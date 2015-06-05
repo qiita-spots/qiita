@@ -164,9 +164,14 @@
             <li class="dropdown">
               <a href="/user/messages/"><span class="glyphicon glyphicon-envelope"></span></a>
               <ul class="dropdown-menu">
-              {% for um, ts in current_user.messages(5) %}
-                <li>&nbsp;{{um}}<br /><span style="font-size:60%;color:gray;">&nbsp;{{ts}}</span></li>
-              {% end %}
+              {% set user_msgs = current_user.messages(5) %}
+                {% if not user_msgs %}
+                  <li>&nbsp;You have no messages</li>
+                {% else %}
+                  {% for um, ts in user_msgs %}
+                    <li>&nbsp;{{um}}<br /><span style="font-size:60%;color:gray;">&nbsp;{{ts}}</span></li>
+                  {% end %}
+                {% end %}
               </ul>
             </li>
             <li class="dropdown">
