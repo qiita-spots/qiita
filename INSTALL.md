@@ -51,7 +51,7 @@ After these commands are executed, you will need to:
 3. Start a test environment:
 
   ```bash
-  qiita_env make --no-load-ontologies
+  qiita-env make --no-load-ontologies
   ```
 
 4. Start the redis server:
@@ -62,8 +62,8 @@ After these commands are executed, you will need to:
 5. Finally you can start the server:
 
   ```bash
-  qiita_env start_cluster qiita_general && sleep 30
-  qiita webserver start
+  qiita-env start_cluster qiita-general && sleep 30
+  qiita pet webserver start
   ```
 
 If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
@@ -74,7 +74,7 @@ If all the above commands executed correctly, you should be able to go to http:/
 
 If you get a traceback similar to this one when starting up Qiita
 ```python
-File "/home/jorge/code/qiita/scripts/qiita_env", line 71, in make
+File "/home/jorge/code/qiita/scripts/qiita-env", line 71, in make
   make_environment(load_ontologies, download_reference, add_demo_user)
 File "/home/jorge/code/qiita/qiita_db/environment_manager.py", line 180, in make_environment
   admin_conn = SQLConnectionHandler(admin='admin_without_database')

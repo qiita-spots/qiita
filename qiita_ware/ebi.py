@@ -14,7 +14,7 @@ from future.utils import viewitems
 from skbio.util import safe_md5
 
 from qiita_core.qiita_settings import qiita_config
-
+from qiita_ware.exceptions import EBISumbissionError
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
@@ -280,18 +280,20 @@ class EBISubmission(object):
 
         return study_set
 
-    def add_sample(self, sample_name, taxon_id=None, description=None,
-                   **kwargs):
+    def add_sample(self, sample_name, taxon_id, scientific_name,
+                   description, **kwargs):
         """Adds sample information to the current submission
 
         Parameters
         ----------
         sample_name : str
             Unique identifier for the sample
-        taxon_id : str, optional
-            Defaults to ``None``. If not provided, the `empty_value` will be
-            used for the taxon ID
-        description : str, optional
+        taxon_id : str
+            NCBI's taxon ID for the sample
+        scientific_name : str
+            NCBI's scientific name for the `taxon_id`
+        description : str
+
             Defaults to ``None``. If not provided, the `empty_value` will be
             used for the description
 
@@ -308,15 +310,14 @@ class EBISubmission(object):
 
         self.samples[sample_name] = {}
 
-        self.samples[sample_name]['taxon_id'] = self.empty_value if \
-            taxon_id is None else taxon_id
-        self.samples[sample_name]['taxon_id'] = \
-            escape(clean_whitespace(self.samples[sample_name]['taxon_id']))
+        self.samples[sample_name]['taxon_id'] = escape(
+            clean_whitespace(taxon_id))
 
-        self.samples[sample_name]['description'] = self.empty_value if \
-            description is None else description
-        self.samples[sample_name]['description'] = \
-            escape(clean_whitespace(self.samples[sample_name]['description']))
+        self.samples[sample_name]['scientific_name'] = escape(
+            clean_whitespace(scientific_name))
+
+        self.samples[sample_name]['description'] = escape(
+            clean_whitespace(description))
 
         self.samples[sample_name]['attributes'] = self._stringify_kwargs(
             kwargs)
@@ -348,6 +349,10 @@ class EBISubmission(object):
             sample_name_element = ET.SubElement(sample, 'SAMPLE_NAME')
             taxon_id = ET.SubElement(sample_name_element, 'TAXON_ID')
             taxon_id.text = escape(clean_whitespace(sample_info['taxon_id']))
+
+            taxon_id = ET.SubElement(sample_name_element, 'SCIENTIFIC_NAME')
+            taxon_id.text = escape(
+                clean_whitespace(sample_info['scientific_name']))
 
             description = ET.SubElement(sample, 'DESCRIPTION')
             description.text = escape(clean_whitespace(
@@ -791,6 +796,11 @@ class EBISubmission(object):
             Path to the directory containing per-sample FASTQ files where
             the sequence labels should be:
             ``SampleID_SequenceNumber And Additional Notes if Applicable``
+
+        Raises
+        ------
+        EBISumbissionError
+            If a sample doesn't have the required EBI submission information
         """
         if not exists(per_sample_fastq_dir):
             raise IOError('The directory with the FASTQ file does not exist.')
@@ -798,14 +808,24 @@ class EBISubmission(object):
         for sample in iter_file_via_list_of_dicts(sample_template):
             sample_name = sample.pop('sample_name')
             taxon_id = sample.pop('taxon_id', None)
+            scientific_name = sample.pop('scientific_name', None)
             description = sample.pop('description', None)
 
-            self.add_sample(sample_name, taxon_id=taxon_id,
-                            description=description,
-                            **sample)
+            if taxon_id is None or scientific_name is None or \
+                    description is None:
+                raise EBISumbissionError(
+                    "Sample '%s' is missing required EBI submission "
+                    "information. taxon_id: %s; scientific_name: %s; "
+                    "description: %s" % (sample_name, taxon_id,
+                                         scientific_name, description))
 
+            self.add_sample(sample_name, taxon_id, scientific_name,
+                            description, **sample)
+
+        prep_template_samples = []
         for prep in iter_file_via_list_of_dicts(prep_template):
             sample_name = prep.pop('sample_name')
+            prep_template_samples.append(sample_name)
             platform = prep.pop('platform')
             experiment_design_description = prep.pop(
                 'experiment_design_description')
@@ -817,6 +837,10 @@ class EBISubmission(object):
                                  file_path, experiment_design_description,
                                  library_construction_protocol,
                                  **prep)
+
+        to_remove = set(self.samples).difference(prep_template_samples)
+        for sample in to_remove:
+            del self.samples[sample]
 
     @classmethod
     def from_templates_and_per_sample_fastqs(cls, preprocessed_data_id,

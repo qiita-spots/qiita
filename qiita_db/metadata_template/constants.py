@@ -15,7 +15,9 @@ Restriction = namedtuple('Restriction', ['columns', 'error_msg'])
 SAMPLE_TEMPLATE_COLUMNS = {
     # The following columns are required by EBI for submission
     'EBI': Restriction(columns={'collection_timestamp': 'timestamp',
-                                'physical_specimen_location': 'varchar'},
+                                'physical_specimen_location': 'varchar',
+                                'taxon_id': 'integer',
+                                'scientific_name': 'varchar'},
                        error_msg="EBI submission disabled"),
     # The following columns are required for the official main QIITA site
     'qiita_main': Restriction(columns={'sample_type': 'varchar',

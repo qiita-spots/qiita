@@ -12,7 +12,8 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis, Collection
 from qiita_db.job import Job
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBStatusError, QiitaDBError
+from qiita_db.exceptions import (QiitaDBStatusError, QiitaDBError,
+                                 QiitaDBUnknownIDError)
 from qiita_db.util import get_mountpoint, get_count
 from qiita_db.study import Study, StudyPerson
 from qiita_db.data import ProcessedData
@@ -145,6 +146,21 @@ class TestAnalysis(TestCase):
                [new_id, 1, '1.SKM4.640180']]
         self.assertEqual(obs, exp)
 
+    def test_exists(self):
+        self.assertTrue(Analysis.exists(1))
+        new_id = get_count("qiita.analysis") + 1
+        self.assertFalse(Analysis.exists(new_id))
+
+    def test_delete(self):
+        # successful delete
+        total_analyses = get_count("qiita.analysis")
+        Analysis.delete(1)
+        self.assertEqual(total_analyses - 1, get_count("qiita.analysis"))
+
+        # no possible to delete
+        with self.assertRaises(QiitaDBUnknownIDError):
+            Analysis.delete(total_analyses + 1)
+
     def test_retrieve_owner(self):
         self.assertEqual(self.analysis.owner, "test@foo.bar")
 
@@ -193,7 +209,9 @@ class TestAnalysis(TestCase):
                             'Description': 'Test Sample 1',
                             'str_column': 'Value for sample 1',
                             'latitude': 42.42,
-                            'longitude': 41.41},
+                            'longitude': 41.41,
+                            'taxon_id': 9606,
+                            'scientific_name': 'homo sapiens'},
             'SKD8.640184': {'physical_specimen_location': 'location1',
                             'physical_specimen_remaining': True,
                             'dna_extracted': True,
@@ -205,7 +223,9 @@ class TestAnalysis(TestCase):
                             'Description': 'Test Sample 2',
                             'str_column': 'Value for sample 2',
                             'latitude': 4.2,
-                            'longitude': 1.1},
+                            'longitude': 1.1,
+                            'taxon_id': 9606,
+                            'scientific_name': 'homo sapiens'},
             'SKB7.640196': {'physical_specimen_location': 'location1',
                             'physical_specimen_remaining': True,
                             'dna_extracted': True,
@@ -217,7 +237,9 @@ class TestAnalysis(TestCase):
                             'Description': 'Test Sample 3',
                             'str_column': 'Value for sample 3',
                             'latitude': 4.8,
-                            'longitude': 4.41},
+                            'longitude': 4.41,
+                            'taxon_id': 9606,
+                            'scientific_name': 'homo sapiens'},
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
@@ -242,6 +264,12 @@ class TestAnalysis(TestCase):
                2: {'2.SKB7.640196'}}
         self.assertEqual(self.analysis.dropped_samples, exp)
 
+    def test_empty_analysis(self):
+        analysis = Analysis(2)
+        # These should be empty as the analysis hasn't started
+        self.assertEqual(analysis.biom_tables, {})
+        self.assertEqual(analysis.dropped_samples, {})
+
     def test_retrieve_data_types(self):
         exp = ['18S']
         self.assertEqual(self.analysis.data_types, exp)
@@ -254,13 +282,13 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.biom_tables, exp)
 
     def test_all_associated_filepaths(self):
-        exp = {12, 13, 14, 15}
+        exp = {10, 11, 12, 13}
         self.assertEqual(self.analysis.all_associated_filepath_ids, exp)
 
-    def test_retrieve_biom_tables_none(self):
+    def test_retrieve_biom_tables_empty(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
-        self.assertEqual(new.biom_tables, None)
+        self.assertEqual(new.biom_tables, {})
 
     def test_set_step(self):
         new_id = get_count("qiita.analysis") + 1
@@ -304,7 +332,7 @@ class TestAnalysis(TestCase):
     def test_retrieve_jobs_none(self):
         new = Analysis.create(User("admin@foo.bar"), "newAnalysis",
                               "A New Analysis", Analysis(1))
-        self.assertEqual(new.jobs, None)
+        self.assertEqual(new.jobs, [])
 
     def test_retrieve_pmid(self):
         self.assertEqual(self.analysis.pmid, "121112")
@@ -405,8 +433,8 @@ class TestAnalysis(TestCase):
         obs = self.conn_handler.execute_fetchall(
             sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
 
-        exp = [[15, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
-               [new_id, '1_analysis_mapping.txt', 9, '2349935429', 1, 1]]
+        exp = [[13, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
+               [new_id, '1_analysis_mapping.txt', 9, '1606265094', 1, 1]]
         self.assertEqual(obs, exp)
 
         sql = """SELECT * FROM qiita.analysis_filepath

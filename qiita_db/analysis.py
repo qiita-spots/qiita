@@ -32,7 +32,7 @@ from .sql_connection import SQLConnectionHandler
 from .base import QiitaStatusObject
 from .data import ProcessedData
 from .study import Study
-from .exceptions import QiitaDBStatusError, QiitaDBError
+from .exceptions import QiitaDBStatusError, QiitaDBError, QiitaDBUnknownIDError
 from .util import (convert_to_id, get_work_base_dir,
                    get_mountpoint, insert_filepaths)
 
@@ -66,9 +66,13 @@ class Analysis(QiitaStatusObject):
     unshare
     build_files
     summary_data
+    exists
+    create
+    delete
     """
 
     _table = "analysis"
+    _analysis_id_column = 'analysis_id'
 
     def _lock_check(self, conn_handler):
         """Raises QiitaDBStatusError if analysis is not in_progress"""
@@ -165,6 +169,73 @@ class Analysis(QiitaStatusObject):
         a_id = conn_handler.execute_queue(queue)[0]
         return cls(a_id)
 
+    @classmethod
+    def delete(cls, _id):
+        """Deletes an analysis
+
+        Parameters
+        ----------
+        _id : int
+            The analysis id
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If the analysis id doesn't exist
+        """
+        # check if the analysis exist
+        if not cls.exists(_id):
+            raise QiitaDBUnknownIDError(_id, "analysis")
+
+        queue = "delete_analysis_%d" % _id
+        conn_handler = SQLConnectionHandler()
+        conn_handler.create_queue(queue)
+
+        sql = ("DELETE FROM qiita.analysis_filepath WHERE "
+               "{0} = {1}".format(cls._analysis_id_column, _id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.analysis_workflow WHERE "
+               "{0} = {1}".format(cls._analysis_id_column, _id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.analysis_sample WHERE "
+               "{0} = {1}".format(cls._analysis_id_column, _id))
+        conn_handler.add_to_queue(queue, sql)
+
+        sql = ("DELETE FROM qiita.collection_analysis WHERE "
+               "{0} = {1}".format(cls._analysis_id_column, _id))
+        conn_handler.add_to_queue(queue, sql)
+
+        # TODO: issue #1176
+
+        sql = ("DELETE FROM qiita.{0} WHERE "
+               "{1} = {2}".format(cls._table, cls._analysis_id_column, _id))
+        conn_handler.add_to_queue(queue, sql)
+
+        conn_handler.execute_queue(queue)
+
+    @classmethod
+    def exists(cls, analysis_id):
+        r"""Checks if the given analysis _id exists
+
+        Parameters
+        ----------
+        analysis_id : int
+            The id of the analysis we are searching for
+
+        Returns
+        -------
+        bool
+            True if exists, false otherwise.
+        """
+        conn_handler = SQLConnectionHandler()
+
+        return conn_handler.execute_fetchone(
+            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
+            "{1}=%s)".format(cls._table, cls._analysis_id_column),
+            (analysis_id, ))[0]
+
     # ---- Properties ----
     @property
     def owner(self):
@@ -260,13 +331,12 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        dict of sets or None
+        dict of sets
             Format is {processed_data_id: {sample_id, sample_id, ...}, ...}
-            if no biom tables exist for the analysis, returns None
         """
         bioms = self.biom_tables
         if not bioms:
-            return None
+            return {}
 
         # get all samples selected for the analysis, converting lists to
         # sets for fast searching. Overhead less this way for large analyses
@@ -352,9 +422,8 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        dict or None
-            Dictonary in the form {data_type: full BIOM filepath} or None if
-            not generated
+        dict
+            Dictonary in the form {data_type: full BIOM filepath}
         """
         conn_handler = SQLConnectionHandler()
         fptypeid = convert_to_id("biom", "filepath_type")
@@ -364,7 +433,7 @@ class Analysis(QiitaStatusObject):
                "WHERE af.analysis_id = %s AND f.filepath_type_id = %s")
         tables = conn_handler.execute_fetchall(sql, (self._id, fptypeid))
         if not tables:
-            return None
+            return {}
         ret_tables = {}
         _, base_fp = get_mountpoint(self._table)[0]
         for fp in tables:
@@ -425,14 +494,12 @@ class Analysis(QiitaStatusObject):
         Returns
         -------
         list of ints
-            Job ids for jobs in analysis
+            Job ids for jobs in analysis. Empty list if no jobs attached.
         """
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT job_id FROM qiita.analysis_job WHERE "
                "analysis_id = %s".format(self._table))
         job_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        if job_ids == []:
-            return None
         return [job_id[0] for job_id in job_ids]
 
     @property

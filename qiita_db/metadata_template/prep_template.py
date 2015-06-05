@@ -77,16 +77,13 @@ class PrepTemplate(MetadataTemplate):
     _filepath_table = 'prep_template_filepath'
 
     @classmethod
-    def create(cls, md_template, raw_data, study, data_type,
-               investigation_type=None):
+    def create(cls, md_template, study, data_type, investigation_type=None):
         r"""Creates the metadata template in the database
 
         Parameters
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by samples Ids
-        raw_data : RawData
-            The raw_data to which the prep template belongs to.
         study : Study
             The study to which the prep template belongs to.
         data_type : str or int
@@ -111,7 +108,7 @@ class PrepTemplate(MetadataTemplate):
 
         # Get a connection handler
         conn_handler = SQLConnectionHandler()
-        queue_name = "CREATE_PREP_TEMPLATE_%d" % raw_data.id
+        queue_name = "CREATE_PREP_TEMPLATE_%d_%d" % (study.id, id(md_template))
         conn_handler.create_queue(queue_name)
 
         # Check if the data_type is the id or the string
@@ -134,13 +131,18 @@ class PrepTemplate(MetadataTemplate):
         # We need the prep_id for multiple calls below, which currently is not
         # supported by the queue system. Thus, executing this outside the queue
         prep_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.prep_template (data_type_id, raw_data_id, "
-            "investigation_type) VALUES (%s, %s, %s) RETURNING "
-            "prep_template_id", (data_type_id, raw_data.id,
-                                 investigation_type))[0]
+            "INSERT INTO qiita.prep_template "
+            "(data_type_id, investigation_type) "
+            "VALUES (%s, %s) RETURNING prep_template_id",
+            (data_type_id, investigation_type))[0]
 
         cls._add_common_creation_steps_to_queue(md_template, prep_id,
                                                 conn_handler, queue_name)
+
+        # Link the prep template with the study
+        sql = ("INSERT INTO qiita.study_prep_template "
+               "(study_id, prep_template_id) VALUES (%s, %s)")
+        conn_handler.add_to_queue(queue_name, sql, (study.id, prep_id))
 
         try:
             conn_handler.execute_queue(queue_name)
@@ -205,6 +207,7 @@ class PrepTemplate(MetadataTemplate):
         ------
         QiitaDBExecutionError
             If the prep template already has a preprocessed data
+            If the prep template has a raw data attached
         QiitaDBUnknownIDError
             If no prep template with id = id_ exists
         """
@@ -223,6 +226,17 @@ class PrepTemplate(MetadataTemplate):
                                         "because a preprocessed data has been"
                                         " already generated using it." % id_)
 
+        sql = """SELECT (
+                    SELECT raw_data_id
+                    FROM qiita.prep_template
+                    WHERE prep_template_id=%s)
+                IS NOT NULL"""
+        raw_data_attached = conn_handler.execute_fetchone(sql, (id_,))[0]
+        if raw_data_attached:
+            raise QiitaDBExecutionError(
+                "Cannot remove prep template %d because it has raw data "
+                "associated with it" % id_)
+
         # Delete the prep template filepaths
         conn_handler.execute(
             "DELETE FROM qiita.prep_template_filepath WHERE "
@@ -232,7 +246,7 @@ class PrepTemplate(MetadataTemplate):
         conn_handler.execute(
             "DROP TABLE qiita.{0}".format(table_name))
 
-        # Remove the rows from common_prep_info
+        # Remove the rows from prep_template_samples
         conn_handler.execute(
             "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
                                                           cls._id_column),
@@ -243,6 +257,11 @@ class PrepTemplate(MetadataTemplate):
             "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
                                                           cls._id_column),
             (id_,))
+
+        # Remove the row from study_prep_template
+        conn_handler.execute(
+            "DELETE FROM qiita.study_prep_template "
+            "WHERE {0} = %s".format(cls._id_column), (id_,))
 
         # Remove the row from prep_template
         conn_handler.execute(
@@ -272,9 +291,30 @@ class PrepTemplate(MetadataTemplate):
     @property
     def raw_data(self):
         conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
+        result = conn_handler.execute_fetchone(
             "SELECT raw_data_id FROM qiita.prep_template "
-            "WHERE prep_template_id=%s", (self.id,))[0]
+            "WHERE prep_template_id=%s", (self.id,))
+        if result:
+            return result[0]
+        return None
+
+    @raw_data.setter
+    def raw_data(self, raw_data):
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT (
+                    SELECT raw_data_id
+                    FROM qiita.prep_template
+                    WHERE prep_template_id=%s)
+                IS NOT NULL"""
+        exists = conn_handler.execute_fetchone(sql, (self.id,))[0]
+        if exists:
+            raise QiitaDBError(
+                "Prep template %d already has a raw data associated"
+                % self.id)
+        sql = """UPDATE qiita.prep_template
+                 SET raw_data_id = %s
+                 WHERE prep_template_id = %s"""
+        conn_handler.execute(sql, (raw_data.id, self.id))
 
     @property
     def preprocessed_data(self):
@@ -365,10 +405,9 @@ class PrepTemplate(MetadataTemplate):
             The ID of the study with which this prep template is associated
         """
         conn = SQLConnectionHandler()
-        sql = ("SELECT srd.study_id FROM qiita.prep_template pt JOIN "
-               "qiita.study_raw_data srd ON pt.raw_data_id = srd.raw_data_id "
-               "WHERE prep_template_id = %d" % self.id)
-        study_id = conn.execute_fetchone(sql)
+        sql = ("SELECT study_id FROM qiita.study_prep_template "
+               "WHERE prep_template_id=%s")
+        study_id = conn.execute_fetchone(sql, (self.id,))
         if study_id:
             return study_id[0]
         else:

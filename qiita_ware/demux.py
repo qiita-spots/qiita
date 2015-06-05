@@ -438,7 +438,10 @@ def to_ascii(demux, samples=None):
     for samp, idx, seq, qual, bc_ori, bc_cor, bc_err in fetch(demux, samples):
         seq_id = id_fmt % {'sample': samp, 'idx': idx, 'bc_ori': bc_ori,
                            'bc_cor': bc_cor, 'bc_diff': bc_err}
-        yield formatter(seq_id, seq, qual.astype(np.uint8))
+        if qual != []:
+            qual = qual.astype(np.uint8)
+
+        yield formatter(seq_id, seq, qual)
 
 
 def to_per_sample_ascii(demux, samples=None):
@@ -513,7 +516,7 @@ def fetch(demux, samples=None, k=None):
         seqs = demux[pjoin(dset_paths['sequence'])][indices]
 
         # only yield qual if we have it
-        quals = repeat(None)
+        quals = repeat([])
         if demux.attrs['has-qual']:
             if len(indices) == 1:
                 if indices[0]:
@@ -528,8 +531,8 @@ def fetch(demux, samples=None, k=None):
         iter_ = zip(repeat(sample), np.arange(indices.size)[indices], seqs,
                     quals, bc_original, bc_corrected, bc_error)
 
-        for item in iter_:
-            yield item
+        for samp, idx, seq, qual, bc_ori, bc_cor, bc_err in iter_:
+            yield (samp, idx, seq, qual[:len(seq)], bc_ori, bc_cor, bc_err)
 
 
 def stats(demux):

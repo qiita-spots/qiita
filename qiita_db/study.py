@@ -642,10 +642,11 @@ class Study(QiitaObject):
         list of str
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT DISTINCT DT.data_type FROM qiita.study_raw_data SRD "
-               "JOIN qiita.prep_template PT ON SRD.raw_data_id = "
-               "PT.raw_data_id JOIN qiita.data_type DT ON PT.data_type_id = "
-               "DT.data_type_id WHERE SRD.study_id = %s")
+        sql = """SELECT DISTINCT data_type
+                 FROM qiita.study_prep_template
+                    JOIN qiita.prep_template USING (prep_template_id)
+                    JOIN qiita.data_type USING (data_type_id)
+                 WHERE study_id = %s"""
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     @property
@@ -751,40 +752,38 @@ class Study(QiitaObject):
             spec_data = " AND data_type_id = %d" % convert_to_id(data_type,
                                                                  "data_type")
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT raw_data_id FROM qiita.study_raw_data WHERE "
-               "study_id = %s{0}".format(spec_data))
+        sql = """SELECT raw_data_id
+                 FROM qiita.study_prep_template
+                    JOIN qiita.prep_template USING (prep_template_id)
+                    JOIN qiita.raw_data USING (raw_data_id)
+                 WHERE study_id = %s{0}""".format(spec_data)
+
         return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
-    def add_raw_data(self, raw_data):
-        """ Adds raw_data to the current study
+    def prep_templates(self, data_type=None):
+        """Return list of prep template ids
 
         Parameters
         ----------
-        raw_data : list of RawData
-            The RawData objects to be added to the study
+        data_type : str, optional
+            If given, retrieve only prep templates for given datatype.
+            Default None.
 
-        Raises
-        ------
-        QiitaDBError
-            If the raw_data is already linked to the current study
+        Returns
+        -------
+        list of PrepTemplate ids
         """
+        spec_data = ""
+        if data_type:
+            spec_data = " AND data_type_id = %s" % convert_to_id(data_type,
+                                                                 "data_type")
+
         conn_handler = SQLConnectionHandler()
-        self._lock_non_sandbox(conn_handler)
-        queue = "%d_add_raw_data" % self.id
-        sql = ("SELECT EXISTS(SELECT * FROM qiita.study_raw_data WHERE "
-               "study_id=%s AND raw_data_id=%s)")
-        conn_handler.create_queue(queue)
-        sql_args = [(self.id, rd.id) for rd in raw_data]
-        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
-        linked = conn_handler.execute_queue(queue)
-
-        if any(linked):
-            raise QiitaDBError("Some of the passed raw datas have been already"
-                               " linked to the study %s" % self.id)
-
-        conn_handler.executemany(
-            "INSERT INTO qiita.study_raw_data (study_id, raw_data_id) "
-            "VALUES (%s, %s)", sql_args)
+        sql = """SELECT prep_template_id
+                 FROM qiita.study_prep_template
+                    JOIN qiita.prep_template USING (prep_template_id)
+                 WHERE study_id = %s{0}""".format(spec_data)
+        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
 
     def preprocessed_data(self, data_type=None):
         """ Returns list of data ids for preprocessed data info

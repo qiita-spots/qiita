@@ -124,8 +124,8 @@ EBI_ORGANIZATION_PREFIX = qiime
 
 [ipython]
 # context is expected to be a comma separated list
-context = qiita_general
-default = qiita_general
+context = qiita-general
+default = qiita-general
 
 [vamps]
 # general info to submit to vamps

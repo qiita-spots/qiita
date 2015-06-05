@@ -637,7 +637,11 @@ class MetadataTemplate(QiitaObject):
                            for col, dtype in zip(headers, datatypes)]
         conn_handler.add_to_queue(
             queue_name,
-            "CREATE TABLE qiita.{0} (sample_id varchar NOT NULL, {1})".format(
+            "CREATE TABLE qiita.{0} ("
+            "sample_id varchar NOT NULL, {1}, "
+            "CONSTRAINT fk_{0} FOREIGN KEY (sample_id) "
+            "REFERENCES qiita.study_sample (sample_id) "
+            "ON UPDATE CASCADE)".format(
                 table_name, ', '.join(column_datatype)))
 
         # Insert values on custom table
@@ -703,9 +707,9 @@ class MetadataTemplate(QiitaObject):
 
             if existing_samples:
                 warnings.warn(
-                    "No values have been modified for samples '%s'. However, "
-                    "the following columns have been added to them: '%s'"
-                    % (", ".join(existing_samples), ", ".join(new_cols)),
+                    "No values have been modified for existing samples (%s). "
+                    "However, the following columns have been added to them: "
+                    "'%s'" % (len(existing_samples), ", ".join(new_cols)),
                     QiitaDBWarning)
                 # The values for the new columns are the only ones that get
                 # added to the database. None of the existing values will be
@@ -727,8 +731,8 @@ class MetadataTemplate(QiitaObject):
                 conn_handler.add_to_queue(queue_name, sql, values, many=True)
         elif existing_samples:
             warnings.warn(
-                "The following samples already exist in the template and "
-                "will be ignored: %s" % ", ".join(existing_samples),
+                "%d samples already exist in the template and "
+                "their values won't be modified" % len(existing_samples),
                 QiitaDBWarning)
 
         if new_samples:
