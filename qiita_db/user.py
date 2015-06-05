@@ -501,8 +501,8 @@ class User(QiitaObject):
             raise IncompetentQiitaDeveloperError("Only 100 messages available")
 
         # turn JSON messages back into tuple and return them
-        return [loads(m) for m in r_client.lrange("%s:qiita-sysmsgs" % self._id,
-                                                  0, count-1)]
+        return [loads(m) for m in r_client.lrange("%s:qiita-sysmsgs" %
+                                                  self._id, 0, count-1)]
 
 
 def validate_email(email):
