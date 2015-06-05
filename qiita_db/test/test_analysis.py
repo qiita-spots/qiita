@@ -264,6 +264,12 @@ class TestAnalysis(TestCase):
                2: {'2.SKB7.640196'}}
         self.assertEqual(self.analysis.dropped_samples, exp)
 
+    def test_empty_analysis(self):
+        analysis = Analysis(2)
+        # These should be empty as the analysis hasn't started
+        self.assertEqual(analysis.biom_tables, [])
+        self.assertEqual(analysis.dropped_samples, [])
+
     def test_retrieve_data_types(self):
         exp = ['18S']
         self.assertEqual(self.analysis.data_types, exp)
