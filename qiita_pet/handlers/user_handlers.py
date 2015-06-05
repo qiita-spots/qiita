@@ -144,3 +144,10 @@ class ChangeForgotPasswordHandler(BaseHandler):
                 level = "danger"
 
         self.render(page, message=message, level=level, code=code)
+
+
+class UserMessagesHander(BaseHandler):
+    @authenticated
+    def get(self):
+        self.render("user_messages.html",
+                    messages=self.current_user.messages(as_html=True))

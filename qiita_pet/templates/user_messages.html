@@ -1,0 +1,10 @@
+{% extends sitebase.html %}
+{% autoescape None %}
+{% block content%}
+<h2 style="text-decoration: underline;">System Messages</h2>
+<ul>
+	{% for msg in messages %}
+    <li>{{msg}}</li>
+	{% end %}
+</ul>
+{% end %}

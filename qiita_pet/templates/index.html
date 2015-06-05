@@ -1,5 +1,21 @@
 {% extends sitebase.html %}
 {% block head %}
+<style>
+  .msg-bar {
+    position: fixed;
+    bottom:5px;
+    right:15px;
+    padding: 10px;
+    z-index:100;
+    border-radius: 10px;
+    border: 1px solid black;
+    background-color:white;
+  }
+  #template-content
+  {
+    position:relative;
+  }
+</style>
 {% end %}
 
 {%block content %}
@@ -30,4 +46,12 @@
           <li><a target=_blank href="http://www.postgresql.org">PostgreSQL</a></li>
       </ul>
 </div>
+{% if current_user is not None %}
+  <div id="messages" class="msg-bar">
+  <h4 style="text-decoration: underline;">System Messages</h4>
+  {% for msg in messages %}
+    {% raw msg %}
+  {% end %}
+  </div>
+{% end %}
 {% end %}

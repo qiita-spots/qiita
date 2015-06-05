@@ -61,7 +61,12 @@ class MainHandler(BaseHandler):
     def get(self):
         msg = self.get_argument('message', '')
         lvl = self.get_argument('level', '')
-        self.render("index.html", message=msg, level=lvl)
+        if self.current_user:
+            msgs = self.current_user.messages(5, as_html=True)
+        else:
+            msgs = []
+        self.render("index.html", message=msg, level=lvl,
+                    messages=msgs)
 
 
 class MockupHandler(BaseHandler):
