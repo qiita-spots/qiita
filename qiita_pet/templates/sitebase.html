@@ -169,7 +169,7 @@
                   <li>&nbsp;You have no messages</li>
                 {% else %}
                   {% for um, ts in user_msgs %}
-                    <li>&nbsp;{{um}}<br /><span style="font-size:60%;color:gray;">&nbsp;{{ts}}</span></li>
+                    <li>&nbsp;{% raw um %}<br /><span style="font-size:60%;color:gray;">&nbsp;{{ts}}</span></li>
                   {% end %}
                 {% end %}
               </ul>
