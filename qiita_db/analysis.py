@@ -423,8 +423,7 @@ class Analysis(QiitaStatusObject):
         Returns
         -------
         dict
-            Dictonary in the form {data_type: full BIOM filepath} or None if
-            not generated
+            Dictonary in the form {data_type: full BIOM filepath}
         """
         conn_handler = SQLConnectionHandler()
         fptypeid = convert_to_id("biom", "filepath_type")
