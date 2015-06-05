@@ -63,7 +63,7 @@ def _template_generator(study, full_access):
         the prep template status icons
     """
 
-    for pt_id in study.prep_templates():
+    for pt_id in sorted(study.prep_templates()):
         pt = PrepTemplate(pt_id)
         if full_access or pt.status == 'public':
             yield (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status])

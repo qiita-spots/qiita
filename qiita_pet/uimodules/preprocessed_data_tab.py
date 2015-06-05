@@ -40,7 +40,7 @@ class PreprocessedDataInfoTab(BaseUIModule):
         is_local_request = self._is_local()
         show_ebi_btn = user.level == "admin"
         processing_status = preprocessed_data.processing_status
-        processed_data = preprocessed_data.processed_data
+        processed_data = sorted(preprocessed_data.processed_data)
 
         # Get all the ENA terms for the investigation type
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
