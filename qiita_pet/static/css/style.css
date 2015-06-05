@@ -13,3 +13,14 @@
 .dropdown:hover .dropdown-menu {
     display: block;
  }
+
+ .info-menu {
+    word-wrap: break-word;
+    white-space: normal;
+ }
+
+ .info-menu > li > a {
+  display: inline;
+  color:#428bca;
+  padding:0px;
+}

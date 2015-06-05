@@ -4,6 +4,8 @@
 <ul>
   {% for msg, timestamp in messages %}
   <li>{% raw msg %}<br /><span style="font-size:60%;color:gray;">{{ timestamp }}</span></li>
+  {% else %}
+  <h3>You have no messages</h3>
   {% end %}
 </ul>
 {% end %}
