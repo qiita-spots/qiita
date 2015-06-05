@@ -331,13 +331,12 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        dict of sets or None
+        dict of sets
             Format is {processed_data_id: {sample_id, sample_id, ...}, ...}
-            if no biom tables exist for the analysis, returns None
         """
         bioms = self.biom_tables
         if not bioms:
-            return []
+            return {}
 
         # get all samples selected for the analysis, converting lists to
         # sets for fast searching. Overhead less this way for large analyses
@@ -423,7 +422,7 @@ class Analysis(QiitaStatusObject):
 
         Returns
         -------
-        dict or None
+        dict
             Dictonary in the form {data_type: full BIOM filepath} or None if
             not generated
         """
@@ -435,7 +434,7 @@ class Analysis(QiitaStatusObject):
                "WHERE af.analysis_id = %s AND f.filepath_type_id = %s")
         tables = conn_handler.execute_fetchall(sql, (self._id, fptypeid))
         if not tables:
-            return []
+            return {}
         ret_tables = {}
         _, base_fp = get_mountpoint(self._table)[0]
         for fp in tables:
