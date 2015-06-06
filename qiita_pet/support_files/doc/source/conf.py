@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 #
 # qiita documentation build configuration file, created by
 # sphinx-quickstart on Mon May 18 17:59:39 2015.
