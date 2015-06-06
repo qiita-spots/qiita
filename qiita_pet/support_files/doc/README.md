@@ -17,11 +17,13 @@ An easy way to install the dependencies is via pip:
 
     pip install Sphinx sphinx-bootstrap-theme
 
-To build the documentation, assuming you are at the top-level qiita
-directory:
+To build the documentation (assuming you have a working installation of Qiita):
 
-    cd doc
-    make html
+    qiita pet webserver
+
+Or alternatively you can (assuming you are at the top-level Qiita folder):
+
+    make -C qiita_pet/support_files/doc html
 
 The built HTML documentation will be at ```build/html/index.html```.
 

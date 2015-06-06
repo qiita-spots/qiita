@@ -66,7 +66,8 @@ Coverage testing is in effect, so run tests using `nosetests --with-coverage [te
 ###Documentation
 
 The documentation for Qiita is maintained as part of this repository, under the
-`doc` folder, for more information, see the README.md file in `doc/README.md`.
+`qiita_pet/support_files/doc` folder, for more information, see the README.md
+file in `qiita_pet/support_files/doc/README.md`.
 
 ###Scripts
 
