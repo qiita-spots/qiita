@@ -44,9 +44,7 @@ def _get_accessible_raw_data(user):
         study = Study(sid)
         study_title = study.title
         for rdid in study.raw_data():
-            rdid = int(rdid)
-            if rdid not in d:
-                d[rdid] = study_title
+            d[int(rdid)] = study_title
     return d
 
 
