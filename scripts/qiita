@@ -17,7 +17,7 @@ import tornado.httpserver
 import tornado.ioloop
 from psycopg2 import OperationalError
 from future.utils import viewitems
-from os.path import join, abspath
+from os.path import join, abspath, dirname
 
 from qiita_db.util import (get_filepath_types, get_filetypes,
                            get_data_types,
@@ -70,7 +70,7 @@ def webserver(build_docs):
     if build_docs:
         import qiita_pet
 
-        base = abspath(qiita_pet.__file__)
+        base = abspath(dirname(qiita_pet.__file__))
         sphinx_fp = join(base, 'support_files/doc/')
         cmd = 'make -C %s html' % sphinx_fp
         print('Building documentation ...')
