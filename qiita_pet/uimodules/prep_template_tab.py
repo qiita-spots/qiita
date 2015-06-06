@@ -63,7 +63,7 @@ def _template_generator(study, full_access):
         the prep template status icons
     """
 
-    for pt_id in study.prep_templates():
+    for pt_id in sorted(study.prep_templates()):
         pt = PrepTemplate(pt_id)
         if full_access or pt.status == 'public':
             yield (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status])
@@ -148,7 +148,7 @@ class PrepTemplateInfoTab(BaseUIModule):
         other_studies_rd = sorted(viewitems(
             _get_accessible_raw_data(user)))
 
-        # A prep template can be modified if its status is sanbdox
+        # A prep template can be modified if its status is sandbox
         is_editable = prep_template.status == 'sandbox'
 
         raw_data_id = prep_template.raw_data

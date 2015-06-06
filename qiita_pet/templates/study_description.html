@@ -623,6 +623,11 @@ function submit_preprocess(id) {
 };
 
 function display_tab(top_tab, sub_tab, prep_tab){
+  // making sure the last tab is always the default
+  $('#prep_template_nav_tabs a:last').tab('show');
+  $('#preprocessed_data_tab li:eq(1) a').tab('show');
+  $('#processed_data_tab li:eq(1) a').tab('show');
+
   $('#myTab a[href="#'+top_tab+'"]').tab('show');
   if (top_tab == "prep_template_tab"){
     if (sub_tab !== undefined){
