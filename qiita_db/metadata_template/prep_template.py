@@ -75,7 +75,6 @@ class PrepTemplate(MetadataTemplate):
     _sample_cls = PrepSample
     _fp_id = convert_to_id("prep_template", "filepath_type")
     _filepath_table = 'prep_template_filepath'
-    _columns = PREP_TEMPLATE_COLUMNS
 
     @classmethod
     def create(cls, md_template, study, data_type, investigation_type=None):
@@ -288,6 +287,45 @@ class PrepTemplate(MetadataTemplate):
             "SELECT d.data_type{0} FROM qiita.data_type d JOIN "
             "qiita.prep_template p ON p.data_type_id = d.data_type_id WHERE "
             "p.prep_template_id=%s".format(ret), (self.id,))[0]
+
+    @property
+    def columns_restrictions(self):
+        """Gets the dictionary of colums required based on data_type
+
+        Returns
+        -------
+        dict
+            The dict of restictions based on the data_type
+        """
+        pt_cols = deepcopy(PREP_TEMPLATE_COLUMNS)
+        if self.data_type() in TARGET_GENE_DATA_TYPES:
+            pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+
+        return pt_cols
+
+    def can_be_updated(self, columns):
+        """Gets if the template can be updated
+
+        Parameters
+        ----------
+        columns : set
+            A set of the names of the columns to be updated
+
+        Returns
+        -------
+        bool
+            If the template can be updated
+        """
+        if not self.preprocessed_data:
+            return True
+
+        tg_columns = {e for v in viewvalues(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+                      for e in v.columns.keys()}
+
+        if not columns & tg_columns:
+            return True
+
+        return False
 
     @property
     def raw_data(self):

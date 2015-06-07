@@ -1108,6 +1108,7 @@ class MetadataTemplate(QiitaObject):
         QiitaDBError
             If md_template and db do not have the same sample ids
             If md_template and db do not have the same column headers
+            If self.can_be_updated is not True
         """
         self._check_subclass()
 
@@ -1115,7 +1116,7 @@ class MetadataTemplate(QiitaObject):
 
         # Clean and validate the metadata template given
         new_map = self._clean_validate_template(md_template, self.id,
-                                                self._columns)
+                                                self.columns_restrictions)
         # Retrieving current metadata
         current_map = self._transform_to_dict(conn_handler.execute_fetchall(
             "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,
@@ -1154,6 +1155,13 @@ class MetadataTemplate(QiitaObject):
         map_diff = map_diff[map_diff]
         map_diff.index.names = ['id', 'column']
         changed_cols = map_diff.index.get_level_values('column').unique()
+
+        if not self.can_be_updated(columns=set(changed_cols)):
+            raise QiitaDBError('The new template is modifying fields that '
+                               'cannot be modified. Try removing the target '
+                               'gene fields or deleting the processed data. '
+                               'You are trying to modify: %s'
+                               % ', '.join(changed_cols))
 
         for col in changed_cols:
             self.update_category(col, new_map[col].to_dict())

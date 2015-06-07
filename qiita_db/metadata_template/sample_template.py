@@ -68,7 +68,6 @@ class SampleTemplate(MetadataTemplate):
     _sample_cls = Sample
     _fp_id = convert_to_id("sample_template", "filepath_type")
     _filepath_table = 'sample_template_filepath'
-    _columns = SAMPLE_TEMPLATE_COLUMNS
 
     @staticmethod
     def metadata_headers():
@@ -187,6 +186,32 @@ class SampleTemplate(MetadataTemplate):
             The ID of the study with which this sample template is associated
         """
         return self._id
+
+    @property
+    def columns_restrictions(self):
+        """Gets the dictionary of colums required
+
+        Returns
+        -------
+        dict
+            The dict of restictions
+        """
+        return SAMPLE_TEMPLATE_COLUMNS
+
+    def can_be_updated(self, **kwargs):
+        """Gets if the template can be updated
+
+        Parameters
+        ----------
+        kwargs : ignored
+            Necessary to have in parameters to support other objects.
+
+        Returns
+        -------
+        bool
+            As this is the sample template this returns always True
+        """
+        return True
 
     def generate_files(self):
         r"""Generates all the files that contain data from this template
