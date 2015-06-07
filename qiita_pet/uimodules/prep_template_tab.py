@@ -35,13 +35,16 @@ fp_type_by_ft = defaultdict(
 
 
 def _get_accessible_raw_data(user):
-    """Retrieves a tuple of raw_data_id and the last study title for that
+    """Retrieves a tuple of raw_data_id and one study title for that
     raw_data
     """
     d = {}
-    for sid in user.user_studies:
-        for rdid in Study(sid).raw_data():
-            d[int(rdid)] = Study(RawData(rdid).studies[-1]).title
+    accessible_studies = user.user_studies.union(user.shared_studies)
+    for sid in accessible_studies:
+        study = Study(sid)
+        study_title = study.title
+        for rdid in study.raw_data():
+            d[int(rdid)] = study_title
     return d
 
 
