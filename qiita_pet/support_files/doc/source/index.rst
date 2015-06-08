@@ -23,5 +23,5 @@ tutorials:
 .. toctree::
    :maxdepth: 1
 
-   tutorials/tutorial-index
+   tutorials/index.rst
 
