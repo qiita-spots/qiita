@@ -325,7 +325,7 @@ class PrepTemplate(MetadataTemplate):
         PREP_TEMPLATE_COLUMNS_TARGET_GENE
         """
         if (not self.preprocessed_data or
-           self.data_type not in TARGET_GENE_DATA_TYPES):
+           self.data_type() not in TARGET_GENE_DATA_TYPES):
             return True
 
         tg_columns = {e for v in viewvalues(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
