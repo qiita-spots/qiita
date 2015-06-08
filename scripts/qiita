@@ -77,7 +77,8 @@ def webserver(build_docs):
         try:
             system_call(cmd)
         except ComputeError as e:
-            print('Could not build documentation: %s' % str(e))
+            raise click.ClickException('Could not build documentation: %s' %
+                                       str(e))
         else:
             print('Documentation successfully built')
 
