@@ -94,9 +94,9 @@ CREATE TABLE qiita.annotation_filepath (
 	CONSTRAINT idx_annotation_filepath PRIMARY KEY ( annotation_id, filepath_id )
  ) ;
 
-CREATE INDEX idx_annotation_filepath ON qiita.annotation_filepath ( annotation_id ) ;
+CREATE INDEX idx_annotation_filepath_0 ON qiita.annotation_filepath ( annotation_id ) ;
 
-CREATE INDEX idx_annotation_filepath ON qiita.annotation_filepath ( filepath_id ) ;
+CREATE INDEX idx_annotation_filepath_1 ON qiita.annotation_filepath ( filepath_id ) ;
 
 CREATE TABLE qiita.assembly ( 
 	assembly_id          bigserial  NOT NULL,
@@ -121,19 +121,19 @@ CREATE TABLE qiita.assembly_annotation (
 	CONSTRAINT idx_assembly_annotation PRIMARY KEY ( assembly_id, annotation_id )
  ) ;
 
-CREATE INDEX idx_assembly_annotation ON qiita.assembly_annotation ( assembly_id ) ;
+CREATE INDEX idx_assembly_annotation_0 ON qiita.assembly_annotation ( assembly_id ) ;
 
-CREATE INDEX idx_assembly_annotation ON qiita.assembly_annotation ( annotation_id ) ;
+CREATE INDEX idx_assembly_annotation_1 ON qiita.assembly_annotation ( annotation_id ) ;
 
 CREATE TABLE qiita.assembly_filepath ( 
 	assembly_id          bigint  NOT NULL,
 	filepath_id          bigint  NOT NULL,
-	CONSTRAINT idx_assembly_filepath PRIMARY KEY ( assembly_id, filepath_id )
+	CONSTRAINT idx_assembly_filepath_0 PRIMARY KEY ( assembly_id, filepath_id )
  ) ;
 
-CREATE INDEX idx_assembly_filepath_0 ON qiita.assembly_filepath ( assembly_id ) ;
+CREATE INDEX idx_assembly_filepath_1 ON qiita.assembly_filepath ( assembly_id ) ;
 
-CREATE INDEX idx_assembly_filepath_1 ON qiita.assembly_filepath ( filepath_id ) ;
+CREATE INDEX idx_assembly_filepath_2 ON qiita.assembly_filepath ( filepath_id ) ;
 
 CREATE TABLE qiita.assembly_preprocessed_data ( 
 	preprocessed_data_id bigint  NOT NULL,
@@ -141,9 +141,9 @@ CREATE TABLE qiita.assembly_preprocessed_data (
 	CONSTRAINT idx_assembly_preprocessed_data PRIMARY KEY ( preprocessed_data_id, assembly_id )
  ) ;
 
-CREATE INDEX idx_assembly_preprocessed_data ON qiita.assembly_preprocessed_data ( preprocessed_data_id ) ;
+CREATE INDEX idx_assembly_preprocessed_data_0 ON qiita.assembly_preprocessed_data ( preprocessed_data_id ) ;
 
-CREATE INDEX idx_assembly_preprocessed_data ON qiita.assembly_preprocessed_data ( assembly_id ) ;
+CREATE INDEX idx_assembly_preprocessed_data_1 ON qiita.assembly_preprocessed_data ( assembly_id ) ;
 
 CREATE TABLE qiita.isolate ( 
 	isolate_id           bigserial  NOT NULL,
@@ -166,9 +166,9 @@ CREATE TABLE qiita.isolate_antibiotic_resistance (
 	CONSTRAINT idx_table_0 PRIMARY KEY ( isolate_id, antibiotic_id )
  ) ;
 
-CREATE INDEX idx_table_0 ON qiita.isolate_antibiotic_resistance ( isolate_id ) ;
+CREATE INDEX idx_isolate_antibiotic_resistance ON qiita.isolate_antibiotic_resistance ( isolate_id ) ;
 
-CREATE INDEX idx_table_0 ON qiita.isolate_antibiotic_resistance ( antibiotic_id ) ;
+CREATE INDEX idx_isolate_antibiotic_resistance_0 ON qiita.isolate_antibiotic_resistance ( antibiotic_id ) ;
 
 COMMENT ON COLUMN qiita.isolate_antibiotic_resistance.mic IS 'Minimum inhibitory concentration';
 
@@ -182,9 +182,9 @@ CREATE TABLE qiita.isolate_antibiotic_sensitivity (
 	CONSTRAINT idx_isolate_antibiotic_sensitivity PRIMARY KEY ( isolate_id, antibiotic_id )
  ) ;
 
-CREATE INDEX idx_isolate_antibiotic_sensitivity ON qiita.isolate_antibiotic_sensitivity ( antibiotic_id ) ;
+CREATE INDEX idx_isolate_antibiotic_sensitivity_0 ON qiita.isolate_antibiotic_sensitivity ( antibiotic_id ) ;
 
-CREATE INDEX idx_isolate_antibiotic_sensitivity ON qiita.isolate_antibiotic_sensitivity ( isolate_id ) ;
+CREATE INDEX idx_isolate_antibiotic_sensitivity_1 ON qiita.isolate_antibiotic_sensitivity ( isolate_id ) ;
 
 COMMENT ON COLUMN qiita.isolate_antibiotic_sensitivity.mic IS 'minimum inhibitory concentration';
 
@@ -211,9 +211,9 @@ CREATE TABLE qiita.isolate_growth_filepath (
 	CONSTRAINT idx_isolate_growth_filepath PRIMARY KEY ( isolate_growth_id, filepath_id )
  ) ;
 
-CREATE INDEX idx_isolate_growth_filepath ON qiita.isolate_growth_filepath ( isolate_growth_id ) ;
+CREATE INDEX idx_isolate_growth_filepath_0 ON qiita.isolate_growth_filepath ( isolate_growth_id ) ;
 
-CREATE INDEX idx_isolate_growth_filepath ON qiita.isolate_growth_filepath ( filepath_id ) ;
+CREATE INDEX idx_isolate_growth_filepath_1 ON qiita.isolate_growth_filepath ( filepath_id ) ;
 
 CREATE TABLE qiita.isolate_storage ( 
 	isolate_id           bigint  NOT NULL,
