@@ -1110,12 +1110,10 @@ class MetadataTemplate(QiitaObject):
             If md_template and db do not have the same column headers
             If self.can_be_updated is not True
         """
-        self._check_subclass()
-
         conn_handler = SQLConnectionHandler()
 
         # Clean and validate the metadata template given
-        new_map = self._clean_validate_template(md_template, self.id,
+        new_map = self._clean_validate_template(md_template, self.study_id,
                                                 self.columns_restrictions)
         # Retrieving current metadata
         current_map = self._transform_to_dict(conn_handler.execute_fetchall(

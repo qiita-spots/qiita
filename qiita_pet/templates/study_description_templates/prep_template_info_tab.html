@@ -188,14 +188,15 @@
         </td>
       </tr>
       {% end %}
-      {{is_editable}}
     {% if is_editable %}
       <tr><td><hr></td></tr>
       <tr>
         <td>
           <select id="update_prep_template_{{pt_id}}">
             {% for f in files %}
-              <option value="{{f}}">{{f}}</option>
+              {% if f.endswith(('txt', 'tsv')) %}
+                <option value="{{f}}">{{f}}</option>
+              {% end %}
             {% end %}
           </select>
           <a class="btn btn-primary" onclick="update_prep_template({{pt_id}});">Update prep template</a>

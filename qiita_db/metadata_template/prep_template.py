@@ -315,8 +315,17 @@ class PrepTemplate(MetadataTemplate):
         -------
         bool
             If the template can be updated
+
+        Notes
+        -----
+        The prep template can be updated when (1) it has no preprocessed data
+        or the prep template data-type is not part of TARGET_GENE_DATA_TYPES,
+        (2) if is part of TARGET_GENE_DATA_TYPES then we will only update if
+        the columns being updated are not part of
+        PREP_TEMPLATE_COLUMNS_TARGET_GENE
         """
-        if not self.preprocessed_data:
+        if (not self.preprocessed_data or
+           self.data_type not in TARGET_GENE_DATA_TYPES):
             return True
 
         tg_columns = {e for v in viewvalues(PREP_TEMPLATE_COLUMNS_TARGET_GENE)

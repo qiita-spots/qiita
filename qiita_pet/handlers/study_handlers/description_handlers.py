@@ -444,7 +444,7 @@ class StudyDescriptionHandler(BaseHandler):
         # If we are on this function, the arguments "prep_template_id",
         # "update_prep_template_file" must defined. If not, let tornado
         # raise its error
-        pt_id = self.get_argument('prep_template_id')
+        pt_id = int(self.get_argument('prep_template_id'))
         prep_template = self.get_argument('update_prep_template_file')
 
         # Define here the message and message level in case of success
