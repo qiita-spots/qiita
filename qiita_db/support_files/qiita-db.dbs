@@ -184,6 +184,138 @@
 				<fk_column name="analysis_id" pk="analysis_id" />
 			</fk>
 		</table>
+		<table name="annotation" >
+			<column name="annotation_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="cds_count" type="integer" jt="4" mandatory="y" />
+			<column name="rrna_count" type="integer" jt="4" mandatory="y" />
+			<column name="trna_count" type="integer" jt="4" mandatory="y" />
+			<column name="tmrna_count" type="integer" jt="4" mandatory="y" />
+			<column name="ncrna_count" type="integer" jt="4" mandatory="y" />
+			<column name="cripr_count" type="integer" jt="4" mandatory="y" />
+			<column name="cazymes_count" type="integer" jt="4" mandatory="y" />
+			<column name="peptidases_count" type="integer" jt="4" mandatory="y" />
+			<column name="annotator_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="annotator_params_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="pk_annotation" unique="PRIMARY_KEY" >
+				<column name="annotation_id" />
+			</index>
+			<index name="idx_annotation" unique="NORMAL" >
+				<column name="annotator_id" />
+			</index>
+			<fk name="fk_annotation_software" to_schema="qiita" to_table="software" >
+				<fk_column name="annotator_id" pk="software_id" />
+			</fk>
+		</table>
+		<table name="annotation_filepath" >
+			<column name="annotation_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_annotation_filepath" unique="PRIMARY_KEY" >
+				<column name="annotation_id" />
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_annotation_filepath" unique="NORMAL" >
+				<column name="annotation_id" />
+			</index>
+			<index name="idx_annotation_filepath" unique="NORMAL" >
+				<column name="filepath_id" />
+			</index>
+			<fk name="fk_annotation_filepath" to_schema="qiita" to_table="annotation" >
+				<fk_column name="annotation_id" pk="annotation_id" />
+			</fk>
+			<fk name="fk_annotation_filepath_fp" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+		</table>
+		<table name="antibiotic" >
+			<column name="antibiotic_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" />
+			<column name="description" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_antibiotic" unique="PRIMARY_KEY" >
+				<column name="antibiotic_id" />
+			</index>
+		</table>
+		<table name="assembly" >
+			<column name="assembly_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="n50" type="integer" jt="4" mandatory="y" />
+			<column name="n90" type="integer" jt="4" mandatory="y" />
+			<column name="num_contigs" type="integer" jt="4" mandatory="y" />
+			<column name="acum_length" type="integer" jt="4" mandatory="y" />
+			<column name="max_contig_length" type="integer" jt="4" mandatory="y" />
+			<column name="min_contig_length" type="integer" jt="4" mandatory="y" />
+			<column name="avg_contig_length" type="real" jt="7" mandatory="y" />
+			<column name="gc_content" type="integer" jt="4" mandatory="y" />
+			<column name="assembler_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="assembler_parameters_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="pk_assembly" unique="PRIMARY_KEY" >
+				<column name="assembly_id" />
+			</index>
+			<index name="idx_assembly" unique="NORMAL" >
+				<column name="assembler_id" />
+			</index>
+			<fk name="fk_assembly_software" to_schema="qiita" to_table="software" >
+				<fk_column name="assembler_id" pk="software_id" />
+			</fk>
+		</table>
+		<table name="assembly_annotation" >
+			<column name="assembly_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="annotation_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_assembly_annotation" unique="PRIMARY_KEY" >
+				<column name="assembly_id" />
+				<column name="annotation_id" />
+			</index>
+			<index name="idx_assembly_annotation" unique="NORMAL" >
+				<column name="assembly_id" />
+			</index>
+			<index name="idx_assembly_annotation" unique="NORMAL" >
+				<column name="annotation_id" />
+			</index>
+			<fk name="fk_assembly_annotation" to_schema="qiita" to_table="assembly" >
+				<fk_column name="assembly_id" pk="assembly_id" />
+			</fk>
+			<fk name="fk_assembly_annotation_annotation" to_schema="qiita" to_table="annotation" >
+				<fk_column name="annotation_id" pk="annotation_id" />
+			</fk>
+		</table>
+		<table name="assembly_filepath" >
+			<column name="assembly_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_assembly_filepath" unique="PRIMARY_KEY" >
+				<column name="assembly_id" />
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_assembly_filepath_0" unique="NORMAL" >
+				<column name="assembly_id" />
+			</index>
+			<index name="idx_assembly_filepath_1" unique="NORMAL" >
+				<column name="filepath_id" />
+			</index>
+			<fk name="fk_assembly_filepath_assembly" to_schema="qiita" to_table="assembly" >
+				<fk_column name="assembly_id" pk="assembly_id" />
+			</fk>
+			<fk name="fk_assembly_filepath_filepath" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+		</table>
+		<table name="assembly_preprocessed_data" >
+			<column name="preprocessed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="assembly_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_assembly_preprocessed_data" unique="PRIMARY_KEY" >
+				<column name="preprocessed_data_id" />
+				<column name="assembly_id" />
+			</index>
+			<index name="idx_assembly_preprocessed_data" unique="NORMAL" >
+				<column name="preprocessed_data_id" />
+			</index>
+			<index name="idx_assembly_preprocessed_data" unique="NORMAL" >
+				<column name="assembly_id" />
+			</index>
+			<fk name="fk_assembly_preprocessed_data" to_schema="qiita" to_table="preprocessed_data" >
+				<fk_column name="preprocessed_data_id" pk="preprocessed_data_id" />
+			</fk>
+			<fk name="fk_assembly_preprocessed_data_assembly" to_schema="qiita" to_table="assembly" >
+				<fk_column name="assembly_id" pk="assembly_id" />
+			</fk>
+		</table>
 		<table name="checksum_algorithm" >
 			<column name="checksum_algorithm_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="name" type="varchar" jt="12" mandatory="y" />
@@ -372,6 +504,16 @@
 				<fk_column name="data_type_id" pk="data_type_id" />
 			</fk>
 		</table>
+		<table name="conditions" >
+			<column name="conditions_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" />
+			<column name="temperature" type="real" jt="7" mandatory="y" />
+			<column name="atmoshpere" type="varchar" jt="12" mandatory="y" />
+			<column name="agitation" type="bool" jt="-7" mandatory="y" />
+			<index name="pk_conditions" unique="PRIMARY_KEY" >
+				<column name="conditions_id" />
+			</index>
+		</table>
 		<table name="controlled_vocab" >
 			<column name="controlled_vocab_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="controlled_vocab" type="varchar" jt="12" mandatory="y" />
@@ -475,6 +617,14 @@
 				<column name="type" />
 			</index>
 		</table>
+		<table name="ingredient" >
+			<column name="ingredient_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" />
+			<column name="lot_number" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_ingredients" unique="PRIMARY_KEY" >
+				<column name="ingredient_id" />
+			</index>
+		</table>
 		<table name="investigation" >
 			<comment>Overarching investigation information.An investigation comprises one or more individual studies.</comment>
 			<column name="investigation_id" type="bigserial" jt="-5" mandatory="y" />
@@ -511,6 +661,150 @@
 			</fk>
 			<fk name="fk_investigation_study_study" to_schema="qiita" to_table="study" >
 				<fk_column name="study_id" pk="study_id" />
+			</fk>
+		</table>
+		<table name="isolate" >
+			<column name="isolate_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="alias" type="varchar" jt="12" mandatory="y" />
+			<column name="parent_id" type="bigint" jt="-5" />
+			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<column name="isolation_date" type="timestamp" jt="93" mandatory="y" />
+			<index name="pk_isolate" unique="PRIMARY_KEY" >
+				<column name="isolate_id" />
+			</index>
+			<index name="idx_isolate" unique="NORMAL" >
+				<column name="sample_id" />
+			</index>
+			<index name="idx_isolate_0" unique="NORMAL" >
+				<column name="parent_id" />
+			</index>
+			<fk name="fk_isolate_study_sample" to_schema="qiita" to_table="study_sample" >
+				<fk_column name="sample_id" pk="sample_id" />
+			</fk>
+			<fk name="fk_isolate_isolate" to_schema="qiita" to_table="isolate" >
+				<fk_column name="parent_id" pk="isolate_id" />
+			</fk>
+		</table>
+		<table name="isolate_antibiotic_resistance" >
+			<column name="isolate_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="antibiotic_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="mic" type="real" jt="7" mandatory="y" >
+				<comment><![CDATA[Minimum inhibitory concentration]]></comment>
+			</column>
+			<column name="description" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Description of the experiment conducted to perform antibiotic resistance testing]]></comment>
+			</column>
+			<index name="idx_table_0" unique="PRIMARY_KEY" >
+				<column name="isolate_id" />
+				<column name="antibiotic_id" />
+			</index>
+			<index name="idx_table_0" unique="NORMAL" >
+				<column name="isolate_id" />
+			</index>
+			<index name="idx_table_0" unique="NORMAL" >
+				<column name="antibiotic_id" />
+			</index>
+			<fk name="fk_table_0_isolate" to_schema="qiita" to_table="isolate" >
+				<fk_column name="isolate_id" pk="isolate_id" />
+			</fk>
+			<fk name="fk_table_0_antibiotic" to_schema="qiita" to_table="antibiotic" >
+				<fk_column name="antibiotic_id" pk="antibiotic_id" />
+			</fk>
+		</table>
+		<table name="isolate_antibiotic_sensitivity" >
+			<column name="isolate_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="antibiotic_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="mic" type="real" jt="7" mandatory="y" >
+				<comment><![CDATA[minimum inhibitory concentration]]></comment>
+			</column>
+			<column name="description" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Description of the experiment conducted to perform antibiotic sensitivity testing]]></comment>
+			</column>
+			<index name="idx_isolate_antibiotic_sensitivity" unique="PRIMARY_KEY" >
+				<column name="isolate_id" />
+				<column name="antibiotic_id" />
+			</index>
+			<index name="idx_isolate_antibiotic_sensitivity" unique="NORMAL" >
+				<column name="antibiotic_id" />
+			</index>
+			<index name="idx_isolate_antibiotic_sensitivity" unique="NORMAL" >
+				<column name="isolate_id" />
+			</index>
+			<fk name="fk_isolate_antibiotic_sensitivity" to_schema="qiita" to_table="antibiotic" >
+				<fk_column name="antibiotic_id" pk="antibiotic_id" />
+			</fk>
+			<fk name="fk_isolate_antibiotic_sensitivity_isolate" to_schema="qiita" to_table="isolate" >
+				<fk_column name="isolate_id" pk="isolate_id" />
+			</fk>
+		</table>
+		<table name="isolate_growth" >
+			<column name="isolate_growth_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="isolate_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="media_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="conditions_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="has_grown" type="bool" jt="-7" mandatory="y" />
+			<column name="time_to_grow" type="varchar" jt="12" mandatory="y" />
+			<column name="max_od" type="real" jt="7" />
+			<column name="comments" type="varchar" jt="12" />
+			<column name="morpholgy_id" type="bigint" jt="-5" />
+			<index name="pk_isolate_growth" unique="PRIMARY_KEY" >
+				<column name="isolate_growth_id" />
+			</index>
+			<index name="idx_isolate_growth" unique="NORMAL" >
+				<column name="morpholgy_id" />
+			</index>
+			<fk name="fk_isolate_growth_isolate" to_schema="qiita" to_table="isolate" >
+				<fk_column name="isolate_id" pk="isolate_id" />
+			</fk>
+			<fk name="fk_isolate_growth_media" to_schema="qiita" to_table="media" >
+				<fk_column name="media_id" pk="media_id" />
+			</fk>
+			<fk name="fk_isolate_growth_conditions" to_schema="qiita" to_table="conditions" >
+				<fk_column name="conditions_id" pk="conditions_id" />
+			</fk>
+			<fk name="fk_isolate_growth_morphology" to_schema="qiita" to_table="morphology" >
+				<fk_column name="morpholgy_id" pk="morphology_id" />
+			</fk>
+		</table>
+		<table name="isolate_growth_filepath" >
+			<column name="isolate_growth_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_isolate_growth_filepath" unique="PRIMARY_KEY" >
+				<column name="isolate_growth_id" />
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_isolate_growth_filepath" unique="NORMAL" >
+				<column name="isolate_growth_id" />
+			</index>
+			<index name="idx_isolate_growth_filepath" unique="NORMAL" >
+				<column name="filepath_id" />
+			</index>
+			<fk name="fk_isolate_growth_filepath" to_schema="qiita" to_table="isolate_growth" >
+				<fk_column name="isolate_growth_id" pk="isolate_growth_id" />
+			</fk>
+			<fk name="fk_isolate_growth_filepath_fp" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+		</table>
+		<table name="isolate_storage" >
+			<column name="isolate_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="storage_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="issues" type="varchar" jt="12" />
+			<index name="idx_isolate_storage" unique="PRIMARY_KEY" >
+				<column name="isolate_id" />
+				<column name="storage_id" />
+			</index>
+			<index name="idx_isolate_storage_0" unique="NORMAL" >
+				<column name="storage_id" />
+			</index>
+			<index name="idx_isolate_storage_1" unique="NORMAL" >
+				<column name="isolate_id" />
+			</index>
+			<fk name="fk_isolate_storage_storage" to_schema="qiita" to_table="storage" >
+				<fk_column name="storage_id" pk="storage_id" />
+			</fk>
+			<fk name="fk_isolate_storage_isolate" to_schema="qiita" to_table="isolate" >
+				<fk_column name="isolate_id" pk="isolate_id" />
 			</fk>
 		</table>
 		<table name="job" >
@@ -611,6 +905,36 @@
 				<fk_column name="severity_id" pk="severity_id" />
 			</fk>
 		</table>
+		<table name="media" >
+			<column name="media_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" />
+			<column name="protocol" type="varchar" jt="12" mandatory="y" />
+			<column name="type" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_media" unique="PRIMARY_KEY" >
+				<column name="media_id" />
+			</index>
+		</table>
+		<table name="media_ingredients" >
+			<column name="media_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="ingredient_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="quantity" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_media_ingredients" unique="PRIMARY_KEY" >
+				<column name="media_id" />
+				<column name="ingredient_id" />
+			</index>
+			<index name="idx_media_ingredients_0" unique="NORMAL" >
+				<column name="media_id" />
+			</index>
+			<index name="idx_media_ingredients_1" unique="NORMAL" >
+				<column name="ingredient_id" />
+			</index>
+			<fk name="fk_media_ingredients_media" to_schema="qiita" to_table="media" >
+				<fk_column name="media_id" pk="media_id" />
+			</fk>
+			<fk name="fk_media_ingredients" to_schema="qiita" to_table="ingredient" >
+				<fk_column name="ingredient_id" pk="ingredient_id" />
+			</fk>
+		</table>
 		<table name="mixs_field_description" >
 			<column name="column_name" type="varchar" jt="12" mandatory="y" />
 			<column name="data_type" type="varchar" jt="12" mandatory="y" />
@@ -620,6 +944,18 @@
 			<column name="active" type="integer" jt="4" mandatory="y" />
 			<index name="pk_mixs_field_description" unique="PRIMARY_KEY" >
 				<column name="column_name" />
+			</index>
+		</table>
+		<table name="morphology" >
+			<column name="morphology_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="form" type="varchar" jt="12" mandatory="y" />
+			<column name="elevation" type="varchar" jt="12" mandatory="y" />
+			<column name="margin" type="varchar" jt="12" mandatory="y" />
+			<column name="surface" type="varchar" jt="12" mandatory="y" />
+			<column name="opacity" type="varchar" jt="12" />
+			<column name="pigmentation" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_morphology" unique="PRIMARY_KEY" >
+				<column name="morphology_id" />
 			</index>
 		</table>
 		<table name="ontology" >
@@ -1194,6 +1530,58 @@
 				<column name="severity" />
 			</index>
 		</table>
+		<table name="software" >
+			<column name="software_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" />
+			<column name="version" type="varchar" jt="12" mandatory="y" />
+			<column name="parameters_table" type="varchar" jt="12" mandatory="y" />
+			<column name="type" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_software" unique="PRIMARY_KEY" >
+				<column name="software_id" />
+			</index>
+		</table>
+		<table name="storage" >
+			<column name="storage_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" />
+			<column name="media_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="additives" type="varchar" jt="12" />
+			<column name="temperature" type="float8" jt="6" />
+			<index name="pk_storage" unique="PRIMARY_KEY" >
+				<column name="storage_id" />
+			</index>
+			<index name="idx_storage" unique="NORMAL" >
+				<column name="media_id" />
+			</index>
+			<fk name="fk_storage_media" to_schema="qiita" to_table="media" >
+				<fk_column name="media_id" pk="media_id" />
+			</fk>
+		</table>
+		<table name="strain" >
+			<column name="strain_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="official_name" type="varchar" jt="12" />
+			<column name="alias" type="varchar" jt="12" mandatory="y" />
+			<column name="representative_assembly_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="representative_isolate_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="taxonomy" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_strain" unique="PRIMARY_KEY" >
+				<column name="strain_id" />
+			</index>
+			<index name="idx_strain" unique="UNIQUE" >
+				<column name="representative_assembly_id" />
+			</index>
+			<index name="idx_strain_0" unique="UNIQUE" >
+				<column name="representative_isolate_id" />
+			</index>
+			<index name="idx_strain_1" unique="UNIQUE" >
+				<column name="taxonomy" />
+			</index>
+			<fk name="fk_strain_assembly" to_schema="qiita" to_table="assembly" >
+				<fk_column name="representative_assembly_id" pk="assembly_id" />
+			</fk>
+			<fk name="fk_strain_isolate" to_schema="qiita" to_table="isolate" >
+				<fk_column name="representative_isolate_id" pk="isolate_id" />
+			</fk>
+		</table>
 		<table name="study" >
 			<column name="study_id" type="bigserial" jt="-5" mandatory="y" >
 				<comment><![CDATA[Unique name for study]]></comment>
@@ -1574,7 +1962,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="processed_data_status" color="c0d4f3" x="1500" y="1050" />
 		<entity schema="qiita" name="portal_type" color="c0d4f3" x="1995" y="660" />
 		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1170" />
-		<entity schema="qiita" name="study_sample" color="d0def5" x="1515" y="105" />
 		<entity schema="qiita" name="raw_data" color="d0def5" x="1020" y="300" />
 		<entity schema="qiita" name="filetype" color="d0def5" x="1035" y="180" />
 		<entity schema="qiita" name="prep_template_preprocessed_data" color="b2cdf7" x="1275" y="555" />
@@ -1584,6 +1971,28 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_prep_template" color="d0def5" x="1590" y="420" />
 		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1470" y="285" />
 		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1335" y="195" />
+		<entity schema="qiita" name="study_sample" color="d0def5" x="1515" y="105" />
+		<entity schema="qiita" name="ingredient" color="b2cdf7" x="2505" y="45" />
+		<entity schema="qiita" name="media_ingredients" color="b2cdf7" x="2670" y="45" />
+		<entity schema="qiita" name="media" color="b2cdf7" x="2685" y="195" />
+		<entity schema="qiita" name="storage" color="b2cdf7" x="2835" y="45" />
+		<entity schema="qiita" name="isolate_storage" color="b2cdf7" x="2835" y="210" />
+		<entity schema="qiita" name="antibiotic" color="b2cdf7" x="3285" y="270" />
+		<entity schema="qiita" name="isolate_antibiotic_sensitivity" color="b2cdf7" x="3075" y="210" />
+		<entity schema="qiita" name="isolate_antibiotic_resistance" color="b2cdf7" x="3075" y="330" />
+		<entity schema="qiita" name="isolate" color="b2cdf7" x="2865" y="405" />
+		<entity schema="qiita" name="isolate_growth_filepath" color="b2cdf7" x="2490" y="420" />
+		<entity schema="qiita" name="isolate_growth" color="b2cdf7" x="2685" y="405" />
+		<entity schema="qiita" name="morphology" color="b2cdf7" x="2505" y="540" />
+		<entity schema="qiita" name="assembly_preprocessed_data" color="b2cdf7" x="2505" y="720" />
+		<entity schema="qiita" name="assembly_filepath" color="b2cdf7" x="2535" y="810" />
+		<entity schema="qiita" name="assembly_annotation" color="b2cdf7" x="2760" y="945" />
+		<entity schema="qiita" name="annotation_filepath" color="b2cdf7" x="2550" y="1065" />
+		<entity schema="qiita" name="software" color="b2cdf7" x="3000" y="930" />
+		<entity schema="qiita" name="annotation" color="b2cdf7" x="2760" y="1050" />
+		<entity schema="qiita" name="strain" color="b2cdf7" x="3030" y="570" />
+		<entity schema="qiita" name="assembly" color="b2cdf7" x="2745" y="705" />
+		<entity schema="qiita" name="conditions" color="b2cdf7" x="2520" y="195" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1669,6 +2078,29 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="collection_users" />
 			<entity schema="qiita" name="collection_analysis" />
 			<entity schema="qiita" name="collection_job" />
+		</group>
+		<group name="Group_single_strain_WGS" color="ffff33" >
+			<entity schema="qiita" name="isolate" />
+			<entity schema="qiita" name="ingredient" />
+			<entity schema="qiita" name="media_ingredients" />
+			<entity schema="qiita" name="media" />
+			<entity schema="qiita" name="storage" />
+			<entity schema="qiita" name="isolate_storage" />
+			<entity schema="qiita" name="isolate_antibiotic_sensitivity" />
+			<entity schema="qiita" name="antibiotic" />
+			<entity schema="qiita" name="isolate_antibiotic_resistance" />
+			<entity schema="qiita" name="conditions" />
+			<entity schema="qiita" name="isolate_growth" />
+			<entity schema="qiita" name="isolate_growth_filepath" />
+			<entity schema="qiita" name="morphology" />
+			<entity schema="qiita" name="assembly" />
+			<entity schema="qiita" name="assembly_preprocessed_data" />
+			<entity schema="qiita" name="annotation" />
+			<entity schema="qiita" name="assembly_filepath" />
+			<entity schema="qiita" name="assembly_annotation" />
+			<entity schema="qiita" name="annotation_filepath" />
+			<entity schema="qiita" name="strain" />
+			<entity schema="qiita" name="software" />
 		</group>
 	</layout>
 </project>
