@@ -100,6 +100,18 @@ def flatten(listOfLists):
 
 
 class SQLConnectionHandler(object):
+    """Encapsulates the DB connection with the Postgres DB
+
+    Parameters
+    ----------
+    admin : {'no_admin', 'no_database', 'database'}, optional
+        Whether or not to connect as the admin user. Options other than
+        `no_admin` depend on admin credentials in the qiita configuration. If
+        'admin_without_database', the connection will be made to the server
+        specified in the qiita configuration, but not to a specific database.
+        If 'admin_with_database', then a connection will be made to the server
+        and database specified in the qiita config.
+    """
     # From http://osdir.com/ml/sqlalchemy/2011-05/msg00094.html
     TYPE_CODES = pg_types = {
         16: bool,
@@ -157,18 +169,6 @@ class SQLConnectionHandler(object):
 
     _regex = re.compile("{(\d+)}")
 
-    """Encapsulates the DB connection with the Postgres DB
-
-    Parameters
-    ----------
-    admin : {'no_admin', 'no_database', 'database'}, optional
-        Whether or not to connect as the admin user. Options other than
-        `no_admin` depend on admin credentials in the qiita configuration. If
-        'admin_without_database', the connection will be made to the server
-        specified in the qiita configuration, but not to a specific database.
-        If 'admin_with_database', then a connection will be made to the server
-        and database specified in the qiita config.
-    """
     def __init__(self, admin='no_admin'):
         if admin not in ('no_admin', 'admin_with_database',
                          'admin_without_database'):
@@ -255,23 +255,16 @@ class SQLConnectionHandler(object):
         except PostgresError as e:
             raise QiitaDBConnectionError("Cannot get postgres cursor! %s" % e)
 
-    def set_autocommit(self, on_or_off):
-        """Sets the isolation level to autocommit or default (read committed)
+    @property
+    def autocommit(self):
+        return self._connection.isolation_level == ISOLATION_LEVEL_AUTOCOMMIT
 
-        Parameters
-        ----------
-        on_or_off : {'on', 'off'}
-            If 'on', isolation level will be set to autocommit. Otherwise,
-            it will be set to read committed.
-        """
-        if on_or_off not in {'on', 'off'}:
-            raise ValueError("set_autocommit takes only 'on' or 'off'")
-
-        if on_or_off == 'on':
-            level = ISOLATION_LEVEL_AUTOCOMMIT
-        else:
-            level = ISOLATION_LEVEL_READ_COMMITTED
-
+    @autocommit.setter
+    def autocommit(self, value):
+        if not is isinstance(value, bool):
+            raise TypeError("The value for autocommit should be a boolean")
+        level = (ISOLATION_LEVEL_AUTOCOMMIT if value
+                 else ISOLATION_LEVEL_READ_COMMITTED)
         self._connection.set_isolation_level(level)
 
     def _check_sql_args(self, sql_args):
