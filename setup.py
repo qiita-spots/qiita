@@ -82,9 +82,9 @@ setup(name='qiita-spots',
                         'support_files/doc/README.md',
                         'support_files/doc/source/conf.py',
                         'support_files/doc/source/index.rst',
-                        'support_files/doc/tutorials/*.rst',
-                        'support_files/doc/tutorials/images/*.png',
-                        'support_files/doc/_static/*.png'
+                        'support_files/doc/source/tutorials/*.rst',
+                        'support_files/doc/source/tutorials/images/*.png',
+                        'support_files/doc/source/_static/*.png'
                         ]},
       scripts=glob('scripts/*'),
       extras_require={'test': ["nose >= 0.10.1", "pep8", 'mock'],
