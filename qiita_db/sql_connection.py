@@ -79,6 +79,7 @@ conn_handler.execute_fetchall(
 from __future__ import division
 from contextlib import contextmanager
 from itertools import chain
+from functools import partial
 from tempfile import mktemp
 from datetime import date, time, datetime
 import re
@@ -261,7 +262,7 @@ class SQLConnectionHandler(object):
 
     @autocommit.setter
     def autocommit(self, value):
-        if not is isinstance(value, bool):
+        if not isinstance(value, bool):
             raise TypeError("The value for autocommit should be a boolean")
         level = (ISOLATION_LEVEL_AUTOCOMMIT if value
                  else ISOLATION_LEVEL_READ_COMMITTED)
@@ -578,7 +579,7 @@ class SQLConnectionHandler(object):
 
         for args in sql_args:
             self._check_sql_args(args)
-            self.queue[queue].append((sql, args))
+            self.queues[queue].append((sql, args))
 
     def _rollback_raise_error(self, queue, sql, sql_args, e):
         self._connection.rollback()
@@ -610,13 +611,23 @@ class SQLConnectionHandler(object):
             clear_res = False
             for sql, sql_args in self.queues[queue]:
                 if sql_args is not None:
+                    # The user can provide a tuple, make sure that it is a
+                    # list, so we can assign the item
+                    sql_args = list(sql_args)
                     for pos, arg in enumerate(sql_args):
                         # check if previous results needed and replace
                         if isinstance(arg, str):
                             result = self._regex.search(arg)
                             if result:
                                 result_pos = int(result.group(1))
-                                sql_args[pos] = results[result_pos]
+                                try:
+                                    sql_args[pos] = results[result_pos]
+                                except IndexError:
+                                    self._rollback_raise_error(
+                                        queue, sql, sql_args,
+                                        "The index provided as a placeholder "
+                                        "%d does not correspond to any "
+                                        "previous result" % result_pos)
                                 clear_res = True
                 # wipe out results if needed and reset clear_res
                 if clear_res:
