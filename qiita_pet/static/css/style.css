@@ -24,3 +24,10 @@
   color:#428bca;
   padding:0px;
 }
+
+.truncated {
+  white-space: nowrap;
+  width:300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
