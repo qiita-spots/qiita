@@ -2,7 +2,7 @@ from unittest import TestCase, main
 
 from psycopg2._psycopg import connection
 from psycopg2.extras import DictCursor
-from psycopg2 import connect, ProgrammingError
+from psycopg2 import connect
 from psycopg2.extensions import (ISOLATION_LEVEL_AUTOCOMMIT,
                                  ISOLATION_LEVEL_READ_COMMITTED)
 
