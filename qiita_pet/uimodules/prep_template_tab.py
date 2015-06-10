@@ -35,13 +35,16 @@ fp_type_by_ft = defaultdict(
 
 
 def _get_accessible_raw_data(user):
-    """Retrieves a tuple of raw_data_id and the last study title for that
+    """Retrieves a tuple of raw_data_id and one study title for that
     raw_data
     """
     d = {}
-    for sid in user.user_studies:
-        for rdid in Study(sid).raw_data():
-            d[int(rdid)] = Study(RawData(rdid).studies[-1]).title
+    accessible_studies = user.user_studies.union(user.shared_studies)
+    for sid in accessible_studies:
+        study = Study(sid)
+        study_title = study.title
+        for rdid in study.raw_data():
+            d[int(rdid)] = study_title
     return d
 
 
@@ -63,7 +66,7 @@ def _template_generator(study, full_access):
         the prep template status icons
     """
 
-    for pt_id in study.prep_templates():
+    for pt_id in sorted(study.prep_templates()):
         pt = PrepTemplate(pt_id)
         if full_access or pt.status == 'public':
             yield (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status])
@@ -147,8 +150,8 @@ class PrepTemplateInfoTab(BaseUIModule):
         other_studies_rd = sorted(viewitems(
             _get_accessible_raw_data(user)))
 
-        # A prep template can be modified if its status is sanbdox
-        is_editable = prep_template.status == 'sanbdox'
+        # A prep template can be modified if its status is sandbox
+        is_editable = prep_template.status == 'sandbox'
 
         raw_data_id = prep_template.raw_data
         preprocess_options = []

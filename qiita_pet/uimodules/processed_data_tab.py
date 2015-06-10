@@ -14,7 +14,8 @@ from .base_uimodule import BaseUIModule
 
 class ProcessedDataTab(BaseUIModule):
     def render(self, study, full_access, allow_approval, approval_deny_msg):
-        pd_gen = (ProcessedData(pd_id) for pd_id in study.processed_data())
+        pd_gen = (ProcessedData(pd_id) for pd_id in
+                  sorted(study.processed_data()))
         avail_pd = [(pd.id, pd, STATUS_STYLER[pd.status]) for pd in pd_gen
                     if full_access or pd.status == 'public']
 
