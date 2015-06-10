@@ -7,7 +7,6 @@ from psycopg2.extensions import (ISOLATION_LEVEL_AUTOCOMMIT,
                                  ISOLATION_LEVEL_READ_COMMITTED)
 
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.exceptions import QiitaDBExecutionError
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
 
@@ -306,7 +305,7 @@ class TestConnHandler(TestCase):
                  WHERE str_column = %s"""
         self.conn_handler.add_to_queue("test_queue", sql, ('{0}',))
 
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(RuntimeError):
             self.conn_handler.execute_queue("test_queue")
 
         # make sure rollback correctly
@@ -323,7 +322,7 @@ class TestConnHandler(TestCase):
         sql = "INSERT INTO qiita.table_to_make (the_queue_to_fail) VALUES (1)"
         self.conn_handler.add_to_queue("test_queue", sql)
 
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(RuntimeError):
             self.conn_handler.execute_queue("test_queue")
 
         # make sure rollback correctly
