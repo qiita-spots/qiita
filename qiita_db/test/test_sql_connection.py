@@ -66,7 +66,7 @@ class TestConnHandler(TestCase):
         self.assertEqual(self.conn_handler._user_conn.closed, 0)
 
     def test_init_admin_error(self):
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             SQLConnectionHandler(admin='not a valid value')
 
     def test_init_admin_with_database(self):
@@ -305,7 +305,7 @@ class TestConnHandler(TestCase):
                  WHERE str_column = %s"""
         self.conn_handler.add_to_queue("test_queue", sql, ('{0}',))
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             self.conn_handler.execute_queue("test_queue")
 
         # make sure rollback correctly
@@ -322,7 +322,7 @@ class TestConnHandler(TestCase):
         sql = "INSERT INTO qiita.table_to_make (the_queue_to_fail) VALUES (1)"
         self.conn_handler.add_to_queue("test_queue", sql)
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             self.conn_handler.execute_queue("test_queue")
 
         # make sure rollback correctly

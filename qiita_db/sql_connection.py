@@ -173,9 +173,9 @@ class SQLConnectionHandler(object):
     def __init__(self, admin='no_admin'):
         if admin not in ('no_admin', 'admin_with_database',
                          'admin_without_database'):
-            raise RuntimeError("admin takes only {'no_admin', "
-                               "'admin_with_database', or "
-                               "'admin_without_database'}")
+            raise ValueError("admin takes only {'no_admin', "
+                             "'admin_with_database', or "
+                             "'admin_without_database'}")
 
         self.admin = admin
 
@@ -323,7 +323,7 @@ class SQLConnectionHandler(object):
 
         Raises
         ------
-        RuntimeError
+        ValueError
             If there is some error executing the SQL query
         """
         # Check that sql arguments have the correct type
@@ -342,10 +342,8 @@ class SQLConnectionHandler(object):
                 yield cur
             except PostgresError as e:
                 self._connection.rollback()
-                raise RuntimeError(("\nError running SQL query: %s"
-                                    "\nARGS: %s"
-                                    "\nError: %s" %
-                                    (sql, str(sql_args), e)))
+                raise ValueError("Error running SQL query: %s\nARGS: %s\n"
+                                 "Error: %s" % (sql, str(sql_args), e))
             else:
                 self._connection.commit()
 
@@ -460,6 +458,18 @@ class SQLConnectionHandler(object):
         return result
 
     def _check_queue_exists(self, queue_name):
+        """Checks if queue `queue_name` exists in the handler
+
+        Parameters
+        ----------
+        queue_name : str
+            The name of the queue
+
+        Raises
+        ------
+        KeyError
+            If the queue `queue_name` does not exist in the handler
+        """
         if queue_name not in self.queues:
             raise KeyError("Queue '%s' does not exist" % queue_name)
 
@@ -528,7 +538,7 @@ class SQLConnectionHandler(object):
         self._connection.rollback()
         # wipe out queue since it has an error in it
         del self.queues[queue]
-        raise RuntimeError(
+        raise ValueError(
             "Error running SQL query in queue %s: %s\nARGS: %s\nError: %s"
             % (queue, sql, str(sql_args), e))
 
@@ -546,6 +556,11 @@ class SQLConnectionHandler(object):
         SQL commands as multiple entries in the queue.
 
         Queues are executed in FIFO order
+
+        Raises
+        ------
+        IndexError
+            If there a placeholder cannot be replaced with a real value
         """
         self._check_queue_exists(queue)
 
