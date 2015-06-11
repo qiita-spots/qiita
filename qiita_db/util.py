@@ -809,7 +809,7 @@ def filepath_ids_to_rel_paths(filepath_ids):
         return {}
 
 
-def convert_to_id(value, table):
+def convert_to_id(value, table, text_col=None):
     """Converts a string value to its corresponding table identifier
 
     Parameters
@@ -818,6 +818,8 @@ def convert_to_id(value, table):
         The string value to convert
     table : str
         The table that has the conversion
+    text_col : str, optional
+        Column holding the string value. Defaults to same as table name.
 
     Returns
     -------
@@ -829,8 +831,9 @@ def convert_to_id(value, table):
     IncompetentQiitaDeveloperError
         The passed string has no associated id
     """
+    text_col = text_col if text_col else table
     conn_handler = SQLConnectionHandler()
-    sql = "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table)
+    sql = "SELECT {0}_id FROM qiita.{0} WHERE {1} = %s".format(table, text_col)
     _id = conn_handler.execute_fetchone(sql, (value, ))
     if _id is None:
         raise IncompetentQiitaDeveloperError("%s not valid for table %s"
