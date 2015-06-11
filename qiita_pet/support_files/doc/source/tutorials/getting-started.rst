@@ -5,9 +5,11 @@
 Getting started
 ===============
 
-Note that this is a work in progress. Please let us know of any additions or
-changes you will like to see by emailing us at `qiita.help@gmail.com
-<qiita.help@gmail.com>`__. Thanks!
+
+.. note::
+   This is a work in progress. Please let us know of any additions or changes
+   you will like to see by emailing us at `qiita.help@gmail.com
+   <qiita.help@gmail.com>`__.
 
 If you have not yet created an account, please see the document
 :doc:`account-creation`.
@@ -84,8 +86,9 @@ to create your study.
 
 The “Study Title” has to be unique system-wide. Qiita will check this
 when you try to create the study, and may ask you to alter the study
-name if the one you provide is already in use..\ |Screen Shot 2015-02-23
-at 9.08.35 AM.png|
+name if the one you provide is already in use.
+
+|studycreation|
 
 A principal investigator is required, and a list of known PIs is
 provided. If you cannot find the name you are looking for in this
@@ -191,42 +194,42 @@ enforced in the sample and prep templates:
 +-----------------------+--------------+
 
 
-Adding raw data
----------------
+Adding a preparation template and linking it to raw data
+--------------------------------------------------------
 
 Once the sample template is successfully processed, you will be able to
-use the “Add raw data” tab. You can either (a) select a new raw data
-file from the drop-down menu of uploaded files or (b) add raw data from
-another study to which you have access. The latter ability exists as a
-way to avoid duplication of uploads, since some studies share the same
-raw data (for example, the same fastq files). Note that the prep
-templates are not shared.
+use the “Add prep template” tab.
 
-|image18|
+|addpreptemplate|
 
-Linking files and adding preparation (prep) templates
------------------------------------------------------
+After you've added a new prep template, you can either (a) select a new raw
+data file from the drop-down menu of uploaded files or (b) add raw data from
+another study to which you have access. The latter ability exists as a way to
+avoid duplication of uploads, since some studies share the same raw data (for
+example, the same fastq files).
 
-|image19|
+.. note::
+   Prep templates are not shared, only raw data can be shared.
 
-After adding raw data to your study, you can add a prep template and
-link uploaded raw files through the raw file object (tab). On the left
-side of the tab you will have a list of all the updated files. To link
-them to this tab you need to select which files are the forward and the
-barcodes reads. You can also add which are the reverse reads but these
-are optional. Once the selections are made you can “Link raw files for:
-name of your raw data”. This action will take you to a new page, where
-the moving/adding job is created, but you can move out of there whenever
-you want. Note that from that moment until the job is finish, you will
-see a “Linking files” message and you will not be able to add any more
-files or unlink them.  |image20|
+Here you should select what kind of data you are processing (SFF, FASTQ, etc).
+Once the selections are made you can “Link” your raw data. This action will
+take you to a new page, where the moving/adding job is created, but you can
+move out of there whenever you want.
+
+|newrawdata|
+
+.. note::
+   From that moment until the job is finish, you will see a “Linking files”
+   message and you will not be able to add any more files or unlink them.
 
 Adding prep templates is similar to adding sample templates except that,
 in addition to selecting the prep template file from the dropdown menu,
 you will also need to select what kind of prep template (16S, 18S, etc)
 and the corresponding investigation type. The investigation type is
 optional for Qiita, but a requirement for submitting your data to
-EBI.\ |image21|
+EBI.
+
+|image21|
 
 Finally, when you add a new prep template, you will get two new links or
 two full paths for those running Qiita on your local machine: one to
@@ -243,14 +246,15 @@ Currently we only support fastq files for target gene preprocessing
 (including reverse complementing the prep template barcodes). We are
 working on adding more options and preprocessing pipelines.
 
-Once the preprocessing is finished you will have 4 new files:\ |image22|
+|image22|
 
--  \*\_seqs.fna: demultiplexed sequences in fasta format
--  \*\_seqs.fastq: demultiplexed sequences in fastq format
--  \*\_seqs.demux: demultiplexed sequences in an HDF5 format (more
-   below)
--  \*\_split\_library\_log: the classic QIIME split libraries log that
-   summarizes the demultiplexing process
+Once the preprocessing is finished you will have 4 new files:
+
+-  preprocessed fasta: demultiplexed sequences in fasta format
+-  preprocessed demux: demultiplexed sequences in an HDF5 format (more
+   demultiplexing process below)
+-  log: the classic QIIME split libraries log that summarizes the
+-  preprocessed fastq: demultiplexed sequences in fastq format.
 
 The HDF5 demuliplexed file format allows (described in detail
 `here <https://www.google.com/url?q=https%3A%2F%2Fgithub.com%2Fbiocore%2Fqiita%2Fblob%2Fmaster%2Fqiita_ware%2Fdemux.py&sa=D&sntz=1&usg=AFQjCNEzzqKW3-c5dtMDOpLxCS8mnrQn1A>`__)
@@ -335,6 +339,8 @@ Study status
 Metadata
 ========
 
+TODO!
+
 Analyses
 ========
 
@@ -405,7 +411,8 @@ A few more instructions: for the example above the workflow should be:
    demultiplexing and QC.
 
 .. |image8| image:: images/image18.png
-.. |Screen Shot 2015-02-23 at 9.08.35 AM.png| image:: images/image02.png
+.. |studycreation| image:: images/image02.png
+.. |addpreptemplate| image:: images/add-prep-template.png
 .. |image10| image:: images/image04.png
 .. |image11| image:: images/image09.png
 .. |image12| image:: images/image17.png
@@ -414,9 +421,7 @@ A few more instructions: for the example above the workflow should be:
 .. |image15| image:: images/image12.png
 .. |image16| image:: images/image00.png
 .. |image17| image:: images/image15.png
-.. |image18| image:: images/image06.png
-.. |image19| image:: images/image21.png
-.. |image20| image:: images/image16.png
+.. |newrawdata| image:: images/new-raw-data.png
 .. |image21| image:: images/image11.png
 .. |image22| image:: images/image08.png
 
