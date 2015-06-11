@@ -191,7 +191,9 @@ class PrepTemplateInfoTab(BaseUIModule):
                     "linked with the Raw Data")
             else:
                 if prep_template.data_type() in TARGET_GENE_DATA_TYPES:
-                    key = ('demultiplex_multiple' if len(raw_data_files) > 2
+                    raw_forward_fps = [fp for _, fp, ftype in raw_data_files
+                                       if ftype == 'raw_forward_seqs']
+                    key = ('demultiplex_multiple' if len(raw_forward_fps) > 1
                            else 'demultiplex')
                     missing_cols = prep_template.check_restrictions(
                         [PREP_TEMPLATE_COLUMNS_TARGET_GENE[key]])
