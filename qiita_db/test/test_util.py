@@ -185,7 +185,6 @@ class DBUtilTests(TestCase):
                                        "status"), 3)
         self.assertEqual(convert_to_id("EMP", "portal_type", "portal"), 2)
 
-
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
