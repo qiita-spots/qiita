@@ -24,6 +24,7 @@
 			<column name="dflt" type="bool" jt="-7" mandatory="y" >
 				<defo>false</defo>
 			</column>
+			<column name="portal_type_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="pk_analysis" unique="PRIMARY_KEY" >
 				<column name="analysis_id" />
 			</index>
@@ -33,11 +34,17 @@
 			<index name="idx_analysis_status_id" unique="NORMAL" >
 				<column name="analysis_status_id" />
 			</index>
+			<index name="idx_analysis" unique="NORMAL" >
+				<column name="portal_type_id" />
+			</index>
 			<fk name="fk_analysis_user" to_schema="qiita" to_table="qiita_user" >
 				<fk_column name="email" pk="email" />
 			</fk>
 			<fk name="fk_analysis_analysis_status" to_schema="qiita" to_table="analysis_status" >
 				<fk_column name="analysis_status_id" pk="analysis_status_id" />
+			</fk>
+			<fk name="fk_analysis" to_schema="qiita" to_table="portal_type" >
+				<fk_column name="portal_type_id" pk="portal_type_id" />
 			</fk>
 		</table>
 		<table name="analysis_chain" >
@@ -1565,14 +1572,12 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="collection" color="a8c4ef" x="45" y="360" />
 		<entity schema="qiita" name="collection_users" color="a8c4ef" x="255" y="345" />
 		<entity schema="qiita" name="study_sample_columns" color="d0def5" x="1635" y="285" />
-		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="720" />
 		<entity schema="qiita" name="study_experimental_factor" color="c0d4f3" x="2100" y="495" />
 		<entity schema="qiita" name="study_pmid" color="c0d4f3" x="2145" y="600" />
 		<entity schema="qiita" name="study" color="d0def5" x="1815" y="60" />
 		<entity schema="qiita" name="processed_data" color="d0def5" x="1275" y="960" />
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="2100" y="255" />
 		<entity schema="qiita" name="processed_data_status" color="c0d4f3" x="1500" y="1050" />
-		<entity schema="qiita" name="portal_type" color="c0d4f3" x="1995" y="660" />
 		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1170" />
 		<entity schema="qiita" name="study_sample" color="d0def5" x="1515" y="105" />
 		<entity schema="qiita" name="raw_data" color="d0def5" x="1020" y="300" />
@@ -1584,6 +1589,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_prep_template" color="d0def5" x="1590" y="420" />
 		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1470" y="285" />
 		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1335" y="195" />
+		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="720" />
+		<entity schema="qiita" name="portal_type" color="c0d4f3" x="720" y="360" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
