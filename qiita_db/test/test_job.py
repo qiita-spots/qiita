@@ -219,7 +219,7 @@ class JobTest(TestCase):
     def test_create_exists_return_existing(self):
         """Makes sure creation doesn't duplicate a job by returning existing"""
         new_id = get_count("qiita.analysis") + 1
-        Analysis.create(User("demo@microbio.me"), "new", "desc")
+        Analysis.create(User("demo@microbio.me"), "new", "desc", "EMP")
         self.conn_handler.execute(
             "INSERT INTO qiita.analysis_sample "
             "(analysis_id, processed_data_id, sample_id) VALUES "
