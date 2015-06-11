@@ -17,11 +17,12 @@ repository for automated deposition. Query and interact with Qiita data
 programmatically.
 
 If you intend to use Qiita at the `central deployment
-<http://qiita.ucsd.edu>`__ we recommend that you have a look at the following
-tutorials:
+<http://qiita.microbio.me>`__ we recommend that you have a look at the
+following documents:
 
 .. toctree::
    :maxdepth: 1
 
    tutorials/index.rst
+   faq.rst
 

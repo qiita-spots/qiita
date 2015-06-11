@@ -78,17 +78,19 @@ and template information:
 Creating a study
 ----------------
 
-|image8|
-
 To create a study, click on the “Study” menu and then on “Create Study”.
 This will take you to a new page that will gather some basic information
 to create your study.
+
+.. figure::  images/image18.png
+   :align:   center
 
 The “Study Title” has to be unique system-wide. Qiita will check this
 when you try to create the study, and may ask you to alter the study
 name if the one you provide is already in use.
 
-|studycreation|
+.. figure::  images/image02.png
+   :align:   center
 
 A principal investigator is required, and a list of known PIs is
 provided. If you cannot find the name you are looking for in this
@@ -123,14 +125,20 @@ interventions:
 
 Once your study has been created, you will be informed by a green
 message; click on the study name to begin inserting your sample
-template, raw data and/or prep templates.\ |image10|
+template, raw data and/or prep templates.
+
+.. figure::  images/image04.png
+   :align:   center
 
 Inserting sample templates
 --------------------------
 
 The first point of entrance to a study is the study description
 page. Here you will be able to edit the study info, upload files, and
-manage all other aspects of your study.\ |image11|
+manage all other aspects of your study.
+
+.. figure::  images/image09.png
+   :align:   center
 
 The first step after study creation is uploading files. Click on the
 “Upload” button: as shown in the figure below, you can now drag-and-drop
@@ -141,57 +149,34 @@ Uploads can be paused at any time and restarted again, as long as you do
 not refresh or navigate away from the page, or log out of the system
 from another page.
 
-|image12|
+.. figure::  images/image17.png
+   :align:   center
 
 Once your file(s) have been uploaded, you can process them in Qiita.
 From the upload tool, click on “Go to study description” and, once
 there, click on the “Sample template” tab.  Select your sample template
-from the dropdown menu and, lastly, click “Process sample template”. If
-it is processed successfully,, a green message will appear; if
-processing is unsuccessful, a red message describing the errors will
-appear. In this case, please fix the described issues, re-upload your
-file, and then re-attempt processing.
-|image13|\ |image14|\ |image15|
+from the dropdown menu and, lastly, click “Process sample template”. 
+
+.. figure::  images/process-sample-template.png
+   :align:   center
+
+   If a sample template is processed successfully, a green message will appear;
+   if processing is unsuccessful, a red message describing the errors will
+   appear. In this case, please fix the described issues, re-upload your
+   file, and then re-attempt processing.
 
 You can download the processed sample template file from the “Sample
 template” tab. If you are using a single-user install, you will see the
 full path on your computer for downloads; alternately, if you have a multi-user
-install, you will be able to download the files (Figure 2).
+install, you will be able to download the files, see below:
 
-|image16|
+.. figure::  images/single-multi.png
+   :align:   center
 
-|image17|
-
-Figure 2. An example of how downloads differ between the single- and
-multi-user installs. In a single-user install, the file-path on your
-system is provided. In a multi-user install, an actual download of the
-file is available.
-
-The following table describes the data type per column that will be
-enforced in the sample and prep templates:
-
-
-+-----------------------+--------------+
-|      Column Name      |  Python Type |
-+=======================+==============+
-|           sample_name |          str |
-+-----------------------+--------------+
-|     physical_location |          str |
-+-----------------------+--------------+
-| has_physical_specimen |         bool |
-+-----------------------+--------------+
-|    has_extracted_data |         bool |
-+-----------------------+--------------+
-|           sample_type |          str |
-+-----------------------+--------------+
-|       host_subject_id |          str |
-+-----------------------+--------------+
-|           description |          str |
-+-----------------------+--------------+
-|              latitude |        float |
-+-----------------------+--------------+
-|             longitude |        float |
-+-----------------------+--------------+
+   An example of how downloads differ between the single- and multi-user
+   installs. In a single-user install, the file-path on your system is
+   provided. In a multi-user install, an actual download of the file is
+   available.
 
 
 Adding a preparation template and linking it to raw data
@@ -200,7 +185,8 @@ Adding a preparation template and linking it to raw data
 Once the sample template is successfully processed, you will be able to
 use the “Add prep template” tab.
 
-|addpreptemplate|
+.. figure::  images/add-prep-template.png
+   :align:   center
 
 After you've added a new prep template, you can either (a) select a new raw
 data file from the drop-down menu of uploaded files or (b) add raw data from
@@ -216,7 +202,8 @@ Once the selections are made you can “Link” your raw data. This action will
 take you to a new page, where the moving/adding job is created, but you can
 move out of there whenever you want.
 
-|newrawdata|
+.. figure::  images/new-raw-data.png
+   :align:   center
 
 .. note::
    From that moment until the job is finish, you will see a “Linking files”
@@ -229,7 +216,8 @@ and the corresponding investigation type. The investigation type is
 optional for Qiita, but a requirement for submitting your data to
 EBI.
 
-|image21|
+.. figure::  images/image11.png
+   :align:   center
 
 Finally, when you add a new prep template, you will get two new links or
 two full paths for those running Qiita on your local machine: one to
@@ -246,7 +234,8 @@ Currently we only support fastq files for target gene preprocessing
 (including reverse complementing the prep template barcodes). We are
 working on adding more options and preprocessing pipelines.
 
-|image22|
+.. figure::  images/image08.png
+   :align:   center
 
 Once the preprocessing is finished you will have 4 new files:
 
@@ -335,93 +324,4 @@ Study status
    private, the user can choose when to make it public. Making a study
    public means that it will be available to anyone with a Qiita user
    account (e.g., for data downloads and meta-analyses).
-
-Metadata
-========
-
-TODO!
-
-Analyses
-========
-
-TODO!
-
-Frequent Asked Questions
-========================
-
-What kind of data can I upload to Qiita for processing?
--------------------------------------------------------
-
-We need 3 things: raw data, sample template, and prep template. At this
-moment, raw data is fastq files without demultiplexing with forward,
-reverse (optional) and barcode reads. We should have before the end of
-the week SFF processing so it's OK to upload. Note that we are accepting
-any kind of target gene (16S, 18S, ITS, whatever) as long as they have
-some kind of demultiplexing strategy and that you can also upload WGS.
-However, WGS processing is not ready.
-
-What's the difference between a sample and a prep template?
------------------------------------------------------------
-
-Sample template is the information about your samples, including
-environmental and other important information about them. The prep
-template is basically what kind of wet lab work all or a subset of the
-samples had. If you collected 100 samples, you are going to need 100
-rows in your sample template describing each of them, this includes
-blanks, etc. Then you prepared 95 of them for 16S and 50 of them for
-18S. Thus, you are going to need 2 prep templates: one with 95 rows
-describing the preparation for 16S, and another one with 50 to
-describing the 18S. For a more complex example go
-`here <#h.eddzjlm5e6l6>`__ and for examples of these files you can go to
-the "Upload instructions"
-`here <https://www.google.com/url?q=https%3A%2F%2Fvamps.mbl.edu%2Fmobe_workshop%2Fwiki%2Findex.php%2FMain_Page&sa=D&sntz=1&usg=AFQjCNE4PTOKIvFNlWtHmJyLLy11mfzF8A>`__.
-
-Example study processing workflow
----------------------------------
-
-A few more instructions: for the example above the workflow should be:
-
-#. Create a new study
-#. Add a sample template, you can add 1, try to process it and the
-   system will let you know if you have errors or missing columns. The
-   most common errors are: the sample name column should be named
-   sample\_name, duplicated sample names are not permitted, and the prep
-   template should contain all the samples in the sample template or a
-   subset. Finally, if you haven't processed your sample templates and
-   can add a column to your template named sloan\_status with this info:
-   SLOAN (funded by Sloan), SLOAN\_COMPATIBLE (not Sloan funded but with
-   compatible metadata, usually public), NOT\_SLOAN (not included i.e.
-   private study), that will be great!
-#. Add a raw data. Depending on your barcoding/sequencing strategy you
-   might need 1 or 2 raw datas for the example above. If you have two
-   different fastq file sets (forward, reverse (optional) and barcodes)
-   you will need two raw datas but if you only have one set, you only
-   need one.
-#. You can link your raw data to your files
-#. You can add a prep template to your raw data. If you have the case
-   with only one fastq set (forward, reverse (optional) and barcodes),
-   you can add 2 different prep templates. Common missing fields here
-   are: emp\_status, center\_name, run\_prefix, platform,
-   library\_construction\_protocol, experiment\_design\_description,
-   center\_project\_name. Note that if you get a 500 error at this stage
-   is highly probable because emp\_status only accepts 3 values: 'EMP',
-   'EMP\_Processed', 'NOT\_EMP', if errors persist please do not
-   hesitate to contact us.
-#. You can preprocess your files. For target gene, this means
-   demultiplexing and QC.
-
-.. |image8| image:: images/image18.png
-.. |studycreation| image:: images/image02.png
-.. |addpreptemplate| image:: images/add-prep-template.png
-.. |image10| image:: images/image04.png
-.. |image11| image:: images/image09.png
-.. |image12| image:: images/image17.png
-.. |image13| image:: images/image01.png
-.. |image14| image:: images/image22.png
-.. |image15| image:: images/image12.png
-.. |image16| image:: images/image00.png
-.. |image17| image:: images/image15.png
-.. |newrawdata| image:: images/new-raw-data.png
-.. |image21| image:: images/image11.png
-.. |image22| image:: images/image08.png
 
