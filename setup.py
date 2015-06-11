@@ -81,7 +81,7 @@ setup(name='qiita-spots',
                         'support_files/doc/Makefile',
                         'support_files/doc/README.md',
                         'support_files/doc/source/conf.py',
-                        'support_files/doc/source/index.rst',
+                        'support_files/doc/source/*.rst',
                         'support_files/doc/source/tutorials/*.rst',
                         'support_files/doc/source/tutorials/images/*.png',
                         'support_files/doc/source/_static/*.png'
