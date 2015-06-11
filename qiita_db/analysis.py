@@ -54,6 +54,7 @@ class Analysis(QiitaStatusObject):
     shared_with
     jobs
     pmid
+    portal
     parent
     children
 
@@ -107,7 +108,8 @@ class Analysis(QiitaStatusObject):
         return {x[0] for x in conn_handler.execute_fetchall(sql, (status,))}
 
     @classmethod
-    def create(cls, owner, name, description, parent=None, from_default=False):
+    def create(cls, owner, name, description, portal, parent=None,
+               from_default=False):
         """Creates a new analysis on the database
 
         Parameters
@@ -118,6 +120,8 @@ class Analysis(QiitaStatusObject):
             Name of the analysis
         description : str
             Description of the analysis
+        portal : str
+            Portal the analysis belongs to.
         parent : Analysis object, optional
             The analysis this one was forked from
         from_default : bool, optional
@@ -132,15 +136,21 @@ class Analysis(QiitaStatusObject):
         status_id = conn_handler.execute_fetchone(
             "SELECT analysis_status_id from qiita.analysis_status WHERE "
             "status = 'in_construction'")[0]
+        portal_id = conn_handler.execute_fetchone(
+            "SELECT portal_type_id from qiita.portal_type WHERE "
+            "portal = %s", [portal])[0]
+
         if from_default:
             # insert analysis and move samples into that new analysis
             dflt_id = owner.default_analysis
             sql = """INSERT INTO qiita.{0}
-                    (email, name, description, analysis_status_id)
-                    VALUES (%s, %s, %s, %s)
+                    (email, name, description, analysis_status_id,
+                     portal_type_id)
+                    VALUES (%s, %s, %s, %s, %s)
                     RETURNING analysis_id""".format(cls._table)
             conn_handler.add_to_queue(queue, sql, (owner.id, name,
-                                                   description, status_id))
+                                                   description, status_id,
+                                                   portal_id))
             # MAGIC NUMBER 3: command selection step
             # needed so we skip the sample selection step
             sql = """INSERT INTO qiita.analysis_workflow
@@ -154,11 +164,13 @@ class Analysis(QiitaStatusObject):
         else:
             # insert analysis information into table as "in construction"
             sql = """INSERT INTO qiita.{0}
-                  (email, name, description, analysis_status_id)
-                  VALUES (%s, %s, %s, %s)
+                  (email, name, description, analysis_status_id,
+                   portal_type_id)
+                  VALUES (%s, %s, %s, %s, %s)
                   RETURNING analysis_id""".format(cls._table)
             conn_handler.add_to_queue(
-                queue, sql, (owner.id, name, description, status_id))
+                queue, sql, (owner.id, name, description, status_id,
+                             portal_id))
 
         # add parent if necessary
         if parent:
@@ -263,6 +275,21 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         sql = ("SELECT name FROM qiita.{0} WHERE "
                "analysis_id = %s".format(self._table))
+        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @property
+    def portal(self):
+        """The portal used to create the analysis
+
+        Returns
+        -------
+        str
+            Name of the portal
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT portal FROM qiita.{0}
+               JOIN qiita.portal_type USING (portal_type_id)
+               WHERE analysis_id = %s""".format(self._table)
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     @property
