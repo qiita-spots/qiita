@@ -148,11 +148,10 @@ function get_and_check_raw_data_files(prep_id, filetype){
         break;
     }
   }
-
   if (sff.length === 0 && barcodes.length === 0 && forward.length === 0 && fasta.length === 0) {
     bootstrapAlert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
     return [false];
-  } else if (sff.length === 0 && barcodes.length != forward.length) {
+  } else if (sff.length === 0 && barcodes.length != forward.length && filetype !== 5 && filetype != "per_sample_FASTQ") {
     bootstrapAlert("You must select the same number of barcode and forward seq files.");
     return [false];
   } else if (sff.length === 0 && (reverse.length !== 0 && reverse.length != forward.length)) {
