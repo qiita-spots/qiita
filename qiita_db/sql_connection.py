@@ -485,7 +485,7 @@ class SQLConnectionHandler(object):
         KeyError
             Queue name already exists
         """
-        if self._check_queue_exists(queue):
+        if self._check_queue_exists(queue_name):
             raise KeyError("Queue %s already exists" % queue_name)
 
         self.queues[queue_name] = []
@@ -521,7 +521,7 @@ class SQLConnectionHandler(object):
             queue does not exist
         """
         if not self._check_queue_exists(queue):
-            raise KeyError("Queue '%s' does not exist" % queue_name)
+            raise KeyError("Queue '%s' does not exist" % queue)
 
         if not many:
             sql_args = [sql_args]
@@ -560,7 +560,7 @@ class SQLConnectionHandler(object):
             any previously-executed query.
         """
         if not self._check_queue_exists(queue):
-            raise KeyError("Queue '%s' does not exist" % queue_name)
+            raise KeyError("Queue '%s' does not exist" % queue)
 
         with self.get_postgres_cursor() as cur:
             results = []

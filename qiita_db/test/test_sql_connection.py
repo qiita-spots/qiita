@@ -193,6 +193,11 @@ class TestConnHandler(TestCase):
         obs = self.conn_handler.execute_fetchall(sql, (True,))
         self.assertEqual(obs, [['test1', True, 1], ['test2', True, 2]])
 
+    def test_check_queue_exists(self):
+        self.assertFalse(self.conn_handler._check_queue_exists('foo'))
+        self.conn_handler.create_queue('foo')
+        self.assertTrue(self.conn_handler._check_queue_exists('foo'))
+
     def test_create_queue(self):
         self.assertEqual(self.conn_handler.queues, {})
         self.conn_handler.create_queue("toy_queue")
@@ -231,6 +236,10 @@ class TestConnHandler(TestCase):
         self.assertEqual(self.conn_handler.queues,
                          {"test_queue": [(sql, (1,)), (sql, (2,)),
                                          (sql, (3,))]})
+
+    def test_add_to_queue_error(self):
+        with self.assertRaises(KeyError):
+            self.conn_handler.add_to_queue("foo", "SELECT 42")
 
     def test_execute_queue(self):
         self.conn_handler.create_queue("test_queue")
@@ -310,6 +319,18 @@ class TestConnHandler(TestCase):
 
         # make sure rollback correctly
         self._assert_sql_equal([])
+
+    def test_execute_queue_error(self):
+        self.conn_handler.create_queue("test_queue")
+        sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s)"""
+        self.conn_handler.add_to_queue("test_queue", sql, ['test_insert', '2'])
+        sql = """UPDATE qiita.test_table
+                 SET int_column = 20, bool_column = FALSE
+                 WHERE str_column = %s"""
+        self.conn_handler.add_to_queue("test_queue", sql, ['test_insert'])
+        with self.assertRaises(KeyError):
+            self.conn_handler.execute_queue("oops!")
 
     def test_huge_queue(self):
         self.conn_handler.create_queue("test_queue")
