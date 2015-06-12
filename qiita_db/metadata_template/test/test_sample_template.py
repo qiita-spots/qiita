@@ -22,7 +22,6 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
-                                 QiitaDBExecutionError,
                                  QiitaDBColumnError, QiitaDBError,
                                  QiitaDBWarning)
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -963,7 +962,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                         'scientific_name': 'homo sapiens'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(ValueError):
             SampleTemplate.create(metadata, self.new_study)
 
         sql = """SELECT EXISTS(
@@ -1356,7 +1355,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         exp = []
         self.assertEqual(obs, exp)
 
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(ValueError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.sample_%s" % st_id)
 
