@@ -585,9 +585,8 @@ class MetadataTemplate(QiitaObject):
         if warning_msg:
             warnings.warn(
                 "Some functionality will be disabled due to missing "
-                "columns:\n\t%s.\nCheck https://github.com/biocore/qiita/wiki"
-                "/Preparing-Qiita-template-files for a description of these "
-                "fields." % ";\n\t".join(warning_msg),
+                "columns:\n\t%s.\nSee the Templates tutorial for a description"
+                " of these fields." % ";\n\t".join(warning_msg),
                 QiitaDBWarning)
 
         return md_template

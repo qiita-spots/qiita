@@ -54,3 +54,6 @@ dump.rdb
 # ignoring the reference file that (might) be downloaded during env creation
 gg_97_otus_4feb2011.tre
 gg_13_8-*
+
+# sphinx documentation
+qiita_pet/static/doc/
