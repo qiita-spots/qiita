@@ -170,10 +170,10 @@ class PrepTemplateInfoTab(BaseUIModule):
                 param_iter = Preprocessed454Params.iter()
             elif rd_ft == 'FASTQ':
                 param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
-                              if pip.name != 'per sample FASTQ defaults']
+                              if pip.values['barcode_type'] != 'not-barcoded']
             elif rd_ft == 'per_sample_FASTQ':
                 param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
-                              if pip.name == 'per sample FASTQ defaults']
+                              if pip.values['barcode_type'] == 'not-barcoded']
             else:
                 raise NotImplementedError(
                     "Pre-processing of %s files currently not supported."
