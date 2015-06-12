@@ -465,13 +465,12 @@ class SQLConnectionHandler(object):
         queue_name : str
             The name of the queue
 
-        Raises
-        ------
-        KeyError
-            If the queue `queue_name` does not exist in the handler
+        Returns
+        -------
+        bool
+            True if queue `queue_name` exist in the handler. False otherwise.
         """
-        if queue_name not in self.queues:
-            raise KeyError("Queue '%s' does not exist" % queue_name)
+        return queue_name in self.queues
 
     def create_queue(self, queue_name):
         """Add a new queue to the connection
@@ -486,7 +485,7 @@ class SQLConnectionHandler(object):
         KeyError
             Queue name already exists
         """
-        if queue_name in self.queues:
+        if self._check_queue_exists(queue):
             raise KeyError("Queue %s already exists" % queue_name)
 
         self.queues[queue_name] = []
@@ -520,12 +519,9 @@ class SQLConnectionHandler(object):
         ------
         KeyError
             queue does not exist
-
-        Notes
-        -----
-        Queues are executed in FIFO order
         """
-        self._check_queue_exists(queue)
+        if not self._check_queue_exists(queue):
+            raise KeyError("Queue '%s' does not exist" % queue_name)
 
         if not many:
             sql_args = [sql_args]
@@ -555,14 +551,16 @@ class SQLConnectionHandler(object):
         Does not support executemany command. Instead, enter the multiple
         SQL commands as multiple entries in the queue.
 
-        Queues are executed in FIFO order
-
         Raises
         ------
+        KetError
+            If queue does not exist
         IndexError
-            If there a placeholder cannot be replaced with a real value
+            If a sql argument placeholder does not correspond to the result of
+            any previously-executed query.
         """
-        self._check_queue_exists(queue)
+        if not self._check_queue_exists(queue):
+            raise KeyError("Queue '%s' does not exist" % queue_name)
 
         with self.get_postgres_cursor() as cur:
             results = []
