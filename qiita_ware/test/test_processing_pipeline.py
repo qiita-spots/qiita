@@ -363,7 +363,7 @@ class ProcessingPipelineTests(TestCase):
                                                             prep_template,
                                                             params)
 
-        raw_fps = ','.join([fp for _, fp, _ in raw_data.get_filepaths()])
+        raw_fps = ','.join([fp for _, fp, _ in sorted(raw_data.get_filepaths())])
         exp_cmd = (
             "split_libraries_fastq.py --store_demultiplexed_fastq -i "
             "{} --sample_ids 1.SKB8.640193,1.SKD8.640184 -o {} --barcode_type "
