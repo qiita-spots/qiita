@@ -3,7 +3,7 @@
 
 -- Temporarily have default value for non-portaled analyses
 ALTER TABLE qiita.analysis
-ADD portal_type_id bigint NOT NULL DEFAULT 3;
+ADD portal_type_id bigint NOT NULL DEFAULT 1;
 
 -- Add FK to portal_type_id
 ALTER TABLE qiita.analysis
@@ -16,6 +16,8 @@ ALTER TABLE qiita.analysis
 ALTER portal_type_id DROP DEFAULT;
 
 -- Remove existing portals and replace with more relevant ones
+UPDATE qiita.study SET portal_type_id = 1 WHERE portal_type_id = 3;
+
 DELETE FROM qiita.portal_type WHERE portal = 'QIIME_EMP';
 
 UPDATE qiita.portal_type
