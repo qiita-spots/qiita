@@ -51,8 +51,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBNotImplementedError, QiitaDBError,
-                                 QiitaDBExecutionError, QiitaDBWarning,
-                                 QiitaDBDuplicateHeaderError)
+                                 QiitaDBWarning, QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, get_table_cols,
@@ -323,7 +322,7 @@ class BaseSample(QiitaObject):
 
         try:
             conn_handler.execute_queue(queue_name)
-        except QiitaDBExecutionError as e:
+        except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
             type_lookup = defaultdict(lambda: 'varchar')
@@ -1129,7 +1128,7 @@ class MetadataTemplate(QiitaObject):
 
         try:
             conn_handler.execute_queue(queue_name)
-        except QiitaDBExecutionError as e:
+        except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
             type_lookup = defaultdict(lambda: 'varchar')
