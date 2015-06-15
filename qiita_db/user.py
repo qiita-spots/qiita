@@ -36,8 +36,7 @@ from qiita_core.qiita_settings import qiita_config
 
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import (create_rand_string, check_table_cols, hash_password,
-                   convert_to_id)
+from .util import (create_rand_string, check_table_cols, hash_password)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
@@ -224,7 +223,6 @@ class User(QiitaObject):
 
         # build info to insert making sure columns and data are in same order
         # for sql insertion
-        portal_id = convert_to_id(qiita_config.portal, 'portal_type', 'portal')
         columns = info.keys()
         values = [info[col] for col in columns]
         queue = "add_user_%s" % email
@@ -240,7 +238,7 @@ class User(QiitaObject):
                "VALUES (%s, %s, %s, %s, 1, %s)")
         conn_handler.add_to_queue(queue, sql,
                                   (email, '%s-dflt' % email, 'dflt', True,
-                                   portal_id))
+                                   qiita_config.portal_id))
 
         conn_handler.execute_queue(queue)
 

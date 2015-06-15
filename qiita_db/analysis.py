@@ -35,7 +35,7 @@ from .study import Study
 from .exceptions import QiitaDBStatusError, QiitaDBError, QiitaDBUnknownIDError
 from .util import (convert_to_id, get_work_base_dir,
                    get_mountpoint, insert_filepaths)
-
+from qiita_core.qiita_settings import qiita_config
 
 class Analysis(QiitaStatusObject):
     """
@@ -145,9 +145,9 @@ class Analysis(QiitaStatusObject):
                      portal_type_id)
                     VALUES (%s, %s, %s, %s, %s)
                     RETURNING analysis_id""".format(cls._table)
-            conn_handler.add_to_queue(queue, sql, (owner.id, name,
-                                                   description, status_id,
-                                                   portal_id))
+            conn_handler.add_to_queue(queue, sql, (
+                owner.id, name, description, status_id,
+                qiita_config.portal_id))
             # MAGIC NUMBER 3: command selection step
             # needed so we skip the sample selection step
             sql = """INSERT INTO qiita.analysis_workflow
