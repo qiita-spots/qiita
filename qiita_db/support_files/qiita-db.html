@@ -97,7 +97,7 @@ table {
 </head>
 
 <body>
-<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'   width='2490' height='2015' viewbox='0 0 2490 2015' >
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'   width='3435' height='2015' viewbox='0 0 3435 2015' >
 <style type='text/css'>
   text                { fill:#000000; font-family: Dialog, Dialog, Arial; font-size:11px; stroke:#000000; stroke-width:0.1; }
   text:hover          { fill:#a00000; font-size:12px;}
@@ -245,7 +245,7 @@ table {
 </defs>
 
 <!-- ============= Desktop ============= -->
-<rect x='1' y='1' width='2488' height='2013' rx='7' ry='7' style='fill:url(#layoutGradient); stroke:#333333; stroke-width:0.5;' />
+<rect x='1' y='1' width='3433' height='2013' rx='7' ry='7' style='fill:url(#layoutGradient); stroke:#333333; stroke-width:0.5;' />
 
 <!-- ============= Legend ============= -->
 <g transform='translate(10,10)'>
@@ -297,6 +297,11 @@ table {
 <text x='40' y='325'>Group_collection</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='40' y='328' width='340' height='2' />
 
+<!-- ============= Group 'Group_single_strain_WGS' ============= -->
+<rect class='grp' style='fill:#ffff33;stroke:#e0e0c5' x='2474' y='10' width='932' height='1265' />
+<text x='2485' y='25'>Group_single_strain_WGS</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='2485' y='28' width='910' height='2' />
+
 <path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 60 1530 L 60,1410' >
 	<title>Foreign Key fk_controlled_vocab_values
 	controlled_vocab_values references controlled_vocab ( controlled_vocab_id )</title>
@@ -317,12 +322,7 @@ table {
 	job_results_filepath references job ( job_id )</title>
 </path>
 <text x='448' y='930' transform='rotate(90 448,930)' title='Foreign Key fk_job_results_filepath
-	job_results_filepath references job ( job_id )' style='fill:#a1a0a0;'>job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 510 930 L 510,967 Q 510,975 517,975 L 907,975 Q 915,975 915,967 L 915,802 Q 915,795 907,795 L 810,795' >
-	<title>Foreign Key fk_job_results_filepath_0
-	job_results_filepath references filepath ( filepath_id )</title>
-</path>
-<text x='523' y='930' transform='rotate(90 523,930)' title='Foreign Key fk_job_results_filepath_0
-	job_results_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 915 L 300,885' >
+	job_results_filepath references job ( job_id )' style='fill:#a1a0a0;'>job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 915 L 300,885' >
 	<title>Foreign Key fk_analysis_job_analysis
 	analysis_job references analysis ( analysis_id )</title>
 </path>
@@ -397,7 +397,7 @@ table {
 	logging references severity ( severity_id )</title>
 </path>
 <text x='1447' y='1300' transform='rotate(0 1447,1300)' title='Foreign Key fk_logging_severity
-	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1650 960 L 1702,960 Q 1710,960 1710,952 L 1710,727 Q 1710,720 1717,720 L 1867,720 Q 1875,720 1875,712 L 1875,420' >
+	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1650 960 L 1687,960 Q 1695,960 1695,952 L 1695,832 Q 1695,825 1702,825 L 1867,825 Q 1875,825 1875,817 L 1875,420' >
 	<title>Foreign Key fk_study_processed_data
 	study_processed_data references study ( study_id )</title>
 </path>
@@ -422,11 +422,11 @@ table {
 	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='1207' y='715' transform='rotate(0 1207,715)' title='Foreign Key fk_preprocessed_filepath
-	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1035 720 L 810,720' >
+	preprocessed_filepath references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1035 735 L 810,735' >
 	<title>Foreign Key fk_preprocessed_filepath_0
 	preprocessed_filepath references filepath ( filepath_id )</title>
 </path>
-<text x='981' y='715' transform='rotate(0 981,715)' title='Foreign Key fk_preprocessed_filepath_0
+<text x='981' y='730' transform='rotate(0 981,730)' title='Foreign Key fk_preprocessed_filepath_0
 	preprocessed_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 390 735 L 360,735' >
 	<title>Foreign Key fk_analysis_filepath
 	analysis_filepath references analysis ( analysis_id )</title>
@@ -522,7 +522,7 @@ table {
 	study_environmental_package references environmental_package ( environmental_package_name )</title>
 </path>
 <text x='2278' y='120' transform='rotate(90 2278,120)' title='Foreign Key fk_study_environmental_package_0
-	study_environmental_package references environmental_package ( environmental_package_name )' style='fill:#a1a0a0;'>environmental_package_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 810 L 1222,810 Q 1230,810 1230,802 L 1230,517 Q 1230,510 1237,510 L 1822,510 Q 1830,510 1830,502 L 1830,420' >
+	study_environmental_package references environmental_package ( environmental_package_name )' style='fill:#a1a0a0;'>environmental_package_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 810 L 1222,810 Q 1230,810 1230,802 L 1230,532 Q 1230,525 1237,525 L 1822,525 Q 1830,525 1830,517 L 1830,420' >
 	<title>Foreign Key fk_study_id
 	sample_template_filepath references study ( study_id )</title>
 </path>
@@ -532,22 +532,12 @@ table {
 	sample_template_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='981' y='820' transform='rotate(0 981,820)' title='Foreign Key fk_filepath_id
-	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1245 675 L 1027,675 Q 1020,675 1020,682 L 1020,1027 Q 1020,1035 1012,1035 L 795,1035' >
+	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1245 675 L 1027,675 Q 1020,675 1020,682 L 1020,982 Q 1020,990 1012,990 L 787,990 Q 780,990 780,997 L 780,1005' >
 	<title>Foreign Key fk_preprocessed_data
 	preprocessed_data references data_type ( data_type_id )</title>
 </path>
 <text x='1179' y='670' transform='rotate(0 1179,670)' title='Foreign Key fk_preprocessed_data
-	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2265 975 L 2182,975 Q 2175,975 2175,967 L 2175,787 Q 2175,780 2167,780 L 1732,780 Q 1725,780 1725,787 L 1725,907 Q 1725,915 1717,915 L 1477,915 Q 1470,915 1470,922 L 1470,1117 Q 1470,1125 1462,1125 L 952,1125 Q 945,1125 945,1117 L 945,772 Q 945,765 937,765 L 810,765' >
-	<title>Foreign Key fk_reference_sequence_filepath
-	reference references filepath ( sequence_filepath -> filepath_id )</title>
-</path>
-<text x='2170' y='970' transform='rotate(0 2170,970)' title='Foreign Key fk_reference_sequence_filepath
-	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2400 945 L 2400,772 Q 2400,765 2392,765 L 1747,765 Q 1740,765 1740,772 L 1740,802 Q 1740,810 1732,810 L 1477,810 Q 1470,810 1470,802 L 1470,652 Q 1470,645 1462,645 L 1012,645 Q 1005,645 1005,652 L 1005,727 Q 1005,735 997,735 L 810,735' >
-	<title>Foreign Key fk_reference_taxonomy_filepath
-	reference references filepath ( taxonomy_filepath -> filepath_id )</title>
-</path>
-<text x='2402' y='940' transform='rotate(270 2402,940)' title='Foreign Key fk_reference_taxonomy_filepath
-	reference references filepath ( taxonomy_filepath -> filepath_id )' style='fill:#a1a0a0;'>taxonomy_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2160 960 L 2265,960' >
+	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2160 960 L 2265,960' >
 	<title>Foreign Key fk_processed_params_sortmerna
 	processed_params_sortmerna references reference ( reference_id )</title>
 </path>
@@ -642,16 +632,16 @@ table {
 	study references timeseries_type ( timeseries_type_id )</title>
 </path>
 <text x='1702' y='385' transform='rotate(0 1702,385)' title='Foreign Key fk_study_timeseries_type
-	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1995 390 L 2002,390 Q 2010,390 2010,397 L 2010,645' >
+	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1995 390 L 2017,390 Q 2025,390 2025,397 L 2025,645' >
 	<title>Foreign Key fk_study
 	study references portal_type ( portal_type_id )</title>
 </path>
 <text x='2002' y='385' transform='rotate(0 2002,385)' title='Foreign Key fk_study
-	study references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1260 1050 L 795,1050' >
+	study references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1260 1035 L 795,1035' >
 	<title>Foreign Key fk_processed_data
 	processed_data references data_type ( data_type_id )</title>
 </path>
-<text x='1194' y='1045' transform='rotate(0 1194,1045)' title='Foreign Key fk_processed_data
+<text x='1194' y='1030' transform='rotate(0 1194,1030)' title='Foreign Key fk_processed_data
 	processed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 1050 L 1485,1050' >
 	<title>Foreign Key fk_processed_data_status
 	processed_data references processed_data_status ( processed_data_status_id )</title>
@@ -677,12 +667,7 @@ table {
 	analysis_sample references study_sample ( sample_id )</title>
 </path>
 <text x='163' y='1260' transform='rotate(90 163,1260)' title='Foreign Key fk_analysis_sample
-	analysis_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 120 L 1800,120' >
-	<title>Foreign Key fk_required_sample_info_study
-	study_sample references study ( study_id )</title>
-</path>
-<text x='1612' y='115' transform='rotate(0 1612,115)' title='Foreign Key fk_required_sample_info_study
-	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1050 285 L 1050,255' >
+	analysis_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1050 285 L 1050,255' >
 	<title>Foreign Key fk_raw_data_filetype
 	raw_data references filetype ( filetype_id )</title>
 </path>
@@ -697,7 +682,7 @@ table {
 	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='1303' y='630' transform='rotate(90 1303,630)' title='Foreign Key fk_prep_template_preprocessed_data
-	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 450 L 1222,450 Q 1215,450 1215,457 L 1215,1057 Q 1215,1065 1207,1065 L 795,1065' >
+	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 450 L 1222,450 Q 1215,450 1215,457 L 1215,1042 Q 1215,1050 1207,1050 L 795,1050' >
 	<title>Foreign Key fk_prep_template_data_type
 	prep_template references data_type ( data_type_id )</title>
 </path>
@@ -707,7 +692,7 @@ table {
 	prep_template references raw_data ( raw_data_id )</title>
 </path>
 <text x='1228' y='370' transform='rotate(0 1228,370)' title='Foreign Key fk_prep_template_raw_data
-	prep_template references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 480 L 787,480 Q 780,480 780,487 L 780,660' >
+	prep_template references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 480 L 772,480 Q 765,480 765,487 L 765,660' >
 	<title>Foreign Key fk_raw_filepath
 	raw_filepath references filepath ( filepath_id )</title>
 </path>
@@ -717,7 +702,7 @@ table {
 	raw_filepath references raw_data ( raw_data_id )</title>
 </path>
 <text x='1052' y='415' transform='rotate(270 1052,415)' title='Foreign Key fk_raw_filepath_0
-	raw_filepath references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 555 L 802,555 Q 795,555 795,562 L 795,660' >
+	raw_filepath references raw_data ( raw_data_id )' style='fill:#a1a0a0;'>raw_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1020 555 L 787,555 Q 780,555 780,562 L 780,660' >
 	<title>Foreign Key fk_filepath_id
 	prep_template_filepath references filepath ( filepath_id )</title>
 </path>
@@ -747,7 +732,152 @@ table {
 	prep_template_sample references prep_template ( prep_template_id )</title>
 </path>
 <text x='1363' y='270' transform='rotate(90 1363,270)' title='Foreign Key fk_prep_template
-	prep_template_sample references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	prep_template_sample references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 120 L 1800,120' >
+	<title>Foreign Key fk_required_sample_info_study
+	study_sample references study ( study_id )</title>
+</path>
+<text x='1612' y='115' transform='rotate(0 1612,115)' title='Foreign Key fk_required_sample_info_study
+	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2700 135 L 2700,180' >
+	<title>Foreign Key fk_media_ingredients_media
+	media_ingredients references media ( media_id )</title>
+</path>
+<text x='2713' y='135' transform='rotate(90 2713,135)' title='Foreign Key fk_media_ingredients_media
+	media_ingredients references media ( media_id )' style='fill:#a1a0a0;'>media_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2655 60 L 2610,60' >
+	<title>Foreign Key fk_media_ingredients
+	media_ingredients references ingredient ( ingredient_id )</title>
+</path>
+<text x='2586' y='55' transform='rotate(0 2586,55)' title='Foreign Key fk_media_ingredients
+	media_ingredients references ingredient ( ingredient_id )' style='fill:#a1a0a0;'>ingredient_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2820 135 L 2812,135 Q 2805,135 2805,142 L 2805,202 Q 2805,210 2797,210 L 2775,210' >
+	<title>Foreign Key fk_storage_media
+	storage references media ( media_id )</title>
+</path>
+<text x='2774' y='130' transform='rotate(0 2774,130)' title='Foreign Key fk_storage_media
+	storage references media ( media_id )' style='fill:#a1a0a0;'>media_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2850 195 L 2850,165' >
+	<title>Foreign Key fk_isolate_storage_storage
+	isolate_storage references storage ( storage_id )</title>
+</path>
+<text x='2852' y='190' transform='rotate(270 2852,190)' title='Foreign Key fk_isolate_storage_storage
+	isolate_storage references storage ( storage_id )' style='fill:#a1a0a0;'>storage_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2880 300 L 2880,390' >
+	<title>Foreign Key fk_isolate_storage_isolate
+	isolate_storage references isolate ( isolate_id )</title>
+</path>
+<text x='2893' y='300' transform='rotate(90 2893,300)' title='Foreign Key fk_isolate_storage_isolate
+	isolate_storage references isolate ( isolate_id )' style='fill:#a1a0a0;'>isolate_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 3240 270 L 3270,270' >
+	<title>Foreign Key fk_isolate_antibiotic_sensitivity
+	isolate_antibiotic_sensitivity references antibiotic ( antibiotic_id )</title>
+</path>
+<text x='3247' y='265' transform='rotate(0 3247,265)' title='Foreign Key fk_isolate_antibiotic_sensitivity
+	isolate_antibiotic_sensitivity references antibiotic ( antibiotic_id )' style='fill:#a1a0a0;'>antibiotic_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 3060 285 L 2992,285 Q 2985,285 2985,292 L 2985,412 Q 2985,420 2977,420 L 2970,420' >
+	<title>Foreign Key fk_isolate_antibiotic_sensitivity_isolate
+	isolate_antibiotic_sensitivity references isolate ( isolate_id )</title>
+</path>
+<text x='3011' y='280' transform='rotate(0 3011,280)' title='Foreign Key fk_isolate_antibiotic_sensitivity_isolate
+	isolate_antibiotic_sensitivity references isolate ( isolate_id )' style='fill:#a1a0a0;'>isolate_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 3060 375 L 2962,375 Q 2955,375 2955,382 L 2955,390' >
+	<title>Foreign Key fk_table_0_isolate
+	isolate_antibiotic_resistance references isolate ( isolate_id )</title>
+</path>
+<text x='3011' y='370' transform='rotate(0 3011,370)' title='Foreign Key fk_table_0_isolate
+	isolate_antibiotic_resistance references isolate ( isolate_id )' style='fill:#a1a0a0;'>isolate_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 3240 375 L 3292,375 Q 3300,375 3300,367 L 3300,360' >
+	<title>Foreign Key fk_table_0_antibiotic
+	isolate_antibiotic_resistance references antibiotic ( antibiotic_id )</title>
+</path>
+<text x='3247' y='370' transform='rotate(0 3247,370)' title='Foreign Key fk_table_0_antibiotic
+	isolate_antibiotic_resistance references antibiotic ( antibiotic_id )' style='fill:#a1a0a0;'>antibiotic_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2940 390 L 2940,322 Q 2940,315 2947,315 L 2947,315 Q 2955,315 2955,307 L 2955,22 Q 2955,15 2947,15 L 1597,15 Q 1590,15 1590,22 L 1590,90' >
+	<title>Foreign Key fk_isolate_study_sample
+	isolate references study_sample ( sample_id )</title>
+</path>
+<text x='2942' y='385' transform='rotate(270 2942,385)' title='Foreign Key fk_isolate_study_sample
+	isolate references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2970 510 L 2977,510 Q 2985,510 2985,517 L 2985,532 Q 2985,540 2977,540 L 2947,540 Q 2940,540 2940,532 L 2940,525' >
+	<title>Foreign Key fk_isolate_isolate
+	isolate references isolate ( parent_id -> isolate_id )</title>
+</path>
+<text x='2977' y='505' transform='rotate(0 2977,505)' title='Foreign Key fk_isolate_isolate
+	isolate references isolate ( parent_id -> isolate_id )' style='fill:#a1a0a0;'>parent_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2640 435 L 2670,435' >
+	<title>Foreign Key fk_isolate_growth_filepath
+	isolate_growth_filepath references isolate_growth ( isolate_growth_id )</title>
+</path>
+<text x='2647' y='430' transform='rotate(0 2647,430)' title='Foreign Key fk_isolate_growth_filepath
+	isolate_growth_filepath references isolate_growth ( isolate_growth_id )' style='fill:#a1a0a0;'>isolate_growth_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2475 420 L 2242,420 Q 2235,420 2235,412 L 2235,382 Q 2235,375 2227,375 L 2017,375 Q 2010,375 2010,382 L 2010,502 Q 2010,510 2002,510 L 1192,510 Q 1185,510 1185,502 L 1185,412 Q 1185,405 1177,405 L 802,405 Q 795,405 795,412 L 795,660' >
+	<title>Foreign Key fk_isolate_growth_filepath_fp
+	isolate_growth_filepath references filepath ( filepath_id )</title>
+</path>
+<text x='2421' y='415' transform='rotate(0 2421,415)' title='Foreign Key fk_isolate_growth_filepath_fp
+	isolate_growth_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2820 420 L 2850,420' >
+	<title>Foreign Key fk_isolate_growth_isolate
+	isolate_growth references isolate ( isolate_id )</title>
+</path>
+<text x='2827' y='415' transform='rotate(0 2827,415)' title='Foreign Key fk_isolate_growth_isolate
+	isolate_growth references isolate ( isolate_id )' style='fill:#a1a0a0;'>isolate_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2700 390 L 2700,300' >
+	<title>Foreign Key fk_isolate_growth_media
+	isolate_growth references media ( media_id )</title>
+</path>
+<text x='2702' y='385' transform='rotate(270 2702,385)' title='Foreign Key fk_isolate_growth_media
+	isolate_growth references media ( media_id )' style='fill:#a1a0a0;'>media_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2670 405 L 2662,405 Q 2655,405 2655,397 L 2655,307 Q 2655,300 2647,300 L 2625,300' >
+	<title>Foreign Key fk_isolate_growth_conditions
+	isolate_growth references conditions ( conditions_id )</title>
+</path>
+<text x='2599' y='400' transform='rotate(0 2599,400)' title='Foreign Key fk_isolate_growth_conditions
+	isolate_growth references conditions ( conditions_id )' style='fill:#a1a0a0;'>conditions_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2670 555 L 2625,555' >
+	<title>Foreign Key fk_isolate_growth_morphology
+	isolate_growth references morphology ( morpholgy_id -> morphology_id )</title>
+</path>
+<text x='2597' y='550' transform='rotate(0 2597,550)' title='Foreign Key fk_isolate_growth_morphology
+	isolate_growth references morphology ( morpholgy_id -> morphology_id )' style='fill:#a1a0a0;'>morpholgy_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2685 735 L 2730,735' >
+	<title>Foreign Key fk_assembly_preprocessed_data_assembly
+	assembly_preprocessed_data references assembly ( assembly_id )</title>
+</path>
+<text x='2692' y='730' transform='rotate(0 2692,730)' title='Foreign Key fk_assembly_preprocessed_data_assembly
+	assembly_preprocessed_data references assembly ( assembly_id )' style='fill:#a1a0a0;'>assembly_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2655 825 L 2730,825' >
+	<title>Foreign Key fk_assembly_filepath_assembly
+	assembly_filepath references assembly ( assembly_id )</title>
+</path>
+<text x='2662' y='820' transform='rotate(0 2662,820)' title='Foreign Key fk_assembly_filepath_assembly
+	assembly_filepath references assembly ( assembly_id )' style='fill:#a1a0a0;'>assembly_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2520 810 L 2407,810 Q 2400,810 2400,802 L 2400,772 Q 2400,765 2392,765 L 1732,765 Q 1725,765 1725,772 L 1725,802 Q 1725,810 1717,810 L 1477,810 Q 1470,810 1470,802 L 1470,652 Q 1470,645 1462,645 L 1012,645 Q 1005,645 1005,652 L 1005,712 Q 1005,720 997,720 L 810,720' >
+	<title>Foreign Key fk_assembly_filepath_filepath
+	assembly_filepath references filepath ( filepath_id )</title>
+</path>
+<text x='2466' y='805' transform='rotate(0 2466,805)' title='Foreign Key fk_assembly_filepath_filepath
+	assembly_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2775 930 L 2775,915' >
+	<title>Foreign Key fk_assembly_annotation
+	assembly_annotation references assembly ( assembly_id )</title>
+</path>
+<text x='2777' y='925' transform='rotate(270 2777,925)' title='Foreign Key fk_assembly_annotation
+	assembly_annotation references assembly ( assembly_id )' style='fill:#a1a0a0;'>assembly_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2775 1020 L 2775,1035' >
+	<title>Foreign Key fk_assembly_annotation_annotation
+	assembly_annotation references annotation ( annotation_id )</title>
+</path>
+<text x='2788' y='1020' transform='rotate(90 2788,1020)' title='Foreign Key fk_assembly_annotation_annotation
+	assembly_annotation references annotation ( annotation_id )' style='fill:#a1a0a0;'>annotation_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2670 1080 L 2745,1080' >
+	<title>Foreign Key fk_annotation_filepath
+	annotation_filepath references annotation ( annotation_id )</title>
+</path>
+<text x='2677' y='1075' transform='rotate(0 2677,1075)' title='Foreign Key fk_annotation_filepath
+	annotation_filepath references annotation ( annotation_id )' style='fill:#a1a0a0;'>annotation_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2535 1065 L 2437,1065 Q 2430,1065 2430,1057 L 2430,787 Q 2430,780 2422,780 L 1717,780 Q 1710,780 1710,787 L 1710,907 Q 1710,915 1702,915 L 1477,915 Q 1470,915 1470,922 L 1470,1117 Q 1470,1125 1462,1125 L 922,1125 Q 915,1125 915,1117 L 915,802 Q 915,795 907,795 L 810,795' >
+	<title>Foreign Key fk_annotation_filepath_fp
+	annotation_filepath references filepath ( filepath_id )</title>
+</path>
+<text x='2481' y='1060' transform='rotate(0 2481,1060)' title='Foreign Key fk_annotation_filepath_fp
+	annotation_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2910 1065 L 3007,1065 Q 3015,1065 3015,1057 L 3015,1050' >
+	<title>Foreign Key fk_annotation_software
+	annotation references software ( annotator_id -> software_id )</title>
+</path>
+<text x='2917' y='1060' transform='rotate(0 2917,1060)' title='Foreign Key fk_annotation_software
+	annotation references software ( annotator_id -> software_id )' style='fill:#a1a0a0;'>annotator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 3015 675 L 2917,675 Q 2910,675 2910,682 L 2910,690' >
+	<title>Foreign Key fk_strain_assembly
+	strain references assembly ( representative_assembly_id -> assembly_id )</title>
+</path>
+<text x='2868' y='670' transform='rotate(0 2868,670)' title='Foreign Key fk_strain_assembly
+	strain references assembly ( representative_assembly_id -> assembly_id )' style='fill:#a1a0a0;'>representative_assembly_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 3015 570 L 2962,570 Q 2955,570 2955,562 L 2955,525' >
+	<title>Foreign Key fk_strain_isolate
+	strain references isolate ( representative_isolate_id -> isolate_id )</title>
+</path>
+<text x='2883' y='565' transform='rotate(0 2883,565)' title='Foreign Key fk_strain_isolate
+	strain references isolate ( representative_isolate_id -> isolate_id )' style='fill:#a1a0a0;'>representative_isolate_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2925 900 L 3007,900 Q 3015,900 3015,907 L 3015,915' >
+	<title>Foreign Key fk_assembly_software
+	assembly references software ( assembler_id -> software_id )</title>
+</path>
+<text x='2932' y='895' transform='rotate(0 2932,895)' title='Foreign Key fk_assembly_software
+	assembly references software ( assembler_id -> software_id )' style='fill:#a1a0a0;'>assembler_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1538' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1564.50 L 45.50 1545.50 Q 45.50 1538.50 52.50 1538.50 L 187.50 1538.50 Q 194.50 1538.50 194.50 1545.50 L 194.50 1564.50 L45.50 1564.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1552' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1234,7 +1364,11 @@ Referred by raw_filepath ( filepath_id )
 Referred by reference ( sequence_filepath -> filepath_id ) 
 Referred by reference ( taxonomy_filepath -> filepath_id ) 
 Referred by reference ( tree_filepath -> filepath_id ) 
-Referred by sample_template_filepath ( filepath_id ) </title></a>
+Referred by sample_template_filepath ( filepath_id ) 
+Referred by isolate_growth_filepath ( filepath_id ) 
+Referred by assembly_filepath ( filepath_id ) 
+Referred by assembly_filepath ( filepath_id ) 
+Referred by annotation_filepath ( filepath_id ) </title></a>
   <use id='nn' x='647' y='717' xlink:href='#nn'/><a xlink:href='#filepath.filepath'><text x='663' y='727'>filepath</text><title>filepath varchar not null</title></a>
   <use id='nn' x='647' y='732' xlink:href='#nn'/><a xlink:href='#filepath.filepath_type_id'><use id='idx' x='647' y='731' xlink:href='#idx'/><title>Index  ( filepath_type_id ) </title></a>
 <a xlink:href='#filepath.filepath_type_id'><text x='663' y='742'>filepath_type_id</text><title>filepath_type_id bigint not null</title></a>
@@ -1334,7 +1468,8 @@ Holds the 1 to many relationship between the study and the environmental&#095;pa
 <a xlink:href='#preprocessed_data.preprocessed_data_id'><use id='ref' x='1443' y='701' xlink:href='#ref'/><title>Referred by prep_template_preprocessed_data ( preprocessed_data_id ) 
 Referred by preprocessed_filepath ( preprocessed_data_id ) 
 Referred by preprocessed_processed_data ( preprocessed_data_id ) 
-Referred by study_preprocessed_data ( preprocessed_data_id ) </title></a>
+Referred by study_preprocessed_data ( preprocessed_data_id ) 
+Referred by assembly_preprocessed_data ( preprocessed_data_id ) </title></a>
   <use id='nn' x='1262' y='717' xlink:href='#nn'/><a xlink:href='#preprocessed_data.preprocessed_params_table'><text x='1278' y='727'>preprocessed_params_table</text><title>preprocessed_params_table varchar not null
 Name of table holding the params</title></a>
   <use id='nn' x='1262' y='732' xlink:href='#nn'/><a xlink:href='#preprocessed_data.preprocessed_params_id'><text x='1278' y='742'>preprocessed_params_id</text><title>preprocessed_params_id bigint not null</title></a>
@@ -1598,13 +1733,12 @@ Referred by sample_template_filepath ( study_id )
 Referred by study_environmental_package ( study_id ) 
 Referred by study_experimental_factor ( study_id ) 
 Referred by study_pmid ( study_id ) 
+Referred by study_prep_template ( study_id ) 
 Referred by study_preprocessed_data ( study_id ) 
 Referred by study_processed_data ( study_id ) 
 Referred by study_sample ( study_id ) 
 Referred by study_sample_columns ( study_id ) 
-Referred by study_users ( study_id ) 
-Referred by study_prep_template ( study_id ) 
-Referred by study_prep_template ( study_id ) </title></a>
+Referred by study_users ( study_id ) </title></a>
   <use id='nn' x='1817' y='102' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1817' y='101' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1833' y='112'>email</text><title>email varchar not null
 Email of study owner</title></a>
@@ -1716,18 +1850,6 @@ What portals are available to show a study in</title></a>
 <a xlink:href='#analysis_sample.sample_id'><text x='63' y='1237'>sample_id</text><title>sample_id varchar not null</title></a>
 <a xlink:href='#analysis_sample.sample_id'><use id='fk' x='168' y='1226' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
 
-<!-- ============= Table 'study_sample' ============= -->
-<rect class='table' x='1515' y='98' width='90' height='75' rx='7' ry='7' />
-<path d='M 1515.50 124.50 L 1515.50 105.50 Q 1515.50 98.50 1522.50 98.50 L 1597.50 98.50 Q 1604.50 98.50 1604.50 105.50 L 1604.50 124.50 L1515.50 124.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#study_sample'><text x='1523' y='112' class='tableTitle'>study_sample</text><title>Table qiita.study_sample
-Required info for each sample&#046; One row is one sample&#046;</title></a>
-  <use id='nn' x='1517' y='132' xlink:href='#nn'/><a xlink:href='#study_sample.sample_id'><use id='pk' x='1517' y='131' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
-<a xlink:href='#study_sample.sample_id'><text x='1533' y='142'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#study_sample.sample_id'><use id='ref' x='1593' y='131' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) </title></a>
-  <use id='nn' x='1517' y='147' xlink:href='#nn'/><a xlink:href='#study_sample.study_id'><use id='idx' x='1517' y='146' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
-<a xlink:href='#study_sample.study_id'><text x='1533' y='157'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#study_sample.study_id'><use id='fk' x='1593' y='146' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
-
 <!-- ============= Table 'raw_data' ============= -->
 <rect class='table' x='1020' y='293' width='150' height='90' rx='7' ry='7' />
 <path d='M 1020.50 319.50 L 1020.50 300.50 Q 1020.50 293.50 1027.50 293.50 L 1162.50 293.50 Q 1169.50 293.50 1169.50 300.50 L 1169.50 319.50 L1020.50 319.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1773,7 +1895,6 @@ Type of file &#040;FASTA&#044; FASTQ&#044; SPECTRA&#044; etc&#041;</title></a>
 Referred by prep_template_filepath ( prep_template_id ) 
 Referred by prep_template_preprocessed_data ( prep_template_id ) 
 Referred by prep_template_sample ( prep_template_id ) 
-Referred by study_prep_template ( prep_template_id ) 
 Referred by study_prep_template ( prep_template_id ) </title></a>
   <use id='nn' x='1307' y='417' xlink:href='#nn'/><a xlink:href='#prep_template.data_type_id'><use id='idx' x='1307' y='416' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
 <a xlink:href='#prep_template.data_type_id'><text x='1323' y='427'>data_type_id</text><title>data_type_id bigint not null</title></a>
@@ -1841,6 +1962,330 @@ The prep template identifier</title></a>
 <a xlink:href='#prep_template_sample.prep_template_id'><use id='fk' x='1458' y='221' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
   <use id='nn' x='1337' y='237' xlink:href='#nn'/><a xlink:href='#prep_template_sample.sample_id'><use id='pk' x='1337' y='236' xlink:href='#pk'/><title>Index  ( sample_id ) Index  ( sample_id ) Primary Key  ( prep_template_id, sample_id ) </title></a>
 <a xlink:href='#prep_template_sample.sample_id'><text x='1353' y='247'>sample_id</text><title>sample_id varchar not null</title></a>
+
+<!-- ============= Table 'study_sample' ============= -->
+<rect class='table' x='1515' y='98' width='90' height='75' rx='7' ry='7' />
+<path d='M 1515.50 124.50 L 1515.50 105.50 Q 1515.50 98.50 1522.50 98.50 L 1597.50 98.50 Q 1604.50 98.50 1604.50 105.50 L 1604.50 124.50 L1515.50 124.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#study_sample'><text x='1523' y='112' class='tableTitle'>study_sample</text><title>Table qiita.study_sample
+Required info for each sample&#046; One row is one sample&#046;</title></a>
+  <use id='nn' x='1517' y='132' xlink:href='#nn'/><a xlink:href='#study_sample.sample_id'><use id='pk' x='1517' y='131' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
+<a xlink:href='#study_sample.sample_id'><text x='1533' y='142'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#study_sample.sample_id'><use id='ref' x='1593' y='131' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) 
+Referred by isolate ( sample_id ) 
+Referred by isolate ( sample_id ) </title></a>
+  <use id='nn' x='1517' y='147' xlink:href='#nn'/><a xlink:href='#study_sample.study_id'><use id='idx' x='1517' y='146' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
+<a xlink:href='#study_sample.study_id'><text x='1533' y='157'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_sample.study_id'><use id='fk' x='1593' y='146' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+
+<!-- ============= Table 'ingredient' ============= -->
+<rect class='table' x='2505' y='38' width='105' height='90' rx='7' ry='7' />
+<path d='M 2505.50 64.50 L 2505.50 45.50 Q 2505.50 38.50 2512.50 38.50 L 2602.50 38.50 Q 2609.50 38.50 2609.50 45.50 L 2609.50 64.50 L2505.50 64.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#ingredient'><text x='2530' y='52' class='tableTitle'>ingredient</text><title>Table qiita.ingredient</title></a>
+  <use id='nn' x='2507' y='72' xlink:href='#nn'/><a xlink:href='#ingredient.ingredient_id'><use id='pk' x='2507' y='71' xlink:href='#pk'/><title>Primary Key  ( ingredient_id ) </title></a>
+<a xlink:href='#ingredient.ingredient_id'><text x='2523' y='82'>ingredient_id</text><title>ingredient_id bigserial not null</title></a>
+<a xlink:href='#ingredient.ingredient_id'><use id='ref' x='2598' y='71' xlink:href='#ref'/><title>Referred by media_ingredients ( ingredient_id ) 
+Referred by media_ingredients ( ingredient_id ) </title></a>
+  <use id='nn' x='2507' y='87' xlink:href='#nn'/><a xlink:href='#ingredient.name'><text x='2523' y='97'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2507' y='102' xlink:href='#nn'/><a xlink:href='#ingredient.lot_number'><text x='2523' y='112'>lot_number</text><title>lot_number varchar not null</title></a>
+
+<!-- ============= Table 'media_ingredients' ============= -->
+<rect class='table' x='2670' y='38' width='120' height='90' rx='7' ry='7' />
+<path d='M 2670.50 64.50 L 2670.50 45.50 Q 2670.50 38.50 2677.50 38.50 L 2782.50 38.50 Q 2789.50 38.50 2789.50 45.50 L 2789.50 64.50 L2670.50 64.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#media_ingredients'><text x='2680' y='52' class='tableTitle'>media_ingredients</text><title>Table qiita.media_ingredients</title></a>
+  <use id='nn' x='2672' y='72' xlink:href='#nn'/><a xlink:href='#media_ingredients.media_id'><use id='pk' x='2672' y='71' xlink:href='#pk'/><title>Primary Key  ( media_id, ingredient_id ) Index  ( media_id ) </title></a>
+<a xlink:href='#media_ingredients.media_id'><text x='2688' y='82'>media_id</text><title>media_id bigint not null</title></a>
+<a xlink:href='#media_ingredients.media_id'><use id='fk' x='2778' y='71' xlink:href='#fk'/><title>References media ( media_id ) </title></a>
+  <use id='nn' x='2672' y='87' xlink:href='#nn'/><a xlink:href='#media_ingredients.ingredient_id'><use id='pk' x='2672' y='86' xlink:href='#pk'/><title>Primary Key  ( media_id, ingredient_id ) Index  ( ingredient_id ) </title></a>
+<a xlink:href='#media_ingredients.ingredient_id'><text x='2688' y='97'>ingredient_id</text><title>ingredient_id bigint not null</title></a>
+<a xlink:href='#media_ingredients.ingredient_id'><use id='fk' x='2778' y='86' xlink:href='#fk'/><title>References ingredient ( ingredient_id ) </title></a>
+  <use id='nn' x='2672' y='102' xlink:href='#nn'/><a xlink:href='#media_ingredients.quantity'><text x='2688' y='112'>quantity</text><title>quantity varchar not null</title></a>
+
+<!-- ============= Table 'media' ============= -->
+<rect class='table' x='2685' y='188' width='90' height='105' rx='7' ry='7' />
+<path d='M 2685.50 214.50 L 2685.50 195.50 Q 2685.50 188.50 2692.50 188.50 L 2767.50 188.50 Q 2774.50 188.50 2774.50 195.50 L 2774.50 214.50 L2685.50 214.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#media'><text x='2714' y='202' class='tableTitle'>media</text><title>Table qiita.media</title></a>
+  <use id='nn' x='2687' y='222' xlink:href='#nn'/><a xlink:href='#media.media_id'><use id='pk' x='2687' y='221' xlink:href='#pk'/><title>Primary Key  ( media_id ) </title></a>
+<a xlink:href='#media.media_id'><text x='2703' y='232'>media_id</text><title>media_id bigint not null</title></a>
+<a xlink:href='#media.media_id'><use id='ref' x='2763' y='221' xlink:href='#ref'/><title>Referred by media_ingredients ( media_id ) 
+Referred by media_ingredients ( media_id ) 
+Referred by storage ( media_id ) 
+Referred by isolate_growth ( media_id ) </title></a>
+  <use id='nn' x='2687' y='237' xlink:href='#nn'/><a xlink:href='#media.name'><text x='2703' y='247'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2687' y='252' xlink:href='#nn'/><a xlink:href='#media.protocol'><text x='2703' y='262'>protocol</text><title>protocol varchar not null</title></a>
+  <use id='nn' x='2687' y='267' xlink:href='#nn'/><a xlink:href='#media.type'><text x='2703' y='277'>type</text><title>type varchar not null</title></a>
+
+<!-- ============= Table 'storage' ============= -->
+<rect class='table' x='2835' y='38' width='105' height='120' rx='7' ry='7' />
+<path d='M 2835.50 64.50 L 2835.50 45.50 Q 2835.50 38.50 2842.50 38.50 L 2932.50 38.50 Q 2939.50 38.50 2939.50 45.50 L 2939.50 64.50 L2835.50 64.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#storage'><text x='2867' y='52' class='tableTitle'>storage</text><title>Table qiita.storage</title></a>
+  <use id='nn' x='2837' y='72' xlink:href='#nn'/><a xlink:href='#storage.storage_id'><use id='pk' x='2837' y='71' xlink:href='#pk'/><title>Primary Key  ( storage_id ) </title></a>
+<a xlink:href='#storage.storage_id'><text x='2853' y='82'>storage_id</text><title>storage_id bigserial not null</title></a>
+<a xlink:href='#storage.storage_id'><use id='ref' x='2928' y='71' xlink:href='#ref'/><title>Referred by isolate_storage ( storage_id ) 
+Referred by isolate_storage ( storage_id ) </title></a>
+  <use id='nn' x='2837' y='87' xlink:href='#nn'/><a xlink:href='#storage.name'><text x='2853' y='97'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2837' y='102' xlink:href='#nn'/><a xlink:href='#storage.media_id'><use id='idx' x='2837' y='101' xlink:href='#idx'/><title>Index  ( media_id ) </title></a>
+<a xlink:href='#storage.media_id'><text x='2853' y='112'>media_id</text><title>media_id bigint not null</title></a>
+<a xlink:href='#storage.media_id'><use id='fk' x='2928' y='101' xlink:href='#fk'/><title>References media ( media_id ) </title></a>
+  <a xlink:href='#storage.additives'><text x='2853' y='127'>additives</text><title>additives varchar</title></a>
+  <a xlink:href='#storage.temperature'><text x='2853' y='142'>temperature</text><title>temperature float8</title></a>
+
+<!-- ============= Table 'isolate_storage' ============= -->
+<rect class='table' x='2835' y='203' width='105' height='90' rx='7' ry='7' />
+<path d='M 2835.50 229.50 L 2835.50 210.50 Q 2835.50 203.50 2842.50 203.50 L 2932.50 203.50 Q 2939.50 203.50 2939.50 210.50 L 2939.50 229.50 L2835.50 229.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#isolate_storage'><text x='2846' y='217' class='tableTitle'>isolate_storage</text><title>Table qiita.isolate_storage</title></a>
+  <use id='nn' x='2837' y='237' xlink:href='#nn'/><a xlink:href='#isolate_storage.isolate_id'><use id='pk' x='2837' y='236' xlink:href='#pk'/><title>Primary Key  ( isolate_id, storage_id ) Index  ( isolate_id ) </title></a>
+<a xlink:href='#isolate_storage.isolate_id'><text x='2853' y='247'>isolate_id</text><title>isolate_id bigint not null</title></a>
+<a xlink:href='#isolate_storage.isolate_id'><use id='fk' x='2928' y='236' xlink:href='#fk'/><title>References isolate ( isolate_id ) </title></a>
+  <use id='nn' x='2837' y='252' xlink:href='#nn'/><a xlink:href='#isolate_storage.storage_id'><use id='pk' x='2837' y='251' xlink:href='#pk'/><title>Primary Key  ( isolate_id, storage_id ) Index  ( storage_id ) </title></a>
+<a xlink:href='#isolate_storage.storage_id'><text x='2853' y='262'>storage_id</text><title>storage_id bigserial not null</title></a>
+<a xlink:href='#isolate_storage.storage_id'><use id='fk' x='2928' y='251' xlink:href='#fk'/><title>References storage ( storage_id ) </title></a>
+  <a xlink:href='#isolate_storage.issues'><text x='2853' y='277'>issues</text><title>issues varchar</title></a>
+
+<!-- ============= Table 'antibiotic' ============= -->
+<rect class='table' x='3285' y='263' width='105' height='90' rx='7' ry='7' />
+<path d='M 3285.50 289.50 L 3285.50 270.50 Q 3285.50 263.50 3292.50 263.50 L 3382.50 263.50 Q 3389.50 263.50 3389.50 270.50 L 3389.50 289.50 L3285.50 289.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#antibiotic'><text x='3312' y='277' class='tableTitle'>antibiotic</text><title>Table qiita.antibiotic</title></a>
+  <use id='nn' x='3287' y='297' xlink:href='#nn'/><a xlink:href='#antibiotic.antibiotic_id'><use id='pk' x='3287' y='296' xlink:href='#pk'/><title>Primary Key  ( antibiotic_id ) </title></a>
+<a xlink:href='#antibiotic.antibiotic_id'><text x='3303' y='307'>antibiotic_id</text><title>antibiotic_id bigserial not null</title></a>
+<a xlink:href='#antibiotic.antibiotic_id'><use id='ref' x='3378' y='296' xlink:href='#ref'/><title>Referred by isolate_antibiotic_sensitivity ( antibiotic_id ) 
+Referred by isolate_antibiotic_resistance ( antibiotic_id ) </title></a>
+  <use id='nn' x='3287' y='312' xlink:href='#nn'/><a xlink:href='#antibiotic.name'><text x='3303' y='322'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='3287' y='327' xlink:href='#nn'/><a xlink:href='#antibiotic.description'><text x='3303' y='337'>description</text><title>description varchar not null</title></a>
+
+<!-- ============= Table 'isolate_antibiotic_sensitivity' ============= -->
+<rect class='table' x='3075' y='203' width='165' height='105' rx='7' ry='7' />
+<path d='M 3075.50 229.50 L 3075.50 210.50 Q 3075.50 203.50 3082.50 203.50 L 3232.50 203.50 Q 3239.50 203.50 3239.50 210.50 L 3239.50 229.50 L3075.50 229.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#isolate_antibiotic_sensitivity'><text x='3082' y='217' class='tableTitle'>isolate_antibiotic_sensitivity</text><title>Table qiita.isolate_antibiotic_sensitivity</title></a>
+  <use id='nn' x='3077' y='237' xlink:href='#nn'/><a xlink:href='#isolate_antibiotic_sensitivity.isolate_id'><use id='pk' x='3077' y='236' xlink:href='#pk'/><title>Primary Key  ( isolate_id, antibiotic_id ) Index  ( isolate_id ) </title></a>
+<a xlink:href='#isolate_antibiotic_sensitivity.isolate_id'><text x='3093' y='247'>isolate_id</text><title>isolate_id bigint not null</title></a>
+<a xlink:href='#isolate_antibiotic_sensitivity.isolate_id'><use id='fk' x='3228' y='236' xlink:href='#fk'/><title>References isolate ( isolate_id ) </title></a>
+  <use id='nn' x='3077' y='252' xlink:href='#nn'/><a xlink:href='#isolate_antibiotic_sensitivity.antibiotic_id'><use id='pk' x='3077' y='251' xlink:href='#pk'/><title>Primary Key  ( isolate_id, antibiotic_id ) Index  ( antibiotic_id ) </title></a>
+<a xlink:href='#isolate_antibiotic_sensitivity.antibiotic_id'><text x='3093' y='262'>antibiotic_id</text><title>antibiotic_id bigint not null</title></a>
+<a xlink:href='#isolate_antibiotic_sensitivity.antibiotic_id'><use id='fk' x='3228' y='251' xlink:href='#fk'/><title>References antibiotic ( antibiotic_id ) </title></a>
+  <use id='nn' x='3077' y='267' xlink:href='#nn'/><a xlink:href='#isolate_antibiotic_sensitivity.mic'><text x='3093' y='277'>mic</text><title>mic real not null
+minimum inhibitory concentration</title></a>
+  <use id='nn' x='3077' y='282' xlink:href='#nn'/><a xlink:href='#isolate_antibiotic_sensitivity.description'><text x='3093' y='292'>description</text><title>description varchar not null
+Description of the experiment conducted to perform antibiotic sensitivity testing</title></a>
+
+<!-- ============= Table 'isolate_antibiotic_resistance' ============= -->
+<rect class='table' x='3075' y='323' width='165' height='105' rx='7' ry='7' />
+<path d='M 3075.50 349.50 L 3075.50 330.50 Q 3075.50 323.50 3082.50 323.50 L 3232.50 323.50 Q 3239.50 323.50 3239.50 330.50 L 3239.50 349.50 L3075.50 349.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#isolate_antibiotic_resistance'><text x='3081' y='337' class='tableTitle'>isolate_antibiotic_resistance</text><title>Table qiita.isolate_antibiotic_resistance</title></a>
+  <use id='nn' x='3077' y='357' xlink:href='#nn'/><a xlink:href='#isolate_antibiotic_resistance.isolate_id'><use id='pk' x='3077' y='356' xlink:href='#pk'/><title>Primary Key  ( isolate_id, antibiotic_id ) Index  ( isolate_id ) </title></a>
+<a xlink:href='#isolate_antibiotic_resistance.isolate_id'><text x='3093' y='367'>isolate_id</text><title>isolate_id bigint not null</title></a>
+<a xlink:href='#isolate_antibiotic_resistance.isolate_id'><use id='fk' x='3228' y='356' xlink:href='#fk'/><title>References isolate ( isolate_id ) </title></a>
+  <use id='nn' x='3077' y='372' xlink:href='#nn'/><a xlink:href='#isolate_antibiotic_resistance.antibiotic_id'><use id='pk' x='3077' y='371' xlink:href='#pk'/><title>Primary Key  ( isolate_id, antibiotic_id ) Index  ( antibiotic_id ) </title></a>
+<a xlink:href='#isolate_antibiotic_resistance.antibiotic_id'><text x='3093' y='382'>antibiotic_id</text><title>antibiotic_id bigint not null</title></a>
+<a xlink:href='#isolate_antibiotic_resistance.antibiotic_id'><use id='fk' x='3228' y='371' xlink:href='#fk'/><title>References antibiotic ( antibiotic_id ) </title></a>
+  <use id='nn' x='3077' y='387' xlink:href='#nn'/><a xlink:href='#isolate_antibiotic_resistance.mic'><text x='3093' y='397'>mic</text><title>mic real not null
+Minimum inhibitory concentration</title></a>
+  <use id='nn' x='3077' y='402' xlink:href='#nn'/><a xlink:href='#isolate_antibiotic_resistance.description'><text x='3093' y='412'>description</text><title>description varchar not null
+Description of the experiment conducted to perform antibiotic resistance testing</title></a>
+
+<!-- ============= Table 'isolate' ============= -->
+<rect class='table' x='2865' y='398' width='105' height='120' rx='7' ry='7' />
+<path d='M 2865.50 424.50 L 2865.50 405.50 Q 2865.50 398.50 2872.50 398.50 L 2962.50 398.50 Q 2969.50 398.50 2969.50 405.50 L 2969.50 424.50 L2865.50 424.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#isolate'><text x='2900' y='412' class='tableTitle'>isolate</text><title>Table qiita.isolate</title></a>
+  <use id='nn' x='2867' y='432' xlink:href='#nn'/><a xlink:href='#isolate.isolate_id'><use id='pk' x='2867' y='431' xlink:href='#pk'/><title>Primary Key  ( isolate_id ) </title></a>
+<a xlink:href='#isolate.isolate_id'><text x='2883' y='442'>isolate_id</text><title>isolate_id bigserial not null</title></a>
+<a xlink:href='#isolate.isolate_id'><use id='ref' x='2958' y='431' xlink:href='#ref'/><title>Referred by isolate_storage ( isolate_id ) 
+Referred by isolate_storage ( isolate_id ) 
+Referred by isolate ( parent_id -> isolate_id ) 
+Referred by isolate ( parent_id -> isolate_id ) 
+Referred by isolate_antibiotic_sensitivity ( isolate_id ) 
+Referred by isolate_antibiotic_resistance ( isolate_id ) 
+Referred by isolate_growth ( isolate_id ) 
+Referred by strain ( representative_isolate_id -> isolate_id ) 
+Referred by strain ( representative_isolate_id -> isolate_id ) </title></a>
+  <use id='nn' x='2867' y='447' xlink:href='#nn'/><a xlink:href='#isolate.alias'><text x='2883' y='457'>alias</text><title>alias varchar not null</title></a>
+  <a xlink:href='#isolate.parent_id'><use id='idx' x='2867' y='461' xlink:href='#idx'/><title>Index  ( parent_id ) </title></a>
+<a xlink:href='#isolate.parent_id'><text x='2883' y='472'>parent_id</text><title>parent_id bigint</title></a>
+<a xlink:href='#isolate.parent_id'><use id='fk' x='2958' y='461' xlink:href='#fk'/><title>References isolate ( parent_id -> isolate_id ) </title></a>
+  <use id='nn' x='2867' y='477' xlink:href='#nn'/><a xlink:href='#isolate.sample_id'><use id='idx' x='2867' y='476' xlink:href='#idx'/><title>Index  ( sample_id ) </title></a>
+<a xlink:href='#isolate.sample_id'><text x='2883' y='487'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#isolate.sample_id'><use id='fk' x='2958' y='476' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
+  <use id='nn' x='2867' y='492' xlink:href='#nn'/><a xlink:href='#isolate.isolation_date'><text x='2883' y='502'>isolation_date</text><title>isolation_date timestamp not null</title></a>
+
+<!-- ============= Table 'isolate_growth_filepath' ============= -->
+<rect class='table' x='2490' y='413' width='150' height='75' rx='7' ry='7' />
+<path d='M 2490.50 439.50 L 2490.50 420.50 Q 2490.50 413.50 2497.50 413.50 L 2632.50 413.50 Q 2639.50 413.50 2639.50 420.50 L 2639.50 439.50 L2490.50 439.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#isolate_growth_filepath'><text x='2502' y='427' class='tableTitle'>isolate_growth_filepath</text><title>Table qiita.isolate_growth_filepath</title></a>
+  <use id='nn' x='2492' y='447' xlink:href='#nn'/><a xlink:href='#isolate_growth_filepath.isolate_growth_id'><use id='pk' x='2492' y='446' xlink:href='#pk'/><title>Primary Key  ( isolate_growth_id, filepath_id ) Index  ( isolate_growth_id ) </title></a>
+<a xlink:href='#isolate_growth_filepath.isolate_growth_id'><text x='2508' y='457'>isolate_growth_id</text><title>isolate_growth_id bigint not null</title></a>
+<a xlink:href='#isolate_growth_filepath.isolate_growth_id'><use id='fk' x='2628' y='446' xlink:href='#fk'/><title>References isolate_growth ( isolate_growth_id ) </title></a>
+  <use id='nn' x='2492' y='462' xlink:href='#nn'/><a xlink:href='#isolate_growth_filepath.filepath_id'><use id='pk' x='2492' y='461' xlink:href='#pk'/><title>Primary Key  ( isolate_growth_id, filepath_id ) Index  ( filepath_id ) </title></a>
+<a xlink:href='#isolate_growth_filepath.filepath_id'><text x='2508' y='472'>filepath_id</text><title>filepath_id bigint not null</title></a>
+<a xlink:href='#isolate_growth_filepath.filepath_id'><use id='fk' x='2628' y='461' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
+
+<!-- ============= Table 'isolate_growth' ============= -->
+<rect class='table' x='2685' y='398' width='135' height='180' rx='7' ry='7' />
+<path d='M 2685.50 424.50 L 2685.50 405.50 Q 2685.50 398.50 2692.50 398.50 L 2812.50 398.50 Q 2819.50 398.50 2819.50 405.50 L 2819.50 424.50 L2685.50 424.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#isolate_growth'><text x='2713' y='412' class='tableTitle'>isolate_growth</text><title>Table qiita.isolate_growth</title></a>
+  <use id='nn' x='2687' y='432' xlink:href='#nn'/><a xlink:href='#isolate_growth.isolate_growth_id'><use id='pk' x='2687' y='431' xlink:href='#pk'/><title>Primary Key  ( isolate_growth_id ) </title></a>
+<a xlink:href='#isolate_growth.isolate_growth_id'><text x='2703' y='442'>isolate_growth_id</text><title>isolate_growth_id bigserial not null</title></a>
+<a xlink:href='#isolate_growth.isolate_growth_id'><use id='ref' x='2808' y='431' xlink:href='#ref'/><title>Referred by isolate_growth_filepath ( isolate_growth_id ) </title></a>
+  <use id='nn' x='2687' y='447' xlink:href='#nn'/><a xlink:href='#isolate_growth.isolate_id'><text x='2703' y='457'>isolate_id</text><title>isolate_id bigint not null</title></a>
+<a xlink:href='#isolate_growth.isolate_id'><use id='fk' x='2808' y='446' xlink:href='#fk'/><title>References isolate ( isolate_id ) </title></a>
+  <use id='nn' x='2687' y='462' xlink:href='#nn'/><a xlink:href='#isolate_growth.media_id'><text x='2703' y='472'>media_id</text><title>media_id bigint not null</title></a>
+<a xlink:href='#isolate_growth.media_id'><use id='fk' x='2808' y='461' xlink:href='#fk'/><title>References media ( media_id ) </title></a>
+  <use id='nn' x='2687' y='477' xlink:href='#nn'/><a xlink:href='#isolate_growth.conditions_id'><text x='2703' y='487'>conditions_id</text><title>conditions_id bigint not null</title></a>
+<a xlink:href='#isolate_growth.conditions_id'><use id='fk' x='2808' y='476' xlink:href='#fk'/><title>References conditions ( conditions_id ) </title></a>
+  <use id='nn' x='2687' y='492' xlink:href='#nn'/><a xlink:href='#isolate_growth.has_grown'><text x='2703' y='502'>has_grown</text><title>has_grown bool not null</title></a>
+  <use id='nn' x='2687' y='507' xlink:href='#nn'/><a xlink:href='#isolate_growth.time_to_grow'><text x='2703' y='517'>time_to_grow</text><title>time_to_grow varchar not null</title></a>
+  <a xlink:href='#isolate_growth.max_od'><text x='2703' y='532'>max_od</text><title>max_od real</title></a>
+  <a xlink:href='#isolate_growth.comments'><text x='2703' y='547'>comments</text><title>comments varchar</title></a>
+  <a xlink:href='#isolate_growth.morpholgy_id'><use id='idx' x='2687' y='551' xlink:href='#idx'/><title>Index  ( morpholgy_id ) </title></a>
+<a xlink:href='#isolate_growth.morpholgy_id'><text x='2703' y='562'>morpholgy_id</text><title>morpholgy_id bigint</title></a>
+<a xlink:href='#isolate_growth.morpholgy_id'><use id='fk' x='2808' y='551' xlink:href='#fk'/><title>References morphology ( morpholgy_id -> morphology_id ) </title></a>
+
+<!-- ============= Table 'morphology' ============= -->
+<rect class='table' x='2505' y='533' width='120' height='150' rx='7' ry='7' />
+<path d='M 2505.50 559.50 L 2505.50 540.50 Q 2505.50 533.50 2512.50 533.50 L 2617.50 533.50 Q 2624.50 533.50 2624.50 540.50 L 2624.50 559.50 L2505.50 559.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#morphology'><text x='2532' y='547' class='tableTitle'>morphology</text><title>Table qiita.morphology</title></a>
+  <use id='nn' x='2507' y='567' xlink:href='#nn'/><a xlink:href='#morphology.morphology_id'><use id='pk' x='2507' y='566' xlink:href='#pk'/><title>Primary Key  ( morphology_id ) </title></a>
+<a xlink:href='#morphology.morphology_id'><text x='2523' y='577'>morphology_id</text><title>morphology_id bigserial not null</title></a>
+<a xlink:href='#morphology.morphology_id'><use id='ref' x='2613' y='566' xlink:href='#ref'/><title>Referred by isolate_growth ( morpholgy_id -> morphology_id ) 
+Referred by isolate_growth ( morpholgy_id -> morphology_id ) </title></a>
+  <use id='nn' x='2507' y='582' xlink:href='#nn'/><a xlink:href='#morphology.form'><text x='2523' y='592'>form</text><title>form varchar not null</title></a>
+  <use id='nn' x='2507' y='597' xlink:href='#nn'/><a xlink:href='#morphology.elevation'><text x='2523' y='607'>elevation</text><title>elevation varchar not null</title></a>
+  <use id='nn' x='2507' y='612' xlink:href='#nn'/><a xlink:href='#morphology.margin'><text x='2523' y='622'>margin</text><title>margin varchar not null</title></a>
+  <use id='nn' x='2507' y='627' xlink:href='#nn'/><a xlink:href='#morphology.surface'><text x='2523' y='637'>surface</text><title>surface varchar not null</title></a>
+  <a xlink:href='#morphology.opacity'><text x='2523' y='652'>opacity</text><title>opacity varchar</title></a>
+  <use id='nn' x='2507' y='657' xlink:href='#nn'/><a xlink:href='#morphology.pigmentation'><text x='2523' y='667'>pigmentation</text><title>pigmentation varchar not null</title></a>
+
+<!-- ============= Table 'assembly_preprocessed_data' ============= -->
+<rect class='table' x='2505' y='713' width='180' height='75' rx='7' ry='7' />
+<path d='M 2505.50 739.50 L 2505.50 720.50 Q 2505.50 713.50 2512.50 713.50 L 2677.50 713.50 Q 2684.50 713.50 2684.50 720.50 L 2684.50 739.50 L2505.50 739.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#assembly_preprocessed_data'><text x='2515' y='727' class='tableTitle'>assembly_preprocessed_data</text><title>Table qiita.assembly_preprocessed_data</title></a>
+  <use id='nn' x='2507' y='747' xlink:href='#nn'/><a xlink:href='#assembly_preprocessed_data.preprocessed_data_id'><use id='pk' x='2507' y='746' xlink:href='#pk'/><title>Primary Key  ( preprocessed_data_id, assembly_id ) Index  ( preprocessed_data_id ) </title></a>
+<a xlink:href='#assembly_preprocessed_data.preprocessed_data_id'><text x='2523' y='757'>preprocessed_data_id</text><title>preprocessed_data_id bigint not null</title></a>
+<a xlink:href='#assembly_preprocessed_data.preprocessed_data_id'><use id='fk' x='2673' y='746' xlink:href='#fk'/><title>References preprocessed_data ( preprocessed_data_id ) </title></a>
+  <use id='nn' x='2507' y='762' xlink:href='#nn'/><a xlink:href='#assembly_preprocessed_data.assembly_id'><use id='pk' x='2507' y='761' xlink:href='#pk'/><title>Primary Key  ( preprocessed_data_id, assembly_id ) Index  ( assembly_id ) </title></a>
+<a xlink:href='#assembly_preprocessed_data.assembly_id'><text x='2523' y='772'>assembly_id</text><title>assembly_id bigint not null</title></a>
+<a xlink:href='#assembly_preprocessed_data.assembly_id'><use id='fk' x='2673' y='761' xlink:href='#fk'/><title>References assembly ( assembly_id ) </title></a>
+
+<!-- ============= Table 'assembly_filepath' ============= -->
+<rect class='table' x='2535' y='803' width='120' height='75' rx='7' ry='7' />
+<path d='M 2535.50 829.50 L 2535.50 810.50 Q 2535.50 803.50 2542.50 803.50 L 2647.50 803.50 Q 2654.50 803.50 2654.50 810.50 L 2654.50 829.50 L2535.50 829.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#assembly_filepath'><text x='2547' y='817' class='tableTitle'>assembly_filepath</text><title>Table qiita.assembly_filepath</title></a>
+  <use id='nn' x='2537' y='837' xlink:href='#nn'/><a xlink:href='#assembly_filepath.assembly_id'><use id='pk' x='2537' y='836' xlink:href='#pk'/><title>Primary Key  ( assembly_id, filepath_id ) Index  ( assembly_id ) </title></a>
+<a xlink:href='#assembly_filepath.assembly_id'><text x='2553' y='847'>assembly_id</text><title>assembly_id bigint not null</title></a>
+<a xlink:href='#assembly_filepath.assembly_id'><use id='fk' x='2643' y='836' xlink:href='#fk'/><title>References assembly ( assembly_id ) </title></a>
+  <use id='nn' x='2537' y='852' xlink:href='#nn'/><a xlink:href='#assembly_filepath.filepath_id'><use id='pk' x='2537' y='851' xlink:href='#pk'/><title>Primary Key  ( assembly_id, filepath_id ) Index  ( filepath_id ) </title></a>
+<a xlink:href='#assembly_filepath.filepath_id'><text x='2553' y='862'>filepath_id</text><title>filepath_id bigint not null</title></a>
+<a xlink:href='#assembly_filepath.filepath_id'><use id='fk' x='2643' y='851' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
+
+<!-- ============= Table 'assembly_annotation' ============= -->
+<rect class='table' x='2760' y='938' width='135' height='75' rx='7' ry='7' />
+<path d='M 2760.50 964.50 L 2760.50 945.50 Q 2760.50 938.50 2767.50 938.50 L 2887.50 938.50 Q 2894.50 938.50 2894.50 945.50 L 2894.50 964.50 L2760.50 964.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#assembly_annotation'><text x='2770' y='952' class='tableTitle'>assembly_annotation</text><title>Table qiita.assembly_annotation</title></a>
+  <use id='nn' x='2762' y='972' xlink:href='#nn'/><a xlink:href='#assembly_annotation.assembly_id'><use id='pk' x='2762' y='971' xlink:href='#pk'/><title>Primary Key  ( assembly_id, annotation_id ) Index  ( assembly_id ) </title></a>
+<a xlink:href='#assembly_annotation.assembly_id'><text x='2778' y='982'>assembly_id</text><title>assembly_id bigint not null</title></a>
+<a xlink:href='#assembly_annotation.assembly_id'><use id='fk' x='2883' y='971' xlink:href='#fk'/><title>References assembly ( assembly_id ) </title></a>
+  <use id='nn' x='2762' y='987' xlink:href='#nn'/><a xlink:href='#assembly_annotation.annotation_id'><use id='pk' x='2762' y='986' xlink:href='#pk'/><title>Primary Key  ( assembly_id, annotation_id ) Index  ( annotation_id ) </title></a>
+<a xlink:href='#assembly_annotation.annotation_id'><text x='2778' y='997'>annotation_id</text><title>annotation_id bigint not null</title></a>
+<a xlink:href='#assembly_annotation.annotation_id'><use id='fk' x='2883' y='986' xlink:href='#fk'/><title>References annotation ( annotation_id ) </title></a>
+
+<!-- ============= Table 'annotation_filepath' ============= -->
+<rect class='table' x='2550' y='1058' width='120' height='75' rx='7' ry='7' />
+<path d='M 2550.50 1084.50 L 2550.50 1065.50 Q 2550.50 1058.50 2557.50 1058.50 L 2662.50 1058.50 Q 2669.50 1058.50 2669.50 1065.50 L 2669.50 1084.50 L2550.50 1084.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#annotation_filepath'><text x='2558' y='1072' class='tableTitle'>annotation_filepath</text><title>Table qiita.annotation_filepath</title></a>
+  <use id='nn' x='2552' y='1092' xlink:href='#nn'/><a xlink:href='#annotation_filepath.annotation_id'><use id='pk' x='2552' y='1091' xlink:href='#pk'/><title>Primary Key  ( annotation_id, filepath_id ) Index  ( annotation_id ) </title></a>
+<a xlink:href='#annotation_filepath.annotation_id'><text x='2568' y='1102'>annotation_id</text><title>annotation_id bigint not null</title></a>
+<a xlink:href='#annotation_filepath.annotation_id'><use id='fk' x='2658' y='1091' xlink:href='#fk'/><title>References annotation ( annotation_id ) </title></a>
+  <use id='nn' x='2552' y='1107' xlink:href='#nn'/><a xlink:href='#annotation_filepath.filepath_id'><use id='pk' x='2552' y='1106' xlink:href='#pk'/><title>Primary Key  ( annotation_id, filepath_id ) Index  ( filepath_id ) </title></a>
+<a xlink:href='#annotation_filepath.filepath_id'><text x='2568' y='1117'>filepath_id</text><title>filepath_id bigint not null</title></a>
+<a xlink:href='#annotation_filepath.filepath_id'><use id='fk' x='2658' y='1106' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
+
+<!-- ============= Table 'software' ============= -->
+<rect class='table' x='3000' y='923' width='135' height='120' rx='7' ry='7' />
+<path d='M 3000.50 949.50 L 3000.50 930.50 Q 3000.50 923.50 3007.50 923.50 L 3127.50 923.50 Q 3134.50 923.50 3134.50 930.50 L 3134.50 949.50 L3000.50 949.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software'><text x='3044' y='937' class='tableTitle'>software</text><title>Table qiita.software</title></a>
+  <use id='nn' x='3002' y='957' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='3002' y='956' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
+<a xlink:href='#software.software_id'><text x='3018' y='967'>software_id</text><title>software_id bigserial not null</title></a>
+<a xlink:href='#software.software_id'><use id='ref' x='3123' y='956' xlink:href='#ref'/><title>Referred by assembly ( assembler_id -> software_id ) 
+Referred by assembly ( assembler_id -> software_id ) 
+Referred by annotation ( annotator_id -> software_id ) 
+Referred by annotation ( annotator_id -> software_id ) </title></a>
+  <use id='nn' x='3002' y='972' xlink:href='#nn'/><a xlink:href='#software.name'><text x='3018' y='982'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='3002' y='987' xlink:href='#nn'/><a xlink:href='#software.version'><text x='3018' y='997'>version</text><title>version varchar not null</title></a>
+  <use id='nn' x='3002' y='1002' xlink:href='#nn'/><a xlink:href='#software.parameters_table'><text x='3018' y='1012'>parameters_table</text><title>parameters_table varchar not null</title></a>
+  <use id='nn' x='3002' y='1017' xlink:href='#nn'/><a xlink:href='#software.type'><text x='3018' y='1027'>type</text><title>type varchar not null</title></a>
+
+<!-- ============= Table 'annotation' ============= -->
+<rect class='table' x='2760' y='1043' width='150' height='210' rx='7' ry='7' />
+<path d='M 2760.50 1069.50 L 2760.50 1050.50 Q 2760.50 1043.50 2767.50 1043.50 L 2902.50 1043.50 Q 2909.50 1043.50 2909.50 1050.50 L 2909.50 1069.50 L2760.50 1069.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#annotation'><text x='2806' y='1057' class='tableTitle'>annotation</text><title>Table qiita.annotation</title></a>
+  <use id='nn' x='2762' y='1077' xlink:href='#nn'/><a xlink:href='#annotation.annotation_id'><use id='pk' x='2762' y='1076' xlink:href='#pk'/><title>Primary Key  ( annotation_id ) </title></a>
+<a xlink:href='#annotation.annotation_id'><text x='2778' y='1087'>annotation_id</text><title>annotation_id bigserial not null</title></a>
+<a xlink:href='#annotation.annotation_id'><use id='ref' x='2898' y='1076' xlink:href='#ref'/><title>Referred by assembly_annotation ( annotation_id ) 
+Referred by annotation_filepath ( annotation_id ) </title></a>
+  <use id='nn' x='2762' y='1092' xlink:href='#nn'/><a xlink:href='#annotation.cds_count'><text x='2778' y='1102'>cds_count</text><title>cds_count integer not null</title></a>
+  <use id='nn' x='2762' y='1107' xlink:href='#nn'/><a xlink:href='#annotation.rrna_count'><text x='2778' y='1117'>rrna_count</text><title>rrna_count integer not null</title></a>
+  <use id='nn' x='2762' y='1122' xlink:href='#nn'/><a xlink:href='#annotation.trna_count'><text x='2778' y='1132'>trna_count</text><title>trna_count integer not null</title></a>
+  <use id='nn' x='2762' y='1137' xlink:href='#nn'/><a xlink:href='#annotation.tmrna_count'><text x='2778' y='1147'>tmrna_count</text><title>tmrna_count integer not null</title></a>
+  <use id='nn' x='2762' y='1152' xlink:href='#nn'/><a xlink:href='#annotation.ncrna_count'><text x='2778' y='1162'>ncrna_count</text><title>ncrna_count integer not null</title></a>
+  <use id='nn' x='2762' y='1167' xlink:href='#nn'/><a xlink:href='#annotation.cripr_count'><text x='2778' y='1177'>cripr_count</text><title>cripr_count integer not null</title></a>
+  <use id='nn' x='2762' y='1182' xlink:href='#nn'/><a xlink:href='#annotation.cazymes_count'><text x='2778' y='1192'>cazymes_count</text><title>cazymes_count integer not null</title></a>
+  <use id='nn' x='2762' y='1197' xlink:href='#nn'/><a xlink:href='#annotation.peptidases_count'><text x='2778' y='1207'>peptidases_count</text><title>peptidases_count integer not null</title></a>
+  <use id='nn' x='2762' y='1212' xlink:href='#nn'/><a xlink:href='#annotation.annotator_id'><use id='idx' x='2762' y='1211' xlink:href='#idx'/><title>Index  ( annotator_id ) </title></a>
+<a xlink:href='#annotation.annotator_id'><text x='2778' y='1222'>annotator_id</text><title>annotator_id bigint not null</title></a>
+<a xlink:href='#annotation.annotator_id'><use id='fk' x='2898' y='1211' xlink:href='#fk'/><title>References software ( annotator_id -> software_id ) </title></a>
+  <use id='nn' x='2762' y='1227' xlink:href='#nn'/><a xlink:href='#annotation.annotator_params_id'><text x='2778' y='1237'>annotator_params_id</text><title>annotator_params_id bigint not null</title></a>
+
+<!-- ============= Table 'strain' ============= -->
+<rect class='table' x='3030' y='563' width='180' height='135' rx='7' ry='7' />
+<path d='M 3030.50 589.50 L 3030.50 570.50 Q 3030.50 563.50 3037.50 563.50 L 3202.50 563.50 Q 3209.50 563.50 3209.50 570.50 L 3209.50 589.50 L3030.50 589.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#strain'><text x='3104' y='577' class='tableTitle'>strain</text><title>Table qiita.strain</title></a>
+  <use id='nn' x='3032' y='597' xlink:href='#nn'/><a xlink:href='#strain.strain_id'><use id='pk' x='3032' y='596' xlink:href='#pk'/><title>Primary Key  ( strain_id ) </title></a>
+<a xlink:href='#strain.strain_id'><text x='3048' y='607'>strain_id</text><title>strain_id bigserial not null</title></a>
+  <a xlink:href='#strain.official_name'><text x='3048' y='622'>official_name</text><title>official_name varchar</title></a>
+  <use id='nn' x='3032' y='627' xlink:href='#nn'/><a xlink:href='#strain.alias'><text x='3048' y='637'>alias</text><title>alias varchar not null</title></a>
+  <use id='nn' x='3032' y='642' xlink:href='#nn'/><a xlink:href='#strain.representative_assembly_id'><use id='unq' x='3032' y='641' xlink:href='#unq'/><title>Unique Index  ( representative_assembly_id ) </title></a>
+<a xlink:href='#strain.representative_assembly_id'><text x='3048' y='652'>representative_assembly_id</text><title>representative_assembly_id bigint not null</title></a>
+<a xlink:href='#strain.representative_assembly_id'><use id='fk' x='3198' y='641' xlink:href='#fk'/><title>References assembly ( representative_assembly_id -> assembly_id ) </title></a>
+  <use id='nn' x='3032' y='657' xlink:href='#nn'/><a xlink:href='#strain.representative_isolate_id'><use id='unq' x='3032' y='656' xlink:href='#unq'/><title>Unique Index  ( representative_isolate_id ) </title></a>
+<a xlink:href='#strain.representative_isolate_id'><text x='3048' y='667'>representative_isolate_id</text><title>representative_isolate_id bigint not null</title></a>
+<a xlink:href='#strain.representative_isolate_id'><use id='fk' x='3198' y='656' xlink:href='#fk'/><title>References isolate ( representative_isolate_id -> isolate_id ) </title></a>
+  <use id='nn' x='3032' y='672' xlink:href='#nn'/><a xlink:href='#strain.taxonomy'><use id='unq' x='3032' y='671' xlink:href='#unq'/><title>Unique Index  ( taxonomy ) </title></a>
+<a xlink:href='#strain.taxonomy'><text x='3048' y='682'>taxonomy</text><title>taxonomy varchar not null</title></a>
+
+<!-- ============= Table 'assembly' ============= -->
+<rect class='table' x='2745' y='698' width='180' height='210' rx='7' ry='7' />
+<path d='M 2745.50 724.50 L 2745.50 705.50 Q 2745.50 698.50 2752.50 698.50 L 2917.50 698.50 Q 2924.50 698.50 2924.50 705.50 L 2924.50 724.50 L2745.50 724.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#assembly'><text x='2810' y='712' class='tableTitle'>assembly</text><title>Table qiita.assembly</title></a>
+  <use id='nn' x='2747' y='732' xlink:href='#nn'/><a xlink:href='#assembly.assembly_id'><use id='pk' x='2747' y='731' xlink:href='#pk'/><title>Primary Key  ( assembly_id ) </title></a>
+<a xlink:href='#assembly.assembly_id'><text x='2763' y='742'>assembly_id</text><title>assembly_id bigserial not null</title></a>
+<a xlink:href='#assembly.assembly_id'><use id='ref' x='2913' y='731' xlink:href='#ref'/><title>Referred by assembly_preprocessed_data ( assembly_id ) 
+Referred by assembly_filepath ( assembly_id ) 
+Referred by assembly_filepath ( assembly_id ) 
+Referred by assembly_annotation ( assembly_id ) 
+Referred by strain ( representative_assembly_id -> assembly_id ) 
+Referred by strain ( representative_assembly_id -> assembly_id ) </title></a>
+  <use id='nn' x='2747' y='747' xlink:href='#nn'/><a xlink:href='#assembly.n50'><text x='2763' y='757'>n50</text><title>n50 integer not null</title></a>
+  <use id='nn' x='2747' y='762' xlink:href='#nn'/><a xlink:href='#assembly.n90'><text x='2763' y='772'>n90</text><title>n90 integer not null</title></a>
+  <use id='nn' x='2747' y='777' xlink:href='#nn'/><a xlink:href='#assembly.num_contigs'><text x='2763' y='787'>num_contigs</text><title>num_contigs integer not null</title></a>
+  <use id='nn' x='2747' y='792' xlink:href='#nn'/><a xlink:href='#assembly.acum_length'><text x='2763' y='802'>acum_length</text><title>acum_length integer not null</title></a>
+  <use id='nn' x='2747' y='807' xlink:href='#nn'/><a xlink:href='#assembly.max_contig_length'><text x='2763' y='817'>max_contig_length</text><title>max_contig_length integer not null</title></a>
+  <use id='nn' x='2747' y='822' xlink:href='#nn'/><a xlink:href='#assembly.min_contig_length'><text x='2763' y='832'>min_contig_length</text><title>min_contig_length integer not null</title></a>
+  <use id='nn' x='2747' y='837' xlink:href='#nn'/><a xlink:href='#assembly.avg_contig_length'><text x='2763' y='847'>avg_contig_length</text><title>avg_contig_length real not null</title></a>
+  <use id='nn' x='2747' y='852' xlink:href='#nn'/><a xlink:href='#assembly.gc_content'><text x='2763' y='862'>gc_content</text><title>gc_content integer not null</title></a>
+  <use id='nn' x='2747' y='867' xlink:href='#nn'/><a xlink:href='#assembly.assembler_id'><use id='idx' x='2747' y='866' xlink:href='#idx'/><title>Index  ( assembler_id ) </title></a>
+<a xlink:href='#assembly.assembler_id'><text x='2763' y='877'>assembler_id</text><title>assembler_id bigint not null</title></a>
+<a xlink:href='#assembly.assembler_id'><use id='fk' x='2913' y='866' xlink:href='#fk'/><title>References software ( assembler_id -> software_id ) </title></a>
+  <use id='nn' x='2747' y='882' xlink:href='#nn'/><a xlink:href='#assembly.assembler_parameters_id'><text x='2763' y='892'>assembler_parameters_id</text><title>assembler_parameters_id bigint not null</title></a>
+
+<!-- ============= Table 'conditions' ============= -->
+<rect class='table' x='2520' y='188' width='105' height='120' rx='7' ry='7' />
+<path d='M 2520.50 214.50 L 2520.50 195.50 Q 2520.50 188.50 2527.50 188.50 L 2617.50 188.50 Q 2624.50 188.50 2624.50 195.50 L 2624.50 214.50 L2520.50 214.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#conditions'><text x='2544' y='202' class='tableTitle'>conditions</text><title>Table qiita.conditions</title></a>
+  <use id='nn' x='2522' y='222' xlink:href='#nn'/><a xlink:href='#conditions.conditions_id'><use id='pk' x='2522' y='221' xlink:href='#pk'/><title>Primary Key  ( conditions_id ) </title></a>
+<a xlink:href='#conditions.conditions_id'><text x='2538' y='232'>conditions_id</text><title>conditions_id bigserial not null</title></a>
+<a xlink:href='#conditions.conditions_id'><use id='ref' x='2613' y='221' xlink:href='#ref'/><title>Referred by isolate_growth ( conditions_id ) </title></a>
+  <use id='nn' x='2522' y='237' xlink:href='#nn'/><a xlink:href='#conditions.name'><text x='2538' y='247'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2522' y='252' xlink:href='#nn'/><a xlink:href='#conditions.temperature'><text x='2538' y='262'>temperature</text><title>temperature real not null</title></a>
+  <use id='nn' x='2522' y='267' xlink:href='#nn'/><a xlink:href='#conditions.atmoshpere'><text x='2538' y='277'>atmoshpere</text><title>atmoshpere varchar not null</title></a>
+  <use id='nn' x='2522' y='282' xlink:href='#nn'/><a xlink:href='#conditions.agitation'><text x='2538' y='292'>agitation</text><title>agitation bool not null</title></a>
 
 </g></svg>
 
@@ -4871,41 +5316,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='study_sample'>Table study_sample</a></th></tr>
-<tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='study_sample.sample_id'>sample&#095;id</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_sample.study_id'>study&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;1 primary key</td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_required_sample_info_study</td>
-		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='raw_data'>Table raw_data</a></th></tr>
 </thead>
 <tbody>
@@ -5282,6 +5692,1093 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_prep_template</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='study_sample'>Table study_sample</a></th></tr>
+<tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_sample.sample_id'>sample&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_sample.study_id'>study&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;1 primary key</td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_required_sample_info_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='ingredient'>Table ingredient</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='ingredient.ingredient_id'>ingredient&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='ingredient.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='ingredient.lot_number'>lot&#095;number</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;ingredients primary key</td>
+		<td> ON ingredient&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='media_ingredients'>Table media_ingredients</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='media_ingredients.media_id'>media&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='media_ingredients.ingredient_id'>ingredient&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='media_ingredients.quantity'>quantity</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;media&#095;ingredients primary key</td>
+		<td> ON media&#095;id&#044; ingredient&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;media&#095;ingredients&#095;0 </td>
+		<td> ON media&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;media&#095;ingredients&#095;1 </td>
+		<td> ON ingredient&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_media_ingredients_media</td>
+		<td > ( media&#095;id ) ref <a href='#media'>media</a> (media&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_media_ingredients</td>
+		<td > ( ingredient&#095;id ) ref <a href='#ingredient'>ingredient</a> (ingredient&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='media'>Table media</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='media.media_id'>media&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='media.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='media.protocol'>protocol</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='media.type'>type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;media primary key</td>
+		<td> ON media&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='storage'>Table storage</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='storage.storage_id'>storage&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='storage.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='storage.media_id'>media&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='storage.additives'>additives</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='storage.temperature'>temperature</a></td>
+		<td> float8   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;storage primary key</td>
+		<td> ON storage&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;storage </td>
+		<td> ON media&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_storage_media</td>
+		<td > ( media&#095;id ) ref <a href='#media'>media</a> (media&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='isolate_storage'>Table isolate_storage</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='isolate_storage.isolate_id'>isolate&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_storage.storage_id'>storage&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_storage.issues'>issues</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;isolate&#095;storage primary key</td>
+		<td> ON isolate&#095;id&#044; storage&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;isolate&#095;storage&#095;0 </td>
+		<td> ON storage&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;isolate&#095;storage&#095;1 </td>
+		<td> ON isolate&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_isolate_storage_storage</td>
+		<td > ( storage&#095;id ) ref <a href='#storage'>storage</a> (storage&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_isolate_storage_isolate</td>
+		<td > ( isolate&#095;id ) ref <a href='#isolate'>isolate</a> (isolate&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='antibiotic'>Table antibiotic</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='antibiotic.antibiotic_id'>antibiotic&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='antibiotic.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='antibiotic.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;antibiotic primary key</td>
+		<td> ON antibiotic&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='isolate_antibiotic_sensitivity'>Table isolate_antibiotic_sensitivity</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='isolate_antibiotic_sensitivity.isolate_id'>isolate&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_antibiotic_sensitivity.antibiotic_id'>antibiotic&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_antibiotic_sensitivity.mic'>mic</a></td>
+		<td> real  NOT NULL  </td>
+		<td> minimum inhibitory concentration </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_antibiotic_sensitivity.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Description of the experiment conducted to perform antibiotic sensitivity testing </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;isolate&#095;antibiotic&#095;sensitivity primary key</td>
+		<td> ON isolate&#095;id&#044; antibiotic&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;isolate&#095;antibiotic&#095;sensitivity </td>
+		<td> ON antibiotic&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;isolate&#095;antibiotic&#095;sensitivity </td>
+		<td> ON isolate&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_isolate_antibiotic_sensitivity</td>
+		<td > ( antibiotic&#095;id ) ref <a href='#antibiotic'>antibiotic</a> (antibiotic&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_isolate_antibiotic_sensitivity_isolate</td>
+		<td > ( isolate&#095;id ) ref <a href='#isolate'>isolate</a> (isolate&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='isolate_antibiotic_resistance'>Table isolate_antibiotic_resistance</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='isolate_antibiotic_resistance.isolate_id'>isolate&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_antibiotic_resistance.antibiotic_id'>antibiotic&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_antibiotic_resistance.mic'>mic</a></td>
+		<td> real  NOT NULL  </td>
+		<td> Minimum inhibitory concentration </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_antibiotic_resistance.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Description of the experiment conducted to perform antibiotic resistance testing </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;table&#095;0 primary key</td>
+		<td> ON isolate&#095;id&#044; antibiotic&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;table&#095;0 </td>
+		<td> ON isolate&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;table&#095;0 </td>
+		<td> ON antibiotic&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_table_0_isolate</td>
+		<td > ( isolate&#095;id ) ref <a href='#isolate'>isolate</a> (isolate&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_table_0_antibiotic</td>
+		<td > ( antibiotic&#095;id ) ref <a href='#antibiotic'>antibiotic</a> (antibiotic&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='isolate'>Table isolate</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='isolate.isolate_id'>isolate&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate.alias'>alias</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate.parent_id'>parent&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate.sample_id'>sample&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate.isolation_date'>isolation&#095;date</a></td>
+		<td> timestamp  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;isolate primary key</td>
+		<td> ON isolate&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;isolate </td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;isolate&#095;0 </td>
+		<td> ON parent&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_isolate_study_sample</td>
+		<td > ( sample&#095;id ) ref <a href='#study&#095;sample'>study&#095;sample</a> (sample&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_isolate_isolate</td>
+		<td > ( parent&#095;id ) ref <a href='#isolate'>isolate</a> (isolate&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='isolate_growth_filepath'>Table isolate_growth_filepath</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='isolate_growth_filepath.isolate_growth_id'>isolate&#095;growth&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_growth_filepath.filepath_id'>filepath&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;isolate&#095;growth&#095;filepath primary key</td>
+		<td> ON isolate&#095;growth&#095;id&#044; filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;isolate&#095;growth&#095;filepath </td>
+		<td> ON isolate&#095;growth&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;isolate&#095;growth&#095;filepath </td>
+		<td> ON filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_isolate_growth_filepath</td>
+		<td > ( isolate&#095;growth&#095;id ) ref <a href='#isolate&#095;growth'>isolate&#095;growth</a> (isolate&#095;growth&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_isolate_growth_filepath_fp</td>
+		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='isolate_growth'>Table isolate_growth</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='isolate_growth.isolate_growth_id'>isolate&#095;growth&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_growth.isolate_id'>isolate&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_growth.media_id'>media&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_growth.conditions_id'>conditions&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_growth.has_grown'>has&#095;grown</a></td>
+		<td> bool  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_growth.time_to_grow'>time&#095;to&#095;grow</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_growth.max_od'>max&#095;od</a></td>
+		<td> real   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_growth.comments'>comments</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='isolate_growth.morpholgy_id'>morpholgy&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;isolate&#095;growth primary key</td>
+		<td> ON isolate&#095;growth&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;isolate&#095;growth </td>
+		<td> ON morpholgy&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_isolate_growth_isolate</td>
+		<td > ( isolate&#095;id ) ref <a href='#isolate'>isolate</a> (isolate&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_isolate_growth_media</td>
+		<td > ( media&#095;id ) ref <a href='#media'>media</a> (media&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_isolate_growth_conditions</td>
+		<td > ( conditions&#095;id ) ref <a href='#conditions'>conditions</a> (conditions&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_isolate_growth_morphology</td>
+		<td > ( morpholgy&#095;id ) ref <a href='#morphology'>morphology</a> (morphology&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='morphology'>Table morphology</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='morphology.morphology_id'>morphology&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='morphology.form'>form</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='morphology.elevation'>elevation</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='morphology.margin'>margin</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='morphology.surface'>surface</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='morphology.opacity'>opacity</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='morphology.pigmentation'>pigmentation</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;morphology primary key</td>
+		<td> ON morphology&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='assembly_preprocessed_data'>Table assembly_preprocessed_data</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='assembly_preprocessed_data.preprocessed_data_id'>preprocessed&#095;data&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly_preprocessed_data.assembly_id'>assembly&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;assembly&#095;preprocessed&#095;data primary key</td>
+		<td> ON preprocessed&#095;data&#095;id&#044; assembly&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;assembly&#095;preprocessed&#095;data </td>
+		<td> ON preprocessed&#095;data&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;assembly&#095;preprocessed&#095;data </td>
+		<td> ON assembly&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_assembly_preprocessed_data</td>
+		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_assembly_preprocessed_data_assembly</td>
+		<td > ( assembly&#095;id ) ref <a href='#assembly'>assembly</a> (assembly&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='assembly_filepath'>Table assembly_filepath</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='assembly_filepath.assembly_id'>assembly&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly_filepath.filepath_id'>filepath&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;assembly&#095;filepath primary key</td>
+		<td> ON assembly&#095;id&#044; filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;assembly&#095;filepath&#095;0 </td>
+		<td> ON assembly&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;assembly&#095;filepath&#095;1 </td>
+		<td> ON filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_assembly_filepath_assembly</td>
+		<td > ( assembly&#095;id ) ref <a href='#assembly'>assembly</a> (assembly&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_assembly_filepath_filepath</td>
+		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='assembly_annotation'>Table assembly_annotation</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='assembly_annotation.assembly_id'>assembly&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly_annotation.annotation_id'>annotation&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;assembly&#095;annotation primary key</td>
+		<td> ON assembly&#095;id&#044; annotation&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;assembly&#095;annotation </td>
+		<td> ON assembly&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;assembly&#095;annotation </td>
+		<td> ON annotation&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_assembly_annotation</td>
+		<td > ( assembly&#095;id ) ref <a href='#assembly'>assembly</a> (assembly&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_assembly_annotation_annotation</td>
+		<td > ( annotation&#095;id ) ref <a href='#annotation'>annotation</a> (annotation&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='annotation_filepath'>Table annotation_filepath</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='annotation_filepath.annotation_id'>annotation&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation_filepath.filepath_id'>filepath&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;annotation&#095;filepath primary key</td>
+		<td> ON annotation&#095;id&#044; filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;annotation&#095;filepath </td>
+		<td> ON annotation&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;annotation&#095;filepath </td>
+		<td> ON filepath&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_annotation_filepath</td>
+		<td > ( annotation&#095;id ) ref <a href='#annotation'>annotation</a> (annotation&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_annotation_filepath_fp</td>
+		<td > ( filepath&#095;id ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='software'>Table software</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='software.software_id'>software&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.version'>version</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.parameters_table'>parameters&#095;table</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.type'>type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;software primary key</td>
+		<td> ON software&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='annotation'>Table annotation</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='annotation.annotation_id'>annotation&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.cds_count'>cds&#095;count</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.rrna_count'>rrna&#095;count</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.trna_count'>trna&#095;count</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.tmrna_count'>tmrna&#095;count</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.ncrna_count'>ncrna&#095;count</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.cripr_count'>cripr&#095;count</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.cazymes_count'>cazymes&#095;count</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.peptidases_count'>peptidases&#095;count</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.annotator_id'>annotator&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='annotation.annotator_params_id'>annotator&#095;params&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;annotation primary key</td>
+		<td> ON annotation&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;annotation </td>
+		<td> ON annotator&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_annotation_software</td>
+		<td > ( annotator&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='strain'>Table strain</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='strain.strain_id'>strain&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='strain.official_name'>official&#095;name</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='strain.alias'>alias</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='strain.representative_assembly_id'>representative&#095;assembly&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='strain.representative_isolate_id'>representative&#095;isolate&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='strain.taxonomy'>taxonomy</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;strain primary key</td>
+		<td> ON strain&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;strain unique</td>
+		<td> ON representative&#095;assembly&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;strain&#095;0 unique</td>
+		<td> ON representative&#095;isolate&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;strain&#095;1 unique</td>
+		<td> ON taxonomy</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_strain_assembly</td>
+		<td > ( representative&#095;assembly&#095;id ) ref <a href='#assembly'>assembly</a> (assembly&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_strain_isolate</td>
+		<td > ( representative&#095;isolate&#095;id ) ref <a href='#isolate'>isolate</a> (isolate&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='assembly'>Table assembly</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='assembly.assembly_id'>assembly&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.n50'>n50</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.n90'>n90</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.num_contigs'>num&#095;contigs</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.acum_length'>acum&#095;length</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.max_contig_length'>max&#095;contig&#095;length</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.min_contig_length'>min&#095;contig&#095;length</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.avg_contig_length'>avg&#095;contig&#095;length</a></td>
+		<td> real  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.gc_content'>gc&#095;content</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.assembler_id'>assembler&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='assembly.assembler_parameters_id'>assembler&#095;parameters&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;assembly primary key</td>
+		<td> ON assembly&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;assembly </td>
+		<td> ON assembler&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_assembly_software</td>
+		<td > ( assembler&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='conditions'>Table conditions</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='conditions.conditions_id'>conditions&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='conditions.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='conditions.temperature'>temperature</a></td>
+		<td> real  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='conditions.atmoshpere'>atmoshpere</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='conditions.agitation'>agitation</a></td>
+		<td> bool  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;conditions primary key</td>
+		<td> ON conditions&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
