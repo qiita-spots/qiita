@@ -379,7 +379,7 @@ INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES 
 INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 10), (2, 11);
 
 -- Insert Analysis
-INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid, portal_type_id) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 1, '121112', 1), ('test@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112', 3);
+INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid, portal_type_id) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 1, '121112', 1), ('test@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112', 2);
 
 -- Insert Analysis Workflow
 INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (1, 3), (2, 3);
