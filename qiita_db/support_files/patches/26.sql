@@ -14,3 +14,10 @@ REFERENCES qiita.portal_type(portal_type_id);
 -- Drop defaut value constraint so it is now required to give portal type
 ALTER TABLE qiita.analysis
 ALTER portal_type_id DROP DEFAULT;
+
+-- Remove existing portals and replace with more relevant ones
+DELETE FROM qiita.portal_type WHERE portal = 'QIIME_EMP';
+
+UPDATE qiita.portal_type
+SET portal = 'QIITA', portal_description = 'QIITA portal. Access to all data stored in database.'
+WHERE portal_type_id = 1;

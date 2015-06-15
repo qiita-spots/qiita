@@ -37,7 +37,7 @@ BASE_DATA_DIR =
 VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt,tsv,sff,fna,qual
 
 #Portal the site is working under
-PORTAL = QIIME_EMP
+PORTAL = QIITA
 
 # ----------------------------- SMTP settings -----------------------------
 [smtp]
