@@ -37,6 +37,7 @@ from .util import (convert_to_id, get_work_base_dir,
                    get_mountpoint, insert_filepaths)
 from qiita_core.qiita_settings import qiita_config
 
+
 class Analysis(QiitaStatusObject):
     """
     Analysis object to access to the Qiita Analysis information
