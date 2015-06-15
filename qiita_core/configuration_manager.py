@@ -163,7 +163,7 @@ class ConfigurationManager(object):
         self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
         self.portal = config.get('main', 'PORTAL')
         # Make sure portal exists in DB
-        convert_to_id(self.portal, 'portal_types', 'portal')
+        self.portal_id = convert_to_id(self.portal, 'portal_types', 'portal')
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]
