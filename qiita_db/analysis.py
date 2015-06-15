@@ -108,8 +108,7 @@ class Analysis(QiitaStatusObject):
         return {x[0] for x in conn_handler.execute_fetchall(sql, (status,))}
 
     @classmethod
-    def create(cls, owner, name, description, portal, parent=None,
-               from_default=False):
+    def create(cls, owner, name, description, parent=None, from_default=False):
         """Creates a new analysis on the database
 
         Parameters
@@ -120,8 +119,6 @@ class Analysis(QiitaStatusObject):
             Name of the analysis
         description : str
             Description of the analysis
-        portal : str
-            Portal the analysis belongs to.
         parent : Analysis object, optional
             The analysis this one was forked from
         from_default : bool, optional
@@ -135,8 +132,6 @@ class Analysis(QiitaStatusObject):
         # Needed since issue #292 exists
         status_id = convert_to_id('in_construction', 'analysis_status',
                                   'status')
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
-
         if from_default:
             # insert analysis and move samples into that new analysis
             dflt_id = owner.default_analysis
