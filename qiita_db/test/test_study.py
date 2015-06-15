@@ -112,7 +112,7 @@ class TestStudy(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
+            "portal_type_id": 1,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
@@ -129,7 +129,7 @@ class TestStudy(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
+            "portal_type_id": 1,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
@@ -337,7 +337,7 @@ class TestStudy(TestCase):
                'email': 'test@foo.bar', 'spatial_series': None,
                'study_description': 'Microbiome of people who eat nothing but'
                                     ' fried chicken',
-               'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 2,
+               'portal_type_id': 1, 'study_alias': 'FCM', 'study_id': 2,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
@@ -395,7 +395,7 @@ class TestStudy(TestCase):
                'email': 'test@foo.bar', 'spatial_series': True,
                'study_description': 'Microbiome of people who eat nothing '
                                     'but fried chicken',
-               'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 3827,
+               'portal_type_id': 1, 'study_alias': 'FCM', 'study_id': 3827,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}

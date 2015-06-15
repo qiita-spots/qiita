@@ -64,7 +64,7 @@ class MetaUtilTests(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 4,
             "number_samples_promised": 4,
-            "portal_type_id": 3,
+            "portal_type_id": 1,
             "study_alias": "TestStudy",
             "study_description": "Description of a test study",
             "study_abstract": "No abstract right now...",
