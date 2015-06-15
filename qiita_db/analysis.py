@@ -132,7 +132,7 @@ class Analysis(QiitaStatusObject):
         # Needed since issue #292 exists
         status_id = convert_to_id('in_construction', 'analysis_status',
                                   'status')
-        portal_id = convert_to_id(qiita_config.portal, 'portal_types',
+        portal_id = convert_to_id(qiita_config.portal, 'portal_type',
                                   'portal')
         if from_default:
             # insert analysis and move samples into that new analysis
