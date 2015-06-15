@@ -445,7 +445,7 @@ class TestAnalysis(TestCase):
         sql = """SELECT * FROM qiita.analysis_filepath
                  WHERE analysis_id=%s ORDER BY filepath_id"""
         obs = self.conn_handler.execute_fetchall(sql, (self.analysis.id,))
-        exp = [[1L, 14L, 2L], [1L, 15L, None], [1L, new_id, None]]
+        exp = [[1, 14, 2], [1, 15, None], [1, new_id, None]]
 
     def test_build_mapping_file_duplicate_samples(self):
         samples = {1: ['1.SKB8.640193', '1.SKB8.640193', '1.SKD8.640184']}

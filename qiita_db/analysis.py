@@ -133,12 +133,9 @@ class Analysis(QiitaStatusObject):
         conn_handler.create_queue(queue)
         # TODO after demo: if exists()
         # Needed since issue #292 exists
-        status_id = conn_handler.execute_fetchone(
-            "SELECT analysis_status_id from qiita.analysis_status WHERE "
-            "status = 'in_construction'")[0]
-        portal_id = conn_handler.execute_fetchone(
-            "SELECT portal_type_id from qiita.portal_type WHERE "
-            "portal = %s", [portal])[0]
+        status_id = convert_to_id('in_construction', 'analysis_status',
+                                  'status')
+        portal_id = convert_to_id(portal, 'portal_type', 'portal')
 
         if from_default:
             # insert analysis and move samples into that new analysis
