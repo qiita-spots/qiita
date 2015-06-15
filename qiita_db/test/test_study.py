@@ -247,7 +247,9 @@ class TestStudy(TestCase):
         exp = [[True, ['123456', '7891011'], 'EMP portal', False,
                 'Identification of the Microbiomes for Cannabis Soils',
                 'None'],
-               [False, None, 'QIIME portal', False, 'test_study_1', 'None']]
+               [False, None,
+                'QIITA portal. Access to all data stored in database.', False,
+                'test_study_1', 'None']]
         self.assertEqual(obs, exp)
 
     def test_has_access_public(self):
