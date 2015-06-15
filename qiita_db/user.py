@@ -231,8 +231,9 @@ class User(QiitaObject):
         conn_handler.add_to_queue(queue, sql, values)
         # create user default sample holder
         sql = ("INSERT INTO qiita.analysis "
-               "(email, name, description, dflt, analysis_status_id) "
-               "VALUES (%s, %s, %s, %s, 1)")
+               "(email, name, description, dflt, analysis_status_id,"
+               "portal_type_id) "
+               "VALUES (%s, %s, %s, %s, 1, 1)")
         conn_handler.add_to_queue(queue, sql,
                                   (email, '%s-dflt' % email, 'dflt', True))
 

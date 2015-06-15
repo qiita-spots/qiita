@@ -132,6 +132,8 @@ class Analysis(QiitaStatusObject):
         # Needed since issue #292 exists
         status_id = convert_to_id('in_construction', 'analysis_status',
                                   'status')
+        portal_id = convert_to_id(qiita_config.portal, 'portal_types',
+                                  'portal')
         if from_default:
             # insert analysis and move samples into that new analysis
             dflt_id = owner.default_analysis
@@ -141,8 +143,7 @@ class Analysis(QiitaStatusObject):
                     VALUES (%s, %s, %s, %s, %s)
                     RETURNING analysis_id""".format(cls._table)
             conn_handler.add_to_queue(queue, sql, (
-                owner.id, name, description, status_id,
-                qiita_config.portal_id))
+                owner.id, name, description, status_id, portal_id))
             # MAGIC NUMBER 3: command selection step
             # needed so we skip the sample selection step
             sql = """INSERT INTO qiita.analysis_workflow

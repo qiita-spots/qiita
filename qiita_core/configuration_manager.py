@@ -16,8 +16,6 @@ from .exceptions import MissingConfigSection
 with standard_library.hooks():
     from configparser import ConfigParser
 
-from qiita_db.util import convert_to_id
-
 
 class ConfigurationManager(object):
     """Holds the QIITA configuration
@@ -162,8 +160,6 @@ class ConfigurationManager(object):
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
         self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
         self.portal = config.get('main', 'PORTAL')
-        # Make sure portal exists in DB
-        self.portal_id = convert_to_id(self.portal, 'portal_types', 'portal')
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]
