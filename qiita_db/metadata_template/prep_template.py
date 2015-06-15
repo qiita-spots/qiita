@@ -8,6 +8,7 @@
 
 from __future__ import division
 from future.utils import viewvalues
+from itertools import chain
 from os.path import join
 from time import strftime
 from copy import deepcopy
@@ -328,8 +329,9 @@ class PrepTemplate(MetadataTemplate):
            self.data_type() not in TARGET_GENE_DATA_TYPES):
             return True
 
-        tg_columns = {e for v in viewvalues(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
-                      for e in v.columns.keys()}
+        tg_columns = set(chain.from_iterable(
+            [v.columns for v in
+             viewvalues(PREP_TEMPLATE_COLUMNS_TARGET_GENE)]))
 
         if not columns & tg_columns:
             return True

@@ -210,6 +210,12 @@ class SampleTemplate(MetadataTemplate):
         -------
         bool
             As this is the sample template this returns always True
+
+        Notes
+        -----
+            This always return True as the sample template can always be
+            updated based on which columns are going to be updated, which is
+            not the case for prep templates.
         """
         return True
 

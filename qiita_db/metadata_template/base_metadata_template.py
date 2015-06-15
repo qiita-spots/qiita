@@ -1094,7 +1094,7 @@ class MetadataTemplate(QiitaObject):
         return cols
 
     def update(self, md_template):
-        r"""Update values in the sample template
+        r"""Update values in the template
 
         Parameters
         ----------
@@ -1114,23 +1114,13 @@ class MetadataTemplate(QiitaObject):
         new_map = self._clean_validate_template(md_template, self.study_id,
                                                 self.columns_restrictions)
         # Retrieving current metadata
+
         current_map = self._transform_to_dict(conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,
-                                                          self._id_column),
-            (self.id,)))
-        dyn_vals = self._transform_to_dict(conn_handler.execute_fetchall(
             "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
-
-        for k in current_map:
-            current_map[k].update(dyn_vals[k])
-            current_map[k].pop('study_id', None)
-
-        # converting sql results to dataframe
         current_map = pd.DataFrame.from_dict(current_map, orient='index')
 
         # simple validations of sample ids and column names
-        samples_diff = set(
-            new_map.index.tolist()) - set(current_map.index.tolist())
+        samples_diff = set(new_map.index) - set(current_map.index)
         if samples_diff:
             raise QiitaDBError('The new template differs from what is stored '
                                'in database by these samples names: %s'
