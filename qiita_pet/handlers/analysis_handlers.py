@@ -32,7 +32,6 @@ from qiita_db.util import (get_db_files_base_dir,
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
 from qiita_db.logger import LogEntry
-from qiita_core.qiita_settings import qiita_config
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -76,7 +75,7 @@ class SelectCommandsHandler(BaseHandler):
         name = self.get_argument('name')
         desc = self.get_argument('description')
         analysis = Analysis.create(self.current_user, name, desc,
-                                   qiita_config.portal, from_default=True)
+                                   from_default=True)
         # set to third step since this page is third step in workflow
         analysis.step = SELECT_COMMANDS
         data_types = analysis.data_types
