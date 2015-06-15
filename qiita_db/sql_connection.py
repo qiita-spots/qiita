@@ -79,6 +79,7 @@ conn_handler.execute_fetchall(
 from __future__ import division
 from contextlib import contextmanager
 from itertools import chain
+from functools import partial
 from tempfile import mktemp
 from datetime import date, time, datetime
 import re
@@ -89,7 +90,6 @@ from psycopg2.extras import DictCursor
 from psycopg2.extensions import (
     ISOLATION_LEVEL_AUTOCOMMIT, ISOLATION_LEVEL_READ_COMMITTED)
 
-from .exceptions import QiitaDBExecutionError, QiitaDBConnectionError
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -100,6 +100,19 @@ def flatten(listOfLists):
 
 
 class SQLConnectionHandler(object):
+    """Postgres DB connection object
+
+    Parameters
+    ----------
+    admin : {'no_admin', 'admin_with_database', 'admin_without_database'},
+             optional
+        Whether or not to connect as the admin user. Options other than
+        `no_admin` depend on admin credentials in the qiita configuration. If
+        `admin_without_database`, the connection will be made to the server
+        specified in the qiita configuration, but not to a specific database.
+        If `admin_with_database`, then a connection will be made to the server
+        and database specified in the qiita config.
+    """
     # From http://osdir.com/ml/sqlalchemy/2011-05/msg00094.html
     TYPE_CODES = pg_types = {
         16: bool,
@@ -157,24 +170,12 @@ class SQLConnectionHandler(object):
 
     _regex = re.compile("{(\d+)}")
 
-    """Encapsulates the DB connection with the Postgres DB
-
-    Parameters
-    ----------
-    admin : {'no_admin', 'no_database', 'database'}, optional
-        Whether or not to connect as the admin user. Options other than
-        `no_admin` depend on admin credentials in the qiita configuration. If
-        'admin_without_database', the connection will be made to the server
-        specified in the qiita configuration, but not to a specific database.
-        If 'admin_with_database', then a connection will be made to the server
-        and database specified in the qiita config.
-    """
     def __init__(self, admin='no_admin'):
         if admin not in ('no_admin', 'admin_with_database',
                          'admin_without_database'):
-            raise RuntimeError("admin takes only {'no_admin', "
-                               "'admin_with_database', or "
-                               "'admin_without_database'}")
+            raise ValueError("admin takes only {'no_admin', "
+                             "'admin_with_database', or "
+                             "'admin_without_database'}")
 
         self.admin = admin
 
@@ -245,7 +246,10 @@ class SQLConnectionHandler(object):
         -------
         pgcursor : psycopg2.cursor
 
-        Raises a QiitaDBConnectionError if the cursor cannot be created
+        Raises
+        ------
+        RuntimeError
+            if the cursor cannot be created
         """
         self._open_connection()
 
@@ -253,35 +257,46 @@ class SQLConnectionHandler(object):
             with self._connection.cursor(cursor_factory=DictCursor) as cur:
                 yield cur
         except PostgresError as e:
-            raise QiitaDBConnectionError("Cannot get postgres cursor! %s" % e)
+            raise RuntimeError("Cannot get postgres cursor! %s" % e)
 
-    def set_autocommit(self, on_or_off):
-        """Sets the isolation level to autocommit or default (read committed)
+    @property
+    def autocommit(self):
+        """If the isolation level of the DB connection is autocommit"""
+        return self._connection.isolation_level == ISOLATION_LEVEL_AUTOCOMMIT
+
+    @autocommit.setter
+    def autocommit(self, value):
+        """(De)activate the autocommit isolation level of the DB connection
 
         Parameters
         ----------
-        on_or_off : {'on', 'off'}
-            If 'on', isolation level will be set to autocommit. Otherwise,
-            it will be set to read committed.
+        value : bool
+            If true, the isolation level of the DB connection is set to
+            autocommit. Otherwise, it is set to read committed.
+
+        Raises
+        ------
+        TypeError
+            If `value` is not a boolean
         """
-        if on_or_off not in {'on', 'off'}:
-            raise ValueError("set_autocommit takes only 'on' or 'off'")
-
-        if on_or_off == 'on':
-            level = ISOLATION_LEVEL_AUTOCOMMIT
-        else:
-            level = ISOLATION_LEVEL_READ_COMMITTED
-
+        if not isinstance(value, bool):
+            raise TypeError("The value for autocommit should be a boolean")
+        level = (ISOLATION_LEVEL_AUTOCOMMIT if value
+                 else ISOLATION_LEVEL_READ_COMMITTED)
         self._connection.set_isolation_level(level)
 
     def _check_sql_args(self, sql_args):
         """ Checks that sql_args have the correct type
 
-        Inputs:
-            sql_args : SQL arguments
+        Parameters
+        ----------
+        sql_args : object
+            The SQL arguments
 
-        Raises a TypeError if sql_args does not have the correct type,
-            otherwise it just returns the execution to the caller
+        Raises
+        ------
+        TypeError
+            If sql_args does not have the correct type
         """
         # Check that sql arguments have the correct type
         if sql_args and type(sql_args) not in [tuple, list, dict]:
@@ -296,7 +311,7 @@ class SQLConnectionHandler(object):
         ----------
         sql : str
             The SQL query
-        sql_args : tuple or list, optional
+        sql_args : tuple, list or dict, optional
             The arguments for the SQL query
         many : bool, optional
             If true, performs an execute many call
@@ -308,7 +323,7 @@ class SQLConnectionHandler(object):
 
         Raises
         ------
-        QiitaDBExecutionError
+        ValueError
             If there is some error executing the SQL query
         """
         # Check that sql arguments have the correct type
@@ -320,28 +335,208 @@ class SQLConnectionHandler(object):
 
         # Execute the query
         with self.get_postgres_cursor() as cur:
+            executor = partial(cur.executemany if many else cur.execute,
+                               sql, sql_args)
             try:
-                if many:
-                    cur.executemany(sql, sql_args)
-                else:
-                    cur.execute(sql, sql_args)
+                executor()
                 yield cur
-                self._connection.commit()
             except PostgresError as e:
                 self._connection.rollback()
-                raise QiitaDBExecutionError(("\nError running SQL query: %s"
-                                             "\nARGS: %s"
-                                             "\nError: %s" %
-                                             (sql, str(sql_args), e)))
+                raise ValueError("Error running SQL query: %s\nARGS: %s\n"
+                                 "Error: %s" % (sql, str(sql_args), e))
+            else:
+                self._connection.commit()
+
+    def execute(self, sql, sql_args=None):
+        """Executes an SQL query with no results
+
+        Parameters
+        ----------
+        sql : str
+            The SQL query
+        sql_args : tuple, list or dict, optional
+            The arguments for the SQL query
+
+        Notes
+        -----
+        From psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
+
+        References
+        ----------
+        http://initd.org/psycopg/docs/usage.html
+        """
+        with self._sql_executor(sql, sql_args):
+            pass
+
+    def executemany(self, sql, sql_args_list):
+        """Executes an executemany SQL query with no results
+
+        Parameters
+        ----------
+        sql : str
+            The SQL query
+        sql_args : list of tuples, lists or dicts
+            The arguments for the SQL query
+
+        Notes
+        -----
+        From psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
+
+        References
+        ----------
+        http://initd.org/psycopg/docs/usage.html
+        """
+        with self._sql_executor(sql, sql_args_list, True):
+            pass
+
+    def execute_fetchone(self, sql, sql_args=None):
+        """Executes a fetchone SQL query
+
+        Parameters
+        ----------
+        sql : str
+            The SQL query
+        sql_args : tuple, list or dict, optional
+            The arguments for the SQL query
+
+        Returns
+        -------
+        Tuple
+            The results of the fetchone query
+
+        Notes
+        -----
+        From psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
+
+        References
+        ----------
+        http://initd.org/psycopg/docs/usage.html
+        """
+        with self._sql_executor(sql, sql_args) as pgcursor:
+            result = pgcursor.fetchone()
+
+        return result
+
+    def execute_fetchall(self, sql, sql_args=None):
+        """Executes a fetchall SQL query
+
+        Parameters
+        ----------
+        sql : str
+            The SQL query
+        sql_args : tuple, list or dict, optional
+            The arguments for the SQL query
+
+        Returns
+        ------
+        list of tuples
+            The results of the fetchall query
+
+        Notes
+        -----
+        From psycopg2 documentation, only variable values should be bound
+        via sql_args, it shouldn't be used to set table or field names. For
+        those elements, ordinary string formatting should be used before
+        running execute.
+
+        References
+        ----------
+        http://initd.org/psycopg/docs/usage.html
+        """
+        with self._sql_executor(sql, sql_args) as pgcursor:
+            result = pgcursor.fetchall()
+
+        return result
+
+    def _check_queue_exists(self, queue_name):
+        """Checks if queue `queue_name` exists in the handler
+
+        Parameters
+        ----------
+        queue_name : str
+            The name of the queue
+
+        Returns
+        -------
+        bool
+            True if queue `queue_name` exist in the handler. False otherwise.
+        """
+        return queue_name in self.queues
+
+    def create_queue(self, queue_name):
+        """Add a new queue to the connection
+
+        Parameters
+        ----------
+        queue_name : str
+            Name of the new queue
+
+        Raises
+        ------
+        KeyError
+            Queue name already exists
+        """
+        if self._check_queue_exists(queue_name):
+            raise KeyError("Queue %s already exists" % queue_name)
+
+        self.queues[queue_name] = []
+
+    def list_queues(self):
+        """Returns list of all queue names currently in handler
+
+        Returns
+        -------
+        list of str
+            names of queues in handler
+        """
+        return self.queues.keys()
+
+    def add_to_queue(self, queue, sql, sql_args=None, many=False):
+        """Add an sql command to the end of a queue
+
+        Parameters
+        ----------
+        queue : str
+            name of queue adding to
+        sql : str
+            sql command to run
+        sql_args : list, tuple or dict, optional
+            the arguments to fill sql command with
+        many : bool, optional
+            Whether or not this should be treated as an executemany command.
+            Default False
+
+        Raises
+        ------
+        KeyError
+            queue does not exist
+        """
+        if not self._check_queue_exists(queue):
+            raise KeyError("Queue '%s' does not exist" % queue)
+
+        if not many:
+            sql_args = [sql_args]
+
+        for args in sql_args:
+            self._check_sql_args(args)
+            self.queues[queue].append((sql, args))
 
     def _rollback_raise_error(self, queue, sql, sql_args, e):
         self._connection.rollback()
         # wipe out queue since it has an error in it
         del self.queues[queue]
-        raise QiitaDBExecutionError(
-            ("\nError running SQL query in queue %s: %s"
-             "\nARGS: %s\nError: %s" % (queue, sql,
-                                        str(sql_args), e)))
+        raise ValueError(
+            "Error running SQL query in queue %s: %s\nARGS: %s\nError: %s"
+            % (queue, sql, str(sql_args), e))
 
     def execute_queue(self, queue):
         """Executes all sql in a queue in a single transaction block
@@ -356,20 +551,39 @@ class SQLConnectionHandler(object):
         Does not support executemany command. Instead, enter the multiple
         SQL commands as multiple entries in the queue.
 
-        Queues are executed in FIFO order
+        Raises
+        ------
+        KetError
+            If queue does not exist
+        IndexError
+            If a sql argument placeholder does not correspond to the result of
+            any previously-executed query.
         """
+        if not self._check_queue_exists(queue):
+            raise KeyError("Queue '%s' does not exist" % queue)
+
         with self.get_postgres_cursor() as cur:
             results = []
             clear_res = False
             for sql, sql_args in self.queues[queue]:
                 if sql_args is not None:
+                    # The user can provide a tuple, make sure that it is a
+                    # list, so we can assign the item
+                    sql_args = list(sql_args)
                     for pos, arg in enumerate(sql_args):
                         # check if previous results needed and replace
                         if isinstance(arg, str):
                             result = self._regex.search(arg)
                             if result:
                                 result_pos = int(result.group(1))
-                                sql_args[pos] = results[result_pos]
+                                try:
+                                    sql_args[pos] = results[result_pos]
+                                except IndexError:
+                                    self._rollback_raise_error(
+                                        queue, sql, sql_args,
+                                        "The index provided as a placeholder "
+                                        "%d does not correspond to any "
+                                        "previous result" % result_pos)
                                 clear_res = True
                 # wipe out results if needed and reset clear_res
                 if clear_res:
@@ -385,9 +599,13 @@ class SQLConnectionHandler(object):
                 try:
                     res = cur.fetchall()
                 except ProgrammingError as e:
-                    # ignore error if nothing to fetch
+                    # At this execution point, we don't know if the sql query
+                    # that we executed was a INSERT or a SELECT. If it was a
+                    # SELECT and there is nothing to fetch, it will return an
+                    # empty list. However, if it was a INSERT it will raise a
+                    # ProgrammingError, so we catch that one and pass.
                     pass
-                except Exception as e:
+                except PostgresError as e:
                     self._rollback_raise_error(queue, sql, sql_args, e)
                 else:
                     # append all results linearly
@@ -396,248 +614,6 @@ class SQLConnectionHandler(object):
         # wipe out queue since finished
         del self.queues[queue]
         return results
-
-    def list_queues(self):
-        """Returns list of all queue names currently in handler
-
-        Returns
-        -------
-        list
-            names of queues in handler
-        """
-        return self.queues.keys()
-
-    def create_queue(self, queue_name):
-        """Add a new queue to the connection
-
-        Parameters
-        ----------
-        queue_name : str
-            Name of the new queue
-
-        Raises
-        ------
-        KeyError
-            Queue name already exists
-        """
-        if queue_name in self.queues:
-            raise KeyError("Queue already contains %s" % queue_name)
-
-        self.queues[queue_name] = []
-
-    def add_to_queue(self, queue, sql, sql_args=None, many=False):
-        """Add an sql command to the end of a queue
-
-        Parameters
-        ----------
-        queue : str
-            name of queue adding to
-        sql : str
-            sql command to run
-        sql_args : list or tuple, optional
-            the arguments to fill sql command with
-        many : bool, optional
-            Whether or not this should be treated as an executemany command.
-            Default False
-
-        Raises
-        ------
-        KeyError
-            queue does not exist
-
-        Notes
-        -----
-        Queues are executed in FIFO order
-        """
-        if many:
-            for args in sql_args:
-                self._check_sql_args(args)
-                self.queues[queue].append((sql, args))
-        else:
-            self._check_sql_args(sql_args)
-            self.queues[queue].append((sql, sql_args))
-
-    def execute_fetchall(self, sql, sql_args=None):
-        """ Executes a fetchall SQL query
-
-        Parameters
-        ----------
-        sql : str
-            The SQL query
-        sql_args : tuple or list, optional
-            The arguments for the SQL query
-
-        Returns
-        ------
-        list of tuples
-            The results of the fetchall query
-
-        Raises
-        ------
-        QiitaDBExecutionError
-            If there is some error executing the SQL query
-
-        Notes
-        -----
-        from psycopg2 documentation, only variable values should be bound
-        via sql_args, it shouldn't be used to set table or field names. For
-        those elements, ordinary string formatting should be used before
-        running execute.
-        """
-        with self._sql_executor(sql, sql_args) as pgcursor:
-            result = pgcursor.fetchall()
-
-        return result
-
-    def execute_fetchone(self, sql, sql_args=None):
-        """ Executes a fetchone SQL query
-
-        Parameters
-        ----------
-        sql : str
-            The SQL query
-        sql_args : tuple or list, optional
-            The arguments for the SQL query
-
-        Returns
-        -------
-        Tuple
-            The results of the fetchone query
-
-        Raises
-        ------
-        QiitaDBExecutionError
-            if there is some error executing the SQL query
-
-        Notes
-        -----
-        from psycopg2 documentation, only variable values should be bound
-        via sql_args, it shouldn't be used to set table or field names. For
-        those elements, ordinary string formatting should be used before
-        running execute.
-        """
-        with self._sql_executor(sql, sql_args) as pgcursor:
-            result = pgcursor.fetchone()
-
-        return result
-
-    def fetchall_with_types(self, sql, sql_args=None):
-        """Executes a fetchall SQL query with column information
-
-        Parameters
-        ----------
-        sql : str
-            The SQL query
-        sql_args : tuple or list, optional
-            The arguments for the SQL query
-
-        Returns
-        ------
-        list of tuples
-            The results of the fetchall query
-        dict
-            dictionary in the form of {column: type}
-
-        Raises
-        ------
-        QiitaDBExecutionError
-            If there is some error executing the SQL query
-
-        Notes
-        -----
-        from psycopg2 documentation, only variable values should be bound
-        via sql_args, it shouldn't be used to set table or field names. For
-        those elements, ordinary string formatting should be used before
-        running execute.
-        """
-        with self._sql_executor(sql, sql_args) as pgcursor:
-            result = pgcursor.fetchall()
-            types = {desc[0]: self.TYPE_CODES[desc[1]]
-                     for desc in pgcursor.description}
-
-        return result, types
-
-    def fetchone_with_types(self, sql, sql_args=None):
-        """Executes a fetchone SQL query with column information
-
-        Parameters
-        ----------
-        sql : str
-            The SQL query
-        sql_args : tuple or list, optional
-            The arguments for the SQL query
-
-        Returns
-        -------
-        Tuple
-            The results of the fetchone query
-        dict
-            dictionary in the form of {column: type}
-
-        Raises
-        ------
-        QiitaDBExecutionError
-            if there is some error executing the SQL query
-
-        Notes
-        -----
-        from psycopg2 documentation, only variable values should be bound
-        via sql_args, it shouldn't be used to set table or field names. For
-        those elements, ordinary string formatting should be used before
-        running execute.
-        """
-        with self._sql_executor(sql, sql_args) as pgcursor:
-            result = pgcursor.fetchone()
-            types = {desc[0]: self.TYPE_CODES[desc[1]]
-                     for desc in pgcursor.description}
-
-        return result, types
-
-    def execute(self, sql, sql_args=None):
-        """ Executes an SQL query with no results
-
-        Parameters
-        ----------
-        sql : str
-            The SQL query
-        sql_args : tuple or list, optional
-            The arguments for the SQL query
-
-        Raises
-        ------
-        QiitaDBExecutionError
-            if there is some error executing the SQL query
-
-        Note: from psycopg2 documentation, only variable values should be bound
-            via sql_args, it shouldn't be used to set table or field names. For
-            those elements, ordinary string formatting should be used before
-            running execute.
-        """
-        with self._sql_executor(sql, sql_args):
-            pass
-
-    def executemany(self, sql, sql_args_list):
-        """ Executes an executemany SQL query with no results
-
-        Parameters
-        ----------
-        sql : str
-            The SQL query
-        sql_args : list of tuples
-            The arguments for the SQL query
-
-        Raises
-        ------
-        QiitaDBExecutionError
-            If there is some error executing the SQL query
-
-        Note: from psycopg2 documentation, only variable values should be bound
-            via sql_args, it shouldn't be used to set table or field names. For
-            those elements, ordinary string formatting should be used before
-            running execute.
-        """
-        with self._sql_executor(sql, sql_args_list, True):
-            pass
 
     def get_temp_queue(self):
         """Get a queue name that did not exist when this function was called

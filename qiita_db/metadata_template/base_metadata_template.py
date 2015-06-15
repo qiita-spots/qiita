@@ -51,8 +51,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBNotImplementedError, QiitaDBError,
-                                 QiitaDBExecutionError, QiitaDBWarning,
-                                 QiitaDBDuplicateHeaderError)
+                                 QiitaDBWarning, QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.util import (exists_table, get_table_cols,
@@ -323,7 +322,7 @@ class BaseSample(QiitaObject):
 
         try:
             conn_handler.execute_queue(queue_name)
-        except QiitaDBExecutionError as e:
+        except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
             type_lookup = defaultdict(lambda: 'varchar')
@@ -585,9 +584,8 @@ class MetadataTemplate(QiitaObject):
         if warning_msg:
             warnings.warn(
                 "Some functionality will be disabled due to missing "
-                "columns:\n\t%s.\nCheck https://github.com/biocore/qiita/wiki"
-                "/Preparing-Qiita-template-files for a description of these "
-                "fields." % ";\n\t".join(warning_msg),
+                "columns:\n\t%s.\nSee the Templates tutorial for a description"
+                " of these fields." % ";\n\t".join(warning_msg),
                 QiitaDBWarning)
 
         return md_template
@@ -1130,7 +1128,7 @@ class MetadataTemplate(QiitaObject):
 
         try:
             conn_handler.execute_queue(queue_name)
-        except QiitaDBExecutionError as e:
+        except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
             type_lookup = defaultdict(lambda: 'varchar')

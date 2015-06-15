@@ -187,9 +187,9 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
 
     # Create the database
     print('Creating database')
-    admin_conn.set_autocommit('on')
+    admin_conn.autocommit = True
     admin_conn.execute('CREATE DATABASE %s' % qiita_config.database)
-    admin_conn.set_autocommit('off')
+    admin_conn.autocommit = False
 
     del admin_conn
 
@@ -273,9 +273,9 @@ def drop_environment(ask_for_confirmation):
     if do_drop:
         SQLConnectionHandler.close()
         admin_conn = SQLConnectionHandler(admin='admin_without_database')
-        admin_conn.set_autocommit('on')
+        admin_conn.autocommit = True
         admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
-        admin_conn.set_autocommit('off')
+        admin_conn.autocommit = False
     else:
         print('ABORTING')
 

@@ -181,6 +181,9 @@ class DBUtilTests(TestCase):
     def test_convert_to_id(self):
         """Tests that ids are returned correctly"""
         self.assertEqual(convert_to_id("directory", "filepath_type"), 8)
+        self.assertEqual(convert_to_id("running", "analysis_status",
+                                       "status"), 3)
+        self.assertEqual(convert_to_id("EMP", "portal_type", "portal"), 2)
 
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""

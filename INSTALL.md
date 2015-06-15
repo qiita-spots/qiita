@@ -59,12 +59,24 @@ After these commands are executed, you will need to:
   redis-server
   ```
 
-5. Finally you can start the server:
+5. Start the IPython cluster:
 
   ```bash
   qiita-env start_cluster qiita-general && sleep 30
-  qiita pet webserver start
   ```
+
+6. Build the documentation (you may need to add `sudo` depending on your
+   privileges and the installation location:
+
+  ```bash
+  qiita pet webserver
+  ```
+
+7. Start the server:
+
+    ```bash
+    qiita pet webserver start
+    ```
 
 If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
 
