@@ -224,7 +224,7 @@ class RawDataTests(TestCase):
     def test_delete_error_raw_data_not_linked(self):
         # the raw data and the prep template id are not linked
         with self.assertRaises(QiitaDBError):
-            RawData.delete(1, self.pt2)
+            RawData.delete(1, self.pt2.id)
 
     def test_delete_error_prep_template_no_exists(self):
         # the prep template does not exist
