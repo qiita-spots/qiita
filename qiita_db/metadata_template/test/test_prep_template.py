@@ -867,7 +867,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         exp_id = get_count("qiita.prep_template") + 1
 
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(ValueError):
             PrepTemplate.create(metadata, self.test_study, self.data_type)
 
         sql = """SELECT EXISTS(
@@ -1193,7 +1193,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp = []
         self.assertEqual(obs, exp)
 
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(ValueError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.prep_%d" % pt.id)
 

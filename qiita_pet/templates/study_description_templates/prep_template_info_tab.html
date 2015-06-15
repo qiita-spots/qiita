@@ -78,7 +78,7 @@
       <tr>
         <td>
           {% if not preprocessed_data or preprocessing_status.startswith('failed') %}
-            {% if preprocessing_status == 'not_preprocessed' or preprocessing_status.startswith('failed')%}
+            {% if preprocessing_status == 'not_preprocessed' or preprocessing_status.startswith('failed') or not preprocessed_data %}
               {% if show_preprocess_btn %}
                 <a class="btn btn-primary glyphicon glyphicon-play" data-toggle="modal" data-target="#preprocess-modal-view-{{pt_id}}" style="word-spacing: -10px;"> Preprocess</a>
               {% else %}

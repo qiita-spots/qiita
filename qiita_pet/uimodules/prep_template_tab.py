@@ -35,13 +35,16 @@ fp_type_by_ft = defaultdict(
 
 
 def _get_accessible_raw_data(user):
-    """Retrieves a tuple of raw_data_id and the last study title for that
+    """Retrieves a tuple of raw_data_id and one study title for that
     raw_data
     """
     d = {}
-    for sid in user.user_studies:
-        for rdid in Study(sid).raw_data():
-            d[int(rdid)] = Study(RawData(rdid).studies[-1]).title
+    accessible_studies = user.user_studies.union(user.shared_studies)
+    for sid in accessible_studies:
+        study = Study(sid)
+        study_title = study.title
+        for rdid in study.raw_data():
+            d[int(rdid)] = study_title
     return d
 
 
@@ -189,7 +192,9 @@ class PrepTemplateInfoTab(BaseUIModule):
                     "linked with the Raw Data")
             else:
                 if prep_template.data_type() in TARGET_GENE_DATA_TYPES:
-                    key = ('demultiplex_multiple' if len(raw_data_files) > 2
+                    raw_forward_fps = [fp for _, fp, ftype in raw_data_files
+                                       if ftype == 'raw_forward_seqs']
+                    key = ('demultiplex_multiple' if len(raw_forward_fps) > 1
                            else 'demultiplex')
                     missing_cols = prep_template.check_restrictions(
                         [PREP_TEMPLATE_COLUMNS_TARGET_GENE[key]])
