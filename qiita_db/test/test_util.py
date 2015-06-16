@@ -47,7 +47,7 @@ class DBUtilTests(TestCase):
         self.required = [
             'number_samples_promised', 'study_title', 'mixs_compliant',
             'metadata_complete', 'study_description', 'first_contact',
-            'reprocess', 'portal_type_id', 'timeseries_type_id', 'study_alias',
+            'reprocess', 'timeseries_type_id', 'study_alias',
             'study_abstract', 'principal_investigator_id', 'email',
             'number_samples_collected']
         self.files_to_remove = []
