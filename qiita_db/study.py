@@ -102,6 +102,7 @@ from itertools import chain
 import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from .base import QiitaObject
 from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
 from .util import (check_required_columns, check_table_cols, convert_to_id,
@@ -123,6 +124,7 @@ class Study(QiitaObject):
     pmids
     shared_with
     sample_template
+    portals
     status
     title
     owner
@@ -133,6 +135,8 @@ class Study(QiitaObject):
     preprocessed_data
     processed_data
     add_pmid
+    add_portal
+    remove_portal
     exists
     has_access
     share
@@ -149,8 +153,7 @@ class Study(QiitaObject):
     # The following tables are considered part of info
     _info_cols = frozenset(chain(
         get_table_cols('study'), get_table_cols('study_status'),
-        get_table_cols('timeseries_type'), get_table_cols('portal_type'),
-        get_table_cols('study_pmid')))
+        get_table_cols('timeseries_type'), get_table_cols('study_pmid')))
 
     def _lock_non_sandbox(self, conn_handler):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -206,6 +209,26 @@ class Study(QiitaObject):
 
         return studies
 
+    @staticmethod
+    def get_by_portal(portal):
+        """Returns study id for all Studies belonging to a portal
+
+        Parameters
+        ----------
+        portal : str
+           Portal to check studies belong to
+
+        Returns
+        -------
+        set of int
+            All study ids in the database that match the given portal
+        """
+        conn_handler = SQLConnectionHandler()
+        portal_id = convert_to_id(portal, 'portal_type', 'portal')
+        sql = """SELECT study_id FROM qiita.study_portal
+                 WHERE portal_type_id = %s"""
+        return {x[0] for x in conn_handler.execute_fetchall(sql, [portal_id])}
+
     @classmethod
     def get_info(cls, study_ids=None, info_cols=None):
         """Returns study data for a set of study_ids
@@ -234,7 +257,6 @@ class Study(QiitaObject):
         sql = """SELECT {0} FROM (
             qiita.study
             JOIN qiita.timeseries_type  USING (timeseries_type_id)
-            JOIN qiita.portal_type USING (portal_type_id)
             LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY pmid) as
             pmid FROM qiita.study_pmid GROUP BY study_id) sp USING (study_id)
             )""".format(search_cols)
@@ -340,6 +362,17 @@ class Study(QiitaObject):
                "efo_id) VALUES (%s, %s)".format(cls._table))
         conn_handler.executemany(sql, [(study_id, e) for e in efo])
 
+        # insert portal into database
+        portal_id = convert_to_id(qiita_config.portal, 'portal_type', 'portal')
+        portal_sql = ""
+        if qiita_config.portal != "QIITA":
+            # need to add to both QIITA portal and this portal
+            portal_sql = ", (%(study_id)s, %(portal_id)s)"
+        sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
+                 VALUES (%(study_id)s, 1){}""".format(portal_sql)
+        conn_handler.execute(sql, {'study_id': study_id,
+                                   'portal_id': portal_id})
+
         # add study to investigation if necessary
         if investigation:
             sql = ("INSERT INTO qiita.investigation_study (investigation_id, "
@@ -378,6 +411,11 @@ class Study(QiitaObject):
         conn_handler.add_to_queue(
             queue,
             "DELETE FROM qiita.study_sample_columns WHERE study_id = %s",
+            (id_, ))
+
+        conn_handler.add_to_queue(
+            queue,
+            "DELETE FROM qiita.study_portal WHERE study_id = %s",
             (id_, ))
 
         conn_handler.add_to_queue(
@@ -734,6 +772,21 @@ class Study(QiitaObject):
         # Execute the queue
         conn_handler.execute_queue(queue)
 
+    @property
+    def portals(self):
+        """Portals this study is associated with
+
+        Returns
+        -------
+        list of str
+            Portal names study is associated with
+        """
+        sql = """SELECT portal from qiita.portal_type
+                 JOIN qiita.study_portal USING (portal_type_id)
+                 WHERE study_id = %s"""
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
+
     # --- methods ---
     def raw_data(self, data_type=None):
         """ Returns list of data ids for raw data info
@@ -841,6 +894,34 @@ class Study(QiitaObject):
         sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
                "VALUES (%s, %s)".format(self._table))
         conn_handler.execute(sql, (self._id, pmid))
+
+    def add_portal(self, portal):
+        """Adds study to given portal
+
+        Parameters
+        ----------
+        portal : str
+            Portal to associate with.
+        """
+        portal_id = convert_to_id(portal, 'portal_type', 'portal')
+        sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
+                 VALUES (%s, %s)"""
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [self._id, portal_id])
+
+    def remove_portal(self, portal):
+        """Adds study to given portal
+
+        Parameters
+        ----------
+        portal : str
+            Portal to associate with.
+        """
+        portal_id = convert_to_id(portal, 'portal_type', 'portal')
+        sql = """DELETE FROM qiita.study_portal WHERE study_id = %s
+                 AND portal_type_id = %s"""
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [self._id, portal_id])
 
     def has_access(self, user, no_public=False):
         """Returns whether the given user has access to the study
