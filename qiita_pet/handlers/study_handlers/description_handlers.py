@@ -250,6 +250,7 @@ class StudyDescriptionHandler(BaseHandler):
                 # deleting previous uploads and inserting new one
                 st = SampleTemplate(study.id)
                 st.update(load_template_to_dataframe(fp_rsp))
+                remove(fp_rsp)
 
                 # join all the warning messages into one. Note that this info
                 # will be ignored if an exception is raised
