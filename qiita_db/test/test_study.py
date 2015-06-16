@@ -242,13 +242,6 @@ class TestStudy(TestCase):
                [False, None, False, 'test_study_1', 'None']]
         self.assertEqual(obs, exp)
 
-    def test_get_by_portal(self):
-        obs = Study.get_by_portal('EMP')
-        self.assertEqual(obs, {1})
-
-        obs = Study.get_by_portal('QIITA')
-        self.assertEqual(obs, set())
-
     def test_has_access_public(self):
         self._change_processed_data_status('public')
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))
@@ -486,8 +479,7 @@ class TestStudy(TestCase):
             self.study.efo = 6
 
     def test_portals(self):
-        obs = self.study.portals
-        self.assertEqual(obs, ['EMP'])
+        self.assertEqual(self.study._portals, ['EMP'])
 
     def test_retrieve_info(self):
         for key, val in viewitems(self.existingexp):
@@ -624,16 +616,6 @@ class TestStudy(TestCase):
         self.study.add_pmid('4544444')
         exp = ['123456', '7891011', '4544444']
         self.assertEqual(self.study.pmids, exp)
-
-    def test_add_portal(self):
-        self.study.add_portal('QIITA')
-        obs = self.study.portals
-        self.assertEqual(obs, ['EMP', 'QIITA'])
-
-    def test_remove_portal(self):
-        self.study.remove_portal('EMP')
-        obs = self.study.portals
-        self.assertEqual(obs, [])
 
     def test_environmental_packages(self):
         obs = self.study.environmental_packages

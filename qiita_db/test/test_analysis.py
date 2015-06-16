@@ -269,6 +269,9 @@ class TestAnalysis(TestCase):
         self.assertEqual(analysis.biom_tables, {})
         self.assertEqual(analysis.dropped_samples, {})
 
+    def test_retrieve_portal(self):
+        self.assertEqual(self.analysis._portal, "QIITA")
+
     def test_retrieve_data_types(self):
         exp = ['18S']
         self.assertEqual(self.analysis.data_types, exp)

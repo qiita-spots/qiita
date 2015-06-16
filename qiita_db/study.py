@@ -122,7 +122,6 @@ class Study(QiitaObject):
     pmids
     shared_with
     sample_template
-    portals
     status
     title
     owner
@@ -133,8 +132,6 @@ class Study(QiitaObject):
     preprocessed_data
     processed_data
     add_pmid
-    add_portal
-    remove_portal
     exists
     has_access
     share
@@ -206,26 +203,6 @@ class Study(QiitaObject):
             studies = studies.union(extra_studies)
 
         return studies
-
-    @staticmethod
-    def get_by_portal(portal):
-        """Returns study id for all Studies belonging to a portal
-
-        Parameters
-        ----------
-        portal : str
-           Portal to check studies belong to
-
-        Returns
-        -------
-        set of int
-            All study ids in the database that match the given portal
-        """
-        conn_handler = SQLConnectionHandler()
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
-        sql = """SELECT study_id FROM qiita.study_portal
-                 WHERE portal_type_id = %s"""
-        return {x[0] for x in conn_handler.execute_fetchall(sql, [portal_id])}
 
     @classmethod
     def get_info(cls, study_ids=None, info_cols=None):
@@ -771,7 +748,7 @@ class Study(QiitaObject):
         conn_handler.execute_queue(queue)
 
     @property
-    def portals(self):
+    def _portals(self):
         """Portals this study is associated with
 
         Returns
@@ -892,34 +869,6 @@ class Study(QiitaObject):
         sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
                "VALUES (%s, %s)".format(self._table))
         conn_handler.execute(sql, (self._id, pmid))
-
-    def add_portal(self, portal):
-        """Adds study to given portal
-
-        Parameters
-        ----------
-        portal : str
-            Portal to associate with.
-        """
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
-        sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
-                 VALUES (%s, %s)"""
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, [self._id, portal_id])
-
-    def remove_portal(self, portal):
-        """Adds study to given portal
-
-        Parameters
-        ----------
-        portal : str
-            Portal to associate with.
-        """
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
-        sql = """DELETE FROM qiita.study_portal WHERE study_id = %s
-                 AND portal_type_id = %s"""
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, [self._id, portal_id])
 
     def has_access(self, user, no_public=False):
         """Returns whether the given user has access to the study

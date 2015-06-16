@@ -55,7 +55,6 @@ class Analysis(QiitaStatusObject):
     shared_with
     jobs
     pmid
-    portal
     parent
     children
 
@@ -272,7 +271,7 @@ class Analysis(QiitaStatusObject):
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
     @property
-    def portal(self):
+    def _portal(self):
         """The portal used to create the analysis
 
         Returns
