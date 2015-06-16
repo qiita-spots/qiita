@@ -462,6 +462,7 @@ class StudyDescriptionHandler(BaseHandler):
             with warnings.catch_warnings(record=True) as warns:
                 pt = PrepTemplate(pt_id)
                 pt.update(load_template_to_dataframe(fp))
+                remove(fp)
 
                 # join all the warning messages into one. Note that this info
                 # will be ignored if an exception is raised

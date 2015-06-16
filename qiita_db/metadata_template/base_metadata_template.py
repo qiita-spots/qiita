@@ -1114,18 +1114,17 @@ class MetadataTemplate(QiitaObject):
         new_map = self._clean_validate_template(md_template, self.study_id,
                                                 self.columns_restrictions)
         # Retrieving current metadata
-
         current_map = self._transform_to_dict(conn_handler.execute_fetchall(
             "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
         current_map = pd.DataFrame.from_dict(current_map, orient='index')
 
         # simple validations of sample ids and column names
-        samples_diff = set(new_map.index) - set(current_map.index)
+        samples_diff = set(new_map.index).difference(current_map.index)
         if samples_diff:
             raise QiitaDBError('The new template differs from what is stored '
                                'in database by these samples names: %s'
                                % ', '.join(samples_diff))
-        columns_diff = set(new_map.columns) - set(current_map.columns)
+        columns_diff = set(new_map.columns).difference(current_map.columns)
         if columns_diff:
             raise QiitaDBError('The new template differs from what is stored '
                                'in database by these columns names: %s'
