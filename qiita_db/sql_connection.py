@@ -77,8 +77,6 @@ conn_handler.execute_fetchall(
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-# DUMB mod so we can do the PR!
-
 from __future__ import division
 from contextlib import contextmanager
 from itertools import chain
