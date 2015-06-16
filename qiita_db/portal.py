@@ -21,7 +21,8 @@ if qiita_config.portal == "QIITA":
             portal_id = convert_to_id(portal, 'portal_type', 'portal')
             sql = """SELECT study_id FROM qiita.study_portal
                      WHERE portal_type_id = %s"""
-            return {x[0] for x in conn_handler.execute_fetchall(sql, [portal_id])}
+            return {x[0] for x in
+                    conn_handler.execute_fetchall(sql, [portal_id])}
 
     def add_study_to_portal(study, portal):
             """Adds study to given portal
