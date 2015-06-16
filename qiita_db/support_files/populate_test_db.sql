@@ -30,14 +30,17 @@ INSERT INTO qiita.study_person (name, email, affiliation, address, phone) VALUES
 INSERT INTO qiita.study (email, emp_person_id, first_contact,
     funding, timeseries_type_id, lab_person_id, metadata_complete,
     mixs_compliant, most_recent_contact, number_samples_collected,
-    number_samples_promised, portal_type_id, principal_investigator_id, reprocess,
+    number_samples_promised, principal_investigator_id, reprocess,
     spatial_series, study_title, study_alias, study_description,
     study_abstract, vamps_id) VALUES
     ('test@foo.bar', 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
-    '2014-05-19 16:11', 27, 27, 2, 3, FALSE, FALSE,
+    '2014-05-19 16:11', 27, 27, 3, FALSE, FALSE,
     'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
     'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
     NULL);
+
+-- Add portal to the study
+INSERT INTO qiita.study_portal (study_id, portal_type_id) VALUES (1, 2);
 
 -- Add some environmental packages to the study
 INSERT INTO qiita.study_environmental_package (study_id, environmental_package_name) VALUES (1, 'soil'), (1, 'plant-associated');
