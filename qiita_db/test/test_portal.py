@@ -15,17 +15,17 @@ class TestPortal(TestCase):
         obs = get_studies_by_portal('EMP')
         self.assertEqual(obs, {1})
 
-        obs = Study.get_by_portal('QIITA')
+        obs = get_studies_by_portal('QIITA')
         self.assertEqual(obs, set())
 
     def test_add_portal(self):
         add_study_to_portal(self.study, 'QIITA')
-        obs = self.study.portals
+        obs = self.study._portals
         self.assertEqual(obs, ['EMP', 'QIITA'])
 
     def test_remove_portal(self):
         remove_study_from_portal(self.study, 'EMP')
-        obs = self.study.portals
+        obs = self.study._portals
         self.assertEqual(obs, [])
 
 
