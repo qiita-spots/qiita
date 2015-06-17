@@ -382,7 +382,7 @@ INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES 
 INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 10), (2, 11);
 
 -- Insert Analysis
-INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid, portal_type_id) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 1, '121112', 1), ('test@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112', 2);
+INSERT INTO qiita.analysis (email, name, description, analysis_status_id, pmid) VALUES ('test@foo.bar', 'SomeAnalysis', 'A test analysis', 1, '121112'), ('test@foo.bar', 'SomeSecondAnalysis', 'Another test analysis', 1, '22221112');
 
 -- Insert Analysis Workflow
 INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (1, 3), (2, 3);
@@ -440,7 +440,7 @@ INSERT INTO qiita.collection_job (collection_id, job_id) VALUES (1, 1);
 INSERT INTO qiita.collection_users (email, collection_id) VALUES ('shared@foo.bar', 1);
 
 --add default analysis for users
-INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id, portal_type_id) VALUES ('test@foo.bar', 'test@foo.bar-dflt', 'dflt', true, 1, 2), ('admin@foo.bar', 'admin@foo.bar-dflt', 'dflt', true, 1, 2), ('shared@foo.bar', 'shared@foo.bar-dflt', 'dflt', true, 1, 2), ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', true, 1, 2);
+INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) VALUES ('test@foo.bar', 'test@foo.bar-dflt', 'dflt', true, 1), ('admin@foo.bar', 'admin@foo.bar-dflt', 'dflt', true, 1), ('shared@foo.bar', 'shared@foo.bar-dflt', 'dflt', true, 1), ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', true, 1);
 
 -- Attach samples to analysis
 INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (3,1,'1.SKD8.640184'), (3,1,'1.SKB7.640196'), (3,1,'1.SKM9.640192'), (3,1,'1.SKM4.640180');
@@ -449,3 +449,6 @@ INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VA
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9);
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_qiime_19700101-000000.txt', 16, '3703494589', 1, 9);
 INSERT INTO qiita.prep_template_filepath VALUES (1, 15), (1, 16);
+
+-- Add all analyses to QITA portal
+INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) SELECT analysis_id, 1 FROM qiita.analysis;

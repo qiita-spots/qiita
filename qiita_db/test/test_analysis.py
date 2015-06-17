@@ -106,6 +106,12 @@ class TestAnalysis(TestCase):
                                        'A New Analysis', 1, None])
         self.assertTrue(time1 < float(obs[0][-1]))
 
+        # make sure portal is associated
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.analysis_portal WHERE analysis_id = %s",
+            [new_id])
+        self.assertEqual(obs, [[new_id, 1]])
+
     def test_create_parent(self):
         sql = "SELECT EXTRACT(EPOCH FROM NOW())"
         time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
@@ -270,7 +276,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(analysis.dropped_samples, {})
 
     def test_retrieve_portal(self):
-        self.assertEqual(self.analysis._portal, "QIITA")
+        self.assertEqual(self.analysis._portals, ["QIITA"])
 
     def test_retrieve_data_types(self):
         exp = ['18S']
