@@ -297,7 +297,8 @@ class ProcessingPipelineTests(TestCase):
 
     def test_get_preprocess_fastq_cmd(self):
         raw_data = RawData(1)
-        params = PreprocessedIlluminaParams(1)
+        params = [p for p in list(PreprocessedIlluminaParams.iter())
+                  if p.name == 'per sample FASTQ defaults'][0]
         prep_template = PrepTemplate(1)
         obs_cmd, obs_output_dir = _get_preprocess_fastq_cmd(
             raw_data, prep_template, params)
@@ -309,11 +310,11 @@ class ProcessingPipelineTests(TestCase):
         exp_cmd_1 = ("split_libraries_fastq.py --store_demultiplexed_fastq -i "
                      "{} -b {} "
                      "-m ".format(seqs_fp, bc_fp))
-        exp_cmd_2 = ("-o {0} --barcode_type golay_12 --max_bad_run_length 3 "
-                     "--max_barcode_errors 1.5 "
-                     "--min_per_read_length_fraction 0.75 "
-                     "--phred_quality_threshold 3 "
-                     "--sequence_max_n 0".format(obs_output_dir))
+        exp_cmd_2 = (
+            "-o {0} --barcode_type not-barcoded --max_bad_run_length 3 "
+            "--max_barcode_errors 1.5 --min_per_read_length_fraction 0.75 "
+            "--phred_quality_threshold 3 --sequence_max_n 0".format(
+                obs_output_dir))
 
         # We are splitting the command into two parts because there is no way
         # that we can know the filepath of the mapping file. We thus split the

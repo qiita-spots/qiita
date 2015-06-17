@@ -101,15 +101,11 @@ def _get_sample_names_by_run_prefix(prep_template):
     ValueError
         If there is more than 1 sample per run_prefix
     """
-    from collections import defaultdict
-    import pandas as pd
+    from qiita_db.metadata_template import load_template_to_dataframe
 
     # The prep templates has a QIIME mapping file, get it
-    qiime_map = pd.read_csv(prep_template.qiime_map_fp, sep='\t',
-                            keep_default_na=False, na_values=['unknown'],
-                            index_col=False,
-                            converters=defaultdict(lambda: str))
-    qiime_map.set_index('#SampleID', inplace=True, drop=True)
+    qiime_map = load_template_to_dataframe(prep_template.qiime_map_fp,
+                                           index='#SampleID')
 
     samples = {}
     errors = []
@@ -152,11 +148,12 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
         If any of the raw data input filepath type is not supported
     ValueError
         If the raw data object does not have any sequence file associated
-        If the raw data filetype is not per_sample_FASTQ number of raw
-            sequences an raw barcode files are not the same
+        If the raw data filetype is not per_sample_FASTQ and the number of raw
+            forward sequences an raw barcode files are not the same
         If the raw data filetype is per_sample_FASTQ and has barcode files
         If the raw data filetype is per_sample_FASTQ and the run_prefix values
-            don't match the file names without extentions
+            don't match the file names without extensions and without the
+            raw data id prefix
     """
     from tempfile import mkdtemp
     from os.path import basename
@@ -189,7 +186,9 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     barcode_fps = sorted(barcode_fps)
 
     # Create a temporary directory to store the split libraries output
-    output_dir = mkdtemp(dir=qiita_config.working_dir, prefix='slq_out')
+    output_dir = mkdtemp(
+        dir=qiita_config.working_dir,
+        prefix='slq_out_%d_%d_' % (prep_template.id, raw_data.id))
 
     # Add any other parameter needed to split libraries fastq
     params_str = params.to_str()
@@ -209,10 +208,10 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
             # getting just the main filename
             f = basename(f).split('_', 1)[1]
             # removing extentions: fastq or fastq.gz
-            if f.endswith('fastq.gz'):
-                f = f[:-9]
-            else:
-                f = f[:-6]
+            if 'fastq' in f.rsplit('.', 2):
+                f = f[:f.rindex('.fastq')]
+            # this try/except block is simply to retrieve all possible errors
+            # and display them in the next if block
             try:
                 samples.append(sn_by_rp[f])
                 del sn_by_rp[f]
