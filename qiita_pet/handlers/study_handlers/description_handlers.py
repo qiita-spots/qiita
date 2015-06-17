@@ -458,6 +458,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         if not exists(fp):
             # The file does not exist, fail nicely
+            # Using 400 because we want the user to get the error in the GUI
             raise HTTPError(400, "This file doesn't exist: %s" % fp)
         try:
             with warnings.catch_warnings(record=True) as warns:

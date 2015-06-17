@@ -209,13 +209,16 @@ class SampleTemplate(MetadataTemplate):
         Returns
         -------
         bool
-            As this is the sample template this returns always True
+            As this is the sample template, it will always return True. See the
+            notes.
 
         Notes
         -----
-            This always return True as the sample template can always be
-            updated based on which columns are going to be updated, which is
-            not the case for prep templates.
+            The prep template can't be updated in certain situations, see the
+            its documentation for more info. However, the sample template
+            doesn't have those restrictions. Thus, to be able to use the same
+            update code in the base class, we need to have this method and it
+            should always return True.
         """
         return True
 
