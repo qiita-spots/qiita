@@ -217,6 +217,10 @@ class Analysis(QiitaStatusObject):
                "{0} = {1}".format(cls._analysis_id_column, _id))
         conn_handler.add_to_queue(queue, sql)
 
+        sql = ("DELETE FROM qiita.analysis_portal WHERE "
+               "{0} = {1}".format(cls._analysis_id_column, _id))
+        conn_handler.add_to_queue(queue, sql)
+
         sql = ("DELETE FROM qiita.analysis_sample WHERE "
                "{0} = {1}".format(cls._analysis_id_column, _id))
         conn_handler.add_to_queue(queue, sql)
