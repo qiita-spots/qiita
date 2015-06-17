@@ -9,6 +9,7 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import qiita_config
 from qiita_db.analysis import Analysis, Collection
 from qiita_db.job import Job
 from qiita_db.user import User
@@ -111,6 +112,21 @@ class TestAnalysis(TestCase):
             "SELECT * from qiita.analysis_portal WHERE analysis_id = %s",
             [new_id])
         self.assertEqual(obs, [[new_id, 1]])
+
+    def test_create_nonqiita_portal(self):
+        new_id = get_count("qiita.analysis") + 1
+        try:
+            qiita_config.portal = "EMP"
+            Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                            "A New Analysis")
+
+            # make sure portal is associated
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * from qiita.analysis_portal WHERE analysis_id = %s",
+                [new_id])
+            self.assertEqual(obs, [[new_id, 1], [new_id, 2]])
+        finally:
+            qiita_config.portal = "QIITA"
 
     def test_create_parent(self):
         sql = "SELECT EXTRACT(EPOCH FROM NOW())"

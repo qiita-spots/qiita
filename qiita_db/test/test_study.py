@@ -4,6 +4,7 @@ from datetime import datetime
 from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
 from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
@@ -351,6 +352,19 @@ class TestStudy(TestCase):
             "SELECT efo_id FROM qiita.study_experimental_factor "
             "WHERE study_id = 2")
         self.assertEqual(efo, [[1]])
+
+    def test_create_nonqiita_portal(self):
+        try:
+            qiita_config.portal = "EMP"
+            Study.create(User('test@foo.bar'), "NEW!",
+                         [1], self.info, Investigation(1))
+
+            # make sure portal is associated
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * from qiita.study_portal WHERE study_id = 2")
+            self.assertEqual(obs, [[2, 1], [2, 2]])
+        finally:
+            qiita_config.portal = "QIITA"
 
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""
