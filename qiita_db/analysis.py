@@ -167,14 +167,14 @@ class Analysis(QiitaStatusObject):
         portal_info = []
         if qiita_config.portal != 'QIITA':
             qp = convert_to_id('QIITA', 'portal_type', 'portal')
-            insert_portal = ', (%s, {}) '.format(qp)
+            insert_portal = '(%s, {}), '.format(qp)
             portal_info.append("{0}")
         portal_info.extend(["{0}", portal_id, "{0}"])
 
         # insert into qiita_portal table
         sql = """INSERT INTO qiita.analysis_portal
                   (analysis_id, portal_type_id)
-                  VALUES (%s, %s){}
+                  VALUES {}(%s, %s)
                   RETURNING %s""".format(insert_portal)
         conn_handler.add_to_queue(queue, sql, portal_info)
 
