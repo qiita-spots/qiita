@@ -188,5 +188,20 @@
         </td>
       </tr>
       {% end %}
+    {% if is_editable %}
+      <tr><td><hr></td></tr>
+      <tr>
+        <td>
+          <select id="update_prep_template_{{pt_id}}">
+            {% for f in files %}
+              {% if f.endswith(('txt', 'tsv')) %}
+                <option value="{{f}}">{{f}}</option>
+              {% end %}
+            {% end %}
+          </select>
+          <a class="btn btn-primary" onclick="update_prep_template({{pt_id}});">Update prep template</a>
+        </td>
+      </tr>
+    {% end %}
   </table>
 </div>
