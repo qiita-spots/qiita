@@ -358,7 +358,8 @@ class ProcessingPipelineTests(TestCase):
 
         filetype_id = get_filetypes()['per_sample_FASTQ']
         raw_data = RawData.create(filetype_id, [prep_template], fps)
-        params = PreprocessedIlluminaParams(1)
+        params = [p for p in list(PreprocessedIlluminaParams.iter())
+                  if p.name == 'per sample FASTQ defaults'][0]
 
         obs_cmd, obs_output_dir = _get_preprocess_fastq_cmd(raw_data,
                                                             prep_template,
@@ -369,7 +370,7 @@ class ProcessingPipelineTests(TestCase):
         exp_cmd = (
             "split_libraries_fastq.py --store_demultiplexed_fastq -i "
             "{} --sample_ids 1.SKB8.640193,1.SKD8.640184 -o {} --barcode_type "
-            "golay_12 --max_bad_run_length 3 --max_barcode_errors 1.5 "
+            "not-barcoded --max_bad_run_length 3 --max_barcode_errors 1.5 "
             "--min_per_read_length_fraction 0.75 --phred_quality_threshold 3 "
             "--sequence_max_n 0").format(raw_fps, obs_output_dir)
         self.assertEqual(obs_cmd, exp_cmd)
