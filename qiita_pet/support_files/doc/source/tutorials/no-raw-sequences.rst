@@ -64,7 +64,7 @@ Per sample FASTQ files without barcode and primer information
 
 In this example we assume we are working with uncompressed per-sample
 FASTQ files and that they do not have any barcode or primer information. This
-file type normally is what you can download from BaseSpace.
+file type normally is what you can download from `Illumina's BaseSpace`<https://basespace.illumina.com/home/index>_.
 
 The current system allows to upload this kind of files. The only requirement is
 that the prep template should have the uploaded sequence file(s) name in the
@@ -80,7 +80,7 @@ The current way to process this files is to remove the primer section of the
 reads and follow the `Per sample FASTQ files without barcode and primer information`_
 instructions after they have been removed.
 
-To remove the primer information we will use extract_barcodes.py and pass the size
-of the primer as the barcode and simply discard the barcode files created during
-this step. For this you could follow the `Per sample FASTQ files with barcode information`_
-tutorial.
+To remove the primer information we will use `extract_barcodes.py`<http://qiime.org/scripts/extract_barcodes.html>_
+and pass the size of the primer as the barcode and simply discard the barcode
+files created during this step. For this you could follow the
+`Per sample FASTQ files with barcode information`_ tutorial.

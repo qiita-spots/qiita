@@ -208,8 +208,8 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
             # getting just the main filename
             f = basename(f).split('_', 1)[1]
             # removing extentions: fastq or fastq.gz
-            if 'fastq' in f.rsplit('.', 2):
-                f = f[:f.rindex('.fastq')]
+            if 'fastq' in f.lower().rsplit('.', 2):
+                f = f[:f.lower().rindex('.fastq')]
             # this try/except block is simply to retrieve all possible errors
             # and display them in the next if block
             try:
