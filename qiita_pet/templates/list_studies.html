@@ -1,5 +1,7 @@
 {% extends sitebase.html %}
 {% block head %}
+{% from qiita_pet.support_files import portal_styling %}
+{% set sty = portal_styling['study_list'] %}
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
 <style>
 .alert {
@@ -206,7 +208,7 @@ function add_metacat(metacat) {
   <div class="col-sm-12">
     <h1>Metadata Search</h1>
     A basic search consists of: (category)  (operator) (value)<br/>
-    Example search: env_matter = soil<br />
+    Example search: {{sty['example_search']}}<br />
     <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Available Metadata</a></p>
     <form id="search-form" name="search-form" class="form-inline">
         <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" />
