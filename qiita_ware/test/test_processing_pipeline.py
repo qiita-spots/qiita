@@ -341,9 +341,6 @@ class ProcessingPipelineTests(TestCase):
         md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
         prep_template = PrepTemplate.create(md_template, Study(1), '16S')
 
-        tmp_dir = mkdtemp()
-        self.dirs_to_remove.append(tmp_dir)
-        self.path_builder = partial(join, tmp_dir)
         fp1 = self.path_builder('sample1.fastq')
         with open(fp1, 'w') as f:
             f.write('\n')
@@ -386,9 +383,6 @@ class ProcessingPipelineTests(TestCase):
         prep_template = PrepTemplate.create(md_template, Study(1), '16S')
 
         # This part should fail
-        tmp_dir = mkdtemp()
-        self.dirs_to_remove.append(tmp_dir)
-        self.path_builder = partial(join, tmp_dir)
         fp1 = self.path_builder('sample1_failure.fastq')
         with open(fp1, 'w') as f:
             f.write('\n')
