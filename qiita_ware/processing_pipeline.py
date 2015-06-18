@@ -90,11 +90,12 @@ def _get_sample_names_by_run_prefix(prep_template):
     ----------
     prep_template : PrepTemplate
         The prep template from which we need to generate the minimal mapping
+        file
 
     Returns
     -------
     dict
-        The paths to the qiime minimal mapping files
+        Dict mapping run_prefix to path of the minimal qiime mapping file
 
     Raises
     ------
@@ -103,7 +104,6 @@ def _get_sample_names_by_run_prefix(prep_template):
     """
     from qiita_db.metadata_template import load_template_to_dataframe
 
-    # The prep templates has a QIIME mapping file, get it
     qiime_map = load_template_to_dataframe(prep_template.qiime_map_fp,
                                            index='#SampleID')
 
@@ -112,8 +112,8 @@ def _get_sample_names_by_run_prefix(prep_template):
     for prefix, df in qiime_map.groupby('run_prefix'):
         len_df = len(df)
         if len_df != 1:
-            errors.append('%s (%d): %s' % (prefix, len_df,
-                                           ', '.join(df.index.values)))
+            errors.append('%s has %d samples (%s)' % (prefix, len_df,
+                                                      ', '.join(df.index)))
         else:
             samples[prefix] = df.index.values[0]
 
@@ -149,11 +149,11 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     ValueError
         If the raw data object does not have any sequence file associated
         If the raw data filetype is not per_sample_FASTQ and the number of raw
-            forward sequences an raw barcode files are not the same
-        If the raw data filetype is per_sample_FASTQ and has barcode files
+        forward sequences and raw barcode files are not the same
+        If the raw data filetype is per_sample_FASTQ and it has barcode files
         If the raw data filetype is per_sample_FASTQ and the run_prefix values
-            don't match the file names without extensions and without the
-            raw data id prefix
+        don't match the file names without extensions and without the raw data
+        id prefix
     """
     from tempfile import mkdtemp
     from os.path import basename
@@ -194,13 +194,13 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     params_str = params.to_str()
 
     if len(forward_seqs) == 0:
-        raise ValueError("Forward reads file not found on raw data %s"
+        raise ValueError("Forward reads file not found in raw data %s"
                          % raw_data.id)
 
     if filetype == "per_sample_FASTQ":
         if barcode_fps:
-            raise ValueError("per_sample_FASTQ can not have barcodes:"
-                             % (', '.join(barcode_fps)))
+            raise ValueError("per_sample_FASTQ can not have barcodes: %s"
+                             % (', '.join([basename(b) for b in barcode_fps])))
 
         sn_by_rp = _get_sample_names_by_run_prefix(prep_template)
         samples = []

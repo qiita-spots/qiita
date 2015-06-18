@@ -10,8 +10,11 @@ able to use Qiita to process your data files.
    `QIIME <http://www.qiime.org>`__ installation and basic knowledge on the
    usage of the command line.
 
-Per sample FASTQ files
-======================
+
+Per sample FASTQ files with barcode information
+===============================================
+
+Due to the nature of Qiita this is the prefered way to add per sample files.
 
 In this example we assume we are working with uncompressed per-sample
 FASTQ files. Thus before we begin, we have to make sure that we separate
@@ -55,3 +58,29 @@ compression program to use is ``gzip``:
     # new files, named barcodes.fastq.gz, forward.fastq.gz and revers.fastq.gz
     gzip *.fastq
 
+
+Per sample FASTQ files without barcode and primer information
+=============================================================
+
+In this example we assume we are working with uncompressed per-sample
+FASTQ files and that they do not have any barcode or primer information. This
+file type normally is what you can download from BaseSpace.
+
+The current system allows to upload this kind of files. The only requirement is
+that the prep template should have the uploaded sequence file(s) name in the
+run_prefix field. This should be an exact match without extension (fastq or
+fastq.gz). For example, if your uploaded file is named sample1_L001_R1.fastq.gz
+you will need to have sample1_L001_R1 as the run_prefix.
+
+
+Per sample FASTQ files without barcode but with primer information
+==================================================================
+
+The current way to process this files is to remove the primer section of the
+reads and follow the `Per sample FASTQ files without barcode and primer information`_
+instructions after they have been removed.
+
+To remove the primer information we will use extract_barcodes.py and pass the size
+of the primer as the barcode and simply discard the barcode files created during
+this step. For this you could follow the `Per sample FASTQ files with barcode information`_
+tutorial.

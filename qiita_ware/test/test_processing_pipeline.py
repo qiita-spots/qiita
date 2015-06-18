@@ -375,6 +375,42 @@ class ProcessingPipelineTests(TestCase):
             "--sequence_max_n 0").format(raw_fps, obs_output_dir)
         self.assertEqual(obs_cmd, exp_cmd)
 
+    def test_get_preprocess_fastq_cmd_per_sample_FASTQ_failure(self):
+        metadata_dict = {
+            'SKB8.640193': {'run_prefix': "sample1_failure", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'}}
+        md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        prep_template = PrepTemplate.create(md_template, Study(1), '16S')
+
+        # This part should fail
+        tmp_dir = mkdtemp()
+        self.dirs_to_remove.append(tmp_dir)
+        self.path_builder = partial(join, tmp_dir)
+        fp1 = self.path_builder('sample1_failure.fastq')
+        with open(fp1, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp1)
+        fp2 = self.path_builder('sample1_failure.barcodes.fastq.gz')
+        with open(fp2, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp2)
+        forward_filepath_id = convert_to_id('raw_forward_seqs',
+                                            'filepath_type')
+        barcode_filepath_id = convert_to_id('raw_barcodes', 'filepath_type')
+
+        fps = [(fp1, forward_filepath_id), (fp2, barcode_filepath_id)]
+
+        filetype_id = get_filetypes()['per_sample_FASTQ']
+        raw_data = RawData.create(filetype_id, [prep_template], fps)
+        params = [p for p in list(PreprocessedIlluminaParams.iter())
+                  if p.name == 'per sample FASTQ defaults'][0]
+
+        with self.assertRaises(ValueError):
+            _get_preprocess_fastq_cmd(raw_data, prep_template, params)
+
     def test_get_preprocess_fasta_cmd_sff_no_run_prefix(self):
         params = Preprocessed454Params(1)
         obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
