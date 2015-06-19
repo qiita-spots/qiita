@@ -59,6 +59,8 @@ compression program to use is ``gzip``:
     gzip *.fastq
 
 
+.. _per_sample_fastq_files_without_barcode_or_primer_information:
+
 Per sample FASTQ files without barcode and primer information
 =============================================================
 
