@@ -527,18 +527,18 @@ class Transaction(object):
                             # values as expected
                             self._rollback(
                                 sql, sql_args,
-                                "The placeholder {%d:%d} does not match to "
+                                "The placeholder {%d:%d:%d} does not match to "
                                 "any previous result"
-                                % (query_idx, res_idx))
+                                % (q_idx, r_idx, v_idx))
                         except TypeError:
                             # The query that the placeholder is pointing to
                             # is not expected to retrieve any value
                             # (e.g. an INSERT w/o RETURNING clause)
                             self._rollback(
                                 sql, sql_args,
-                                "The placeholder {%d:%d} is referring to "
+                                "The placeholder {%d:%d:%d} is referring to "
                                 "an sql query that do not retrieve data"
-                                % (query_idx, res_idx))
+                                % (q_idx, r_idx, v_idx))
         return sql, sql_args
 
     def add(self, sql, sql_args=None, many=False):
