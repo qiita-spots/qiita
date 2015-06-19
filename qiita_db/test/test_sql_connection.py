@@ -414,6 +414,41 @@ class TestTransaction(TestBase):
         # make sure rollback correctly
         self._assert_sql_equal([])
 
+    def test_execute_commit_false(self):
+        trans = Transaction("test_execute_commit_false")
+        sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s) RETURNING str_column, int_column"""
+        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+        trans.add(sql, args, many=True)
+
+        obs = trans.execute(commit=False)
+        exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+        self.assertEqual(obs, exp)
+
+        self._assert_sql_equal([])
+
+        trans.commit()
+
+        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                ('insert3', True, 3)])
+
+    def test_execute_commit_false_rollback(self):
+        trans = Transaction("test_execute_commit_false_rollback")
+        sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s) RETURNING str_column, int_column"""
+        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+        trans.add(sql, args, many=True)
+
+        obs = trans.execute(commit=False)
+        exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+        self.assertEqual(obs, exp)
+
+        self._assert_sql_equal([])
+
+        trans.rollback()
+
+        self._assert_sql_equal([])
+
     def test_index(self):
         trans = Transaction("test_index")
         self.assertEqual(trans.index, 0)
