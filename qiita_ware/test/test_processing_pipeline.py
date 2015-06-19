@@ -18,7 +18,7 @@ import pandas as pd
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.util import (get_db_files_base_dir, get_mountpoint,
-                           convert_to_id, get_count)
+                           convert_to_id, get_count, get_filetypes)
 
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.data import RawData, PreprocessedData
@@ -33,6 +33,7 @@ from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _insert_preprocessed_data,
                                             generate_demux_file,
                                             _get_qiime_minimal_mapping,
+                                            _get_sample_names_by_run_prefix,
                                             _get_process_target_gene_cmd,
                                             _insert_processed_data_target_gene)
 
@@ -241,9 +242,63 @@ class ProcessingPipelineTests(TestCase):
             with open(fp, "U") as f:
                 self.assertEqual(f.read(), contents)
 
+    def test_get_sample_names_by_run_prefix(self):
+        metadata_dict = {
+            'SKB8.640193': {'run_prefix': "s1", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'},
+            'SKD8.640184': {'run_prefix': "s2", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'},
+            'SKB7.640196': {'run_prefix': "s3", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'}}
+        md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        prep_template = PrepTemplate.create(md_template, Study(1), '16S')
+        for _, fp in prep_template.get_filepaths():
+            self.files_to_remove.append(fp)
+
+        obs = _get_sample_names_by_run_prefix(prep_template)
+
+        exp = {'s3': '1.SKB7.640196', 's2': '1.SKD8.640184',
+               's1': '1.SKB8.640193'}
+        self.assertEqual(obs, exp)
+
+        # This should raise an error
+        metadata_dict = {
+            'SKB8.640193': {'run_prefix': "s1", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'},
+            'SKD8.640184': {'run_prefix': "s1", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'},
+            'SKB7.640196': {'run_prefix': "s3", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'}}
+        md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        prep_template = PrepTemplate.create(md_template, Study(1), '16S')
+        for _, fp in prep_template.get_filepaths():
+            self.files_to_remove.append(fp)
+
+        with self.assertRaises(ValueError):
+            _get_sample_names_by_run_prefix(prep_template)
+
     def test_get_preprocess_fastq_cmd(self):
         raw_data = RawData(1)
-        params = PreprocessedIlluminaParams(1)
+        params = [p for p in list(PreprocessedIlluminaParams.iter())
+                  if p.name == 'per sample FASTQ defaults'][0]
         prep_template = PrepTemplate(1)
         obs_cmd, obs_output_dir = _get_preprocess_fastq_cmd(
             raw_data, prep_template, params)
@@ -255,11 +310,11 @@ class ProcessingPipelineTests(TestCase):
         exp_cmd_1 = ("split_libraries_fastq.py --store_demultiplexed_fastq -i "
                      "{} -b {} "
                      "-m ".format(seqs_fp, bc_fp))
-        exp_cmd_2 = ("-o {0} --barcode_type golay_12 --max_bad_run_length 3 "
-                     "--max_barcode_errors 1.5 "
-                     "--min_per_read_length_fraction 0.75 "
-                     "--phred_quality_threshold 3 "
-                     "--sequence_max_n 0".format(obs_output_dir))
+        exp_cmd_2 = (
+            "-o {0} --barcode_type not-barcoded --max_bad_run_length 3 "
+            "--max_barcode_errors 1.5 --min_per_read_length_fraction 0.75 "
+            "--phred_quality_threshold 3 --sequence_max_n 0".format(
+                obs_output_dir))
 
         # We are splitting the command into two parts because there is no way
         # that we can know the filepath of the mapping file. We thus split the
@@ -270,6 +325,85 @@ class ProcessingPipelineTests(TestCase):
 
         self.assertEqual(obs_cmd_1, exp_cmd_1)
         self.assertEqual(obs_cmd_2, exp_cmd_2)
+
+    def test_get_preprocess_fastq_cmd_per_sample_FASTQ(self):
+        metadata_dict = {
+            'SKB8.640193': {'run_prefix': "sample1", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'},
+            'SKD8.640184': {'run_prefix': "sample2", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'}}
+        md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        prep_template = PrepTemplate.create(md_template, Study(1), '16S')
+
+        fp1 = self.path_builder('sample1.fastq')
+        with open(fp1, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp1)
+        fp2 = self.path_builder('sample2.fastq.gz')
+        with open(fp2, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp2)
+        filepath_id = convert_to_id('raw_forward_seqs', 'filepath_type')
+
+        fps = [(fp1, filepath_id), (fp2, filepath_id)]
+
+        filetype_id = get_filetypes()['per_sample_FASTQ']
+        raw_data = RawData.create(filetype_id, [prep_template], fps)
+        params = [p for p in list(PreprocessedIlluminaParams.iter())
+                  if p.name == 'per sample FASTQ defaults'][0]
+
+        obs_cmd, obs_output_dir = _get_preprocess_fastq_cmd(raw_data,
+                                                            prep_template,
+                                                            params)
+
+        raw_fps = ','.join([fp for _, fp, _ in
+                            sorted(raw_data.get_filepaths())])
+        exp_cmd = (
+            "split_libraries_fastq.py --store_demultiplexed_fastq -i "
+            "{} --sample_ids 1.SKB8.640193,1.SKD8.640184 -o {} --barcode_type "
+            "not-barcoded --max_bad_run_length 3 --max_barcode_errors 1.5 "
+            "--min_per_read_length_fraction 0.75 --phred_quality_threshold 3 "
+            "--sequence_max_n 0").format(raw_fps, obs_output_dir)
+        self.assertEqual(obs_cmd, exp_cmd)
+
+    def test_get_preprocess_fastq_cmd_per_sample_FASTQ_failure(self):
+        metadata_dict = {
+            'SKB8.640193': {'run_prefix': "sample1_failure", 'primer': 'A',
+                            'barcode': 'A', 'center_name': 'ANL',
+                            'platform': 'ILLUMINA',
+                            'library_construction_protocol': 'A',
+                            'experiment_design_description': 'A'}}
+        md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        prep_template = PrepTemplate.create(md_template, Study(1), '16S')
+
+        # This part should fail
+        fp1 = self.path_builder('sample1_failure.fastq')
+        with open(fp1, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp1)
+        fp2 = self.path_builder('sample1_failure.barcodes.fastq.gz')
+        with open(fp2, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp2)
+        forward_filepath_id = convert_to_id('raw_forward_seqs',
+                                            'filepath_type')
+        barcode_filepath_id = convert_to_id('raw_barcodes', 'filepath_type')
+
+        fps = [(fp1, forward_filepath_id), (fp2, barcode_filepath_id)]
+
+        filetype_id = get_filetypes()['per_sample_FASTQ']
+        raw_data = RawData.create(filetype_id, [prep_template], fps)
+        params = [p for p in list(PreprocessedIlluminaParams.iter())
+                  if p.name == 'per sample FASTQ defaults'][0]
+
+        with self.assertRaises(ValueError):
+            _get_preprocess_fastq_cmd(raw_data, prep_template, params)
 
     def test_get_preprocess_fasta_cmd_sff_no_run_prefix(self):
         params = Preprocessed454Params(1)

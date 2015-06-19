@@ -237,6 +237,15 @@ class TestSampleReadOnly(BaseTestSample):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Category') is None)
 
+    def test_columns_restrictions(self):
+        """that it returns SAMPLE_TEMPLATE_COLUMNS"""
+        self.assertEqual(self.sample_template.columns_restrictions,
+                         SAMPLE_TEMPLATE_COLUMNS)
+
+    def test_can_be_updated(self):
+        """test if the template can be updated"""
+        self.assertTrue(self.sample_template.can_be_updated)
+
 
 @qiita_test_checker()
 class TestSampleReadWrite(BaseTestSample):

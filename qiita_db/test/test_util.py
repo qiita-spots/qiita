@@ -181,6 +181,9 @@ class DBUtilTests(TestCase):
     def test_convert_to_id(self):
         """Tests that ids are returned correctly"""
         self.assertEqual(convert_to_id("directory", "filepath_type"), 8)
+        self.assertEqual(convert_to_id("running", "analysis_status",
+                                       "status"), 3)
+        self.assertEqual(convert_to_id("EMP", "portal_type", "portal"), 2)
 
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
@@ -191,7 +194,8 @@ class DBUtilTests(TestCase):
         """Tests that get_filetypes works with valid arguments"""
 
         obs = get_filetypes()
-        exp = {'SFF': 1, 'FASTA-Sanger': 2, 'FASTQ': 3, 'FASTA': 4}
+        exp = {'SFF': 1, 'FASTA_Sanger': 2, 'FASTQ': 3, 'FASTA': 4,
+               'per_sample_FASTQ': 5}
         self.assertEqual(obs, exp)
 
         obs = get_filetypes(key='filetype_id')

@@ -9,7 +9,7 @@
       {{pt_data_type}} (ID: {{pt_id}})&nbsp;
         <div class="{{class_icon1}}" style="color: {{color}};"></div>
         <div class="{{class_icon2}}" style="color: {{color}};"></div>
-      <button class="close" title="Remove this prep template" type="button" onclick="delete_prep_template('{{pt_data_type}}', {{pt_id}})">&nbsp; ×</button> 
+      <button class="close" title="Remove this prep template" type="button" onclick="delete_prep_template('{{pt_data_type}}', {{pt_id}})">&nbsp; ×</button>
     </a></li>
   {% end %}
   </ul>
@@ -25,9 +25,7 @@
           Select your prep template file (only files with the "txt" and "tsv" file extensions will be displayed here):
           <select id="add_prep_template">
             {% for f in files %}
-              {% if f.endswith(('txt', 'tsv')) %}
-                <option value="{{f}}">{{f}}</option>
-              {% end %}
+              <option value="{{f}}">{{f}}</option>
             {% end %}
           </select>
         </li>
