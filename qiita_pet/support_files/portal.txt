@@ -1,17 +1,17 @@
-_SITEBASE = {
-    'logo': "/static/img/logo-clear.png",
-    'title': "Qiita",
-    'navbar_color': "#2c2c2c",
-    'navbar_highlight': "#c0392b",
-    'navbar_text_color': "#999999",
-    'navbar_text_hover': "white",
-}
+[sitebase]
+LOGO = /static/img/logo-clear.png
+TITLE = Qiita
+NAVBAR_COLOR = #2c2c2c
+NAVBAR_HIGHLIGHT = #c0392b
+NAVBAR_TEXT_COLOR = #999999
+NAVBAR_TEXT_HOVER = white
 
-_INDEX = {
-    'text_bg': "#eeeeee",
-    'text_color': "black",
-    'header': "<i>Qiita</i>: Spot Patterns",
-    'text': """<p align="justify">
+
+[index]
+TEXT_BG = #eeeeee
+TEXT_COLOR = black
+HEADER = <i>Qiita</i>: Spot Patterns
+TEXT = """<p align="justify">
   Qiita (<i>canonically pronounced cheetah</i>) is an entirely
   <strong>open-source</strong> microbiome storage and analysis resource that
   can run on everything from your laptop to a supercomputer. It is built on top
@@ -40,14 +40,7 @@ _INDEX = {
       <li><a target=_blank href="http://www.postgresql.org">PostgreSQL</a></li>
     </ul>
   </p>"""
-}
 
-_STUDY_LIST = {
-    'example_search': "env_matter = soil"
-}
 
-portal_styling = {
-    'sitebase': _SITEBASE,
-    'index': _INDEX,
-    'study_list': _STUDY_LIST
-}
+[study_list]
+EXAMPLE_SEARCH = "env_matter = soil"

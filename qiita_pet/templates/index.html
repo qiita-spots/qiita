@@ -1,18 +1,16 @@
 {% extends sitebase.html %}
 {% block head %}
-{% from qiita_pet.support_files import portal_styling %}
-{% set sty = portal_styling['index'] %}
 <style type="text/css">
   .jumbotron {
-    background-color: {{sty['text_bg']}};
-    color: {{sty['text_color']}};
+    background-color: {{portal_styling.text_bg}};
+    color: {{portal_styling.text_color}};
   }
 </style>
 {% end %}
 
 {%block content %}
 <div id="jumbotron" class="jumbotron">
-  <h1>{% raw sty['header']%}</h1>
-  {% raw sty['text']%}
+  <h1>{% raw portal_styling.index_header%}</h1>
+  {% raw portal_styling.index_text%}
 </div>
 {% end %}

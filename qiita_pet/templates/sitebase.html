@@ -1,7 +1,6 @@
 {% from moi import r_client %}
 {% from qiita_pet import allowed_min_browser_versions %}
-{% from qiita_pet.support_files import portal_styling %}
-{% set site_sty = portal_styling['sitebase'] %}
+{% from qiita_pet.portal import portal_styling %}
 {% set maintenance = r_client.get('maintenance') %}
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
@@ -9,7 +8,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
   <head>
-    <title>{{site_sty['title']}}</title>
+    <title>{{portal_styling.title}}</title>
     <link rel="stylesheet" href="/static/vendor/css/jquery-ui.min.css" type="text/css">
     <link rel="stylesheet" href="/static/vendor/css/jquery-ui.structure.min.css" type="text/css">
     <link rel="stylesheet" href="/static/vendor/css/jquery-ui.theme.min.css" type="text/css">
@@ -19,27 +18,27 @@
     <link rel="stylesheet" href="/static/css/style.css" type="text/css">
     <style type="text/css">
     .navbar-custom {
-        background-color: {{site_sty['navbar_color']}};
-        color: {{site_sty['navbar_text_color']}};
+        background-color: {{portal_styling.navbar_color}};
+        color: {{portal_styling.navbar_text_color}};
         background-image: none;
         background-repeat: no-repeat;
         border-radius:0;
     }
 
     .navbar-custom .navbar-nav > li > a {
-        color: {{site_sty['navbar_text_color']}};
+        color: {{portal_styling.navbar_text_color}};
     }
 
     .navbar-custom .navbar-nav>.open>a, .navbar-custom .navbar-nav>.open>a:hover, .navbar-custom .navbar-nav>.open>a:focus {
-      background-color: {{site_sty['navbar_highlight']}};
-      color: {{site_sty['navbar_text_hover']}};
+      background-color: {{portal_styling.navbar_highlight}};
+      color: {{portal_styling.navbar_text_hover}};
     }
     .navbar-custom .navbar-nav > .active > a, .navbar-nav > .active > a:hover, .navbar-nav > .active > a:focus {
-      color: {{site_sty['navbar_text_hover']}};
+      color: {{portal_styling.navbar_text_hover}};
       background-color:transparent;
     }
     .navbar-custom .navbar-brand {
-      color:{{site_sty['navbar_text_color']}};
+      color:{{portal_styling.navbar_text_color}};
       background-color:transparent;
     }
     </style>
@@ -141,8 +140,8 @@
           <ul class="nav navbar-nav">
             <li>
               <!-- qiita logo -->
-              <a class="navbar-brand" rel="home" href="/" title="{{site_sty['title']}}">
-                <img style="max-width:100px; margin-top: -7px;" src="{{site_sty['logo']}}">
+              <a class="navbar-brand" rel="home" href="/" title="{{portal_styling.title}}">
+                <img style="max-width:100px; margin-top: -7px;" src="{{portal_styling.logo}}">
               </a>
             </li>
             <!-- analysis menu -->
@@ -247,7 +246,7 @@
     <div id="footer">
     </div>
     <div id="overlay" class="navbar-brand" style="visibility: hidden; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; font-size: 13px; text-align: center; z-index: 1000; background-color: #333333; color: #FFFFFF;">
-        <img src="{{site_sty['logo']}}" alt="Qiita logo" id="small-logo"/>
+        <img src="{{portal_styling.logo}}" alt="Qiita logo" id="small-logo"/>
         <h1>This site only works with the following browsers</h1>
         <p id="explanation"><strong>Chrome >= {{allowed_min_browser_versions['chrome']}}:</strong> You can download Chrome from <a href="https://www.google.com/chrome/browser/">here</a> or you can find instructions on how to update it <a href="https://support.google.com/chrome/answer/95414?hl=en">here</a></p>
         <p id="explanation"><strong>Safari >= {{allowed_min_browser_versions['safari']}}:</strong> You can update Safari following <a href="http://support.apple.com/en-us/HT6104">these</a> instructions.</p>
