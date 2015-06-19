@@ -4,13 +4,11 @@
 # make the RawData to be effectively just a container for the raw files,
 # which is how it was acting previously.
 
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import Transaction
 from qiita_db.data import RawData
 from qiita_db.util import move_filepaths_to_upload_folder
 
-conn_handler = SQLConnectionHandler()
-queue = "PATCH_25"
-conn_handler.create_queue(queue)
+trans = Transaction("PATCH_25")
 
 # the system may contain raw data with no prep template associated to it.
 # Retrieve all those raw data ids
@@ -18,7 +16,8 @@ sql = """SELECT raw_data_id
          FROM qiita.raw_data
          WHERE raw_data_id NOT IN (
             SELECT DISTINCT raw_data_id FROM qiita.prep_template);"""
-rd_ids = [x[0] for x in conn_handler.execute_fetchall(sql)]
+trans.add(sql)
+rd_ids = [x[0] for x in trans.execute(commit=False)[0]]
 
 # We will delete those RawData. However, if they have files attached, we should
 # move them to the uploads folder of the study
@@ -32,8 +31,8 @@ move_files = []
 for rd_id in rd_ids:
     rd = RawData(rd_id)
     filepaths = rd.get_filepaths()
-    studies = [s[0] for s in conn_handler.execute_fetchall(sql_studies,
-                                                           (rd_id,))]
+    trans.add(sql_studies, (rd_id,))
+    studies = [s[0] for s in trans.execute(commit=False)[-1]]
     if filepaths:
         # we need to move the files to a study. We chose the one with lower
         # study id. Currently there is no case in the live database in which a
@@ -42,13 +41,13 @@ for rd_id in rd_ids:
         move_files.append((min(studies), filepaths))
 
     # To delete the RawData we first need to unlink all the files
-    conn_handler.add_to_queue(queue, sql_unlink, (rd_id,))
+    trans.add(sql_unlink, (rd_id,))
 
     # Then, remove the raw data from all the studies
     for st_id in studies:
-        conn_handler.add_to_queue(queue, sql_detach, (rd_id, st_id))
+        trans.add(sql_detach, (rd_id, st_id))
 
-    conn_handler.add_to_queue(queue, sql_delete, (rd_id,))
+    trans.add(sql_delete, (rd_id,))
 
 # We can now perform all changes in the DB. Although these changes can be
 # done in an SQL patch, they are done here because we need to execute the
@@ -101,8 +100,8 @@ DROP TABLE qiita.study_raw_data;
 ALTER TABLE qiita.prep_template
     ALTER COLUMN raw_data_id DROP NOT NULL;
 """
-conn_handler.add_to_queue(queue, sql)
-conn_handler.execute_queue(queue)
+trans.add(sql)
+trans.execute()
 
 # After the changes in the database have been performed, move the files
 # to the uploads folder
