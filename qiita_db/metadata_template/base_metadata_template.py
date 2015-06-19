@@ -592,8 +592,8 @@ class MetadataTemplate(QiitaObject):
         return md_template
 
     @classmethod
-    def _add_common_creation_steps_to_queue(cls, md_template, obj_id,
-                                            conn_handler, queue_name):
+    def _add_common_creation_steps_to_transaction(cls, md_template, obj_id,
+                                                  trans):
         r"""Adds the common creation steps to the queue in conn_handler
 
         Parameters
@@ -602,10 +602,8 @@ class MetadataTemplate(QiitaObject):
             The metadata template file contents indexed by sample ids
         obj_id : int
             The id of the object being created
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
-        queue_name : str
-            The queue where the SQL statements will be added
+        trans : Transaction
+            The Transaction object to add the sql queries
         """
         cls._check_subclass()
 
@@ -614,10 +612,10 @@ class MetadataTemplate(QiitaObject):
         headers = sorted(md_template.keys().tolist())
 
         # Insert values on template_sample table
-        values = [(obj_id, s_id) for s_id in sample_ids]
+        values = [[obj_id, s_id] for s_id in sample_ids]
         sql = "INSERT INTO qiita.{0} ({1}, sample_id) VALUES (%s, %s)".format(
             cls._table, cls._id_column)
-        conn_handler.add_to_queue(queue_name, sql, values, many=True)
+        trans.add(sql, values, many=True)
 
         # Insert rows on *_columns table
         datatypes = get_datatypes(md_template.ix[:, headers])
@@ -625,34 +623,32 @@ class MetadataTemplate(QiitaObject):
         # of values to use in the string formatting of the query. We have all
         # the values in different lists (but in the same order) so use zip
         # to create the list of tuples that psycopg2 requires.
-        values = [(obj_id, h, d) for h, d in zip(headers, datatypes)]
+        values = [[obj_id, h, d] for h, d in zip(headers, datatypes)]
         sql = ("INSERT INTO qiita.{0} ({1}, column_name, column_type) "
                "VALUES (%s, %s, %s)").format(cls._column_table, cls._id_column)
-        conn_handler.add_to_queue(queue_name, sql, values, many=True)
+        trans.add(sql, values, many=True)
 
         # Create table with custom columns
         table_name = cls._table_name(obj_id)
-        column_datatype = ["%s %s" % (col, dtype)
-                           for col, dtype in zip(headers, datatypes)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "CREATE TABLE qiita.{0} ("
-            "sample_id varchar NOT NULL, {1}, "
-            "CONSTRAINT fk_{0} FOREIGN KEY (sample_id) "
-            "REFERENCES qiita.study_sample (sample_id) "
-            "ON UPDATE CASCADE)".format(
-                table_name, ', '.join(column_datatype)))
+        col_datatype = ["%s %s" % (col, dtype)
+                        for col, dtype in zip(headers, datatypes)]
+        sql = """CREATE TABLE qiita.{0} (
+                    sample_id varchar NOT NULL,
+                    {1},
+                    CONSTRAINT fk_{0} FOREIGN KEY (sample_id)
+                        REFERENCES qiita.study_sample (sample_id)
+                        ON UPDATE CASCADE)""".format(table_name,
+                                                     ', '.join(col_datatype))
+        trans.add(sql)
 
         # Insert values on custom table
         values = as_python_types(md_template, headers)
         values.insert(0, sample_ids)
-        values = [v for v in zip(*values)]
-        conn_handler.add_to_queue(
-            queue_name,
-            "INSERT INTO qiita.{0} (sample_id, {1}) "
-            "VALUES (%s, {2})".format(table_name, ", ".join(headers),
-                                      ', '.join(["%s"] * len(headers))),
-            values, many=True)
+        values = [list(v) for v in zip(*values)]
+        sql = """INSERT INTO qiita.{0} (sample_id, {1})
+                 VALUES (%s, {2})""".format(table_name, ", ".join(headers),
+                                            ', '.join(["%s"] * len(headers)))
+        trans.add(sql, values, many=True)
 
     def _add_common_extend_steps_to_queue(self, md_template, conn_handler,
                                           queue_name):

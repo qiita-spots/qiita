@@ -13,7 +13,7 @@ from time import strftime
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
                                  QiitaDBUnknownIDError)
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import SQLConnectionHandler, Transaction
 from qiita_db.util import get_mountpoint, convert_to_id
 from qiita_db.study import Study
 from qiita_db.data import RawData
@@ -101,18 +101,16 @@ class SampleTemplate(MetadataTemplate):
         if cls.exists(study.id):
             raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
 
-        conn_handler = SQLConnectionHandler()
-        queue_name = "CREATE_SAMPLE_TEMPLATE_%d" % study.id
-        conn_handler.create_queue(queue_name)
+        trans = Transaction("CREATE_SAMPLE_TEMPLATE_%d" % study.id)
 
         # Clean and validate the metadata template given
         md_template = cls._clean_validate_template(md_template, study.id,
                                                    SAMPLE_TEMPLATE_COLUMNS)
 
-        cls._add_common_creation_steps_to_queue(md_template, study.id,
-                                                conn_handler, queue_name)
+        cls._add_common_creation_steps_to_transaction(md_template, study.id,
+                                                      trans)
 
-        conn_handler.execute_queue(queue_name)
+        trans.execute()
 
         st = cls(study.id)
         st.generate_files()
