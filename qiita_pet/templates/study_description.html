@@ -148,11 +148,10 @@ function get_and_check_raw_data_files(prep_id, filetype){
         break;
     }
   }
-
   if (sff.length === 0 && barcodes.length === 0 && forward.length === 0 && fasta.length === 0) {
     bootstrapAlert("You need to select at least: one barcode and one forward file, one sff file or one fasta file.");
     return [false];
-  } else if (sff.length === 0 && barcodes.length != forward.length) {
+  } else if (sff.length === 0 && barcodes.length != forward.length && filetype !== 5 && filetype != "per_sample_FASTQ") {
     bootstrapAlert("You must select the same number of barcode and forward seq files.");
     return [false];
   } else if (sff.length === 0 && (reverse.length !== 0 && reverse.length != forward.length)) {
@@ -273,6 +272,28 @@ function add_prep_template() {
           .attr("value", "add_prep_template"));
   $("body").append(form);
   form.submit();
+}
+
+function update_prep_template(pt_id) {
+  if (confirm("Are you sure you want to update the prep template?")) {
+    var form = $("<form>")
+      .attr("action", window.location.href)
+      .attr("method", "post")
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "prep_template_id")
+        .attr("value", pt_id))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "update_prep_template_file")
+        .attr("value", $("#update_prep_template_" + pt_id).val()))
+      .append($("<input>")
+        .attr("type", "hidden")
+        .attr("name", "action")
+        .attr("value", "update_prep_template"));
+    $("body").append(form);
+    form.submit();
+  }
 }
 
 function validate_delete_study_text() {
