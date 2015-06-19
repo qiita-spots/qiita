@@ -463,7 +463,7 @@ class Transaction(object):
         Name of the transaction.
     """
 
-    _regex = re.compile("{(\d+):(\d+):(\d+)}")
+    _regex = re.compile("^{(\d+):(\d+):(\d+)}$")
 
     def __init__(self, name):
         # The name is useful for debugging, since we can identify the
@@ -580,18 +580,20 @@ class Transaction(object):
                                 % type(args))
             self._queries.append((sql, args))
 
-    def execute(self):
+    def execute(self, commit=True):
         """Executes the transaction
+
+        Parameters
+        ----------
+        commit : bool, optional
+            Whether if the transaction should be committed or not. Defaults
+            to true.
 
         Returns
         -------
         list of DictCursor
             The results of all the SQL queries in the transaction
         """
-        # Removing previous results, in case the transaction is executed
-        # multiple times
-        self._results = []
-
         with self._conn_handler.get_postgres_cursor() as cur:
             for sql, sql_args in self._queries:
                 sql, sql_args = self._replace_placeholders(sql, sql_args)
@@ -621,12 +623,16 @@ class Transaction(object):
             # Store the results of the current query
             self._results.append(res)
 
-        # All the SQL queries were successfully executed, we can commit
-        # the transaction
-        self._conn_handler._connection.commit()
+        if commit:
+            self.commit()
+
         return self._results
+
+    def commit(self):
+        """Commits the transaction"""
+        self._conn_handler._connection.commit()
 
     @property
     def index(self):
-        "Returns the index of the next query that will be added"
+        """Returns the index of the next query that will be added"""
         return len(self._queries)
