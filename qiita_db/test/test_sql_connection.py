@@ -198,14 +198,50 @@ class TestConnHandler(TestBase):
 
 class TestTransaction(TestBase):
     def test_init(self):
-        obs = Transaction("test")
-        self.assertEqual(obs._name, "test")
+        obs = Transaction("test_init")
+        self.assertEqual(obs._name, "test_init")
         self.assertEqual(obs._queries, [])
         self.assertEqual(obs._results, [])
         self.assertTrue(isinstance(obs._conn_handler, SQLConnectionHandler))
 
     def test_replace_placeholders(self):
-        raise NotImplementedError()
+        trans = Transaction("test_replace_placeholders")
+        trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 3]]]
+        sql = "SELECT 42"
+        obs_sql, obs_args = trans._replace_placeholders(sql, ["{0:0:0}"])
+        self.assertEqual(obs_sql, sql)
+        self.assertEqual(obs_args, "res1")
+
+        obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:0:0}"])
+        self.assertEqual(obs_sql, sql)
+        self.assertEqual(obs_args, "res2a")
+
+        obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:1:1}"])
+        self.assertEqual(obs_sql, sql)
+        self.assertEqual(obs_args, 3)
+
+        obs_sql, obs_args = trans._replace_placeholders(
+            sql, ["foo", "{0:0:1}", "bar", "{1:0:1}"])
+        self.assertEqual(obs_sql, sql)
+        self.assertEqual(obs_args, ["foo", 1, "bar", 2])
+
+    def test_replace_placeholders_index_error(self):
+        trans = Transaction("test_replace_placeholders_index_error")
+        trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 2]]]
+        with self.assertRaises(IndexError):
+            trans._replace_placeholders("SELECT 42", "{0:0:3}")
+
+        with self.assertRaises(IndexError):
+            trans._replace_placeholders("SELECT 42", "{0:2:0}")
+
+        with self.assertRaises(IndexError):
+            trans._replace_placeholders("SELECT 42", "{2:0:0}")
+
+    def test_replace_placeholders_type_error(self):
+        trans = Transaction("test_replace_placeholders_type_error")
+        trans._results = [None]
+        with self.assertRaises(TypeError):
+            trans._replace_placeholders("SELECT 42", "{0:0:0}")
 
     def test_add(self):
         trans = Transaction("test_add")
