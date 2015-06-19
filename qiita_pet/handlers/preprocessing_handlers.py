@@ -18,7 +18,7 @@ class PreprocessHandler(BaseHandler):
         param_id = int(self.get_argument('preprocessing_parameters_id'))
 
         # Get the preprocessing parameters
-        if raw_data.filetype == 'FASTQ':
+        if raw_data.filetype in ('FASTQ', 'per_sample_FASTQ'):
             param_constructor = PreprocessedIlluminaParams
         elif raw_data.filetype in ('FASTA', 'SFF'):
             param_constructor = Preprocessed454Params

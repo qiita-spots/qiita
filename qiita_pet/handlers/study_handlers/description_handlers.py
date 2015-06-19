@@ -250,6 +250,7 @@ class StudyDescriptionHandler(BaseHandler):
                 # deleting previous uploads and inserting new one
                 st = SampleTemplate(study.id)
                 st.update(load_template_to_dataframe(fp_rsp))
+                remove(fp_rsp)
 
                 # join all the warning messages into one. Note that this info
                 # will be ignored if an exception is raised
@@ -419,6 +420,65 @@ class StudyDescriptionHandler(BaseHandler):
             # Show the error to the user so he can fix the template
             msg = html_error_message % ("parsing the prep template: ",
                                         basename(fp_rpt), str(e))
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'prep_template_tab', pt_id, None))
+
+    def update_prep_template(self, study, user, callback):
+        """Update a prep template from the POST method
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+
+        Raises
+        ------
+        HTTPError
+            If the prep template file does not exists
+        """
+        # If we are on this function, the arguments "prep_template_id",
+        # "update_prep_template_file" must defined. If not, let tornado
+        # raise its error
+        pt_id = int(self.get_argument('prep_template_id'))
+        prep_template = self.get_argument('update_prep_template_file')
+
+        # Define here the message and message level in case of success
+        msg = "The prep template '%s' has been updated" % prep_template
+        msg_level = "success"
+        # Get the uploads folder
+        _, base_fp = get_mountpoint("uploads")[0]
+        # Get the path of the prep template in the uploads folder
+        fp = join(base_fp, str(study.id), prep_template)
+
+        if not exists(fp):
+            # The file does not exist, fail nicely
+            # Using 400 because we want the user to get the error in the GUI
+            raise HTTPError(400, "This file doesn't exist: %s" % fp)
+        try:
+            with warnings.catch_warnings(record=True) as warns:
+                pt = PrepTemplate(pt_id)
+                pt.update(load_template_to_dataframe(fp))
+                remove(fp)
+
+                # join all the warning messages into one. Note that this info
+                # will be ignored if an exception is raised
+                if warns:
+                    msg = '; '.join([str(w.message) for w in warns])
+                    msg_level = 'warning'
+
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
+            # Some error occurred while processing the sample template
+            # Show the error to the user so they can fix the template
+            msg = html_error_message % ('updating the prep template:',
+                                        basename(fp), str(e))
             msg_level = "danger"
 
         callback((msg, msg_level, 'prep_template_tab', pt_id, None))
@@ -848,6 +908,7 @@ class StudyDescriptionHandler(BaseHandler):
             extend_sample_template=self.add_to_sample_template,
             add_raw_data=self.add_raw_data,
             add_prep_template=self.add_prep_template,
+            update_prep_template=self.update_prep_template,
             make_public=self.make_public,
             approve_study=self.approve_study,
             request_approval=self.request_approval,

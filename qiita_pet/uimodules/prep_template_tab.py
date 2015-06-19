@@ -31,7 +31,9 @@ filepath_types = [k.split('_', 1)[1].replace('_', ' ')
                   if k.startswith('raw_')]
 fp_type_by_ft = defaultdict(
     lambda: filepath_types, SFF=['sff'], FASTA=['fasta', 'qual'],
-    FASTQ=['barcodes', 'forward seqs', 'reverse seqs'])
+    FASTQ=['barcodes', 'forward seqs', 'reverse seqs'],
+    FASTA_Sanger=['fasta'],
+    per_sample_FASTQ=['forward seqs', 'reverse seqs'])
 
 
 def _get_accessible_raw_data(user):
@@ -74,7 +76,8 @@ def _template_generator(study, full_access):
 
 class PrepTemplateTab(BaseUIModule):
     def render(self, study, full_access):
-        files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
+        files = [f for _, f in get_files_from_uploads_folders(str(study.id))
+                 if f.endswith(('txt', 'tsv'))]
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
         prep_templates_info = [
             res for res in _template_generator(study, full_access)]
@@ -161,12 +164,17 @@ class PrepTemplateInfoTab(BaseUIModule):
         if raw_data_id:
             rd = RawData(raw_data_id)
             rd_ft = rd.filetype
+
             # If the prep template has a raw data associated, it can be
             # preprocessed. Retrieve the pre-processing parameters
             if rd_ft in ('SFF', 'FASTA'):
                 param_iter = Preprocessed454Params.iter()
             elif rd_ft == 'FASTQ':
-                param_iter = PreprocessedIlluminaParams.iter()
+                param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
+                              if pip.values['barcode_type'] != 'not-barcoded']
+            elif rd_ft == 'per_sample_FASTQ':
+                param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
+                              if pip.values['barcode_type'] == 'not-barcoded']
             else:
                 raise NotImplementedError(
                     "Pre-processing of %s files currently not supported."
@@ -197,13 +205,17 @@ class PrepTemplateInfoTab(BaseUIModule):
                            else 'demultiplex')
                     missing_cols = prep_template.check_restrictions(
                         [PREP_TEMPLATE_COLUMNS_TARGET_GENE[key]])
-                    show_preprocess_btn = len(missing_cols) == 0
+
+                    if rd_ft == 'per_sample_FASTQ':
+                        show_preprocess_btn = 'run_prefix' not in missing_cols
+                    else:
+                        show_preprocess_btn = len(missing_cols) == 0
+
+                    no_preprocess_msg = None
                     if not show_preprocess_btn:
                         no_preprocess_msg = (
                             "Preprocessing disabled due to missing columns in "
                             "the prep template: %s" % ', '.join(missing_cols))
-                    else:
-                        no_preprocess_msg = None
 
         preprocessing_status = prep_template.preprocessing_status
 
