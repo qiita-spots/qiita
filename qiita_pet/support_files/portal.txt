@@ -11,7 +11,7 @@ NAVBAR_TEXT_HOVER = white
 TEXT_BG = #eeeeee
 TEXT_COLOR = black
 HEADER = <i>Qiita</i>: Spot Patterns
-TEXT = """<p align="justify">
+TEXT = <p align="justify">
   Qiita (<i>canonically pronounced cheetah</i>) is an entirely
   <strong>open-source</strong> microbiome storage and analysis resource that
   can run on everything from your laptop to a supercomputer. It is built on top
@@ -39,8 +39,7 @@ TEXT = """<p align="justify">
       <li><a target=_blank href="http://redis.io">Redis</a></li>
       <li><a target=_blank href="http://www.postgresql.org">PostgreSQL</a></li>
     </ul>
-  </p>"""
-
+  </p>
 
 [study_list]
-EXAMPLE_SEARCH = "env_matter = soil"
+EXAMPLE_SEARCH = env_matter = soil
