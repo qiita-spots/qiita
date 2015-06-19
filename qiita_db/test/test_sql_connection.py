@@ -210,15 +210,15 @@ class TestTransaction(TestBase):
         sql = "SELECT 42"
         obs_sql, obs_args = trans._replace_placeholders(sql, ["{0:0:0}"])
         self.assertEqual(obs_sql, sql)
-        self.assertEqual(obs_args, "res1")
+        self.assertEqual(obs_args, ["res1"])
 
         obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:0:0}"])
         self.assertEqual(obs_sql, sql)
-        self.assertEqual(obs_args, "res2a")
+        self.assertEqual(obs_args, ["res2a"])
 
         obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:1:1}"])
         self.assertEqual(obs_sql, sql)
-        self.assertEqual(obs_args, 3)
+        self.assertEqual(obs_args, [3])
 
         obs_sql, obs_args = trans._replace_placeholders(
             sql, ["foo", "{0:0:1}", "bar", "{1:0:1}"])
@@ -228,20 +228,30 @@ class TestTransaction(TestBase):
     def test_replace_placeholders_index_error(self):
         trans = Transaction("test_replace_placeholders_index_error")
         trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 2]]]
-        with self.assertRaises(IndexError):
-            trans._replace_placeholders("SELECT 42", "{0:0:3}")
 
-        with self.assertRaises(IndexError):
-            trans._replace_placeholders("SELECT 42", "{0:2:0}")
+        error_regex = ('The placeholder {0:0:3} does not match to any '
+                       'previous result')
+        with self.assertRaisesRegexp(ValueError, error_regex):
+            trans._replace_placeholders("SELECT 42", ["{0:0:3}"])
 
-        with self.assertRaises(IndexError):
-            trans._replace_placeholders("SELECT 42", "{2:0:0}")
+        error_regex = ('The placeholder {0:2:0} does not match to any '
+                       'previous result')
+        with self.assertRaisesRegexp(ValueError, error_regex):
+            trans._replace_placeholders("SELECT 42", ["{0:2:0}"])
+
+        error_regex = ('The placeholder {2:0:0} does not match to any '
+                       'previous result')
+        with self.assertRaisesRegexp(ValueError, error_regex):
+            trans._replace_placeholders("SELECT 42", ["{2:0:0}"])
 
     def test_replace_placeholders_type_error(self):
         trans = Transaction("test_replace_placeholders_type_error")
         trans._results = [None]
-        with self.assertRaises(TypeError):
-            trans._replace_placeholders("SELECT 42", "{0:0:0}")
+
+        error_regex = ("The placeholder {0:0:0} is referring to "
+                       "an sql query that do not retrieve data")
+        with self.assertRaisesRegexp(ValueError, error_regex):
+            trans._replace_placeholders("SELECT 42", ["{0:0:0}"])
 
     def test_add(self):
         trans = Transaction("test_add")
@@ -332,13 +342,13 @@ class TestTransaction(TestBase):
         sql = "SELECT * FROM qiita.test_table"
         trans.add(sql)
         obs = trans.execute()
-        exp = [['insert1', 1],  # First query of the many query
-               ['insert2', 2],  # Second query of the many query
-               ['insert3', 3],  # Third query of the many query
+        exp = [[['insert1', 1]],  # First query of the many query
+               [['insert2', 2]],  # Second query of the many query
+               [['insert3', 3]],  # Third query of the many query
                None,  # Update query
-               [['insert1', 1, True],  # First result select
-                ['insert3', 3, True],  # Second result select
-                ['insert2', 2, False]]]  # Third result select
+               [['insert1', True, 1],  # First result select
+                ['insert3', True, 3],  # Second result select
+                ['insert2', False, 2]]]  # Third result select
         self.assertEqual(obs, exp)
 
     def test_execute_placeholders(self):
@@ -372,7 +382,7 @@ class TestTransaction(TestBase):
         sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
         trans.add(sql, [[1], [2], [3]], many=True)
         sql = "SELECT str_column FROM qiita.test_table WHERE int_column = %s"
-        trans.add(sql, 4)
+        trans.add(sql, [4])
         sql = """UPDATE qiita.test_table SET bool_column = %s
                  WHERE str_column = %s"""
         trans.add(sql, [False, "{3:0:0}"])
