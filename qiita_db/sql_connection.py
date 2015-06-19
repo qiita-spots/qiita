@@ -642,9 +642,10 @@ class Transaction(object):
         self._name = name
         self._queries = []
         self._results = []
+        self._index = 0
         self._conn_handler = SQLConnectionHandler()
 
-    def _rollback(self, sql, sql_args, error):
+    def _raise_execution_error(self, sql, sql_args, error):
         """Rollbacks the current transaction and raises a useful error
 
         The error message contains the name of the transaction, the failed
@@ -654,7 +655,7 @@ class Transaction(object):
         ------
         ValueError
         """
-        self._conn_handler._connection.rollback()
+        self.rollback()
         raise ValueError(
             "Error running SQL query in transaction %s:\n"
             "Query: %s\nArguments: %s\nError: %s\n"
@@ -696,7 +697,7 @@ class Transaction(object):
                             # A previous query that was expected to retrieve
                             # some data from the DB did not return as many
                             # values as expected
-                            self._rollback(
+                            self._raise_execution_error(
                                 sql, sql_args,
                                 "The placeholder {%d:%d:%d} does not match to "
                                 "any previous result"
@@ -705,7 +706,7 @@ class Transaction(object):
                             # The query that the placeholder is pointing to
                             # is not expected to retrieve any value
                             # (e.g. an INSERT w/o RETURNING clause)
-                            self._rollback(
+                            self._raise_execution_error(
                                 sql, sql_args,
                                 "The placeholder {%d:%d:%d} is referring to "
                                 "an sql query that do not retrieve data"
@@ -775,7 +776,7 @@ class Transaction(object):
                 except Exception as e:
                     # We catch any exception as we want to make sure that we
                     # rollback every time that something went wrong
-                    self._rollback(sql, sql_args, e)
+                    self._raise_execution_error(sql, sql_args, e)
 
                 try:
                     res = cur.fetchall()
@@ -790,10 +791,14 @@ class Transaction(object):
                 except PostgresError as e:
                     # Some other error happened during the execution of the
                     # query, so we need to rollback
-                    self._rollback(sql, sql_args, e)
+                    self._raise_execution_error(sql, sql_args, e)
 
                 # Store the results of the current query
                 self._results.append(res)
+
+        # wipe out the already executed queries
+        self._index += len(self._queries)
+        self._queries = []
 
         if commit:
             self.commit()
@@ -804,7 +809,11 @@ class Transaction(object):
         """Commits the transaction"""
         self._conn_handler._connection.commit()
 
+    def rollback(self):
+        """Rollbacks the transaction"""
+        self._conn_handler._connection.rollback()
+
     @property
     def index(self):
         """Returns the index of the next query that will be added"""
-        return len(self._queries)
+        return self._index + len(self._queries)

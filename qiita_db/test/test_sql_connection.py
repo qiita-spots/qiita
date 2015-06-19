@@ -202,6 +202,7 @@ class TestTransaction(TestBase):
         self.assertEqual(obs._name, "test_init")
         self.assertEqual(obs._queries, [])
         self.assertEqual(obs._results, [])
+        self.assertEqual(obs._index, 0)
         self.assertTrue(isinstance(obs._conn_handler, SQLConnectionHandler))
 
     def test_replace_placeholders(self):
@@ -414,6 +415,65 @@ class TestTransaction(TestBase):
         # make sure rollback correctly
         self._assert_sql_equal([])
 
+    def test_execute_commit_false(self):
+        trans = Transaction("test_execute_commit_false")
+        sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s) RETURNING str_column, int_column"""
+        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+        trans.add(sql, args, many=True)
+
+        obs = trans.execute(commit=False)
+        exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+        self.assertEqual(obs, exp)
+
+        self._assert_sql_equal([])
+
+        trans.commit()
+
+        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                ('insert3', True, 3)])
+
+    def test_execute_commit_false_rollback(self):
+        trans = Transaction("test_execute_commit_false_rollback")
+        sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s) RETURNING str_column, int_column"""
+        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+        trans.add(sql, args, many=True)
+
+        obs = trans.execute(commit=False)
+        exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+        self.assertEqual(obs, exp)
+
+        self._assert_sql_equal([])
+
+        trans.rollback()
+
+        self._assert_sql_equal([])
+
+    def test_execute_commit_false_wipe_queries(self):
+        trans = Transaction("test_execute_commit_false_wipe_queries")
+        sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s) RETURNING str_column, int_column"""
+        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+        trans.add(sql, args, many=True)
+
+        obs = trans.execute(commit=False)
+        exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+        self.assertEqual(obs, exp)
+
+        self._assert_sql_equal([])
+
+        sql = """UPDATE qiita.test_table SET bool_column = %s
+                 WHERE str_column = %s"""
+        args = [False, 'insert2']
+        trans.add(sql, args)
+        self.assertEqual(trans._queries, [(sql, args)])
+
+        trans.execute()
+
+        self._assert_sql_equal([('insert1', True, 1), ('insert3', True, 3),
+                                ('insert2', False, 2)])
+
     def test_index(self):
         trans = Transaction("test_index")
         self.assertEqual(trans.index, 0)
@@ -425,6 +485,12 @@ class TestTransaction(TestBase):
         args = [[1], [2], [3]]
         trans.add(sql, args, many=True)
         self.assertEqual(trans.index, 4)
+
+        trans.execute(commit=False)
+        self.assertEqual(trans.index, 4)
+
+        trans.add(sql, args, many=True)
+        self.assertEqual(trans.index, 7)
 
 if __name__ == "__main__":
     main()
