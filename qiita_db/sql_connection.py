@@ -642,6 +642,7 @@ class Transaction(object):
         self._name = name
         self._queries = []
         self._results = []
+        self._index = 0
         self._conn_handler = SQLConnectionHandler()
 
     def _raise_execution_error(self, sql, sql_args, error):
@@ -795,6 +796,10 @@ class Transaction(object):
                 # Store the results of the current query
                 self._results.append(res)
 
+        # wipe out the already executed queries
+        self._index += len(self._queries)
+        self._queries = []
+
         if commit:
             self.commit()
 
@@ -811,4 +816,4 @@ class Transaction(object):
     @property
     def index(self):
         """Returns the index of the next query that will be added"""
-        return len(self._queries)
+        return self._index + len(self._queries)
