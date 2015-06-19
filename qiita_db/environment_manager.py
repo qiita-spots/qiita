@@ -319,6 +319,11 @@ def clean_test_environment():
     In case that the test database is dirty (i.e. the 'qiita' schema is
     present), this cleans it up by dropping the 'qiita' schema and
     re-populating it.
+
+    Raises
+    ------
+    RuntimeError
+        If we are connected to a production environment
     """
     # First, we check that we are not in a production environment
     conn_handler = SQLConnectionHandler()
