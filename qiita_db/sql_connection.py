@@ -169,7 +169,7 @@ class SQLConnectionHandler(object):
                  'admin_with_database': '_admin_args',
                  'admin_without_database': '_admin_nodb_args'}
 
-    _regex = re.compile("{(\d+)}")
+    _regex = re.compile("{(\d+):(\d+)}")
 
     def __init__(self, admin='no_admin'):
         if admin not in ('no_admin', 'admin_with_database',
@@ -539,6 +539,58 @@ class SQLConnectionHandler(object):
             "Error running SQL query in queue %s: %s\nARGS: %s\nError: %s"
             % (queue, sql, str(sql_args), e))
 
+    def _get_queue_sql_args(self, sql, sql_args, results, queue):
+        """Replaces any placeholder in the sql_args for the actual value
+
+        Parameters
+        ----------
+        sql : str
+            The sql query
+        sql_args : list, tuple or None
+            The arguments of the sql query
+        results : list of DictCursor
+            The results of the previous SQL queries in the queue
+
+        Returns
+        -------
+        tuple of (str, list of objects)
+            The input sql query (unmodified) and a list with the sql arguments
+            with the placeholder values (if any) substituted with the actual
+            value
+        """
+        if sql_args is not None:
+            # The user can provide a tuple. Since tuples are immutable, cast it
+            # to a list so we can replace the value
+            sql_args = list(sql_args)
+            for pos, arg in enumerate(sql_args):
+                # check if previous results needed and replace
+                if isinstance(arg, str):
+                    placeholder = self._regex.search(arg)
+                    if placeholder:
+                        query_idx = int(placeholder.group(1))
+                        result_idx = int(placeholder.group(2))
+                        try:
+                            sql_args[pos] = results[query_idx][result_idx]
+                        except IndexError:
+                            # In this case, a previous query that was expected
+                            # to return a value is not returning any value
+                            self._rollback_raise_error(
+                                queue, sql, sql_args,
+                                "The placeholder {%d:%d} does not match to "
+                                "any previous result"
+                                % (query_idx, result_idx))
+                        except TypeError:
+                            # In this case, the query that the placeholder is
+                            # referring to was not tailored to return any
+                            # value (i.e. it was an insert w/o a RETURNING
+                            # statement)
+                            self._rollback_raise_error(
+                                queue, sql, sql_args,
+                                "The placeholder {%d:%d} is referring to an "
+                                "sql query that do not retrieve data"
+                                % (query_idx, result_idx))
+        return sql, sql_args
+
     def execute_queue(self, queue):
         """Executes all sql in a queue in a single transaction block
 
@@ -547,6 +599,11 @@ class SQLConnectionHandler(object):
         queue : str
             Name of queue to execute
 
+        Returns
+        -------
+        list of DictCursor
+            The results of all the sql queries in the queue
+
         Notes
         -----
         Does not support executemany command. Instead, enter the multiple
@@ -554,46 +611,25 @@ class SQLConnectionHandler(object):
 
         Raises
         ------
-        KetError
+        KeyError
             If queue does not exist
-        IndexError
-            If a sql argument placeholder does not correspond to the result of
-            any previously-executed query.
         """
         if not self._check_queue_exists(queue):
             raise KeyError("Queue '%s' does not exist" % queue)
 
+        results = []
+
         with self.get_postgres_cursor() as cur:
-            results = []
-            clear_res = False
             for sql, sql_args in self.queues[queue]:
-                if sql_args is not None:
-                    # The user can provide a tuple, make sure that it is a
-                    # list, so we can assign the item
-                    sql_args = list(sql_args)
-                    for pos, arg in enumerate(sql_args):
-                        # check if previous results needed and replace
-                        if isinstance(arg, str):
-                            result = self._regex.search(arg)
-                            if result:
-                                result_pos = int(result.group(1))
-                                try:
-                                    sql_args[pos] = results[result_pos]
-                                except IndexError:
-                                    self._rollback_raise_error(
-                                        queue, sql, sql_args,
-                                        "The index provided as a placeholder "
-                                        "%d does not correspond to any "
-                                        "previous result" % result_pos)
-                                clear_res = True
-                # wipe out results if needed and reset clear_res
-                if clear_res:
-                    results = []
-                    clear_res = False
+                sql, sql_args = self._get_queue_sql_args(sql, sql_args,
+                                                         results, queue)
+
                 # Fire off the SQL command
                 try:
                     cur.execute(sql, sql_args)
                 except Exception as e:
+                    # We catch any exception as we want to make sure that we
+                    # rollback every time that something went wrong
                     self._rollback_raise_error(queue, sql, sql_args, e)
 
                 # fetch results if available and append to results list
@@ -601,16 +637,19 @@ class SQLConnectionHandler(object):
                     res = cur.fetchall()
                 except ProgrammingError as e:
                     # At this execution point, we don't know if the sql query
-                    # that we executed was a INSERT or a SELECT. If it was a
-                    # SELECT and there is nothing to fetch, it will return an
-                    # empty list. However, if it was a INSERT it will raise a
-                    # ProgrammingError, so we catch that one and pass.
-                    pass
+                    # that we executed retrieved any value from the database.
+                    # If it was expected to retrieve something and there is
+                    # nothing to fetch, it will return an empty list. However,
+                    # if it was not supposed to return anything it will raise a
+                    # ProgrammingError, so we catch that one and define res
+                    # as None
+                    res = []
                 except PostgresError as e:
                     self._rollback_raise_error(queue, sql, sql_args, e)
-                else:
-                    # append all results linearly
-                    results.extend(flatten(res))
+
+                # Add the results to the queue
+                results.append(res)
+
         self._connection.commit()
         # wipe out queue since finished
         del self.queues[queue]
@@ -631,3 +670,184 @@ class SQLConnectionHandler(object):
         self.create_queue(temp_queue_name)
 
         return temp_queue_name
+
+
+class Transaction(object):
+    """Encapsulates a DB transaction
+
+    A transaction is defined by a series of consecutive queries that need to
+    be applied to the database as a single block.
+
+    Parameters
+    ----------
+    name : str
+        Name of the transaction.
+    """
+
+    _regex = re.compile("{(\d+):(\d+):(\d+)}")
+
+    def __init__(self, name):
+        # The name is useful for debugging, since we can identify the
+        # failed queue in errors
+        self._name = name
+        self._queries = []
+        self._results = []
+        self._conn_handler = SQLConnectionHandler()
+
+    def _rollback(self, sql, sql_args, error):
+        """Rollbacks the current transaction and raises a useful error
+
+        The error message contains the name of the transaction, the failed
+        query, the arguments of the failed query and the error generated.
+
+        Raises
+        ------
+        ValueError
+        """
+        self._conn_handler._connection.rollback()
+        raise ValueError(
+            "Error running SQL query in transaction %s:\n"
+            "Query: %s\nArguments: %s\nError: %s\n"
+            % (self._name, sql, str(sql_args), error))
+
+    def _replace_placeholders(self, sql, sql_args):
+        """Replaces the placeholder in `sql_args` with the actual value
+
+        Parameters
+        ----------
+        sql : str
+            The sql query
+        sql_args : list or None
+            The arguments of the SQL query
+
+        Returns
+        -------
+        tuple of (str, list of objects)
+            The input sql query (unmodified) and the sql arguments with the
+            placeholder (if any) substituted with the actual value of the
+            previous query
+        """
+        if sql_args is not None:
+            for pos, arg in enumerate(sql_args):
+                # Check if we have a placeholder
+                if isinstance(arg, str):
+                    placeholder = self._regex.search(arg)
+                    if placeholder:
+                        # We do have a placeholder, get the indexes
+                        # Query index
+                        q_idx = int(placeholder.group(1))
+                        # Row index
+                        r_idx = int(placeholder.group(2))
+                        # Value index
+                        v_idx = int(placeholder.group(3))
+                        try:
+                            sql_args[pos] = self._results[q_idx][r_idx][v_idx]
+                        except IndexError:
+                            # A previous query that was expected to retrieve
+                            # some data from the DB did not return as many
+                            # values as expected
+                            self._rollback(
+                                sql, sql_args,
+                                "The placeholder {%d:%d} does not match to "
+                                "any previous result"
+                                % (query_idx, res_idx))
+                        except TypeError:
+                            # The query that the placeholder is pointing to
+                            # is not expected to retrieve any value
+                            # (e.g. an INSERT w/o RETURNING clause)
+                            self._rollback(
+                                sql, sql_args,
+                                "The placeholder {%d:%d} is referring to "
+                                "an sql query that do not retrieve data"
+                                % (query_idx, res_idx))
+        return sql, sql_args
+
+    def add(self, sql, sql_args=None, many=False):
+        """Add an sql query to the transaction
+
+        If the current query needs a result of a previous query in the
+        transaction, a placeholder of the form '{#:#:#}' can be used. The first
+        number is the index of the previous SQL query in the transaction, the
+        second number is the row from that query result and the third number is
+        the index of the value withing the query result row.
+        The placeholder will be replaced by the actual value at execution time.
+
+        Parameters
+        ----------
+        sql : str
+            The sql query
+        sql_args : list of objects, optional
+            The arguments to the sql query
+        many : bool, optional
+            Whether or not we should add the query multiple times to the
+            transaction
+
+        Raises
+        ------
+        TypeError
+            If `sql_args` is provided and is not a list
+
+        Notes
+        -----
+        If `many` is true, `sql_args` should be a list of lists, in which each
+        list contains the parameters for the sql query
+        """
+        if not many:
+            sql_args = [sql_args]
+
+        for args in sql_args:
+            if args and type(args) != list:
+                raise TypeError("sql_args should be a list. Found %s"
+                                % type(args))
+            self._queries.append((sql, args))
+
+    def execute(self):
+        """Executes the transaction
+
+        Returns
+        -------
+        list of DictCursor
+            The results of all the SQL queries in the transaction
+        """
+        # Removing previous results, in case the transaction is executed
+        # multiple times
+        self._results = []
+
+        with self._conn_handler.get_postgres_cursor() as cur:
+            for sql, sql_args in self._queries:
+                sql, sql_args = self._replace_placeholders(sql, sql_args)
+
+            # Execute the current SQL command
+            try:
+                cur.execute(sql, sql_args)
+            except Exception as e:
+                # We catch any exception as we want to make sure that we
+                # rollback every time that something went wrong
+                self._rollback(sql, sql_args, e)
+
+            try:
+                res = cur.fetchall()
+            except ProgrammingError as e:
+                # At this execution point, we don't know if the sql query that
+                # we executed should retrieve values from the database.
+                # If the query was not supposed to retrieve any value
+                # (e.g. an INSERT without a RETURNING clause), it will
+                # raise a ProgrammingError. Otherwise it will just return
+                # an empty list
+                res = None
+            except PostgresError as e:
+                # Some other error happened during the execution of the query
+                self._rollback(sql, sql_args, e)
+
+            # Store the results of the current query
+            self._results.append(res)
+
+        # All the SQL queries were successfully executed, we can commit
+        # the transaction
+        self._conn_handler._connection.commit()
+        return self._results
+
+    @property
+    def index(self):
+        "Returns the index of the next query that will be added"
+        return len(self._queries)
