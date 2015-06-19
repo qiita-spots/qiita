@@ -534,7 +534,7 @@ class Transaction(object):
         Parameters
         ----------
         commit : bool, optional
-            Whether if the transaction should be committed or not. Defaults
+            Whether the transaction should be committed or not. Defaults
             to true.
 
         Returns
