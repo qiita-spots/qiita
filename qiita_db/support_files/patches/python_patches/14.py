@@ -8,16 +8,14 @@ from os.path import basename
 
 from skbio.util import flatten
 
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import Transaction
 from qiita_db.metadata_template import PrepTemplate
 
-conn_handler = SQLConnectionHandler()
+trans = Transaction('unlink-bad-mapping-files')
 
 sql = "SELECT prep_template_id FROM qiita.prep_template"
-all_ids = conn_handler.execute_fetchall(sql)
-
-q_name = 'unlink-bad-mapping-files'
-conn_handler.create_queue(q_name)
+trans.add(sql)
+all_ids = trans.execute(commit=False)[0]
 
 # remove all the bad mapping files
 for prep_template_id in all_ids:
@@ -40,27 +38,24 @@ for prep_template_id in all_ids:
 
         # (1) get the ids that we are going to delete.
         # because of the FK restriction, we cannot just delete the ids
-        ids = conn_handler.execute_fetchall(
+        trans.add(
             'SELECT filepath_id FROM qiita.{0} WHERE '
             '{1}=%s and filepath_id=%s'.format(table, column), (pt.id, mf[0]))
+        ids = trans.execute(commit=False)[-1]
         ids = flatten(ids)
 
         # (2) delete the entries from the prep_template_filepath table
-        conn_handler.add_to_queue(
-            q_name, "DELETE FROM qiita.{0} "
+        trans.add(
+            "DELETE FROM qiita.{0} "
             "WHERE {1}=%s and filepath_id=%s;".format(table, column),
             (pt.id, mf[0]))
 
         # (3) delete the entries from the filepath table
-        conn_handler.add_to_queue(
-            q_name,
+        trans.add(
             "DELETE FROM qiita.filepath WHERE "
             "filepath_id IN ({0});".format(', '.join(map(str, ids))))
 
-try:
-    conn_handler.execute_queue(q_name)
-except Exception as e:
-    raise
+trans.execute()
 
 # create correct versions of the mapping files
 for prep_template_id in all_ids:
