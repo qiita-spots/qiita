@@ -14,60 +14,7 @@ Classes
    :toctree: generated/
 
    SQLConnectionHandler
-
-Examples
---------
-Transaction blocks are created by first creating a queue of SQL commands, then
-adding commands to it. Finally, the execute command is called to execute the
-entire queue of SQL commands. A single command is made up of SQL and sql_args.
-SQL is the sql string in psycopg2 format with \%s markup, and sql_args is the
-list or tuple of replacement items.
-An example of a basic queue with two SQL commands in a single transaction:
-
-from qiita_db.sql_connection import SQLConnectionHandler
-conn_handler = SQLConnectionHandler # doctest: +SKIP
-conn_handler.create_queue("example_queue") # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
-    "phone) VALUES (%s, %s, %s, %s)",
-    ['insert@foo.bar', 'Toy', 'pass', '111-111-11112']) # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
-    "phone = '222-222-2221' WHERE email = %s",
-    ['insert@foo.bar']) # doctest: +SKIP
-conn_handler.execute_queue("example_queue") # doctest: +SKIP
-conn_handler.execute_fetchall(
-    "SELECT * from qiita.qiita_user WHERE email = %s",
-    ['insert@foo.bar']) # doctest: +SKIP
-[['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221', None, None,
-  None]] # doctest: +SKIP
-
-You can also use results from a previous command in the queue in a later
-command. If an item in the queue depends on a previous sql command's output,
-use {#} notation as a placeholder for the value. The \# must be the
-position of the result, e.g. if you return two things you can use \{0\}
-to reference the first and \{1\} to referece the second. The results list
-will continue to grow until one of the references is reached, then it
-will be cleaned out.
-Modifying the previous example to show this ability (Note the RETURNING added
-to the first SQL command):
-
-from qiita_db.sql_connection import SQLConnectionHandler
-conn_handler = SQLConnectionHandler # doctest: +SKIP
-conn_handler.create_queue("example_queue") # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
-    "phone) VALUES (%s, %s, %s, %s) RETURNING email, password",
-    ['insert@foo.bar', 'Toy', 'pass', '111-111-11112']) # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
-    "phone = '222-222-2221' WHERE email = %s AND password = %s",
-    ['{0}', '{1}']) # doctest: +SKIP
-conn_handler.execute_queue("example_queue") # doctest: +SKIP
-conn_handler.execute_fetchall(
-    "SELECT * from qiita.qiita_user WHERE email = %s", ['insert@foo.bar'])
-[['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221', None, None,
-  None]] # doctest: +SKIP
+   Transaction
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -488,7 +435,7 @@ class Transaction(object):
         raise ValueError(
             "Error running SQL query in transaction %s:\n"
             "Query: %s\nArguments: %s\nError: %s\n"
-            % (self._name, sql, str(sql_args), error))
+            % (self._name, sql, str(sql_args), str(error)))
 
     def _replace_placeholders(self, sql, sql_args):
         """Replaces the placeholder in `sql_args` with the actual value
@@ -496,14 +443,14 @@ class Transaction(object):
         Parameters
         ----------
         sql : str
-            The sql query
+            The SQL query
         sql_args : list or None
             The arguments of the SQL query
 
         Returns
         -------
         tuple of (str, list of objects)
-            The input sql query (unmodified) and the sql arguments with the
+            The input SQL query (unmodified) and the SQL arguments with the
             placeholder (if any) substituted with the actual value of the
             previous query
         """
@@ -538,7 +485,7 @@ class Transaction(object):
                             self._raise_execution_error(
                                 sql, sql_args,
                                 "The placeholder {%d:%d:%d} is referring to "
-                                "an sql query that do not retrieve data"
+                                "an SQL query that does not retrieve data"
                                 % (q_idx, r_idx, v_idx))
         return sql, sql_args
 
@@ -549,7 +496,7 @@ class Transaction(object):
         transaction, a placeholder of the form '{#:#:#}' can be used. The first
         number is the index of the previous SQL query in the transaction, the
         second number is the row from that query result and the third number is
-        the index of the value withing the query result row.
+        the index of the value within the query result row.
         The placeholder will be replaced by the actual value at execution time.
 
         Parameters
@@ -576,7 +523,7 @@ class Transaction(object):
             sql_args = [sql_args]
 
         for args in sql_args:
-            if args and type(args) != list:
+            if args and isinstance(args, list):
                 raise TypeError("sql_args should be a list. Found %s"
                                 % type(args))
             self._queries.append((sql, args))
