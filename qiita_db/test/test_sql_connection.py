@@ -207,7 +207,8 @@ class TestTransaction(TestBase):
 
     def test_replace_placeholders(self):
         trans = Transaction("test_replace_placeholders")
-        trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 3]]]
+        trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 3]],
+                          None, None, [["res5", 5]]]
         sql = "SELECT 42"
         obs_sql, obs_args = trans._replace_placeholders(sql, ["{0:0:0}"])
         self.assertEqual(obs_sql, sql)
@@ -220,6 +221,10 @@ class TestTransaction(TestBase):
         obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:1:1}"])
         self.assertEqual(obs_sql, sql)
         self.assertEqual(obs_args, [3])
+
+        obs_sql, obs_args = trans._replace_placeholders(sql, ["{4:0:0}"])
+        self.assertEqual(obs_sql, sql)
+        self.assertEqual(obs_args, ["res5"])
 
         obs_sql, obs_args = trans._replace_placeholders(
             sql, ["foo", "{0:0:1}", "bar", "{1:0:1}"])
