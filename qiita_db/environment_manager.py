@@ -19,7 +19,7 @@ from future.utils import viewitems
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import SQLConnectionHandler, Transaction
 from .reference import Reference
 from natsort import natsorted
 
@@ -319,6 +319,11 @@ def clean_test_environment():
     In case that the test database is dirty (i.e. the 'qiita' schema is
     present), this cleans it up by dropping the 'qiita' schema and
     re-populating it.
+
+    Raises
+    ------
+    RuntimeError
+        If we are connected to a production environment
     """
     # First, we check that we are not in a production environment
     conn_handler = SQLConnectionHandler()
@@ -367,15 +372,14 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
         py_patch_fp = corresponding_py_patch(
             splitext(basename(sql_patch_fp))[0] + '.py')
         py_patch_filename = basename(py_patch_fp)
-        conn.create_queue(sql_patch_filename)
+        trans = Transaction(sql_patch_filename)
         with open(sql_patch_fp, 'U') as patch_file:
             if verbose:
                 print('\tApplying patch %s...' % sql_patch_filename)
-            conn.add_to_queue(sql_patch_filename, patch_file.read())
-            conn.add_to_queue(sql_patch_filename, patch_update_sql,
-                              [sql_patch_filename])
+            trans.add(patch_file.read())
+            trans.add(patch_update_sql, [sql_patch_filename])
 
-        conn.execute_queue(sql_patch_filename)
+        trans.execute()
 
         if exists(py_patch_fp):
             if verbose:
