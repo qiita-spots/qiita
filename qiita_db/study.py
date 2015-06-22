@@ -337,16 +337,16 @@ class Study(QiitaObject):
                "efo_id) VALUES (%s, %s)".format(cls._table))
         conn_handler.executemany(sql, [(study_id, e) for e in efo])
 
-        # insert portal into database
+        # Add to both QIITA and given portal (if not QIITA)
         portal_id = convert_to_id(qiita_config.portal, 'portal_type', 'portal')
-        portal_sql = ""
-        if qiita_config.portal != "QIITA":
-            # need to add to both QIITA portal and this portal
-            portal_sql = ", (%(study_id)s, %(portal_id)s)"
-        sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
-                 VALUES (%(study_id)s, 1){}""".format(portal_sql)
-        conn_handler.execute(sql, {'study_id': study_id,
-                                   'portal_id': portal_id})
+        sql = """INSERT INTO qiita.study_portal
+                 (study_id, portal_type_id)
+                 VALUES (%s, %s)"""
+        args = [[study_id, portal_id]]
+        if qiita_config.portal != 'QIITA':
+            qp_id = convert_to_id('QIITA', 'portal_type', 'portal')
+            args.append([study_id, qp_id])
+        conn_handler.executemany(sql, args)
 
         # add study to investigation if necessary
         if investigation:

@@ -162,21 +162,15 @@ class Analysis(QiitaStatusObject):
             conn_handler.add_to_queue(
                 queue, sql, (owner.id, name, description, status_id))
 
-        # make changes to SQL needed to add to both QIITA and given portal
-        insert_portal = ""
-        portal_info = []
-        if qiita_config.portal != 'QIITA':
-            qp = convert_to_id('QIITA', 'portal_type', 'portal')
-            insert_portal = '(%s, {}), '.format(qp)
-            portal_info.append("{0}")
-        portal_info.extend(["{0}", portal_id, "{0}"])
-
-        # insert into qiita_portal table
+        # Add to both QIITA and given portal (if not QIITA)
         sql = """INSERT INTO qiita.analysis_portal
-                  (analysis_id, portal_type_id)
-                  VALUES {}(%s, %s)
-                  RETURNING %s""".format(insert_portal)
-        conn_handler.add_to_queue(queue, sql, portal_info)
+                 (analysis_id, portal_type_id)
+                 VALUES (%s, %s) RETURNING %s"""
+        args = [['{0}', portal_id, '{0}']]
+        if qiita_config.portal != 'QIITA':
+            qp_id = convert_to_id('QIITA', 'portal_type', 'portal')
+            args.append(['{0}', qp_id, '{0}'])
+        conn_handler.add_to_queue(queue, sql, args, many=True)
 
         # add parent if necessary
         if parent:

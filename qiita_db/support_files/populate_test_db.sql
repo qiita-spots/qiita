@@ -40,7 +40,7 @@ INSERT INTO qiita.study (email, emp_person_id, first_contact,
     NULL);
 
 -- Add portal to the study
-INSERT INTO qiita.study_portal (study_id, portal_type_id) VALUES (1, 2);
+INSERT INTO qiita.study_portal (study_id, portal_type_id) VALUES (1, 1);
 
 -- Add some environmental packages to the study
 INSERT INTO qiita.study_environmental_package (study_id, environmental_package_name) VALUES (1, 'soil'), (1, 'plant-associated');

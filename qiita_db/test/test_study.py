@@ -362,7 +362,7 @@ class TestStudy(TestCase):
             # make sure portal is associated
             obs = self.conn_handler.execute_fetchall(
                 "SELECT * from qiita.study_portal WHERE study_id = 2")
-            self.assertEqual(obs, [[2, 1], [2, 2]])
+            self.assertEqual(obs, [[2, 2], [2, 1]])
         finally:
             qiita_config.portal = "QIITA"
 
@@ -493,7 +493,7 @@ class TestStudy(TestCase):
             self.study.efo = 6
 
     def test_portals(self):
-        self.assertEqual(self.study._portals, ['EMP'])
+        self.assertEqual(self.study._portals, ['QIITA'])
 
     def test_retrieve_info(self):
         for key, val in viewitems(self.existingexp):

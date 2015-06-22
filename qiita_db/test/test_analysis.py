@@ -124,7 +124,7 @@ class TestAnalysis(TestCase):
             obs = self.conn_handler.execute_fetchall(
                 "SELECT * from qiita.analysis_portal WHERE analysis_id = %s",
                 [new_id])
-            self.assertEqual(obs, [[new_id, 1], [new_id, 2]])
+            self.assertEqual(obs, [[new_id, 2], [new_id, 1]])
         finally:
             qiita_config.portal = "QIITA"
 
