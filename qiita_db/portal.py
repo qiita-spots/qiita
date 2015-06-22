@@ -54,6 +54,8 @@ if qiita_config.portal == "QIITA":
         portal : str
             Portal to associate with.
         """
+        if portal == "QIITA":
+            raise ValueError('Can not remove from main QIITA portal!')
         portal_id = convert_to_id(portal, 'portal_type', 'portal')
         sql = """DELETE FROM qiita.study_portal WHERE study_id = %s
                  AND portal_type_id = %s"""
