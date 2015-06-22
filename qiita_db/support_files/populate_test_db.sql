@@ -440,7 +440,7 @@ INSERT INTO qiita.collection_job (collection_id, job_id) VALUES (1, 1);
 INSERT INTO qiita.collection_users (email, collection_id) VALUES ('shared@foo.bar', 1);
 
 --add default analysis for users
-INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) VALUES ('test@foo.bar', 'test@foo.bar-dflt', 'dflt', true, 1), ('admin@foo.bar', 'admin@foo.bar-dflt', 'dflt', true, 1), ('shared@foo.bar', 'shared@foo.bar-dflt', 'dflt', true, 1), ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', true, 1);
+INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) VALUES ('test@foo.bar', 'test@foo.bar-dflt', 'dflt', true, 1), ('admin@foo.bar', 'admin@foo.bar-dflt', 'dflt', true, 1), ('shared@foo.bar', 'shared@foo.bar-dflt', 'dflt', true, 1), ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', true, 1), ('test@foo.bar', 'test@foo.bar-dflt', 'dflt', true, 2), ('admin@foo.bar', 'admin@foo.bar-dflt', 'dflt', true, 2), ('shared@foo.bar', 'shared@foo.bar-dflt', 'dflt', true, 2), ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', true, 2);
 
 -- Attach samples to analysis
 INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (3,1,'1.SKD8.640184'), (3,1,'1.SKB7.640196'), (3,1,'1.SKM9.640192'), (3,1,'1.SKM4.640180');
