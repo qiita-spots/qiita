@@ -51,7 +51,7 @@ LOOP
 END LOOP;
 END $do$;
 
--- Remove study portal info to it's own table, as one study can be in multiple portals
+-- Move study portal info to it's own table, as one study can be in multiple portals
 CREATE TABLE qiita.study_portal (
 	study_id             bigint  NOT NULL,
 	portal_type_id       bigint  NOT NULL,
