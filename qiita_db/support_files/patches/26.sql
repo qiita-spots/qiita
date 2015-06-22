@@ -46,7 +46,7 @@ LOOP
 	LOOP
 		INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) VALUES (eml, eml || '-dflt', 'dflt', true, 1) RETURNING analysis_id INTO aid;
 		INSERT INTO qiita.analysis_workflow (analysis_id, step) VALUES (aid, 2);
-		INSERT INTO qiita.analysis_portal (analysis_id, portal_type) VALUES (aid, portal);
+		INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES (aid, portal);
 	END LOOP;
 END LOOP;
 END $do$;
