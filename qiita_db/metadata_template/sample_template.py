@@ -246,8 +246,7 @@ class SampleTemplate(MetadataTemplate):
         md_template = self._clean_validate_template(md_template, self.study_id,
                                                     SAMPLE_TEMPLATE_COLUMNS)
 
-        self._add_common_creation_steps_to_transaction(
-            md_template, self.study_id, trans)
+        self._add_common_extend_steps_to_transaction(md_template, trans)
         trans.execute()
 
         self.generate_files()

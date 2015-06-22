@@ -633,23 +633,19 @@ class MetadataTemplate(QiitaObject):
         values = as_python_types(md_template, headers)
         values.insert(0, sample_ids)
         values = [list(v) for v in zip(*values)]
-        sql = """INSERT INTO qiita.{0} (sample_id, {1})
-                 VALUES (%s, {2})""".format(table_name, ", ".join(headers),
-                                            ', '.join(["%s"] * len(headers)))
+        sql = "INSERT INTO qiita.{0} (sample_id, {1}) VALUES (%s, {2})".format(
+            table_name, ", ".join(headers), ', '.join(["%s"] * len(headers)))
         trans.add(sql, values, many=True)
 
-    def _add_common_extend_steps_to_queue(self, md_template, conn_handler,
-                                          queue_name):
+    def _add_common_extend_steps_to_transaction(self, md_template, trans):
         r"""Adds the common extend steps to the queue in conn_handler
 
         Parameters
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by sample ids
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
-        queue_name : str
-            The queue where the SQL statements will be added
+        trans : Transaction
+            The transaction where the SQL statements will be added
 
         Raises
         ------
@@ -683,10 +679,8 @@ class MetadataTemplate(QiitaObject):
                                                         self._id_column)
             sql_alter = """ALTER TABLE qiita.{0} ADD COLUMN {1} {2}"""
             for category, dtype in zip(new_cols, datatypes):
-                conn_handler.add_to_queue(
-                    queue_name, sql_cols, (self._id, category, dtype))
-                conn_handler.add_to_queue(
-                    queue_name, sql_alter.format(table_name, category, dtype))
+                trans.add(sql_cols, [self._id, category, dtype])
+                trans.add(sql_alter.format(table_name, category, dtype))
 
             if existing_samples:
                 warnings.warn(
@@ -705,13 +699,13 @@ class MetadataTemplate(QiitaObject):
                 # We have all the values in different lists (but in the same
                 # order) so use zip to create the list of tuples that psycopg2
                 # requires.
-                values = [v for v in zip(*values)]
+                values = [list(v) for v in zip(*values)]
                 set_str = ["{0} = %s".format(col) for col in new_cols]
                 sql = """UPDATE qiita.{0}
                          SET {1}
                          WHERE sample_id=%s""".format(table_name,
                                                       ",".join(set_str))
-                conn_handler.add_to_queue(queue_name, sql, values, many=True)
+                trans.add(sql, values, many=True)
         elif existing_samples:
             warnings.warn(
                 "%d samples already exist in the template and "
@@ -724,20 +718,20 @@ class MetadataTemplate(QiitaObject):
             md_template = md_template.loc[new_samples]
 
             # Insert values on required columns
-            values = [(self._id, s_id) for s_id in new_samples]
+            values = [[self._id, s_id] for s_id in new_samples]
             sql = """INSERT INTO qiita.{0} ({1}, sample_id)
                      VALUES (%s, %s)""".format(self._table, self._id_column)
-            conn_handler.add_to_queue(queue_name, sql, values, many=True)
+            trans.add(sql, values, many=True)
 
             # Insert values on custom table
             values = as_python_types(md_template, headers)
             values.insert(0, new_samples)
-            values = [v for v in zip(*values)]
+            values = [list(v) for v in zip(*values)]
             sql = """INSERT INTO qiita.{0} (sample_id, {1})
                      VALUES (%s, {2})""".format(
                 table_name, ", ".join(headers),
                 ', '.join(["%s"] * len(headers)))
-            conn_handler.add_to_queue(queue_name, sql, values, many=True)
+            trans.add(sql, values, many=True)
 
     @classmethod
     def exists(cls, obj_id):
