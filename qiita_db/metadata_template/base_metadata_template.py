@@ -44,6 +44,7 @@ from collections import defaultdict
 from copy import deepcopy
 
 import pandas as pd
+import numpy as np
 from skbio.util import find_duplicates
 import warnings
 
@@ -325,11 +326,7 @@ class BaseSample(QiitaObject):
         except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
-            type_lookup = defaultdict(lambda: 'varchar')
-            type_lookup[int] = 'integer'
-            type_lookup[float] = 'float8'
-            type_lookup[str] = 'varchar'
-            value_type = type_lookup[type(value)]
+            value_type = type_lookup(type(value))
 
             sql = """SELECT udt_name
                      FROM information_schema.columns
@@ -1192,11 +1189,8 @@ class MetadataTemplate(QiitaObject):
         except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
-            type_lookup = defaultdict(lambda: 'varchar')
-            type_lookup[int] = 'integer'
-            type_lookup[float] = 'float8'
-            type_lookup[str] = 'varchar'
-            value_types = set(type_lookup[type(value)]
+
+            value_types = set(type_lookup(type(value))
                               for value in viewvalues(samples_and_values))
 
             sql = """SELECT udt_name
