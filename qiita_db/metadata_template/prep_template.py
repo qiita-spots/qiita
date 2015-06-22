@@ -20,7 +20,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
                                  QiitaDBError, QiitaDBExecutionError,
                                  QiitaDBWarning)
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import SQLConnectionHandler, Transaction
 from qiita_db.ontology import Ontology
 from qiita_db.util import (convert_to_id,
                            convert_from_id, get_mountpoint, infer_status)
@@ -107,11 +107,6 @@ class PrepTemplate(MetadataTemplate):
         if investigation_type is not None:
             cls.validate_investigation_type(investigation_type)
 
-        # Get a connection handler
-        conn_handler = SQLConnectionHandler()
-        queue_name = "CREATE_PREP_TEMPLATE_%d_%d" % (study.id, id(md_template))
-        conn_handler.create_queue(queue_name)
-
         # Check if the data_type is the id or the string
         if isinstance(data_type, (int, long)):
             data_type_id = data_type
@@ -129,31 +124,27 @@ class PrepTemplate(MetadataTemplate):
                                                    pt_cols)
 
         # Insert the metadata template
-        # We need the prep_id for multiple calls below, which currently is not
-        # supported by the queue system. Thus, executing this outside the queue
-        prep_id = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.prep_template "
-            "(data_type_id, investigation_type) "
-            "VALUES (%s, %s) RETURNING prep_template_id",
-            (data_type_id, investigation_type))[0]
+        trans = Transaction("CREATE_PREP_TEMPLATE_%d_%d"
+                            % (study.id, id(md_template)))
+        sql = ("INSERT INTO qiita.prep_template "
+               "(data_type_id, investigation_type) VALUES (%s, %s) "
+               "RETURNING prep_template_id")
+        trans.add(sql, [data_type_id, investigation_type])
+        prep_id = trans.execute(commit=False)[0][0][0]
 
-        cls._add_common_creation_steps_to_queue(md_template, prep_id,
-                                                conn_handler, queue_name)
+        cls._add_common_creation_steps_to_transaction(md_template, prep_id,
+                                                      trans)
 
         # Link the prep template with the study
         sql = ("INSERT INTO qiita.study_prep_template "
                "(study_id, prep_template_id) VALUES (%s, %s)")
-        conn_handler.add_to_queue(queue_name, sql, (study.id, prep_id))
+        trans.add(sql, [study.id, prep_id])
 
         try:
-            conn_handler.execute_queue(queue_name)
+            trans.execute()
         except Exception:
-            # Clean up row from qiita.prep_template
-            conn_handler.execute(
-                "DELETE FROM qiita.prep_template where "
-                "{0} = %s".format(cls._id_column), (prep_id,))
-
             # Check if sample IDs present here but not in sample template
+            conn_handler = SQLConnectionHandler()
             sql = ("SELECT sample_id from qiita.study_sample WHERE "
                    "study_id = %s")
             # Get list of study sample IDs, prep template study IDs,
