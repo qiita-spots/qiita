@@ -485,7 +485,7 @@ class Transaction(object):
                             self._raise_execution_error(
                                 sql, sql_args,
                                 "The placeholder {%d:%d:%d} is referring to "
-                                "an SQL query that does not retrieve data"
+                                "a SQL query that does not retrieve data"
                                 % (q_idx, r_idx, v_idx))
         return sql, sql_args
 
@@ -517,7 +517,10 @@ class Transaction(object):
         Notes
         -----
         If `many` is true, `sql_args` should be a list of lists, in which each
-        list contains the parameters for the sql query
+        list of the list contains the parameters for one SQL query of the many.
+        Each element on the list is all the parameters for a single one of the
+        many queries added. The amount of SQL queries added to the list is
+        len(sql_args).
         """
         if not many:
             sql_args = [sql_args]
