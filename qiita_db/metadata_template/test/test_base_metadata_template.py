@@ -54,8 +54,8 @@ class TestMetadataTemplateReadOnly(TestCase):
         """_add_common_creation_steps_to_queue raises an error from base class
         """
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            MetadataTemplate._add_common_creation_steps_to_queue(
-                None, 1, None, "")
+            MetadataTemplate._add_common_creation_steps_to_transaction(
+                None, 1, None)
 
     def test_clean_validate_template(self):
         """_clean_validate_template raises an error from base class"""
