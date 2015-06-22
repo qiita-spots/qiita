@@ -53,7 +53,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBNotImplementedError, QiitaDBError,
                                  QiitaDBWarning, QiitaDBDuplicateHeaderError)
 from qiita_db.base import QiitaObject
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import SQLConnectionHandler, Transaction
 from qiita_db.util import (exists_table, get_table_cols,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
@@ -180,13 +180,8 @@ class BaseSample(QiitaObject):
             "{1}=%s)".format(cls._table, cls._id_column),
             (sample_id, md_template.id))[0]
 
-    def _get_categories(self, conn_handler):
+    def _get_categories(self):
         r"""Returns all the available metadata categories for the sample
-
-        Parameters
-        ----------
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
 
         Returns
         -------
@@ -228,9 +223,8 @@ class BaseSample(QiitaObject):
         int
             The number of metadata categories
         """
-        conn_handler = SQLConnectionHandler()
         # return the number of columns
-        return len(self._get_categories(conn_handler))
+        return len(self._get_categories())
 
     def __getitem__(self, key):
         r"""Returns the value of the metadata category `key`
@@ -254,20 +248,20 @@ class BaseSample(QiitaObject):
         --------
         get
         """
-        conn_handler = SQLConnectionHandler()
         key = key.lower()
-        if key not in self._get_categories(conn_handler):
+        if key not in self._get_categories():
             # The key is not available for the sample, so raise a KeyError
             raise KeyError("Metadata category %s does not exists for sample %s"
                            " in template %d" %
                            (key, self._id, self._md_template.id))
 
+        conn_handler = SQLConnectionHandler()
         sql = """SELECT {0} FROM qiita.{1}
                  WHERE sample_id=%s""".format(key, self._dynamic_table)
 
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
 
-    def add_setitem_queries(self, column, value, conn_handler, queue):
+    def add_setitem_queries(self, column, value, trans):
         """Adds the SQL queries needed to set a value to the provided queue
 
         Parameters
@@ -277,10 +271,8 @@ class BaseSample(QiitaObject):
         value : str
             The value to set. This is expected to be a str on the assumption
             that psycopg2 will cast as necessary when updating.
-        conn_handler : SQLConnectionHandler
-            The connection handler object connected to the DB
-        queue : str
-            The queue where the SQL statements will be added
+        trans : Transaction
+            The Transaction object where the SQL queries will be added
 
         Raises
         ------
@@ -288,7 +280,7 @@ class BaseSample(QiitaObject):
             If the column does not exist in the table
         """
         # Check if the column exist in the table
-        if column not in self._get_categories(conn_handler):
+        if column not in self._get_categories():
             raise QiitaDBColumnError("Column %s does not exist in %s" %
                                      (column, self._dynamic_table))
 
@@ -296,7 +288,7 @@ class BaseSample(QiitaObject):
                  SET {1}=%s
                  WHERE sample_id=%s""".format(self._dynamic_table, column)
 
-        conn_handler.add_to_queue(queue, sql, (value, self._id))
+        trans.add(sql, [value, self._id])
 
     def __setitem__(self, column, value):
         r"""Sets the metadata value for the category `column`
@@ -314,14 +306,12 @@ class BaseSample(QiitaObject):
         ValueError
             If the value type does not match the one in the DB
         """
-        conn_handler = SQLConnectionHandler()
-        queue_name = "set_item_%s" % self._id
-        conn_handler.create_queue(queue_name)
+        trans = Transaction("set_item_%s" % self._id)
 
-        self.add_setitem_queries(column, value, conn_handler, queue_name)
+        self.add_setitem_queries(column, value, trans)
 
         try:
-            conn_handler.execute_queue(queue_name)
+            trans.execute()
         except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
@@ -336,6 +326,7 @@ class BaseSample(QiitaObject):
                      WHERE column_name = %s
                         AND table_schema = 'qiita'
                         AND (table_name = %s OR table_name = %s)"""
+            conn_handler = SQLConnectionHandler()
             column_type = conn_handler.execute_fetchone(
                 sql, (column, self._table, self._dynamic_table))
 
@@ -371,8 +362,7 @@ class BaseSample(QiitaObject):
         --------
         keys
         """
-        conn_handler = SQLConnectionHandler()
-        return iter(self._get_categories(conn_handler))
+        return iter(self._get_categories())
 
     def __contains__(self, key):
         r"""Checks if the metadata category `key` is present
@@ -387,8 +377,7 @@ class BaseSample(QiitaObject):
         bool
             True if the metadata category `key` is present, false otherwise
         """
-        conn_handler = SQLConnectionHandler()
-        return key.lower() in self._get_categories(conn_handler)
+        return key.lower() in self._get_categories()
 
     def keys(self):
         r"""Iterator over the metadata categories
@@ -594,7 +583,7 @@ class MetadataTemplate(QiitaObject):
     @classmethod
     def _add_common_creation_steps_to_transaction(cls, md_template, obj_id,
                                                   trans):
-        r"""Adds the common creation steps to the queue in conn_handler
+        r"""Adds the common creation steps to transaction object
 
         Parameters
         ----------
@@ -632,13 +621,12 @@ class MetadataTemplate(QiitaObject):
         table_name = cls._table_name(obj_id)
         col_datatype = ["%s %s" % (col, dtype)
                         for col, dtype in zip(headers, datatypes)]
-        sql = """CREATE TABLE qiita.{0} (
-                    sample_id varchar NOT NULL,
-                    {1},
-                    CONSTRAINT fk_{0} FOREIGN KEY (sample_id)
-                        REFERENCES qiita.study_sample (sample_id)
-                        ON UPDATE CASCADE)""".format(table_name,
-                                                     ', '.join(col_datatype))
+        sql = ("CREATE TABLE qiita.{0} ("
+               "sample_id varchar NOT NULL, {1}, "
+               "CONSTRAINT fk_{0} FOREIGN KEY (sample_id) "
+               "REFERENCES qiita.study_sample (sample_id) "
+               "ON UPDATE CASCADE)".format(table_name,
+                                           ', '.join(col_datatype)))
         trans.add(sql)
 
         # Insert values on custom table
@@ -1175,16 +1163,14 @@ class MetadataTemplate(QiitaObject):
             table_name = self._table_name(self._id)
             raise QiitaDBUnknownIDError(missing, table_name)
 
-        conn_handler = SQLConnectionHandler()
-        queue_name = "update_category_%s_%s" % (self._id, category)
-        conn_handler.create_queue(queue_name)
+        trans = Transaction("update_category_%s_%s" % (self._id, category))
 
         for k, v in viewitems(samples_and_values):
             sample = self[k]
-            sample.add_setitem_queries(category, v, conn_handler, queue_name)
+            sample.add_setitem_queries(category, v, trans)
 
         try:
-            conn_handler.execute_queue(queue_name)
+            trans.execute()
         except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
@@ -1200,6 +1186,7 @@ class MetadataTemplate(QiitaObject):
                      WHERE column_name = %s
                         AND table_schema = 'qiita'
                         AND (table_name = %s OR table_name = %s)"""
+            conn_handler = SQLConnectionHandler()
             column_type = conn_handler.execute_fetchone(
                 sql, (category, self._table, self._table_name(self._id)))
 

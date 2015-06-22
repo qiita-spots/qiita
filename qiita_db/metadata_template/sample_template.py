@@ -241,15 +241,13 @@ class SampleTemplate(MetadataTemplate):
         md_template : DataFrame
             The metadata template file contents indexed by samples Ids
         """
-        conn_handler = SQLConnectionHandler()
-        queue_name = "EXTEND_SAMPLE_TEMPLATE_%d" % self.id
-        conn_handler.create_queue(queue_name)
+        trans = Transaction("EXTEND_SAMPLE_TEMPLATE_%d" % self.id)
 
         md_template = self._clean_validate_template(md_template, self.study_id,
                                                     SAMPLE_TEMPLATE_COLUMNS)
 
-        self._add_common_extend_steps_to_queue(md_template, conn_handler,
-                                               queue_name)
-        conn_handler.execute_queue(queue_name)
+        self._add_common_creation_steps_to_transaction(
+            md_template, self.study_id, trans)
+        trans.execute()
 
         self.generate_files()
