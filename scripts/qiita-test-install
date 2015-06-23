@@ -340,7 +340,7 @@ def main():
         qiita_conf_fp = environ['QIITA_CONFIG_FP']
     except KeyError:
         qiita_conf_fp = join(dirname(abspath(__file__)),
-                             'support_files/config_test.txt')
+                             'support_files/config_test.cfg')
     smtp = SMTP_SSL() if qiita_config.smtp_ssl else SMTP()
     smtp.set_debuglevel(False)
     try:

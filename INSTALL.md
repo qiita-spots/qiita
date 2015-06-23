@@ -33,17 +33,17 @@ pip install qiita-spots
 Qiita configuration
 ===================
 After these commands are executed, you will need to:
-1. Download a [sample Qiita configuration file](https://github.com/biocore/qiita/blob/master/qiita_core/support_files/config_test.txt).
+1. Download a [sample Qiita configuration file](https://github.com/biocore/qiita/blob/master/qiita_core/support_files/config_test.cfg).
 
   ```bash
   cd
-  curl -O https://raw.githubusercontent.com/biocore/qiita/master/qiita_core/support_files/config_test.txt
+  curl -O https://raw.githubusercontent.com/biocore/qiita/master/qiita_core/support_files/config_test.cfg
   ```
 
 2. Set your `QIITA_CONFIG_FP` environment variable to point to that file:
 
   ```bash
-  echo "export QIITA_CONFIG_FP=$HOME/config_test.txt" >> ~/.bashrc
+  echo "export QIITA_CONFIG_FP=$HOME/config_test.cfg" >> ~/.bashrc
   echo "export MOI_CONFIG_FP=$QIITA_CONFIG_FP" >> ~/.bashrc
   source ~/.bashrc
   ```

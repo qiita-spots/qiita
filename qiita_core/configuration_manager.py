@@ -23,7 +23,7 @@ class ConfigurationManager(object):
     Parameters
     ----------
     conf_fp: str, optional
-        Filepath to the configuration file. Default: config_test.txt
+        Filepath to the configuration file. Default: config_test.cfg
 
     Attributes
     ----------
