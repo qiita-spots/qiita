@@ -34,8 +34,7 @@ from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import (create_rand_string, check_table_cols, hash_password,
-                   convert_to_id)
+from .util import (create_rand_string, check_table_cols, hash_password)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
@@ -233,14 +232,9 @@ class User(QiitaObject):
         # create user default sample holder
         sql = ("INSERT INTO qiita.analysis "
                "(email, name, description, dflt, analysis_status_id) "
-               "VALUES (%s, %s, %s, %s, 1) RETURNING analysis_id")
+               "VALUES (%s, %s, %s, %s, 1)")
         conn_handler.add_to_queue(queue, sql,
                                   (email, '%s-dflt' % email, 'dflt', True))
-
-        portal_id = convert_to_id('QIITA', 'portal_type', 'portal')
-        sql = """INSERT INTO qiita.analysis_portal
-                 (analysis_id, portal_type_id) VALUES (%s, %s)"""
-        conn_handler.add_to_queue(queue, sql, ['{0}', portal_id])
 
         conn_handler.execute_queue(queue)
 
