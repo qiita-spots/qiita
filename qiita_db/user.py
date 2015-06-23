@@ -303,7 +303,7 @@ class User(QiitaObject):
             # wipe out code so we know it was used
             sql = """UPDATE qiita.{0} SET {1} = ''
                      WHERE email = %s""".format(cls._table, column)
-            conn_handler.execute(sql, (email))
+            conn_handler.execute(sql, [email])
 
         return db_code == code
 
