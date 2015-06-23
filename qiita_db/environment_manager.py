@@ -244,6 +244,17 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             VALUES
             (%s, %s)""", [analysis_id, portal_id])
 
+        # Add to both QIITA and given portal (if not QIITA)
+        sql = """INSERT INTO qiita.analysis_portal
+                 (analysis_id, portal_type_id)
+                 VALUES (%s, %s)"""
+        args = [[analysis_id, portal_id]]
+        if qiita_config.portal != 'QIITA':
+            qp_id = convert_to_id('QIITA', 'portal_type', 'portal')
+            args.append([analysis_id, qp_id])
+
+        conn.execute_many(sql, args)
+
         print('Demo user successfully created')
 
     if qiita_config.test_environment:
