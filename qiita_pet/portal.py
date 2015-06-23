@@ -48,13 +48,6 @@ class PortalStyleManager(object):
         else:
             self.conf_fp = join(dirname(abspath(__file__)),
                                 'support_files/config_portal.cfg')
-        self.css_fp = qiita_config.css_fp
-
-        # Load the custom CSS if needed
-        self.custom_css = ''
-        if self.css_fp:
-            with open(self.css_fp, 'U') as f:
-                self.custom_css = f.read()
 
         # Parse the configuration file
         config = ConfigParser()
@@ -65,6 +58,13 @@ class PortalStyleManager(object):
         if not _required_sections.issubset(set(config.sections())):
             missing = _required_sections - set(config.sections())
             raise MissingConfigSection(', '.join(missing))
+
+        self.css_fp = config.get('sitebase', 'CSS_FP')
+        # Load the custom CSS if needed
+        self.custom_css = ''
+        if self.css_fp:
+            with open(self.css_fp, 'U') as f:
+                self.custom_css = f.read()
 
         self._get_sitebase(config)
         self._get_index(config)

@@ -111,8 +111,6 @@ class ConfigurationManager(object):
         The filepath for the configuration file that is loaded
     portal_fp : str
         The filepath to the portal styling config file
-    css_fp : str
-        The filepath to the portal styling custom CSS
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -236,4 +234,3 @@ class ConfigurationManager(object):
 
     def _get_portal(self, config):
         self.portal_fp = config.get('portal', 'PORTAL_FP')
-        self.css_fp = config.get('portal', 'CSS_FP')
