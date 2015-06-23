@@ -26,7 +26,18 @@ else:
 
 
 def type_lookup(dtype):
-    """Lookup function """
+    """Lookup function to transform from python type to SQL type
+
+    Parameters
+    ----------
+    dtype : object
+        The python type
+
+    Returns
+    -------
+    str
+        The SQL type
+    """
     if dtype in [np.int8, np.int16, np.int32, np.int64]:
         return 'integer'
     elif dtype in [np.float16, np.float32, np.float64]:
