@@ -13,7 +13,7 @@ from time import strftime
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
                                  QiitaDBUnknownIDError)
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import SQLConnectionHandler, Transaction
 from qiita_db.util import get_mountpoint, convert_to_id
 from qiita_db.study import Study
 from qiita_db.data import RawData
@@ -101,18 +101,16 @@ class SampleTemplate(MetadataTemplate):
         if cls.exists(study.id):
             raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
 
-        conn_handler = SQLConnectionHandler()
-        queue_name = "CREATE_SAMPLE_TEMPLATE_%d" % study.id
-        conn_handler.create_queue(queue_name)
+        trans = Transaction("CREATE_SAMPLE_TEMPLATE_%d" % study.id)
 
         # Clean and validate the metadata template given
         md_template = cls._clean_validate_template(md_template, study.id,
                                                    SAMPLE_TEMPLATE_COLUMNS)
 
-        cls._add_common_creation_steps_to_queue(md_template, study.id,
-                                                conn_handler, queue_name)
+        cls._add_common_creation_steps_to_transaction(md_template, study.id,
+                                                      trans)
 
-        conn_handler.execute_queue(queue_name)
+        trans.execute()
 
         st = cls(study.id)
         st.generate_files()
@@ -133,48 +131,44 @@ class SampleTemplate(MetadataTemplate):
         QiitaDBUnknownIDError
             If no sample template with id id_ exists
         QiitaDBError
-            If the study that owns this sample template has raw datas
+            If the study that owns this sample template has prep templates
         """
         cls._check_subclass()
 
         if not cls.exists(id_):
             raise QiitaDBUnknownIDError(id_, cls.__name__)
 
-        raw_datas = [str(rd) for rd in Study(cls(id_).study_id).raw_data()]
-        if raw_datas:
+        trans = Transaction("delete_sample_template_%d" % id_)
+        sql = """SELECT EXISTS(SELECT * FROM qiita.study_prep_template
+                               WHERE study_id=%s)"""
+        args = [id_]
+        trans.add(sql, args)
+        has_prep_templates = trans.execute(commit=False)[0][0][0]
+
+        if has_prep_templates:
             raise QiitaDBError("Sample template can not be erased because "
-                               "there are raw datas (%s) associated." %
-                               ', '.join(raw_datas))
+                               "there are prep templates associated.")
 
         table_name = cls._table_name(id_)
-        conn_handler = SQLConnectionHandler()
 
-        # Delete the sample template filepaths
-        queue = "delete_sample_template_%d" % id_
-        conn_handler.create_queue(queue)
+        # Delete the sample template filepaths links
+        sql = "DELETE FROM qiita.sample_template_filepath WHERE study_id = %s"
+        trans.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.sample_template_filepath WHERE study_id = %s",
-            (id_, ))
+        # Delete the dynamic table
+        trans.add("DROP TABLE qiita.{0}".format(table_name))
 
-        conn_handler.add_to_queue(
-            queue,
-            "DROP TABLE qiita.{0}".format(table_name))
+        # Delete the rows from the study_sample table
+        sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(cls._table,
+                                                            cls._id_column)
+        trans.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
-                                                          cls._id_column),
-            (id_,))
+        # Delete the rows from the study_column table
+        sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(cls._column_table,
+                                                            cls._id_column)
+        trans.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
-                                                          cls._id_column),
-            (id_,))
-
-        conn_handler.execute_queue(queue)
+        trans.execute()
 
     @property
     def study_id(self):
@@ -247,15 +241,12 @@ class SampleTemplate(MetadataTemplate):
         md_template : DataFrame
             The metadata template file contents indexed by samples Ids
         """
-        conn_handler = SQLConnectionHandler()
-        queue_name = "EXTEND_SAMPLE_TEMPLATE_%d" % self.id
-        conn_handler.create_queue(queue_name)
+        trans = Transaction("EXTEND_SAMPLE_TEMPLATE_%d" % self.id)
 
         md_template = self._clean_validate_template(md_template, self.study_id,
                                                     SAMPLE_TEMPLATE_COLUMNS)
 
-        self._add_common_extend_steps_to_queue(md_template, conn_handler,
-                                               queue_name)
-        conn_handler.execute_queue(queue_name)
+        self._add_common_extend_steps_to_transaction(md_template, trans)
+        trans.execute()
 
         self.generate_files()

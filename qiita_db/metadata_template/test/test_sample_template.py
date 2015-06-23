@@ -24,7 +24,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBDuplicateHeaderError,
                                  QiitaDBColumnError, QiitaDBError,
                                  QiitaDBWarning)
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import SQLConnectionHandler, Transaction
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import exists_table, get_count
@@ -54,42 +54,34 @@ class BaseTestSample(TestCase):
 
 class TestSampleReadOnly(BaseTestSample):
     def test_add_setitem_queries_error(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
+        trans = Transaction("test_queue")
 
         with self.assertRaises(QiitaDBColumnError):
-            self.tester.add_setitem_queries(
-                'COL_DOES_NOT_EXIST', 0.30, conn_handler, queue)
+            self.tester.add_setitem_queries('COL_DOES_NOT_EXIST', 0.30, trans)
 
     def test_add_setitem_queries_required(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
+        trans = Transaction("test_queue")
 
         self.tester.add_setitem_queries(
-            'physical_specimen_remaining', True, conn_handler, queue)
+            'physical_specimen_remaining', True, trans)
 
-        obs = conn_handler.queues[queue]
+        obs = trans._queries
         sql = """UPDATE qiita.sample_1
                  SET physical_specimen_remaining=%s
                  WHERE sample_id=%s"""
-        exp = [(sql, (True, '1.SKB8.640193'))]
+        exp = [(sql, [True, '1.SKB8.640193'])]
         self.assertEqual(obs, exp)
 
     def test_add_setitem_queries_dynamic(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
+        trans = Transaction("test_queue")
 
-        self.tester.add_setitem_queries(
-            'tot_nitro', '1234.5', conn_handler, queue)
+        self.tester.add_setitem_queries('tot_nitro', '1234.5', trans)
 
-        obs = conn_handler.queues[queue]
+        obs = trans._queries
         sql = """UPDATE qiita.sample_1
                  SET tot_nitro=%s
                  WHERE sample_id=%s"""
-        exp = [(sql, ('1234.5', '1.SKB8.640193'))]
+        exp = [(sql, ['1234.5', '1.SKB8.640193'])]
         self.assertEqual(obs, exp)
 
     def test_init_unknown_error(self):
@@ -138,8 +130,7 @@ class TestSampleReadOnly(BaseTestSample):
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
-        conn_handler = SQLConnectionHandler()
-        obs = self.tester._get_categories(conn_handler)
+        obs = self.tester._get_categories()
         self.assertEqual(obs, self.exp_categories)
 
     def test_len(self):
@@ -692,7 +683,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Sample') is None)
 
-    def test_add_common_creation_steps_to_queue(self):
+    def test_add_common_creation_steps_to_transaction(self):
         """add_common_creation_steps_to_queue adds the correct sql statements
         """
         metadata_dict = {
@@ -735,11 +726,9 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
-        conn_handler = SQLConnectionHandler()
-        queue_name = "TEST_QUEUE"
-        conn_handler.create_queue(queue_name)
-        SampleTemplate._add_common_creation_steps_to_queue(
-            metadata, 2, conn_handler, queue_name)
+        trans = Transaction("TEST_QUEUE")
+        SampleTemplate._add_common_creation_steps_to_transaction(metadata, 2,
+                                                                 trans)
 
         sql_insert_required = (
             'INSERT INTO qiita.study_sample (study_id, sample_id) '
@@ -768,41 +757,41 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
             'physical_specimen_location, physical_specimen_remaining, '
             'sample_type, str_column) '
             'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
-        sql_insert_dynamic_params_1 = (
+        sql_insert_dynamic_params_1 = [
             '2.Sample1', datetime(2014, 5, 29, 12, 24, 51), 'Test Sample 1',
             True, 'NotIdentified', 1, 42.42, 41.41, 'location1', True, 'type1',
-            'Value for sample 1')
-        sql_insert_dynamic_params_2 = (
+            'Value for sample 1']
+        sql_insert_dynamic_params_2 = [
             '2.Sample2', datetime(2014, 5, 29, 12, 24, 51), 'Test Sample 2',
             True, 'NotIdentified', 2, 4.2, 1.1, 'location1', True, 'type1',
-            'Value for sample 2')
-        sql_insert_dynamic_params_3 = (
+            'Value for sample 2']
+        sql_insert_dynamic_params_3 = [
             '2.Sample3', datetime(2014, 5, 29, 12, 24, 51), 'Test Sample 3',
             True, 'NotIdentified', 3, 4.8, 4.41, 'location1', True, 'type1',
-            'Value for sample 3')
+            'Value for sample 3']
 
         exp = [
-            (sql_insert_required, (2, '2.Sample1')),
-            (sql_insert_required, (2, '2.Sample2')),
-            (sql_insert_required, (2, '2.Sample3')),
-            (sql_insert_sample_cols, (2, 'collection_timestamp', 'timestamp')),
-            (sql_insert_sample_cols, (2, 'description', 'varchar')),
-            (sql_insert_sample_cols, (2, 'dna_extracted', 'bool')),
-            (sql_insert_sample_cols, (2, 'host_subject_id', 'varchar')),
-            (sql_insert_sample_cols, (2, 'int_column', 'integer')),
-            (sql_insert_sample_cols, (2, 'latitude', 'float8')),
-            (sql_insert_sample_cols, (2, 'longitude', 'float8')),
+            (sql_insert_required, [2, '2.Sample1']),
+            (sql_insert_required, [2, '2.Sample2']),
+            (sql_insert_required, [2, '2.Sample3']),
+            (sql_insert_sample_cols, [2, 'collection_timestamp', 'timestamp']),
+            (sql_insert_sample_cols, [2, 'description', 'varchar']),
+            (sql_insert_sample_cols, [2, 'dna_extracted', 'bool']),
+            (sql_insert_sample_cols, [2, 'host_subject_id', 'varchar']),
+            (sql_insert_sample_cols, [2, 'int_column', 'integer']),
+            (sql_insert_sample_cols, [2, 'latitude', 'float8']),
+            (sql_insert_sample_cols, [2, 'longitude', 'float8']),
             (sql_insert_sample_cols,
-                (2, 'physical_specimen_location', 'varchar')),
+                [2, 'physical_specimen_location', 'varchar']),
             (sql_insert_sample_cols,
-                (2, 'physical_specimen_remaining', 'bool')),
-            (sql_insert_sample_cols, (2, 'sample_type', 'varchar')),
-            (sql_insert_sample_cols, (2, 'str_column', 'varchar')),
+                [2, 'physical_specimen_remaining', 'bool']),
+            (sql_insert_sample_cols, [2, 'sample_type', 'varchar']),
+            (sql_insert_sample_cols, [2, 'str_column', 'varchar']),
             (sql_crate_table, None),
             (sql_insert_dynamic, sql_insert_dynamic_params_1),
             (sql_insert_dynamic, sql_insert_dynamic_params_2),
             (sql_insert_dynamic, sql_insert_dynamic_params_3)]
-        self.assertEqual(conn_handler.queues[queue_name], exp)
+        self.assertEqual(trans._queries, exp)
 
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
