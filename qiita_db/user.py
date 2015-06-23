@@ -35,8 +35,10 @@ from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
 from qiita_core.qiita_settings import qiita_config
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
-from .util import (create_rand_string, check_table_cols, hash_password)
-from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
+from .util import (create_rand_string, check_table_cols, hash_password,
+                   convert_to_id)
+from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError,
+                         QiitaDBError)
 
 
 class User(QiitaObject):
@@ -275,14 +277,15 @@ class User(QiitaObject):
             return False
 
         db_code = db_code[0]
+        if not db_code:
+            raise QiitaDBError("No %s code for user %s" %
+                               (column, email))
 
         if db_code == code and code_type == "create":
             # verify the user
-            level = conn_handler.execute_fetchone(
-                "SELECT user_level_id FROM qiita.user_level WHERE "
-                "name = %s", ("user", ))[0]
-            sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
-                   "email = %s".format(cls._table))
+            level = convert_to_id('user', 'user_level', 'name')
+            sql = """UPDATE qiita.{} SET user_level_id = %s
+                     WHERE email = %s""".format(cls._table)
             conn_handler.execute(sql, (level, email))
             # create user default sample holders once verified
             # create one per portal
@@ -295,6 +298,12 @@ class User(QiitaObject):
                 analysis_args.append(
                     (email, '%s-dflt-%d' % (email, portal[0]), 'dflt', True))
             conn_handler.executemany(analysis_sql, analysis_args)
+
+        if db_code == code:
+            # wipe out code so we know it was used
+            sql = """UPDATE qiita.{0} SET {1} = ''
+                     WHERE email = %s""".format(cls._table, column)
+            conn_handler.execute(sql, (email))
 
         return db_code == code
 
