@@ -365,19 +365,6 @@ class User(QiitaObject):
             sql, [self._id, qiita_config.portal])[0]
 
     @property
-    def sandbox_studies(self):
-        """Returns a list of sandboxed study ids owned by the user"""
-        sql = """SELECT study_id FROM qiita.study
-                 JOIN qiita.study_status USING (study_status_id)
-                 JOIN qiita.study_portal USING (study_id)
-                 JOIN qiita.portal_type USING (portal_type_id)
-                 WHERE email = %s AND status = %s AND portal = %s"""
-        conn_handler = SQLConnectionHandler()
-        study_ids = conn_handler.execute_fetchall(
-            sql, (self._id, 'sandbox', qiita_config.portal))
-        return [s[0] for s in study_ids]
-
-    @property
     def user_studies(self):
         """Returns a list of study ids owned by the user"""
         sql = """SELECT study_id FROM qiita.study
