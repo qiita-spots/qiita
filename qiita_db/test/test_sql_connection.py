@@ -272,7 +272,7 @@ class TestTransaction(TestBase):
             sql2 = "INSERT INTO qiita.test_table (int_column) VALUES (1)"
             trans.add(sql2)
 
-            exp = [(sql1, args1), (sql2, None)]
+            exp = [(sql1, args1), (sql2, [])]
             self.assertEqual(trans._queries, exp)
 
     def test_add_many(self):

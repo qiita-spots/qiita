@@ -639,7 +639,7 @@ class Transaction(object):
         ----------
         sql : str
             The SQL query
-        sql_args : list or None
+        sql_args : list
             The arguments of the SQL query
 
         Returns
@@ -655,39 +655,38 @@ class Transaction(object):
             If a placeholder does not match any previous result
             If a placeholder points to a query that do not produce any result
         """
-        if sql_args is not None:
-            for pos, arg in enumerate(sql_args):
-                # Check if we have a placeholder
-                if isinstance(arg, str):
-                    placeholder = self._regex.search(arg)
-                    if placeholder:
-                        # We do have a placeholder, get the indexes
-                        # Query index
-                        q_idx = int(placeholder.group(1))
-                        # Row index
-                        r_idx = int(placeholder.group(2))
-                        # Value index
-                        v_idx = int(placeholder.group(3))
-                        try:
-                            sql_args[pos] = self._results[q_idx][r_idx][v_idx]
-                        except IndexError:
-                            # A previous query that was expected to retrieve
-                            # some data from the DB did not return as many
-                            # values as expected
-                            self._raise_execution_error(
-                                sql, sql_args,
-                                "The placeholder {%d:%d:%d} does not match to "
-                                "any previous result"
-                                % (q_idx, r_idx, v_idx))
-                        except TypeError:
-                            # The query that the placeholder is pointing to
-                            # is not expected to retrieve any value
-                            # (e.g. an INSERT w/o RETURNING clause)
-                            self._raise_execution_error(
-                                sql, sql_args,
-                                "The placeholder {%d:%d:%d} is referring to "
-                                "a SQL query that does not retrieve data"
-                                % (q_idx, r_idx, v_idx))
+        for pos, arg in enumerate(sql_args):
+            # Check if we have a placeholder
+            if isinstance(arg, str):
+                placeholder = self._regex.search(arg)
+                if placeholder:
+                    # We do have a placeholder, get the indexes
+                    # Query index
+                    q_idx = int(placeholder.group(1))
+                    # Row index
+                    r_idx = int(placeholder.group(2))
+                    # Value index
+                    v_idx = int(placeholder.group(3))
+                    try:
+                        sql_args[pos] = self._results[q_idx][r_idx][v_idx]
+                    except IndexError:
+                        # A previous query that was expected to retrieve
+                        # some data from the DB did not return as many
+                        # values as expected
+                        self._raise_execution_error(
+                            sql, sql_args,
+                            "The placeholder {%d:%d:%d} does not match to "
+                            "any previous result"
+                            % (q_idx, r_idx, v_idx))
+                    except TypeError:
+                        # The query that the placeholder is pointing to
+                        # is not expected to retrieve any value
+                        # (e.g. an INSERT w/o RETURNING clause)
+                        self._raise_execution_error(
+                            sql, sql_args,
+                            "The placeholder {%d:%d:%d} is referring to "
+                            "a SQL query that does not retrieve data"
+                            % (q_idx, r_idx, v_idx))
         return sql, sql_args
 
     def add(self, sql, sql_args=None, many=False):
@@ -727,9 +726,12 @@ class Transaction(object):
             sql_args = [sql_args]
 
         for args in sql_args:
-            if args and not isinstance(args, list):
-                raise TypeError("sql_args should be a list. Found %s"
-                                % type(args))
+            if args:
+                if not isinstance(args, list):
+                    raise TypeError("sql_args should be a list. Found %s"
+                                    % type(args))
+            else:
+                args = []
             self._queries.append((sql, args))
 
     def _execute(self, commit=True):
