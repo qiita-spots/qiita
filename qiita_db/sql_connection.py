@@ -36,7 +36,8 @@ from psycopg2 import (connect, ProgrammingError, Error as PostgresError,
                       OperationalError)
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import (
-    ISOLATION_LEVEL_AUTOCOMMIT, ISOLATION_LEVEL_READ_COMMITTED)
+    ISOLATION_LEVEL_AUTOCOMMIT, ISOLATION_LEVEL_READ_COMMITTED,
+    TRANSACTION_STATUS_IDLE)
 
 from qiita_core.qiita_settings import qiita_config
 
@@ -609,7 +610,8 @@ class Transaction(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is not None:
+        status = self._conn_handler._connection.get_transaction_status()
+        if exc_type is not None or status != TRANSACTION_STATUS_IDLE:
             # An exception occurred during the execution of the transaction
             # Make sure that we leave the DB w/o any modification
             self.rollback()

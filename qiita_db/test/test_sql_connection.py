@@ -4,7 +4,8 @@ from psycopg2._psycopg import connection
 from psycopg2.extras import DictCursor
 from psycopg2 import connect
 from psycopg2.extensions import (ISOLATION_LEVEL_AUTOCOMMIT,
-                                 ISOLATION_LEVEL_READ_COMMITTED)
+                                 ISOLATION_LEVEL_READ_COMMITTED,
+                                 TRANSACTION_STATUS_IDLE)
 
 from qiita_db.sql_connection import SQLConnectionHandler, Transaction
 from qiita_core.util import qiita_test_checker
@@ -506,6 +507,9 @@ class TestTransaction(TestBase):
 
             trans.execute(commit=False)
         self._assert_sql_equal([])
+        self.assertEqual(
+            trans._conn_handler._connection.get_transaction_status(),
+            TRANSACTION_STATUS_IDLE)
 
     def test_index(self):
         with Transaction("test_index") as trans:
