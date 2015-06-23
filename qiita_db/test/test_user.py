@@ -13,6 +13,7 @@ from unittest import TestCase, main
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import hash_password
 from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
@@ -63,6 +64,7 @@ class UserTest(TestCase):
 
     def setUp(self):
         self.user = User('admin@foo.bar')
+        self.portal = qiita_config.portal
 
         self.userinfo = {
             'name': 'Dude',
@@ -217,22 +219,60 @@ class UserTest(TestCase):
             self.user.info = self.userinfo
 
     def test_default_analysis(self):
-        obs = self.user.default_analysis
-        self.assertEqual(obs, 4)
+        try:
+            qiita_config.portal = "QIITA"
+            obs = self.user.default_analysis
+            self.assertEqual(obs, 4)
+
+            qiita_config.portal = "EMP"
+            obs = self.user.default_analysis
+            self.assertEqual(obs, 8)
+        finally:
+            qiita_config.portal = self.portal
 
     def test_get_user_studies(self):
         user = User('test@foo.bar')
-        self.assertEqual(user.user_studies, {1})
+        try:
+            qiita_config.portal = "QIITA"
+            self.assertEqual(user.user_studies, {1})
+
+            qiita_config.portal = "EMP"
+            self.assertEqual(user.user_studies, set())
+        finally:
+            qiita_config.portal = self.portal
 
     def test_get_shared_studies(self):
         user = User('shared@foo.bar')
-        self.assertEqual(user.shared_studies, {1})
+        try:
+            qiita_config.portal = "QIITA"
+            self.assertEqual(user.shared_studies, {1})
+
+            qiita_config.portal = "EMP"
+            self.assertEqual(user.shared_studies, set())
+        finally:
+            qiita_config.portal = self.portal
 
     def test_get_private_analyses(self):
-        self.assertEqual(self.user.private_analyses, set([]))
+        user = User('test@foo.bar')
+        try:
+            qiita_config.portal = "QIITA"
+            self.assertEqual(user.private_analyses, set([1, 2]))
+
+            qiita_config.portal = "EMP"
+            self.assertEqual(user.private_analyses, set())
+        finally:
+            qiita_config.portal = self.portal
 
     def test_get_shared_analyses(self):
-        self.assertEqual(self.user.shared_analyses, set([]))
+        user = User('shared@foo.bar')
+        try:
+            qiita_config.portal = "QIITA"
+            self.assertEqual(user.shared_analyses, set([1]))
+
+            qiita_config.portal = "EMP"
+            self.assertEqual(user.shared_analyses, set())
+        finally:
+            qiita_config.portal = self.portal
 
     def test_verify_code(self):
         sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
