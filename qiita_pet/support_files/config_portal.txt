@@ -1,15 +1,10 @@
+# ---------- Base information for the website ----------
 [sitebase]
 LOGO = /static/img/logo-clear.png
 TITLE = Qiita
-NAVBAR_COLOR = #2c2c2c
-NAVBAR_HIGHLIGHT = #c0392b
-NAVBAR_TEXT_COLOR = #999999
-NAVBAR_TEXT_HOVER = white
 
-
+# ---------- Welcome text on index page ----------
 [index]
-TEXT_BG = #eeeeee
-TEXT_COLOR = black
 HEADER = <i>Qiita</i>: Spot Patterns
 TEXT = <p align="justify">
   Qiita (<i>canonically pronounced cheetah</i>) is an entirely
@@ -41,5 +36,6 @@ TEXT = <p align="justify">
     </ul>
   </p>
 
+# ---------- Study listing page ----------
 [study_list]
 EXAMPLE_SEARCH = env_matter = soil

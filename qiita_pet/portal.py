@@ -5,11 +5,11 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os import environ
-from os.path import dirname, abspath, join
 from future import standard_library
+from os.path import join, dirname, abspath
 
 from qiita_core.exceptions import MissingConfigSection
+from qiita_core.qiita_settings import qiita_config
 
 with standard_library.hooks():
     from configparser import ConfigParser
@@ -29,37 +29,36 @@ class PortalStyleManager(object):
         Path from base URL to the site logo
     title : str
         Site title
-    navbar_color : str
-        Hex or text color for navbar background color
-    navbar_highlight : str
-        Hex or text color for navbar highlight of selected menu
-    navbar_text_color : str
-        Hex or text color for navbar menu text
-    navbar_text_hover : str
-        Hex or text color for navbar hover over for menu text
-    text_bg : str
-        Hex or text color for index jumbotron background
-    text_color : str
-        Hex or text color for index welcome text
     index header : str
         Welcome text header for the website
     index_text : str
         Welcome text for the website
     example_search : str
         Example search to be shown on the study listing page
+    custom_css : str
+        custom css for the portal
+    conf_fp : str
+        The filepath to the portal styling config file
+    css_fp : str
+        The filepath to the portal styling custom CSS
     """
     def __init__(self, conf_fp=None):
-        # If conf_fp is None, we default to the test configuration file
-        try:
-            conf_fp = environ['QIITA_PORTAL_FP']
-        except KeyError:
-            conf_fp = join(dirname(abspath(__file__)),
-                           'support_files/portal.txt')
-        self.conf_fp = conf_fp
+        if qiita_config.portal_fp:
+            self.conf_fp = qiita_config.portal_fp
+        else:
+            self.conf_fp = join(dirname(abspath(__file__)),
+                                'support_files/config_portal.txt')
+        self.css_fp = qiita_config.css_fp
+
+        # Load the custom CSS if needed
+        self.custom_css = ''
+        if self.css_fp:
+            with open(self.css_fp, 'U') as f:
+                self.custom_css = f.read()
 
         # Parse the configuration file
         config = ConfigParser()
-        with open(conf_fp, 'U') as conf_file:
+        with open(self.conf_fp, 'U') as conf_file:
             config.readfp(conf_file)
 
         _required_sections = {'sitebase', 'index', 'study_list'}
@@ -75,15 +74,9 @@ class PortalStyleManager(object):
         """Get the configuration of the sitebase section"""
         self.logo = config.get('sitebase', 'LOGO')
         self.title = config.get('sitebase', 'TITLE')
-        self.navbar_color = config.get('sitebase', 'NAVBAR_COLOR')
-        self.navbar_highlight = config.get('sitebase', 'NAVBAR_HIGHLIGHT')
-        self.navbar_text_color = config.get('sitebase', 'NAVBAR_TEXT_COLOR')
-        self.navbar_text_hover = config.get('sitebase', 'NAVBAR_TEXT_HOVER')
 
     def _get_index(self, config):
         """Get the configuration of the index section"""
-        self.text_bg = config.get('index', 'TEXT_BG')
-        self.text_color = config.get('index', 'TEXT_COLOR')
         self.index_header = config.get('index', 'HEADER')
         self.index_text = config.get('index', 'TEXT')
 
