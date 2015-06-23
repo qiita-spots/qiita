@@ -42,7 +42,7 @@ class PortalStyleManager(object):
     css_fp : str
         The filepath to the portal styling custom CSS
     """
-    def __init__(self, conf_fp=None):
+    def __init__(self):
         if qiita_config.portal_fp:
             self.conf_fp = qiita_config.portal_fp
         else:
