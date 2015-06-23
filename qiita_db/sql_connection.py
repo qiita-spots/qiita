@@ -41,6 +41,12 @@ from psycopg2.extensions import (
 from qiita_core.qiita_settings import qiita_config
 
 
+def flatten(listOfLists):
+    # https://docs.python.org/2/library/itertools.html
+    # TODO: Issue #551  Use skbio.util.flatten instead of this
+    return chain.from_iterable(listOfLists)
+
+
 class SQLConnectionHandler(object):
     """Postgres DB connection object
 
@@ -55,6 +61,8 @@ class SQLConnectionHandler(object):
         If `admin_with_database`, then a connection will be made to the server
         and database specified in the qiita config.
     """
+    _regex = re.compile("{(\d+)}")
+
     # From http://osdir.com/ml/sqlalchemy/2011-05/msg00094.html
     TYPE_CODES = pg_types = {
         16: bool,
@@ -397,6 +405,170 @@ class SQLConnectionHandler(object):
 
         return result
 
+    # ---- Queue calls
+    def _check_queue_exists(self, queue_name):
+        """Checks if queue `queue_name` exists in the handler
+        Parameters
+        ----------
+        queue_name : str
+            The name of the queue
+        Returns
+        -------
+        bool
+            True if queue `queue_name` exist in the handler. False otherwise.
+        """
+        return queue_name in self.queues
+
+    def create_queue(self, queue_name):
+        """Add a new queue to the connection
+        Parameters
+        ----------
+        queue_name : str
+            Name of the new queue
+        Raises
+        ------
+        KeyError
+            Queue name already exists
+        """
+        if self._check_queue_exists(queue_name):
+            raise KeyError("Queue %s already exists" % queue_name)
+
+        self.queues[queue_name] = []
+
+    def list_queues(self):
+        """Returns list of all queue names currently in handler
+        Returns
+        -------
+        list of str
+            names of queues in handler
+        """
+        return self.queues.keys()
+
+    def add_to_queue(self, queue, sql, sql_args=None, many=False):
+        """Add an sql command to the end of a queue
+        Parameters
+        ----------
+        queue : str
+            name of queue adding to
+        sql : str
+            sql command to run
+        sql_args : list, tuple or dict, optional
+            the arguments to fill sql command with
+        many : bool, optional
+            Whether or not this should be treated as an executemany command.
+            Default False
+        Raises
+        ------
+        KeyError
+            queue does not exist
+        """
+        if not self._check_queue_exists(queue):
+            raise KeyError("Queue '%s' does not exist" % queue)
+
+        if not many:
+            sql_args = [sql_args]
+
+        for args in sql_args:
+            self._check_sql_args(args)
+            self.queues[queue].append((sql, args))
+
+    def _rollback_raise_error(self, queue, sql, sql_args, e):
+        self._connection.rollback()
+        # wipe out queue since it has an error in it
+        del self.queues[queue]
+        raise ValueError(
+            "Error running SQL query in queue %s: %s\nARGS: %s\nError: %s"
+            % (queue, sql, str(sql_args), e))
+
+    def execute_queue(self, queue):
+        """Executes all sql in a queue in a single transaction block
+        Parameters
+        ----------
+        queue : str
+            Name of queue to execute
+        Notes
+        -----
+        Does not support executemany command. Instead, enter the multiple
+        SQL commands as multiple entries in the queue.
+        Raises
+        ------
+        KetError
+            If queue does not exist
+        IndexError
+            If a sql argument placeholder does not correspond to the result of
+            any previously-executed query.
+        """
+        if not self._check_queue_exists(queue):
+            raise KeyError("Queue '%s' does not exist" % queue)
+
+        with self.get_postgres_cursor() as cur:
+            results = []
+            clear_res = False
+            for sql, sql_args in self.queues[queue]:
+                if sql_args is not None:
+                    # The user can provide a tuple, make sure that it is a
+                    # list, so we can assign the item
+                    sql_args = list(sql_args)
+                    for pos, arg in enumerate(sql_args):
+                        # check if previous results needed and replace
+                        if isinstance(arg, str):
+                            result = self._regex.search(arg)
+                            if result:
+                                result_pos = int(result.group(1))
+                                try:
+                                    sql_args[pos] = results[result_pos]
+                                except IndexError:
+                                    self._rollback_raise_error(
+                                        queue, sql, sql_args,
+                                        "The index provided as a placeholder "
+                                        "%d does not correspond to any "
+                                        "previous result" % result_pos)
+                                clear_res = True
+                # wipe out results if needed and reset clear_res
+                if clear_res:
+                    results = []
+                    clear_res = False
+                # Fire off the SQL command
+                try:
+                    cur.execute(sql, sql_args)
+                except Exception as e:
+                    self._rollback_raise_error(queue, sql, sql_args, e)
+
+                # fetch results if available and append to results list
+                try:
+                    res = cur.fetchall()
+                except ProgrammingError as e:
+                    # At this execution point, we don't know if the sql query
+                    # that we executed was a INSERT or a SELECT. If it was a
+                    # SELECT and there is nothing to fetch, it will return an
+                    # empty list. However, if it was a INSERT it will raise a
+                    # ProgrammingError, so we catch that one and pass.
+                    pass
+                except PostgresError as e:
+                    self._rollback_raise_error(queue, sql, sql_args, e)
+                else:
+                    # append all results linearly
+                    results.extend(flatten(res))
+        self._connection.commit()
+        # wipe out queue since finished
+        del self.queues[queue]
+        return results
+
+    def get_temp_queue(self):
+        """Get a queue name that did not exist when this function was called
+        Returns
+        -------
+        str
+            The name of the queue
+        """
+        temp_queue_name = mktemp()
+        while temp_queue_name in self.queues:
+            temp_queue_name = mktemp()
+
+        self.create_queue(temp_queue_name)
+
+        return temp_queue_name
+
 
 class Transaction(object):
     """A context manager that encapsulates a DB transaction
@@ -429,14 +601,9 @@ class Transaction(object):
             # An exception occurred during the execution of the transaction
             # Make sure that we leave the DB w/o any modification
             self.rollback()
-        else:
-            # There was no exception, execute the transaction in case the
-            # developer forgot to execute it. This will commit on success
-            # and rollback automatically on failure
-            self.execute()
 
     def _raise_execution_error(self, sql, sql_args, error):
-        """Creates a useful error message and raises a ValueError
+        """Rollbacks the current transaction and raises a useful error
 
         The error message contains the name of the transaction, the failed
         query, the arguments of the failed query and the error generated.
@@ -444,8 +611,8 @@ class Transaction(object):
         Raises
         ------
         ValueError
-            Always
         """
+        self.rollback()
         raise ValueError(
             "Error running SQL query in transaction %s:\n"
             "Query: %s\nArguments: %s\nError: %s\n"
@@ -546,7 +713,7 @@ class Transaction(object):
             sql_args = [sql_args]
 
         for args in sql_args:
-            if args and isinstance(args, list):
+            if args and not isinstance(args, list):
                 raise TypeError("sql_args should be a list. Found %s"
                                 % type(args))
             self._queries.append((sql, args))

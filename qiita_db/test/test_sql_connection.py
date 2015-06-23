@@ -198,304 +198,332 @@ class TestConnHandler(TestBase):
 
 class TestTransaction(TestBase):
     def test_init(self):
-        obs = Transaction("test_init")
-        self.assertEqual(obs._name, "test_init")
-        self.assertEqual(obs._queries, [])
-        self.assertEqual(obs._results, [])
-        self.assertEqual(obs._index, 0)
-        self.assertTrue(isinstance(obs._conn_handler, SQLConnectionHandler))
+        with Transaction("test_init") as obs:
+            obs = Transaction("test_init")
+            self.assertEqual(obs._name, "test_init")
+            self.assertEqual(obs._queries, [])
+            self.assertEqual(obs._results, [])
+            self.assertEqual(obs._index, 0)
+            self.assertTrue(
+                isinstance(obs._conn_handler, SQLConnectionHandler))
 
     def test_replace_placeholders(self):
-        trans = Transaction("test_replace_placeholders")
-        trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 3]],
-                          None, None, [["res5", 5]]]
-        sql = "SELECT 42"
-        obs_sql, obs_args = trans._replace_placeholders(sql, ["{0:0:0}"])
-        self.assertEqual(obs_sql, sql)
-        self.assertEqual(obs_args, ["res1"])
+        with Transaction("test_replace_placeholders") as trans:
+            trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 3]],
+                              None, None, [["res5", 5]]]
+            sql = "SELECT 42"
+            obs_sql, obs_args = trans._replace_placeholders(sql, ["{0:0:0}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, ["res1"])
 
-        obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:0:0}"])
-        self.assertEqual(obs_sql, sql)
-        self.assertEqual(obs_args, ["res2a"])
+            obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:0:0}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, ["res2a"])
 
-        obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:1:1}"])
-        self.assertEqual(obs_sql, sql)
-        self.assertEqual(obs_args, [3])
+            obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:1:1}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, [3])
 
-        obs_sql, obs_args = trans._replace_placeholders(sql, ["{4:0:0}"])
-        self.assertEqual(obs_sql, sql)
-        self.assertEqual(obs_args, ["res5"])
+            obs_sql, obs_args = trans._replace_placeholders(sql, ["{4:0:0}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, ["res5"])
 
-        obs_sql, obs_args = trans._replace_placeholders(
-            sql, ["foo", "{0:0:1}", "bar", "{1:0:1}"])
-        self.assertEqual(obs_sql, sql)
-        self.assertEqual(obs_args, ["foo", 1, "bar", 2])
+            obs_sql, obs_args = trans._replace_placeholders(
+                sql, ["foo", "{0:0:1}", "bar", "{1:0:1}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, ["foo", 1, "bar", 2])
 
     def test_replace_placeholders_index_error(self):
-        trans = Transaction("test_replace_placeholders_index_error")
-        trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 2]]]
+        with Transaction("test_replace_placeholders_index_error") as trans:
+            trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 2]]]
 
-        error_regex = ('The placeholder {0:0:3} does not match to any '
-                       'previous result')
-        with self.assertRaisesRegexp(ValueError, error_regex):
-            trans._replace_placeholders("SELECT 42", ["{0:0:3}"])
+            error_regex = ('The placeholder {0:0:3} does not match to any '
+                           'previous result')
+            with self.assertRaisesRegexp(ValueError, error_regex):
+                trans._replace_placeholders("SELECT 42", ["{0:0:3}"])
 
-        error_regex = ('The placeholder {0:2:0} does not match to any '
-                       'previous result')
-        with self.assertRaisesRegexp(ValueError, error_regex):
-            trans._replace_placeholders("SELECT 42", ["{0:2:0}"])
+            error_regex = ('The placeholder {0:2:0} does not match to any '
+                           'previous result')
+            with self.assertRaisesRegexp(ValueError, error_regex):
+                trans._replace_placeholders("SELECT 42", ["{0:2:0}"])
 
-        error_regex = ('The placeholder {2:0:0} does not match to any '
-                       'previous result')
-        with self.assertRaisesRegexp(ValueError, error_regex):
-            trans._replace_placeholders("SELECT 42", ["{2:0:0}"])
+            error_regex = ('The placeholder {2:0:0} does not match to any '
+                           'previous result')
+            with self.assertRaisesRegexp(ValueError, error_regex):
+                trans._replace_placeholders("SELECT 42", ["{2:0:0}"])
 
     def test_replace_placeholders_type_error(self):
-        trans = Transaction("test_replace_placeholders_type_error")
-        trans._results = [None]
+        with Transaction("test_replace_placeholders_type_error") as trans:
+            trans._results = [None]
 
-        error_regex = ("The placeholder {0:0:0} is referring to "
-                       "an sql query that do not retrieve data")
-        with self.assertRaisesRegexp(ValueError, error_regex):
-            trans._replace_placeholders("SELECT 42", ["{0:0:0}"])
+            error_regex = ("The placeholder {0:0:0} is referring to a SQL "
+                           "query that does not retrieve data")
+            with self.assertRaisesRegexp(ValueError, error_regex):
+                trans._replace_placeholders("SELECT 42", ["{0:0:0}"])
 
     def test_add(self):
-        trans = Transaction("test_add")
-        self.assertEqual(trans._queries, [])
+        with Transaction("test_add") as trans:
+            self.assertEqual(trans._queries, [])
 
-        sql1 = "INSERT INTO qiita.test_table (bool_column) VALUES (%s)"
-        args1 = [True]
-        trans.add(sql1, args1)
-        sql2 = "INSERT INTO qiita.test_table (int_column) VALUES (1)"
-        trans.add(sql2)
+            sql1 = "INSERT INTO qiita.test_table (bool_column) VALUES (%s)"
+            args1 = [True]
+            trans.add(sql1, args1)
+            sql2 = "INSERT INTO qiita.test_table (int_column) VALUES (1)"
+            trans.add(sql2)
 
-        exp = [(sql1, args1), (sql2, None)]
-        self.assertEqual(trans._queries, exp)
+            exp = [(sql1, args1), (sql2, None)]
+            self.assertEqual(trans._queries, exp)
 
     def test_add_many(self):
-        trans = Transaction("test_add_many")
-        self.assertEqual(trans._queries, [])
+        with Transaction("test_add_many") as trans:
+            self.assertEqual(trans._queries, [])
 
-        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
-        args = [[1], [2], [3]]
-        trans.add(sql, args, many=True)
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            args = [[1], [2], [3]]
+            trans.add(sql, args, many=True)
 
-        exp = [(sql, [1]), (sql, [2]), (sql, [3])]
-        self.assertEqual(trans._queries, exp)
+            exp = [(sql, [1]), (sql, [2]), (sql, [3])]
+            self.assertEqual(trans._queries, exp)
 
     def test_add_error(self):
-        trans = Transaction("test_add_error")
+        with Transaction("test_add_error") as trans:
 
-        with self.assertRaises(TypeError):
-            trans.add("SELECT 42", (1,))
+            with self.assertRaises(TypeError):
+                trans.add("SELECT 42", (1,))
 
-        with self.assertRaises(TypeError):
-            trans.add("SELECT 42", {'foo': 'bar'})
+            with self.assertRaises(TypeError):
+                trans.add("SELECT 42", {'foo': 'bar'})
 
-        with self.assertRaises(TypeError):
-            trans.add("SELECT 42", [(1,), (1,)], many=True)
+            with self.assertRaises(TypeError):
+                trans.add("SELECT 42", [(1,), (1,)], many=True)
 
     def test_execute(self):
-        trans = Transaction("test_execute")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s)"""
-        trans.add(sql, ["test_insert", 2])
-        sql = """UPDATE qiita.test_table
-                 SET int_column = %s, bool_column = %s
-                 WHERE str_column = %s"""
-        trans.add(sql, [20, False, "test_insert"])
-        obs = trans.execute()
-        self.assertEqual(obs, [None, None])
-        self._assert_sql_equal([("test_insert", False, 20)])
+        with Transaction("test_execute") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s)"""
+            trans.add(sql, ["test_insert", 2])
+            sql = """UPDATE qiita.test_table
+                     SET int_column = %s, bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [20, False, "test_insert"])
+            obs = trans.execute()
+            self.assertEqual(obs, [None, None])
+            self._assert_sql_equal([("test_insert", False, 20)])
 
     def test_execute_many(self):
-        trans = Transaction("test_execute_many")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s)"""
-        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-        trans.add(sql, args, many=True)
-        sql = """UPDATE qiita.test_table
-                 SET int_column = %s, bool_column = %s
-                 WHERE str_column = %s"""
-        trans.add(sql, [20, False, 'insert2'])
-        obs = trans.execute()
-        self.assertEqual(obs, [None, None, None, None])
+        with Transaction("test_execute_many") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s)"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
+            sql = """UPDATE qiita.test_table
+                     SET int_column = %s, bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [20, False, 'insert2'])
+            obs = trans.execute()
+            self.assertEqual(obs, [None, None, None, None])
 
-        self._assert_sql_equal([('insert1', True, 1),
-                                ('insert3', True, 3),
-                                ('insert2', False, 20)])
+            self._assert_sql_equal([('insert1', True, 1),
+                                    ('insert3', True, 3),
+                                    ('insert2', False, 20)])
 
     def test_execute_return(self):
-        trans = Transaction("test_execute_return")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s) RETURNING str_column, int_column"""
-        trans.add(sql, ['test_insert', 2])
-        sql = """UPDATE qiita.test_table SET bool_column = %s
-                 WHERE str_column = %s RETURNING int_column"""
-        trans.add(sql, [False, 'test_insert'])
-        obs = trans.execute()
-        self.assertEqual(obs, [[['test_insert', 2]], [[2]]])
+        with Transaction("test_execute_return") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            trans.add(sql, ['test_insert', 2])
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s RETURNING int_column"""
+            trans.add(sql, [False, 'test_insert'])
+            obs = trans.execute()
+            self.assertEqual(obs, [[['test_insert', 2]], [[2]]])
 
     def test_execute_return_many(self):
-        trans = Transaction("test_execute_return_many")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s) RETURNING str_column, int_column"""
-        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-        trans.add(sql, args, many=True)
-        sql = """UPDATE qiita.test_table SET bool_column = %s
-                 WHERE str_column = %s"""
-        trans.add(sql, [False, 'insert2'])
-        sql = "SELECT * FROM qiita.test_table"
-        trans.add(sql)
-        obs = trans.execute()
-        exp = [[['insert1', 1]],  # First query of the many query
-               [['insert2', 2]],  # Second query of the many query
-               [['insert3', 3]],  # Third query of the many query
-               None,  # Update query
-               [['insert1', True, 1],  # First result select
-                ['insert3', True, 3],  # Second result select
-                ['insert2', False, 2]]]  # Third result select
-        self.assertEqual(obs, exp)
+        with Transaction("test_execute_return_many") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [False, 'insert2'])
+            sql = "SELECT * FROM qiita.test_table"
+            trans.add(sql)
+            obs = trans.execute()
+            exp = [[['insert1', 1]],  # First query of the many query
+                   [['insert2', 2]],  # Second query of the many query
+                   [['insert3', 3]],  # Third query of the many query
+                   None,  # Update query
+                   [['insert1', True, 1],  # First result select
+                    ['insert3', True, 3],  # Second result select
+                    ['insert2', False, 2]]]  # Third result select
+            self.assertEqual(obs, exp)
 
     def test_execute_placeholders(self):
-        trans = Transaction("test_execute_placeholders")
-        sql = """INSERT INTO qiita.test_table (int_column) VALUES (%s)
-                 RETURNING str_column"""
-        trans.add(sql, [2])
-        sql = """UPDATE qiita.test_table SET str_column = %s
-                 WHERE str_column = %s"""
-        trans.add(sql, ["", "{0:0:0}"])
-        obs = trans.execute()
-        self.assertEqual(obs, [[['foo']], None])
-        self._assert_sql_equal([('', True, 2)])
+        with Transaction("test_execute_placeholders") as trans:
+            sql = """INSERT INTO qiita.test_table (int_column) VALUES (%s)
+                     RETURNING str_column"""
+            trans.add(sql, [2])
+            sql = """UPDATE qiita.test_table SET str_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, ["", "{0:0:0}"])
+            obs = trans.execute()
+            self.assertEqual(obs, [[['foo']], None])
+            self._assert_sql_equal([('', True, 2)])
 
     def test_execute_error_bad_placeholder(self):
-        trans = Transaction("test_execute_error_bad_placeholder")
-        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
-        trans.add(sql, [2])
-        sql = """UPDATE qiita.test_table SET bool_column = %s
-                 WHERE str_column = %s"""
-        trans.add(sql, [False, "{0:0:0}"])
+        with Transaction("test_execute_error_bad_placeholder") as trans:
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            trans.add(sql, [2])
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [False, "{0:0:0}"])
 
-        with self.assertRaises(ValueError):
-            trans.execute()
+            with self.assertRaises(ValueError):
+                trans.execute()
 
-        # make sure rollback correctly
-        self._assert_sql_equal([])
+            # make sure rollback correctly
+            self._assert_sql_equal([])
 
     def test_execute_error_no_result_placeholder(self):
-        trans = Transaction("test_execute_error_no_result_placeholder")
-        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
-        trans.add(sql, [[1], [2], [3]], many=True)
-        sql = "SELECT str_column FROM qiita.test_table WHERE int_column = %s"
-        trans.add(sql, [4])
-        sql = """UPDATE qiita.test_table SET bool_column = %s
-                 WHERE str_column = %s"""
-        trans.add(sql, [False, "{3:0:0}"])
+        with Transaction("test_execute_error_no_result_placeholder") as trans:
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            trans.add(sql, [[1], [2], [3]], many=True)
+            sql = """SELECT str_column FROM qiita.test_table
+                     WHERE int_column = %s"""
+            trans.add(sql, [4])
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [False, "{3:0:0}"])
 
-        with self.assertRaises(ValueError):
-            trans.execute()
+            with self.assertRaises(ValueError):
+                trans.execute()
 
-        # make sure rollback correctly
-        self._assert_sql_equal([])
+            # make sure rollback correctly
+            self._assert_sql_equal([])
 
     def test_execute_huge_transaction(self):
-        trans = Transaction("test_execute_huge_transaction")
-        # Add a lot of inserts to the transaction
-        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
-        for i in range(1000):
-            trans.add(sql, [i])
-        # Add some updates to the transaction
-        sql = """UPDATE qiita.test_table SET bool_column = %s
-                 WHERE int_column = %s"""
-        for i in range(500):
-            trans.add(sql, [False, i])
-        # Make the transaction fail with the last insert
-        sql = "INSERT INTO qiita.table_to_make (the_trans_to_fail) VALUES (1)"
-        trans.add(sql)
+        with Transaction("test_execute_huge_transaction") as trans:
+            # Add a lot of inserts to the transaction
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            for i in range(1000):
+                trans.add(sql, [i])
+            # Add some updates to the transaction
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE int_column = %s"""
+            for i in range(500):
+                trans.add(sql, [False, i])
+            # Make the transaction fail with the last insert
+            sql = """INSERT INTO qiita.table_to_make (the_trans_to_fail)
+                     VALUES (1)"""
+            trans.add(sql)
 
-        with self.assertRaises(ValueError):
-            trans.execute()
+            with self.assertRaises(ValueError):
+                trans.execute()
 
-        # make sure rollback correctly
-        self._assert_sql_equal([])
+            # make sure rollback correctly
+            self._assert_sql_equal([])
 
     def test_execute_commit_false(self):
-        trans = Transaction("test_execute_commit_false")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s) RETURNING str_column, int_column"""
-        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-        trans.add(sql, args, many=True)
+        with Transaction("test_execute_commit_false") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
 
-        obs = trans.execute(commit=False)
-        exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
-        self.assertEqual(obs, exp)
+            obs = trans.execute(commit=False)
+            exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+            self.assertEqual(obs, exp)
 
-        self._assert_sql_equal([])
+            self._assert_sql_equal([])
 
-        trans.commit()
+            trans.commit()
 
-        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
-                                ('insert3', True, 3)])
+            self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                    ('insert3', True, 3)])
 
     def test_execute_commit_false_rollback(self):
-        trans = Transaction("test_execute_commit_false_rollback")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s) RETURNING str_column, int_column"""
-        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-        trans.add(sql, args, many=True)
+        with Transaction("test_execute_commit_false_rollback") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
 
-        obs = trans.execute(commit=False)
-        exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
-        self.assertEqual(obs, exp)
+            obs = trans.execute(commit=False)
+            exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+            self.assertEqual(obs, exp)
 
-        self._assert_sql_equal([])
+            self._assert_sql_equal([])
 
-        trans.rollback()
+            trans.rollback()
 
-        self._assert_sql_equal([])
+            self._assert_sql_equal([])
 
     def test_execute_commit_false_wipe_queries(self):
-        trans = Transaction("test_execute_commit_false_wipe_queries")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s) RETURNING str_column, int_column"""
-        args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-        trans.add(sql, args, many=True)
+        with Transaction("test_execute_commit_false_wipe_queries") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
 
-        obs = trans.execute(commit=False)
-        exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
-        self.assertEqual(obs, exp)
+            obs = trans.execute(commit=False)
+            exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+            self.assertEqual(obs, exp)
 
+            self._assert_sql_equal([])
+
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s"""
+            args = [False, 'insert2']
+            trans.add(sql, args)
+            self.assertEqual(trans._queries, [(sql, args)])
+
+            trans.execute()
+
+            self._assert_sql_equal([('insert1', True, 1), ('insert3', True, 3),
+                                    ('insert2', False, 2)])
+
+    def test_context_manager_rollback(self):
+        try:
+            with Transaction("test_context_manager_rollback") as trans:
+                sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+                args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+                trans.add(sql, args, many=True)
+
+                trans.execute(commit=False)
+                raise ValueError("Force exiting the context manager")
+        except ValueError:
+            pass
         self._assert_sql_equal([])
 
-        sql = """UPDATE qiita.test_table SET bool_column = %s
-                 WHERE str_column = %s"""
-        args = [False, 'insert2']
-        trans.add(sql, args)
-        self.assertEqual(trans._queries, [(sql, args)])
+    def test_context_manager_no_commit(self):
+        with Transaction("test_context_manager_no_commit") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
 
-        trans.execute()
-
-        self._assert_sql_equal([('insert1', True, 1), ('insert3', True, 3),
-                                ('insert2', False, 2)])
+            trans.execute(commit=False)
+        self._assert_sql_equal([])
 
     def test_index(self):
-        trans = Transaction("test_index")
-        self.assertEqual(trans.index, 0)
+        with Transaction("test_index") as trans:
+            self.assertEqual(trans.index, 0)
 
-        trans.add("SELECT 42")
-        self.assertEqual(trans.index, 1)
+            trans.add("SELECT 42")
+            self.assertEqual(trans.index, 1)
 
-        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
-        args = [[1], [2], [3]]
-        trans.add(sql, args, many=True)
-        self.assertEqual(trans.index, 4)
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            args = [[1], [2], [3]]
+            trans.add(sql, args, many=True)
+            self.assertEqual(trans.index, 4)
 
-        trans.execute(commit=False)
-        self.assertEqual(trans.index, 4)
+            trans.execute(commit=False)
+            self.assertEqual(trans.index, 4)
 
-        trans.add(sql, args, many=True)
-        self.assertEqual(trans.index, 7)
+            trans.add(sql, args, many=True)
+            self.assertEqual(trans.index, 7)
 
 if __name__ == "__main__":
     main()
