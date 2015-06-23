@@ -399,7 +399,7 @@ class SQLConnectionHandler(object):
 
 
 class Transaction(object):
-    """Encapsulates a DB transaction
+    """A context manager that encapsulates a DB transaction
 
     A transaction is defined by a series of consecutive queries that need to
     be applied to the database as a single block.
@@ -421,8 +421,22 @@ class Transaction(object):
         self._index = 0
         self._conn_handler = SQLConnectionHandler()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is not None:
+            # An exception occurred during the execution of the transaction
+            # Make sure that we leave the DB w/o any modification
+            self.rollback()
+        else:
+            # There was no exception, execute the transaction in case the
+            # developer forgot to execute it. This will commit on success
+            # and rollback automatically on failure
+            self.execute()
+
     def _raise_execution_error(self, sql, sql_args, error):
-        """Rollbacks the current transaction and raises a useful error
+        """Creates a useful error message and raises a ValueError
 
         The error message contains the name of the transaction, the failed
         query, the arguments of the failed query and the error generated.
@@ -430,8 +444,8 @@ class Transaction(object):
         Raises
         ------
         ValueError
+            Always
         """
-        self.rollback()
         raise ValueError(
             "Error running SQL query in transaction %s:\n"
             "Query: %s\nArguments: %s\nError: %s\n"
@@ -453,6 +467,12 @@ class Transaction(object):
             The input SQL query (unmodified) and the SQL arguments with the
             placeholder (if any) substituted with the actual value of the
             previous query
+
+        Raises
+        ------
+        ValueError
+            If a placeholder does not match any previous result
+            If a placeholder points to a query that do not produce any result
         """
         if sql_args is not None:
             for pos, arg in enumerate(sql_args):
@@ -531,19 +551,12 @@ class Transaction(object):
                                 % type(args))
             self._queries.append((sql, args))
 
-    def execute(self, commit=True):
-        """Executes the transaction
+    def _execute(self, commit=True):
+        """Internal function that actually executes the transaction
 
-        Parameters
-        ----------
-        commit : bool, optional
-            Whether the transaction should be committed or not. Defaults
-            to true.
-
-        Returns
-        -------
-        list of DictCursor
-            The results of all the SQL queries in the transaction
+        The `execute` function exposed in the API wraps this one to make sure
+        that we catch any exception that happens in here and we rollback the
+        transaction
         """
         with self._conn_handler.get_postgres_cursor() as cur:
             for sql, sql_args in self._queries:
@@ -583,6 +596,31 @@ class Transaction(object):
             self.commit()
 
         return self._results
+
+    def execute(self, commit=True):
+        """Executes the transaction
+
+        Parameters
+        ----------
+        commit : bool, optional
+            Whether the transaction should be committed or not. Defaults
+            to true.
+
+        Returns
+        -------
+        list of DictCursor
+            The results of all the SQL queries in the transaction
+
+        Notes
+        -----
+        If any exception occurs during the execution transaction, a rollback
+        is executed an no changes are reflected in the database
+        """
+        try:
+            return self._execute(commit=commit)
+        except Exception:
+            self.rollback()
+            raise
 
     def commit(self):
         """Commits the transaction"""
