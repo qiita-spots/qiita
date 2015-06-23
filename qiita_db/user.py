@@ -32,6 +32,7 @@ from re import sub
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
+from qiita_core.qiita_settings import qiita_config
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler
 from .util import (create_rand_string, check_table_cols, hash_password)
@@ -229,12 +230,6 @@ class User(QiitaObject):
         sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
             cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
         conn_handler.add_to_queue(queue, sql, values)
-        # create user default sample holder
-        sql = ("INSERT INTO qiita.analysis "
-               "(email, name, description, dflt, analysis_status_id) "
-               "VALUES (%s, %s, %s, %s, 1)")
-        conn_handler.add_to_queue(queue, sql,
-                                  (email, '%s-dflt' % email, 'dflt', True))
 
         conn_handler.execute_queue(queue)
 
@@ -266,9 +261,9 @@ class User(QiitaObject):
         elif code_type == 'reset':
             column = 'pass_reset_code'
         else:
-            raise IncompetentQiitaDeveloperError("code_type must be 'create'"
-                                                 " or 'reset' Uknown type "
-                                                 "%s" % code_type)
+            raise IncompetentQiitaDeveloperError(
+                "code_type must be 'create' or 'reset' Uknown type %s" %
+                code_type)
         sql = ("SELECT {1} from qiita.{0} where email"
                " = %s".format(cls._table, column))
         conn_handler = SQLConnectionHandler()
@@ -289,6 +284,18 @@ class User(QiitaObject):
             sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
                    "email = %s".format(cls._table))
             conn_handler.execute(sql, (level, email))
+            # create user default sample holders once verified
+            # create one per portal
+            analysis_sql = """INSERT INTO qiita.analysis "
+                "(email, name, description, dflt, analysis_status_id) "
+                "VALUES (%s, %s, %s, %s, 1)"""
+            analysis_args = []
+            sql = "SELECT portal_type_id from qiita.portal_type"
+            for portal in conn_handler.execute_fetchall(sql):
+                analysis_args.append(
+                    (email, '%s-dflt-%d' % (email, portal[0]), 'dflt', True))
+            conn_handler.executemany(analysis_sql, analysis_args)
+
         return db_code == code
 
     # ---properties---
@@ -349,55 +356,75 @@ class User(QiitaObject):
 
     @property
     def default_analysis(self):
-        sql = ("SELECT analysis_id FROM qiita.analysis WHERE email = %s AND "
-               "dflt = true")
+        sql = """SELECT analysis_id FROM qiita.analysis
+                 JOIN qiita.analysis_portal USING (analysis_id)
+                 JOIN qiita.portal USING (portal_id)
+                 WHERE email = %s AND dflt = true AND portal = %s"""
         conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
+        return conn_handler.execute_fetchone(
+            sql, [self._id, qiita_config.portal])[0]
 
     @property
     def sandbox_studies(self):
         """Returns a list of sandboxed study ids owned by the user"""
-        sql = ("SELECT study_id FROM qiita.study s JOIN qiita.study_status ss "
-               "ON s.study_status_id = ss.study_status_id WHERE "
-               "s.email = %s AND ss.status = %s".format(self._table))
+        sql = """SELECT study_id FROM qiita.study
+                 JOIN qiita.study_status USING (study_status_id)
+                 JOIN qiita.study_portal USING (study_id)
+                 JOIN qiita.portal USING (portal_id)
+                 WHERE email = %s AND status = %s AND portal = %s"""
         conn_handler = SQLConnectionHandler()
-        study_ids = conn_handler.execute_fetchall(sql, (self._id, 'sandbox'))
+        study_ids = conn_handler.execute_fetchall(
+            sql, (self._id, 'sandbox', qiita_config.portal))
         return [s[0] for s in study_ids]
 
     @property
     def user_studies(self):
         """Returns a list of study ids owned by the user"""
-        sql = ("SELECT study_id FROM qiita.study WHERE "
-               "email = %s".format(self._table))
+        sql = """SELECT study_id FROM qiita.study
+                 JOIN qiita.study_status USING (study_status_id)
+                 JOIN qiita.study_portal USING (study_id)
+                 JOIN qiita.portal USING (portal_id)
+                 WHERE email = %s AND portal = %s"""
         conn_handler = SQLConnectionHandler()
-        study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+        study_ids = conn_handler.execute_fetchall(
+            sql, (self._id, qiita_config.portal))
         return {s[0] for s in study_ids}
 
     @property
     def shared_studies(self):
         """Returns a list of study ids shared with the user"""
-        sql = ("SELECT study_id FROM qiita.study_users WHERE "
-               "email = %s".format(self._table))
+        sql = """SELECT study_id FROM qiita.study_users
+                 JOIN qiita.study_status USING (study_status_id)
+                 JOIN qiita.study_portal USING (study_id)
+                 JOIN qiita.portal USING (portal_id)
+                 WHERE email = %s and portal = %s"""
         conn_handler = SQLConnectionHandler()
-        study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+        study_ids = conn_handler.execute_fetchall(
+            sql, (self._id, qiita_config.portal_id))
         return {s[0] for s in study_ids}
 
     @property
     def private_analyses(self):
         """Returns a list of private analysis ids owned by the user"""
-        sql = ("SELECT analysis_id FROM qiita.analysis "
-               "WHERE email = %s AND dflt = false")
+        sql = """SELECT analysis_id FROM qiita.analysis
+                 JOIN qiita.analysis_portal USING (analysis_id)
+                 JOIN qiita.portal USING (portal_id)
+               WHERE email = %s AND dflt = false AND portal = %s"""
         conn_handler = SQLConnectionHandler()
-        analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+        analysis_ids = conn_handler.execute_fetchall(
+            sql, (self._id, qiita_config.portal))
         return {a[0] for a in analysis_ids}
 
     @property
     def shared_analyses(self):
         """Returns a list of analysis ids shared with the user"""
-        sql = ("SELECT analysis_id FROM qiita.analysis_users WHERE "
-               "email = %s".format(self._table))
+        sql = """SELECT analysis_id FROM qiita.analysis_users
+                 JOIN qiita.analysis_portal USING (analysis_id)
+                 JOIN qiita.portal USING (portal_id)
+                 WHERE email = %s AND portal = %s"""
         conn_handler = SQLConnectionHandler()
-        analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+        analysis_ids = conn_handler.execute_fetchall(
+            sql, (self._id, qiita_config.portal))
         return {a[0] for a in analysis_ids}
 
     # ------- methods ---------
