@@ -23,7 +23,7 @@ install:
   - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
   - travis_retry pip install .
 script:
-  - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.txt
+  - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
