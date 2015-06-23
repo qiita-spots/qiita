@@ -309,7 +309,6 @@ class RawDataTests(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",

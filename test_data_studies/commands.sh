@@ -26,7 +26,7 @@ for i in ${studies[@]}; do
     # Generate the study config file
     echo "\tgenerating config file... "
     title=`awk -F '\t' -v col=TITLE 'NR==1{for(i=1;i<=NF;i++){if($i==col){c=i;break}} print $c} NR>1{print $c}' ${sample_file} | sort | uniq | grep -vw TITLE | head -n 1`
-    echo -e "[required]\ntimeseries_type_id = 1\nmetadata_complete = True\nmixs_compliant = True\nportal_type_id = 3\nprincipal_investigator = Earth Microbiome Project, emp@earthmicrobiome.org, UCSD\nreprocess = False\nstudy_alias = $title\nstudy_description = $description\nstudy_abstract = $description\nefo_ids = 1\n[optional]\nstudy_id = $i" > $conf_fp
+    echo -e "[required]\ntimeseries_type_id = 1\nmetadata_complete = True\nmixs_compliant = True\nprincipal_investigator = Earth Microbiome Project, emp@earthmicrobiome.org, UCSD\nreprocess = False\nstudy_alias = $title\nstudy_description = $description\nstudy_abstract = $description\nefo_ids = 1\n[optional]\nstudy_id = $i" > $conf_fp
     echo "Ok"
 
     # Insert the study
