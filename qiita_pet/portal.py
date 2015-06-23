@@ -36,7 +36,7 @@ class PortalStyleManager(object):
     example_search : str
         Example search to be shown on the study listing page
     custom_css : str
-        custom css for the portal
+        custom CSS for the portal
     conf_fp : str
         The filepath to the portal styling config file
     css_fp : str
@@ -47,7 +47,7 @@ class PortalStyleManager(object):
             self.conf_fp = qiita_config.portal_fp
         else:
             self.conf_fp = join(dirname(abspath(__file__)),
-                                'support_files/config_portal.txt')
+                                'support_files/config_portal.cfg')
         self.css_fp = qiita_config.css_fp
 
         # Load the custom CSS if needed

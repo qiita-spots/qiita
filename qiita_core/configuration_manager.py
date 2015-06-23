@@ -120,7 +120,7 @@ class ConfigurationManager(object):
             conf_fp = environ['QIITA_CONFIG_FP']
         except KeyError:
             conf_fp = join(dirname(abspath(__file__)),
-                           'support_files/config_test.txt')
+                           'support_files/config_test.cfg')
         self.conf_fp = conf_fp
 
         # Parse the configuration file
