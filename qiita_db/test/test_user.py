@@ -113,13 +113,6 @@ class UserTest(TestCase):
             'email': 'new@test.bar'}
         self._check_correct_info(obs, exp)
 
-        # make sure default analysis created
-        sql = ("SELECT email, name, description, dflt FROM qiita.analysis "
-               "WHERE email = 'new@test.bar'")
-        obs = self.conn_handler.execute_fetchall(sql)
-        exp = [['new@test.bar', 'new@test.bar-dflt', 'dflt', True]]
-        self.assertEqual(obs, exp)
-
     def test_create_user_info(self):
         user = User.create('new@test.bar', 'password', self.userinfo)
         self.assertEqual(user.id, 'new@test.bar')
@@ -242,20 +235,29 @@ class UserTest(TestCase):
         self.assertEqual(self.user.shared_analyses, set([]))
 
     def test_verify_code(self):
-        sql = ("insert into qiita.qiita_user values ('test@user.com', '1', "
+        sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
                "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
                ",null)")
         self.conn_handler.execute(sql)
-        self.assertTrue(User.verify_code('test@user.com', 'verifycode',
+        self.assertTrue(User.verify_code('new@test.bar', 'verifycode',
                                          'create'))
-        self.assertTrue(User.verify_code('test@user.com', 'resetcode',
+        self.assertTrue(User.verify_code('new@test.bar', 'resetcode',
                                          'reset'))
-        self.assertFalse(User.verify_code('test@user.com', 'wrongcode',
+        self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
                                           'create'))
-        self.assertFalse(User.verify_code('test@user.com', 'wrongcode',
+        self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
                                           'reset'))
+
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            User.verify_code('test@user.com', 'fakecode', 'badtype')
+            User.verify_code('new@test.bar', 'fakecode', 'badtype')
+
+        # make sure default analyses created
+        sql = ("SELECT email, name, description, dflt FROM qiita.analysis "
+               "WHERE email = 'new@test.bar'")
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [['new@test.bar', 'new@test.bar-dflt-2', 'dflt', True],
+               ['new@test.bar', 'new@test.bar-dflt-1', 'dflt', True]]
+        self.assertEqual(obs, exp)
 
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(

@@ -286,9 +286,9 @@ class User(QiitaObject):
             conn_handler.execute(sql, (level, email))
             # create user default sample holders once verified
             # create one per portal
-            analysis_sql = """INSERT INTO qiita.analysis "
-                "(email, name, description, dflt, analysis_status_id) "
-                "VALUES (%s, %s, %s, %s, 1)"""
+            analysis_sql = """INSERT INTO qiita.analysis
+                (email, name, description, dflt, analysis_status_id)
+                VALUES (%s, %s, %s, %s, 1)"""
             analysis_args = []
             sql = "SELECT portal_type_id from qiita.portal_type"
             for portal in conn_handler.execute_fetchall(sql):
@@ -358,7 +358,7 @@ class User(QiitaObject):
     def default_analysis(self):
         sql = """SELECT analysis_id FROM qiita.analysis
                  JOIN qiita.analysis_portal USING (analysis_id)
-                 JOIN qiita.portal USING (portal_id)
+                 JOIN qiita.portal_type USING (portal_type_id)
                  WHERE email = %s AND dflt = true AND portal = %s"""
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchone(
@@ -370,7 +370,7 @@ class User(QiitaObject):
         sql = """SELECT study_id FROM qiita.study
                  JOIN qiita.study_status USING (study_status_id)
                  JOIN qiita.study_portal USING (study_id)
-                 JOIN qiita.portal USING (portal_id)
+                 JOIN qiita.portal_type USING (portal_type_id)
                  WHERE email = %s AND status = %s AND portal = %s"""
         conn_handler = SQLConnectionHandler()
         study_ids = conn_handler.execute_fetchall(
@@ -381,9 +381,8 @@ class User(QiitaObject):
     def user_studies(self):
         """Returns a list of study ids owned by the user"""
         sql = """SELECT study_id FROM qiita.study
-                 JOIN qiita.study_status USING (study_status_id)
                  JOIN qiita.study_portal USING (study_id)
-                 JOIN qiita.portal USING (portal_id)
+                 JOIN qiita.portal_type USING (portal_type_id)
                  WHERE email = %s AND portal = %s"""
         conn_handler = SQLConnectionHandler()
         study_ids = conn_handler.execute_fetchall(
@@ -394,13 +393,12 @@ class User(QiitaObject):
     def shared_studies(self):
         """Returns a list of study ids shared with the user"""
         sql = """SELECT study_id FROM qiita.study_users
-                 JOIN qiita.study_status USING (study_status_id)
                  JOIN qiita.study_portal USING (study_id)
-                 JOIN qiita.portal USING (portal_id)
+                 JOIN qiita.portal_type USING (portal_type_id)
                  WHERE email = %s and portal = %s"""
         conn_handler = SQLConnectionHandler()
         study_ids = conn_handler.execute_fetchall(
-            sql, (self._id, qiita_config.portal_id))
+            sql, (self._id, qiita_config.portal))
         return {s[0] for s in study_ids}
 
     @property
@@ -408,7 +406,7 @@ class User(QiitaObject):
         """Returns a list of private analysis ids owned by the user"""
         sql = """SELECT analysis_id FROM qiita.analysis
                  JOIN qiita.analysis_portal USING (analysis_id)
-                 JOIN qiita.portal USING (portal_id)
+                 JOIN qiita.portal_type USING (portal_type_id)
                WHERE email = %s AND dflt = false AND portal = %s"""
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(
@@ -420,7 +418,7 @@ class User(QiitaObject):
         """Returns a list of analysis ids shared with the user"""
         sql = """SELECT analysis_id FROM qiita.analysis_users
                  JOIN qiita.analysis_portal USING (analysis_id)
-                 JOIN qiita.portal USING (portal_id)
+                 JOIN qiita.portal_type USING (portal_type_id)
                  WHERE email = %s AND portal = %s"""
         conn_handler = SQLConnectionHandler()
         analysis_ids = conn_handler.execute_fetchall(
