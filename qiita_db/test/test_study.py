@@ -4,6 +4,7 @@ from datetime import datetime
 from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
 from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
@@ -112,7 +113,6 @@ class TestStudy(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
@@ -129,7 +129,6 @@ class TestStudy(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
@@ -164,7 +163,6 @@ class TestStudy(TestCase):
                 "lifecycle.",
             'spatial_series': False,
             'study_description': 'Analysis of the Cannabis Plant Microbiome',
-            'portal_type_id': 2,
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': '2014-05-19 16:11',
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
@@ -187,7 +185,6 @@ class TestStudy(TestCase):
         exp = {
             'mixs_compliant': True, 'metadata_complete': True,
             'reprocess': False, 'timeseries_type': 'None',
-            'portal_description': 'EMP portal',
             'number_samples_promised': 27, 'emp_person_id': 2,
             'funding': None, 'vamps_id': None,
             'first_contact': datetime(2014, 5, 19, 16, 10),
@@ -204,8 +201,6 @@ class TestStudy(TestCase):
             'analyze the soils and rhizospheres from the same location at '
             'different time points in the plant lifecycle.',
             'study_description': 'Analysis of the Cannabis Plant Microbiome',
-            'portal': 'EMP',
-            'portal_type_id': 2,
             'intervention_type': 'None', 'email': 'test@foo.bar',
             'study_id': 1,
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
@@ -216,14 +211,13 @@ class TestStudy(TestCase):
 
         # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
-                    'portal_description', 'pmid', 'study_title']
+                    'pmid', 'study_title']
         obs = Study.get_info([1], exp_keys)
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
         exp = {
             'metadata_complete': True, 'reprocess': False,
             'timeseries_type': 'None',
-            'portal_description': 'EMP portal',
             'pmid': ['123456', '7891011'],
             'study_title': 'Identification of the Microbiomes for Cannabis '
             'Soils'}
@@ -232,7 +226,6 @@ class TestStudy(TestCase):
         # Test get specific keys for all studies
         info = {
             'timeseries_type_id': 1,
-            'portal_type_id': 1,
             'lab_person_id': None,
             'principal_investigator_id': 3,
             'metadata_complete': False,
@@ -244,10 +237,10 @@ class TestStudy(TestCase):
 
         Study.create(user, 'test_study_1', efo=[1], info=info)
         obs = Study.get_info(info_cols=exp_keys)
-        exp = [[True, ['123456', '7891011'], 'EMP portal', False,
+        exp = [[True, ['123456', '7891011'], False,
                 'Identification of the Microbiomes for Cannabis Soils',
                 'None'],
-               [False, None, 'QIIME portal', False, 'test_study_1', 'None']]
+               [False, None, False, 'test_study_1', 'None']]
         self.assertEqual(obs, exp)
 
     def test_has_access_public(self):
@@ -337,7 +330,7 @@ class TestStudy(TestCase):
                'email': 'test@foo.bar', 'spatial_series': None,
                'study_description': 'Microbiome of people who eat nothing but'
                                     ' fried chicken',
-               'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 2,
+               'study_alias': 'FCM', 'study_id': 2,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
@@ -359,6 +352,19 @@ class TestStudy(TestCase):
             "SELECT efo_id FROM qiita.study_experimental_factor "
             "WHERE study_id = 2")
         self.assertEqual(efo, [[1]])
+
+    def test_create_nonqiita_portal(self):
+        try:
+            qiita_config.portal = "EMP"
+            Study.create(User('test@foo.bar'), "NEW!",
+                         [1], self.info, Investigation(1))
+
+            # make sure portal is associated
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * from qiita.study_portal WHERE study_id = 2")
+            self.assertEqual(obs, [[2, 2], [2, 1]])
+        finally:
+            qiita_config.portal = "QIITA"
 
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""
@@ -395,7 +401,7 @@ class TestStudy(TestCase):
                'email': 'test@foo.bar', 'spatial_series': True,
                'study_description': 'Microbiome of people who eat nothing '
                                     'but fried chicken',
-               'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 3827,
+               'study_alias': 'FCM', 'study_id': 3827,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
@@ -485,6 +491,9 @@ class TestStudy(TestCase):
         """Set efo on a public study"""
         with self.assertRaises(QiitaDBStatusError):
             self.study.efo = 6
+
+    def test_portals(self):
+        self.assertEqual(self.study._portals, ['QIITA'])
 
     def test_retrieve_info(self):
         for key, val in viewitems(self.existingexp):

@@ -9,6 +9,7 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import qiita_config
 from qiita_db.analysis import Analysis, Collection
 from qiita_db.job import Job
 from qiita_db.user import User
@@ -106,6 +107,27 @@ class TestAnalysis(TestCase):
                                        'A New Analysis', 1, None])
         self.assertTrue(time1 < float(obs[0][-1]))
 
+        # make sure portal is associated
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.analysis_portal WHERE analysis_id = %s",
+            [new_id])
+        self.assertEqual(obs, [[new_id, 1]])
+
+    def test_create_nonqiita_portal(self):
+        new_id = get_count("qiita.analysis") + 1
+        try:
+            qiita_config.portal = "EMP"
+            Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                            "A New Analysis")
+
+            # make sure portal is associated
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * from qiita.analysis_portal WHERE analysis_id = %s",
+                [new_id])
+            self.assertEqual(obs, [[new_id, 2], [new_id, 1]])
+        finally:
+            qiita_config.portal = "QIITA"
+
     def test_create_parent(self):
         sql = "SELECT EXTRACT(EPOCH FROM NOW())"
         time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
@@ -187,7 +209,6 @@ class TestAnalysis(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
@@ -269,6 +290,9 @@ class TestAnalysis(TestCase):
         # These should be empty as the analysis hasn't started
         self.assertEqual(analysis.biom_tables, {})
         self.assertEqual(analysis.dropped_samples, {})
+
+    def test_retrieve_portal(self):
+        self.assertEqual(self.analysis._portals, ["QIITA"])
 
     def test_retrieve_data_types(self):
         exp = ['18S']

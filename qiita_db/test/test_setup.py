@@ -109,7 +109,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.job"), 3)
 
     def test_analysis(self):
-        self.assertEqual(get_count("qiita.analysis"), 6)
+        self.assertEqual(get_count("qiita.analysis"), 10)
 
     def test_analysis_job(self):
         self.assertEqual(get_count("qiita.analysis_job"), 3)
