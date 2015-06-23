@@ -281,7 +281,9 @@ class User(QiitaObject):
             raise QiitaDBError("No %s code for user %s" %
                                (column, email))
 
-        if db_code == code and code_type == "create":
+        correct_code = db_code == code
+
+        if correct_code and code_type == "create":
             # verify the user
             level = convert_to_id('user', 'user_level', 'name')
             sql = """UPDATE qiita.{} SET user_level_id = %s
@@ -292,20 +294,19 @@ class User(QiitaObject):
             analysis_sql = """INSERT INTO qiita.analysis
                 (email, name, description, dflt, analysis_status_id)
                 VALUES (%s, %s, %s, %s, 1)"""
-            analysis_args = []
             sql = "SELECT portal_type_id from qiita.portal_type"
-            for portal in conn_handler.execute_fetchall(sql):
-                analysis_args.append(
-                    (email, '%s-dflt-%d' % (email, portal[0]), 'dflt', True))
+            analysis_args = [
+                (email, '%s-dflt-%d' % (email, portal[0]), 'dflt', True)
+                for portal in conn_handler.execute_fetchall(sql)]
             conn_handler.executemany(analysis_sql, analysis_args)
 
-        if db_code == code:
+        if correct_code:
             # wipe out code so we know it was used
             sql = """UPDATE qiita.{0} SET {1} = ''
                      WHERE email = %s""".format(cls._table, column)
             conn_handler.execute(sql, [email])
 
-        return db_code == code
+        return correct_code
 
     # ---properties---
     @property

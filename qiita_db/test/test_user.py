@@ -17,7 +17,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import hash_password
 from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                                 QiitaDBUnknownIDError)
+                                 QiitaDBUnknownIDError, QiitaDBError)
 
 
 class SupportTests(TestCase):
@@ -75,6 +75,9 @@ class UserTest(TestCase):
             'pass_reset_timestamp': None,
             'user_verify_code': None
         }
+
+    def tearDown(self):
+        qiita_config.portal = self.portal
 
     def test_instantiate_user(self):
         User('admin@foo.bar')
@@ -219,74 +222,66 @@ class UserTest(TestCase):
             self.user.info = self.userinfo
 
     def test_default_analysis(self):
-        try:
-            qiita_config.portal = "QIITA"
-            obs = self.user.default_analysis
-            self.assertEqual(obs, 4)
+        qiita_config.portal = "QIITA"
+        obs = self.user.default_analysis
+        self.assertEqual(obs, 4)
 
-            qiita_config.portal = "EMP"
-            obs = self.user.default_analysis
-            self.assertEqual(obs, 8)
-        finally:
-            qiita_config.portal = self.portal
+        qiita_config.portal = "EMP"
+        obs = self.user.default_analysis
+        self.assertEqual(obs, 8)
 
     def test_get_user_studies(self):
         user = User('test@foo.bar')
-        try:
-            qiita_config.portal = "QIITA"
-            self.assertEqual(user.user_studies, {1})
+        qiita_config.portal = "QIITA"
+        self.assertEqual(user.user_studies, {1})
 
-            qiita_config.portal = "EMP"
-            self.assertEqual(user.user_studies, set())
-        finally:
-            qiita_config.portal = self.portal
+        qiita_config.portal = "EMP"
+        self.assertEqual(user.user_studies, set())
 
     def test_get_shared_studies(self):
         user = User('shared@foo.bar')
-        try:
-            qiita_config.portal = "QIITA"
-            self.assertEqual(user.shared_studies, {1})
+        qiita_config.portal = "QIITA"
+        self.assertEqual(user.shared_studies, {1})
 
-            qiita_config.portal = "EMP"
-            self.assertEqual(user.shared_studies, set())
-        finally:
-            qiita_config.portal = self.portal
+        qiita_config.portal = "EMP"
+        self.assertEqual(user.shared_studies, set())
 
     def test_get_private_analyses(self):
         user = User('test@foo.bar')
-        try:
-            qiita_config.portal = "QIITA"
-            self.assertEqual(user.private_analyses, set([1, 2]))
+        qiita_config.portal = "QIITA"
+        self.assertEqual(user.private_analyses, set([1, 2]))
 
-            qiita_config.portal = "EMP"
-            self.assertEqual(user.private_analyses, set())
-        finally:
-            qiita_config.portal = self.portal
+        qiita_config.portal = "EMP"
+        self.assertEqual(user.private_analyses, set())
 
     def test_get_shared_analyses(self):
         user = User('shared@foo.bar')
-        try:
-            qiita_config.portal = "QIITA"
-            self.assertEqual(user.shared_analyses, set([1]))
+        qiita_config.portal = "QIITA"
+        self.assertEqual(user.shared_analyses, set([1]))
 
-            qiita_config.portal = "EMP"
-            self.assertEqual(user.shared_analyses, set())
-        finally:
-            qiita_config.portal = self.portal
+        qiita_config.portal = "EMP"
+        self.assertEqual(user.shared_analyses, set())
 
     def test_verify_code(self):
         sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
                "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
                ",null)")
         self.conn_handler.execute(sql)
-        self.assertTrue(User.verify_code('new@test.bar', 'verifycode',
-                                         'create'))
-        self.assertTrue(User.verify_code('new@test.bar', 'resetcode',
-                                         'reset'))
         self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
                                           'create'))
         self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
                                           'reset'))
+
+        self.assertTrue(User.verify_code('new@test.bar', 'verifycode',
+                                         'create'))
+        self.assertTrue(User.verify_code('new@test.bar', 'resetcode',
+                                         'reset'))
+
+        # make sure errors raised if code already used or wrong type
+        with self.assertRaises(QiitaDBError):
+            User.verify_code('new@test.bar', 'verifycode', 'create')
+        with self.assertRaises(QiitaDBError):
+            User.verify_code('new@test.bar', 'resetcode', 'reset')
 
         with self.assertRaises(IncompetentQiitaDeveloperError):
             User.verify_code('new@test.bar', 'fakecode', 'badtype')
