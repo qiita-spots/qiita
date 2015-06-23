@@ -61,8 +61,6 @@ class SQLConnectionHandler(object):
         If `admin_with_database`, then a connection will be made to the server
         and database specified in the qiita config.
     """
-    _regex = re.compile("{(\d+)}")
-
     # From http://osdir.com/ml/sqlalchemy/2011-05/msg00094.html
     TYPE_CODES = pg_types = {
         16: bool,
@@ -117,6 +115,8 @@ class SQLConnectionHandler(object):
     _args_map = {'no_admin': '_user_args',
                  'admin_with_database': '_admin_args',
                  'admin_without_database': '_admin_nodb_args'}
+
+    _regex = re.compile("{(\d+)}")
 
     def __init__(self, admin='no_admin'):
         if admin not in ('no_admin', 'admin_with_database',
@@ -408,10 +408,12 @@ class SQLConnectionHandler(object):
     # ---- Queue calls
     def _check_queue_exists(self, queue_name):
         """Checks if queue `queue_name` exists in the handler
+
         Parameters
         ----------
         queue_name : str
             The name of the queue
+
         Returns
         -------
         bool
@@ -421,10 +423,12 @@ class SQLConnectionHandler(object):
 
     def create_queue(self, queue_name):
         """Add a new queue to the connection
+
         Parameters
         ----------
         queue_name : str
             Name of the new queue
+
         Raises
         ------
         KeyError
@@ -437,6 +441,7 @@ class SQLConnectionHandler(object):
 
     def list_queues(self):
         """Returns list of all queue names currently in handler
+
         Returns
         -------
         list of str
@@ -446,6 +451,7 @@ class SQLConnectionHandler(object):
 
     def add_to_queue(self, queue, sql, sql_args=None, many=False):
         """Add an sql command to the end of a queue
+
         Parameters
         ----------
         queue : str
@@ -457,6 +463,7 @@ class SQLConnectionHandler(object):
         many : bool, optional
             Whether or not this should be treated as an executemany command.
             Default False
+
         Raises
         ------
         KeyError
@@ -482,14 +489,17 @@ class SQLConnectionHandler(object):
 
     def execute_queue(self, queue):
         """Executes all sql in a queue in a single transaction block
+
         Parameters
         ----------
         queue : str
             Name of queue to execute
+
         Notes
         -----
         Does not support executemany command. Instead, enter the multiple
         SQL commands as multiple entries in the queue.
+
         Raises
         ------
         KetError
@@ -556,8 +566,10 @@ class SQLConnectionHandler(object):
 
     def get_temp_queue(self):
         """Get a queue name that did not exist when this function was called
+
         Returns
         -------
+
         str
             The name of the queue
         """
