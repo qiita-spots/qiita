@@ -40,7 +40,6 @@ from future.utils import viewitems, viewvalues
 from future.builtins import zip
 from os.path import join
 from functools import partial
-from collections import defaultdict
 from copy import deepcopy
 
 import pandas as pd
@@ -58,7 +57,7 @@ from qiita_db.util import (exists_table, get_table_cols,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
 from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
-                   prefix_sample_names_with_id)
+                   prefix_sample_names_with_id, type_lookup)
 
 
 class BaseSample(QiitaObject):
@@ -325,11 +324,7 @@ class BaseSample(QiitaObject):
         except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
-            type_lookup = defaultdict(lambda: 'varchar')
-            type_lookup[int] = 'integer'
-            type_lookup[float] = 'float8'
-            type_lookup[str] = 'varchar'
-            value_type = type_lookup[type(value)]
+            value_type = type_lookup(type(value))
 
             sql = """SELECT udt_name
                      FROM information_schema.columns
@@ -1192,11 +1187,8 @@ class MetadataTemplate(QiitaObject):
         except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
-            type_lookup = defaultdict(lambda: 'varchar')
-            type_lookup[int] = 'integer'
-            type_lookup[float] = 'float8'
-            type_lookup[str] = 'varchar'
-            value_types = set(type_lookup[type(value)]
+
+            value_types = set(type_lookup(type(value))
                               for value in viewvalues(samples_and_values))
 
             sql = """SELECT udt_name

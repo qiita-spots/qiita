@@ -18,7 +18,7 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
 from qiita_db.metadata_template.util import (
     get_datatypes, as_python_types, prefix_sample_names_with_id,
     load_template_to_dataframe, get_invalid_sample_names,
-    looks_like_qiime_mapping_file, _parse_mapping_file)
+    looks_like_qiime_mapping_file, _parse_mapping_file, type_lookup)
 
 
 class TestUtil(TestCase):
@@ -32,6 +32,15 @@ class TestUtil(TestCase):
         self.metadata_map = pd.DataFrame.from_dict(metadata_dict,
                                                    orient='index')
         self.headers = ['float_col', 'str_col', 'int_col']
+
+    def test_type_lookup(self):
+        """Correctly returns the SQL datatype of the passed dtype"""
+        self.assertEqual(type_lookup(self.metadata_map['float_col'].dtype),
+                         'float8')
+        self.assertEqual(type_lookup(self.metadata_map['int_col'].dtype),
+                         'integer')
+        self.assertEqual(type_lookup(self.metadata_map['str_col'].dtype),
+                         'varchar')
 
     def test_get_datatypes(self):
         """Correctly returns the data types of each column"""
