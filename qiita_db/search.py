@@ -71,6 +71,7 @@ import pandas as pd
 from future.utils import viewitems
 
 from qiita_db.util import scrub_data, convert_type, get_table_cols
+from qiita_core.qiita_settings import qiita_config
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import ProcessedData
@@ -329,6 +330,11 @@ class QiitaStudySearch(object):
         # combine the query
         if only_with_processed_data:
             sql.append('SELECT study_id FROM qiita.study_processed_data')
+
+        # restrict to studies in portal
+        sql.append("SELECT study_id from qiita.study_portal "
+                   "JOIN qiita.portal_type USING (portal_type_id) "
+                   "WHERE portal = '%s'" % qiita_config.portal)
         study_sql = ' INTERSECT '.join(sql)
 
         # create  the sample finding SQL, getting both sample id and values
