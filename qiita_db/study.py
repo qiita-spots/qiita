@@ -186,20 +186,26 @@ class Study(QiitaObject):
             All study ids in the database that match the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = """SELECT study_id FROM qiita.study_processed_data spd
-                JOIN qiita.processed_data pd
-                    ON spd.processed_data_id=pd.processed_data_id
-                JOIN qiita.processed_data_status pds
-                    ON pds.processed_data_status_id=pd.processed_data_status_id
-                WHERE pds.processed_data_status=%s"""
+        sql = """SELECT study_id FROM qiita.study_processed_data
+                JOIN qiita.processed_data using (processed_data_id)
+                JOIN qiita.processed_data_status
+                USING (processed_data_status_id)
+                JOIN qiita.study_portal USING (study_id)
+                JOIN qiita.portal_type USING (portal_type_id)
+                WHERE processed_data_status=%s AND portal = %s"""
         studies = {x[0] for x in
-                   conn_handler.execute_fetchall(sql, (status, ))}
+                   conn_handler.execute_fetchall(
+                   sql, (status, qiita_config.portal))}
         # If status is sandbox, all the studies that are not present in the
         # study_processed_data are also sandbox
         if status == 'sandbox':
             sql = """SELECT study_id FROM qiita.study WHERE study_id NOT IN (
-                     SELECT study_id FROM qiita.study_processed_data)"""
-            extra_studies = {x[0] for x in conn_handler.execute_fetchall(sql)}
+                     SELECT study_id FROM qiita.study_processed_data)
+                     JOIN qiita.study_portal USING (study_id)
+                     JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE portal = %s"""
+            extra_studies = {x[0] for x in conn_handler.execute_fetchall(
+                sql, qiita_config.portal)}
             studies = studies.union(extra_studies)
 
         return studies
@@ -220,12 +226,27 @@ class Study(QiitaObject):
         list of DictCursor
             Table-like structure of metadata, one study per row. Can be
             accessed as a list of dictionaries, keyed on column name.
+
+        Raises
+        ------
+        QiitaDBError
+            Portal-restricted studies are asked for
         """
         if info_cols is None:
             info_cols = cls._info_cols
         elif not cls._info_cols.issuperset(info_cols):
             warnings.warn("Non-info columns passed: %s" % ", ".join(
                 set(info_cols) - cls._info_cols))
+
+        conn_handler = SQLConnectionHandler()
+        # Make sure portal has access to all studies asked for
+        sql = """SELECT COUNT(study_id) FROM qiita.study_portal
+                 JOIN qiita.portal_type USING portal_type_id
+                 WHERE study_id IN ({}) and portal = %s""".format(
+            ','.join(str(x) for x in study_ids))
+        accesable = conn_handler.execute_fetchall(sql, [qiita_config.portal])
+        if accesable != len(study_ids):
+            raise QiitaDBError('Non-portal-accessable studies asked for!')
 
         search_cols = ",".join(sorted(cls._info_cols.intersection(info_cols)))
 
@@ -239,7 +260,6 @@ class Study(QiitaObject):
             sql = "{0} WHERE study_id in ({1})".format(
                 sql, ','.join(str(s) for s in study_ids))
 
-        conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchall(sql)
 
     @classmethod
