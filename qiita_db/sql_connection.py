@@ -642,7 +642,7 @@ class Transaction(object):
             elif self._queries:
                 # There are still queries to be executed, execute them
                 # It is safe to use the execute method here, as internally is
-                # wrapped in a tr/except and rollbacks in case of failure
+                # wrapped in a try/except and rollbacks in case of failure
                 self.execute()
             elif status != TRANSACTION_STATUS_IDLE:
                 # There are no queries to be executed, however, the transaction
