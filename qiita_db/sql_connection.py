@@ -610,7 +610,8 @@ class Transaction(object):
     -----
     When the execution leaves the context manager, any remaining queries in
     the transaction will be executed and committed.
-    The Transaction methods can only be executed inside a context
+    The Transaction methods can only be executed inside a context, if they are
+    invoked outside a context, a RuntimeError is raised.
     """
 
     _regex = re.compile("^{(\d+):(\d+):(\d+)}$")
@@ -748,6 +749,8 @@ class Transaction(object):
         ------
         TypeError
             If `sql_args` is provided and is not a list
+        RuntimeError
+            If invoked outside a context
 
         Notes
         -----
@@ -830,6 +833,11 @@ class Transaction(object):
         list of DictCursor
             The results of all the SQL queries in the transaction
 
+        Raises
+        ------
+        RuntimeError
+            If invoked outside a context
+
         Notes
         -----
         If any exception occurs during the execution transaction, a rollback
@@ -843,14 +851,26 @@ class Transaction(object):
 
     @_checker
     def commit(self):
-        """Commits the transaction and reset the queries"""
+        """Commits the transaction and reset the queries
+
+        Raises
+        ------
+        RuntimeError
+            If invoked outside a context
+        """
         self._conn_handler._connection.commit()
         # Reset the queries
         self._queries = []
 
     @_checker
     def rollback(self):
-        """Rollbacks the transaction and reset the queries"""
+        """Rollbacks the transaction and reset the queries
+
+        Raises
+        ------
+        RuntimeError
+            If invoked outside a context
+        """
         self._conn_handler._connection.rollback()
         # Reset the queries
         self._queries = []
