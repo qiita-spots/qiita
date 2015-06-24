@@ -140,7 +140,7 @@ class QiitaObject(object):
             "{0}_id=%s)".format(self._table), (id_, ))[0]
 
     def _check_portal(self, id_):
-        """Checks that object is accessable in current portal
+        """Checks that object is accessible in current portal
 
         Parameters
         ----------
@@ -177,7 +177,7 @@ class QiitaObject(object):
             raise QiitaDBUnknownIDError(id_, self._table)
 
         if not self._check_portal(id_):
-            raise QiitaDBError("Inaccesable in current portal: %s" %
+            raise QiitaDBError("Inaccessible in current portal: %s" %
                                qiita_config.portal)
 
         self._id = id_
