@@ -155,15 +155,17 @@ class Study(QiitaObject):
         if self.status != 'sandbox':
             raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
+    @staticmethod
     def _check_portal_access(study_ids):
         """Raises QiitaDBError if non-portal-accesable studies given"""
         conn_handler = SQLConnectionHandler()
         # Make sure portal has access to all studies asked for
         sql = """SELECT COUNT(study_id) FROM qiita.study_portal
-                 JOIN qiita.portal_type USING portal_type_id
+                 JOIN qiita.portal_type USING (portal_type_id)
                  WHERE study_id IN ({}) and portal = %s""".format(
             ','.join(str(x) for x in study_ids))
-        accesable = conn_handler.execute_fetchall(sql, [qiita_config.portal])
+        accesable = conn_handler.execute_fetchone(
+            sql, [qiita_config.portal])[0]
         if accesable != len(study_ids):
             raise QiitaDBError('Non-portal-accessable studies asked for!')
 
@@ -211,13 +213,13 @@ class Study(QiitaObject):
         # If status is sandbox, all the studies that are not present in the
         # study_processed_data are also sandbox
         if status == 'sandbox':
-            sql = """SELECT study_id FROM qiita.study WHERE study_id NOT IN (
-                     SELECT study_id FROM qiita.study_processed_data)
+            sql = """SELECT study_id FROM qiita.study
                      JOIN qiita.study_portal USING (study_id)
                      JOIN qiita.portal_type USING (portal_type_id)
-                     WHERE portal = %s"""
+                     WHERE portal = %s AND study_id NOT IN (
+                     SELECT study_id FROM qiita.study_processed_data)"""
             extra_studies = {x[0] for x in conn_handler.execute_fetchall(
-                sql, qiita_config.portal)}
+                sql, [qiita_config.portal])}
             studies = studies.union(extra_studies)
 
         return studies
@@ -245,9 +247,6 @@ class Study(QiitaObject):
             warnings.warn("Non-info columns passed: %s" % ", ".join(
                 set(info_cols) - cls._info_cols))
 
-        # Make sure portal has access to all studies asked for
-        cls._check_portal_access(study_ids)
-
         search_cols = ",".join(sorted(cls._info_cols.intersection(info_cols)))
 
         sql = """SELECT {0} FROM (
@@ -255,9 +254,14 @@ class Study(QiitaObject):
             JOIN qiita.timeseries_type  USING (timeseries_type_id)
             LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY pmid) as
             pmid FROM qiita.study_pmid GROUP BY study_id) sp USING (study_id)
-            )""".format(search_cols)
+            JOIN qiita.study_portal USING (study_id)
+            JOIN qiita.portal_type USING (portal_type_id)
+            ) WHERE portal = '{1}'""".format(search_cols, qiita_config.portal)
         if study_ids is not None:
-            sql = "{0} WHERE study_id in ({1})".format(
+            # Make sure portal has access to all studies asked for
+            cls._check_portal_access(study_ids)
+
+            sql = "{0} AND study_id in ({1})".format(
                 sql, ','.join(str(s) for s in study_ids))
         conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchall(sql)
