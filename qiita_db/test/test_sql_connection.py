@@ -275,6 +275,9 @@ class TestTransaction(TestBase):
             exp = [(sql1, args1), (sql2, [])]
             self.assertEqual(trans._queries, exp)
 
+            # Remove queries so __exit__ doesn't try to execute it
+            trans._queries = []
+
     def test_add_many(self):
         with Transaction("test_add_many") as trans:
             self.assertEqual(trans._queries, [])
@@ -497,6 +500,23 @@ class TestTransaction(TestBase):
         except ValueError:
             pass
         self._assert_sql_equal([])
+        self.assertEqual(
+            trans._conn_handler._connection.get_transaction_status(),
+            TRANSACTION_STATUS_IDLE)
+
+    def test_context_manager_execute(self):
+        with Transaction("test_context_manager_no_commit") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
+            self._assert_sql_equal([])
+
+        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                ('insert3', True, 3)])
+        self.assertEqual(
+            trans._conn_handler._connection.get_transaction_status(),
+            TRANSACTION_STATUS_IDLE)
 
     def test_context_manager_no_commit(self):
         with Transaction("test_context_manager_no_commit") as trans:
@@ -506,7 +526,10 @@ class TestTransaction(TestBase):
             trans.add(sql, args, many=True)
 
             trans.execute(commit=False)
-        self._assert_sql_equal([])
+            self._assert_sql_equal([])
+
+        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                ('insert3', True, 3)])
         self.assertEqual(
             trans._conn_handler._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)

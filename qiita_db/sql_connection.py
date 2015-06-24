@@ -821,3 +821,5 @@ class Transaction(object):
     def rollback(self):
         """Rollbacks the transaction"""
         self._conn_handler._connection.rollback()
+        # Reset the queries
+        self._queries = []
