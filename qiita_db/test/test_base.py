@@ -58,7 +58,7 @@ class QiitaBaseTest(TestCase):
         self.assertFalse(self.tester._check_id(100))
 
     def test_check_portal(self):
-        """Correctly checks if an id exists on the database"""
+        """Correctly checks if object is accessable in portal given"""
         qiita_config.portal = 'QIITA'
         tester = Analysis(1)
         self.assertTrue(tester._check_portal(1))
