@@ -611,10 +611,19 @@ class Transaction(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         status = self._conn_handler._connection.get_transaction_status()
-        if exc_type is not None or status != TRANSACTION_STATUS_IDLE:
+        if exc_type is not None:
             # An exception occurred during the execution of the transaction
             # Make sure that we leave the DB w/o any modification
             self.rollback()
+        elif self._queries:
+            # There are still queries to be executed, execute them
+            # It is safe to use the execute method here, as internally is
+            # wrapped in a tr/except and rollbacks in case of failure
+            self.execute()
+        elif status != TRANSACTION_STATUS_IDLE:
+            # There are no queries to be executed, however, the transaction
+            # is still not committed. Commit it so the changes are not lost
+            self.commit()
 
     def _raise_execution_error(self, sql, sql_args, error):
         """Rollbacks the current transaction and raises a useful error
