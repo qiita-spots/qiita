@@ -815,11 +815,13 @@ class Transaction(object):
             raise
 
     def commit(self):
-        """Commits the transaction"""
+        """Commits the transaction and reset the queries"""
         self._conn_handler._connection.commit()
+        # Reset the queries
+        self._queries = []
 
     def rollback(self):
-        """Rollbacks the transaction"""
+        """Rollbacks the transaction and reset the queries"""
         self._conn_handler._connection.rollback()
         # Reset the queries
         self._queries = []
