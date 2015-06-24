@@ -143,6 +143,7 @@ class Study(QiitaObject):
     You should not be doing that.
     """
     _table = "study"
+    _portal_table = "study_portal"
     # The following columns are considered not part of the study info
     _non_info = frozenset(["email", "study_title"])
     # The following tables are considered part of info
