@@ -605,6 +605,12 @@ class Transaction(object):
     ----------
     name : str
         Name of the transaction.
+
+    Notes
+    -----
+    When the execution leaves the context manager, any remaining queries in
+    the transaction will be executed and committed.
+    The Transaction methods can only be executed inside a context
     """
 
     _regex = re.compile("^{(\d+):(\d+):(\d+)}$")
