@@ -155,6 +155,18 @@ class Study(QiitaObject):
         if self.status != 'sandbox':
             raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
+    def _check_portal_access(study_ids):
+        """Raises QiitaDBError if non-portal-accesable studies given"""
+        conn_handler = SQLConnectionHandler()
+        # Make sure portal has access to all studies asked for
+        sql = """SELECT COUNT(study_id) FROM qiita.study_portal
+                 JOIN qiita.portal_type USING portal_type_id
+                 WHERE study_id IN ({}) and portal = %s""".format(
+            ','.join(str(x) for x in study_ids))
+        accesable = conn_handler.execute_fetchall(sql, [qiita_config.portal])
+        if accesable != len(study_ids):
+            raise QiitaDBError('Non-portal-accessable studies asked for!')
+
     @property
     def status(self):
         r"""The status is inferred by the status of its processed data"""
@@ -226,11 +238,6 @@ class Study(QiitaObject):
         list of DictCursor
             Table-like structure of metadata, one study per row. Can be
             accessed as a list of dictionaries, keyed on column name.
-
-        Raises
-        ------
-        QiitaDBError
-            Portal-restricted studies are asked for
         """
         if info_cols is None:
             info_cols = cls._info_cols
@@ -238,15 +245,8 @@ class Study(QiitaObject):
             warnings.warn("Non-info columns passed: %s" % ", ".join(
                 set(info_cols) - cls._info_cols))
 
-        conn_handler = SQLConnectionHandler()
         # Make sure portal has access to all studies asked for
-        sql = """SELECT COUNT(study_id) FROM qiita.study_portal
-                 JOIN qiita.portal_type USING portal_type_id
-                 WHERE study_id IN ({}) and portal = %s""".format(
-            ','.join(str(x) for x in study_ids))
-        accesable = conn_handler.execute_fetchall(sql, [qiita_config.portal])
-        if accesable != len(study_ids):
-            raise QiitaDBError('Non-portal-accessable studies asked for!')
+        cls._check_portal_access(study_ids)
 
         search_cols = ",".join(sorted(cls._info_cols.intersection(info_cols)))
 
@@ -259,7 +259,7 @@ class Study(QiitaObject):
         if study_ids is not None:
             sql = "{0} WHERE study_id in ({1})".format(
                 sql, ','.join(str(s) for s in study_ids))
-
+        conn_handler = SQLConnectionHandler()
         return conn_handler.execute_fetchall(sql)
 
     @classmethod
