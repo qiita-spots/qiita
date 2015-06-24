@@ -204,7 +204,7 @@ class TestTransaction(TestBase):
             self.assertEqual(obs._name, "test_init")
             self.assertEqual(obs._queries, [])
             self.assertEqual(obs._results, [])
-            self.assertEqual(obs._index, 0)
+            self.assertEqual(obs.index, 0)
             self.assertTrue(
                 isinstance(obs._conn_handler, SQLConnectionHandler))
 

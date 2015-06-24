@@ -603,7 +603,7 @@ class Transaction(object):
         self._name = name
         self._queries = []
         self._results = []
-        self._index = 0
+        self.index = 0
         self._conn_handler = SQLConnectionHandler()
 
     def __enter__(self):
@@ -733,6 +733,7 @@ class Transaction(object):
             else:
                 args = []
             self._queries.append((sql, args))
+            self.index += 1
 
     def _execute(self, commit=True):
         """Internal function that actually executes the transaction
@@ -772,7 +773,6 @@ class Transaction(object):
                 self._results.append(res)
 
         # wipe out the already executed queries
-        self._index += len(self._queries)
         self._queries = []
 
         if commit:
@@ -812,8 +812,3 @@ class Transaction(object):
     def rollback(self):
         """Rollbacks the transaction"""
         self._conn_handler._connection.rollback()
-
-    @property
-    def index(self):
-        """Returns the index of the next query that will be added"""
-        return self._index + len(self._queries)
