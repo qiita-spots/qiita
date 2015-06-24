@@ -27,7 +27,7 @@ Classes
 from __future__ import division
 from contextlib import contextmanager
 from itertools import chain
-from functools import partial
+from functools import partial, wraps
 from tempfile import mktemp
 from datetime import date, time, datetime
 import re
@@ -583,6 +583,18 @@ class SQLConnectionHandler(object):
         return temp_queue_name
 
 
+def _checker(func):
+    """Decorator to check that methods are executed inside the context"""
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if not self._is_inside_context:
+            raise RuntimeError(
+                "Operation not permitted. Transaction methods can only be "
+                "invoked within the context manager.")
+        return func(self, *args, **kwargs)
+    return wrapper
+
+
 class Transaction(object):
     """A context manager that encapsulates a DB transaction
 
@@ -605,25 +617,32 @@ class Transaction(object):
         self._results = []
         self.index = 0
         self._conn_handler = SQLConnectionHandler()
+        self._is_inside_context = False
 
     def __enter__(self):
+        self._is_inside_context = True
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        status = self._conn_handler._connection.get_transaction_status()
-        if exc_type is not None:
-            # An exception occurred during the execution of the transaction
-            # Make sure that we leave the DB w/o any modification
-            self.rollback()
-        elif self._queries:
-            # There are still queries to be executed, execute them
-            # It is safe to use the execute method here, as internally is
-            # wrapped in a tr/except and rollbacks in case of failure
-            self.execute()
-        elif status != TRANSACTION_STATUS_IDLE:
-            # There are no queries to be executed, however, the transaction
-            # is still not committed. Commit it so the changes are not lost
-            self.commit()
+        # We need to wrap the entire function in a try/finally because
+        # at the end of the function we need to set _is_inside_context to false
+        try:
+            status = self._conn_handler._connection.get_transaction_status()
+            if exc_type is not None:
+                # An exception occurred during the execution of the transaction
+                # Make sure that we leave the DB w/o any modification
+                self.rollback()
+            elif self._queries:
+                # There are still queries to be executed, execute them
+                # It is safe to use the execute method here, as internally is
+                # wrapped in a tr/except and rollbacks in case of failure
+                self.execute()
+            elif status != TRANSACTION_STATUS_IDLE:
+                # There are no queries to be executed, however, the transaction
+                # is still not committed. Commit it so the changes are not lost
+                self.commit()
+        finally:
+            self._is_inside_context = False
 
     def _raise_execution_error(self, sql, sql_args, error):
         """Rollbacks the current transaction and raises a useful error
@@ -698,6 +717,7 @@ class Transaction(object):
                             % (q_idx, r_idx, v_idx))
         return sql, sql_args
 
+    @_checker
     def add(self, sql, sql_args=None, many=False):
         """Add an sql query to the transaction
 
@@ -789,6 +809,7 @@ class Transaction(object):
 
         return self._results
 
+    @_checker
     def execute(self, commit=True):
         """Executes the transaction
 
@@ -814,12 +835,14 @@ class Transaction(object):
             self.rollback()
             raise
 
+    @_checker
     def commit(self):
         """Commits the transaction and reset the queries"""
         self._conn_handler._connection.commit()
         # Reset the queries
         self._queries = []
 
+    @_checker
     def rollback(self):
         """Rollbacks the transaction and reset the queries"""
         self._conn_handler._connection.rollback()

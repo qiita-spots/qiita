@@ -207,6 +207,7 @@ class TestTransaction(TestBase):
             self.assertEqual(obs.index, 0)
             self.assertTrue(
                 isinstance(obs._conn_handler, SQLConnectionHandler))
+            self.assertFalse(obs._is_inside_context)
 
     def test_replace_placeholders(self):
         with Transaction("test_replace_placeholders") as trans:
@@ -533,6 +534,27 @@ class TestTransaction(TestBase):
         self.assertEqual(
             trans._conn_handler._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
+
+    def test_context_managet_checker(self):
+        t = Transaction("test_context_managet_checker")
+
+        with self.assertRaises(RuntimeError):
+            t.add("SELECT 42")
+
+        with self.assertRaises(RuntimeError):
+            t.execute()
+
+        with self.assertRaises(RuntimeError):
+            t.commit()
+
+        with self.assertRaises(RuntimeError):
+            t.rollback()
+
+        with t:
+            t.add("SELECT 42")
+
+        with self.assertRaises(RuntimeError):
+            t.execute()
 
     def test_index(self):
         with Transaction("test_index") as trans:
