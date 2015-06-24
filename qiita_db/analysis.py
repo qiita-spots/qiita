@@ -73,6 +73,7 @@ class Analysis(QiitaStatusObject):
     """
 
     _table = "analysis"
+    _portal_table = "analysis_portal"
     _analysis_id_column = 'analysis_id'
 
     def _lock_check(self, conn_handler):

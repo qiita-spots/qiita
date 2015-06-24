@@ -159,7 +159,8 @@ class QiitaObject(object):
                 SELECT * from qiita.{0}
                 JOIN qiita.portal_type using (portal_type_id)
                 WHERE {1}_id = %s  AND portal = %s)""".format(
-                self._portal_table, self._table), [id_, qiita_config.portal])
+                self._portal_table, self._table),
+            [id_, qiita_config.portal])[0]
 
     def __init__(self, id_):
         r"""Initializes the object
