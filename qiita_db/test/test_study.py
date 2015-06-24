@@ -259,12 +259,11 @@ class TestStudy(TestCase):
         qiita_config.portal = 'QIITA'
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))
         qiita_config.portal = 'EMP'
-        self.assertFalse(self.study.has_access(User("demo@microbio.me")))
+        with self.assertRaises(QiitaDBError):
+            Study(1).has_access(User("demo@microbio.me"))
 
     def test_has_access_no_public(self):
         self._change_processed_data_status('public')
-        self.assertFalse(self.study.has_access(User("demo@microbio.me"), True))
-        qiita_config.portal = 'EMP'
         self.assertFalse(self.study.has_access(User("demo@microbio.me"), True))
 
     def test_owner(self):
