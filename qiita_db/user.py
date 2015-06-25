@@ -298,6 +298,7 @@ class User(QiitaObject):
                 sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
                        "email = %s".format(cls._table))
                 trans.add(sql, [level, email])
+                trans.execute()
 
         return db_code == code
 
@@ -341,21 +342,22 @@ class User(QiitaObject):
             raise QiitaDBColumnError("non info keys passed!")
 
         # make sure keys in info correspond to columns in table
-        conn_handler = SQLConnectionHandler()
-        check_table_cols(conn_handler, info, self._table)
+        with Transaction("info_setter_%s" % self._id) as trans:
+            check_table_cols(trans, info, self._table)
 
-        # build sql command and data to update
-        sql_insert = []
-        data = []
-        # items used for py3 compatability
-        for key, val in info.items():
-            sql_insert.append("{0} = %s".format(key))
-            data.append(val)
-        data.append(self._id)
+            # build sql command and data to update
+            sql_insert = []
+            data = []
+            # items used for py3 compatability
+            for key, val in info.items():
+                sql_insert.append("{0} = %s".format(key))
+                data.append(val)
+            data.append(self._id)
 
-        sql = ("UPDATE qiita.{0} SET {1} WHERE "
-               "email = %s".format(self._table, ','.join(sql_insert)))
-        conn_handler.execute(sql, data)
+            sql = ("UPDATE qiita.{0} SET {1} WHERE "
+                   "email = %s".format(self._table, ','.join(sql_insert)))
+            trans.add(sql, data)
+            trans.execute()
 
     @property
     def default_analysis(self):
