@@ -534,7 +534,38 @@ class TestTransaction(TestBase):
             trans._conn_handler._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
 
-    def test_context_managet_checker(self):
+    def test_context_manager_multiple(self):
+        trans = Transaction("test_context_manager_multiple")
+        self.assertEqual(trans._contexts_entered, 0)
+
+        with trans:
+            self.assertEqual(trans._contexts_entered, 1)
+
+            trans.add("SELECT 42")
+            with trans:
+                self.assertEqual(trans._contexts_entered, 2)
+                sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                         VALUES (%s, %s) RETURNING str_column, int_column"""
+                args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+                trans.add(sql, args, many=True)
+
+            # We exited the second context, anything should have been executed
+            self.assertEqual(trans._contexts_entered, 1)
+            self.assertEqual(
+                trans._conn_handler._connection.get_transaction_status(),
+                TRANSACTION_STATUS_IDLE)
+            self._assert_sql_equal([])
+
+        # We have exited the first context, everything should have been
+        # executed and committed
+        self.assertEqual(trans._contexts_entered, 0)
+        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                ('insert3', True, 3)])
+        self.assertEqual(
+            trans._conn_handler._connection.get_transaction_status(),
+            TRANSACTION_STATUS_IDLE)
+
+    def test_context_manager_checker(self):
         t = Transaction("test_context_managet_checker")
 
         with self.assertRaises(RuntimeError):
