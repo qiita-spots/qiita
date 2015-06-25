@@ -131,8 +131,6 @@ class QiitaObject(object):
         the other classes. However, still defining here as there is only one
         subclass that doesn't follow this convention and it can override this.
         """
-        self._check_subclass()
-
         conn_handler = SQLConnectionHandler()
 
         return conn_handler.execute_fetchone(
@@ -147,7 +145,6 @@ class QiitaObject(object):
         id_ : object
             The ID to test
         """
-        self._check_subclass()
         if self._portal_table is None:
             # assume not portal limited object
             return True
@@ -174,12 +171,14 @@ class QiitaObject(object):
         QiitaDBUnknownIDError
             If `id_` does not correspond to any object
         """
+        self._check_subclass()
         if not self._check_id(id_):
             raise QiitaDBUnknownIDError(id_, self._table)
 
         if not self._check_portal(id_):
-            raise QiitaDBError("Inaccessible in current portal: %s" %
-                               qiita_config.portal)
+            raise QiitaDBError("%s with id %d inaccessible in current portal: "
+                               "%s" % (self.__class__.__name__, id_,
+                                       qiita_config.portal))
 
         self._id = id_
 
