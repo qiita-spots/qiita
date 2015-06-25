@@ -269,13 +269,17 @@ class UserTest(TestCase):
         self.assertEqual(hash_password(passwd, obspass), obspass)
 
     def test_change_pass(self):
-        self.user._change_pass("newpassword")
+        with Transaction("test_change_pass") as trans:
+            self.user._change_pass("newpassword", trans)
+
         self._check_pass("newpassword")
         self.assertIsNone(self.user.info["pass_reset_code"])
 
     def test_change_pass_short(self):
         with self.assertRaises(IncorrectPasswordError):
-            self.user._change_pass("newpass")
+            with Transaction("test_change_pass_short") as trans:
+                self.user._change_pass("newpass", trans)
+
         self._check_pass("password")
 
     def test_change_password(self):

@@ -428,13 +428,13 @@ class User(QiitaObject):
         bool
             password changed or not
         """
-        conn_handler = SQLConnectionHandler()
-        dbpass = conn_handler.execute_fetchone(
-            "SELECT password FROM qiita.{0} WHERE email = %s".format(
-                self._table), (self._id, ))[0]
-        if dbpass == hash_password(oldpass, dbpass):
-            self._change_pass(newpass)
-            return True
+        with Transaction("change_password_%s" % self._id) as trans:
+            trans.add("SELECT password FROM qiita.{0} WHERE email = %s".format(
+                self._table), [self._id])
+            dbpass = trans.execute()[-1][0][0]
+            if dbpass == hash_password(oldpass, dbpass):
+                self._change_pass(newpass, trans)
+                return True
         return False
 
     def generate_reset_code(self):
@@ -466,14 +466,14 @@ class User(QiitaObject):
             return True
         return False
 
-    def _change_pass(self, newpass):
+    def _change_pass(self, newpass, trans):
         if not validate_password(newpass):
             raise IncorrectPasswordError("Bad password given!")
 
         sql = ("UPDATE qiita.{0} SET password=%s, pass_reset_code=NULL WHERE "
                "email = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (hash_password(newpass), self._id))
+        trans.add(sql, [hash_password(newpass), self._id])
+        trans.execute()
 
 
 def validate_email(email):
