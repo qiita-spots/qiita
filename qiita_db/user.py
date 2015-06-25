@@ -141,7 +141,7 @@ class User(QiitaObject):
                    "email = %s".format(cls._table))
             trans.add(sql, [email])
 
-            info = trans.execute(commit=False)[-1][0]
+            info = trans.execute()[-1][0]
 
             # verify user email verification
             # MAGIC NUMBER 5 = unverified email
@@ -151,10 +151,10 @@ class User(QiitaObject):
             # verify password
             dbpass = info[0]
             hashed = hash_password(password, dbpass)
-            if hashed == dbpass:
-                return cls(email)
-            else:
+            if hashed != dbpass:
                 raise IncorrectPasswordError("Password not valid!")
+
+        return cls(email)
 
     @classmethod
     def exists(cls, email, trans=None):
@@ -175,7 +175,7 @@ class User(QiitaObject):
         with trans:
             trans.add("SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
                       "email = %s)".format(cls._table), [email])
-            return trans.execute(commit=False)[-1][0][0]
+            return trans.execute()[-1][0][0]
 
     @classmethod
     def create(cls, email, password, info=None):

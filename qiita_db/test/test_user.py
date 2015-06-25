@@ -17,6 +17,7 @@ from qiita_db.util import hash_password
 from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError)
+from qiita_db.sql_connection import Transaction
 
 
 class SupportTests(TestCase):
@@ -187,6 +188,10 @@ class UserTest(TestCase):
     def test_exists_invalid_email(self):
         with self.assertRaises(IncorrectEmailError):
             User.exists("notanemail.@badformat")
+
+    def test_exists_w_transaction(self):
+        with Transaction("test_exists_w_transaction") as trans:
+            self.assertTrue(User.exists("test@foo.bar", trans))
 
     def test_get_email(self):
         self.assertEqual(self.user.email, 'admin@foo.bar')
