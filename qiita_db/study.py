@@ -156,20 +156,6 @@ class Study(QiitaObject):
         if self.status != 'sandbox':
             raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
-    @staticmethod
-    def _check_portal_access(study_ids):
-        """Raises QiitaDBError if non-portal-accesable studies given"""
-        conn_handler = SQLConnectionHandler()
-        # Make sure portal has access to all studies asked for
-        sql = """SELECT COUNT(study_id) FROM qiita.study_portal
-                 JOIN qiita.portal_type USING (portal_type_id)
-                 WHERE study_id IN ({}) and portal = %s""".format(
-            ','.join(str(x) for x in study_ids))
-        accesable = conn_handler.execute_fetchone(
-            sql, [qiita_config.portal])[0]
-        if accesable != len(study_ids):
-            raise QiitaDBError('Non-portal-accessable studies asked for!')
-
     @property
     def status(self):
         r"""The status is inferred by the status of its processed data"""
@@ -258,14 +244,16 @@ class Study(QiitaObject):
             JOIN qiita.study_portal USING (study_id)
             JOIN qiita.portal_type USING (portal_type_id)
             ) WHERE portal = '{1}'""".format(search_cols, qiita_config.portal)
-        if study_ids is not None:
-            # Make sure portal has access to all studies asked for
-            cls._check_portal_access(study_ids)
 
+        if study_ids is not None:
             sql = "{0} AND study_id in ({1})".format(
                 sql, ','.join(str(s) for s in study_ids))
+
         conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchall(sql)
+        res = conn_handler.execute_fetchall(sql)
+        if study_ids is not None and (res is None or
+                                      len(res) != len(study_ids)):
+                raise QiitaDBError('Non-portal-accessible studies asked for!')
 
     @classmethod
     def exists(cls, study_title):
