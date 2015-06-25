@@ -65,6 +65,8 @@ class QiitaBaseTest(TestCase):
         qiita_config.portal = 'EMP'
         self.assertFalse(tester._check_portal(1))
 
+        self.assertTrue(self.tester._check_portal(1))
+
     def test_equal_self(self):
         """Equality works with the same object"""
         self.assertEqual(self.tester, self.tester)
