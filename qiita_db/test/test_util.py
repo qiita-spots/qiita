@@ -16,6 +16,7 @@ import pandas as pd
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_db.sql_connection import Transaction
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
 from qiita_db.data import RawData
 from qiita_db.study import Study
@@ -107,13 +108,14 @@ class DBUtilTests(TestCase):
 
     def test_check_table_cols(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
-        check_table_cols(self.conn_handler, self.required, self.table)
+        with Transaction("test_check_table_cols") as trans:
+            check_table_cols(trans, self.required, self.table)
 
     def test_check_table_cols_fail(self):
         self.required.append('BADTHINGNOINHERE')
         with self.assertRaises(QiitaDBColumnError):
-            check_table_cols(self.conn_handler, self.required,
-                             self.table)
+            with Transaction("test_check_table_cols_fail") as trans:
+                check_table_cols(trans, self.required, self.table)
 
     def test_get_table_cols(self):
         obs = get_table_cols("qiita_user")
