@@ -33,7 +33,7 @@ from re import sub
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .base import QiitaObject
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import SQLConnectionHandler, Transaction
 from .util import (create_rand_string, check_table_cols, hash_password)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
@@ -126,48 +126,56 @@ class User(QiitaObject):
         IncorrectPasswordError
             Password passed is not correct for user
         """
-        # see if user exists
-        if not cls.exists(email):
-            raise IncorrectEmailError("Email not valid: %s" % email)
+        trans = Transaction("login_%s" % email)
 
-        if not validate_password(password):
-            raise IncorrectPasswordError("Password not valid!")
+        with trans:
+            # see if user exists
+            if not cls.exists(email, trans=trans):
+                raise IncorrectEmailError("Email not valid: %s" % email)
 
-        # pull password out of database
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
-               "email = %s".format(cls._table))
-        info = conn_handler.execute_fetchone(sql, (email, ))
+            if not validate_password(password):
+                raise IncorrectPasswordError("Password not valid!")
 
-        # verify user email verification
-        # MAGIC NUMBER 5 = unverified email
-        if int(info[1]) == 5:
-            return False
+            # pull password out of database
+            sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
+                   "email = %s".format(cls._table))
+            trans.add(sql, [email])
 
-        # verify password
-        dbpass = info[0]
-        hashed = hash_password(password, dbpass)
-        if hashed == dbpass:
-            return cls(email)
-        else:
-            raise IncorrectPasswordError("Password not valid!")
+            info = trans.execute(commit=False)[-1][0]
+
+            # verify user email verification
+            # MAGIC NUMBER 5 = unverified email
+            if int(info[1]) == 5:
+                return False
+
+            # verify password
+            dbpass = info[0]
+            hashed = hash_password(password, dbpass)
+            if hashed == dbpass:
+                return cls(email)
+            else:
+                raise IncorrectPasswordError("Password not valid!")
 
     @classmethod
-    def exists(cls, email):
+    def exists(cls, email, trans=None):
         """Checks if a user exists on the database
 
         Parameters
         ----------
         email : str
             the email of the user
+        trans : Transaction, optional
+            The current transaction, if any.
         """
         if not validate_email(email):
             raise IncorrectEmailError("Email string not valid: %s" % email)
-        conn_handler = SQLConnectionHandler()
 
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "email = %s)".format(cls._table), (email, ))[0]
+        trans = trans if trans is not None else Transaction("exists_%s"
+                                                            % email)
+        with trans:
+            trans.add("SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
+                      "email = %s)".format(cls._table), [email])
+            return trans.execute(commit=False)[-1][0][0]
 
     @classmethod
     def create(cls, email, password, info=None):
