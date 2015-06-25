@@ -641,6 +641,7 @@ class Transaction(object):
             # It is safe to use the execute method here, as internally is
             # wrapped in a try/except and rollbacks in case of failure
             self.execute()
+            self.commit()
         elif status != TRANSACTION_STATUS_IDLE:
             # There are no queries to be executed, however, the transaction
             # is still not committed. Commit it so the changes are not lost
@@ -781,7 +782,7 @@ class Transaction(object):
             self._queries.append((sql, args))
             self.index += 1
 
-    def _execute(self, commit=True):
+    def _execute(self):
         """Internal function that actually executes the transaction
 
         The `execute` function exposed in the API wraps this one to make sure
@@ -821,20 +822,11 @@ class Transaction(object):
         # wipe out the already executed queries
         self._queries = []
 
-        if commit:
-            self.commit()
-
         return self._results
 
     @_checker
-    def execute(self, commit=True):
+    def execute(self):
         """Executes the transaction
-
-        Parameters
-        ----------
-        commit : bool, optional
-            Whether the transaction should be committed or not. Defaults
-            to true.
 
         Returns
         -------
@@ -849,10 +841,12 @@ class Transaction(object):
         Notes
         -----
         If any exception occurs during the execution transaction, a rollback
-        is executed an no changes are reflected in the database
+        is executed an no changes are reflected in the database.
+        When calling execute, the transaction will never be committed, it will
+        be automatically committed when leaving the context
         """
         try:
-            return self._execute(commit=commit)
+            return self._execute()
         except Exception:
             self.rollback()
             raise
