@@ -246,7 +246,7 @@ class User(QiitaObject):
         return cls(email)
 
     @classmethod
-    def verify_code(cls, email, code, code_type):
+    def verify_code(cls, email, code, code_type, trans=None):
         """Verify that a code and email match
 
         Parameters
@@ -256,6 +256,8 @@ class User(QiitaObject):
         code : str
             code to verify
         code_type : {'create', 'reset'}
+        trans : Transaction, optional
+            The current transaction, if any.
 
         Returns
         -------
@@ -275,7 +277,9 @@ class User(QiitaObject):
                                                  " or 'reset' Uknown type "
                                                  "%s" % code_type)
 
-        with Transaction('verify_code_%s' % email) as trans:
+        trans = trans if trans is not None else Transaction('verify_code_%s'
+                                                            % email)
+        with trans:
             sql = ("SELECT {1} from qiita.{0} where email"
                    " = %s".format(cls._table, column))
             trans.add(sql, [email])
@@ -461,9 +465,10 @@ class User(QiitaObject):
         bool
             password changed or not
         """
-        if self.verify_code(self._id, code, "reset"):
-            self._change_pass(newpass)
-            return True
+        with Transaction("change_forgot_password_%s" % self._id) as trans:
+            if self.verify_code(self._id, code, "reset", trans=trans):
+                self._change_pass(newpass, trans)
+                return True
         return False
 
     def _change_pass(self, newpass, trans):

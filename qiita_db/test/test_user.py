@@ -262,6 +262,12 @@ class UserTest(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             User.verify_code('test@user.com', 'fakecode', 'badtype')
 
+        with Transaction("test_verify_code") as t:
+            self.assertTrue(
+                User.verify_code('test@user.com', 'resetcode', 'reset', t))
+            self.assertFalse(
+                User.verify_code('test@user.com', 'wrongcode', 'create', t))
+
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(
             "SELECT password FROM qiita.qiita_user WHERE email = %s",
