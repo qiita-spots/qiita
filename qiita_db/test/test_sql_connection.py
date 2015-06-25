@@ -199,15 +199,14 @@ class TestConnHandler(TestBase):
 
 class TestTransaction(TestBase):
     def test_init(self):
-        with Transaction("test_init") as obs:
-            obs = Transaction("test_init")
-            self.assertEqual(obs._name, "test_init")
-            self.assertEqual(obs._queries, [])
-            self.assertEqual(obs._results, [])
-            self.assertEqual(obs.index, 0)
-            self.assertTrue(
-                isinstance(obs._conn_handler, SQLConnectionHandler))
-            self.assertFalse(obs._is_inside_context)
+        obs = Transaction("test_init")
+        self.assertEqual(obs._name, "test_init")
+        self.assertEqual(obs._queries, [])
+        self.assertEqual(obs._results, [])
+        self.assertEqual(obs.index, 0)
+        self.assertTrue(
+            isinstance(obs._conn_handler, SQLConnectionHandler))
+        self.assertEqual(obs._contexts_entered, 0)
 
     def test_replace_placeholders(self):
         with Transaction("test_replace_placeholders") as trans:
