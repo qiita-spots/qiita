@@ -182,7 +182,12 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
 
     def test_exists(self):
+        qiita_config.portal = 'QIITA'
         self.assertTrue(Analysis.exists(1))
+        new_id = get_count("qiita.analysis") + 1
+        self.assertFalse(Analysis.exists(new_id))
+        qiita_config.portal = 'EMP'
+        self.assertFalse(Analysis.exists(1))
         new_id = get_count("qiita.analysis") + 1
         self.assertFalse(Analysis.exists(new_id))
 

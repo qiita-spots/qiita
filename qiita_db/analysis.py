@@ -252,9 +252,12 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
 
         return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "{1}=%s)".format(cls._table, cls._analysis_id_column),
-            (analysis_id, ))[0]
+            """SELECT EXISTS(SELECT * FROM qiita.{0}
+            JOIN qiita.analysis_portal USING (analysis_id)
+            JOIN qiita.portal_type USING (portal_type_id)
+            WHERE {1}=%s AND portal=%s)""".format(
+                cls._table, cls._analysis_id_column),
+            (analysis_id, qiita_config.portal))[0]
 
     # ---- Properties ----
     @property
