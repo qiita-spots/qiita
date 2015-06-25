@@ -255,6 +255,8 @@ class Study(QiitaObject):
                                       len(res) != len(study_ids)):
                 raise QiitaDBError('Non-portal-accessible studies asked for!')
 
+        return res if res is not None else []
+
     @classmethod
     def exists(cls, study_title):
         """Check if a study exists based on study_title, which is unique
