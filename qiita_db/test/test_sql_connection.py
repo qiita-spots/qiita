@@ -556,7 +556,7 @@ class TestTransaction(TestBase):
                 args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
                 trans.add(sql, args, many=True)
 
-            # We exited the second context, anything should have been executed
+            # We exited the second context, nothing should have been executed
             self.assertEqual(trans._contexts_entered, 1)
             self.assertEqual(
                 trans._conn_handler._connection.get_transaction_status(),
