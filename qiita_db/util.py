@@ -295,13 +295,13 @@ def check_required_columns(conn_handler, keys, table):
                                  required.difference(keys))
 
 
-def check_table_cols(conn_handler, keys, table):
+def check_table_cols(trans, keys, table):
     """Makes sure all keys correspond to column headers in a table
 
     Parameters
     ----------
-    conn_handler: SQLConnectionHandler object
-        Previously opened connection to the database
+    trans: Transaction
+        Transaction in which this method should be executed
     keys: iterable
         Holds the keys in the dictionary
     table: str
@@ -316,7 +316,8 @@ def check_table_cols(conn_handler, keys, table):
     """
     sql = ("SELECT column_name FROM information_schema.columns WHERE "
            "table_name = %s")
-    cols = [x[0] for x in conn_handler.execute_fetchall(sql, (table, ))]
+    trans.add(sql, [table])
+    cols = [x[0] for x in trans.execute()[-1]]
     # Test needed because a user with certain permissions can query without
     # error but be unable to get the column names
     if len(cols) == 0:

@@ -205,46 +205,43 @@ class User(QiitaObject):
         if not validate_password(password):
             raise IncorrectPasswordError("Bad password given!")
 
-        # make sure user does not already exist
-        if cls.exists(email):
-            raise QiitaDBDuplicateError("User", "email: %s" % email)
+        with Transaction("create_%s" % email) as trans:
+            # make sure user does not already exist
+            if cls.exists(email, trans=trans):
+                raise QiitaDBDuplicateError("User", "email: %s" % email)
 
-        # make sure non-info columns aren't passed in info dict
-        if info:
-            if cls._non_info.intersection(info):
-                raise QiitaDBColumnError("non info keys passed: %s" %
-                                         cls._non_info.intersection(info))
-        else:
-            info = {}
+            # make sure non-info columns aren't passed in info dict
+            if info:
+                if cls._non_info.intersection(info):
+                    raise QiitaDBColumnError("non info keys passed: %s" %
+                                             cls._non_info.intersection(info))
+            else:
+                info = {}
 
-        # create email verification code and hashed password to insert
-        # add values to info
-        info["email"] = email
-        info["password"] = hash_password(password)
-        info["user_verify_code"] = create_rand_string(20, punct=False)
+            # create email verification code and hashed password to insert
+            # add values to info
+            info["email"] = email
+            info["password"] = hash_password(password)
+            info["user_verify_code"] = create_rand_string(20, punct=False)
 
-        # make sure keys in info correspond to columns in table
-        conn_handler = SQLConnectionHandler()
-        check_table_cols(conn_handler, info, cls._table)
+            # make sure keys in info correspond to columns in table
+            check_table_cols(trans, info, cls._table)
 
-        # build info to insert making sure columns and data are in same order
-        # for sql insertion
-        columns = info.keys()
-        values = [info[col] for col in columns]
-        queue = "add_user_%s" % email
-        conn_handler.create_queue(queue)
-        # crete user
-        sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
-            cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
-        conn_handler.add_to_queue(queue, sql, values)
-        # create user default sample holder
-        sql = ("INSERT INTO qiita.analysis "
-               "(email, name, description, dflt, analysis_status_id) "
-               "VALUES (%s, %s, %s, %s, 1)")
-        conn_handler.add_to_queue(queue, sql,
-                                  (email, '%s-dflt' % email, 'dflt', True))
+            # build info to insert making sure columns and data are in same
+            # order for sql insertion
+            columns = info.keys()
+            values = [info[col] for col in columns]
+            # crete user
+            sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
+                cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
+            trans.add(sql, values)
+            # create user default sample holder
+            sql = ("INSERT INTO qiita.analysis "
+                   "(email, name, description, dflt, analysis_status_id) "
+                   "VALUES (%s, %s, %s, %s, 1)")
+            trans.add(sql, [email, '%s-dflt' % email, 'dflt', True])
 
-        conn_handler.execute_queue(queue)
+            trans.execute()
 
         return cls(email)
 
