@@ -274,26 +274,31 @@ class User(QiitaObject):
             raise IncompetentQiitaDeveloperError("code_type must be 'create'"
                                                  " or 'reset' Uknown type "
                                                  "%s" % code_type)
-        sql = ("SELECT {1} from qiita.{0} where email"
-               " = %s".format(cls._table, column))
-        conn_handler = SQLConnectionHandler()
-        db_code = conn_handler.execute_fetchone(sql, (email,))
 
-        # If the query didn't return anything, then there's no way the code
-        # can match
-        if db_code is None:
-            return False
+        with Transaction('verify_code_%s' % email) as trans:
+            sql = ("SELECT {1} from qiita.{0} where email"
+                   " = %s".format(cls._table, column))
+            trans.add(sql, [email])
+            db_code = trans.execute()[-1][0]
 
-        db_code = db_code[0]
+            # If the query didn't return anything, then there's no way the code
+            # can match
+            if db_code is None:
+                return False
 
-        if db_code == code and code_type == "create":
-            # verify the user
-            level = conn_handler.execute_fetchone(
-                "SELECT user_level_id FROM qiita.user_level WHERE "
-                "name = %s", ("user", ))[0]
-            sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
-                   "email = %s".format(cls._table))
-            conn_handler.execute(sql, (level, email))
+            db_code = db_code[0]
+
+            if db_code == code and code_type == "create":
+                # verify the user
+                sql = ("SELECT user_level_id FROM qiita.user_level WHERE "
+                       "name = %s")
+                trans.add(sql, ['user'])
+                level = trans.execute()[-1][0][0]
+
+                sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
+                       "email = %s".format(cls._table))
+                trans.add(sql, [level, email])
+
         return db_code == code
 
     # ---properties---
