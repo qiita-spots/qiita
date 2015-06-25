@@ -27,8 +27,10 @@ Classes
 
 from __future__ import division
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from .sql_connection import SQLConnectionHandler
-from .exceptions import QiitaDBNotImplementedError, QiitaDBUnknownIDError
+from .exceptions import (QiitaDBNotImplementedError, QiitaDBUnknownIDError,
+                         QiitaDBError)
 
 
 class QiitaObject(object):
@@ -60,6 +62,7 @@ class QiitaObject(object):
     """
 
     _table = None
+    _portal_table = None
 
     @classmethod
     def create(cls):
@@ -128,13 +131,33 @@ class QiitaObject(object):
         the other classes. However, still defining here as there is only one
         subclass that doesn't follow this convention and it can override this.
         """
-        self._check_subclass()
-
         conn_handler = SQLConnectionHandler()
 
         return conn_handler.execute_fetchone(
             "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
             "{0}_id=%s)".format(self._table), (id_, ))[0]
+
+    def _check_portal(self, id_):
+        """Checks that object is accessible in current portal
+
+        Parameters
+        ----------
+        id_ : object
+            The ID to test
+        """
+        if self._portal_table is None:
+            # assume not portal limited object
+            return True
+
+        conn_handler = SQLConnectionHandler()
+
+        return conn_handler.execute_fetchone(
+            """SELECT EXISTS(
+                SELECT * from qiita.{0}
+                JOIN qiita.portal_type using (portal_type_id)
+                WHERE {1}_id = %s  AND portal = %s)""".format(
+                self._portal_table, self._table),
+            [id_, qiita_config.portal])[0]
 
     def __init__(self, id_):
         r"""Initializes the object
@@ -148,8 +171,14 @@ class QiitaObject(object):
         QiitaDBUnknownIDError
             If `id_` does not correspond to any object
         """
+        self._check_subclass()
         if not self._check_id(id_):
             raise QiitaDBUnknownIDError(id_, self._table)
+
+        if not self._check_portal(id_):
+            raise QiitaDBError("%s with id %d inaccessible in current portal: "
+                               "%s" % (self.__class__.__name__, id_,
+                                       qiita_config.portal))
 
         self._id = id_
 
