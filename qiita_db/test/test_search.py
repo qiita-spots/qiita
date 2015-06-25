@@ -26,7 +26,10 @@ class SearchTest(TestCase):
             self.search._parse_study_search_string("altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "lower(column_name) = lower('altitude') and column_type "
-                      "in ('integer', 'float8')")
+                      "in ('integer', 'float8') INTERSECT "
+                      "SELECT study_id from qiita.study_portal "
+                      "JOIN qiita.portal_type USING (portal_type_id) "
+                      "WHERE portal = 'QIITA'")
         exp_samp_sql = ("SELECT ss.sample_id,sa.altitude "
                         "FROM qiita.study_sample ss "
                         "JOIN qiita.sample_{0} sa "
@@ -42,7 +45,10 @@ class SearchTest(TestCase):
             self.search._parse_study_search_string("NOT altitude > 0")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "lower(column_name) = lower('altitude') and column_type "
-                      "in ('integer', 'float8')")
+                      "in ('integer', 'float8') INTERSECT "
+                      "SELECT study_id from qiita.study_portal "
+                      "JOIN qiita.portal_type USING (portal_type_id) "
+                      "WHERE portal = 'QIITA'")
         exp_samp_sql = ("SELECT ss.sample_id,sa.altitude "
                         "FROM qiita.study_sample ss "
                         "JOIN qiita.sample_{0} sa "
@@ -58,7 +64,10 @@ class SearchTest(TestCase):
             self.search._parse_study_search_string("ph > 7 and ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "lower(column_name) = lower('ph') and column_type in "
-                      "('integer', 'float8')")
+                      "('integer', 'float8') INTERSECT "
+                      "SELECT study_id from qiita.study_portal "
+                      "JOIN qiita.portal_type USING (portal_type_id) "
+                      "WHERE portal = 'QIITA'")
         exp_samp_sql = ("SELECT ss.sample_id,sa.ph "
                         "FROM qiita.study_sample ss "
                         "JOIN qiita.sample_{0} sa "
@@ -74,7 +83,10 @@ class SearchTest(TestCase):
             self.search._parse_study_search_string("ph > 7 or ph < 9")
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns WHERE "
                       "lower(column_name) = lower('ph') and column_type in "
-                      "('integer', 'float8')")
+                      "('integer', 'float8') INTERSECT "
+                      "SELECT study_id from qiita.study_portal "
+                      "JOIN qiita.portal_type USING (portal_type_id) "
+                      "WHERE portal = 'QIITA'")
         exp_samp_sql = ("SELECT ss.sample_id,sa.ph "
                         "FROM qiita.study_sample ss "
                         "JOIN qiita.sample_{0} sa "
@@ -91,7 +103,10 @@ class SearchTest(TestCase):
                 'host_subject_id includes "Chicken little"')
         exp_st_sql = ("SELECT study_id FROM qiita.study_sample_columns "
                       "WHERE lower(column_name) = lower('host_subject_id') "
-                      "and column_type in ('varchar')")
+                      "and column_type in ('varchar') INTERSECT "
+                      "SELECT study_id from qiita.study_portal "
+                      "JOIN qiita.portal_type USING (portal_type_id) "
+                      "WHERE portal = 'QIITA'")
         exp_samp_sql = ("SELECT ss.sample_id,sa.host_subject_id "
                         "FROM qiita.study_sample ss "
                         "JOIN qiita.sample_{0} sa "
@@ -111,7 +126,10 @@ class SearchTest(TestCase):
         exp_st_sql = (
             "SELECT study_id FROM qiita.study_sample_columns WHERE "
             "lower(column_name) = lower('name') and column_type in "
-            "('varchar')")
+            "('varchar') INTERSECT "
+            "SELECT study_id from qiita.study_portal "
+            "JOIN qiita.portal_type USING (portal_type_id) "
+            "WHERE portal = 'QIITA'")
         exp_samp_sql = (
             "SELECT ss.sample_id,sa.name "
             "FROM qiita.study_sample ss "
@@ -131,10 +149,13 @@ class SearchTest(TestCase):
         st_sql = st_sql.split(" INTERSECT ")
 
         exp_st_sql = ["SELECT study_id FROM qiita.study_sample_columns WHERE "
-                      "lower(column_name) = lower('pH') and column_type in "
+                      "lower(column_name) = lower('ph') and column_type in "
                       "('integer', 'float8')", "SELECT study_id FROM "
                       "qiita.study_sample_columns WHERE lower(column_name) = "
-                      "lower('ph') and column_type in ('integer', 'float8')"]
+                      "lower('pH') and column_type in ('integer', 'float8')",
+                      "SELECT study_id from qiita.study_portal "
+                      "JOIN qiita.portal_type USING (portal_type_id) "
+                      "WHERE portal = 'QIITA'"]
         exp_samp_sql = ("SELECT ss.sample_id,sa.pH,sa.ph "
                         "FROM qiita.study_sample ss "
                         "JOIN qiita.sample_{0} sa "
@@ -142,10 +163,9 @@ class SearchTest(TestCase):
                         "JOIN qiita.study st ON st.study_id = ss.study_id "
                         "WHERE (sa.ph > 7 OR sa.ph < 9)")
         # use the split list to make sure the SQL is properly formed
-        self.assertEqual(len(st_sql), 2)
-        pos = exp_st_sql.index(st_sql[0])
-        del exp_st_sql[pos]
-        pos = exp_st_sql.index(st_sql[1])
+        self.assertEqual(len(st_sql), 3)
+        for pos, query in enumerate(exp_st_sql):
+            self.assertEqual(st_sql[pos], query)
         self.assertEqual(samp_sql, exp_samp_sql)
         self.assertEqual(len(meta), 2)
         assert "ph" in meta
