@@ -678,18 +678,26 @@ class Study(QiitaObject):
             # Execute the queue
             trans.execute()
 
-    @property
-    def investigation(self):
+    def investigation(self, trans=None):
         """ Returns Investigation this study is part of
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         Investigation id
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT investigation_id FROM qiita.investigation_study WHERE "
-               "study_id = %s")
-        inv = conn_handler.execute_fetchone(sql, (self._id, ))
+        trans = trans if trans is not None else Transaction("investigation_%s"
+                                                            % self._id)
+        with trans:
+            sql = """SELECT investigation_id FROM qiita.investigation_study
+                     WHERE study_id = %s"""
+            trans.add(sql, [self._id])
+            inv = trans.execute()[0]
+
         return inv[0] if inv is not None else inv
 
     @property

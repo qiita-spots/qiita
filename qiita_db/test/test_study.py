@@ -605,12 +605,12 @@ class TestStudy(TestCase):
             self.study.set_pmids('123456')
 
     def test_retrieve_investigation(self):
-        self.assertEqual(self.study.investigation, 1)
+        self.assertEqual(self.study.investigation(), 1)
 
     def test_retrieve_investigation_empty(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        self.assertEqual(new.investigation, None)
+        self.assertEqual(new.investigation(), None)
 
     def test_retrieve_sample_template(self):
         self.assertEqual(self.study.sample_template, 1)
