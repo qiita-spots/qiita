@@ -733,20 +733,27 @@ class Study(QiitaObject):
             trans.add(sql, [self._id])
             return [x[0] for x in trans.execute()[-1]]
 
-    @property
-    def owner(self):
+    def owner(self, trans=None):
         """Gets the owner of the study
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         str
             The email (id) of the user that owns this study
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """select email from qiita.{} where study_id = %s""".format(
-            self._table)
+        trans = trans if trans is not None else Transaction("owner_%s"
+                                                            % self._id)
+        with trans:
+            sql = """select email from qiita.{} where study_id = %s""".format(
+                self._table)
+            trans.add(sql, [self._id])
 
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
+            return trans.execute()[-1][0][0]
 
     @property
     def environmental_packages(self):

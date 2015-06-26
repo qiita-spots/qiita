@@ -260,7 +260,10 @@ class TestStudy(TestCase):
         self.assertFalse(self.study.has_access(User("demo@microbio.me"), True))
 
     def test_owner(self):
-        self.assertEqual(self.study.owner, "test@foo.bar")
+        self.assertEqual(self.study.owner(), "test@foo.bar")
+
+        with Transaction("test_owner") as trans:
+            self.assertEqual(self.study.owner(trans=trans), "test@foo.bar")
 
     def test_share(self):
         # Clear all sharing associations
