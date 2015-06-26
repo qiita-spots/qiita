@@ -834,7 +834,7 @@ class Study(QiitaObject):
             trans.execute()
 
     # --- methods ---
-    def raw_data(self, data_type=None):
+    def raw_data(self, data_type=None, trans=None):
         """ Returns list of data ids for raw data info
 
         Parameters
@@ -850,14 +850,17 @@ class Study(QiitaObject):
         if data_type:
             spec_data = " AND data_type_id = %d" % convert_to_id(data_type,
                                                                  "data_type")
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT raw_data_id
-                 FROM qiita.study_prep_template
-                    JOIN qiita.prep_template USING (prep_template_id)
-                    JOIN qiita.raw_data USING (raw_data_id)
-                 WHERE study_id = %s{0}""".format(spec_data)
 
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+        trans = trans if trans is not None else Transaction("raw_data_%s"
+                                                            % self._id)
+        with trans:
+            sql = """SELECT raw_data_id
+                     FROM qiita.study_prep_template
+                        JOIN qiita.prep_template USING (prep_template_id)
+                        JOIN qiita.raw_data USING (raw_data_id)
+                     WHERE study_id = %s{0}""".format(spec_data)
+            trans.add(sql, [self._id])
+            return [x[0] for x in trans.execute()[-1]]
 
     def prep_templates(self, data_type=None):
         """Return list of prep template ids

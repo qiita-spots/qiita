@@ -635,10 +635,16 @@ class TestStudy(TestCase):
     def test_retrieve_raw_data(self):
         self.assertEqual(self.study.raw_data(), [1])
 
+        with Transaction("test_retrieve_raw_data") as trans:
+            self.assertEqual(self.study.raw_data(trans=trans), [1])
+
     def test_retrieve_raw_data_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.raw_data(), [])
+
+        with Transaction("test_retrieve_raw_data_none") as trans:
+            self.assertEqual(new.raw_data(trans=trans), [])
 
     def test_retrieve_prep_templates(self):
         self.assertEqual(self.study.prep_templates(), [1])
