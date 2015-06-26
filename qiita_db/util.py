@@ -964,8 +964,13 @@ def get_lat_longs():
     return result
 
 
-def get_environmental_packages():
+def get_environmental_packages(trans=None):
     """Get the list of available environmental packages
+
+    Parameters
+    ----------
+    trans: Transaction, optional
+        Transaction in which this method should be executed
 
     Returns
     -------
@@ -974,9 +979,10 @@ def get_environmental_packages():
         environmental package name and the second string is the table where
         the metadata for the environmental package is stored
     """
-    conn_handler = SQLConnectionHandler()
-    return conn_handler.execute_fetchall(
-        "SELECT * FROM qiita.environmental_package")
+    trans = trans if trans is not None else Transaction("get_env_pkgs")
+    with trans:
+        trans.add("SELECT * FROM qiita.environmental_package")
+        return trans.execute()[-1]
 
 
 def get_timeseries_types():

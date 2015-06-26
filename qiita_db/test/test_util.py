@@ -640,6 +640,10 @@ class DBUtilTests(TestCase):
                ['water', 'ep_water']]
         self.assertEqual(sorted(obs), sorted(exp))
 
+        with Transaction("test_get_environmental_packages") as trans:
+            obs = get_environmental_packages(trans=trans)
+        self.assertEqual(sorted(obs), sorted(exp))
+
     def test_get_timeseries_types(self):
         obs = get_timeseries_types()
         exp = [[1, 'None', 'None'],
