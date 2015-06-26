@@ -106,7 +106,7 @@ from .base import QiitaObject
 from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
 from .util import (check_required_columns, check_table_cols, convert_to_id,
                    get_environmental_packages, get_table_cols, infer_status)
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import SQLConnectionHandler, Transaction
 from .util import exists_table
 
 
@@ -315,36 +315,39 @@ class Study(QiitaObject):
         # No nuns allowed
         insertdict = {k: v for k, v in viewitems(insertdict) if v is not None}
 
-        conn_handler = SQLConnectionHandler()
-        # make sure dictionary only has keys for available columns in db
-        check_table_cols(conn_handler, insertdict, cls._table)
-        # make sure reqired columns in dictionary
-        check_required_columns(conn_handler, insertdict, cls._table)
+        with Transaction("create_%s" % title) as trans:
+            # make sure dictionary only has keys for available columns in db
+            check_table_cols(trans, insertdict, cls._table)
+            # make sure reqired columns in dictionary
+            check_required_columns(trans, insertdict, cls._table)
 
-        # Insert study into database
-        sql = ("INSERT INTO qiita.{0} ({1}) VALUES ({2}) RETURNING "
-               "study_id".format(cls._table, ','.join(insertdict),
-                                 ','.join(['%s'] * len(insertdict))))
-        # make sure data in same order as sql column names, and ids are used
-        data = []
-        for col in insertdict:
-            if isinstance(insertdict[col], QiitaObject):
-                data.append(insertdict[col].id)
-            else:
-                data.append(insertdict[col])
+            # Insert study into database
+            sql = ("INSERT INTO qiita.{0} ({1}) VALUES ({2}) RETURNING "
+                   "study_id".format(cls._table, ','.join(insertdict),
+                                     ','.join(['%s'] * len(insertdict))))
+            # make sure data in same order as sql column names,
+            # and ids are used
+            data = []
+            for col in insertdict:
+                if isinstance(insertdict[col], QiitaObject):
+                    data.append(insertdict[col].id)
+                else:
+                    data.append(insertdict[col])
 
-        study_id = conn_handler.execute_fetchone(sql, data)[0]
+            trans.add(sql, data)
+            study_id = trans.execute()[-1][0][0]
 
-        # insert efo information into database
-        sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
-               "efo_id) VALUES (%s, %s)".format(cls._table))
-        conn_handler.executemany(sql, [(study_id, e) for e in efo])
+            # insert efo information into database
+            sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
+                   "efo_id) VALUES (%s, %s)".format(cls._table))
+            trans.add(sql, [[study_id, e] for e in efo], many=True)
 
-        # add study to investigation if necessary
-        if investigation:
-            sql = ("INSERT INTO qiita.investigation_study (investigation_id, "
-                   "study_id) VALUES (%s, %s)")
-            conn_handler.execute(sql, (investigation.id, study_id))
+            # add study to investigation if necessary
+            if investigation:
+                sql = ("INSERT INTO qiita.investigation_study "
+                       "(investigation_id, study_id) VALUES (%s, %s)")
+                trans.add(sql, [investigation.id, study_id])
+            trans.execute()
 
         return cls(study_id)
 
