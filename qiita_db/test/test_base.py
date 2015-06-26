@@ -85,7 +85,7 @@ class QiitaStatusObjectTest(TestCase):
 
     def test_status(self):
         """Correctly returns the status of the object"""
-        self.assertEqual(self.tester.status, "in_construction")
+        self.assertEqual(self.tester.status(), "in_construction")
 
     def test_check_status_single(self):
         """check_status works passing a single status"""
