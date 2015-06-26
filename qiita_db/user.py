@@ -34,7 +34,8 @@ from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .base import QiitaObject
 from .sql_connection import SQLConnectionHandler, Transaction
-from .util import (create_rand_string, check_table_cols, hash_password)
+from .util import (create_rand_string, check_table_cols, hash_password,
+                   convert_to_id)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
@@ -144,8 +145,9 @@ class User(QiitaObject):
             info = trans.execute()[-1][0]
 
             # verify user email verification
-            # MAGIC NUMBER 5 = unverified email
-            if int(info[1]) == 5:
+            level_id = convert_to_id('unverified', 'user_level',
+                                     text_col='name', trans=trans)
+            if int(info[1]) == level_id:
                 return False
 
             # verify password

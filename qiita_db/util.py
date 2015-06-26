@@ -54,7 +54,7 @@ from datetime import datetime
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError, QiitaDBError
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import SQLConnectionHandler, Transaction
 
 
 def params_dict_to_json(options):
@@ -811,7 +811,7 @@ def filepath_ids_to_rel_paths(filepath_ids):
         return {}
 
 
-def convert_to_id(value, table, text_col=None):
+def convert_to_id(value, table, text_col=None, trans=None):
     """Converts a string value to its corresponding table identifier
 
     Parameters
@@ -834,13 +834,17 @@ def convert_to_id(value, table, text_col=None):
         The passed string has no associated id
     """
     text_col = table if text_col is None else text_col
-    conn_handler = SQLConnectionHandler()
-    sql = "SELECT {0}_id FROM qiita.{0} WHERE {1} = %s".format(table, text_col)
-    _id = conn_handler.execute_fetchone(sql, (value, ))
-    if _id is None:
+    trans = trans if trans is not None else Transaction("convert_to_id")
+    with trans:
+        sql = "SELECT {0}_id FROM qiita.{0} WHERE {1} = %s".format(table,
+                                                                   text_col)
+        trans.add(sql, [value])
+        _id = trans.execute()[-1]
+
+    if not _id:
         raise IncompetentQiitaDeveloperError("%s not valid for table %s"
                                              % (value, table))
-    return _id[0]
+    return _id[0][0]
 
 
 def convert_from_id(value, table):
