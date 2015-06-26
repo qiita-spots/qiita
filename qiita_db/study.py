@@ -755,30 +755,38 @@ class Study(QiitaObject):
 
             return trans.execute()[-1][0][0]
 
-    @property
-    def environmental_packages(self):
+    def environmental_packages(self, trans=None):
         """Gets the environmental packages associated with the study
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         list of str
             The environmental package names associated with the study
         """
-        conn_handler = SQLConnectionHandler()
-        env_pkgs = conn_handler.execute_fetchall(
-            "SELECT environmental_package_name FROM "
-            "qiita.study_environmental_package WHERE study_id = %s",
-            (self._id,))
+        trans = trans if trans is not None else Transaction("env_pkgs_%s"
+                                                            % self._id)
+        with trans:
+            sql = """SELECT environmental_package_name
+                     FROM qiita.study_environmental_package
+                     WHERE study_id = %s"""
+            trans.add(sql, [self._id])
+            env_pkgs = trans.execute()[-1]
         return [pkg[0] for pkg in env_pkgs]
 
-    @environmental_packages.setter
-    def environmental_packages(self, values):
+    def set_environmental_packages(self, values, trans=None):
         """Sets the environmental packages for the study
 
         Parameters
         ----------
         values : list of str
             The list of environmental package names to associate with the study
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Raises
         ------
@@ -787,43 +795,43 @@ class Study(QiitaObject):
         ValueError
             If any environmental packages listed on values is not recognized
         """
-        # Get the connection to the database
-        conn_handler = SQLConnectionHandler()
+        trans = trans if trans is not None else Transaction("set_env_pkgs_%s"
+                                                            % self._id)
 
-        # The environmental packages can be changed only if the study is
-        # sandboxed
-        self._lock_non_sandbox(conn_handler)
+        with trans:
+            # The environmental packages can be changed only if the study is
+            # sandboxed
+            self._lock_non_sandbox(trans)
 
-        # Check that a list is actually passed
-        if not isinstance(values, list):
-            raise TypeError('Environmental packages should be a list')
+            # Check that a list is actually passed
+            if not isinstance(values, list):
+                raise TypeError('Environmental packages should be a list')
 
-        # Get all the environmental packages
-        env_pkgs = [pkg[0] for pkg in get_environmental_packages()]
+            # Get all the environmental packages
+            env_pkgs = [pkg[0]
+                        for pkg in get_environmental_packages(trans=trans)]
 
-        # Check that all the passed values are valid environmental packages
-        missing = set(values).difference(env_pkgs)
-        if missing:
-            raise ValueError('Environmetal package(s) not recognized: %s'
-                             % ', '.join(missing))
+            # Check that all the passed values are valid environmental packages
+            missing = set(values).difference(env_pkgs)
+            if missing:
+                raise ValueError('Environmetal package(s) not recognized: %s'
+                                 % ', '.join(missing))
 
-        # Create a queue for the operations that we need to do
-        queue = "%d_env_pkgs_setter" % self._id
-        conn_handler.create_queue(queue)
+            # Delete the previous environmental packages associated
+            # with the study
+            sql = """DELETE FROM qiita.study_environmental_package
+                     WHERE study_id=%s"""
+            sql_args = [self._id]
+            trans.add(sql, sql_args)
 
-        # Delete the previous environmental packages associated with the study
-        sql = "DELETE FROM qiita.study_environmental_package WHERE study_id=%s"
-        sql_args = (self._id,)
-        conn_handler.add_to_queue(queue, sql, sql_args)
+            # Set the new ones
+            sql = ("INSERT INTO qiita.study_environmental_package "
+                   "(study_id, environmental_package_name) VALUES (%s, %s)")
+            sql_args = [[self._id, val] for val in values]
+            trans.add(sql, sql_args, many=True)
 
-        # Set the new ones
-        sql = ("INSERT INTO qiita.study_environmental_package "
-               "(study_id, environmental_package_name) VALUES (%s, %s)")
-        sql_args = [(self._id, val) for val in values]
-        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
-
-        # Execute the queue
-        conn_handler.execute_queue(queue)
+            # Execute the queue
+            trans.execute()
 
     # --- methods ---
     def raw_data(self, data_type=None):

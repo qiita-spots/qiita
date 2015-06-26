@@ -671,37 +671,41 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.pmids, exp)
 
     def test_environmental_packages(self):
-        obs = self.study.environmental_packages
+        obs = self.study.environmental_packages()
         exp = ['soil', 'plant-associated']
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        with Transaction() as trans:
+            obs = self.study.environmental_packages(trans=trans)
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_environmental_packages_setter(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        obs = new.environmental_packages
+        obs = new.environmental_packages()
         exp = []
         self.assertEqual(obs, exp)
 
         new_values = ['air', 'human-oral']
-        new.environmental_packages = new_values
-        obs = new.environmental_packages
+        new.set_environmental_packages(new_values)
+        obs = new.environmental_packages()
         self.assertEqual(sorted(obs), sorted(new_values))
 
     def test_environmental_packages_setter_typeerror(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(TypeError):
-            new.environmental_packages = 'air'
+            new.set_environmental_packages('air')
 
     def test_environmental_packages_setter_valueerror(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(ValueError):
-            new.environmental_packages = ['air', 'not a package']
+            new.set_environmental_packages(['air', 'not a package'])
 
     def test_environmental_packages_sandboxed(self):
         with self.assertRaises(QiitaDBStatusError):
-            self.study.environmental_packages = ['air']
+            self.study.set_environmental_packages(['air'])
 
 
 if __name__ == "__main__":
