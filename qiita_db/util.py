@@ -262,13 +262,13 @@ def hash_password(password, hashedpw=None):
     return output
 
 
-def check_required_columns(conn_handler, keys, table):
+def check_required_columns(trans, keys, table):
     """Makes sure all required columns in database table are in keys
 
     Parameters
     ----------
-    conn_handler: SQLConnectionHandler object
-        Previously opened connection to the database
+    trans: Tranasction
+        Transaction in which this method should be executed
     keys: iterable
         Holds the keys in the dictionary
     table: str
@@ -284,7 +284,8 @@ def check_required_columns(conn_handler, keys, table):
     sql = ("SELECT is_nullable, column_name, column_default "
            "FROM information_schema.columns "
            "WHERE table_name = %s")
-    cols = conn_handler.execute_fetchall(sql, (table, ))
+    trans.add(sql, [table])
+    cols = trans.execute()[-1]
     # Test needed because a user with certain permissions can query without
     # error but be unable to get the column names
     if len(cols) == 0:

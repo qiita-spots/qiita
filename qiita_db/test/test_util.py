@@ -65,13 +65,14 @@ class DBUtilTests(TestCase):
 
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
-        check_required_columns(self.conn_handler, self.required, self.table)
+        with Transaction("test_check_required_columns") as trans:
+            check_required_columns(trans, self.required, self.table)
 
     def test_check_required_columns_fail(self):
         self.required.remove('study_title')
         with self.assertRaises(QiitaDBColumnError):
-            check_required_columns(self.conn_handler, self.required,
-                                   self.table)
+            with Transaction("test_check_required_columns_fail") as trans:
+                check_required_columns(trans, self.required, self.table)
 
     def test_get_lat_longs(self):
         exp = [
