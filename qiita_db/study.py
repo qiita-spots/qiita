@@ -103,7 +103,8 @@ import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .base import QiitaObject
-from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
+from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError,
+                         QiitaDBDuplicateError)
 from .util import (check_required_columns, check_table_cols, convert_to_id,
                    get_environmental_packages, get_table_cols, infer_status)
 from .sql_connection import SQLConnectionHandler, Transaction
@@ -162,7 +163,7 @@ class Study(QiitaObject):
 
         Parameters
         ----------
-        trans: Transaction
+        trans: Transaction, optional
             Transaction in which this method should be executed
         """
         trans = trans if trans is not None else Transaction("study_status_%s"
@@ -182,35 +183,40 @@ class Study(QiitaObject):
             return infer_status(pd_statuses)
 
     @classmethod
-    def get_by_status(cls, status):
+    def get_by_status(cls, status, trans=None):
         """Returns study id for all Studies with given status
 
         Parameters
         ----------
         status : str
             Status setting to search for
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         set of int
             All study ids in the database that match the given status
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT study_id FROM qiita.study_processed_data spd
-                JOIN qiita.processed_data pd
+        trans = trans if trans is not None else Transaction(
+            "get_study_by_status")
+        with trans:
+            sql = """SELECT study_id FROM qiita.study_processed_data spd
+                    JOIN qiita.processed_data pd
                     ON spd.processed_data_id=pd.processed_data_id
-                JOIN qiita.processed_data_status pds
+                    JOIN qiita.processed_data_status pds
                     ON pds.processed_data_status_id=pd.processed_data_status_id
-                WHERE pds.processed_data_status=%s"""
-        studies = {x[0] for x in
-                   conn_handler.execute_fetchall(sql, (status, ))}
-        # If status is sandbox, all the studies that are not present in the
-        # study_processed_data are also sandbox
-        if status == 'sandbox':
-            sql = """SELECT study_id FROM qiita.study WHERE study_id NOT IN (
-                     SELECT study_id FROM qiita.study_processed_data)"""
-            extra_studies = {x[0] for x in conn_handler.execute_fetchall(sql)}
-            studies = studies.union(extra_studies)
+                    WHERE pds.processed_data_status=%s"""
+            trans.add(sql, [status])
+            studies = {x[0] for x in trans.execute()}
+            # If status is sandbox, all the studies that are not present in the
+            # study_processed_data are also sandbox
+            if status == 'sandbox':
+                sql = """SELECT study_id FROM qiita.study WHERE study_id NOT IN (
+                         SELECT study_id FROM qiita.study_processed_data)"""
+                trans.add(sql)
+                extra_studies = {x[0] for x in trans.execute()}
+                studies = studies.union(extra_studies)
 
         return studies
 
@@ -254,23 +260,27 @@ class Study(QiitaObject):
         return conn_handler.execute_fetchall(sql)
 
     @classmethod
-    def exists(cls, study_title):
+    def exists(cls, study_title, trans=None):
         """Check if a study exists based on study_title, which is unique
 
         Parameters
         ----------
         study_title : str
             The title of the study to search for in the database
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         bool
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT exists(select study_id from qiita.{} WHERE "
-               "study_title = %s)").format(cls._table)
-
-        return conn_handler.execute_fetchone(sql, [study_title])[0]
+        trans = trans if trans is not None else Transaction("exists_%s"
+                                                            % study_title)
+        with trans:
+            sql = ("SELECT exists(select study_id from qiita.{} WHERE "
+                   "study_title = %s)").format(cls._table)
+            trans.add(sql, [study_title])
+            return trans.execute()[-1][0][0]
 
     @classmethod
     def create(cls, owner, title, efo, info, investigation=None):
@@ -292,6 +302,8 @@ class Study(QiitaObject):
 
         Raises
         ------
+        QiitaDBDuplicateError
+            If another study with the same title already exists in the DB
         QiitaDBColumnError
             Non-db columns in info dictionary
             All required keys not passed
@@ -313,17 +325,21 @@ class Study(QiitaObject):
         if not efo:
             raise IncompetentQiitaDeveloperError("Need EFO information!")
 
-        # add default values to info
-        insertdict = deepcopy(info)
-        insertdict['email'] = owner.id
-        insertdict['study_title'] = title
-        if "reprocess" not in insertdict:
-            insertdict['reprocess'] = False
-
-        # No nuns allowed
-        insertdict = {k: v for k, v in viewitems(insertdict) if v is not None}
-
         with Transaction("create_%s" % title) as trans:
+            if cls.exists(title, trans=trans):
+                raise QiitaDBDuplicateError("Study", "title: %s" % title)
+
+            # add default values to info
+            insertdict = deepcopy(info)
+            insertdict['email'] = owner.id
+            insertdict['study_title'] = title
+            if "reprocess" not in insertdict:
+                insertdict['reprocess'] = False
+
+            # No Nones allowed
+            insertdict = {k: v for k, v in viewitems(insertdict)
+                          if v is not None}
+
             # make sure dictionary only has keys for available columns in db
             check_table_cols(trans, insertdict, cls._table)
             # make sure reqired columns in dictionary
@@ -530,21 +546,36 @@ class Study(QiitaObject):
             trans.add(sql, data)
             trans.execute()
 
-    @property
-    def efo(self):
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT efo_id FROM qiita.{0}_experimental_factor WHERE "
-               "study_id = %s".format(self._table))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
+    def efo(self, trans=None):
+        """Gets the efo for the study
 
-    @efo.setter
-    def efo(self, efo_vals):
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
+
+        Returns
+        -------
+        list of str
+            The efos associated with the study
+        """
+        trans = trans if trans is not None else Transaction("efo_%s"
+                                                            % (self._id))
+        with trans:
+            sql = ("SELECT efo_id FROM qiita.{0}_experimental_factor WHERE "
+                   "study_id = %s".format(self._table))
+            trans.add(sql, [self._id])
+            return [x[0] for x in trans.execute()[-1]]
+
+    def set_efo(self, efo_vals, trans=None):
         """Sets the efo for the study
 
         Parameters
         ----------
         efo_vals : list
             Id(s) for the new efo values
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Raises
         ------
@@ -553,16 +584,20 @@ class Study(QiitaObject):
         """
         if not efo_vals:
             raise IncompetentQiitaDeveloperError("Need EFO information!")
-        conn_handler = SQLConnectionHandler()
-        self._lock_non_sandbox(conn_handler)
-        # wipe out any EFOs currently attached to study
-        sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
-               "study_id = %s".format(self._table))
-        conn_handler.execute(sql, (self._id, ))
-        # insert new EFO information into database
-        sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
-               "efo_id) VALUES (%s, %s)".format(self._table))
-        conn_handler.executemany(sql, [(self._id, efo) for efo in efo_vals])
+
+        trans = trans if trans is not None else Transaction("set_efo_%s"
+                                                            % (self._id))
+        with trans:
+            self._lock_non_sandbox(trans)
+            # wipe out any EFOs currently attached to study
+            sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
+                   "study_id = %s".format(self._table))
+            trans.add(sql, [self._id])
+            # insert new EFO information into database
+            sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
+                   "efo_id) VALUES (%s, %s)".format(self._table))
+            trans.add(sql, [[self._id, efo] for efo in efo_vals], many=True)
+            trans.execute()
 
     @property
     def shared_with(self):

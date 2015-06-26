@@ -13,7 +13,7 @@ from qiita_db.util import convert_to_id
 from qiita_db.sql_connection import Transaction
 from qiita_db.exceptions import (
     QiitaDBColumnError, QiitaDBStatusError, QiitaDBError,
-    QiitaDBUnknownIDError)
+    QiitaDBUnknownIDError, QiitaDBDuplicateError)
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -320,6 +320,12 @@ class TestStudy(TestCase):
                                      'Cannabis Soils'))
         self.assertFalse(Study.exists('Not Cannabis Soils'))
 
+        with Transaction("test_exists") as trans:
+            self.assertTrue(
+                Study.exists('Identification of the Microbiomes for '
+                             'Cannabis Soils', trans=trans))
+            self.assertFalse(Study.exists('Not Cannabis Soils', trans=trans))
+
     def test_create_study_min_data(self):
         """Insert a study into the database"""
         before = datetime.now()
@@ -412,6 +418,13 @@ class TestStudy(TestCase):
             "WHERE study_id = 3827")
         self.assertEqual(obsefo, [[1]])
 
+    def test_create_duplicate(self):
+        with self.assertRaises(QiitaDBDuplicateError):
+            Study.create(
+                User('test@foo.bar'),
+                'Identification of the Microbiomes for Cannabis Soils',
+                [1], self.info)
+
     def test_create_missing_required(self):
         """ Insert a study that is missing a required info key"""
         self.info.pop("study_alias")
@@ -476,26 +489,26 @@ class TestStudy(TestCase):
         self.assertEqual(new.title(), "Cannabis soils")
 
     def test_get_efo(self):
-        self.assertEqual(self.study.efo, [1])
+        self.assertEqual(self.study.efo(), [1])
 
     def test_set_efo(self):
         """Set efo with list efo_id"""
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        new.efo = [3, 4]
-        self.assertEqual(new.efo, [3, 4])
+        new.set_efo([3, 4])
+        self.assertEqual(new.efo(), [3, 4])
 
     def test_set_efo_empty(self):
         """Set efo with list efo_id"""
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            new.efo = []
+            new.set_efo([])
 
     def test_set_efo_public(self):
         """Set efo on a public study"""
         with self.assertRaises(QiitaDBStatusError):
-            self.study.efo = 6
+            self.study.set_efo([6])
 
     def test_retrieve_info(self):
         for key, val in viewitems(self.existingexp):
