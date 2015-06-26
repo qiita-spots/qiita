@@ -187,10 +187,23 @@ class DBUtilTests(TestCase):
                                        "status"), 3)
         self.assertEqual(convert_to_id("EMP", "portal_type", "portal"), 2)
 
+        with Transaction("test_convert_to_id") as trans:
+            self.assertEqual(
+                convert_to_id("directory", "filepath_type", trans=trans), 8)
+            self.assertEqual(
+                convert_to_id("running", "analysis_status", "status",
+                              trans=trans), 3)
+            self.assertEqual(
+                convert_to_id("EMP", "portal_type", "portal", trans=trans), 2)
+
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
             convert_to_id("FAKE", "filepath_type")
+
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            with Transaction("test_convert_to_id_bad_value") as trans:
+                convert_to_id("FAKE", "filepath_type", trans=trans)
 
     def test_get_filetypes(self):
         """Tests that get_filetypes works with valid arguments"""
