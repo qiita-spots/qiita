@@ -822,6 +822,8 @@ def convert_to_id(value, table, text_col=None, trans=None):
         The table that has the conversion
     text_col : str, optional
         Column holding the string value. Defaults to same as table name.
+    trans: Transaction, optional
+        Transaction in which this method should be executed
 
     Returns
     -------

@@ -15,6 +15,7 @@ from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.data import RawData
 from qiita_db.study import Study, StudyPerson
 from qiita_db.analysis import Analysis
+from qiita_db.sql_connection import Transaction
 
 
 @qiita_test_checker()
@@ -49,8 +50,9 @@ class QiitaBaseTest(TestCase):
 
     def test_check_id(self):
         """Correctly checks if an id exists on the database"""
-        self.assertTrue(self.tester._check_id(1))
-        self.assertFalse(self.tester._check_id(100))
+        with Transaction("test_check_id") as trans:
+            self.assertTrue(self.tester._check_id(1, trans))
+            self.assertFalse(self.tester._check_id(100, trans))
 
     def test_equal_self(self):
         """Equality works with the same object"""
@@ -83,7 +85,7 @@ class QiitaStatusObjectTest(TestCase):
 
     def test_status(self):
         """Correctly returns the status of the object"""
-        self.assertEqual(self.tester.status, "in_construction")
+        self.assertEqual(self.tester.status(), "in_construction")
 
     def test_check_status_single(self):
         """check_status works passing a single status"""

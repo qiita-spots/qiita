@@ -66,26 +66,24 @@ class User(QiitaObject):
     # The following columns are considered not part of the user info
     _non_info = {"email", "user_level_id", "password"}
 
-    def _check_id(self, id_):
+    def _check_id(self, id_, trans):
         r"""Check that the provided ID actually exists in the database
 
         Parameters
         ----------
         id_ : object
             The ID to test
+        trans: Transaction
+            Transaction in which this method should be executed
 
         Notes
         -----
         This function overwrites the base function, as sql layout doesn't
         follow the same conventions done in the other classes.
         """
-        self._check_subclass()
-
-        conn_handler = SQLConnectionHandler()
-
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
-            "email = %s)", (id_, ))[0]
+        sql = "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE email = %s)"
+        trans.add(sql, [id_])
+        return trans.execute()[-1][0][0]
 
     @classmethod
     def iter(cls):
