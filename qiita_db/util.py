@@ -367,25 +367,25 @@ def get_table_cols_w_type(table):
         "table_name=%s", (table,))
 
 
-def exists_table(table, conn_handler):
+def exists_table(table, trans):
     r"""Checks if `table` exists on the database connected through
-    `conn_handler`
+    `trans`
 
     Parameters
     ----------
     table : str
         The table name to check if exists
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
+    trans: Transaction
+        Transaction in which this method should be executed
     """
-    return conn_handler.execute_fetchone(
-        "SELECT exists(SELECT * FROM information_schema.tables WHERE "
-        "table_name=%s)", (table,))[0]
+    trans.add("SELECT exists(SELECT * FROM information_schema.tables "
+              "WHERE table_name=%s)", [table])
+    return trans.execute()[-1][0][0]
 
 
-def exists_dynamic_table(table, prefix, suffix, conn_handler):
+def exists_dynamic_table(table, prefix, suffix, trans):
     r"""Checks if the dynamic `table` exists on the database connected through
-    `conn_handler`, and its name starts with prefix and ends with suffix
+    `trans`, and its name starts with prefix and ends with suffix
 
     Parameters
     ----------
@@ -395,11 +395,11 @@ def exists_dynamic_table(table, prefix, suffix, conn_handler):
         The table name prefix
     suffix : str
         The table name suffix
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
+    trans: Transaction
+        Transaction in which this method should be executed
     """
     return (table.startswith(prefix) and table.endswith(suffix) and
-            exists_table(table, conn_handler))
+            exists_table(table, trans))
 
 
 def get_db_files_base_dir():
