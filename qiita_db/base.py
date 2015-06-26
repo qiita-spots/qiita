@@ -27,7 +27,7 @@ Classes
 
 from __future__ import division
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .sql_connection import SQLConnectionHandler, Transaction
+from .sql_connection import Transaction
 from .exceptions import QiitaDBNotImplementedError, QiitaDBUnknownIDError
 
 
