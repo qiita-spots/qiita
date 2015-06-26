@@ -365,71 +365,64 @@ class Study(QiitaObject):
         QiitaDBError
             If the sample_(id_) table exists means a sample template exists
         """
-        cls._check_subclass()
+        with Transaction("delete_study_%d" % id_) as trans:
+            # checking that the id_ exists
+            st = cls(id_, trans=trans)
 
-        # checking that the id_ exists
-        cls(id_)
+            if exists_table('sample_%d' % id_, trans):
+                raise QiitaDBError(
+                    'Study "%s" cannot be erased because it has a '
+                    'sample template' % st.title(trans))
 
-        conn_handler = SQLConnectionHandler()
-        if exists_table('sample_%d' % id_, conn_handler):
-            raise QiitaDBError('Study "%s" cannot be erased because it has a '
-                               'sample template' % cls(id_).title)
+            sql = "DELETE FROM qiita.study_sample_columns WHERE study_id = %s"
+            args = [id_]
+            trans.add(sql, args)
 
-        queue = "delete_study_%d" % id_
-        conn_handler.create_queue(queue)
+            sql = """DELETE FROM qiita.study_experimental_factor
+                     WHERE study_id = %s"""
+            trans.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_sample_columns WHERE study_id = %s",
-            (id_, ))
+            sql = "DELETE FROM qiita.study_pmid WHERE study_id = %s"
+            trans.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_experimental_factor WHERE study_id = %s",
-            (id_, ))
+            sql = """DELETE FROM qiita.study_environmental_package
+                     WHERE study_id = %s"""
+            trans.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_pmid WHERE study_id = %s", (id_, ))
+            sql = "DELETE FROM qiita.study_users WHERE study_id = %s"
+            trans.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_environmental_package WHERE study_id = "
-            "%s", (id_, ))
+            sql = "DELETE FROM qiita.investigation_study WHERE study_id = %s"
+            trans.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_users WHERE study_id = %s", (id_, ))
+            sql = "DELETE FROM qiita.study WHERE study_id = %s"
+            trans.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.investigation_study WHERE study_id = "
-            "%s", (id_, ))
-
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study WHERE study_id = %s", (id_, ))
-
-        conn_handler.execute_queue(queue)
+            trans.execute()
 
 
 # --- Attributes ---
-    @property
-    def title(self):
+    def title(self, trans=None):
         """Returns the title of the study
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         str
             Title of study
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT study_title FROM qiita.{0} WHERE "
-               "study_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        trans = trans if trans is not None else Transaction(
+            "study_title_%s" % self._id)
+        with trans:
+            sql = ("SELECT study_title FROM qiita.{0} WHERE "
+                   "study_id = %s".format(self._table))
+            return trans.execute()[-1][0][0]
 
-    @title.setter
-    def title(self, title):
+    def set_title(self, title):
         """Sets the title of the study
 
         Parameters
