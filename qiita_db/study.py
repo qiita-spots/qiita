@@ -152,26 +152,34 @@ class Study(QiitaObject):
         get_table_cols('timeseries_type'), get_table_cols('portal_type'),
         get_table_cols('study_pmid')))
 
-    def _lock_non_sandbox(self, conn_handler):
+    def _lock_non_sandbox(self, trans):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
-        if self.status != 'sandbox':
+        if self.status(trans) != 'sandbox':
             raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
 
-    @property
-    def status(self):
-        r"""The status is inferred by the status of its processed data"""
-        conn_handler = SQLConnectionHandler()
-        # Get the status of all its processed data
-        sql = """SELECT processed_data_status
-                FROM qiita.processed_data_status pds
-                  JOIN qiita.processed_data pd
-                    USING (processed_data_status_id)
-                  JOIN qiita.study_processed_data spd
-                    USING (processed_data_id)
-                WHERE spd.study_id = %s"""
-        pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
+    def status(self, trans=None):
+        r"""The status is inferred by the status of its processed data
 
-        return infer_status(pd_statuses)
+        Parameters
+        ----------
+        trans: Transaction
+            Transaction in which this method should be executed
+        """
+        trans = trans if trans is not None else Transaction("study_status_%s"
+                                                            % self._id)
+        with trans:
+            # Get the status of all its processed data
+            sql = """SELECT processed_data_status
+                     FROM qiita.processed_data_status pds
+                        JOIN qiita.processed_data pd
+                            USING (processed_data_status_id)
+                        JOIN qiita.study_processed_data spd
+                            USING (processed_data_id)
+                     WHERE spd.study_id = %s"""
+            trans.add(sql, [self._id])
+            pd_statuses = trans.execute()[-1]
+
+            return infer_status(pd_statuses)
 
     @classmethod
     def get_by_status(cls, status):
@@ -415,54 +423,69 @@ class Study(QiitaObject):
         str
             Title of study
         """
-        trans = trans if trans is not None else Transaction(
-            "study_title_%s" % self._id)
+        trans = trans if trans is not None else Transaction("title_%s"
+                                                            % self._id)
         with trans:
             sql = ("SELECT study_title FROM qiita.{0} WHERE "
                    "study_id = %s".format(self._table))
+            trans.add(sql, [self._id])
             return trans.execute()[-1][0][0]
 
-    def set_title(self, title):
+    def set_title(self, title, trans=None):
         """Sets the title of the study
 
         Parameters
         ----------
         title : str
             The new study title
+        trans: Transaction, optional
+            Transaction in which this method should be executed
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET study_title = %s WHERE "
-               "study_id = %s".format(self._table))
-        return conn_handler.execute(sql, (title, self._id))
+        trans = trans if trans is not None else Transaction("set_title_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("UPDATE qiita.{0} SET study_title = %s WHERE "
+                   "study_id = %s".format(self._table))
+            trans.add(sql, [title, self._id])
+            return trans.execute()
 
-    @property
-    def info(self):
+    def info(self, trans=None):
         """Dict with all information attached to the study
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         dict
             info of study keyed to column names
         """
-        conn_handler = SQLConnectionHandler()
-        sql = "SELECT * FROM qiita.{0} WHERE study_id = %s".format(self._table)
-        info = dict(conn_handler.execute_fetchone(sql, (self._id, )))
-        # remove non-info items from info
-        for item in self._non_info:
-            info.pop(item)
-        # This is an optional column, but should not be considered part of the
-        # info
-        info.pop('study_id')
+        trans = trans if trans is not None else Transaction("study_info_%s"
+                                                            % (self._id))
+        with trans:
+            sql = "SELECT * FROM qiita.{0} WHERE study_id = %s".format(
+                self._table)
+            trans.add(sql, [self._id])
+            info = dict(trans.execute()[-1][0])
+            # remove non-info items from info
+            for item in self._non_info:
+                info.pop(item)
+            # This is an optional column, but should not be considered part
+            # of the info
+            info.pop('study_id')
         return info
 
-    @info.setter
-    def info(self, info):
+    def set_info(self, info, trans=None):
         """Updates the information attached to the study
 
         Parameters
         ----------
         info : dict
             information to change/update for the study, keyed to column name
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Raises
         ------
@@ -481,29 +504,31 @@ class Study(QiitaObject):
             raise QiitaDBColumnError("non info keys passed: %s" %
                                      self._non_info.intersection(info))
 
-        conn_handler = SQLConnectionHandler()
+        trans = trans if trans is not None else Transaction("set_study_info_%s"
+                                                            % (self._id))
+        with trans:
+            if 'timeseries_type_id' in info:
+                # We only lock if the timeseries type changes
+                self._lock_non_sandbox(trans)
 
-        if 'timeseries_type_id' in info:
-            # We only lock if the timeseries type changes
-            self._lock_non_sandbox(conn_handler)
+            # make sure dictionary only has keys for available columns in db
+            check_table_cols(trans, info, self._table)
 
-        # make sure dictionary only has keys for available columns in db
-        check_table_cols(conn_handler, info, self._table)
+            sql_vals = []
+            data = []
+            # build query with data values in correct order for SQL statement
+            for key, val in viewitems(info):
+                sql_vals.append("{0} = %s".format(key))
+                if isinstance(val, QiitaObject):
+                    data.append(val.id)
+                else:
+                    data.append(val)
+            data.append(self._id)
 
-        sql_vals = []
-        data = []
-        # build query with data values in correct order for SQL statement
-        for key, val in viewitems(info):
-            sql_vals.append("{0} = %s".format(key))
-            if isinstance(val, QiitaObject):
-                data.append(val.id)
-            else:
-                data.append(val)
-        data.append(self._id)
-
-        sql = ("UPDATE qiita.{0} SET {1} WHERE "
-               "study_id = %s".format(self._table, ','.join(sql_vals)))
-        conn_handler.execute(sql, data)
+            sql = ("UPDATE qiita.{0} SET {1} WHERE "
+                   "study_id = %s".format(self._table, ','.join(sql_vals)))
+            trans.add(sql, data)
+            trans.execute()
 
     @property
     def efo(self):

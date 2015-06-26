@@ -10,6 +10,7 @@ from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
 from qiita_db.util import convert_to_id
+from qiita_db.sql_connection import Transaction
 from qiita_db.exceptions import (
     QiitaDBColumnError, QiitaDBStatusError, QiitaDBError,
     QiitaDBUnknownIDError)
@@ -455,14 +456,24 @@ class TestStudy(TestCase):
             Study.delete(41)
 
     def test_retrieve_title(self):
-        self.assertEqual(self.study.title, 'Identification of the Microbiomes'
-                         ' for Cannabis Soils')
+        self.assertEqual(
+            self.study.title(),
+            'Identification of the Microbiomes for Cannabis Soils')
+        with Transaction("test_retrieve_title") as trans:
+            self.assertEqual(
+                self.study.title(trans=trans),
+                'Identification of the Microbiomes for Cannabis Soils')
 
     def test_set_title(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        new.title = "Cannabis soils"
-        self.assertEqual(new.title, "Cannabis soils")
+
+        new.set_title("Cannabis soils")
+        self.assertEqual(new.title(), "Cannabis soils")
+
+        with Transaction("test_set_title") as trans:
+            new.set_title("Cannabis soils", trans=trans)
+        self.assertEqual(new.title(), "Cannabis soils")
 
     def test_get_efo(self):
         self.assertEqual(self.study.efo, [1])
@@ -490,7 +501,10 @@ class TestStudy(TestCase):
         for key, val in viewitems(self.existingexp):
             if isinstance(val, QiitaObject):
                 self.existingexp[key] = val.id
-        self.assertEqual(self.study.info, self.existingexp)
+        self.assertEqual(self.study.info(), self.existingexp)
+
+        with Transaction("test_retrieve_info") as trans:
+            self.assertEqual(self.study.info(trans=trans), self.existingexp)
 
     def test_set_info(self):
         """Set info in a study"""
@@ -505,7 +519,7 @@ class TestStudy(TestCase):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.infoexp.update(newinfo)
-        new.info = newinfo
+        new.set_info(newinfo)
         # add missing table cols
         self.infoexp["funding"] = None
         self.infoexp["spatial_series"] = None
@@ -518,28 +532,31 @@ class TestStudy(TestCase):
 
     def test_set_info_public(self):
         """Tests for fail if editing info of a public study"""
-        self.study.info = {"vamps_id": "12321312"}
+        self.study.set_info({"vamps_id": "12321312"})
 
     def test_set_info_public_error(self):
         """Tests for fail if trying to modify timeseries of a public study"""
         with self.assertRaises(QiitaDBStatusError):
-            self.study.info = {"timeseries_type_id": 2}
+            self.study.set_info({"timeseries_type_id": 2})
 
     def test_set_info_disallowed_keys(self):
         """Tests for fail if sending non-info keys in info dict"""
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(QiitaDBColumnError):
-            new.info = {"email": "fail@fail.com"}
+            new.set_info({"email": "fail@fail.com"})
 
     def test_info_empty(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            new.info = {}
+            new.set_info({})
 
     def test_retrieve_status(self):
-        self.assertEqual(self.study.status, "private")
+        self.assertEqual(self.study.status(), "private")
+
+        with Transaction("test_retrieve_status") as trans:
+            self.assertEqual(self.study.status(trans=trans), "private")
 
     def test_retrieve_shared_with(self):
         self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
