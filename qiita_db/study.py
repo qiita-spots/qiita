@@ -620,28 +620,36 @@ class Study(QiitaObject):
             trans.add(sql, [self._id])
             return [x[0] for x in trans.execute()[-1]]
 
-    @property
-    def pmids(self):
+    def pmids(self, trans=None):
         """ Returns list of paper PMIDs from this study
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         list of str
             list of all the PMIDs
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT pmid FROM qiita.{0}_pmid WHERE "
-               "study_id = %s".format(self._table))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
+        trans = trans if trans is not None else Transaction("pmids_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("SELECT pmid FROM qiita.{0}_pmid WHERE "
+                   "study_id = %s".format(self._table))
+            trans.add(sql, [self._id])
+            return [x[0] for x in trans.execute()[-1]]
 
-    @pmids.setter
-    def pmids(self, values):
+    def set_pmids(self, values, trans=None):
         """Sets the pmids for the study
 
         Parameters
         ----------
         values : list of str
             The list of pmids to associate with the study
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Raises
         ------
@@ -652,25 +660,23 @@ class Study(QiitaObject):
         if not isinstance(values, list):
             raise TypeError('pmids should be a list')
 
-        # Get the connection to the database
-        conn_handler = SQLConnectionHandler()
+        trans = trans if trans is not None else Transaction("set_pmids_%s"
+                                                            % self._id)
 
-        # Create a queue for the operations that we need to do
-        queue = "%d_pmid_setter" % self._id
-        conn_handler.create_queue(queue)
+        with trans:
+            # Delete the previous pmids associated with the study
+            sql = "DELETE FROM qiita.study_pmid WHERE study_id=%s"
+            sql_args = [self._id]
+            trans.add(sql, sql_args)
 
-        # Delete the previous pmids associated with the study
-        sql = "DELETE FROM qiita.study_pmid WHERE study_id=%s"
-        sql_args = (self._id,)
-        conn_handler.add_to_queue(queue, sql, sql_args)
+            # Set the new ones
+            sql = """INSERT INTO qiita.study_pmid (study_id, pmid)
+                     VALUES (%s, %s)"""
+            sql_args = [(self._id, val) for val in values]
+            trans.add(sql, sql_args, many=True)
 
-        # Set the new ones
-        sql = "INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (%s, %s)"
-        sql_args = [(self._id, val) for val in values]
-        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
-
-        # Execute the queue
-        conn_handler.execute_queue(queue)
+            # Execute the queue
+            trans.execute()
 
     @property
     def investigation(self):

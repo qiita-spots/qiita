@@ -579,24 +579,30 @@ class TestStudy(TestCase):
 
     def test_retrieve_pmids(self):
         exp = ['123456', '7891011']
-        self.assertEqual(self.study.pmids, exp)
+        self.assertEqual(self.study.pmids(), exp)
+
+        with Transaction("test_retrieve_pmids") as trans:
+            self.assertEqual(self.study.pmids(trans=trans), exp)
 
     def test_retrieve_pmids_empty(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        self.assertEqual(new.pmids, [])
+        self.assertEqual(new.pmids(), [])
+
+        with Transaction("test_retrieve_pmids_empty") as trans:
+            self.assertEqual(self.study.pmids(trans=trans), [])
 
     def test_pmids_setter(self):
         exp = ['123456', '7891011']
-        self.assertEqual(self.study.pmids, exp)
+        self.assertEqual(self.study.pmids(), exp)
 
         new_values = ['654321', '1101987']
-        self.study.pmids = new_values
-        self.assertEqual(self.study.pmids, new_values)
+        self.study.set_pmids(new_values)
+        self.assertEqual(self.study.pmids(), new_values)
 
     def test_pmids_setter_typeerror(self):
         with self.assertRaises(TypeError):
-            self.study.pmids = '123456'
+            self.study.set_pmids('123456')
 
     def test_retrieve_investigation(self):
         self.assertEqual(self.study.investigation, 1)
