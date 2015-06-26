@@ -16,6 +16,7 @@ import pandas as pd
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_db.sql_connection import Transaction
 from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
 from qiita_db.data import RawData
 from qiita_db.study import Study
@@ -107,13 +108,14 @@ class DBUtilTests(TestCase):
 
     def test_check_table_cols(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
-        check_table_cols(self.conn_handler, self.required, self.table)
+        with Transaction("test_check_table_cols") as trans:
+            check_table_cols(trans, self.required, self.table)
 
     def test_check_table_cols_fail(self):
         self.required.append('BADTHINGNOINHERE')
         with self.assertRaises(QiitaDBColumnError):
-            check_table_cols(self.conn_handler, self.required,
-                             self.table)
+            with Transaction("test_check_table_cols_fail") as trans:
+                check_table_cols(trans, self.required, self.table)
 
     def test_get_table_cols(self):
         obs = get_table_cols("qiita_user")
@@ -185,10 +187,23 @@ class DBUtilTests(TestCase):
                                        "status"), 3)
         self.assertEqual(convert_to_id("EMP", "portal_type", "portal"), 2)
 
+        with Transaction("test_convert_to_id") as trans:
+            self.assertEqual(
+                convert_to_id("directory", "filepath_type", trans=trans), 8)
+            self.assertEqual(
+                convert_to_id("running", "analysis_status", "status",
+                              trans=trans), 3)
+            self.assertEqual(
+                convert_to_id("EMP", "portal_type", "portal", trans=trans), 2)
+
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
             convert_to_id("FAKE", "filepath_type")
+
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            with Transaction("test_convert_to_id_bad_value") as trans:
+                convert_to_id("FAKE", "filepath_type", trans=trans)
 
     def test_get_filetypes(self):
         """Tests that get_filetypes works with valid arguments"""

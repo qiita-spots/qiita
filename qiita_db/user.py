@@ -33,8 +33,9 @@ from re import sub
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .base import QiitaObject
-from .sql_connection import SQLConnectionHandler
-from .util import (create_rand_string, check_table_cols, hash_password)
+from .sql_connection import SQLConnectionHandler, Transaction
+from .util import (create_rand_string, check_table_cols, hash_password,
+                   convert_to_id)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
 
@@ -126,48 +127,57 @@ class User(QiitaObject):
         IncorrectPasswordError
             Password passed is not correct for user
         """
-        # see if user exists
-        if not cls.exists(email):
-            raise IncorrectEmailError("Email not valid: %s" % email)
+        trans = Transaction("login_%s" % email)
 
-        if not validate_password(password):
-            raise IncorrectPasswordError("Password not valid!")
+        with trans:
+            # see if user exists
+            if not cls.exists(email, trans=trans):
+                raise IncorrectEmailError("Email not valid: %s" % email)
 
-        # pull password out of database
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
-               "email = %s".format(cls._table))
-        info = conn_handler.execute_fetchone(sql, (email, ))
+            if not validate_password(password):
+                raise IncorrectPasswordError("Password not valid!")
 
-        # verify user email verification
-        # MAGIC NUMBER 5 = unverified email
-        if int(info[1]) == 5:
-            return False
+            # pull password out of database
+            sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
+                   "email = %s".format(cls._table))
+            trans.add(sql, [email])
 
-        # verify password
-        dbpass = info[0]
-        hashed = hash_password(password, dbpass)
-        if hashed == dbpass:
-            return cls(email)
-        else:
-            raise IncorrectPasswordError("Password not valid!")
+            info = trans.execute()[-1][0]
+
+            # verify user email verification
+            level_id = convert_to_id('unverified', 'user_level',
+                                     text_col='name', trans=trans)
+            if int(info[1]) == level_id:
+                return False
+
+            # verify password
+            dbpass = info[0]
+            hashed = hash_password(password, dbpass)
+            if hashed != dbpass:
+                raise IncorrectPasswordError("Password not valid!")
+
+        return cls(email)
 
     @classmethod
-    def exists(cls, email):
+    def exists(cls, email, trans=None):
         """Checks if a user exists on the database
 
         Parameters
         ----------
         email : str
             the email of the user
+        trans : Transaction, optional
+            The current transaction, if any.
         """
         if not validate_email(email):
             raise IncorrectEmailError("Email string not valid: %s" % email)
-        conn_handler = SQLConnectionHandler()
 
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "email = %s)".format(cls._table), (email, ))[0]
+        trans = trans if trans is not None else Transaction("exists_%s"
+                                                            % email)
+        with trans:
+            trans.add("SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
+                      "email = %s)".format(cls._table), [email])
+            return trans.execute()[-1][0][0]
 
     @classmethod
     def create(cls, email, password, info=None):
@@ -197,51 +207,48 @@ class User(QiitaObject):
         if not validate_password(password):
             raise IncorrectPasswordError("Bad password given!")
 
-        # make sure user does not already exist
-        if cls.exists(email):
-            raise QiitaDBDuplicateError("User", "email: %s" % email)
+        with Transaction("create_%s" % email) as trans:
+            # make sure user does not already exist
+            if cls.exists(email, trans=trans):
+                raise QiitaDBDuplicateError("User", "email: %s" % email)
 
-        # make sure non-info columns aren't passed in info dict
-        if info:
-            if cls._non_info.intersection(info):
-                raise QiitaDBColumnError("non info keys passed: %s" %
-                                         cls._non_info.intersection(info))
-        else:
-            info = {}
+            # make sure non-info columns aren't passed in info dict
+            if info:
+                if cls._non_info.intersection(info):
+                    raise QiitaDBColumnError("non info keys passed: %s" %
+                                             cls._non_info.intersection(info))
+            else:
+                info = {}
 
-        # create email verification code and hashed password to insert
-        # add values to info
-        info["email"] = email
-        info["password"] = hash_password(password)
-        info["user_verify_code"] = create_rand_string(20, punct=False)
+            # create email verification code and hashed password to insert
+            # add values to info
+            info["email"] = email
+            info["password"] = hash_password(password)
+            info["user_verify_code"] = create_rand_string(20, punct=False)
 
-        # make sure keys in info correspond to columns in table
-        conn_handler = SQLConnectionHandler()
-        check_table_cols(conn_handler, info, cls._table)
+            # make sure keys in info correspond to columns in table
+            check_table_cols(trans, info, cls._table)
 
-        # build info to insert making sure columns and data are in same order
-        # for sql insertion
-        columns = info.keys()
-        values = [info[col] for col in columns]
-        queue = "add_user_%s" % email
-        conn_handler.create_queue(queue)
-        # crete user
-        sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
-            cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
-        conn_handler.add_to_queue(queue, sql, values)
-        # create user default sample holder
-        sql = ("INSERT INTO qiita.analysis "
-               "(email, name, description, dflt, analysis_status_id) "
-               "VALUES (%s, %s, %s, %s, 1)")
-        conn_handler.add_to_queue(queue, sql,
-                                  (email, '%s-dflt' % email, 'dflt', True))
+            # build info to insert making sure columns and data are in same
+            # order for sql insertion
+            columns = info.keys()
+            values = [info[col] for col in columns]
+            # crete user
+            sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
+                cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
+            trans.add(sql, values)
+            # create user default sample holder
+            sql = ("INSERT INTO qiita.analysis "
+                   "(email, name, description, dflt, analysis_status_id) "
+                   "VALUES (%s, %s, %s, %s, 1)")
+            trans.add(sql, [email, '%s-dflt' % email, 'dflt', True])
 
-        conn_handler.execute_queue(queue)
+            trans.execute()
 
         return cls(email)
 
     @classmethod
-    def verify_code(cls, email, code, code_type):
+    def verify_code(cls, email, code, code_type, trans=None):
         """Verify that a code and email match
 
         Parameters
@@ -251,6 +258,8 @@ class User(QiitaObject):
         code : str
             code to verify
         code_type : {'create', 'reset'}
+        trans : Transaction, optional
+            The current transaction, if any.
 
         Returns
         -------
@@ -269,26 +278,34 @@ class User(QiitaObject):
             raise IncompetentQiitaDeveloperError("code_type must be 'create'"
                                                  " or 'reset' Uknown type "
                                                  "%s" % code_type)
-        sql = ("SELECT {1} from qiita.{0} where email"
-               " = %s".format(cls._table, column))
-        conn_handler = SQLConnectionHandler()
-        db_code = conn_handler.execute_fetchone(sql, (email,))
 
-        # If the query didn't return anything, then there's no way the code
-        # can match
-        if db_code is None:
-            return False
+        trans = trans if trans is not None else Transaction('verify_code_%s'
+                                                            % email)
+        with trans:
+            sql = ("SELECT {1} from qiita.{0} where email"
+                   " = %s".format(cls._table, column))
+            trans.add(sql, [email])
+            db_code = trans.execute()[-1][0]
 
-        db_code = db_code[0]
+            # If the query didn't return anything, then there's no way the code
+            # can match
+            if db_code is None:
+                return False
 
-        if db_code == code and code_type == "create":
-            # verify the user
-            level = conn_handler.execute_fetchone(
-                "SELECT user_level_id FROM qiita.user_level WHERE "
-                "name = %s", ("user", ))[0]
-            sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
-                   "email = %s".format(cls._table))
-            conn_handler.execute(sql, (level, email))
+            db_code = db_code[0]
+
+            if db_code == code and code_type == "create":
+                # verify the user
+                sql = ("SELECT user_level_id FROM qiita.user_level WHERE "
+                       "name = %s")
+                trans.add(sql, ['user'])
+                level = trans.execute()[-1][0][0]
+
+                sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
+                       "email = %s".format(cls._table))
+                trans.add(sql, [level, email])
+                trans.execute()
+
         return db_code == code
 
     # ---properties---
@@ -331,21 +348,22 @@ class User(QiitaObject):
             raise QiitaDBColumnError("non info keys passed!")
 
         # make sure keys in info correspond to columns in table
-        conn_handler = SQLConnectionHandler()
-        check_table_cols(conn_handler, info, self._table)
+        with Transaction("info_setter_%s" % self._id) as trans:
+            check_table_cols(trans, info, self._table)
 
-        # build sql command and data to update
-        sql_insert = []
-        data = []
-        # items used for py3 compatability
-        for key, val in info.items():
-            sql_insert.append("{0} = %s".format(key))
-            data.append(val)
-        data.append(self._id)
+            # build sql command and data to update
+            sql_insert = []
+            data = []
+            # items used for py3 compatability
+            for key, val in info.items():
+                sql_insert.append("{0} = %s".format(key))
+                data.append(val)
+            data.append(self._id)
 
-        sql = ("UPDATE qiita.{0} SET {1} WHERE "
-               "email = %s".format(self._table, ','.join(sql_insert)))
-        conn_handler.execute(sql, data)
+            sql = ("UPDATE qiita.{0} SET {1} WHERE "
+                   "email = %s".format(self._table, ','.join(sql_insert)))
+            trans.add(sql, data)
+            trans.execute()
 
     @property
     def default_analysis(self):
@@ -416,13 +434,13 @@ class User(QiitaObject):
         bool
             password changed or not
         """
-        conn_handler = SQLConnectionHandler()
-        dbpass = conn_handler.execute_fetchone(
-            "SELECT password FROM qiita.{0} WHERE email = %s".format(
-                self._table), (self._id, ))[0]
-        if dbpass == hash_password(oldpass, dbpass):
-            self._change_pass(newpass)
-            return True
+        with Transaction("change_password_%s" % self._id) as trans:
+            trans.add("SELECT password FROM qiita.{0} WHERE email = %s".format(
+                self._table), [self._id])
+            dbpass = trans.execute()[-1][0][0]
+            if dbpass == hash_password(oldpass, dbpass):
+                self._change_pass(newpass, trans)
+                return True
         return False
 
     def generate_reset_code(self):
@@ -449,19 +467,20 @@ class User(QiitaObject):
         bool
             password changed or not
         """
-        if self.verify_code(self._id, code, "reset"):
-            self._change_pass(newpass)
-            return True
+        with Transaction("change_forgot_password_%s" % self._id) as trans:
+            if self.verify_code(self._id, code, "reset", trans=trans):
+                self._change_pass(newpass, trans)
+                return True
         return False
 
-    def _change_pass(self, newpass):
+    def _change_pass(self, newpass, trans):
         if not validate_password(newpass):
             raise IncorrectPasswordError("Bad password given!")
 
         sql = ("UPDATE qiita.{0} SET password=%s, pass_reset_code=NULL WHERE "
                "email = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (hash_password(newpass), self._id))
+        trans.add(sql, [hash_password(newpass), self._id])
+        trans.execute()
 
 
 def validate_email(email):
