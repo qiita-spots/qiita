@@ -113,13 +113,15 @@ class QiitaObject(object):
             raise IncompetentQiitaDeveloperError(
                 "Could not instantiate an object of the base class")
 
-    def _check_id(self, id_):
+    def _check_id(self, id_, trans):
         r"""Check that the provided ID actually exists on the database
 
         Parameters
         ----------
         id_ : object
             The ID to test
+        trans: Transaction
+            Transaction in which this method should be executed
 
         Notes
         -----
@@ -128,28 +130,34 @@ class QiitaObject(object):
         the other classes. However, still defining here as there is only one
         subclass that doesn't follow this convention and it can override this.
         """
-        self._check_subclass()
+        sql = "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {0}_id=%s)".format(
+            self._table)
+        trans.add(sql, [id_])
+        return trans.execute()[-1][0][0]
 
-        conn_handler = SQLConnectionHandler()
-
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "{0}_id=%s)".format(self._table), (id_, ))[0]
-
-    def __init__(self, id_):
+    def __init__(self, id_, trans=None):
         r"""Initializes the object
 
         Parameters
         ----------
-        id_: the object identifier
+        id_: object
+            The object identifier
+        trans: Transaction
+            Transaction in which this method should be executed
 
         Raises
         ------
         QiitaDBUnknownIDError
             If `id_` does not correspond to any object
         """
-        if not self._check_id(id_):
-            raise QiitaDBUnknownIDError(id_, self._table)
+        self._check_subclass()
+
+        trans = trans if trans is not None else Transaction(
+            "init_%s_%s" % (self.__class__.__name__, id_))
+
+        with trans:
+            if not self._check_id(id_, trans):
+                raise QiitaDBUnknownIDError(id_, self._table)
 
         self._id = id_
 
