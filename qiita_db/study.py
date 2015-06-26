@@ -599,19 +599,26 @@ class Study(QiitaObject):
             trans.add(sql, [[self._id, efo] for efo in efo_vals], many=True)
             trans.execute()
 
-    @property
-    def shared_with(self):
+    def shared_with(self, trans=None):
         """list of users the study is shared with
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         list of User ids
             Users the study is shared with
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT email FROM qiita.{0}_users WHERE "
-               "study_id = %s".format(self._table))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+        trans = trans if trans is not None else Transaction("shared_with_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("SELECT email FROM qiita.{0}_users WHERE "
+                   "study_id = %s".format(self._table))
+            trans.add(sql, [self._id])
+            return [x[0] for x in trans.execute()[-1]]
 
     @property
     def pmids(self):

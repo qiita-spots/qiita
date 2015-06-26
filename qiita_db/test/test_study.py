@@ -266,20 +266,20 @@ class TestStudy(TestCase):
         # Clear all sharing associations
         self._change_processed_data_status('sandbox')
         self.conn_handler.execute("delete from qiita.study_users")
-        self.assertEqual(self.study.shared_with, [])
+        self.assertEqual(self.study.shared_with(), [])
 
         # Try to share with the owner, which should not work
         self.study.share(User("test@foo.bar"))
-        self.assertEqual(self.study.shared_with, [])
+        self.assertEqual(self.study.shared_with(), [])
 
         # Then share the study with shared@foo.bar
         self.study.share(User("shared@foo.bar"))
-        self.assertEqual(self.study.shared_with, ["shared@foo.bar"])
+        self.assertEqual(self.study.shared_with(), ["shared@foo.bar"])
 
     def test_unshare(self):
         self._change_processed_data_status('sandbox')
         self.study.unshare(User("shared@foo.bar"))
-        self.assertEqual(self.study.shared_with, [])
+        self.assertEqual(self.study.shared_with(), [])
 
     def test_has_access_shared(self):
         self._change_processed_data_status('sandbox')
@@ -572,7 +572,10 @@ class TestStudy(TestCase):
             self.assertEqual(self.study.status(trans=trans), "private")
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
+        self.assertEqual(self.study.shared_with(), ['shared@foo.bar'])
+        with Transaction("test_retrieve_shared_with") as trans:
+            self.assertEqual(
+                self.study.shared_with(trans=trans), ['shared@foo.bar'])
 
     def test_retrieve_pmids(self):
         exp = ['123456', '7891011']
