@@ -616,12 +616,18 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.sample_template, 1)
 
     def test_retrieve_data_types(self):
-        self.assertEqual(self.study.data_types, ['18S'])
+        self.assertEqual(self.study.data_types(), ['18S'])
+
+        with Transaction("test_retrieve_data_types") as trans:
+            self.assertEqual(self.study.data_types(trans=trans), ['18S'])
 
     def test_retrieve_data_types_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        self.assertEqual(new.data_types, [])
+        self.assertEqual(new.data_types(), [])
+
+        with Transaction("test_retrieve_data_types_none") as trans:
+            self.assertEqual(new.data_types(trans=trans), [])
 
     def test_retrieve_raw_data(self):
         self.assertEqual(self.study.raw_data(), [1])

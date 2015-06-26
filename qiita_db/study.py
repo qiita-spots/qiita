@@ -710,21 +710,28 @@ class Study(QiitaObject):
         """
         return self._id
 
-    @property
-    def data_types(self):
+    def data_types(self, trans=None):
         """Returns list of the data types for this study
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         list of str
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT DISTINCT data_type
-                 FROM qiita.study_prep_template
-                    JOIN qiita.prep_template USING (prep_template_id)
-                    JOIN qiita.data_type USING (data_type_id)
-                 WHERE study_id = %s"""
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+        trans = trans if trans is not None else Transaction("data_types_%s"
+                                                            % self._id)
+        with trans:
+            sql = """SELECT DISTINCT data_type
+                     FROM qiita.study_prep_template
+                        JOIN qiita.prep_template USING (prep_template_id)
+                        JOIN qiita.data_type USING (data_type_id)
+                     WHERE study_id = %s"""
+            trans.add(sql, [self._id])
+            return [x[0] for x in trans.execute()[-1]]
 
     @property
     def owner(self):
