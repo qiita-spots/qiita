@@ -841,6 +841,8 @@ class Study(QiitaObject):
         ----------
         data_type : str, optional
             If given, retrieve only raw_data for given datatype. Default None.
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
@@ -862,7 +864,7 @@ class Study(QiitaObject):
             trans.add(sql, [self._id])
             return [x[0] for x in trans.execute()[-1]]
 
-    def prep_templates(self, data_type=None):
+    def prep_templates(self, data_type=None, trans=trans):
         """Return list of prep template ids
 
         Parameters
@@ -870,6 +872,8 @@ class Study(QiitaObject):
         data_type : str, optional
             If given, retrieve only prep templates for given datatype.
             Default None.
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
@@ -880,12 +884,16 @@ class Study(QiitaObject):
             spec_data = " AND data_type_id = %s" % convert_to_id(data_type,
                                                                  "data_type")
 
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT prep_template_id
-                 FROM qiita.study_prep_template
-                    JOIN qiita.prep_template USING (prep_template_id)
-                 WHERE study_id = %s{0}""".format(spec_data)
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+        trans = trans if trans is not None else Transaction("prep_template_%s"
+                                                            % self._id)
+
+        with trans:
+            sql = """SELECT prep_template_id
+                     FROM qiita.study_prep_template
+                        JOIN qiita.prep_template USING (prep_template_id)
+                     WHERE study_id = %s{0}""".format(spec_data)
+            trans.add(sql, [self._id])
+            return [x[0] for x in trans.execute()]
 
     def preprocessed_data(self, data_type=None):
         """ Returns list of data ids for preprocessed data info

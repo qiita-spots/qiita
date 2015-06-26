@@ -649,10 +649,16 @@ class TestStudy(TestCase):
     def test_retrieve_prep_templates(self):
         self.assertEqual(self.study.prep_templates(), [1])
 
+        with Transaction("test_retrieve_prep_templates") as trans:
+            self.assertEqual(self.study.prep_templates(trans=trans), [1])
+
     def test_retrieve_prep_templates_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.prep_templates(), [])
+
+        with Transaction("test_retrieve_prep_templates_none") as trans:
+            self.assertEqual(new.prep_templates(trans=trans), [])
 
     def test_retrieve_preprocessed_data(self):
         self.assertEqual(self.study.preprocessed_data(), [1, 2])
