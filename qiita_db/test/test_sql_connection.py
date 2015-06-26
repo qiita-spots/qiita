@@ -199,15 +199,14 @@ class TestConnHandler(TestBase):
 
 class TestTransaction(TestBase):
     def test_init(self):
-        with Transaction("test_init") as obs:
-            obs = Transaction("test_init")
-            self.assertEqual(obs._name, "test_init")
-            self.assertEqual(obs._queries, [])
-            self.assertEqual(obs._results, [])
-            self.assertEqual(obs.index, 0)
-            self.assertTrue(
-                isinstance(obs._conn_handler, SQLConnectionHandler))
-            self.assertFalse(obs._is_inside_context)
+        obs = Transaction("test_init")
+        self.assertEqual(obs._name, "test_init")
+        self.assertEqual(obs._queries, [])
+        self.assertEqual(obs._results, [])
+        self.assertEqual(obs.index, 0)
+        self.assertTrue(
+            isinstance(obs._conn_handler, SQLConnectionHandler))
+        self.assertEqual(obs._contexts_entered, 0)
 
     def test_replace_placeholders(self):
         with Transaction("test_replace_placeholders") as trans:
@@ -313,7 +312,9 @@ class TestTransaction(TestBase):
             trans.add(sql, [20, False, "test_insert"])
             obs = trans.execute()
             self.assertEqual(obs, [None, None])
-            self._assert_sql_equal([("test_insert", False, 20)])
+            self._assert_sql_equal([])
+
+        self._assert_sql_equal([("test_insert", False, 20)])
 
     def test_execute_many(self):
         with Transaction("test_execute_many") as trans:
@@ -328,9 +329,11 @@ class TestTransaction(TestBase):
             obs = trans.execute()
             self.assertEqual(obs, [None, None, None, None])
 
-            self._assert_sql_equal([('insert1', True, 1),
-                                    ('insert3', True, 3),
-                                    ('insert2', False, 20)])
+            self._assert_sql_equal([])
+
+        self._assert_sql_equal([('insert1', True, 1),
+                                ('insert3', True, 3),
+                                ('insert2', False, 20)])
 
     def test_execute_return(self):
         with Transaction("test_execute_return") as trans:
@@ -374,7 +377,9 @@ class TestTransaction(TestBase):
             trans.add(sql, ["", "{0:0:0}"])
             obs = trans.execute()
             self.assertEqual(obs, [[['foo']], None])
-            self._assert_sql_equal([('', True, 2)])
+            self._assert_sql_equal([])
+
+        self._assert_sql_equal([('', True, 2)])
 
     def test_execute_error_bad_placeholder(self):
         with Transaction("test_execute_error_bad_placeholder") as trans:
@@ -436,7 +441,7 @@ class TestTransaction(TestBase):
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
             trans.add(sql, args, many=True)
 
-            obs = trans.execute(commit=False)
+            obs = trans.execute()
             exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
             self.assertEqual(obs, exp)
 
@@ -454,7 +459,7 @@ class TestTransaction(TestBase):
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
             trans.add(sql, args, many=True)
 
-            obs = trans.execute(commit=False)
+            obs = trans.execute()
             exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
             self.assertEqual(obs, exp)
 
@@ -471,7 +476,7 @@ class TestTransaction(TestBase):
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
             trans.add(sql, args, many=True)
 
-            obs = trans.execute(commit=False)
+            obs = trans.execute()
             exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
             self.assertEqual(obs, exp)
 
@@ -484,9 +489,10 @@ class TestTransaction(TestBase):
             self.assertEqual(trans._queries, [(sql, args)])
 
             trans.execute()
+            self._assert_sql_equal([])
 
-            self._assert_sql_equal([('insert1', True, 1), ('insert3', True, 3),
-                                    ('insert2', False, 2)])
+        self._assert_sql_equal([('insert1', True, 1), ('insert3', True, 3),
+                                ('insert2', False, 2)])
 
     def test_context_manager_rollback(self):
         try:
@@ -496,7 +502,7 @@ class TestTransaction(TestBase):
                 args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
                 trans.add(sql, args, many=True)
 
-                trans.execute(commit=False)
+                trans.execute()
                 raise ValueError("Force exiting the context manager")
         except ValueError:
             pass
@@ -526,7 +532,7 @@ class TestTransaction(TestBase):
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
             trans.add(sql, args, many=True)
 
-            trans.execute(commit=False)
+            trans.execute()
             self._assert_sql_equal([])
 
         self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
@@ -535,7 +541,38 @@ class TestTransaction(TestBase):
             trans._conn_handler._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
 
-    def test_context_managet_checker(self):
+    def test_context_manager_multiple(self):
+        trans = Transaction("test_context_manager_multiple")
+        self.assertEqual(trans._contexts_entered, 0)
+
+        with trans:
+            self.assertEqual(trans._contexts_entered, 1)
+
+            trans.add("SELECT 42")
+            with trans:
+                self.assertEqual(trans._contexts_entered, 2)
+                sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                         VALUES (%s, %s) RETURNING str_column, int_column"""
+                args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+                trans.add(sql, args, many=True)
+
+            # We exited the second context, nothing should have been executed
+            self.assertEqual(trans._contexts_entered, 1)
+            self.assertEqual(
+                trans._conn_handler._connection.get_transaction_status(),
+                TRANSACTION_STATUS_IDLE)
+            self._assert_sql_equal([])
+
+        # We have exited the first context, everything should have been
+        # executed and committed
+        self.assertEqual(trans._contexts_entered, 0)
+        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                ('insert3', True, 3)])
+        self.assertEqual(
+            trans._conn_handler._connection.get_transaction_status(),
+            TRANSACTION_STATUS_IDLE)
+
+    def test_context_manager_checker(self):
         t = Transaction("test_context_managet_checker")
 
         with self.assertRaises(RuntimeError):
@@ -568,7 +605,7 @@ class TestTransaction(TestBase):
             trans.add(sql, args, many=True)
             self.assertEqual(trans.index, 4)
 
-            trans.execute(commit=False)
+            trans.execute()
             self.assertEqual(trans.index, 4)
 
             trans.add(sql, args, many=True)
