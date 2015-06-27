@@ -275,6 +275,10 @@ class TestStudy(TestCase):
         self.study.share(User("test@foo.bar"))
         self.assertEqual(self.study.shared_with(), [])
 
+        with Transaction() as trans:
+            self.study.share(User("test@foo.bar"), trans=trans)
+        self.assertEqual(self.study.shared_with(), [])
+
         # Then share the study with shared@foo.bar
         self.study.share(User("shared@foo.bar"))
         self.assertEqual(self.study.shared_with(), ["shared@foo.bar"])

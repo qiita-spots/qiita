@@ -1004,27 +1004,32 @@ class Study(QiitaObject):
 
             return self._id in studies
 
-    def share(self, user):
+    def share(self, user, trans=None):
         """Share the study with another user
 
         Parameters
         ----------
         user: User object
             The user to share the study with
+        trans: Transaction, optional
+            Transaction in which this method should be executed
         """
-        conn_handler = SQLConnectionHandler()
+        trans = trans if trans is not None else Transaction("share_%s"
+                                                            % self._id)
 
-        # Make sure the study is not already shared with the given user
-        if user.id in self.shared_with:
-            return
-        # Do not allow the study to be shared with the owner
-        if user.id == self.owner:
-            return
+        with trans:
+            # Make sure the study is not already shared with the given user
+            if user.id in self.shared_with(trans=trans):
+                return
+            # Do not allow the study to be shared with the owner
+            if user.id == self.owner(trans=trans):
+                return
 
-        sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
-               "(%s, %s)")
+            sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
+                   "(%s, %s)")
+            trans.add(sql, [self._id, user.id])
 
-        conn_handler.execute(sql, (self._id, user.id))
+            trans.execute()
 
     def unshare(self, user):
         """Unshare the study with another user
