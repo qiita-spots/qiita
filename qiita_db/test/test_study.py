@@ -47,11 +47,11 @@ class TestStudyPerson(TestCase):
             ('PIDude', 'PI_dude@foo.bar', 'Wash U', '123 PI street', None)]
         for i, person in enumerate(StudyPerson.iter()):
             self.assertTrue(person.id == i+1)
-            self.assertTrue(person.name == expected[i][0])
-            self.assertTrue(person.email == expected[i][1])
-            self.assertTrue(person.affiliation == expected[i][2])
-            self.assertTrue(person.address == expected[i][3])
-            self.assertTrue(person.phone == expected[i][4])
+            self.assertTrue(person.name() == expected[i][0])
+            self.assertTrue(person.email() == expected[i][1])
+            self.assertTrue(person.affiliation() == expected[i][2])
+            self.assertTrue(person.address() == expected[i][3])
+            self.assertTrue(person.phone() == expected[i][4])
 
     def test_exists(self):
         self.assertTrue(StudyPerson.exists('LabDude', 'knight lab'))
@@ -72,47 +72,60 @@ class TestStudyPerson(TestCase):
                 'LabDude', 'lab_dude@foo.bar', 'knight lab')
 
     def test_retrieve_name(self):
-        self.assertEqual(self.studyperson.name, 'LabDude')
-
-    def test_set_name_fail(self):
-        with self.assertRaises(AttributeError):
-            self.studyperson.name = 'Fail Dude'
+        self.assertEqual(self.studyperson.name(), 'LabDude')
+        with Transaction("test_retrieve_name") as trans:
+            self.assertEqual(self.studyperson.name(trans=trans), 'LabDude')
 
     def test_retrieve_email(self):
-        self.assertEqual(self.studyperson.email, 'lab_dude@foo.bar')
+        self.assertEqual(self.studyperson.email(), 'lab_dude@foo.bar')
+        with Transaction("test_retrieve_email") as trans:
+            self.assertEqual(self.studyperson.email(trans=trans),
+                             'lab_dude@foo.bar')
 
     def test_retrieve_affiliation(self):
-        self.assertEqual(self.studyperson.affiliation, 'knight lab')
-
-    def test_set_email_fail(self):
-        with self.assertRaises(AttributeError):
-            self.studyperson.email = 'faildude@foo.bar'
-
-    def test_set_affiliation_fail(self):
-        with self.assertRaises(AttributeError):
-            self.studyperson.affiliation = 'squire lab'
+        self.assertEqual(self.studyperson.affiliation(), 'knight lab')
+        with Transaction("test_retrieve_affiliation") as trans:
+            self.assertEqual(self.studyperson.affiliation(trans=trans),
+                             'knight lab')
 
     def test_retrieve_address(self):
-        self.assertEqual(self.studyperson.address, '123 lab street')
+        self.assertEqual(self.studyperson.address(), '123 lab street')
+        with Transaction("test_retrieve_address") as trans:
+            self.assertEqual(self.studyperson.address(trans=trans),
+                             '123 lab street')
 
     def test_retrieve_address_null(self):
         person = StudyPerson(2)
-        self.assertEqual(person.address, None)
+        self.assertEqual(person.address(), None)
+        with Transaction("test_retrieve_address_null") as trans:
+            self.assertEqual(person.address(trans=trans), None)
 
     def test_set_address(self):
-        self.studyperson.address = '123 nonsense road'
-        self.assertEqual(self.studyperson.address, '123 nonsense road')
+        self.studyperson.set_address('123 nonsense road')
+        self.assertEqual(self.studyperson.address(), '123 nonsense road')
+
+        with Transaction("test_set_address") as trans:
+            self.studyperson.set_address('123 some road', trans=trans)
+        self.assertEqual(self.studyperson.address(), '123 some road')
 
     def test_retrieve_phone(self):
-        self.assertEqual(self.studyperson.phone, '121-222-3333')
+        self.assertEqual(self.studyperson.phone(), '121-222-3333')
+        with Transaction("test_retrieve_phone") as trans:
+            self.assertEqual(
+                self.studyperson.phone(trans=trans), '121-222-3333')
 
     def test_retrieve_phone_null(self):
         person = StudyPerson(3)
-        self.assertEqual(person.phone, None)
+        self.assertEqual(person.phone(), None)
+        with Transaction("test_retrieve_phone_null") as trans:
+            self.assertEqual(person.phone(trans=trans), None)
 
     def test_set_phone(self):
-        self.studyperson.phone = '111111111111111111121'
-        self.assertEqual(self.studyperson.phone, '111111111111111111121')
+        self.studyperson.set_phone('111111111111111111121')
+        self.assertEqual(self.studyperson.phone(), '111111111111111111121')
+        with Transaction("test_set_phone") as trans:
+            self.studyperson.set_phone('123456789', trans=trans)
+        self.assertEqual(self.studyperson.phone(), '123456789')
 
 
 @qiita_test_checker()

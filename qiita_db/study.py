@@ -1155,100 +1155,143 @@ class StudyPerson(QiitaObject):
             return cls(spid, trans=trans)
 
     # Properties
-    @property
-    def name(self):
+    def name(self, trans=None):
         """Returns the name of the person
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         str
             Name of person
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT name FROM qiita.{0} WHERE "
-               "study_person_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        trans = trans if trans is not None else Transaction("name_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("SELECT name FROM qiita.{0} WHERE "
+                   "study_person_id = %s".format(self._table))
+            trans.add(sql, [self._id])
+            return trans.execute()[-1][0][0]
 
-    @property
-    def email(self):
+    def email(self, trans=None):
         """Returns the email of the person
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         str
             Email of person
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT email FROM qiita.{0} WHERE "
-               "study_person_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        trans = trans if trans is not None else Transaction("email_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("SELECT email FROM qiita.{0} WHERE "
+                   "study_person_id = %s".format(self._table))
+            trans.add(sql, [self._id])
+            return trans.execute()[-1][0][0]
 
-    @property
-    def affiliation(self):
+    def affiliation(self, trans=None):
         """Returns the affiliation of the person
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         str
             Affiliation of person
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT affiliation FROM qiita.{0} WHERE "
-               "study_person_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
+        trans = trans if trans is not None else Transaction("affiliation_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("SELECT affiliation FROM qiita.{0} WHERE "
+                   "study_person_id = %s".format(self._table))
+            trans.add(sql, [self._id])
+            return trans.execute()[-1][0][0]
 
-    @property
-    def address(self):
+    def address(self, trans=None):
         """Returns the address of the person
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         str or None
             address or None if no address in database
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT address FROM qiita.{0} WHERE study_person_id ="
-               " %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        trans = trans if trans is not None else Transaction("address_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("SELECT address FROM qiita.{0} WHERE study_person_id ="
+                   " %s".format(self._table))
+            trans.add(sql, [self._id])
+            return trans.execute()[-1][0][0]
 
-    @address.setter
-    def address(self, value):
+    def set_address(self, value, trans=None):
         """Set/update the address of the person
 
         Parameters
         ----------
         value : str
             New address for person
+        trans: Transaction, optional
+            Transaction in which this method should be executed
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET address = %s WHERE "
-               "study_person_id = %s".format(self._table))
-        conn_handler.execute(sql, (value, self._id))
+        trans = trans if trans is not None else Transaction("set_address_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("UPDATE qiita.{0} SET address = %s WHERE "
+                   "study_person_id = %s".format(self._table))
+            trans.add(sql, [value, self._id])
+            trans.execute()
 
-    @property
-    def phone(self):
+    def phone(self, trans=None):
         """Returns the phone number of the person
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
          str or None
             phone or None if no address in database
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT phone FROM qiita.{0} WHERE "
-               "study_person_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        trans = trans if trans is not None else Transaction("phone_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("SELECT phone FROM qiita.{0} WHERE "
+                   "study_person_id = %s".format(self._table))
+            trans.add(sql, [self._id])
+            return trans.execute()[-1][0][0]
 
-    @phone.setter
-    def phone(self, value):
+    def set_phone(self, value, trans=None):
         """Set/update the phone number of the person
 
         Parameters
         ----------
         value : str
             New phone number for person
+        trans: Transaction, optional
+            Transaction in which this method should be executed
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET phone = %s WHERE "
-               "study_person_id = %s".format(self._table))
-        conn_handler.execute(sql, (value, self._id))
+        trans = trans if trans is not None else Transaction("set_phone_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("UPDATE qiita.{0} SET phone = %s WHERE "
+                   "study_person_id = %s".format(self._table))
+            trans.add(sql, [value, self._id])
+            trans.execute()
