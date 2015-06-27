@@ -677,16 +677,22 @@ class TestStudy(TestCase):
     def test_retrieve_processed_data(self):
         self.assertEqual(self.study.processed_data(), [1])
 
+        with Transaction("test_retrieve_processed_data") as trans:
+            self.assertEqual(self.study.processed_data(trans=trans), [1])
+
     def test_retrieve_processed_data_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.processed_data(), [])
 
+        with Transaction("test_retrieve_processed_data_none") as trans:
+            self.assertEqual(new.processed_data(trans=trans), [])
+
     def test_add_pmid(self):
         self._change_processed_data_status('sandbox')
         self.study.add_pmid('4544444')
         exp = ['123456', '7891011', '4544444']
-        self.assertEqual(self.study.pmids, exp)
+        self.assertEqual(self.study.pmids(), exp)
 
     def test_environmental_packages(self):
         obs = self.study.environmental_packages()

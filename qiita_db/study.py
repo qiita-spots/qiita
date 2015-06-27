@@ -893,7 +893,7 @@ class Study(QiitaObject):
                         JOIN qiita.prep_template USING (prep_template_id)
                      WHERE study_id = %s{0}""".format(spec_data)
             trans.add(sql, [self._id])
-            return [x[0] for x in trans.execute()]
+            return [x[0] for x in trans.execute()[-1]]
 
     def preprocessed_data(self, data_type=None, trans=None):
         """ Returns list of data ids for preprocessed data info
@@ -921,15 +921,17 @@ class Study(QiitaObject):
                      FROM qiita.study_preprocessed_data
                      WHERE study_id = %s{0}""".format(spec_data)
             trans.add(sql, [self._id])
-            return [x[0] for x in trans.execute()]
+            return [x[0] for x in trans.execute()[-1]]
 
-    def processed_data(self, data_type=None):
+    def processed_data(self, data_type=None, trans=None):
         """ Returns list of data ids for processed data info
 
         Parameters
         ----------
         data_type : str, optional
             If given, retrieve only for given datatype. Default None.
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
@@ -939,12 +941,18 @@ class Study(QiitaObject):
         if data_type:
             spec_data = " AND p.data_type_id = %d" % convert_to_id(data_type,
                                                                    "data_type")
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT p.processed_data_id FROM qiita.processed_data p JOIN "
-               "qiita.study_processed_data sp ON p.processed_data_id = "
-               "sp.processed_data_id WHERE "
-               "sp.study_id = %s{0}".format(spec_data))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+
+        trans = trans if trans is not None else Transaction(
+            "processed_data_%s" % self._id)
+
+        with trans:
+            sql = ("SELECT p.processed_data_id "
+                   "FROM qiita.processed_data p JOIN "
+                   "qiita.study_processed_data sp ON p.processed_data_id = "
+                   "sp.processed_data_id WHERE "
+                   "sp.study_id = %s{0}".format(spec_data))
+            trans.add(sql, [self._id])
+            return [x[0] for x in trans.execute()[-1]]
 
     def add_pmid(self, pmid):
         """Adds PMID to study
