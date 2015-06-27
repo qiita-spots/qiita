@@ -275,7 +275,7 @@ class TestStudy(TestCase):
         self.study.share(User("test@foo.bar"))
         self.assertEqual(self.study.shared_with(), [])
 
-        with Transaction() as trans:
+        with Transaction("test_share") as trans:
             self.study.share(User("test@foo.bar"), trans=trans)
         self.assertEqual(self.study.shared_with(), [])
 
@@ -554,7 +554,7 @@ class TestStudy(TestCase):
         self.infoexp["lab_person_id"] = 2
         self.infoexp["first_contact"] = datetime(2014, 6, 11)
 
-        self.assertEqual(new.info, self.infoexp)
+        self.assertEqual(new.info(), self.infoexp)
 
     def test_set_info_public(self):
         """Tests for fail if editing info of a public study"""
@@ -603,7 +603,7 @@ class TestStudy(TestCase):
         self.assertEqual(new.pmids(), [])
 
         with Transaction("test_retrieve_pmids_empty") as trans:
-            self.assertEqual(self.study.pmids(trans=trans), [])
+            self.assertEqual(new.pmids(trans=trans), [])
 
     def test_pmids_setter(self):
         exp = ['123456', '7891011']
@@ -705,8 +705,8 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.pmids(), exp)
 
         with Transaction("test_add_pmid") as trans:
-            self.study.add_pmid('123456', trans)
-        exp = ['123456', '7891011', '4544444', '123456']
+            self.study.add_pmid('654321', trans)
+        exp = ['123456', '7891011', '4544444', '654321']
         self.assertEqual(self.study.pmids(), exp)
 
     def test_environmental_packages(self):
@@ -714,7 +714,7 @@ class TestStudy(TestCase):
         exp = ['soil', 'plant-associated']
         self.assertEqual(sorted(obs), sorted(exp))
 
-        with Transaction() as trans:
+        with Transaction("test_environmental_packages") as trans:
             obs = self.study.environmental_packages(trans=trans)
         self.assertEqual(sorted(obs), sorted(exp))
 

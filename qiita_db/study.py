@@ -208,15 +208,15 @@ class Study(QiitaObject):
                     ON pds.processed_data_status_id=pd.processed_data_status_id
                     WHERE pds.processed_data_status=%s"""
             trans.add(sql, [status])
-            studies = {x[0] for x in trans.execute()}
+            studies = {x[0] for x in trans.execute()[-1]}
             # If status is sandbox, all the studies that are not present in the
             # study_processed_data are also sandbox
             if status == 'sandbox':
-                sql = """SELECT study_id FROM qiita.study WHERE study_id NOT IN (
-                         SELECT study_id FROM qiita.study_processed_data)"""
+                sql = """SELECT study_id FROM qiita.study
+                         WHERE study_id NOT IN (
+                            SELECT study_id FROM qiita.study_processed_data)"""
                 trans.add(sql)
-                extra_studies = {x[0] for x in trans.execute()}
-                studies = studies.union(extra_studies)
+                studies = studies.union({x[0] for x in trans.execute()[-1]})
 
         return studies
 
@@ -672,7 +672,7 @@ class Study(QiitaObject):
             # Set the new ones
             sql = """INSERT INTO qiita.study_pmid (study_id, pmid)
                      VALUES (%s, %s)"""
-            sql_args = [(self._id, val) for val in values]
+            sql_args = [[self._id, val] for val in values]
             trans.add(sql, sql_args, many=True)
 
             # Execute the queue
@@ -698,7 +698,7 @@ class Study(QiitaObject):
             trans.add(sql, [self._id])
             inv = trans.execute()[0]
 
-        return inv[0] if inv is not None else inv
+        return inv[0][0] if inv else None
 
     @property
     def sample_template(self):
@@ -969,7 +969,8 @@ class Study(QiitaObject):
         with trans:
             sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
                    "VALUES (%s, %s)".format(self._table))
-            trans.execute(sql, [self._id, pmid])
+            trans.add(sql, [self._id, pmid])
+            trans.execute()
 
     def has_access(self, user, no_public=False, trans=None):
         """Returns whether the given user has access to the study
@@ -1041,7 +1042,7 @@ class Study(QiitaObject):
         trans: Transaction, optional
             Transaction in which this method should be executed
         """
-        trans = trans if trans is not None else Transaction("unshare_"
+        trans = trans if trans is not None else Transaction("unshare_%s"
                                                             % self._id)
 
         with trans:
