@@ -954,18 +954,22 @@ class Study(QiitaObject):
             trans.add(sql, [self._id])
             return [x[0] for x in trans.execute()[-1]]
 
-    def add_pmid(self, pmid):
+    def add_pmid(self, pmid, trans=None):
         """Adds PMID to study
 
         Parameters
         ----------
         pmid : str
             pmid to associate with study
+        trans: Transaction, optional
+            Transaction in which this method should be executed
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
-               "VALUES (%s, %s)".format(self._table))
-        conn_handler.execute(sql, (self._id, pmid))
+        trans = trans if trans is not None else Transaction("add_pmid_%s"
+                                                            % self._id)
+        with trans:
+            sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
+                   "VALUES (%s, %s)".format(self._table))
+            trans.execute(sql, [self._id, pmid])
 
     def has_access(self, user, no_public=False):
         """Returns whether the given user has access to the study

@@ -694,6 +694,11 @@ class TestStudy(TestCase):
         exp = ['123456', '7891011', '4544444']
         self.assertEqual(self.study.pmids(), exp)
 
+        with Transaction("test_add_pmid") as trans:
+            self.study.add_pmid('123456', trans)
+        exp = ['123456', '7891011', '4544444', '123456']
+        self.assertEqual(self.study.pmids(), exp)
+
     def test_environmental_packages(self):
         obs = self.study.environmental_packages()
         exp = ['soil', 'plant-associated']
