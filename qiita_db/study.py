@@ -971,7 +971,7 @@ class Study(QiitaObject):
                    "VALUES (%s, %s)".format(self._table))
             trans.execute(sql, [self._id, pmid])
 
-    def has_access(self, user, no_public=False):
+    def has_access(self, user, no_public=False, trans=None):
         """Returns whether the given user has access to the study
 
         Parameters
@@ -981,21 +981,28 @@ class Study(QiitaObject):
         no_public: bool
             If we should ignore those studies shared with the user. Defaults
             to False
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         bool
             Whether user has access to study or not
         """
-        # if admin or superuser, just return true
-        if user.level in {'superuser', 'admin'}:
-            return True
+        trans = trans if trans is not None else Transaction("has_access_%s"
+                                                            % self._id)
+        with trans:
+            # if admin or superuser, just return true
+            if user.level(trans) in {'superuser', 'admin'}:
+                return True
 
-        if no_public:
-            return self._id in user.user_studies | user.shared_studies
-        else:
-            return self._id in user.user_studies | user.shared_studies \
-                | self.get_by_status('public')
+            studies = (user.user_studies(trans=trans) |
+                       user.shared_studies(trans=trans))
+
+            if not no_public:
+                studies = studies | self.get_by_status('public', trans=trans)
+
+            return self._id in studies
 
     def share(self, user):
         """Share the study with another user

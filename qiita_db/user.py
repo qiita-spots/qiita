@@ -312,14 +312,23 @@ class User(QiitaObject):
         """The email of the user"""
         return self._id
 
-    @property
-    def level(self):
-        """The level of privileges of the user"""
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT ul.name from qiita.user_level ul JOIN qiita.{0} u ON "
-               "ul.user_level_id = u.user_level_id WHERE "
-               "u.email = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+    def level(self, trans=None):
+        """The level of privileges of the user
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
+        """
+        trans = trans if trans is not None else Transaction("user_level_%s"
+                                                            % self._id)
+        with trans:
+            sql = """SELECT ul.name
+                     FROM qiita.user_level ul
+                        JOIN qiita.{0} u ON ul.user_level_id = u.user_level_id
+                     WHERE u.email = %s""".format(self._table)
+            trans.add(sql, [self._id])
+            return trans.execute()[-1][0][0]
 
     @property
     def info(self):
@@ -380,22 +389,42 @@ class User(QiitaObject):
         study_ids = conn_handler.execute_fetchall(sql, (self._id, 'sandbox'))
         return [s[0] for s in study_ids]
 
-    @property
-    def user_studies(self):
-        """Returns a list of study ids owned by the user"""
-        sql = ("SELECT study_id FROM qiita.study WHERE "
-               "email = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+    def user_studies(self, trans=None):
+        """Returns a list of study ids owned by the user
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
+        """
+        trans = trans if trans is not None else Transaction("user_studies_%s"
+                                                            % self._id)
+
+        with trans:
+            sql = "SELECT study_id FROM qiita.study WHERE email = %s".format(
+                self._table)
+            trans.add(sql, [self._id])
+            study_ids = trans.execute()[-1]
+
         return {s[0] for s in study_ids}
 
-    @property
-    def shared_studies(self):
-        """Returns a list of study ids shared with the user"""
-        sql = ("SELECT study_id FROM qiita.study_users WHERE "
-               "email = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
+    def shared_studies(self, trans=None):
+        """Returns a list of study ids shared with the user
+
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
+        """
+        trans = trans if trans is not None else Transaction("shared_studies_%s"
+                                                            % self._id)
+
+        with trans:
+            sql = """SELECT study_id FROM qiita.study_users
+                     WHERE email = %s""".format(self._table)
+            trans.add(sql, [self._id])
+            study_ids = trans.execute()[-1]
+
         return {s[0] for s in study_ids}
 
     @property
