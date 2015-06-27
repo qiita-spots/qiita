@@ -262,13 +262,13 @@ def hash_password(password, hashedpw=None):
     return output
 
 
-def check_required_columns(conn_handler, keys, table):
+def check_required_columns(trans, keys, table):
     """Makes sure all required columns in database table are in keys
 
     Parameters
     ----------
-    conn_handler: SQLConnectionHandler object
-        Previously opened connection to the database
+    trans: Tranasction
+        Transaction in which this method should be executed
     keys: iterable
         Holds the keys in the dictionary
     table: str
@@ -284,7 +284,8 @@ def check_required_columns(conn_handler, keys, table):
     sql = ("SELECT is_nullable, column_name, column_default "
            "FROM information_schema.columns "
            "WHERE table_name = %s")
-    cols = conn_handler.execute_fetchall(sql, (table, ))
+    trans.add(sql, [table])
+    cols = trans.execute()[-1]
     # Test needed because a user with certain permissions can query without
     # error but be unable to get the column names
     if len(cols) == 0:
@@ -366,25 +367,25 @@ def get_table_cols_w_type(table):
         "table_name=%s", (table,))
 
 
-def exists_table(table, conn_handler):
+def exists_table(table, trans):
     r"""Checks if `table` exists on the database connected through
-    `conn_handler`
+    `trans`
 
     Parameters
     ----------
     table : str
         The table name to check if exists
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
+    trans: Transaction
+        Transaction in which this method should be executed
     """
-    return conn_handler.execute_fetchone(
-        "SELECT exists(SELECT * FROM information_schema.tables WHERE "
-        "table_name=%s)", (table,))[0]
+    trans.add("SELECT exists(SELECT * FROM information_schema.tables "
+              "WHERE table_name=%s)", [table])
+    return trans.execute()[-1][0][0]
 
 
-def exists_dynamic_table(table, prefix, suffix, conn_handler):
+def exists_dynamic_table(table, prefix, suffix, trans):
     r"""Checks if the dynamic `table` exists on the database connected through
-    `conn_handler`, and its name starts with prefix and ends with suffix
+    `trans`, and its name starts with prefix and ends with suffix
 
     Parameters
     ----------
@@ -394,11 +395,11 @@ def exists_dynamic_table(table, prefix, suffix, conn_handler):
         The table name prefix
     suffix : str
         The table name suffix
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
+    trans: Transaction
+        Transaction in which this method should be executed
     """
     return (table.startswith(prefix) and table.endswith(suffix) and
-            exists_table(table, conn_handler))
+            exists_table(table, trans))
 
 
 def get_db_files_base_dir():
@@ -963,8 +964,13 @@ def get_lat_longs():
     return result
 
 
-def get_environmental_packages():
+def get_environmental_packages(trans=None):
     """Get the list of available environmental packages
+
+    Parameters
+    ----------
+    trans: Transaction, optional
+        Transaction in which this method should be executed
 
     Returns
     -------
@@ -973,9 +979,10 @@ def get_environmental_packages():
         environmental package name and the second string is the table where
         the metadata for the environmental package is stored
     """
-    conn_handler = SQLConnectionHandler()
-    return conn_handler.execute_fetchall(
-        "SELECT * FROM qiita.environmental_package")
+    trans = trans if trans is not None else Transaction("get_env_pkgs")
+    with trans:
+        trans.add("SELECT * FROM qiita.environmental_package")
+        return trans.execute()[-1]
 
 
 def get_timeseries_types():

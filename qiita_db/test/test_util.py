@@ -65,13 +65,14 @@ class DBUtilTests(TestCase):
 
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
-        check_required_columns(self.conn_handler, self.required, self.table)
+        with Transaction("test_check_required_columns") as trans:
+            check_required_columns(trans, self.required, self.table)
 
     def test_check_required_columns_fail(self):
         self.required.remove('study_title')
         with self.assertRaises(QiitaDBColumnError):
-            check_required_columns(self.conn_handler, self.required,
-                                   self.table)
+            with Transaction("test_check_required_columns_fail") as trans:
+                check_required_columns(trans, self.required, self.table)
 
     def test_get_lat_longs(self):
         exp = [
@@ -141,44 +142,39 @@ class DBUtilTests(TestCase):
 
     def test_exists_table(self):
         """Correctly checks if a table exists"""
-        # True cases
-        self.assertTrue(exists_table("filepath", self.conn_handler))
-        self.assertTrue(exists_table("qiita_user", self.conn_handler))
-        self.assertTrue(exists_table("analysis", self.conn_handler))
-        self.assertTrue(exists_table("prep_1", self.conn_handler))
-        self.assertTrue(exists_table("sample_1", self.conn_handler))
-        # False cases
-        self.assertFalse(exists_table("sample_2", self.conn_handler))
-        self.assertFalse(exists_table("prep_2", self.conn_handler))
-        self.assertFalse(exists_table("foo_table", self.conn_handler))
-        self.assertFalse(exists_table("bar_table", self.conn_handler))
+        with Transaction("test_exists_table") as trans:
+            # True cases
+            self.assertTrue(exists_table("filepath", trans))
+            self.assertTrue(exists_table("qiita_user", trans))
+            self.assertTrue(exists_table("analysis", trans))
+            self.assertTrue(exists_table("prep_1", trans))
+            self.assertTrue(exists_table("sample_1", trans))
+            # False cases
+            self.assertFalse(exists_table("sample_2", trans))
+            self.assertFalse(exists_table("prep_2", trans))
+            self.assertFalse(exists_table("foo_table", trans))
+            self.assertFalse(exists_table("bar_table", trans))
 
     def test_exists_dynamic_table(self):
         """Correctly checks if a dynamic table exists"""
-        # True cases
-        self.assertTrue(exists_dynamic_table(
-            "preprocessed_sequence_illumina_params", "preprocessed_",
-            "_params", self.conn_handler))
-        self.assertTrue(exists_dynamic_table("prep_1", "prep_", "",
-                                             self.conn_handler))
-        self.assertTrue(exists_dynamic_table("filepath", "", "",
-                                             self.conn_handler))
-        # False cases
-        self.assertFalse(exists_dynamic_table(
-            "preprocessed_foo_params", "preprocessed_", "_params",
-            self.conn_handler))
-        self.assertFalse(exists_dynamic_table(
-            "preprocessed__params", "preprocessed_", "_params",
-            self.conn_handler))
-        self.assertFalse(exists_dynamic_table(
-            "foo_params", "preprocessed_", "_params",
-            self.conn_handler))
-        self.assertFalse(exists_dynamic_table(
-            "preprocessed_foo", "preprocessed_", "_params",
-            self.conn_handler))
-        self.assertFalse(exists_dynamic_table(
-            "foo", "preprocessed_", "_params",
-            self.conn_handler))
+        with Transaction("test_exists_dynamic_table") as trans:
+            # True cases
+            self.assertTrue(exists_dynamic_table(
+                "preprocessed_sequence_illumina_params", "preprocessed_",
+                "_params", trans))
+            self.assertTrue(exists_dynamic_table("prep_1", "prep_", "", trans))
+            self.assertTrue(exists_dynamic_table("filepath", "", "", trans))
+            # False cases
+            self.assertFalse(exists_dynamic_table(
+                "preprocessed_foo_params", "preprocessed_", "_params", trans))
+            self.assertFalse(exists_dynamic_table(
+                "preprocessed__params", "preprocessed_", "_params", trans))
+            self.assertFalse(exists_dynamic_table(
+                "foo_params", "preprocessed_", "_params", trans))
+            self.assertFalse(exists_dynamic_table(
+                "preprocessed_foo", "preprocessed_", "_params", trans))
+            self.assertFalse(exists_dynamic_table(
+                "foo", "preprocessed_", "_params", trans))
 
     def test_convert_to_id(self):
         """Tests that ids are returned correctly"""
@@ -642,6 +638,10 @@ class DBUtilTests(TestCase):
                ['soil', 'ep_soil'],
                ['wastewater/sludge', 'ep_wastewater_sludge'],
                ['water', 'ep_water']]
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        with Transaction("test_get_environmental_packages") as trans:
+            obs = get_environmental_packages(trans=trans)
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_get_timeseries_types(self):

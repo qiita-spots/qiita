@@ -10,9 +10,10 @@ from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
 from qiita_db.util import convert_to_id
+from qiita_db.sql_connection import Transaction
 from qiita_db.exceptions import (
     QiitaDBColumnError, QiitaDBStatusError, QiitaDBError,
-    QiitaDBUnknownIDError)
+    QiitaDBUnknownIDError, QiitaDBDuplicateError)
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -46,59 +47,85 @@ class TestStudyPerson(TestCase):
             ('PIDude', 'PI_dude@foo.bar', 'Wash U', '123 PI street', None)]
         for i, person in enumerate(StudyPerson.iter()):
             self.assertTrue(person.id == i+1)
-            self.assertTrue(person.name == expected[i][0])
-            self.assertTrue(person.email == expected[i][1])
-            self.assertTrue(person.affiliation == expected[i][2])
-            self.assertTrue(person.address == expected[i][3])
-            self.assertTrue(person.phone == expected[i][4])
+            self.assertTrue(person.name() == expected[i][0])
+            self.assertTrue(person.email() == expected[i][1])
+            self.assertTrue(person.affiliation() == expected[i][2])
+            self.assertTrue(person.address() == expected[i][3])
+            self.assertTrue(person.phone() == expected[i][4])
+
+    def test_exists(self):
+        self.assertTrue(StudyPerson.exists('LabDude', 'knight lab'))
+        self.assertFalse(StudyPerson.exists('LabDude', 'SomeOther lab'))
+        self.assertFalse(StudyPerson.exists('AnotherDude', 'knight lab'))
+
+        with Transaction("test_exists") as trans:
+            self.assertTrue(
+                StudyPerson.exists('LabDude', 'knight lab', trans=trans))
+            self.assertFalse(
+                StudyPerson.exists('LabDude', 'SomeOther lab', trans=trans))
+            self.assertFalse(
+                StudyPerson.exists('AnotherDude', 'knight lab', trans=trans))
 
     def test_create_studyperson_already_exists(self):
-        obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar', 'knight lab')
-        self.assertEqual(obs.name, 'LabDude')
-        self.assertEqual(obs.email, 'lab_dude@foo.bar')
+        with self.assertRaises(QiitaDBDuplicateError):
+            obs = StudyPerson.create(
+                'LabDude', 'lab_dude@foo.bar', 'knight lab')
 
     def test_retrieve_name(self):
-        self.assertEqual(self.studyperson.name, 'LabDude')
-
-    def test_set_name_fail(self):
-        with self.assertRaises(AttributeError):
-            self.studyperson.name = 'Fail Dude'
+        self.assertEqual(self.studyperson.name(), 'LabDude')
+        with Transaction("test_retrieve_name") as trans:
+            self.assertEqual(self.studyperson.name(trans=trans), 'LabDude')
 
     def test_retrieve_email(self):
-        self.assertEqual(self.studyperson.email, 'lab_dude@foo.bar')
+        self.assertEqual(self.studyperson.email(), 'lab_dude@foo.bar')
+        with Transaction("test_retrieve_email") as trans:
+            self.assertEqual(self.studyperson.email(trans=trans),
+                             'lab_dude@foo.bar')
 
     def test_retrieve_affiliation(self):
-        self.assertEqual(self.studyperson.affiliation, 'knight lab')
-
-    def test_set_email_fail(self):
-        with self.assertRaises(AttributeError):
-            self.studyperson.email = 'faildude@foo.bar'
-
-    def test_set_affiliation_fail(self):
-        with self.assertRaises(AttributeError):
-            self.studyperson.affiliation = 'squire lab'
+        self.assertEqual(self.studyperson.affiliation(), 'knight lab')
+        with Transaction("test_retrieve_affiliation") as trans:
+            self.assertEqual(self.studyperson.affiliation(trans=trans),
+                             'knight lab')
 
     def test_retrieve_address(self):
-        self.assertEqual(self.studyperson.address, '123 lab street')
+        self.assertEqual(self.studyperson.address(), '123 lab street')
+        with Transaction("test_retrieve_address") as trans:
+            self.assertEqual(self.studyperson.address(trans=trans),
+                             '123 lab street')
 
     def test_retrieve_address_null(self):
         person = StudyPerson(2)
-        self.assertEqual(person.address, None)
+        self.assertEqual(person.address(), None)
+        with Transaction("test_retrieve_address_null") as trans:
+            self.assertEqual(person.address(trans=trans), None)
 
     def test_set_address(self):
-        self.studyperson.address = '123 nonsense road'
-        self.assertEqual(self.studyperson.address, '123 nonsense road')
+        self.studyperson.set_address('123 nonsense road')
+        self.assertEqual(self.studyperson.address(), '123 nonsense road')
+
+        with Transaction("test_set_address") as trans:
+            self.studyperson.set_address('123 some road', trans=trans)
+        self.assertEqual(self.studyperson.address(), '123 some road')
 
     def test_retrieve_phone(self):
-        self.assertEqual(self.studyperson.phone, '121-222-3333')
+        self.assertEqual(self.studyperson.phone(), '121-222-3333')
+        with Transaction("test_retrieve_phone") as trans:
+            self.assertEqual(
+                self.studyperson.phone(trans=trans), '121-222-3333')
 
     def test_retrieve_phone_null(self):
         person = StudyPerson(3)
-        self.assertEqual(person.phone, None)
+        self.assertEqual(person.phone(), None)
+        with Transaction("test_retrieve_phone_null") as trans:
+            self.assertEqual(person.phone(trans=trans), None)
 
     def test_set_phone(self):
-        self.studyperson.phone = '111111111111111111121'
-        self.assertEqual(self.studyperson.phone, '111111111111111111121')
+        self.studyperson.set_phone('111111111111111111121')
+        self.assertEqual(self.studyperson.phone(), '111111111111111111121')
+        with Transaction("test_set_phone") as trans:
+            self.studyperson.set_phone('123456789', trans=trans)
+        self.assertEqual(self.studyperson.phone(), '123456789')
 
 
 @qiita_test_checker()
@@ -259,26 +286,39 @@ class TestStudy(TestCase):
         self.assertFalse(self.study.has_access(User("demo@microbio.me"), True))
 
     def test_owner(self):
-        self.assertEqual(self.study.owner, "test@foo.bar")
+        self.assertEqual(self.study.owner(), "test@foo.bar")
+
+        with Transaction("test_owner") as trans:
+            self.assertEqual(self.study.owner(trans=trans), "test@foo.bar")
 
     def test_share(self):
         # Clear all sharing associations
         self._change_processed_data_status('sandbox')
         self.conn_handler.execute("delete from qiita.study_users")
-        self.assertEqual(self.study.shared_with, [])
+        self.assertEqual(self.study.shared_with(), [])
 
         # Try to share with the owner, which should not work
         self.study.share(User("test@foo.bar"))
-        self.assertEqual(self.study.shared_with, [])
+        self.assertEqual(self.study.shared_with(), [])
+
+        with Transaction("test_share") as trans:
+            self.study.share(User("test@foo.bar"), trans=trans)
+        self.assertEqual(self.study.shared_with(), [])
 
         # Then share the study with shared@foo.bar
         self.study.share(User("shared@foo.bar"))
-        self.assertEqual(self.study.shared_with, ["shared@foo.bar"])
+        self.assertEqual(self.study.shared_with(), ["shared@foo.bar"])
 
     def test_unshare(self):
         self._change_processed_data_status('sandbox')
         self.study.unshare(User("shared@foo.bar"))
-        self.assertEqual(self.study.shared_with, [])
+        self.assertEqual(self.study.shared_with(), [])
+
+    def test_unshare_transaction(self):
+        self._change_processed_data_status('sandbox')
+        with Transaction("test_unshare_transaction") as trans:
+            self.study.unshare(User("shared@foo.bar"), trans=trans)
+        self.assertEqual(self.study.shared_with(), [])
 
     def test_has_access_shared(self):
         self._change_processed_data_status('sandbox')
@@ -318,6 +358,12 @@ class TestStudy(TestCase):
         self.assertTrue(Study.exists('Identification of the Microbiomes for '
                                      'Cannabis Soils'))
         self.assertFalse(Study.exists('Not Cannabis Soils'))
+
+        with Transaction("test_exists") as trans:
+            self.assertTrue(
+                Study.exists('Identification of the Microbiomes for '
+                             'Cannabis Soils', trans=trans))
+            self.assertFalse(Study.exists('Not Cannabis Soils', trans=trans))
 
     def test_create_study_min_data(self):
         """Insert a study into the database"""
@@ -411,6 +457,13 @@ class TestStudy(TestCase):
             "WHERE study_id = 3827")
         self.assertEqual(obsefo, [[1]])
 
+    def test_create_duplicate(self):
+        with self.assertRaises(QiitaDBDuplicateError):
+            Study.create(
+                User('test@foo.bar'),
+                'Identification of the Microbiomes for Cannabis Soils',
+                [1], self.info)
+
     def test_create_missing_required(self):
         """ Insert a study that is missing a required info key"""
         self.info.pop("study_alias")
@@ -455,42 +508,55 @@ class TestStudy(TestCase):
             Study.delete(41)
 
     def test_retrieve_title(self):
-        self.assertEqual(self.study.title, 'Identification of the Microbiomes'
-                         ' for Cannabis Soils')
+        self.assertEqual(
+            self.study.title(),
+            'Identification of the Microbiomes for Cannabis Soils')
+        with Transaction("test_retrieve_title") as trans:
+            self.assertEqual(
+                self.study.title(trans=trans),
+                'Identification of the Microbiomes for Cannabis Soils')
 
     def test_set_title(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        new.title = "Cannabis soils"
-        self.assertEqual(new.title, "Cannabis soils")
+
+        new.set_title("Cannabis soils")
+        self.assertEqual(new.title(), "Cannabis soils")
+
+        with Transaction("test_set_title") as trans:
+            new.set_title("Cannabis soils", trans=trans)
+        self.assertEqual(new.title(), "Cannabis soils")
 
     def test_get_efo(self):
-        self.assertEqual(self.study.efo, [1])
+        self.assertEqual(self.study.efo(), [1])
 
     def test_set_efo(self):
         """Set efo with list efo_id"""
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        new.efo = [3, 4]
-        self.assertEqual(new.efo, [3, 4])
+        new.set_efo([3, 4])
+        self.assertEqual(new.efo(), [3, 4])
 
     def test_set_efo_empty(self):
         """Set efo with list efo_id"""
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            new.efo = []
+            new.set_efo([])
 
     def test_set_efo_public(self):
         """Set efo on a public study"""
         with self.assertRaises(QiitaDBStatusError):
-            self.study.efo = 6
+            self.study.set_efo([6])
 
     def test_retrieve_info(self):
         for key, val in viewitems(self.existingexp):
             if isinstance(val, QiitaObject):
                 self.existingexp[key] = val.id
-        self.assertEqual(self.study.info, self.existingexp)
+        self.assertEqual(self.study.info(), self.existingexp)
+
+        with Transaction("test_retrieve_info") as trans:
+            self.assertEqual(self.study.info(trans=trans), self.existingexp)
 
     def test_set_info(self):
         """Set info in a study"""
@@ -505,7 +571,7 @@ class TestStudy(TestCase):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.infoexp.update(newinfo)
-        new.info = newinfo
+        new.set_info(newinfo)
         # add missing table cols
         self.infoexp["funding"] = None
         self.infoexp["spatial_series"] = None
@@ -514,146 +580,197 @@ class TestStudy(TestCase):
         self.infoexp["lab_person_id"] = 2
         self.infoexp["first_contact"] = datetime(2014, 6, 11)
 
-        self.assertEqual(new.info, self.infoexp)
+        self.assertEqual(new.info(), self.infoexp)
 
     def test_set_info_public(self):
         """Tests for fail if editing info of a public study"""
-        self.study.info = {"vamps_id": "12321312"}
+        self.study.set_info({"vamps_id": "12321312"})
 
     def test_set_info_public_error(self):
         """Tests for fail if trying to modify timeseries of a public study"""
         with self.assertRaises(QiitaDBStatusError):
-            self.study.info = {"timeseries_type_id": 2}
+            self.study.set_info({"timeseries_type_id": 2})
 
     def test_set_info_disallowed_keys(self):
         """Tests for fail if sending non-info keys in info dict"""
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(QiitaDBColumnError):
-            new.info = {"email": "fail@fail.com"}
+            new.set_info({"email": "fail@fail.com"})
 
     def test_info_empty(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            new.info = {}
+            new.set_info({})
 
     def test_retrieve_status(self):
-        self.assertEqual(self.study.status, "private")
+        self.assertEqual(self.study.status(), "private")
+
+        with Transaction("test_retrieve_status") as trans:
+            self.assertEqual(self.study.status(trans=trans), "private")
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
+        self.assertEqual(self.study.shared_with(), ['shared@foo.bar'])
+        with Transaction("test_retrieve_shared_with") as trans:
+            self.assertEqual(
+                self.study.shared_with(trans=trans), ['shared@foo.bar'])
 
     def test_retrieve_pmids(self):
         exp = ['123456', '7891011']
-        self.assertEqual(self.study.pmids, exp)
+        self.assertEqual(self.study.pmids(), exp)
+
+        with Transaction("test_retrieve_pmids") as trans:
+            self.assertEqual(self.study.pmids(trans=trans), exp)
 
     def test_retrieve_pmids_empty(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        self.assertEqual(new.pmids, [])
+        self.assertEqual(new.pmids(), [])
+
+        with Transaction("test_retrieve_pmids_empty") as trans:
+            self.assertEqual(new.pmids(trans=trans), [])
 
     def test_pmids_setter(self):
         exp = ['123456', '7891011']
-        self.assertEqual(self.study.pmids, exp)
+        self.assertEqual(self.study.pmids(), exp)
 
         new_values = ['654321', '1101987']
-        self.study.pmids = new_values
-        self.assertEqual(self.study.pmids, new_values)
+        self.study.set_pmids(new_values)
+        self.assertEqual(self.study.pmids(), new_values)
 
     def test_pmids_setter_typeerror(self):
         with self.assertRaises(TypeError):
-            self.study.pmids = '123456'
+            self.study.set_pmids('123456')
 
     def test_retrieve_investigation(self):
-        self.assertEqual(self.study.investigation, 1)
+        self.assertEqual(self.study.investigation(), 1)
 
     def test_retrieve_investigation_empty(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        self.assertEqual(new.investigation, None)
+        self.assertEqual(new.investigation(), None)
 
     def test_retrieve_sample_template(self):
         self.assertEqual(self.study.sample_template, 1)
 
     def test_retrieve_data_types(self):
-        self.assertEqual(self.study.data_types, ['18S'])
+        self.assertEqual(self.study.data_types(), ['18S'])
+
+        with Transaction("test_retrieve_data_types") as trans:
+            self.assertEqual(self.study.data_types(trans=trans), ['18S'])
 
     def test_retrieve_data_types_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        self.assertEqual(new.data_types, [])
+        self.assertEqual(new.data_types(), [])
+
+        with Transaction("test_retrieve_data_types_none") as trans:
+            self.assertEqual(new.data_types(trans=trans), [])
 
     def test_retrieve_raw_data(self):
         self.assertEqual(self.study.raw_data(), [1])
+
+        with Transaction("test_retrieve_raw_data") as trans:
+            self.assertEqual(self.study.raw_data(trans=trans), [1])
 
     def test_retrieve_raw_data_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.raw_data(), [])
 
+        with Transaction("test_retrieve_raw_data_none") as trans:
+            self.assertEqual(new.raw_data(trans=trans), [])
+
     def test_retrieve_prep_templates(self):
         self.assertEqual(self.study.prep_templates(), [1])
+
+        with Transaction("test_retrieve_prep_templates") as trans:
+            self.assertEqual(self.study.prep_templates(trans=trans), [1])
 
     def test_retrieve_prep_templates_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.prep_templates(), [])
 
+        with Transaction("test_retrieve_prep_templates_none") as trans:
+            self.assertEqual(new.prep_templates(trans=trans), [])
+
     def test_retrieve_preprocessed_data(self):
         self.assertEqual(self.study.preprocessed_data(), [1, 2])
+
+        with Transaction("test_retrieve_preprocessed_data") as trans:
+            self.assertEqual(self.study.preprocessed_data(trans=trans), [1, 2])
 
     def test_retrieve_preprocessed_data_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.preprocessed_data(), [])
 
+        with Transaction("test_retrieve_preprocessed_data_none") as trans:
+            self.assertEqual(new.preprocessed_data(trans=trans), [])
+
     def test_retrieve_processed_data(self):
         self.assertEqual(self.study.processed_data(), [1])
+
+        with Transaction("test_retrieve_processed_data") as trans:
+            self.assertEqual(self.study.processed_data(trans=trans), [1])
 
     def test_retrieve_processed_data_none(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.processed_data(), [])
 
+        with Transaction("test_retrieve_processed_data_none") as trans:
+            self.assertEqual(new.processed_data(trans=trans), [])
+
     def test_add_pmid(self):
         self._change_processed_data_status('sandbox')
         self.study.add_pmid('4544444')
         exp = ['123456', '7891011', '4544444']
-        self.assertEqual(self.study.pmids, exp)
+        self.assertEqual(self.study.pmids(), exp)
+
+        with Transaction("test_add_pmid") as trans:
+            self.study.add_pmid('654321', trans)
+        exp = ['123456', '7891011', '4544444', '654321']
+        self.assertEqual(self.study.pmids(), exp)
 
     def test_environmental_packages(self):
-        obs = self.study.environmental_packages
+        obs = self.study.environmental_packages()
         exp = ['soil', 'plant-associated']
+        self.assertEqual(sorted(obs), sorted(exp))
+
+        with Transaction("test_environmental_packages") as trans:
+            obs = self.study.environmental_packages(trans=trans)
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_environmental_packages_setter(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
-        obs = new.environmental_packages
+        obs = new.environmental_packages()
         exp = []
         self.assertEqual(obs, exp)
 
         new_values = ['air', 'human-oral']
-        new.environmental_packages = new_values
-        obs = new.environmental_packages
+        new.set_environmental_packages(new_values)
+        obs = new.environmental_packages()
         self.assertEqual(sorted(obs), sorted(new_values))
 
     def test_environmental_packages_setter_typeerror(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(TypeError):
-            new.environmental_packages = 'air'
+            new.set_environmental_packages('air')
 
     def test_environmental_packages_setter_valueerror(self):
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         with self.assertRaises(ValueError):
-            new.environmental_packages = ['air', 'not a package']
+            new.set_environmental_packages(['air', 'not a package'])
 
     def test_environmental_packages_sandboxed(self):
         with self.assertRaises(QiitaDBStatusError):
-            self.study.environmental_packages = ['air']
+            self.study.set_environmental_packages(['air'])
 
 
 if __name__ == "__main__":
