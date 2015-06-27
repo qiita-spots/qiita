@@ -1080,16 +1080,16 @@ class StudyPerson(QiitaObject):
             Yields a `StudyPerson` object for each person in the database,
             in order of ascending study_person_id
         """
-        conn = SQLConnectionHandler()
-        sql = "select study_person_id from qiita.{} order by study_person_id"
-        results = conn.execute_fetchall(sql.format(cls._table))
+        with Transaction("study_person_iter") as trans:
+            sql = """SELECT study_person_id FROM qiita.{}
+                     ORDER BY study_person_id""".format(cls._table)
+            trans.add(sql)
 
-        for result in results:
-            ID = result[0]
-            yield StudyPerson(ID)
+            for result in trans.execute()[-1]:
+                yield StudyPerson(result[0], trans=trans)
 
     @classmethod
-    def exists(cls, name, affiliation):
+    def exists(cls, name, affiliation, trans=None):
         """Checks if a person exists
 
         Parameters
@@ -1098,16 +1098,20 @@ class StudyPerson(QiitaObject):
             Name of the person
         affiliation : str
             institution with which the person is affiliated
+        trans: Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
         bool
             True if person exists else false
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT exists(SELECT * FROM qiita.{0} WHERE "
-               "name = %s AND affiliation = %s)".format(cls._table))
-        return conn_handler.execute_fetchone(sql, (name, affiliation))[0]
+        trans = trans if trans is not None else Transaction("exists_%s" % name)
+        with trans:
+            sql = ("SELECT exists(SELECT * FROM qiita.{0} WHERE "
+                   "name = %s AND affiliation = %s)".format(cls._table))
+            trans.add(sql, [name, affiliation])
+            return trans.execute()[-1][0][0]
 
     @classmethod
     def create(cls, name, email, affiliation, address=None, phone=None):
@@ -1130,24 +1134,25 @@ class StudyPerson(QiitaObject):
         -------
         New StudyPerson object
 
+        Raises
+        ------
+        QiitaDBDuplicateError
+            If the pair (name, affiliation) already exists
         """
-        if cls.exists(name, affiliation):
-            sql = ("SELECT study_person_id from qiita.{0} WHERE name = %s and"
-                   " affiliation = %s".format(cls._table))
-            conn_handler = SQLConnectionHandler()
-            spid = conn_handler.execute_fetchone(sql, (name, affiliation))
+        with Transaction("create_%s" % name) as trans:
+            if cls.exists(name, affiliation, trans=trans):
+                raise QiitaDBDuplicateError(
+                    "StudyPerson",
+                    "name: '%s' affiliation: '%s'" % (name, affiliation))
 
-        # Doesn't exist so insert new person
-        else:
+            # Doesn't exist so insert new person
             sql = ("INSERT INTO qiita.{0} (name, email, affiliation, address, "
                    "phone) VALUES"
                    " (%s, %s, %s, %s, %s) RETURNING "
                    "study_person_id".format(cls._table))
-            conn_handler = SQLConnectionHandler()
-            spid = conn_handler.execute_fetchone(sql, (name, email,
-                                                       affiliation, address,
-                                                       phone))
-        return cls(spid[0])
+            trans.add(sql, [name, email, affiliation, address, phone])
+            spid = trans.execute()[-1][0][0]
+            return cls(spid, trans=trans)
 
     # Properties
     @property

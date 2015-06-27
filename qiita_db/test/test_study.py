@@ -53,10 +53,23 @@ class TestStudyPerson(TestCase):
             self.assertTrue(person.address == expected[i][3])
             self.assertTrue(person.phone == expected[i][4])
 
+    def test_exists(self):
+        self.assertTrue(StudyPerson.exists('LabDude', 'knight lab'))
+        self.assertFalse(StudyPerson.exists('LabDude', 'SomeOther lab'))
+        self.assertFalse(StudyPerson.exists('AnotherDude', 'knight lab'))
+
+        with Transaction("test_exists") as trans:
+            self.assertTrue(
+                StudyPerson.exists('LabDude', 'knight lab', trans=trans))
+            self.assertFalse(
+                StudyPerson.exists('LabDude', 'SomeOther lab', trans=trans))
+            self.assertFalse(
+                StudyPerson.exists('AnotherDude', 'knight lab', trans=trans))
+
     def test_create_studyperson_already_exists(self):
-        obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar', 'knight lab')
-        self.assertEqual(obs.name, 'LabDude')
-        self.assertEqual(obs.email, 'lab_dude@foo.bar')
+        with self.assertRaises(QiitaDBDuplicateError):
+            obs = StudyPerson.create(
+                'LabDude', 'lab_dude@foo.bar', 'knight lab')
 
     def test_retrieve_name(self):
         self.assertEqual(self.studyperson.name, 'LabDude')
