@@ -288,6 +288,12 @@ class TestStudy(TestCase):
         self.study.unshare(User("shared@foo.bar"))
         self.assertEqual(self.study.shared_with(), [])
 
+    def test_unshare_transaction(self):
+        self._change_processed_data_status('sandbox')
+        with Transaction("test_unshare_transaction") as trans:
+            self.study.unshare(User("shared@foo.bar"), trans=trans)
+        self.assertEqual(self.study.shared_with(), [])
+
     def test_has_access_shared(self):
         self._change_processed_data_status('sandbox')
         self.assertTrue(self.study.has_access(User("shared@foo.bar")))

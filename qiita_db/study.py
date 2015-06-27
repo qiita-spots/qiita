@@ -1031,20 +1031,24 @@ class Study(QiitaObject):
 
             trans.execute()
 
-    def unshare(self, user):
+    def unshare(self, user, trans=None):
         """Unshare the study with another user
 
         Parameters
         ----------
         user: User object
             The user to unshare the study with
+        trans: Transaction, optional
+            Transaction in which this method should be executed
         """
-        conn_handler = SQLConnectionHandler()
+        trans = trans if trans is not None else Transaction("unshare_"
+                                                            % self._id)
 
-        sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
-               "email = %s")
-
-        conn_handler.execute(sql, (self._id, user.id))
+        with trans:
+            sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
+                   "email = %s")
+            trans.add(sql, [self._id, user.id])
+            trans.execute()
 
 
 class StudyPerson(QiitaObject):
