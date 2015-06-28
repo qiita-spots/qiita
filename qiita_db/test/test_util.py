@@ -201,6 +201,9 @@ class DBUtilTests(TestCase):
             with Transaction("test_convert_to_id_bad_value") as trans:
                 convert_to_id("FAKE", "filepath_type", trans=trans)
 
+    def test_convert_from_id(self):
+        self.assertEqual(convert_from_id(999999999, 'ontology'), 'ENA')
+
     def test_get_filetypes(self):
         """Tests that get_filetypes works with valid arguments"""
 

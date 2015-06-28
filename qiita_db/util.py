@@ -852,7 +852,7 @@ def convert_to_id(value, table, text_col=None, trans=None):
     return _id[0][0]
 
 
-def convert_from_id(value, table):
+def convert_from_id(value, table, trans=None):
     """Converts an id value to its corresponding string value
 
     Parameters
@@ -861,6 +861,8 @@ def convert_from_id(value, table):
         The id value to convert
     table : str
         The table that has the conversion
+    trans: Transaction, optional
+        Transaction in which this method should be executed
 
     Returns
     -------
@@ -872,13 +874,14 @@ def convert_from_id(value, table):
     ValueError
         The passed id has no associated string
     """
-    conn_handler = SQLConnectionHandler()
-    string = conn_handler.execute_fetchone(
-        "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table),
-        (value, ))
-    if string is None:
-        raise ValueError("%s not valid for table %s" % (value, table))
-    return string[0]
+    trans = trans if trans is not None else Transaction("convert_from_id")
+    with trans:
+        sql = "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table)
+        trans.add(sql, [value])
+        string = trans.execute()[-1]
+        if not string:
+            raise ValueError("%s not valid for table %s" % (value, table))
+        return string[0]
 
 
 def get_count(table):
