@@ -13,4 +13,3 @@ INSERT INTO qiita.filetype (type) VALUES ('per_sample_FASTQ');
 INSERT INTO qiita.preprocessed_sequence_illumina_params (param_set_name, barcode_type)
   SELECT DISTINCT 'per sample FASTQ defaults', 'not-barcoded' FROM qiita.preprocessed_sequence_illumina_params
   WHERE NOT EXISTS (SELECT 1 FROM qiita.preprocessed_sequence_illumina_params WHERE barcode_type = 'not-barcoded');
->>>>>>> 1322f888a3cd1e91b90b7e4b62315b6a14e4b69f
