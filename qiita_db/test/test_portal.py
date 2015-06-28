@@ -48,7 +48,7 @@ if qiita_config.portal == "QIITA":
             obs = get_analyses_by_portal('QIITA')
             self.assertEqual(obs, set(x for x in range(1, 11)))
 
-        def test_add_study_portals(self):
+        def test_add_analysis_portals(self):
             add_analyses_to_portal('EMP', [self.analysis.id])
             obs = self.analysis._portals
             self.assertEqual(obs, ['EMP', 'QIITA'])
