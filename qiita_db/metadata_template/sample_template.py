@@ -10,8 +10,6 @@ from __future__ import division
 from os.path import join
 from time import strftime
 
-import pandas as pd
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
                                  QiitaDBUnknownIDError)
@@ -189,6 +187,41 @@ class SampleTemplate(MetadataTemplate):
         """
         return self._id
 
+    @property
+    def columns_restrictions(self):
+        """Gets the dictionary of colums required
+
+        Returns
+        -------
+        dict
+            The dict of restictions
+        """
+        return SAMPLE_TEMPLATE_COLUMNS
+
+    def can_be_updated(self, **kwargs):
+        """Gets if the template can be updated
+
+        Parameters
+        ----------
+        kwargs : ignored
+            Necessary to have in parameters to support other objects.
+
+        Returns
+        -------
+        bool
+            As this is the sample template, it will always return True. See the
+            notes.
+
+        Notes
+        -----
+            The prep template can't be updated in certain situations, see the
+            its documentation for more info. However, the sample template
+            doesn't have those restrictions. Thus, to be able to use the same
+            update code in the base class, we need to have this method and it
+            should always return True.
+        """
+        return True
+
     def generate_files(self):
         r"""Generates all the files that contain data from this template
         """
@@ -224,68 +257,5 @@ class SampleTemplate(MetadataTemplate):
         self._add_common_extend_steps_to_queue(md_template, conn_handler,
                                                queue_name)
         conn_handler.execute_queue(queue_name)
-
-        self.generate_files()
-
-    def update(self, md_template):
-        r"""Update values in the sample template
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by samples Ids
-
-        Raises
-        ------
-        QiitaDBError
-            If md_template and db do not have the same sample ids
-            If md_template and db do not have the same column headers
-        """
-        conn_handler = SQLConnectionHandler()
-
-        # Clean and validate the metadata template given
-        new_map = self._clean_validate_template(md_template, self.id,
-                                                SAMPLE_TEMPLATE_COLUMNS)
-        # Retrieving current metadata
-        current_map = self._transform_to_dict(conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.{0} WHERE {1}=%s".format(self._table,
-                                                          self._id_column),
-            (self.id,)))
-        dyn_vals = self._transform_to_dict(conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
-
-        for k in current_map:
-            current_map[k].update(dyn_vals[k])
-            current_map[k].pop('study_id', None)
-
-        # converting sql results to dataframe
-        current_map = pd.DataFrame.from_dict(current_map, orient='index')
-
-        # simple validations of sample ids and column names
-        samples_diff = set(
-            new_map.index.tolist()) - set(current_map.index.tolist())
-        if samples_diff:
-            raise QiitaDBError('The new sample template differs from what is '
-                               'stored in database by these samples names: %s'
-                               % ', '.join(samples_diff))
-        columns_diff = set(new_map.columns) - set(current_map.columns)
-        if columns_diff:
-            raise QiitaDBError('The new sample template differs from what is '
-                               'stored in database by these columns names: %s'
-                               % ', '.join(columns_diff))
-
-        # here we are comparing two dataframes following:
-        # http://stackoverflow.com/a/17095620/4228285
-        current_map.sort(axis=0, inplace=True)
-        current_map.sort(axis=1, inplace=True)
-        new_map.sort(axis=0, inplace=True)
-        new_map.sort(axis=1, inplace=True)
-        map_diff = (current_map != new_map).stack()
-        map_diff = map_diff[map_diff]
-        map_diff.index.names = ['id', 'column']
-        changed_cols = map_diff.index.get_level_values('column').unique()
-
-        for col in changed_cols:
-            self.update_category(col, new_map[col].to_dict())
 
         self.generate_files()

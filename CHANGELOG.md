@@ -23,6 +23,7 @@ http://qiime.org/documentation/file_formats.html#mapping-file-overview.
  * `qiita webserver` has been moved to `qiita pet webserver`
 * Cluster names now use dashes instead of underscores (e.g., `qiita_general` is now `qiita-general`)
 * `qiita-general` is now used as a default argument to `qiita-env start_cluster` and `qiita-env stop_cluster` if no cluster name is specified
+* Qiita now allows to process already demultiplexed data without any technical (barcode and primer) section of the read.  
 
 Version 0.1.0 (2015-04-30)
 --------------------------

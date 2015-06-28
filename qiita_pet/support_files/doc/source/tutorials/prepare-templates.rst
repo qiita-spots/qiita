@@ -110,8 +110,9 @@ them:
 | ``barcode``   | IUPAC characters   | The barcode sequence (`examples <http://www.nature.com/ismej/journal/v6/n8/extref/ismej20128x2.txt>`__).                                      |
 +---------------+--------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
 
-In case that your data has been sequenced using multiple lanes, an
-additional column is required:
+In case that your data has been sequenced using multiple lanes or you
+have :ref:`per_sample_fastq_files_without_barcode_or_primer_information`, an
+additional column is required.
 
 +------------------+-------------+------------------------------------------------------------------------------------------------------------------------------------------+
 | Field name       | Format      | Description                                                                                                                              |

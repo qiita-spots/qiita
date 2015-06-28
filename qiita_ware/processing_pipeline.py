@@ -83,6 +83,47 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
     return output_fps
 
 
+def _get_sample_names_by_run_prefix(prep_template):
+    """Generates a dictionary of run_prefix and sample names
+
+    Parameters
+    ----------
+    prep_template : PrepTemplate
+        The prep template from which we need to generate the minimal mapping
+        file
+
+    Returns
+    -------
+    dict
+        Dict mapping run_prefix to path of the minimal qiime mapping file
+
+    Raises
+    ------
+    ValueError
+        If there is more than 1 sample per run_prefix
+    """
+    from qiita_db.metadata_template import load_template_to_dataframe
+
+    qiime_map = load_template_to_dataframe(prep_template.qiime_map_fp,
+                                           index='#SampleID')
+
+    samples = {}
+    errors = []
+    for prefix, df in qiime_map.groupby('run_prefix'):
+        len_df = len(df)
+        if len_df != 1:
+            errors.append('%s has %d samples (%s)' % (prefix, len_df,
+                                                      ', '.join(df.index)))
+        else:
+            samples[prefix] = df.index.values[0]
+
+    if errors:
+        raise ValueError("You have run_prefix values with multiple "
+                         "samples: %s" % ' -- '.join(errors))
+
+    return samples
+
+
 def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     """Generates the split_libraries_fastq.py command for the raw-data
 
@@ -106,12 +147,20 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     NotImplementedError
         If any of the raw data input filepath type is not supported
     ValueError
-        If the number of raw sequences an raw barcode files are not the same
         If the raw data object does not have any sequence file associated
+        If the raw data filetype is not per_sample_FASTQ and the number of raw
+        forward sequences and raw barcode files are not the same
+        If the raw data filetype is per_sample_FASTQ and it has barcode files
+        If the raw data filetype is per_sample_FASTQ and the run_prefix values
+        don't match the file names without extensions and without the raw data
+        id prefix
     """
     from tempfile import mkdtemp
+    from os.path import basename
 
     from qiita_core.qiita_settings import qiita_config
+
+    filetype = raw_data.filetype
 
     # Get the filepaths from the raw data object
     forward_seqs = []
@@ -128,29 +177,6 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
             raise NotImplementedError("Raw data file type not supported %s"
                                       % fp_type)
 
-    if len(forward_seqs) == 0:
-        raise ValueError("Forward reads file not found on raw data %s"
-                         % raw_data.id)
-
-    if len(barcode_fps) != len(forward_seqs):
-        raise ValueError("The number of barcode files and the number of "
-                         "sequence files should match: %d != %d"
-                         % (len(barcode_fps), len(forward_seqs)))
-
-    # The minimal QIIME mapping files should be written to a directory,
-    # so QIIME can consume them
-    prep_dir = mkdtemp(dir=qiita_config.working_dir,
-                       prefix='MMF_%s' % prep_template.id)
-
-    # Get the Minimal Mapping Files
-    mapping_fps = _get_qiime_minimal_mapping(prep_template, prep_dir)
-
-    # Create a temporary directory to store the split libraries output
-    output_dir = mkdtemp(dir=qiita_config.working_dir, prefix='slq_out')
-
-    # Add any other parameter needed to split libraries fastq
-    params_str = params.to_str()
-
     # We need to sort the filepaths to make sure that each lane's file is in
     # the same order, so they match when passed to split_libraries_fastq.py
     # All files should be prefixed with run_prefix, so the ordering is
@@ -158,13 +184,70 @@ def _get_preprocess_fastq_cmd(raw_data, prep_template, params):
     forward_seqs = sorted(forward_seqs)
     reverse_seqs = sorted(reverse_seqs)
     barcode_fps = sorted(barcode_fps)
-    mapping_fps = sorted(mapping_fps)
 
-    # Create the split_libraries_fastq.py command
-    cmd = str("split_libraries_fastq.py --store_demultiplexed_fastq -i %s -b "
-              "%s -m %s -o %s %s"
-              % (','.join(forward_seqs), ','.join(barcode_fps),
-                 ','.join(mapping_fps), output_dir, params_str))
+    # Create a temporary directory to store the split libraries output
+    output_dir = mkdtemp(
+        dir=qiita_config.working_dir,
+        prefix='slq_out_%d_%d_' % (prep_template.id, raw_data.id))
+
+    # Add any other parameter needed to split libraries fastq
+    params_str = params.to_str()
+
+    if len(forward_seqs) == 0:
+        raise ValueError("Forward reads file not found in raw data %s"
+                         % raw_data.id)
+
+    if filetype == "per_sample_FASTQ":
+        if barcode_fps:
+            raise ValueError("per_sample_FASTQ can not have barcodes: %s"
+                             % (', '.join([basename(b) for b in barcode_fps])))
+
+        sn_by_rp = _get_sample_names_by_run_prefix(prep_template)
+        samples = []
+        for f in forward_seqs:
+            # getting just the main filename
+            f = basename(f).split('_', 1)[1]
+            # removing extentions: fastq or fastq.gz
+            if 'fastq' in f.lower().rsplit('.', 2):
+                f = f[:f.lower().rindex('.fastq')]
+            # this try/except block is simply to retrieve all possible errors
+            # and display them in the next if block
+            try:
+                samples.append(sn_by_rp[f])
+                del sn_by_rp[f]
+            except KeyError:
+                pass
+
+        if sn_by_rp:
+            raise ValueError(
+                'Some run_prefix values do not match your sample names: %s'
+                % ', '.join(sn_by_rp.keys()))
+
+        cmd = str("split_libraries_fastq.py --store_demultiplexed_fastq -i %s "
+                  "--sample_ids %s -o %s %s" % (','.join(forward_seqs),
+                                                ','.join(samples), output_dir,
+                                                params_str))
+    else:
+        if len(barcode_fps) != len(forward_seqs):
+            raise ValueError("The number of barcode files and the number of "
+                             "sequence files should match: %d != %d"
+                             % (len(barcode_fps), len(forward_seqs)))
+
+        # The minimal QIIME mapping files should be written to a directory,
+        # so QIIME can consume them
+        prep_dir = mkdtemp(dir=qiita_config.working_dir,
+                           prefix='MMF_%s' % prep_template.id)
+
+        # Get the Minimal Mapping Files
+        mapping_fps = _get_qiime_minimal_mapping(prep_template, prep_dir)
+        mapping_fps = sorted(mapping_fps)
+
+        # Create the split_libraries_fastq.py command
+        cmd = str("split_libraries_fastq.py --store_demultiplexed_fastq -i %s "
+                  "-b %s -m %s -o %s %s"
+                  % (','.join(forward_seqs), ','.join(barcode_fps),
+                     ','.join(mapping_fps), output_dir, params_str))
+
     return (cmd, output_dir)
 
 
@@ -461,7 +544,7 @@ class StudyPreprocessor(ParallelWrapper):
         # Check the raw data filetype to know which command generator we
         # should use
         filetype = raw_data.filetype
-        if filetype == "FASTQ":
+        if filetype in ("FASTQ", "per_sample_FASTQ"):
             cmd_generator = _get_preprocess_fastq_cmd
             insert_preprocessed_data = _insert_preprocessed_data
         elif filetype in ('FASTA', 'SFF'):

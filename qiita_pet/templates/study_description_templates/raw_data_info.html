@@ -22,7 +22,7 @@
             {% end %}
           {% else %}
             <h4>There are no files currently linked to the raw data. Choose from the following list:</h4><br/>
-            <table border="0">
+            <table class="table table-striped">
               <tr>
                 <th>File</th>
                 <th>&nbsp;&nbsp;&nbsp;</th>
@@ -35,9 +35,13 @@
                   <td>
                     <select id="{{f}}" name="upload_file_{{prep_template_id}}_{{filetype}}">
                       <option value="">Ignore ...</option>
-                      {% for fp_type in filepath_types %}
-                        <option value="{{fp_type}}">{{fp_type}}</option>
-                      {% end %}
+                        {% for fp_type in filepath_types %}
+                          {% if rd_filetype == "per_sample_FASTQ" and fp_type == "forward seqs" %}
+                            <option value="{{fp_type}}" selected="selected">{{fp_type}}</option>
+                          {% else %}
+                            <option value="{{fp_type}}">{{fp_type}}</option>
+                          {% end %}
+                        {% end %}
                     </select>
                   </td>
                 </tr>
