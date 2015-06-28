@@ -27,7 +27,7 @@ Classes
 
 from __future__ import division
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import Transaction
 from .exceptions import QiitaDBNotImplementedError, QiitaDBUnknownIDError
 
 
@@ -113,13 +113,15 @@ class QiitaObject(object):
             raise IncompetentQiitaDeveloperError(
                 "Could not instantiate an object of the base class")
 
-    def _check_id(self, id_):
+    def _check_id(self, id_, trans):
         r"""Check that the provided ID actually exists on the database
 
         Parameters
         ----------
         id_ : object
             The ID to test
+        trans: Transaction
+            Transaction in which this method should be executed
 
         Notes
         -----
@@ -128,28 +130,34 @@ class QiitaObject(object):
         the other classes. However, still defining here as there is only one
         subclass that doesn't follow this convention and it can override this.
         """
-        self._check_subclass()
+        sql = "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {0}_id=%s)".format(
+            self._table)
+        trans.add(sql, [id_])
+        return trans.execute()[-1][0][0]
 
-        conn_handler = SQLConnectionHandler()
-
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "{0}_id=%s)".format(self._table), (id_, ))[0]
-
-    def __init__(self, id_):
+    def __init__(self, id_, trans=None):
         r"""Initializes the object
 
         Parameters
         ----------
-        id_: the object identifier
+        id_: object
+            The object identifier
+        trans: Transaction
+            Transaction in which this method should be executed
 
         Raises
         ------
         QiitaDBUnknownIDError
             If `id_` does not correspond to any object
         """
-        if not self._check_id(id_):
-            raise QiitaDBUnknownIDError(id_, self._table)
+        self._check_subclass()
+
+        trans = trans if trans is not None else Transaction(
+            "init_%s_%s" % (self.__class__.__name__, id_))
+
+        with trans:
+            if not self._check_id(id_, trans):
+                raise QiitaDBUnknownIDError(id_, self._table)
 
         self._id = id_
 
@@ -184,47 +192,60 @@ class QiitaStatusObject(QiitaObject):
     _status_setter_checks
     """
 
-    @property
-    def status(self):
-        r"""String with the current status of the analysis"""
-        # Check that self._table is actually defined
-        self._check_subclass()
+    def status(self, trans=None):
+        r"""String with the current status of the object
 
+        Parameters
+        ----------
+        trans: Transaction, optional
+            Transaction in which this method should be executed
+        """
         # Get the DB status of the object
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
-            "SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
-            "(SELECT {0}_status_id FROM qiita.{0} WHERE "
-            "{0}_id = %s)".format(self._table),
-            (self._id, ))[0]
+        trans = trans if trans is not None else Transaction(
+            "status_%s_%s" % (self.__class__.__name__, self._id))
+        with trans:
+            sql = """SELECT status FROM qiita.{0}_status
+                     WHERE {0}_status_id = (
+                        SELECT {0}_status_id FROM qiita.{0}
+                        WHERE {0}_id = %s)""".format(self._table)
+            trans.add(sql, [self._id])
+            return trans.execute()[-1][0][0]
 
-    def _status_setter_checks(self, conn_handler):
+    def _status_setter_checks(self, trans):
         r"""Perform any extra checks that needed to be done before setting the
         object status on the database. Should be overwritten by the subclasses
+
+        Parameters
+        ----------
+        trans: Transaction
+            Transaction in which this method should be executed
         """
         raise QiitaDBNotImplementedError()
 
-    @status.setter
-    def status(self, status):
-        r"""Change the status of the analysis
+    def set_status(self, status, trans=None):
+        r"""Change the status of the object
 
         Parameters
         ----------
         status: str
             The new object status
+        trans: Transaction, optional
+            Transaction in which this method should be executed
         """
-        # Check that self._table is actually defined
-        self._check_subclass()
+        trans = trans if trans is not None else Transaction(
+            "set_status_%s_%s" % (self.__class__.__name__, self._id))
 
-        # Perform any extra checks needed before we update the status in the DB
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
-
-        # Update the status of the object
-        conn_handler.execute(
-            "UPDATE qiita.{0} SET {0}_status_id = "
-            "(SELECT {0}_status_id FROM qiita.{0}_status WHERE status = %s) "
-            "WHERE {0}_id = %s".format(self._table), (status, self._id))
+        with trans:
+            # Perform any extra checks needed before we update the
+            # status in the DB
+            self._status_setter_checks(trans)
+            # Update the status of the object
+            sql = """UPDATE qiita.{0} SET {0}_status_id = (
+                        SELECT {0}_status_id
+                        FROM qiita.{0}_status WHERE status = %s)
+                    WHERE {0}_id = %s""".format(self._table)
+            self.add(sql, [status, self._id])
+            self.execute()
 
     def check_status(self, status, exclude=False):
         r"""Checks status of object.
@@ -256,21 +277,20 @@ class QiitaStatusObject(QiitaObject):
         Table setup:
         foo: foo_status_id  ----> foo_status: foo_status_id, status
         """
-        # Check that self._table is actually defined
-        self._check_subclass()
+        trans = Transaction("check_status_%s_%s"
+                            % (self.__class__.__name__, self._id))
+        with trans:
+            sql = "SELECT DISTINCT status FROM qiita.{0}_status".format(
+                self._table)
+            trans.add(sql, [self._id])
+            statuses = [x[0] for x in trans.execute()[-1]]
 
-        # Get all available statuses
-        conn_handler = SQLConnectionHandler()
+            # Check that all the provided statuses are valid statuses
+            if set(status).difference(statuses):
+                raise ValueError("%s are not valid status values"
+                                 % set(status).difference(statuses))
 
-        statuses = [x[0] for x in conn_handler.execute_fetchall(
-            "SELECT DISTINCT status FROM qiita.{0}_status".format(self._table),
-            (self._id, ))]
+            # Get the DB status of the object
+            dbstatus = self.status(trans)
 
-        # Check that all the provided statuses are valid statuses
-        if set(status).difference(statuses):
-            raise ValueError("%s are not valid status values"
-                             % set(status).difference(statuses))
-
-        # Get the DB status of the object
-        dbstatus = self.status
         return dbstatus not in status if exclude else dbstatus in status

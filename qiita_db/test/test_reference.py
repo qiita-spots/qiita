@@ -14,6 +14,7 @@ from tempfile import mkstemp
 from qiita_core.util import qiita_test_checker
 from qiita_db.reference import Reference
 from qiita_db.util import get_mountpoint, get_count
+from qiita_db.sql_connection import Transaction
 
 
 @qiita_test_checker()
@@ -70,20 +71,50 @@ class ReferenceTests(TestCase):
                [tree_id, exp_tree, 12, '0', 1, 6]]
         self.assertEqual(obs, exp)
 
+    def test_exists(self):
+        self.assertTrue(Reference.exists("Greengenes", "13_8"))
+        self.assertFalse(Reference.exists("NotAReference", "13_8"))
+        self.assertFalse(Reference.exists("Greengenes", "13_5"))
+        with Transaction("test_exists") as trans:
+            self.assertTrue(
+                Reference.exists("Greengenes", "13_8", trans=trans))
+            self.assertFalse(
+                Reference.exists("NotAReference", "13_8", trans=trans))
+            self.assertFalse(
+                Reference.exists("Greengenes", "13_5", trans=trans))
+
+    def test_name(self):
+        ref = Reference(1)
+        self.assertEqual(ref.name(), "Greengenes")
+        with Transaction("test_name") as trans:
+            self.assertEqual(ref.name(trans=trans), "Greengenes")
+
+    def test_version(self):
+        ref = Reference(1)
+        self.assertEqual(ref.version(), "13_8")
+        with Transaction("test_version") as trans:
+            self.assertEqual(ref.version(trans=trans), "13_8")
+
     def test_sequence_fp(self):
         ref = Reference(1)
         exp = join(self.db_dir, "GreenGenes_13_8_97_otus.fasta")
-        self.assertEqual(ref.sequence_fp, exp)
+        self.assertEqual(ref.sequence_fp(), exp)
+        with Transaction("test_sequence_fp") as trans:
+            self.assertEqual(ref.sequence_fp(trans=trans), exp)
 
     def test_taxonomy_fp(self):
         ref = Reference(1)
         exp = join(self.db_dir, "GreenGenes_13_8_97_otu_taxonomy.txt")
-        self.assertEqual(ref.taxonomy_fp, exp)
+        self.assertEqual(ref.taxonomy_fp(), exp)
+        with Transaction("test_taxonomy_fp") as trans:
+            self.assertEqual(ref.taxonomy_fp(trans=trans), exp)
 
     def test_tree_fp(self):
         ref = Reference(1)
         exp = join(self.db_dir, "GreenGenes_13_8_97_otus.tree")
-        self.assertEqual(ref.tree_fp, exp)
+        self.assertEqual(ref.tree_fp(), exp)
+        with Transaction("test_tree_fp") as trans:
+            self.assertEqual(ref.tree_fp(trans=trans), exp)
 
 if __name__ == '__main__':
     main()
