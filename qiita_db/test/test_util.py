@@ -275,22 +275,23 @@ class DBUtilTests(TestCase):
 
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
             "SELECT count(1) FROM qiita.filepath")[0]
-        obs = insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",
-                               self.conn_handler)
-        self.assertEqual(obs, [exp_new_id])
+        with Transaction("test_insert_filepaths") as trans:
+            obs = insert_filepaths([(fp, 1)], 1, "raw_data", "filepath", trans)
+            self.assertEqual(obs, [exp_new_id])
 
-        # Check that the files have been copied correctly
-        exp_fp = join(get_db_files_base_dir(), "raw_data",
-                      "1_%s" % basename(fp))
-        self.assertTrue(exists(exp_fp))
-        self.files_to_remove.append(exp_fp)
+            # Check that the files have been copied correctly
+            exp_fp = join(get_db_files_base_dir(trans), "raw_data",
+                          "1_%s" % basename(fp))
+            self.assertTrue(exists(exp_fp))
+            self.files_to_remove.append(exp_fp)
 
-        # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
-        exp_fp = "1_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
-        self.assertEqual(obs, exp)
+            # Check that the filepaths have been added to the DB
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.filepath WHERE filepath_id=%d"
+                % exp_new_id)
+            exp_fp = "1_%s" % basename(fp)
+            exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+            self.assertEqual(obs, exp)
 
     def test_insert_filepaths_string(self):
         fd, fp = mkstemp()
@@ -301,70 +302,24 @@ class DBUtilTests(TestCase):
 
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
             "SELECT count(1) FROM qiita.filepath")[0]
-        obs = insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
-                               "filepath", self.conn_handler)
-        self.assertEqual(obs, [exp_new_id])
+        with Transaction(test_insert_filepaths_string) as trans:
+            obs = insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
+                                   "filepath", self.conn_handler)
+            self.assertEqual(obs, [exp_new_id])
 
-        # Check that the files have been copied correctly
-        exp_fp = join(get_db_files_base_dir(), "raw_data",
-                      "1_%s" % basename(fp))
-        self.assertTrue(exists(exp_fp))
-        self.files_to_remove.append(exp_fp)
+            # Check that the files have been copied correctly
+            exp_fp = join(get_db_files_base_dir(trans), "raw_data",
+                          "1_%s" % basename(fp))
+            self.assertTrue(exists(exp_fp))
+            self.files_to_remove.append(exp_fp)
 
-        # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
-        exp_fp = "1_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
-        self.assertEqual(obs, exp)
-
-    def test_insert_filepaths_queue(self):
-        fd, fp = mkstemp()
-        close(fd)
-        with open(fp, "w") as f:
-            f.write("\n")
-        self.files_to_remove.append(fp)
-
-        # create and populate queue
-        self.conn_handler.create_queue("toy_queue")
-        self.conn_handler.add_to_queue(
-            "toy_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
-            "phone) VALUES (%s, %s, %s, %s)",
-            ['insert@foo.bar', 'Toy', 'pass', '111-111-1111'])
-
-        exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.filepath")[0]
-        insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
-                         "filepath", self.conn_handler, queue='toy_queue')
-
-        self.conn_handler.add_to_queue(
-            "toy_queue", "INSERT INTO qiita.raw_filepath (raw_data_id, "
-            "filepath_id) VALUES (1, %s)", ['{0}'])
-        self.conn_handler.execute_queue("toy_queue")
-
-        # check that the user was added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * from qiita.qiita_user WHERE email = %s",
-            ['insert@foo.bar'])
-        exp = [['insert@foo.bar', 5, 'pass', 'Toy', None, None, '111-111-1111',
-                None, None, None]]
-        self.assertEqual(obs, exp)
-
-        # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
-        exp_fp = "1_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
-        self.assertEqual(obs, exp)
-
-        # check that raw_filpath data was added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            """SELECT *
-               FROM qiita.raw_filepath
-               WHERE filepath_id=%d""" % exp_new_id)
-        exp_fp = "1_%s" % basename(fp)
-        exp = [[1, exp_new_id]]
-        self.assertEqual(obs, exp)
+            # Check that the filepaths have been added to the DB
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.filepath WHERE filepath_id=%d"
+                % exp_new_id)
+            exp_fp = "1_%s" % basename(fp)
+            exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+            self.assertEqual(obs, exp)
 
     def _common_purge_filpeaths_test(self):
         # Get all the filepaths so we can test if they've been removed or not
@@ -494,47 +449,48 @@ class DBUtilTests(TestCase):
             get_filepath_id("raw_data", "Not_a_path")
 
     def test_get_mountpoint(self):
-        exp = [(5, join(get_db_files_base_dir(), 'raw_data', ''))]
-        obs = get_mountpoint("raw_data")
-        self.assertEqual(obs, exp)
+        with Transaction("test_get_mountpoint") as trans:
+            exp = [(5, join(get_db_files_base_dir(trans), 'raw_data', ''))]
+            obs = get_mountpoint("raw_data", trans)
+            self.assertEqual(obs, exp)
 
-        exp = [(1, join(get_db_files_base_dir(), 'analysis', ''))]
-        obs = get_mountpoint("analysis")
-        self.assertEqual(obs, exp)
+            exp = [(1, join(get_db_files_base_dir(trans), 'analysis', ''))]
+            obs = get_mountpoint("analysis", trans)
+            self.assertEqual(obs, exp)
 
-        exp = [(2, join(get_db_files_base_dir(), 'job', ''))]
-        obs = get_mountpoint("job")
-        self.assertEqual(obs, exp)
+            exp = [(2, join(get_db_files_base_dir(trans), 'job', ''))]
+            obs = get_mountpoint("job", trans)
+            self.assertEqual(obs, exp)
 
-        # inserting new ones so we can test that it retrieves these and
-        # doesn't alter other ones
-        self.conn_handler.execute(
-            "UPDATE qiita.data_directory SET active=false WHERE "
-            "data_directory_id=1")
-        self.conn_handler.execute(
-            "INSERT INTO qiita.data_directory (data_type, mountpoint, "
-            "subdirectory, active) VALUES ('analysis', 'analysis', 'tmp', "
-            "true), ('raw_data', 'raw_data', 'tmp', false)")
+            # inserting new ones so we can test that it retrieves these and
+            # doesn't alter other ones
+            self.conn_handler.execute(
+                "UPDATE qiita.data_directory SET active=false WHERE "
+                "data_directory_id=1")
+            self.conn_handler.execute(
+                "INSERT INTO qiita.data_directory (data_type, mountpoint, "
+                "subdirectory, active) VALUES ('analysis', 'analysis', 'tmp', "
+                "true), ('raw_data', 'raw_data', 'tmp', false)")
 
-        # this should have been updated
-        exp = [(10, join(get_db_files_base_dir(), 'analysis', 'tmp'))]
-        obs = get_mountpoint("analysis")
-        self.assertEqual(obs, exp)
+            # this should have been updated
+            exp = [(10, join(get_db_files_base_dir(trans), 'analysis', 'tmp'))]
+            obs = get_mountpoint("analysis", trans)
+            self.assertEqual(obs, exp)
 
-        # these 2 shouldn't
-        exp = [(5, join(get_db_files_base_dir(), 'raw_data', ''))]
-        obs = get_mountpoint("raw_data")
-        self.assertEqual(obs, exp)
+            # these 2 shouldn't
+            exp = [(5, join(get_db_files_base_dir(trans), 'raw_data', ''))]
+            obs = get_mountpoint("raw_data", trans)
+            self.assertEqual(obs, exp)
 
-        exp = [(2, join(get_db_files_base_dir(), 'job', ''))]
-        obs = get_mountpoint("job")
-        self.assertEqual(obs, exp)
+            exp = [(2, join(get_db_files_base_dir(trans), 'job', ''))]
+            obs = get_mountpoint("job", trans)
+            self.assertEqual(obs, exp)
 
-        # testing multi returns
-        exp = [(5, join(get_db_files_base_dir(), 'raw_data', '')),
-               (11, join(get_db_files_base_dir(), 'raw_data', 'tmp'))]
-        obs = get_mountpoint("raw_data", retrieve_all=True)
-        self.assertEqual(obs, exp)
+            # testing multi returns
+            exp = [(5, join(get_db_files_base_dir(trans), 'raw_data', '')),
+                   (11, join(get_db_files_base_dir(trans), 'raw_data', 'tmp'))]
+            obs = get_mountpoint("raw_data", trans, retrieve_all=True)
+            self.assertEqual(obs, exp)
 
     def test_get_mountpoint_path_by_id(self):
         exp = join(get_db_files_base_dir(), 'raw_data', '')

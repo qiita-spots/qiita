@@ -402,18 +402,21 @@ def exists_dynamic_table(table, prefix, suffix, trans):
             exists_table(table, trans))
 
 
-def get_db_files_base_dir():
+def get_db_files_base_dir(trans):
     r"""Returns the path to the base directory of all db files
+
+    Parameters
+    ----------
+    trans : Transaction
+        Transaction in which this method should be executed
 
     Returns
     -------
     str
         The path to the base directory of all db files
     """
-    conn_handler = SQLConnectionHandler()
-
-    return conn_handler.execute_fetchone(
-        "SELECT base_data_dir FROM settings")[0]
+    trans.add("SELECT base_data_dir FROM settings")
+    return trans.execute()[-1][0][0]
 
 
 def get_work_base_dir():
@@ -536,13 +539,15 @@ def move_upload_files_to_trash(study_id, files_to_move):
         rename(fullpath, new_fullpath)
 
 
-def get_mountpoint(mount_type, retrieve_all=False):
+def get_mountpoint(mount_type, trans=None, retrieve_all=False):
     r""" Returns the most recent values from data directory for the given type
 
     Parameters
     ----------
     mount_type : str
         The data mount type
+    trans : Transaction
+        Transaction in which this method should be executed
     retrieve_all : bool
         Retrieve all the available mount points or just the active one
 
@@ -551,20 +556,23 @@ def get_mountpoint(mount_type, retrieve_all=False):
     list
         List of tuple, where: [(id_mountpoint, filepath_of_mountpoint)]
     """
-    conn_handler = SQLConnectionHandler()
 
     if retrieve_all:
-        result = conn_handler.execute_fetchall(
-            "SELECT data_directory_id, mountpoint, subdirectory FROM "
-            "qiita.data_directory WHERE data_type='%s' ORDER BY active DESC"
-            % mount_type)
+        sql = """SELECT data_directory_id, mountpoint, subdirectory
+                 FROM qiita.data_directory WHERE data_type=%s
+                 ORDER BY active DESC"""
     else:
-        result = [conn_handler.execute_fetchone(
-            "SELECT data_directory_id, mountpoint, subdirectory FROM "
-            "qiita.data_directory WHERE data_type='%s' and active=true"
-            % mount_type)]
-    basedir = get_db_files_base_dir()
-    return [(d, join(basedir, m, s)) for d, m, s in result]
+        sql = """SELECT data_directory_id, mountpoint, subdirectory
+                 FROM qiita.data_directory WHERE data_type=%s
+                 AND active=true"""
+
+    trans = trans if trans is not None else Transaction("get_mountpoint")
+
+    with trans:
+        trans.add(sql, [mount_type])
+        result = trans.execute()[-1]
+        basedir = get_db_files_base_dir(trans)
+        return [(d, join(basedir, m, s)) for d, m, s in result]
 
 
 def get_mountpoint_path_by_id(mount_id):
@@ -587,9 +595,9 @@ def get_mountpoint_path_by_id(mount_id):
     return join(get_db_files_base_dir(), mountpoint, subdirectory)
 
 
-def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
-                     move_files=True, queue=None):
-    r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
+def insert_filepaths(filepaths, obj_id, table, filepath_table, trans,
+                     move_files=True):
+    r"""Inserts `filepaths` in the DB connected with `trans`. Since
     the files live outside the database, the directory in which the files
     lives is controlled by the database, so it copies the filepaths from
     its original location to the controlled directory.
@@ -605,24 +613,21 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         Table that holds the file data.
     filepath_table : str
         Table that holds the filepath information
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
+    trans : Transaction
+        Transaction in which this method should be executed
     move_files : bool, optional
         Whether or not to copy from the given filepaths to the db filepaths
         default: True
-    queue : str, optional
-        The queue to add this transaction to. Default return list of ids
 
     Returns
     -------
-    list or None
-        List of the filepath_id in the database for each added filepath if
-        queue not specified, or no return value if queue specified
+    list of int
+        List of the filepath_id in the database for each added filepath
     """
     new_filepaths = filepaths
 
-    dd_id, mp = get_mountpoint(table)[0]
-    base_fp = join(get_db_files_base_dir(), mp)
+    dd_id, mp = get_mountpoint(table, trans)[0]
+    base_fp = join(get_db_files_base_dir(trans), mp)
 
     if move_files:
         # Generate the new fileapths. Format: DataId_OriginalName
@@ -638,27 +643,25 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
 
     def str_to_id(x):
         return (x if isinstance(x, (int, long))
-                else convert_to_id(x, "filepath_type"))
+                else convert_to_id(x, "filepath_type", trans=trans))
+
     paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
                         compute_checksum(path))
                         for path, id in new_filepaths]
-    # Create the list of SQL values to add
-    values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), pid,
-              checksum, 1, dd_id) for path, pid, checksum in
-              paths_w_checksum]
-    # Insert all the filepaths at once and get the filepath_id back
-    sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
-           "checksum_algorithm_id, data_directory_id) VALUES {1} RETURNING"
-           " filepath_id".format(filepath_table, ', '.join(values)))
-    if queue is not None:
-        # Drop the sql into the given queue
-        conn_handler.add_to_queue(queue, sql, None)
-    else:
-        ids = conn_handler.execute_fetchall(sql)
 
-        # we will receive a list of lists with a single element on it
-        # (the id), transform it to a list of ids
-        return [id[0] for id in ids]
+    # Create the list of SQL values to add
+    values = [[path, pid, checksum, 1, dd_id]
+              for path, pid, checksum in paths_w_checksum]
+
+    # Insert all the filepaths at once and get the filepath_id back
+    sql = """INSERT INTO qiita.{0}
+                (filepath, filepath_type_id, checksum, checksum_algorithm_id,
+                    data_directory_id)
+             VALUES (%s, %s, %s, %s, %s)
+             RETURNING filepath_id""".format(filepath_table)
+    idx = t.index
+    trans.add(sql, values, many=True)
+    return [id[0][0] for id in trans.execute()[idx:]]
 
 
 def purge_filepaths():
