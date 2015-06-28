@@ -40,7 +40,6 @@ from future.utils import viewitems, viewvalues
 from future.builtins import zip
 from os.path import join
 from functools import partial
-from collections import defaultdict
 from copy import deepcopy
 
 import pandas as pd
@@ -58,7 +57,7 @@ from qiita_db.util import (exists_table, get_table_cols,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
 from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
-                   prefix_sample_names_with_id)
+                   prefix_sample_names_with_id, type_lookup)
 
 
 class BaseSample(QiitaObject):
@@ -325,11 +324,7 @@ class BaseSample(QiitaObject):
         except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
-            type_lookup = defaultdict(lambda: 'varchar')
-            type_lookup[int] = 'integer'
-            type_lookup[float] = 'float8'
-            type_lookup[str] = 'varchar'
-            value_type = type_lookup[type(value)]
+            value_type = type_lookup(type(value))
 
             sql = """SELECT udt_name
                      FROM information_schema.columns
@@ -474,6 +469,7 @@ class MetadataTemplate(QiitaObject):
     get
     to_file
     add_filepath
+    update
 
     See Also
     --------
@@ -1092,6 +1088,66 @@ class MetadataTemplate(QiitaObject):
 
         return cols
 
+    def update(self, md_template):
+        r"""Update values in the template
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template file contents indexed by samples Ids
+
+        Raises
+        ------
+        QiitaDBError
+            If md_template and db do not have the same sample ids
+            If md_template and db do not have the same column headers
+            If self.can_be_updated is not True
+        """
+        conn_handler = SQLConnectionHandler()
+
+        # Clean and validate the metadata template given
+        new_map = self._clean_validate_template(md_template, self.study_id,
+                                                self.columns_restrictions)
+        # Retrieving current metadata
+        current_map = self._transform_to_dict(conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.{0}".format(self._table_name(self.id))))
+        current_map = pd.DataFrame.from_dict(current_map, orient='index')
+
+        # simple validations of sample ids and column names
+        samples_diff = set(new_map.index).difference(current_map.index)
+        if samples_diff:
+            raise QiitaDBError('The new template differs from what is stored '
+                               'in database by these samples names: %s'
+                               % ', '.join(samples_diff))
+        columns_diff = set(new_map.columns).difference(current_map.columns)
+        if columns_diff:
+            raise QiitaDBError('The new template differs from what is stored '
+                               'in database by these columns names: %s'
+                               % ', '.join(columns_diff))
+
+        # here we are comparing two dataframes following:
+        # http://stackoverflow.com/a/17095620/4228285
+        current_map.sort(axis=0, inplace=True)
+        current_map.sort(axis=1, inplace=True)
+        new_map.sort(axis=0, inplace=True)
+        new_map.sort(axis=1, inplace=True)
+        map_diff = (current_map != new_map).stack()
+        map_diff = map_diff[map_diff]
+        map_diff.index.names = ['id', 'column']
+        changed_cols = map_diff.index.get_level_values('column').unique()
+
+        if not self.can_be_updated(columns=set(changed_cols)):
+            raise QiitaDBError('The new template is modifying fields that '
+                               'cannot be modified. Try removing the target '
+                               'gene fields or deleting the processed data. '
+                               'You are trying to modify: %s'
+                               % ', '.join(changed_cols))
+
+        for col in changed_cols:
+            self.update_category(col, new_map[col].to_dict())
+
+        self.generate_files()
+
     def update_category(self, category, samples_and_values):
         """Update an existing column
 
@@ -1131,11 +1187,8 @@ class MetadataTemplate(QiitaObject):
         except ValueError as e:
             # catching error so we can check if the error is due to different
             # column type or something else
-            type_lookup = defaultdict(lambda: 'varchar')
-            type_lookup[int] = 'integer'
-            type_lookup[float] = 'float8'
-            type_lookup[str] = 'varchar'
-            value_types = set(type_lookup[type(value)]
+
+            value_types = set(type_lookup(type(value))
                               for value in viewvalues(samples_and_values))
 
             sql = """SELECT udt_name

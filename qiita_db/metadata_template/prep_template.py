@@ -8,6 +8,7 @@
 
 from __future__ import division
 from future.utils import viewvalues
+from itertools import chain
 from os.path import join
 from time import strftime
 from copy import deepcopy
@@ -287,6 +288,55 @@ class PrepTemplate(MetadataTemplate):
             "SELECT d.data_type{0} FROM qiita.data_type d JOIN "
             "qiita.prep_template p ON p.data_type_id = d.data_type_id WHERE "
             "p.prep_template_id=%s".format(ret), (self.id,))[0]
+
+    @property
+    def columns_restrictions(self):
+        """Gets the dictionary of colums required based on data_type
+
+        Returns
+        -------
+        dict
+            The dict of restictions based on the data_type
+        """
+        pt_cols = deepcopy(PREP_TEMPLATE_COLUMNS)
+        if self.data_type() in TARGET_GENE_DATA_TYPES:
+            pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+
+        return pt_cols
+
+    def can_be_updated(self, columns):
+        """Gets if the template can be updated
+
+        Parameters
+        ----------
+        columns : set
+            A set of the names of the columns to be updated
+
+        Returns
+        -------
+        bool
+            If the template can be updated
+
+        Notes
+        -----
+        The prep template can be updated when (1) it has no preprocessed data
+        or the prep template data-type is not part of TARGET_GENE_DATA_TYPES,
+        (2) if is part of TARGET_GENE_DATA_TYPES then we will only update if
+        the columns being updated are not part of
+        PREP_TEMPLATE_COLUMNS_TARGET_GENE
+        """
+        if (not self.preprocessed_data or
+           self.data_type() not in TARGET_GENE_DATA_TYPES):
+            return True
+
+        tg_columns = set(chain.from_iterable(
+            [v.columns for v in
+             viewvalues(PREP_TEMPLATE_COLUMNS_TARGET_GENE)]))
+
+        if not columns & tg_columns:
+            return True
+
+        return False
 
     @property
     def raw_data(self):

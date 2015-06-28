@@ -124,7 +124,7 @@
                     {% end %}
                   </select>
                   <div id="files-{{pt_id}}-0" class="filesgroup"></div>
-                  {% for _, value, filepath_types in filetypes %}
+                  {% for name, value, filepath_types in filetypes %}
                     <div id="files-{{pt_id}}-{{value}}" class="filesgroup">
                       <br/>
                       <b>Choose the files to link to the raw data</b>
@@ -143,7 +143,11 @@
                               <select id="{{f}}" name="upload_file_{{pt_id}}_{{value}}">
                                 <option value="">Ignore ...</option>
                                 {% for fp_type in filepath_types %}
-                                  <option value="{{fp_type}}">{{fp_type}}</option>
+                                  {% if name == "per_sample_FASTQ" and fp_type == "forward seqs" %}
+                                    <option value="{{fp_type}}" selected="selected">{{fp_type}}</option>
+                                  {% else %}
+                                    <option value="{{fp_type}}">{{fp_type}}</option>
+                                  {% end %}
                                 {% end %}
                               </select>
                             </td>
@@ -188,5 +192,20 @@
         </td>
       </tr>
       {% end %}
+    {% if is_editable %}
+      <tr><td><hr></td></tr>
+      <tr>
+        <td>
+          <select id="update_prep_template_{{pt_id}}">
+            {% for f in files %}
+              {% if f.endswith(('txt', 'tsv')) %}
+                <option value="{{f}}">{{f}}</option>
+              {% end %}
+            {% end %}
+          </select>
+          <a class="btn btn-primary" onclick="update_prep_template({{pt_id}});">Update prep template</a>
+        </td>
+      </tr>
+    {% end %}
   </table>
 </div>

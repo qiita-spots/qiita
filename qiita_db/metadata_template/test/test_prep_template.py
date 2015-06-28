@@ -12,6 +12,7 @@ from tempfile import mkstemp
 from os import close, remove
 from os.path import join
 from collections import Iterable
+from copy import deepcopy
 
 import numpy.testing as npt
 import pandas as pd
@@ -254,6 +255,19 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
     def test_get_none(self):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Category') is None)
+
+    def test_columns_restrictions(self):
+        """that it returns SAMPLE_TEMPLATE_COLUMNS"""
+        exp = deepcopy(PREP_TEMPLATE_COLUMNS)
+        exp.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+        self.assertEqual(self.prep_template.columns_restrictions, exp)
+
+    def test_can_be_updated(self):
+        """test if the template can be updated"""
+        # you can't update restricted colums in a pt with data
+        self.assertFalse(self.prep_template.can_be_updated({'barcode'}))
+        # but you can if not restricted
+        self.assertTrue(self.prep_template.can_be_updated({'center_name'}))
 
 
 @qiita_test_checker()
@@ -1342,6 +1356,13 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(pt.raw_data, None)
         pt.raw_data = rd
         self.assertEqual(pt.raw_data, rd.id)
+
+    def test_can_be_updated_on_new(self):
+        """test if the template can be updated"""
+        # you can update a newly created pt
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
+        self.assertTrue(pt.can_be_updated({'barcode'}))
 
 
 EXP_PREP_TEMPLATE = (
