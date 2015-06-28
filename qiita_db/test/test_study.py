@@ -106,6 +106,7 @@ class TestStudyPerson(TestCase):
 class TestStudy(TestCase):
     def setUp(self):
         self.study = Study(1)
+        self.portal = qiita_config.portal
 
         self.info = {
             "timeseries_type_id": 1,
@@ -169,6 +170,9 @@ class TestStudy(TestCase):
             'lab_person_id': StudyPerson(1),
             'number_samples_collected': 27}
 
+    def tearDown(self):
+        qiita_config.portal = self.portal
+
     def _change_processed_data_status(self, new_status):
         # Change the status of the studies by changing the status of their
         # processed data
@@ -179,6 +183,7 @@ class TestStudy(TestCase):
 
     def test_get_info(self):
         # Test get all info for single study
+        qiita_config.portal = 'QIITA'
         obs = Study.get_info([1])
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
@@ -243,9 +248,19 @@ class TestStudy(TestCase):
                [False, None, False, 'test_study_1', 'None']]
         self.assertEqual(obs, exp)
 
+        # test portal restriction working
+        qiita_config.portal = 'EMP'
+        with self.assertRaises(QiitaDBError):
+            Study.get_info([1])
+
     def test_has_access_public(self):
         self._change_processed_data_status('public')
+
+        qiita_config.portal = 'QIITA'
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))
+        qiita_config.portal = 'EMP'
+        with self.assertRaises(QiitaDBError):
+            Study(1).has_access(User("demo@microbio.me"))
 
     def test_has_access_no_public(self):
         self._change_processed_data_status('public')
@@ -354,17 +369,14 @@ class TestStudy(TestCase):
         self.assertEqual(efo, [[1]])
 
     def test_create_nonqiita_portal(self):
-        try:
-            qiita_config.portal = "EMP"
-            Study.create(User('test@foo.bar'), "NEW!",
-                         [1], self.info, Investigation(1))
+        qiita_config.portal = "EMP"
+        Study.create(User('test@foo.bar'), "NEW!",
+                     [1], self.info, Investigation(1))
 
-            # make sure portal is associated
-            obs = self.conn_handler.execute_fetchall(
-                "SELECT * from qiita.study_portal WHERE study_id = 2")
-            self.assertEqual(obs, [[2, 2], [2, 1]])
-        finally:
-            qiita_config.portal = "QIITA"
+        # make sure portal is associated
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.study_portal WHERE study_id = 2")
+        self.assertEqual(obs, [[2, 2], [2, 1]])
 
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""

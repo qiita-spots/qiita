@@ -143,6 +143,7 @@ class Study(QiitaObject):
     You should not be doing that.
     """
     _table = "study"
+    _portal_table = "study_portal"
     # The following columns are considered not part of the study info
     _non_info = frozenset(["email", "study_title"])
     # The following tables are considered part of info
@@ -186,20 +187,26 @@ class Study(QiitaObject):
             All study ids in the database that match the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = """SELECT study_id FROM qiita.study_processed_data spd
-                JOIN qiita.processed_data pd
-                    ON spd.processed_data_id=pd.processed_data_id
-                JOIN qiita.processed_data_status pds
-                    ON pds.processed_data_status_id=pd.processed_data_status_id
-                WHERE pds.processed_data_status=%s"""
+        sql = """SELECT study_id FROM qiita.study_processed_data
+                JOIN qiita.processed_data using (processed_data_id)
+                JOIN qiita.processed_data_status
+                USING (processed_data_status_id)
+                JOIN qiita.study_portal USING (study_id)
+                JOIN qiita.portal_type USING (portal_type_id)
+                WHERE processed_data_status=%s AND portal = %s"""
         studies = {x[0] for x in
-                   conn_handler.execute_fetchall(sql, (status, ))}
+                   conn_handler.execute_fetchall(
+                   sql, (status, qiita_config.portal))}
         # If status is sandbox, all the studies that are not present in the
         # study_processed_data are also sandbox
         if status == 'sandbox':
-            sql = """SELECT study_id FROM qiita.study WHERE study_id NOT IN (
+            sql = """SELECT study_id FROM qiita.study
+                     JOIN qiita.study_portal USING (study_id)
+                     JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE portal = %s AND study_id NOT IN (
                      SELECT study_id FROM qiita.study_processed_data)"""
-            extra_studies = {x[0] for x in conn_handler.execute_fetchall(sql)}
+            extra_studies = {x[0] for x in conn_handler.execute_fetchall(
+                sql, [qiita_config.portal])}
             studies = studies.union(extra_studies)
 
         return studies
@@ -234,13 +241,21 @@ class Study(QiitaObject):
             JOIN qiita.timeseries_type  USING (timeseries_type_id)
             LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY pmid) as
             pmid FROM qiita.study_pmid GROUP BY study_id) sp USING (study_id)
-            )""".format(search_cols)
+            JOIN qiita.study_portal USING (study_id)
+            JOIN qiita.portal_type USING (portal_type_id)
+            ) WHERE portal = '{1}'""".format(search_cols, qiita_config.portal)
+
         if study_ids is not None:
-            sql = "{0} WHERE study_id in ({1})".format(
+            sql = "{0} AND study_id in ({1})".format(
                 sql, ','.join(str(s) for s in study_ids))
 
         conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchall(sql)
+        res = conn_handler.execute_fetchall(sql)
+        if study_ids is not None and (res is None or
+                                      len(res) != len(study_ids)):
+                raise QiitaDBError('Non-portal-accessible studies asked for!')
+
+        return res if res is not None else []
 
     @classmethod
     def exists(cls, study_title):

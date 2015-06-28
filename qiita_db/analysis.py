@@ -73,6 +73,7 @@ class Analysis(QiitaStatusObject):
     """
 
     _table = "analysis"
+    _portal_table = "analysis_portal"
     _analysis_id_column = 'analysis_id'
 
     def _lock_check(self, conn_handler):
@@ -102,10 +103,13 @@ class Analysis(QiitaStatusObject):
             All analyses in the database with the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT analysis_id FROM qiita.{0} a JOIN qiita.{0}_status ans "
-               "ON a.analysis_status_id = ans.analysis_status_id WHERE "
-               "ans.status = %s".format(cls._table))
-        return {x[0] for x in conn_handler.execute_fetchall(sql, (status,))}
+        sql = """SELECT analysis_id FROM qiita.{0}
+                 JOIN qiita.{0}_status USING (analysis_status_id)
+                 JOIN qiita.analysis_portal USING (analysis_id)
+                 JOIN qiita.portal_type USING (portal_type_id)
+                 WHERE status = %s AND portal = %s""".format(cls._table)
+        return {x[0] for x in conn_handler.execute_fetchall(
+            sql, (status, qiita_config.portal))}
 
     @classmethod
     def create(cls, owner, name, description, parent=None, from_default=False):
@@ -248,9 +252,12 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
 
         return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "{1}=%s)".format(cls._table, cls._analysis_id_column),
-            (analysis_id, ))[0]
+            """SELECT EXISTS(SELECT * FROM qiita.{0}
+            JOIN qiita.analysis_portal USING (analysis_id)
+            JOIN qiita.portal_type USING (portal_type_id)
+            WHERE {1}=%s AND portal=%s)""".format(
+                cls._table, cls._analysis_id_column),
+            (analysis_id, qiita_config.portal))[0]
 
     # ---- Properties ----
     @property

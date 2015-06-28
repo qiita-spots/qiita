@@ -32,11 +32,13 @@ from qiita_db.metadata_template import SampleTemplate
 class TestAnalysis(TestCase):
     def setUp(self):
         self.analysis = Analysis(1)
+        self.portal = qiita_config.portal
         _, self.fp = get_mountpoint("analysis")[0]
         self.biom_fp = join(self.fp, "1_analysis_18S.biom")
         self.map_fp = join(self.fp, "1_analysis_mapping.txt")
 
     def tearDown(self):
+        qiita_config.portal = self.portal
         with open(self.biom_fp, 'w') as f:
                 f.write("")
         with open(self.map_fp, 'w') as f:
@@ -71,14 +73,24 @@ class TestAnalysis(TestCase):
             self.analysis.status = "queued"
 
     def test_get_by_status(self):
+        qiita_config.portal = 'QIITA'
         self.assertEqual(Analysis.get_by_status('public'), set([]))
+        qiita_config.portal = 'EMP'
+        self.assertEqual(Analysis.get_by_status('public'), set([]))
+
         self.analysis.status = "public"
+        qiita_config.portal = 'QIITA'
         self.assertEqual(Analysis.get_by_status('public'), {1})
+        qiita_config.portal = 'EMP'
+        self.assertEqual(Analysis.get_by_status('public'), set([]))
 
     def test_has_access_public(self):
         self.conn_handler.execute("UPDATE qiita.analysis SET "
                                   "analysis_status_id = 6")
+        qiita_config.portal = 'QIITA'
         self.assertTrue(self.analysis.has_access(User("demo@microbio.me")))
+        qiita_config.portal = 'EMP'
+        self.assertFalse(self.analysis.has_access(User("demo@microbio.me")))
 
     def test_has_access_shared(self):
         self.assertTrue(self.analysis.has_access(User("shared@foo.bar")))
@@ -87,7 +99,11 @@ class TestAnalysis(TestCase):
         self.assertTrue(self.analysis.has_access(User("test@foo.bar")))
 
     def test_has_access_admin(self):
+        qiita_config.portal = 'QIITA'
         self.assertTrue(self.analysis.has_access(User("admin@foo.bar")))
+        qiita_config.portal = 'EMP'
+        with self.assertRaises(QiitaDBError):
+            Analysis(1).has_access(User("admin@foo.bar"))
 
     def test_has_access_no_access(self):
         self.assertFalse(self.analysis.has_access(User("demo@microbio.me")))
@@ -115,18 +131,15 @@ class TestAnalysis(TestCase):
 
     def test_create_nonqiita_portal(self):
         new_id = get_count("qiita.analysis") + 1
-        try:
-            qiita_config.portal = "EMP"
-            Analysis.create(User("admin@foo.bar"), "newAnalysis",
-                            "A New Analysis")
+        qiita_config.portal = "EMP"
+        Analysis.create(User("admin@foo.bar"), "newAnalysis",
+                        "A New Analysis")
 
-            # make sure portal is associated
-            obs = self.conn_handler.execute_fetchall(
-                "SELECT * from qiita.analysis_portal WHERE analysis_id = %s",
-                [new_id])
-            self.assertEqual(obs, [[new_id, 2], [new_id, 1]])
-        finally:
-            qiita_config.portal = "QIITA"
+        # make sure portal is associated
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.analysis_portal WHERE analysis_id = %s",
+            [new_id])
+        self.assertEqual(obs, [[new_id, 2], [new_id, 1]])
 
     def test_create_parent(self):
         sql = "SELECT EXTRACT(EPOCH FROM NOW())"
@@ -169,7 +182,12 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
 
     def test_exists(self):
+        qiita_config.portal = 'QIITA'
         self.assertTrue(Analysis.exists(1))
+        new_id = get_count("qiita.analysis") + 1
+        self.assertFalse(Analysis.exists(new_id))
+        qiita_config.portal = 'EMP'
+        self.assertFalse(Analysis.exists(1))
         new_id = get_count("qiita.analysis") + 1
         self.assertFalse(Analysis.exists(new_id))
 
