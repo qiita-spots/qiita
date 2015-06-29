@@ -2,6 +2,7 @@
 
 {%block head%}
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
@@ -22,24 +23,49 @@ $(document).ready(function() {
             {% end %}
         ]
   });
+  // Validation
+  $("#portal-form").validate({
+    rules:{
+      portal:{required:true},
+      selected:{required:true},
+    },
+
+    messages:{
+      portal:{required:"Select a portal"},
+      selected:{required:"Select at least one row"}
+    },
+
+    errorClass: "help-inline",
+    errorElement: "span",
+    errorLabelContainer: '.errorTxt',
+    highlight:function(element, errorClass, validClass)
+    {
+      $(element).parents('.control-group').addClass('error');
+    },
+    unhighlight: function(element, errorClass, validClass)
+    {
+      $(element).parents('.control-group').removeClass('error');
+      $(element).parents('.control-group').addClass('success');
+    }
+  });
 });
 </script>
 {%end%}
 
 {%block content%}
 <div class='row'>
-<div class='col-sm-2'>
-  <p><b>Portal:</b> <select name="portal" id="portal">
-    <option value=""></option>
-    {% for portal in portals %}
-    <option value="{{portal}}">{{portal}}</option>
-    {% end %}
-  </select></p>
-  <input type="submit" name="action" value="Add to portal"><input type="submit" name="action" value="Remove from Portal">
-  </form>
+    <div class='col-sm-2'>
+    <form role="form" id="portal-form" action="{{submit_url}}" method="post">
+    <p><b>Portal:</b> <select name="portal" id="portal">
+      <option value=""></option>
+      {% for portal in portals %}
+      <option value="{{portal}}">{{portal}}</option>
+      {% end %}
+    </select></p>
+    <input type="submit" name="action" value="Add" class="btn btn-info"> <input type="submit" name="action" value="Remove" class="btn btn-danger">
+    <div class="errorTxt" style="color:red"></div>
   </div>
   <div class='col-lg-10' style="float:right;height:100%; border-color:black;border-left:solid;border-left-width:2px;">
-    <form role="form" action="{{submit_url}}" method="post">
     <table id="info-table" class="table">
     <thead>
       <tr>
@@ -60,6 +86,7 @@ $(document).ready(function() {
     {% end %}
     </tbody>
     </table>
+  </form>
   </div>
 </div>
 {% end %}
