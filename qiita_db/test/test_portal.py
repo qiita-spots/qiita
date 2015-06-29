@@ -4,9 +4,10 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.portal import (
     add_studies_to_portal, remove_studies_from_portal, get_studies_by_portal,
     add_analyses_to_portal, remove_analyses_from_portal,
-    get_analyses_by_portal)
+    get_analyses_by_portal, _check_analyses, _check_studies)
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
+from qiita_db.exceptions import QiitaDBError
 from qiita_core.qiita_settings import qiita_config
 
 # Only test if functions available
@@ -19,6 +20,17 @@ if qiita_config.portal == "QIITA":
 
         def tearDown(self):
             qiita_config.portal = 'QIITA'
+
+        def test_check_studies(self):
+            with self.assertRaises(QiitaDBError):
+                _check_studies([2000000000000, 122222222222222])
+
+        def test_check_analyses(self):
+            with self.assertRaises(QiitaDBError):
+                _check_analyses([2000000000000, 122222222222222])
+
+            with self.assertRaises(QiitaDBError):
+                _check_analyses([8, 9])
 
         def test_get_studies_by_portal(self):
             obs = get_studies_by_portal('EMP')
