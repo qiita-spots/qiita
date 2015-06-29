@@ -34,71 +34,139 @@ from .sql_connection import SQLConnectionHandler
 class Ontology(QiitaObject):
     """Object to access ontologies and associated terms from the database
 
-    Attributes
-    ----------
+    Methods
+    -------
+    contains
     terms
+    user_defined_terms
     shortname
+    add_user_defined_term
+    term_type
     """
     _table = 'ontology'
 
-    def __contains__(self, value):
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT EXISTS (SELECT * FROM qiita.term t JOIN qiita.{0} o
-                 on t.ontology_id = o.ontology_id WHERE o.ontology_id = %s and
-                 term = %s)""".format(self._table)
+    def contains(self, term, trans=None):
+        """Checks if the ontology contains the term `term`
 
-        return conn_handler.execute_fetchone(sql, (self._id, value))[0]
+        Parameters
+        ----------
+        term : str
+            The term to be checked
+        trans : Transaction, optional
+            Transaction in which this method should be executed
 
-    @property
-    def terms(self):
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
-                 user_defined = false"""
+        Returns
+        -------
+        bool
+            True if the ontology contains the term `term`. False otherwise.
+        """
+        trans = trans if trans is not None else Transaction("contains_%s"
+                                                            % self._id)
+        with trans:
+            sql = """SELECT EXISTS (
+                        SELECT *
+                        FROM qiita.term
+                            JOIN qiita.{0} USING (ontology_id)
+                        WHERE ontology_id = %s AND term = %s
+                    )""".format(self._table)
+            trans.add(sql, [self._id, term])
+            return trans.execute()[-1][0][0]
 
-        return [row[0] for row in
-                conn_handler.execute_fetchall(sql, [self.id])]
+    def terms(self, trans=None):
+        """Get the terms of the ontology
 
-    @property
-    def user_defined_terms(self):
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
-                 user_defined = true"""
+        Parameters
+        ----------
+        trans : Transaction, optional
+            Transaction in which this method should be executed
 
-        return [row[0] for row in
-                conn_handler.execute_fetchall(sql, [self.id])]
+        Returns
+        -------
+        list of str
+            The terms of the ontology
+        """
+        trans = trans if trans is not None else Transaction("terms"
+                                                            % self._id)
+        with trans:
+            sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
+                     user_defined = false"""
+            trans.add(sql, [self.id])
+            return [row[0] for row in trans.execute()[-1]]
 
-    @property
-    def shortname(self):
-        return convert_from_id(self.id, 'ontology')
+    def user_defined_terms(self, trans=None):
+        """Get the user-defined terms of the ontology
 
-    def add_user_defined_term(self, term):
+        Parameters
+        ----------
+        trans : Transaction, optional
+            Transaction in which this method should be executed
+
+        Returns
+        -------
+        list of str
+            The user-defined terms of the ontology
+        """
+        trans = trans if trans is not None else Transaction(
+            "user_defined_terms" % self._id)
+        with trans:
+            sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
+                     user_defined = true"""
+            trans.add(sql, [self.id])
+            return [row[0] for row in trans.execute()[-1]]
+
+    def shortname(self, trans=None):
+        """Return the short name of the ontology
+
+        Parameters
+        ----------
+        trans : Transaction, optional
+            Transaction in which this method should be executed
+
+        Return
+        ------
+        str
+            The short name of the ontology
+        """
+        trans = trans if trans is not None else Transaction("shortname"
+                                                            % self._id)
+        with trans:
+            return convert_from_id(self.id, 'ontology', trans=trans)
+
+    def add_user_defined_term(self, term, trans=None):
         """Add a user defined term to the ontology
 
         Parameters
         ----------
         term : str
             New user defined term to add into a given ontology
+        trans : Transaction, optional
+            Transaction in which this method should be executed
         """
+        trans = trans if trans is not None else Transaction(
+            "add_user_defined_term_%s" % self._id)
 
-        # we don't need to add an existing term
-        terms = self.user_defined_terms + self.terms
+        with trans:
+            # we don't need to add an existing term
+            terms = self.user_defined_terms(trans=trans) + self.terms(
+                trans=trans)
 
-        if term not in terms:
-            conn_handler = SQLConnectionHandler()
-            sql = """INSERT INTO qiita.term
-                     (ontology_id, term, user_defined)
-                     VALUES
-                     (%s, %s, true);"""
+            if term not in terms:
+                sql = """INSERT INTO qiita.term
+                         (ontology_id, term, user_defined)
+                         VALUES
+                         (%s, %s, true);"""
+                trans.add(sql, [self.id, term])
+                trans.execute()
 
-            conn_handler.execute(sql, [self.id, term])
-
-    def term_type(self, term):
+    def term_type(self, term, trans=None):
         """Get the type of a given ontology term
 
         Parameters
         ----------
         term : str
             String for which the method will check the type
+        trans : Transaction, optional
+            Transaction in which this method should be executed
 
         Returns
         -------
@@ -108,16 +176,20 @@ class Ontology(QiitaObject):
             user-defined and 'not_ontology' if the term is not part of the
             ontology.
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT user_defined FROM
-                 qiita.term
-                 WHERE term = %s AND ontology_id = %s
-              """
-        result = conn_handler.execute_fetchone(sql, [term, self.id])
+        trans = trans if trans is not None else Transaction("term_type_%s"
+                                                            % self._id)
 
-        if result is None:
-            return 'not_ontology'
-        elif result[0]:
-            return 'user_defined'
-        elif not result[0]:
-            return 'ontology'
+        with trans:
+            sql = """SELECT user_defined FROM
+                     qiita.term
+                     WHERE term = %s AND ontology_id = %s
+                  """
+            trans.add(sql, [term, self.id])
+            result = trans.execute()[-1][0][0]
+
+            if result is None:
+                return 'not_ontology'
+            elif result[0]:
+                return 'user_defined'
+            elif not result[0]:
+                return 'ontology'

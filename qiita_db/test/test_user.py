@@ -197,7 +197,10 @@ class UserTest(TestCase):
         self.assertEqual(self.user.email, 'admin@foo.bar')
 
     def test_get_level(self):
-        self.assertEqual(self.user.level, "admin")
+        self.assertEqual(self.user.level(), "admin")
+
+        with Transaction("test_get_level") as trans:
+            self.assertEqual(self.user.level(trans=trans), "admin")
 
     def test_get_info(self):
         expinfo = {
@@ -234,11 +237,17 @@ class UserTest(TestCase):
 
     def test_get_user_studies(self):
         user = User('test@foo.bar')
-        self.assertEqual(user.user_studies, {1})
+        self.assertEqual(user.user_studies(), {1})
+
+        with Transaction("test_get_user_studies") as trans:
+            self.assertEqual(user.user_studies(trans=trans), {1})
 
     def test_get_shared_studies(self):
         user = User('shared@foo.bar')
-        self.assertEqual(user.shared_studies, {1})
+        self.assertEqual(user.shared_studies(), {1})
+
+        with Transaction("test_get_shared_studies") as trans:
+            self.assertEqual(user.shared_studies(trans=trans), {1})
 
     def test_get_private_analyses(self):
         self.assertEqual(self.user.private_analyses, set([]))
