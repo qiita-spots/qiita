@@ -23,7 +23,8 @@ http://qiime.org/documentation/file_formats.html#mapping-file-overview.
  * `qiita webserver` has been moved to `qiita pet webserver`
 * Cluster names now use dashes instead of underscores (e.g., `qiita_general` is now `qiita-general`)
 * `qiita-general` is now used as a default argument to `qiita-env start_cluster` and `qiita-env stop_cluster` if no cluster name is specified
-* Qiita now allows to process already demultiplexed data without any technical (barcode and primer) section of the read.  
+* Qiita now allows to process already demultiplexed data without any technical (barcode and primer) section of the read. 
+* Qiita now includes full portal support, walling off portal access at below the qiita_db level. This allows one database to act as if subsets of studies/analyses are their own specific interface. Commands added for portals, under `qiita db portal ...` and web UI added for adding studies to portals. Web UI is now fully CSS customizable for each portal.
 
 Version 0.1.0 (2015-04-30)
 --------------------------
