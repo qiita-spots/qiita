@@ -23,19 +23,31 @@ $(document).ready(function() {
         ]
   });
 
+  $('input[type=checkbox]').change(function(){
+        $("#checkbox-error").remove();
+    });
+
+  $('#portal').change(function(){
+        $("#portal-error").remove();
+    });
+
   $('#portal-form').submit( function() {
+    error = false;
     var data = oTable.$('input').serialize();
     if(data.length === 0) {
-      alert("BAD");
-      return false;
+      //No checked rows, so add error message if needed and then don't submit
+      if(!$('#checkbox-error').length) { $("#errors").append("<li id='checkbox-error'>Please select at least one row</li>"); }
+      error = true;
     }
     if($("#portal").val() === '') {
-      alert("BAD");
-      return false;
+      //No selected portal, so add error message if needed and then don't submit
+      if(!$('#portal-error').length) { $("#errors").append("<li id='portal-error'>Please select a portal</li>"); }
+      error = true;
     }
+    if(error) { return false;}
+
     data = data + "&portal=" + $("#portal").val();
-    alert("VALUES: " + data);
-      $.post('{{submit_url}}', data);
+    $.post('{{submit_url}}', data);
   });
 });
 </script>
@@ -53,7 +65,9 @@ $(document).ready(function() {
     </select></p>
     <input type="submit" name="action" value="Add" class="btn btn-info"> <input type="submit" name="action" value="Remove" class="btn btn-danger">
     </form>
-    <div class="errorTxt" style="color:red"></div>
+    <div class="errorTxt" style="color:red">
+      <ul id="errors"></ul>
+    </div>
   </div>
   <div class='col-lg-10' style="float:right;height:100%; border-color:black;border-left:solid;border-left-width:2px;">
     <table id="info-table" class="table">
