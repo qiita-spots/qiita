@@ -31,6 +31,8 @@ class StudyPortalHandler(BaseHandler):
         portal = self.get_argument('portal')
         studies = self.get_arguments('selected')
         action = self.get_argument('action')
+        print ">>>>>>>>>>>>>", studies
+        print ">>>>>>>>>>>>>", portal
 
         if action == "Add":
             add_studies_to_portal(portal, studies)

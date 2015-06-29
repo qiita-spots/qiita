@@ -2,7 +2,6 @@
 
 {%block head%}
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
-<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
@@ -13,7 +12,7 @@ $(document).ready(function() {
       } );
   };
 
-  $('#info-table').dataTable({
+  oTable = $('#info-table').dataTable({
     "deferRender": true,
     "iDisplayLength": 50,
     "aoColumns": [
@@ -23,30 +22,20 @@ $(document).ready(function() {
             {% end %}
         ]
   });
-  // Validation
-  $("#portal-form").validate({
-    rules:{
-      portal:{required:true},
-      selected:{required:true},
-    },
 
-    messages:{
-      portal:{required:"Select a portal"},
-      selected:{required:"Select at least one row"}
-    },
-
-    errorClass: "help-inline",
-    errorElement: "span",
-    errorLabelContainer: '.errorTxt',
-    highlight:function(element, errorClass, validClass)
-    {
-      $(element).parents('.control-group').addClass('error');
-    },
-    unhighlight: function(element, errorClass, validClass)
-    {
-      $(element).parents('.control-group').removeClass('error');
-      $(element).parents('.control-group').addClass('success');
+  $('#portal-form').submit( function() {
+    var data = oTable.$('input').serialize();
+    if(data.length === 0) {
+      alert("BAD");
+      return false;
     }
+    if($("#portal").val() === '') {
+      alert("BAD");
+      return false;
+    }
+    data = data + "&portal=" + $("#portal").val();
+    alert("VALUES: " + data);
+      $.post('{{submit_url}}', data);
   });
 });
 </script>
@@ -55,7 +44,7 @@ $(document).ready(function() {
 {%block content%}
 <div class='row'>
     <div class='col-sm-2'>
-    <form role="form" id="portal-form" action="{{submit_url}}" method="post">
+    <form role="form" id="portal-form">
     <p><b>Portal:</b> <select name="portal" id="portal">
       <option value=""></option>
       {% for portal in portals %}
@@ -63,6 +52,7 @@ $(document).ready(function() {
       {% end %}
     </select></p>
     <input type="submit" name="action" value="Add" class="btn btn-info"> <input type="submit" name="action" value="Remove" class="btn btn-danger">
+    </form>
     <div class="errorTxt" style="color:red"></div>
   </div>
   <div class='col-lg-10' style="float:right;height:100%; border-color:black;border-left:solid;border-left-width:2px;">
@@ -86,7 +76,6 @@ $(document).ready(function() {
     {% end %}
     </tbody>
     </table>
-  </form>
   </div>
 </div>
 {% end %}
