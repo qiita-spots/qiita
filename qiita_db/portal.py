@@ -16,7 +16,7 @@ from qiita_core.qiita_settings import qiita_config
 if qiita_config.portal == "QIITA":
     def list_portals():
         """Returns list of portals available in system"""
-        sql = "SELECT portal FROM qiita.portal_type"
+        sql = "SELECT portal FROM qiita.portal_type ORDER BY portal"
         conn_handler = SQLConnectionHandler()
         return [x[0] for x in conn_handler.execute_fetchall(sql)]
 
