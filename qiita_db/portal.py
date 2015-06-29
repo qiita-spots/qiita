@@ -14,6 +14,12 @@ from qiita_core.qiita_settings import qiita_config
 
 # Only make functions available for main portal
 if qiita_config.portal == "QIITA":
+    def list_portals():
+        """Returns list of portals available in system"""
+        sql = "SELECT portal FROM qiita.portal_type"
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql)]
+
     def get_studies_by_portal(portal):
         """Returns study id for all Studies belonging to a portal
 
