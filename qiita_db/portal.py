@@ -50,10 +50,15 @@ if qiita_config.portal == "QIITA":
 
         Parameters
         ----------
-        studies : list of int
-            Study ids to attach to portal
         portal : str
             Portal to associate with.
+        studies : list of int
+            Study ids to attach to portal
+
+        Raises
+        ------
+        QiitaDBError
+            Some studies given do not exist
         """
         _check_studies(studies)
 
@@ -72,7 +77,6 @@ if qiita_config.portal == "QIITA":
 
         # Add cleaned list to the portal
         portal_id = convert_to_id(portal, 'portal_type', 'portal')
-        conn_handler = SQLConnectionHandler()
         sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
                  VALUES (%s, %s)"""
         conn_handler.executemany(sql, [(s, portal_id) for s in clean_studies])
@@ -82,21 +86,22 @@ if qiita_config.portal == "QIITA":
 
         Parameters
         ----------
-        studies : list of int
-            Study ids to remove from portal
         portal : str
             Portal to associate with.
+        studies : list of int
+            Study ids to remove from portal
 
         Raises
         ------
         ValueError
             Try and delete from QIITA portal
+        QiitaDBError
+            Some studies given do not exist
         """
         if portal == "QIITA":
             raise ValueError('Can not remove from main QIITA portal!')
         _check_studies(studies)
 
-        conn_handler = SQLConnectionHandler()
         # Clean list of studies down to ones associated with portal already
         portal_id = convert_to_id(portal, 'portal_type', 'portal')
         conn_handler = SQLConnectionHandler()
@@ -153,18 +158,24 @@ if qiita_config.portal == "QIITA":
             sql, [tuple(analyses)])]
         if len(default) > 0:
             bad = map(str, set(analyses).difference(default))
-            raise QiitaDBError("The following analyses are default: %s" %
-                               ", ".join(bad))
+            raise QiitaDBError(
+                "The following analyses are default and can't be deleted or "
+                "assigned to another portal: %s" % ", ".join(bad))
 
     def add_analyses_to_portal(portal, analyses):
         """Adds analyses to given portal
 
         Parameters
         ----------
-        analyses : list of int
-            Analysis ids to attach to portal
         portal : str
             Portal to associate with.
+        analyses : list of int
+            Analysis ids to attach to portal
+
+        Raises
+        ------
+        QiitaDBError
+            Some given analyses do not exist, or are default analyses
         """
         _check_analyses(analyses)
 
@@ -187,7 +198,6 @@ if qiita_config.portal == "QIITA":
                  (analysis_id, portal_type_id)
                  VALUES (%s, %s)"""
         portal_id = convert_to_id(portal, 'portal_type', 'portal')
-        conn_handler = SQLConnectionHandler()
         conn_handler.executemany(sql, [(a, portal_id) for a in clean_analyses])
 
     def remove_analyses_from_portal(portal, analyses):
@@ -195,15 +205,17 @@ if qiita_config.portal == "QIITA":
 
         Parameters
         ----------
-        analyses : list of int
-            Analysis ids to remove from portal
         portal : str
             Portal to associate with.
+        analyses : list of int
+            Analysis ids to remove from portal
 
         Raises
         ------
         ValueError
             Try and delete from QIITA portal
+        QiitaDBError
+            Some given analyses do not exist, or are default analyses
         """
         if portal == "QIITA":
             raise ValueError('Can not remove from main QIITA portal!')
@@ -227,5 +239,4 @@ if qiita_config.portal == "QIITA":
         sql = """DELETE FROM qiita.analysis_portal
                  WHERE analysis_id IN %s AND portal_type_id = %s"""
         if len(clean_analyses) != 0:
-            conn_handler = SQLConnectionHandler()
             conn_handler.execute(sql, [tuple(clean_analyses), portal_id])
