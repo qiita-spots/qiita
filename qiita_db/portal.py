@@ -82,7 +82,7 @@ if qiita_config.portal == "QIITA":
         conn_handler.executemany(sql, [(s, portal_id) for s in clean_studies])
 
     def remove_studies_from_portal(portal, studies):
-        """Removes studies to given portal
+        """Removes studies from given portal
 
         Parameters
         ----------
@@ -201,7 +201,7 @@ if qiita_config.portal == "QIITA":
         conn_handler.executemany(sql, [(a, portal_id) for a in clean_analyses])
 
     def remove_analyses_from_portal(portal, analyses):
-        """Removes  analyses from given portal
+        """Removes analyses from given portal
 
         Parameters
         ----------
