@@ -117,7 +117,8 @@ class AnalysisWaitHandler(BaseHandler):
         moi_user_id = get_id_from_user(self.current_user.id)
         moi_group = create_info(analysis_id, 'group', url='/analysis/',
                                 parent=moi_user_id, store=True)
-        moi_name = 'Creating %s' % analysis.name
+        moi_name = ("Creating %s... When finished, please click the 'Success' "
+                    "link to the right" % analysis.name)
         moi_result_url = '/analysis/results/%d' % analysis_id
 
         submit(ctx_default, moi_group['id'], moi_name,
