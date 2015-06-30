@@ -293,7 +293,7 @@ class QiitaStatusObject(QiitaObject):
             # Check that all the provided statuses are valid statuses
             if set(status).difference(statuses):
                 raise ValueError("%s are not valid status values"
-                                 % set(status).difference(statuses))
+                                 % ', '.join(set(status).difference(statuses)))
 
             # Get the DB status of the object
             dbstatus = self.status(trans)
