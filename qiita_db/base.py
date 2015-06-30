@@ -142,7 +142,7 @@ class QiitaObject(object):
         ----------
         id_: object
             The object identifier
-        trans: Transaction
+        trans: Transaction, optional
             Transaction in which this method should be executed
 
         Raises
@@ -199,6 +199,11 @@ class QiitaStatusObject(QiitaObject):
         ----------
         trans: Transaction, optional
             Transaction in which this method should be executed
+
+        Returns
+        -------
+        str
+            The status of the object
         """
         # Get the DB status of the object
         trans = trans if trans is not None else Transaction(
