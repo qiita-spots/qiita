@@ -11,6 +11,7 @@ The following is a full list of the available tutorials:
    getting-started
    analyze-data
    no-raw-sequences
+   portals
 
 To request documentation on any administration use-cases not addressed here,
 please add an issue `here <https://github.com/biocore/qiita/issues>`__.
