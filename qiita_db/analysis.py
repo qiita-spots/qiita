@@ -35,6 +35,7 @@ from .study import Study
 from .exceptions import QiitaDBStatusError, QiitaDBError, QiitaDBUnknownIDError
 from .util import (convert_to_id, get_work_base_dir,
                    get_mountpoint, insert_filepaths)
+from qiita_core.qiita_settings import qiita_config
 
 
 class Analysis(QiitaStatusObject):
@@ -72,6 +73,7 @@ class Analysis(QiitaStatusObject):
     """
 
     _table = "analysis"
+    _portal_table = "analysis_portal"
     _analysis_id_column = 'analysis_id'
 
     def _lock_check(self, conn_handler):
@@ -101,10 +103,13 @@ class Analysis(QiitaStatusObject):
             All analyses in the database with the given status
         """
         conn_handler = SQLConnectionHandler()
-        sql = ("SELECT analysis_id FROM qiita.{0} a JOIN qiita.{0}_status ans "
-               "ON a.analysis_status_id = ans.analysis_status_id WHERE "
-               "ans.status = %s".format(cls._table))
-        return {x[0] for x in conn_handler.execute_fetchall(sql, (status,))}
+        sql = """SELECT analysis_id FROM qiita.{0}
+                 JOIN qiita.{0}_status USING (analysis_status_id)
+                 JOIN qiita.analysis_portal USING (analysis_id)
+                 JOIN qiita.portal_type USING (portal_type_id)
+                 WHERE status = %s AND portal = %s""".format(cls._table)
+        return {x[0] for x in conn_handler.execute_fetchall(
+            sql, (status, qiita_config.portal))}
 
     @classmethod
     def create(cls, owner, name, description, parent=None, from_default=False):
@@ -129,9 +134,10 @@ class Analysis(QiitaStatusObject):
         conn_handler.create_queue(queue)
         # TODO after demo: if exists()
         # Needed since issue #292 exists
-        status_id = conn_handler.execute_fetchone(
-            "SELECT analysis_status_id from qiita.analysis_status WHERE "
-            "status = 'in_construction'")[0]
+        status_id = convert_to_id('in_construction', 'analysis_status',
+                                  'status')
+        portal_id = convert_to_id(qiita_config.portal, 'portal_type',
+                                  'portal')
         if from_default:
             # insert analysis and move samples into that new analysis
             dflt_id = owner.default_analysis
@@ -139,8 +145,8 @@ class Analysis(QiitaStatusObject):
                     (email, name, description, analysis_status_id)
                     VALUES (%s, %s, %s, %s)
                     RETURNING analysis_id""".format(cls._table)
-            conn_handler.add_to_queue(queue, sql, (owner.id, name,
-                                                   description, status_id))
+            conn_handler.add_to_queue(queue, sql, (
+                owner.id, name, description, status_id))
             # MAGIC NUMBER 3: command selection step
             # needed so we skip the sample selection step
             sql = """INSERT INTO qiita.analysis_workflow
@@ -159,6 +165,16 @@ class Analysis(QiitaStatusObject):
                   RETURNING analysis_id""".format(cls._table)
             conn_handler.add_to_queue(
                 queue, sql, (owner.id, name, description, status_id))
+
+        # Add to both QIITA and given portal (if not QIITA)
+        sql = """INSERT INTO qiita.analysis_portal
+                 (analysis_id, portal_type_id)
+                 VALUES (%s, %s) RETURNING %s"""
+        args = [['{0}', portal_id, '{0}']]
+        if qiita_config.portal != 'QIITA':
+            qp_id = convert_to_id('QIITA', 'portal_type', 'portal')
+            args.append(['{0}', qp_id, '{0}'])
+        conn_handler.add_to_queue(queue, sql, args, many=True)
 
         # add parent if necessary
         if parent:
@@ -199,6 +215,10 @@ class Analysis(QiitaStatusObject):
                "{0} = {1}".format(cls._analysis_id_column, _id))
         conn_handler.add_to_queue(queue, sql)
 
+        sql = ("DELETE FROM qiita.analysis_portal WHERE "
+               "{0} = {1}".format(cls._analysis_id_column, _id))
+        conn_handler.add_to_queue(queue, sql)
+
         sql = ("DELETE FROM qiita.analysis_sample WHERE "
                "{0} = {1}".format(cls._analysis_id_column, _id))
         conn_handler.add_to_queue(queue, sql)
@@ -232,9 +252,12 @@ class Analysis(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
 
         return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "{1}=%s)".format(cls._table, cls._analysis_id_column),
-            (analysis_id, ))[0]
+            """SELECT EXISTS(SELECT * FROM qiita.{0}
+            JOIN qiita.analysis_portal USING (analysis_id)
+            JOIN qiita.portal_type USING (portal_type_id)
+            WHERE {1}=%s AND portal=%s)""".format(
+                cls._table, cls._analysis_id_column),
+            (analysis_id, qiita_config.portal))[0]
 
     # ---- Properties ----
     @property
@@ -264,6 +287,21 @@ class Analysis(QiitaStatusObject):
         sql = ("SELECT name FROM qiita.{0} WHERE "
                "analysis_id = %s".format(self._table))
         return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+
+    @property
+    def _portals(self):
+        """The portals used to create the analysis
+
+        Returns
+        -------
+        str
+            Name of the portal
+        """
+        conn_handler = SQLConnectionHandler()
+        sql = """SELECT portal FROM qiita.analysis_portal
+               JOIN qiita.portal_type USING (portal_type_id)
+               WHERE analysis_id = %s""".format(self._table)
+        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
 
     @property
     def timestamp(self):
