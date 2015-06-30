@@ -347,6 +347,10 @@ class Job(QiitaStatusObject):
                     glob(join(basedir, check_dir, "*.html")):
                 result_fps.append(relpath(res, basedir))
 
+        def add_beta_diversity(basedir, check_dir, result_fps):
+            for res in glob(join(basedir, check_dir, "*_dm.txt")):
+                result_fps.append(relpath(res, basedir))
+
         # create new list, with relative paths from db base
         result_fps = []
         for fp in results:
@@ -354,8 +358,10 @@ class Job(QiitaStatusObject):
                 # directory, so all html files in it are results
                 # first, see if we have any in the main directory
                 add_html(basedir, fp[0], result_fps)
+                add_beta_diversity(basedir, fp[0], result_fps)
                 # now do all subdirectories
                 add_html(basedir, join(fp[0], "*"), result_fps)
+                add_beta_diversity(basedir, join(fp[0], '*'), result_fps)
             else:
                 # result is exact filepath given
                 result_fps.append(fp[0])
