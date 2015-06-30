@@ -9,11 +9,62 @@ import warnings
 
 from .sql_connection import SQLConnectionHandler
 from .util import convert_to_id
-from .exceptions import QiitaDBError
+from .exceptions import QiitaDBError, QiitaDBDuplicateError
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 # Only make functions available for main portal
 if qiita_config.portal == "QIITA":
+    def create_portal(portal, desc):
+        """Creates a new portal on the system
+
+        Parameters
+        ----------
+        portal : str
+            The name of the portal to add
+        desc : str
+            Description of the portal
+
+        Raises
+        ------
+        QiitaDBDuplicateError
+            Portal already exists
+        """
+        try:
+            convert_to_id(portal, 'portal_type', 'portal')
+        except IncompetentQiitaDeveloperError:
+            # Portal does not exist, so add it
+            sql = """INSERT INTO qiita.portal_type (portal, portal_description)
+                     VALUES (%s, %s)"""
+            conn_handler = SQLConnectionHandler()
+            conn_handler.execute(sql, [portal, desc])
+        else:
+            # Portal already exists, so raise error
+            raise QiitaDBDuplicateError("Portal", portal)
+
+    def remove_portal(portal):
+        """Removes a portal from the system
+
+        Parameters
+        ----------
+        portal : str
+            The name of the portal to add
+        desc : str
+            Description of the portal
+
+        Raises
+        ------
+        QiitaDBError
+            Portal has analyses or studies attached to it
+        """
+        sql = "DELETE FROM qiita.portal_type WHERE portal = %s"
+        conn_handler = SQLConnectionHandler()
+        try:
+            conn_handler.execute(sql, [portal])
+        except ValueError:
+            # Portal attached to things, so can't delete
+            raise QiitaDBError("Portal %s in use, can not delete!" % portal)
+
     def get_studies_by_portal(portal):
         """Returns study id for all Studies belonging to a portal
 

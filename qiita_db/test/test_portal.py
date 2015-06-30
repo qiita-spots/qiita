@@ -4,10 +4,11 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.portal import (
     add_studies_to_portal, remove_studies_from_portal, get_studies_by_portal,
     add_analyses_to_portal, remove_analyses_from_portal,
-    get_analyses_by_portal, _check_analyses, _check_studies)
+    get_analyses_by_portal, _check_analyses, _check_studies, create_portal,
+    remove_portal)
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
-from qiita_db.exceptions import QiitaDBError
+from qiita_db.exceptions import QiitaDBError, QiitaDBDuplicateError
 from qiita_core.qiita_settings import qiita_config
 
 # Only test if functions available
@@ -20,6 +21,33 @@ if qiita_config.portal == "QIITA":
 
         def tearDown(self):
             qiita_config.portal = 'QIITA'
+
+        def test_add_portal(self):
+            create_portal("NEWPORTAL", "SOMEDESC")
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.portal_type")
+            exp = [[1, 'QIITA', 'QIITA portal. Access to all data stored '
+                    'in database.'],
+                   [2, 'EMP', 'EMP portal'],
+                   [4, 'NEWPORTAL', 'SOMEDESC']]
+
+            self.assertItemsEqual(obs, exp)
+
+            with self.assertRaises(QiitaDBDuplicateError):
+                create_portal("EMP", "DOESNTMATTERFORDESC")
+
+        def test_remove_portal(self):
+            create_portal("NEWPORTAL", "SOMEDESC")
+            remove_portal("NEWPORTAL")
+            obs = self.conn_handler.execute_fetchall(
+                "SELECT * FROM qiita.portal_type")
+            exp = [[1, 'QIITA', 'QIITA portal. Access to all data stored '
+                    'in database.'],
+                   [2, 'EMP', 'EMP portal']]
+            self.assertItemsEqual(obs, exp)
+
+            with self.assertRaises(QiitaDBError):
+                remove_portal("QIITA")
 
         def test_check_studies(self):
             with self.assertRaises(QiitaDBError):
