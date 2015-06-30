@@ -30,6 +30,12 @@ class TestPortal(TestCase):
                [4, 'NEWPORTAL', 'SOMEDESC']]
         self.assertItemsEqual(obs, exp)
 
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.analysis_portal")
+        exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [8, 1],
+               [9, 1], [10, 1], [11, 4], [12, 4], [13, 4], [14, 4]]
+        self.assertEqual(obs, exp)
+
         with self.assertRaises(QiitaDBDuplicateError):
             Portal.create("EMP", "DOESNTMATTERFORDESC")
 
@@ -42,6 +48,12 @@ class TestPortal(TestCase):
                 'in database.'],
                [2, 'EMP', 'EMP portal']]
         self.assertItemsEqual(obs, exp)
+
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.analysis_portal")
+        exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [8, 1],
+               [9, 1], [10, 1]]
+        self.assertEqual(obs, exp)
 
         with self.assertRaises(IncompetentQiitaDeveloperError):
             Portal.delete("NOEXISTPORTAL")

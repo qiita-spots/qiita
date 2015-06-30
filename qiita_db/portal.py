@@ -41,13 +41,34 @@ class Portal(QiitaObject):
         if cls.exists(portal):
             raise QiitaDBDuplicateError("Portal", portal)
 
-        sql = """INSERT INTO qiita.portal_type (portal, portal_description)
-                 VALUES (%s, %s)"""
+        # Add portal and default analyses for all users
+        sql = """DO $do$
+            DECLARE
+                pid bigint;
+                eml varchar;
+                aid bigint;
+            BEGIN
+                INSERT INTO qiita.portal_type (portal, portal_description)
+                VALUES (%s, %s) RETURNING portal_type_id INTO pid;
+
+                FOR eml IN
+                    SELECT email FROM qiita.qiita_user
+                LOOP
+                    INSERT INTO qiita.analysis
+                    (email, name, description, dflt, analysis_status_id)
+                    VALUES (eml, eml || '-dflt', 'dflt', true, 1) RETURNING
+                    analysis_id INTO aid;
+
+                    INSERT INTO qiita.analysis_workflow (analysis_id, step)
+                    VALUES (aid, 2);
+
+                    INSERT INTO qiita.analysis_portal
+                    (analysis_id, portal_type_id)
+                    VALUES (aid, pid);
+                END LOOP;
+            END $do$;"""
         conn_handler = SQLConnectionHandler()
         conn_handler.execute(sql, [portal, desc])
-
-        # Add default analyses for all users
-        # blargle
 
         return cls(portal)
 
@@ -87,11 +108,30 @@ class Portal(QiitaObject):
                 "Analyses still attached to portal %s: %s" %
                 (portal, ', '.join([str(a[0]) for a in analyses])))
 
-        sql = "DELETE FROM qiita.portal_type WHERE portal = %s"
-        conn_handler.execute(sql, [portal])
+        # Remove portal and default analyses for all users
+        sql = """DO $do$
+            DECLARE
+                pid bigint;
+                aid bigint;
+            BEGIN
+                FOR aid IN
+                    SELECT analysis_id FROM qiita.analysis_portal
+                    WHERE portal_type_id = %s
+                LOOP
+                    DELETE FROM qiita.analysis_portal
+                    WHERE analysis_id = aid;
 
-        # Remove default analyses for all users
-        # blargle
+                    DELETE FROM qiita.analysis_workflow
+                    WHERE analysis_id = aid;
+
+                    DELETE FROM qiita.analysis
+                    WHERE analysis_id = aid;
+                END LOOP;
+
+                DELETE FROM qiita.portal_type WHERE portal_type_id = %s;
+            END $do$;"""
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [portal_id, portal_id])
 
     @staticmethod
     def exists(portal):
