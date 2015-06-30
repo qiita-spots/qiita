@@ -11,7 +11,7 @@ The main `QIITA` portal gives access to all studies in the database, while addin
 
 Creating/Deleting a portal
 --------------------------
-Portals are created using the command line interface. A portal may be added using the command `qiita-env portal create -p [PORTALNAME]`. Conversely, a portal may be deleted by the command `qiita-env portal delete -p [PORTALNAME]`. Note, however, that you can not delete a portal that has one or more studies/analyses attached to it. The portal must be completely connectionless to be deleted.
+Portals are created using the command line interface. A portal may be added using the command `qiita-env create-portal --portal [PORTAL NAME] --desc [PORTAL DESCRIPTION]`. Conversely, a portal may be deleted by the command `qiita-env remove-portal --portal [PORTAL NAME]`. Note, however, that you can not remove a portal that has one or more studies/analyses attached to it. The portal must be completely connectionless to be deleted.
 
 Adding/Deleting studies on a portal
 -----------------------------------
