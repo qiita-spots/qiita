@@ -159,19 +159,20 @@ def job_details(job):
             click.echo("%s : %s" % (k, value))
 
 
-@env.command(name="create-portal")
-@click.option('--portal', required=True, type=str, help='The portal name')
-@click.option('--desc', required=True, type=str, help='The portal description')
-def add_portal(portal, desc):
-    """Creates a new portal on the database"""
-    create_portal(portal, desc)
+if qiita_config.portal == "QIITA":
+    @env.command(name="create-portal")
+    @click.option('--portal', required=True, type=str, help='The portal name')
+    @click.option('--desc', required=True, type=str, help='The portal description')
+    def add_portal(portal, desc):
+        """Creates a new portal on the database"""
+        create_portal(portal, desc)
 
 
-@env.command(name="remove-portal")
-@click.option('--portal', required=True, type=str, help='The portal name')
-def rem_portal(portal):
-    """Removes a portal from the database"""
-    remove_portal(portal)
+    @env.command(name="remove-portal")
+    @click.option('--portal', required=True, type=str, help='The portal name')
+    def rem_portal(portal):
+        """Removes a portal from the database"""
+        remove_portal(portal)
 
 if __name__ == '__main__':
     env()
