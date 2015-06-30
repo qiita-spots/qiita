@@ -15,6 +15,7 @@ import click
 from qiita_db.environment_manager import (
     make_environment, drop_environment, clean_test_environment,
     patch as _patch)
+from qiita_db.portal import Portal
 from qiita_core.environment_manager import (
     start_cluster as _start_cluster, stop_cluster as _stop_cluster,
     test as _test, TEST_RUNNERS)
@@ -154,6 +155,21 @@ def job_details(job):
 
             click.echo("%s : %s" % (k, value))
 
+
+@env.command(name="create-portal")
+@click.option('--portal', required=True, type=str, help='The portal name')
+@click.option('--desc', required=True, type=str,
+              help='The portal description')
+def add_portal(portal, desc):
+    """Creates a new portal on the database"""
+    Portal.create(portal, desc)
+
+
+@env.command(name="remove-portal")
+@click.option('--portal', required=True, type=str, help='The portal name')
+def rem_portal(portal):
+    """Removes a portal from the database"""
+    Portal.remove(portal)
 
 if __name__ == '__main__':
     env()
