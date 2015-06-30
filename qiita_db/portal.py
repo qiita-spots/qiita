@@ -80,8 +80,6 @@ class Portal(QiitaObject):
         ----------
         portal : str
             The name of the portal to add
-        desc : str
-            Description of the portal
 
         Raises
         ------
@@ -101,7 +99,8 @@ class Portal(QiitaObject):
 
         # Check if attached to any analyses
         sql = """SELECT analysis_id from qiita.analysis_portal
-                 WHERE portal_type_id = %s"""
+                 JOIN qiita.analysis USING (analysis_id)
+                 WHERE portal_type_id = %s and dflt = FALSE"""
         analyses = conn_handler.execute_fetchall(sql, [portal_id])
         if studies:
             raise QiitaDBError(
@@ -204,15 +203,13 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        portal : str
-            Portal to associate with.
         studies : list of int
             Study ids to remove from portal
 
         Raises
         ------
         ValueError
-            Try and delete from QIITA portal
+            Trying to delete from QIITA portal
         QiitaDBError
             Some studies given do not exist
         """
@@ -239,9 +236,6 @@ class Portal(QiitaObject):
 
     def get_analyses(self):
         """Returns analysis id for all Analyses belonging to a portal
-
-        Parameters
-        ----------
 
         Returns
         -------
@@ -281,8 +275,6 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        portal : str
-            Portal to associate with.
         analyses : list of int
             Analysis ids to attach to portal
 
@@ -317,8 +309,13 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        portal : str
-            Portal to associate with.
+        analyses : list of int
+            Analysis ids to remove from portal
+
+        Raises
+        ------
+        ValueError
+            Trying to delete from QIITA portal
         """
         self._check_analyses(analyses)
         if self.portal == "QIITA":
