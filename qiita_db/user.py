@@ -248,6 +248,7 @@ class User(QiitaObject):
         code : str
             code to verify
         code_type : {'create', 'reset'}
+            type of code being verified, whether creating user or reset pass.
 
         Returns
         -------
@@ -257,6 +258,8 @@ class User(QiitaObject):
         ------
         IncompentQiitaDeveloper
             code_type is not create or reset
+        QiitaDBError
+            User has no code of the given type
         """
         if code_type == 'create':
             column = 'user_verify_code'
