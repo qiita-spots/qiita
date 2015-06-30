@@ -19,6 +19,10 @@ from qiita_core.environment_manager import (
     start_cluster as _start_cluster, stop_cluster as _stop_cluster,
     test as _test, TEST_RUNNERS)
 from qiita_core.configuration_manager import ConfigurationManager
+from qiita_core.qiita_settings import qiita_config
+
+if qiita_config.portal == "QIITA":
+    from qiita_db.portal import create_portal, remove_portal
 
 
 _CONFIG = ConfigurationManager()
@@ -154,6 +158,20 @@ def job_details(job):
 
             click.echo("%s : %s" % (k, value))
 
+if qiita_config.portal == "QIITA":
+    @env.command(name="create-portal")
+    @click.option('--portal', required=True, type=str, help='The portal name')
+    @click.option('--desc', required=True, type=str,
+                  help='The portal description')
+    def add_portal(portal, desc):
+        """Creates a new portal on the database"""
+        create_portal(portal, desc)
+
+    @env.command(name="remove-portal")
+    @click.option('--portal', required=True, type=str, help='The portal name')
+    def rem_portal(portal):
+        """Removes a portal from the database"""
+        remove_portal(portal)
 
 if __name__ == '__main__':
     env()

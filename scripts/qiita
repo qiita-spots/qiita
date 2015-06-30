@@ -35,10 +35,17 @@ from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_db.reference import Reference
 from qiita_db.logger import LogEntry
 from qiita_core.configuration_manager import ConfigurationManager
+from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from qiita_ware.processing_pipeline import generate_demux_file
 from qiita_ware.context import system_call, ComputeError
 from moi import r_client
+
+if qiita_config.portal == "QIITA":
+    from qiita_db.portal import (add_studies_to_portal,
+                                 remove_studies_from_portal,
+                                 add_analyses_to_portal,
+                                 remove_analyses_from_portal)
 
 
 _CONFIG = ConfigurationManager()
@@ -102,6 +109,10 @@ def ware():
 def ebi():
     pass
 
+
+@db.group()
+def portal():
+    pass
 
 # #############################################################################
 # DB COMMANDS
@@ -289,6 +300,49 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
                                             preprocessed_data)
     click.echo("Preprocessed data %s successfully updated" % ppd.id)
 
+# #############################################################################
+# PORTAL COMMANDS
+# #############################################################################
+
+
+@portal.command(name="add-analyses")
+@click.option('--portal', required=True, type=str,
+              help='Portal to add the analyses to')
+@click.option('--analyses', required=True, type=str,
+              help='Comma seperated list of analyses to add')
+def add_analysis(portal, analyses):
+    ids = map(int, analyses.split(','))
+    add_analyses_to_portal(portal, ids)
+
+
+@portal.command(name="remove-analyses")
+@click.option('--portal', required=True, type=str,
+              help='Portal to add the analyses to')
+@click.option('--analyses', required=True, type=str,
+              help='Comma seperated list of analyses to remove')
+def remove_analysis(portal, analyses):
+    ids = map(int, analyses.split(','))
+    remove_analyses_from_portal(portal, ids)
+
+
+@portal.command(name="add-studies")
+@click.option('--portal', required=True, type=str,
+              help='Portal to add the analyses to')
+@click.option('--studies', required=True, type=str,
+              help='Comma seperated list of studies to add')
+def add_study(portal, studies):
+    ids = map(int, studies.split(','))
+    add_studies_to_portal(portal, ids)
+
+
+@portal.command(name="remove-studies")
+@click.option('--portal', required=True, type=str,
+              help='Portal to add the analyses to')
+@click.option('--studies', required=True, type=str,
+              help='Comma seperated list of studies to remove')
+def remove_study(portal, studies):
+    ids = map(int, studies.split(','))
+    remove_studies_from_portal(portal, ids)
 
 # #############################################################################
 # EBI COMMANDS
