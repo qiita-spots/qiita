@@ -32,9 +32,9 @@ class TestPortal(TestCase):
 
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.analysis_portal")
-        exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [8, 1],
-               [9, 1], [10, 1], [11, 4], [12, 4], [13, 4], [14, 4]]
-        self.assertEqual(obs, exp)
+        exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 2], [8, 2],
+               [9, 2], [10, 2], [11, 4], [12, 4], [13, 4], [14, 4]]
+        self.assertItemsEqual(obs, exp)
 
         with self.assertRaises(QiitaDBDuplicateError):
             Portal.create("EMP", "DOESNTMATTERFORDESC")
@@ -51,9 +51,9 @@ class TestPortal(TestCase):
 
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.analysis_portal")
-        exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 1], [8, 1],
-               [9, 1], [10, 1]]
-        self.assertEqual(obs, exp)
+        exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 2], [8, 2],
+               [9, 2], [10, 2]]
+        self.assertItemsEqual(obs, exp)
 
         with self.assertRaises(IncompetentQiitaDeveloperError):
             Portal.delete("NOEXISTPORTAL")
@@ -94,10 +94,10 @@ class TestPortal(TestCase):
 
     def test_get_analyses_by_portal(self):
         obs = self.emp_portal.get_analyses()
-        self.assertEqual(obs, set())
+        self.assertEqual(obs, {7, 8, 9, 10})
 
         obs = self.qiita_portal.get_analyses()
-        self.assertEqual(obs, set(x for x in range(1, 11)))
+        self.assertEqual(obs, {1, 2, 3, 4, 5, 6})
 
     def test_add_analysis_portals(self):
         self.emp_portal.add_analyses([self.analysis.id])
