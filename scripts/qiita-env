@@ -158,7 +158,8 @@ def job_details(job):
 
 
 @env.command(name="create-portal")
-@click.option('--portal', required=True, type=str, help='The portal name')
+@click.option('--portal', '-p', required=True, type=str,
+              help='The portal name')
 @click.option('--desc', required=True, type=str,
               help='The portal description')
 def add_portal(portal, desc):
@@ -170,7 +171,8 @@ def add_portal(portal, desc):
 
 
 @env.command(name="remove-portal")
-@click.option('--portal', required=True, type=str, help='The portal name')
+@click.option('--portal', '-p', required=True, type=str,
+              help='The portal name')
 def rem_portal(portal):
     """Removes a portal from the database"""
     try:
