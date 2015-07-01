@@ -83,6 +83,8 @@ class User(QiitaObject):
         """
         sql = "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE email = %s)"
         trans.add(sql, [id_])
+        # The value that we want is the result of the last SQL query,
+        # and it is stored in the first value of the first row
         return trans.execute()[-1][0][0]
 
     @classmethod

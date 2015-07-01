@@ -876,3 +876,21 @@ class Transaction(object):
         self._conn_handler._connection.rollback()
         # Reset the queries
         self._queries = []
+
+
+def get_transaction(trans, name):
+    """Returns a new Transaction if trans is not None, else returns trans.
+
+    Parameters
+    ----------
+    trans : Transaction or None
+        The variable to check if the transaction already exists or not
+    name : str
+        The name of the new transaction
+
+    Returns
+    -------
+    Transaction
+        `trans` if it is not None or a new Transaction with name `name`
+    """
+    return trans if trans is not None else Transaction(name)

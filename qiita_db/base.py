@@ -27,7 +27,7 @@ Classes
 
 from __future__ import division
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .sql_connection import Transaction
+from .sql_connection import get_transaction
 from .exceptions import QiitaDBNotImplementedError, QiitaDBUnknownIDError
 
 
@@ -121,7 +121,7 @@ class QiitaObject(object):
         id_ : object
             The ID to test
         trans: Transaction
-            Transaction in which this method should be executed
+            Transaction in which this method is executed
 
         Notes
         -----
@@ -133,6 +133,8 @@ class QiitaObject(object):
         sql = "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {0}_id=%s)".format(
             self._table)
         trans.add(sql, [id_])
+        # The value that we want is the result of the last SQL query,
+        # and it is stored in the first value of the first row
         return trans.execute()[-1][0][0]
 
     def __init__(self, id_, trans=None):
@@ -143,7 +145,7 @@ class QiitaObject(object):
         id_: object
             The object identifier
         trans: Transaction, optional
-            Transaction in which this method should be executed
+            Transaction in which this method is executed
 
         Raises
         ------
@@ -152,8 +154,8 @@ class QiitaObject(object):
         """
         self._check_subclass()
 
-        trans = trans if trans is not None else Transaction(
-            "init_%s_%s" % (self.__class__.__name__, id_))
+        trans = get_transaction(
+            trans, "init_%s_%s" % (self.__class__.__name__, id_))
 
         with trans:
             if not self._check_id(id_, trans):
@@ -198,7 +200,7 @@ class QiitaStatusObject(QiitaObject):
         Parameters
         ----------
         trans: Transaction, optional
-            Transaction in which this method should be executed
+            Transaction in which this method is executed
 
         Returns
         -------
@@ -206,14 +208,16 @@ class QiitaStatusObject(QiitaObject):
             The status of the object
         """
         # Get the DB status of the object
-        trans = trans if trans is not None else Transaction(
-            "status_%s_%s" % (self.__class__.__name__, self._id))
+        trans = get_transaction(
+            trans, "status_%s_%s" % (self.__class__.__name__, self._id))
         with trans:
             sql = """SELECT status FROM qiita.{0}_status
                      WHERE {0}_status_id = (
                         SELECT {0}_status_id FROM qiita.{0}
                         WHERE {0}_id = %s)""".format(self._table)
             trans.add(sql, [self._id])
+            # The value that we want is the result of the last SQL query,
+            # and it is stored in the first value of the first row
             return trans.execute()[-1][0][0]
 
     def _status_setter_checks(self, trans):
@@ -223,7 +227,7 @@ class QiitaStatusObject(QiitaObject):
         Parameters
         ----------
         trans: Transaction
-            Transaction in which this method should be executed
+            Transaction in which this method is executed
         """
         raise QiitaDBNotImplementedError()
 
@@ -235,10 +239,10 @@ class QiitaStatusObject(QiitaObject):
         status: str
             The new object status
         trans: Transaction, optional
-            Transaction in which this method should be executed
+            Transaction in which this method is executed
         """
-        trans = trans if trans is not None else Transaction(
-            "set_status_%s_%s" % (self.__class__.__name__, self._id))
+        trans = get_transaction(
+            trans, "set_status_%s_%s" % (self.__class__.__name__, self._id))
 
         with trans:
             # Perform any extra checks needed before we update the
@@ -252,7 +256,7 @@ class QiitaStatusObject(QiitaObject):
             self.add(sql, [status, self._id])
             self.execute()
 
-    def check_status(self, status, exclude=False):
+    def check_status(self, status, exclude=False, trans=None):
         r"""Checks status of object.
 
         Parameters
@@ -262,6 +266,8 @@ class QiitaStatusObject(QiitaObject):
         exclude: bool, optional
             If True, will check that database status is NOT one of the statuses
             passed. Default False.
+        trans: Transaction, optional
+            Transaction in which this method is executed
 
         Returns
         -------
@@ -282,18 +288,20 @@ class QiitaStatusObject(QiitaObject):
         Table setup:
         foo: foo_status_id  ----> foo_status: foo_status_id, status
         """
-        trans = Transaction("check_status_%s_%s"
-                            % (self.__class__.__name__, self._id))
+        trans = get_transaction(
+            "check_status_%s_%s" % (self.__class__.__name__, self._id))
         with trans:
             sql = "SELECT DISTINCT status FROM qiita.{0}_status".format(
                 self._table)
             trans.add(sql, [self._id])
-            statuses = [x[0] for x in trans.execute()[-1]]
+            # The values that we want are the result of the last SQL query
+            db_status = [x[0] for x in trans.execute()[-1]]
 
-            # Check that all the provided statuses are valid statuses
-            if set(status).difference(statuses):
-                raise ValueError("%s are not valid status values"
-                                 % ', '.join(set(status).difference(statuses)))
+            # Check that all the provided status are valid status values
+            if set(status).difference(db_status):
+                raise ValueError(
+                    "%s are not valid status values"
+                    % ', '.join(set(status).difference(db_status)))
 
             # Get the DB status of the object
             dbstatus = self.status(trans)
