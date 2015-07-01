@@ -2,7 +2,6 @@ from tornado.web import authenticated, HTTPError
 
 from qiita_db.study import Study
 from qiita_db.portal import Portal
-from qiita_core.qiita_settings import qiita_config
 from .base_handlers import BaseHandler
 
 
@@ -32,7 +31,7 @@ class StudyPortalHandler(BaseHandler):
         studies = self.get_arguments('selected')
         action = self.get_argument('action')
 
-        portal = Portal(qiita_config.portal)
+        portal = Portal(portal)
         if action == "Add":
             portal.add_studies(studies)
         elif action == "Remove":

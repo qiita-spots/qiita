@@ -4,6 +4,26 @@
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
+function check_submit(action) {
+  error = false;
+  var data = oTable.$('input').serialize();
+  if(data.length === 0) {
+    //No checked rows, so add error message if needed and then don't submit
+    if(!$('#checkbox-error').length) { $("#errors").append("<li id='checkbox-error'>Please select at least one row</li>"); }
+    error = true;
+  }
+  if($("#portal").val() === '') {
+    //No selected portal, so add error message if needed and then don't submit
+    if(!$('#portal-error').length) { $("#errors").append("<li id='portal-error'>Please select a portal</li>"); }
+    error = true;
+  }
+  if(error) { return false;}
+  $('#action').val(action);
+  data = data + "&" + $('#portal-form').serialize();
+  alert(data);
+  $.post('{{submit_url}}', data);
+}
+
 $(document).ready(function() {
   //https://github.com/DataTables/Plugins/blob/master/sorting/custom-data-source/dom-checkbox.js
   $.fn.dataTable.ext.order['dom-checkbox'] = function  ( settings, col ) {
@@ -30,32 +50,13 @@ $(document).ready(function() {
   $('#portal').change(function(){
         $("#portal-error").remove();
     });
-
-  $('#portal-form').submit( function() {
-    error = false;
-    var data = oTable.$('input').serialize();
-    if(data.length === 0) {
-      //No checked rows, so add error message if needed and then don't submit
-      if(!$('#checkbox-error').length) { $("#errors").append("<li id='checkbox-error'>Please select at least one row</li>"); }
-      error = true;
-    }
-    if($("#portal").val() === '') {
-      //No selected portal, so add error message if needed and then don't submit
-      if(!$('#portal-error').length) { $("#errors").append("<li id='portal-error'>Please select a portal</li>"); }
-      error = true;
-    }
-    if(error) { return false;}
-
-    data = data + "&portal=" + $("#portal").val();
-    $.post('{{submit_url}}', data);
-  });
 });
 </script>
 {%end%}
 
 {%block content%}
 <div class='row'>
-    <div class='col-sm-2'>
+    <div class='col-lg-2'>
     <form role="form" id="portal-form">
     <p><b>Portal:</b> <select name="portal" id="portal">
       <option value=""></option>
@@ -63,7 +64,8 @@ $(document).ready(function() {
       <option value="{{portal}}">{{portal}}</option>
       {% end %}
     </select></p>
-    <input type="submit" name="action" value="Add" class="btn btn-info"> <input type="submit" name="action" value="Remove" class="btn btn-danger">
+    <input type="hidden" name="action" id="action" value="">
+    <input type="button" id="add-button" value="Add" class="btn btn-info" onclick="check_submit('Add')"> <input type="submit" id="remove-button" value="Remove" class="btn btn-danger" onclick="check_submit('Remove')">
     </form>
     <div class="errorTxt" style="color:red">
       <ul id="errors"></ul>
