@@ -7,7 +7,8 @@ from psycopg2.extensions import (ISOLATION_LEVEL_AUTOCOMMIT,
                                  ISOLATION_LEVEL_READ_COMMITTED,
                                  TRANSACTION_STATUS_IDLE)
 
-from qiita_db.sql_connection import SQLConnectionHandler, Transaction
+from qiita_db.sql_connection import (SQLConnectionHandler, Transaction,
+                                     get_transaction)
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
 
@@ -610,6 +611,14 @@ class TestTransaction(TestBase):
 
             trans.add(sql, args, many=True)
             self.assertEqual(trans.index, 7)
+
+    def test_get_transaction(self):
+        trans = Transaction("test_get_transaction")
+        obs = get_transaction(trans, "test")
+        self.assertEqual(obs, trans)
+
+        obs = get_transaction(None, "test")
+        self.assertEqual(obs._name, "test")
 
 if __name__ == "__main__":
     main()
