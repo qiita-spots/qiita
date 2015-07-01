@@ -198,7 +198,7 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        studies : list of int
+        studies : iterable of int
             Study ids to attach to portal
 
         Raises
@@ -232,7 +232,7 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        studies : list of int
+        studies : iterable of int
             Study ids to remove from portal
 
         Raises
@@ -306,7 +306,7 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        analyses : list of int
+        analyses : iterable of int
             Analysis ids to attach to portal
 
         Raises
@@ -342,7 +342,7 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        analyses : list of int
+        analyses : iterable of int
             Analysis ids to remove from portal
 
         Raises
