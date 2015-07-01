@@ -6,7 +6,6 @@ from qiita_db.portal import Portal
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import QiitaDBError, QiitaDBDuplicateError
-from qiita_core.qiita_settings import qiita_config
 
 
 @qiita_test_checker()
@@ -17,8 +16,10 @@ class TestPortal(TestCase):
         self.qiita_portal = Portal('QIITA')
         self.emp_portal = Portal('EMP')
 
-    def tearDown(self):
-        qiita_config.portal = 'QIITA'
+    def test_list_portals(self):
+        obs = Portal.list_portals()
+        exp = ['EMP']
+        self.assertEqual(obs, exp)
 
     def test_add_portal(self):
         Portal.create("NEWPORTAL", "SOMEDESC")

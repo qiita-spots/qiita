@@ -22,6 +22,25 @@ class Portal(QiitaObject):
         portal_id = convert_to_id(portal, 'portal_type', 'portal')
         super(Portal, self).__init__(portal_id)
 
+    @staticmethod
+    def list_portals():
+        """Returns list of portals available in system
+
+        Returns
+        -------
+        list of str
+            List of portal names for the system
+
+        Notes
+        -----
+        This does not return the QIITA portal in the list, as it is a required
+        portal that can not be edited.
+        """
+        sql = """SELECT portal FROM qiita.portal_type WHERE portal != 'QIITA'
+              ORDER BY portal"""
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql)]
+
     @classmethod
     def create(cls, portal, desc):
         """Creates a new portal on the system
