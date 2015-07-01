@@ -4,9 +4,10 @@ from psycopg2._psycopg import connection
 from psycopg2.extras import DictCursor
 from psycopg2 import connect
 from psycopg2.extensions import (ISOLATION_LEVEL_AUTOCOMMIT,
-                                 ISOLATION_LEVEL_READ_COMMITTED)
+                                 ISOLATION_LEVEL_READ_COMMITTED,
+                                 TRANSACTION_STATUS_IDLE)
 
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import SQLConnectionHandler, Transaction
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
 
@@ -18,7 +19,7 @@ DB_TEST_TABLE = """CREATE TABLE qiita.test_table (
 
 
 @qiita_test_checker()
-class TestConnHandler(TestCase):
+class TestBase(TestCase):
     def setUp(self):
         # Add the test table to the database, so we can use it in the tests
         with connect(user=qiita_config.user, password=qiita_config.password,
@@ -53,6 +54,8 @@ class TestConnHandler(TestCase):
 
         self.assertEqual(obs, exp)
 
+
+class TestConnHandler(TestBase):
     def test_init(self):
         obs = SQLConnectionHandler()
         self.assertEqual(obs.admin, 'no_admin')
@@ -193,173 +196,420 @@ class TestConnHandler(TestCase):
         obs = self.conn_handler.execute_fetchall(sql, (True,))
         self.assertEqual(obs, [['test1', True, 1], ['test2', True, 2]])
 
-    def test_check_queue_exists(self):
-        self.assertFalse(self.conn_handler._check_queue_exists('foo'))
-        self.conn_handler.create_queue('foo')
-        self.assertTrue(self.conn_handler._check_queue_exists('foo'))
 
-    def test_create_queue(self):
-        self.assertEqual(self.conn_handler.queues, {})
-        self.conn_handler.create_queue("toy_queue")
-        self.assertEqual(self.conn_handler.queues, {'toy_queue': []})
+class TestTransaction(TestBase):
+    def test_init(self):
+        obs = Transaction("test_init")
+        self.assertEqual(obs._name, "test_init")
+        self.assertEqual(obs._queries, [])
+        self.assertEqual(obs._results, [])
+        self.assertEqual(obs.index, 0)
+        self.assertTrue(
+            isinstance(obs._conn_handler, SQLConnectionHandler))
+        self.assertEqual(obs._contexts_entered, 0)
 
-    def test_create_queue_error(self):
-        self.conn_handler.create_queue("test_queue")
-        with self.assertRaises(KeyError):
-            self.conn_handler.create_queue("test_queue")
+    def test_replace_placeholders(self):
+        with Transaction("test_replace_placeholders") as trans:
+            trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 3]],
+                              None, None, [["res5", 5]]]
+            sql = "SELECT 42"
+            obs_sql, obs_args = trans._replace_placeholders(sql, ["{0:0:0}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, ["res1"])
 
-    def test_list_queues(self):
-        self.assertEqual(self.conn_handler.list_queues(), [])
-        self.conn_handler.create_queue("test_queue")
-        self.assertEqual(self.conn_handler.list_queues(), ["test_queue"])
+            obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:0:0}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, ["res2a"])
 
-    def test_add_to_queue(self):
-        self.conn_handler.create_queue("test_queue")
+            obs_sql, obs_args = trans._replace_placeholders(sql, ["{1:1:1}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, [3])
 
-        sql1 = "INSERT INTO qiita.test_table (bool_column) VALUES (%s)"
-        sql_args1 = (True,)
-        self.conn_handler.add_to_queue("test_queue", sql1, sql_args1)
-        self.assertEqual(self.conn_handler.queues,
-                         {"test_queue": [(sql1, sql_args1)]})
+            obs_sql, obs_args = trans._replace_placeholders(sql, ["{4:0:0}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, ["res5"])
 
-        sql2 = "INSERT INTO qiita.test_table (int_column) VALUES (1)"
-        self.conn_handler.add_to_queue("test_queue", sql2)
-        self.assertEqual(self.conn_handler.queues,
-                         {"test_queue": [(sql1, sql_args1), (sql2, None)]})
+            obs_sql, obs_args = trans._replace_placeholders(
+                sql, ["foo", "{0:0:1}", "bar", "{1:0:1}"])
+            self.assertEqual(obs_sql, sql)
+            self.assertEqual(obs_args, ["foo", 1, "bar", 2])
 
-    def test_add_to_queue_many(self):
-        self.conn_handler.create_queue("test_queue")
+    def test_replace_placeholders_index_error(self):
+        with Transaction("test_replace_placeholders_index_error") as trans:
+            trans._results = [[["res1", 1]], [["res2a", 2], ["res2b", 2]]]
 
-        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
-        sql_args = [(1,), (2,), (3,)]
-        self.conn_handler.add_to_queue("test_queue", sql, sql_args, many=True)
-        self.assertEqual(self.conn_handler.queues,
-                         {"test_queue": [(sql, (1,)), (sql, (2,)),
-                                         (sql, (3,))]})
+            error_regex = ('The placeholder {0:0:3} does not match to any '
+                           'previous result')
+            with self.assertRaisesRegexp(ValueError, error_regex):
+                trans._replace_placeholders("SELECT 42", ["{0:0:3}"])
 
-    def test_add_to_queue_error(self):
-        with self.assertRaises(KeyError):
-            self.conn_handler.add_to_queue("foo", "SELECT 42")
+            error_regex = ('The placeholder {0:2:0} does not match to any '
+                           'previous result')
+            with self.assertRaisesRegexp(ValueError, error_regex):
+                trans._replace_placeholders("SELECT 42", ["{0:2:0}"])
 
-    def test_execute_queue(self):
-        self.conn_handler.create_queue("test_queue")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s)"""
-        self.conn_handler.add_to_queue("test_queue", sql, ['test_insert', '2'])
-        sql = """UPDATE qiita.test_table
-                 SET int_column = 20, bool_column = FALSE
-                 WHERE str_column = %s"""
-        self.conn_handler.add_to_queue("test_queue", sql, ['test_insert'])
-        obs = self.conn_handler.execute_queue("test_queue")
-        self.assertEqual(obs, [])
+            error_regex = ('The placeholder {2:0:0} does not match to any '
+                           'previous result')
+            with self.assertRaisesRegexp(ValueError, error_regex):
+                trans._replace_placeholders("SELECT 42", ["{2:0:0}"])
+
+    def test_replace_placeholders_type_error(self):
+        with Transaction("test_replace_placeholders_type_error") as trans:
+            trans._results = [None]
+
+            error_regex = ("The placeholder {0:0:0} is referring to a SQL "
+                           "query that does not retrieve data")
+            with self.assertRaisesRegexp(ValueError, error_regex):
+                trans._replace_placeholders("SELECT 42", ["{0:0:0}"])
+
+    def test_add(self):
+        with Transaction("test_add") as trans:
+            self.assertEqual(trans._queries, [])
+
+            sql1 = "INSERT INTO qiita.test_table (bool_column) VALUES (%s)"
+            args1 = [True]
+            trans.add(sql1, args1)
+            sql2 = "INSERT INTO qiita.test_table (int_column) VALUES (1)"
+            trans.add(sql2)
+
+            exp = [(sql1, args1), (sql2, [])]
+            self.assertEqual(trans._queries, exp)
+
+            # Remove queries so __exit__ doesn't try to execute it
+            trans._queries = []
+
+    def test_add_many(self):
+        with Transaction("test_add_many") as trans:
+            self.assertEqual(trans._queries, [])
+
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            args = [[1], [2], [3]]
+            trans.add(sql, args, many=True)
+
+            exp = [(sql, [1]), (sql, [2]), (sql, [3])]
+            self.assertEqual(trans._queries, exp)
+
+    def test_add_error(self):
+        with Transaction("test_add_error") as trans:
+
+            with self.assertRaises(TypeError):
+                trans.add("SELECT 42", (1,))
+
+            with self.assertRaises(TypeError):
+                trans.add("SELECT 42", {'foo': 'bar'})
+
+            with self.assertRaises(TypeError):
+                trans.add("SELECT 42", [(1,), (1,)], many=True)
+
+    def test_execute(self):
+        with Transaction("test_execute") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s)"""
+            trans.add(sql, ["test_insert", 2])
+            sql = """UPDATE qiita.test_table
+                     SET int_column = %s, bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [20, False, "test_insert"])
+            obs = trans.execute()
+            self.assertEqual(obs, [None, None])
+            self._assert_sql_equal([])
+
         self._assert_sql_equal([("test_insert", False, 20)])
 
-    def test_execute_queue_many(self):
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s)"""
-        sql_args = [('insert1', 1), ('insert2', 2), ('insert3', 3)]
+    def test_execute_many(self):
+        with Transaction("test_execute_many") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s)"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
+            sql = """UPDATE qiita.test_table
+                     SET int_column = %s, bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [20, False, 'insert2'])
+            obs = trans.execute()
+            self.assertEqual(obs, [None, None, None, None])
 
-        self.conn_handler.create_queue("test_queue")
-        self.conn_handler.add_to_queue("test_queue", sql, sql_args, many=True)
-        sql = """UPDATE qiita.test_table
-                 SET int_column = 20, bool_column = FALSE
-                 WHERE str_column = %s"""
-        self.conn_handler.add_to_queue("test_queue", sql, ['insert2'])
-        obs = self.conn_handler.execute_queue('test_queue')
-        self.assertEqual(obs, [])
+            self._assert_sql_equal([])
 
-        self._assert_sql_equal([('insert1', True, 1), ('insert3', True, 3),
+        self._assert_sql_equal([('insert1', True, 1),
+                                ('insert3', True, 3),
                                 ('insert2', False, 20)])
 
-    def test_execute_queue_last_return(self):
-        self.conn_handler.create_queue("test_queue")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s)"""
-        self.conn_handler.add_to_queue("test_queue", sql, ['test_insert', '2'])
-        sql = """UPDATE qiita.test_table SET bool_column = FALSE
-                 WHERE str_column = %s RETURNING int_column"""
-        self.conn_handler.add_to_queue("test_queue", sql, ['test_insert'])
-        obs = self.conn_handler.execute_queue("test_queue")
-        self.assertEqual(obs, [2])
+    def test_execute_return(self):
+        with Transaction("test_execute_return") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            trans.add(sql, ['test_insert', 2])
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s RETURNING int_column"""
+            trans.add(sql, [False, 'test_insert'])
+            obs = trans.execute()
+            self.assertEqual(obs, [[['test_insert', 2]], [[2]]])
 
-    def test_execute_queue_placeholders(self):
-        self.conn_handler.create_queue("test_queue")
-        sql = """INSERT INTO qiita.test_table (int_column) VALUES (%s)
-                 RETURNING str_column"""
-        self.conn_handler.add_to_queue("test_queue", sql, (2,))
-        sql = """UPDATE qiita.test_table SET bool_column = FALSE
-                 WHERE str_column = %s"""
-        self.conn_handler.add_to_queue("test_queue", sql, ('{0}',))
-        obs = self.conn_handler.execute_queue("test_queue")
-        self.assertEqual(obs, [])
-        self._assert_sql_equal([('foo', False, 2)])
+    def test_execute_return_many(self):
+        with Transaction("test_execute_return_many") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [False, 'insert2'])
+            sql = "SELECT * FROM qiita.test_table"
+            trans.add(sql)
+            obs = trans.execute()
+            exp = [[['insert1', 1]],  # First query of the many query
+                   [['insert2', 2]],  # Second query of the many query
+                   [['insert3', 3]],  # Third query of the many query
+                   None,  # Update query
+                   [['insert1', True, 1],  # First result select
+                    ['insert3', True, 3],  # Second result select
+                    ['insert2', False, 2]]]  # Third result select
+            self.assertEqual(obs, exp)
 
-    def test_execute_queue_placeholders_regex(self):
-        self.conn_handler.create_queue("test_queue")
-        sql = """INSERT INTO qiita.test_table (int_column)
-                 VALUES (%s) RETURNING str_column"""
-        self.conn_handler.add_to_queue("test_queue", sql, (1,))
-        sql = """UPDATE qiita.test_table SET str_column = %s
-                 WHERE str_column = %s"""
-        self.conn_handler.add_to_queue("test_queue", sql, ("", "{0}"))
-        obs = self.conn_handler.execute_queue("test_queue")
-        self.assertEqual(obs, [])
-        self._assert_sql_equal([('', True, 1)])
+    def test_execute_placeholders(self):
+        with Transaction("test_execute_placeholders") as trans:
+            sql = """INSERT INTO qiita.test_table (int_column) VALUES (%s)
+                     RETURNING str_column"""
+            trans.add(sql, [2])
+            sql = """UPDATE qiita.test_table SET str_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, ["", "{0:0:0}"])
+            obs = trans.execute()
+            self.assertEqual(obs, [[['foo']], None])
+            self._assert_sql_equal([])
 
-    def test_execute_queue_fail(self):
-        self.conn_handler.create_queue("test_queue")
-        sql = """INSERT INTO qiita.test_table (int_column) VALUES (%s)"""
-        self.conn_handler.add_to_queue("test_queue", sql, (2,))
-        sql = """UPDATE qiita.test_table SET bool_column = False
-                 WHERE str_column = %s"""
-        self.conn_handler.add_to_queue("test_queue", sql, ('{0}',))
+        self._assert_sql_equal([('', True, 2)])
 
-        with self.assertRaises(ValueError):
-            self.conn_handler.execute_queue("test_queue")
+    def test_execute_error_bad_placeholder(self):
+        with Transaction("test_execute_error_bad_placeholder") as trans:
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            trans.add(sql, [2])
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [False, "{0:0:0}"])
 
-        # make sure rollback correctly
+            with self.assertRaises(ValueError):
+                trans.execute()
+
+            # make sure rollback correctly
+            self._assert_sql_equal([])
+
+    def test_execute_error_no_result_placeholder(self):
+        with Transaction("test_execute_error_no_result_placeholder") as trans:
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            trans.add(sql, [[1], [2], [3]], many=True)
+            sql = """SELECT str_column FROM qiita.test_table
+                     WHERE int_column = %s"""
+            trans.add(sql, [4])
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s"""
+            trans.add(sql, [False, "{3:0:0}"])
+
+            with self.assertRaises(ValueError):
+                trans.execute()
+
+            # make sure rollback correctly
+            self._assert_sql_equal([])
+
+    def test_execute_huge_transaction(self):
+        with Transaction("test_execute_huge_transaction") as trans:
+            # Add a lot of inserts to the transaction
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            for i in range(1000):
+                trans.add(sql, [i])
+            # Add some updates to the transaction
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE int_column = %s"""
+            for i in range(500):
+                trans.add(sql, [False, i])
+            # Make the transaction fail with the last insert
+            sql = """INSERT INTO qiita.table_to_make (the_trans_to_fail)
+                     VALUES (1)"""
+            trans.add(sql)
+
+            with self.assertRaises(ValueError):
+                trans.execute()
+
+            # make sure rollback correctly
+            self._assert_sql_equal([])
+
+    def test_execute_commit_false(self):
+        with Transaction("test_execute_commit_false") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
+
+            obs = trans.execute()
+            exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+            self.assertEqual(obs, exp)
+
+            self._assert_sql_equal([])
+
+            trans.commit()
+
+            self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                    ('insert3', True, 3)])
+
+    def test_execute_commit_false_rollback(self):
+        with Transaction("test_execute_commit_false_rollback") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
+
+            obs = trans.execute()
+            exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+            self.assertEqual(obs, exp)
+
+            self._assert_sql_equal([])
+
+            trans.rollback()
+
+            self._assert_sql_equal([])
+
+    def test_execute_commit_false_wipe_queries(self):
+        with Transaction("test_execute_commit_false_wipe_queries") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
+
+            obs = trans.execute()
+            exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
+            self.assertEqual(obs, exp)
+
+            self._assert_sql_equal([])
+
+            sql = """UPDATE qiita.test_table SET bool_column = %s
+                     WHERE str_column = %s"""
+            args = [False, 'insert2']
+            trans.add(sql, args)
+            self.assertEqual(trans._queries, [(sql, args)])
+
+            trans.execute()
+            self._assert_sql_equal([])
+
+        self._assert_sql_equal([('insert1', True, 1), ('insert3', True, 3),
+                                ('insert2', False, 2)])
+
+    def test_context_manager_rollback(self):
+        try:
+            with Transaction("test_context_manager_rollback") as trans:
+                sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+                args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+                trans.add(sql, args, many=True)
+
+                trans.execute()
+                raise ValueError("Force exiting the context manager")
+        except ValueError:
+            pass
         self._assert_sql_equal([])
+        self.assertEqual(
+            trans._conn_handler._connection.get_transaction_status(),
+            TRANSACTION_STATUS_IDLE)
 
-    def test_execute_queue_error(self):
-        self.conn_handler.create_queue("test_queue")
-        sql = """INSERT INTO qiita.test_table (str_column, int_column)
-                 VALUES (%s, %s)"""
-        self.conn_handler.add_to_queue("test_queue", sql, ['test_insert', '2'])
-        sql = """UPDATE qiita.test_table
-                 SET int_column = 20, bool_column = FALSE
-                 WHERE str_column = %s"""
-        self.conn_handler.add_to_queue("test_queue", sql, ['test_insert'])
-        with self.assertRaises(KeyError):
-            self.conn_handler.execute_queue("oops!")
+    def test_context_manager_execute(self):
+        with Transaction("test_context_manager_no_commit") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
+            self._assert_sql_equal([])
 
-    def test_huge_queue(self):
-        self.conn_handler.create_queue("test_queue")
-        # Add a lof of inserts to the queue
-        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
-        for x in range(1000):
-            self.conn_handler.add_to_queue("test_queue", sql, (x,))
+        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                ('insert3', True, 3)])
+        self.assertEqual(
+            trans._conn_handler._connection.get_transaction_status(),
+            TRANSACTION_STATUS_IDLE)
 
-        # Make the queue fail with the last insert
-        sql = "INSERT INTO qiita.table_to_make (the_queue_to_fail) VALUES (1)"
-        self.conn_handler.add_to_queue("test_queue", sql)
+    def test_context_manager_no_commit(self):
+        with Transaction("test_context_manager_no_commit") as trans:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                 VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            trans.add(sql, args, many=True)
 
-        with self.assertRaises(ValueError):
-            self.conn_handler.execute_queue("test_queue")
+            trans.execute()
+            self._assert_sql_equal([])
 
-        # make sure rollback correctly
-        self._assert_sql_equal([])
+        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                ('insert3', True, 3)])
+        self.assertEqual(
+            trans._conn_handler._connection.get_transaction_status(),
+            TRANSACTION_STATUS_IDLE)
 
-    def test_get_temp_queue(self):
-        my_queue = self.conn_handler.get_temp_queue()
-        self.assertTrue(my_queue in self.conn_handler.list_queues())
+    def test_context_manager_multiple(self):
+        trans = Transaction("test_context_manager_multiple")
+        self.assertEqual(trans._contexts_entered, 0)
 
-        self.conn_handler.add_to_queue(my_queue,
-                                       "SELECT * from qiita.qiita_user")
-        self.conn_handler.add_to_queue(my_queue,
-                                       "SELECT * from qiita.user_level")
-        self.conn_handler.execute_queue(my_queue)
+        with trans:
+            self.assertEqual(trans._contexts_entered, 1)
 
-        self.assertTrue(my_queue not in self.conn_handler.list_queues())
+            trans.add("SELECT 42")
+            with trans:
+                self.assertEqual(trans._contexts_entered, 2)
+                sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                         VALUES (%s, %s) RETURNING str_column, int_column"""
+                args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+                trans.add(sql, args, many=True)
+
+            # We exited the second context, nothing should have been executed
+            self.assertEqual(trans._contexts_entered, 1)
+            self.assertEqual(
+                trans._conn_handler._connection.get_transaction_status(),
+                TRANSACTION_STATUS_IDLE)
+            self._assert_sql_equal([])
+
+        # We have exited the first context, everything should have been
+        # executed and committed
+        self.assertEqual(trans._contexts_entered, 0)
+        self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
+                                ('insert3', True, 3)])
+        self.assertEqual(
+            trans._conn_handler._connection.get_transaction_status(),
+            TRANSACTION_STATUS_IDLE)
+
+    def test_context_manager_checker(self):
+        t = Transaction("test_context_managet_checker")
+
+        with self.assertRaises(RuntimeError):
+            t.add("SELECT 42")
+
+        with self.assertRaises(RuntimeError):
+            t.execute()
+
+        with self.assertRaises(RuntimeError):
+            t.commit()
+
+        with self.assertRaises(RuntimeError):
+            t.rollback()
+
+        with t:
+            t.add("SELECT 42")
+
+        with self.assertRaises(RuntimeError):
+            t.execute()
+
+    def test_index(self):
+        with Transaction("test_index") as trans:
+            self.assertEqual(trans.index, 0)
+
+            trans.add("SELECT 42")
+            self.assertEqual(trans.index, 1)
+
+            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+            args = [[1], [2], [3]]
+            trans.add(sql, args, many=True)
+            self.assertEqual(trans.index, 4)
+
+            trans.execute()
+            self.assertEqual(trans.index, 4)
+
+            trans.add(sql, args, many=True)
+            self.assertEqual(trans.index, 7)
 
 if __name__ == "__main__":
     main()

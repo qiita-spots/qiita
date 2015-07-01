@@ -17,6 +17,7 @@ from qiita_db.util import hash_password
 from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError)
+from qiita_db.sql_connection import Transaction
 
 
 class SupportTests(TestCase):
@@ -188,6 +189,10 @@ class UserTest(TestCase):
         with self.assertRaises(IncorrectEmailError):
             User.exists("notanemail.@badformat")
 
+    def test_exists_w_transaction(self):
+        with Transaction("test_exists_w_transaction") as trans:
+            self.assertTrue(User.exists("test@foo.bar", trans))
+
     def test_get_email(self):
         self.assertEqual(self.user.email, 'admin@foo.bar')
 
@@ -257,6 +262,12 @@ class UserTest(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             User.verify_code('test@user.com', 'fakecode', 'badtype')
 
+        with Transaction("test_verify_code") as t:
+            self.assertTrue(
+                User.verify_code('test@user.com', 'resetcode', 'reset', t))
+            self.assertFalse(
+                User.verify_code('test@user.com', 'wrongcode', 'create', t))
+
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(
             "SELECT password FROM qiita.qiita_user WHERE email = %s",
@@ -264,13 +275,17 @@ class UserTest(TestCase):
         self.assertEqual(hash_password(passwd, obspass), obspass)
 
     def test_change_pass(self):
-        self.user._change_pass("newpassword")
+        with Transaction("test_change_pass") as trans:
+            self.user._change_pass("newpassword", trans)
+
         self._check_pass("newpassword")
         self.assertIsNone(self.user.info["pass_reset_code"])
 
     def test_change_pass_short(self):
         with self.assertRaises(IncorrectPasswordError):
-            self.user._change_pass("newpass")
+            with Transaction("test_change_pass_short") as trans:
+                self.user._change_pass("newpass", trans)
+
         self._check_pass("password")
 
     def test_change_password(self):
