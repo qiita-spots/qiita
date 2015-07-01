@@ -15,6 +15,21 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
 class Portal(QiitaObject):
+    r"""Portal object to create and maintain portals in the system
+
+    Attributes
+    ----------
+    portal
+
+    Methods
+    -------
+    get_studies
+    add_studies
+    remove_studies
+    get_analyses
+    add_analyses
+    remove_analyses
+    """
     _table = 'portal_type'
 
     def __init__(self, portal):
@@ -24,7 +39,7 @@ class Portal(QiitaObject):
 
     @classmethod
     def create(cls, portal, desc):
-        """Creates a new portal on the system
+        """Creates a new portal and its default analyses on the system
 
         Parameters
         ----------
@@ -36,7 +51,7 @@ class Portal(QiitaObject):
         Raises
         ------
         QiitaDBDuplicateError
-            Portal already exists
+            Portal name already exists
         """
         if cls.exists(portal):
             raise QiitaDBDuplicateError("Portal", portal)
@@ -74,7 +89,7 @@ class Portal(QiitaObject):
 
     @staticmethod
     def delete(portal):
-        """Removes a portal from the system
+        """Removes a portal and its default analyses from the system
 
         Parameters
         ----------
@@ -94,7 +109,7 @@ class Portal(QiitaObject):
         studies = conn_handler.execute_fetchall(sql, [portal_id])
         if studies:
             raise QiitaDBError(
-                "Studies still attached to portal %s: %s" %
+                " Cannot delete portal '%s', studies still attached: %s" %
                 (portal, ', '.join([str(s[0]) for s in studies])))
 
         # Check if attached to any analyses
@@ -104,7 +119,7 @@ class Portal(QiitaObject):
         analyses = conn_handler.execute_fetchall(sql, [portal_id])
         if studies:
             raise QiitaDBError(
-                "Analyses still attached to portal %s: %s" %
+                " Cannot delete portal '%s', analyses still attached: %s" %
                 (portal, ', '.join([str(a[0]) for a in analyses])))
 
         # Remove portal and default analyses for all users
@@ -134,7 +149,7 @@ class Portal(QiitaObject):
 
     @staticmethod
     def exists(portal):
-        """Returns whether the portal already exists
+        """Returns whether the portal name already exists on the system
 
         Parameters
         ----------
@@ -174,7 +189,7 @@ class Portal(QiitaObject):
         existing = [x[0] for x in conn_handler.execute_fetchall(
             sql, [tuple(studies)])]
         if len(existing) != len(studies):
-            bad = map(str, (set(studies).difference(existing)))
+            bad = map(str, set(studies).difference(existing))
             raise QiitaDBError("The following studies do not exist: %s" %
                                ", ".join(bad))
 

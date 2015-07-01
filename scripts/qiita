@@ -32,7 +32,7 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                update_preprocessed_data_from_cmd)
 from qiita_db.portal import Portal
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.exceptions import QiitaDBConnectionError
+from qiita_db.exceptions import QiitaDBConnectionError, QiitaDBError
 from qiita_db.reference import Reference
 from qiita_db.logger import LogEntry
 from qiita_core.configuration_manager import ConfigurationManager
@@ -306,7 +306,10 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
               help='Comma seperated list of analyses to add')
 def add_analysis(portal, analyses):
     ids = map(int, analyses.split(','))
-    Portal(portal).add_analyses(ids)
+    try:
+        Portal(portal).add_analyses(ids)
+    except QiitaDBError:
+        raise click.BadParameter("Non-existant or default analyses passed!")
 
 
 @portal.command(name="remove-analyses")
@@ -316,7 +319,10 @@ def add_analysis(portal, analyses):
               help='Comma seperated list of analyses to remove')
 def remove_analysis(portal, analyses):
     ids = map(int, analyses.split(','))
-    Portal(portal).remove_analyses(ids)
+    try:
+        Portal(portal).remove_analyses(ids)
+    except QiitaDBError:
+        raise click.BadParameter("Non-existant or default analyses passed!")
 
 
 @portal.command(name="add-studies")
@@ -326,7 +332,10 @@ def remove_analysis(portal, analyses):
               help='Comma seperated list of studies to add')
 def add_study(portal, studies):
     ids = map(int, studies.split(','))
-    Portal(portal).add_studies(ids)
+    try:
+        Portal(portal).add_studies(ids)
+    except QiitaDBError:
+        raise click.BadParameter("Non-existant studies passed!")
 
 
 @portal.command(name="remove-studies")
@@ -336,7 +345,10 @@ def add_study(portal, studies):
               help='Comma seperated list of studies to remove')
 def remove_study(portal, studies):
     ids = map(int, studies.split(','))
-    Portal(portal).remove_studies(ids)
+    try:
+        Portal(portal).remove_studies(ids)
+    except QiitaDBError:
+        raise click.BadParameter("Non-existant studies passed!")
 
 # #############################################################################
 # EBI COMMANDS
