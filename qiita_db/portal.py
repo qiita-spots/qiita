@@ -10,11 +10,26 @@ import warnings
 from .sql_connection import SQLConnectionHandler
 from .util import convert_to_id
 from .base import QiitaObject
-from .exceptions import QiitaDBError, QiitaDBDuplicateError
+from .exceptions import QiitaDBError, QiitaDBDuplicateError, QiitaDBWarning
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
 class Portal(QiitaObject):
+    r"""Portal object to create and maintain portals in the system
+
+    Attributes
+    ----------
+    portal
+
+    Methods
+    -------
+    get_studies
+    add_studies
+    remove_studies
+    get_analyses
+    add_analyses
+    remove_analyses
+    """
     _table = 'portal_type'
 
     def __init__(self, portal):
@@ -43,7 +58,7 @@ class Portal(QiitaObject):
 
     @classmethod
     def create(cls, portal, desc):
-        """Creates a new portal on the system
+        """Creates a new portal and its default analyses on the system
 
         Parameters
         ----------
@@ -55,7 +70,7 @@ class Portal(QiitaObject):
         Raises
         ------
         QiitaDBDuplicateError
-            Portal already exists
+            Portal name already exists
         """
         if cls.exists(portal):
             raise QiitaDBDuplicateError("Portal", portal)
@@ -93,7 +108,7 @@ class Portal(QiitaObject):
 
     @staticmethod
     def delete(portal):
-        """Removes a portal from the system
+        """Removes a portal and its default analyses from the system
 
         Parameters
         ----------
@@ -113,7 +128,7 @@ class Portal(QiitaObject):
         studies = conn_handler.execute_fetchall(sql, [portal_id])
         if studies:
             raise QiitaDBError(
-                "Studies still attached to portal %s: %s" %
+                " Cannot delete portal '%s', studies still attached: %s" %
                 (portal, ', '.join([str(s[0]) for s in studies])))
 
         # Check if attached to any analyses
@@ -123,7 +138,7 @@ class Portal(QiitaObject):
         analyses = conn_handler.execute_fetchall(sql, [portal_id])
         if studies:
             raise QiitaDBError(
-                "Analyses still attached to portal %s: %s" %
+                " Cannot delete portal '%s', analyses still attached: %s" %
                 (portal, ', '.join([str(a[0]) for a in analyses])))
 
         # Remove portal and default analyses for all users
@@ -153,6 +168,18 @@ class Portal(QiitaObject):
 
     @staticmethod
     def exists(portal):
+        """Returns whether the portal name already exists on the system
+
+        Parameters
+        ----------
+        portal : str
+            Name of portal to check
+
+        Returns
+        -------
+        bool
+            Whether the portal exists or not
+        """
         try:
             convert_to_id(portal, 'portal_type', 'portal')
         except IncompetentQiitaDeveloperError:
@@ -181,7 +208,7 @@ class Portal(QiitaObject):
         existing = [x[0] for x in conn_handler.execute_fetchall(
             sql, [tuple(studies)])]
         if len(existing) != len(studies):
-            bad = map(str, (set(studies).difference(existing)))
+            bad = map(str, set(studies).difference(existing))
             raise QiitaDBError("The following studies do not exist: %s" %
                                ", ".join(bad))
 
@@ -190,29 +217,32 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        studies : list of int
+        studies : iterable of int
             Study ids to attach to portal
 
         Raises
         ------
         QiitaDBError
-            Some studies given do not exist
+            Some studies given do not exist in the system
+        QiitaDBWarning
+            Some studies already exist in the given portal
         """
         self._check_studies(studies)
 
         conn_handler = SQLConnectionHandler()
         # Clean list of studies down to ones not associated with portal already
         sql = """SELECT study_id from qiita.study_portal
-                 WHERE portal_type_id != %s AND study_id IN %s"""
-        clean_studies = [x[0] for x in conn_handler.execute_fetchall(
-                         sql, [self._id, tuple(studies)])]
+                 WHERE portal_type_id = %s AND study_id IN %s"""
+        duplicates = [x[0] for x in conn_handler.execute_fetchall(
+                      sql, [self._id, tuple(studies)])]
 
-        if len(clean_studies) != len(studies):
-            rem = map(str, set(studies).difference(clean_studies))
+        if len(duplicates) > 0:
             warnings.warn("The following studies area already part of %s: %s" %
-                          (self.portal, ', '.join(rem)))
+                          (self.portal, ', '.join(map(str, duplicates))),
+                          QiitaDBWarning)
 
         # Add cleaned list to the portal
+        clean_studies = set(studies).difference(duplicates)
         sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
                  VALUES (%s, %s)"""
         conn_handler.executemany(sql, [(s, self._id) for s in clean_studies])
@@ -222,7 +252,7 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        studies : list of int
+        studies : iterable of int
             Study ids to remove from portal
 
         Raises
@@ -230,7 +260,9 @@ class Portal(QiitaObject):
         ValueError
             Trying to delete from QIITA portal
         QiitaDBError
-            Some studies given do not exist
+            Some studies given do not exist in the system
+        QiitaDBWarning
+            Some studies already do not exist in the given portal
         """
         if self.portal == "QIITA":
             raise ValueError('Can not remove from main QIITA portal!')
@@ -246,7 +278,7 @@ class Portal(QiitaObject):
         if len(clean_studies) != len(studies):
             rem = map(str, set(studies).difference(clean_studies))
             warnings.warn("The following studies are not part of %s: %s" %
-                          (self.portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)), QiitaDBWarning)
 
         sql = """DELETE FROM qiita.study_portal
                  WHERE study_id IN %s AND portal_type_id = %s"""
@@ -294,13 +326,16 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        analyses : list of int
+        analyses : iterable of int
             Analysis ids to attach to portal
 
         Raises
         ------
         QiitaDBError
-            Some given analyses do not exist, or are default analyses
+            Some given analyses do not exist in the system,
+            or are default analyses
+        QiitaDBWarning
+            Some analyses already exist in the given portal
         """
         self._check_analyses(analyses)
 
@@ -308,19 +343,20 @@ class Portal(QiitaObject):
         # Clean list of analyses to ones not already associated with portal
         sql = """SELECT analysis_id from qiita.analysis_portal
                  JOIN qiita.analysis USING (analysis_id)
-                 WHERE portal_type_id != %s AND analysis_id IN %s
+                 WHERE portal_type_id = %s AND analysis_id IN %s
                  AND dflt != TRUE"""
-        clean_analyses = [x[0] for x in conn_handler.execute_fetchall(
+        duplicates = [x[0] for x in conn_handler.execute_fetchall(
             sql, [self._id, tuple(analyses)])]
 
-        if len(clean_analyses) != len(analyses):
-            rem = map(str, set(analyses).difference(clean_analyses))
+        if len(duplicates) > 0:
             warnings.warn("The following analyses are already part of %s: %s" %
-                          (self.portal, ', '.join(rem)))
+                          (self.portal, ', '.join(map(str, duplicates))),
+                          QiitaDBWarning)
 
         sql = """INSERT INTO qiita.analysis_portal
                  (analysis_id, portal_type_id)
                  VALUES (%s, %s)"""
+        clean_analyses = set(analyses).difference(duplicates)
         conn_handler.executemany(sql, [(a, self._id) for a in clean_analyses])
 
     def remove_analyses(self, analyses):
@@ -328,13 +364,15 @@ class Portal(QiitaObject):
 
         Parameters
         ----------
-        analyses : list of int
+        analyses : iterable of int
             Analysis ids to remove from portal
 
         Raises
         ------
         ValueError
             Trying to delete from QIITA portal
+        QiitaDBWarning
+            Some analyses already do not exist in the given portal
         """
         self._check_analyses(analyses)
         if self.portal == "QIITA":
@@ -351,7 +389,7 @@ class Portal(QiitaObject):
         if len(clean_analyses) != len(analyses):
             rem = map(str, set(analyses).difference(clean_analyses))
             warnings.warn("The following analyses are not part of %s: %s" %
-                          (self.portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)), QiitaDBWarning)
 
         sql = """DELETE FROM qiita.analysis_portal
                  WHERE analysis_id IN %s AND portal_type_id = %s"""

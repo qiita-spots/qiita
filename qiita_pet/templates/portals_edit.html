@@ -20,7 +20,6 @@ function check_submit(action) {
   if(error) { return false;}
   $('#action').val(action);
   data = data + "&" + $('#portal-form').serialize();
-  alert(data);
   $.post('{{submit_url}}', data);
 }
 
