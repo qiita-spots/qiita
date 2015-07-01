@@ -30,10 +30,7 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_prep_template_from_cmd,
                                load_parameters_from_cmd, SUPPORTED_PARAMS,
                                update_preprocessed_data_from_cmd)
-from qiita_db.portal import (add_studies_to_portal,
-                             remove_studies_from_portal,
-                             add_analyses_to_portal,
-                             remove_analyses_from_portal)
+from qiita_db.portal import Portal
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError
 from qiita_db.reference import Reference
@@ -309,7 +306,7 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
               help='Comma seperated list of analyses to add')
 def add_analysis(portal, analyses):
     ids = map(int, analyses.split(','))
-    add_analyses_to_portal(portal, ids)
+    Portal(portal).add_analyses(ids)
 
 
 @portal.command(name="remove-analyses")
@@ -319,7 +316,7 @@ def add_analysis(portal, analyses):
               help='Comma seperated list of analyses to remove')
 def remove_analysis(portal, analyses):
     ids = map(int, analyses.split(','))
-    remove_analyses_from_portal(portal, ids)
+    Portal(portal).remove_analyses(ids)
 
 
 @portal.command(name="add-studies")
@@ -329,7 +326,7 @@ def remove_analysis(portal, analyses):
               help='Comma seperated list of studies to add')
 def add_study(portal, studies):
     ids = map(int, studies.split(','))
-    add_studies_to_portal(portal, ids)
+    Portal(portal).add_studies(ids)
 
 
 @portal.command(name="remove-studies")
@@ -339,7 +336,7 @@ def add_study(portal, studies):
               help='Comma seperated list of studies to remove')
 def remove_study(portal, studies):
     ids = map(int, studies.split(','))
-    remove_studies_from_portal(portal, ids)
+    Portal(portal).remove_studies(ids)
 
 # #############################################################################
 # EBI COMMANDS

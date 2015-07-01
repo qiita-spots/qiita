@@ -9,24 +9,140 @@ import warnings
 
 from .sql_connection import SQLConnectionHandler
 from .util import convert_to_id
-from .exceptions import QiitaDBError
-from qiita_core.qiita_settings import qiita_config
+from .base import QiitaObject
+from .exceptions import QiitaDBError, QiitaDBDuplicateError
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
-# Only make functions available for main portal
-if qiita_config.portal == "QIITA":
-    def list_portals():
-        """Returns list of portals available in system"""
-        sql = "SELECT portal FROM qiita.portal_type ORDER BY portal"
-        conn_handler = SQLConnectionHandler()
-        return [x[0] for x in conn_handler.execute_fetchall(sql)]
 
-    def get_studies_by_portal(portal):
-        """Returns study id for all Studies belonging to a portal
+class Portal(QiitaObject):
+    _table = 'portal_type'
+
+    def __init__(self, portal):
+        self.portal = portal
+        portal_id = convert_to_id(portal, 'portal_type', 'portal')
+        super(Portal, self).__init__(portal_id)
+
+    @classmethod
+    def create(cls, portal, desc):
+        """Creates a new portal on the system
 
         Parameters
         ----------
         portal : str
-           Portal to check studies belong to
+            The name of the portal to add
+        desc : str
+            Description of the portal
+
+        Raises
+        ------
+        QiitaDBDuplicateError
+            Portal already exists
+        """
+        if cls.exists(portal):
+            raise QiitaDBDuplicateError("Portal", portal)
+
+        # Add portal and default analyses for all users
+        sql = """DO $do$
+            DECLARE
+                pid bigint;
+                eml varchar;
+                aid bigint;
+            BEGIN
+                INSERT INTO qiita.portal_type (portal, portal_description)
+                VALUES (%s, %s) RETURNING portal_type_id INTO pid;
+
+                FOR eml IN
+                    SELECT email FROM qiita.qiita_user
+                LOOP
+                    INSERT INTO qiita.analysis
+                    (email, name, description, dflt, analysis_status_id)
+                    VALUES (eml, eml || '-dflt', 'dflt', true, 1) RETURNING
+                    analysis_id INTO aid;
+
+                    INSERT INTO qiita.analysis_workflow (analysis_id, step)
+                    VALUES (aid, 2);
+
+                    INSERT INTO qiita.analysis_portal
+                    (analysis_id, portal_type_id)
+                    VALUES (aid, pid);
+                END LOOP;
+            END $do$;"""
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [portal, desc])
+
+        return cls(portal)
+
+    @staticmethod
+    def delete(portal):
+        """Removes a portal from the system
+
+        Parameters
+        ----------
+        portal : str
+            The name of the portal to add
+
+        Raises
+        ------
+        QiitaDBError
+            Portal has analyses or studies attached to it
+        """
+        conn_handler = SQLConnectionHandler()
+        # Check if attached to any studies
+        portal_id = convert_to_id(portal, 'portal_type', 'portal')
+        sql = """SELECT study_id from qiita.study_portal
+                 WHERE portal_type_id = %s"""
+        studies = conn_handler.execute_fetchall(sql, [portal_id])
+        if studies:
+            raise QiitaDBError(
+                "Studies still attached to portal %s: %s" %
+                (portal, ', '.join([str(s[0]) for s in studies])))
+
+        # Check if attached to any analyses
+        sql = """SELECT analysis_id from qiita.analysis_portal
+                 JOIN qiita.analysis USING (analysis_id)
+                 WHERE portal_type_id = %s and dflt = FALSE"""
+        analyses = conn_handler.execute_fetchall(sql, [portal_id])
+        if studies:
+            raise QiitaDBError(
+                "Analyses still attached to portal %s: %s" %
+                (portal, ', '.join([str(a[0]) for a in analyses])))
+
+        # Remove portal and default analyses for all users
+        sql = """DO $do$
+            DECLARE
+                pid bigint;
+                aid bigint;
+            BEGIN
+                FOR aid IN
+                    SELECT analysis_id FROM qiita.analysis_portal
+                    WHERE portal_type_id = %s
+                LOOP
+                    DELETE FROM qiita.analysis_portal
+                    WHERE analysis_id = aid;
+
+                    DELETE FROM qiita.analysis_workflow
+                    WHERE analysis_id = aid;
+
+                    DELETE FROM qiita.analysis
+                    WHERE analysis_id = aid;
+                END LOOP;
+
+                DELETE FROM qiita.portal_type WHERE portal_type_id = %s;
+            END $do$;"""
+        conn_handler = SQLConnectionHandler()
+        conn_handler.execute(sql, [portal_id, portal_id])
+
+    @staticmethod
+    def exists(portal):
+        try:
+            convert_to_id(portal, 'portal_type', 'portal')
+        except IncompetentQiitaDeveloperError:
+            return False
+        else:
+            return True
+
+    def get_studies(self):
+        """Returns study id for all Studies belonging to the portal
 
         Returns
         -------
@@ -34,13 +150,12 @@ if qiita_config.portal == "QIITA":
             All study ids in the database that match the given portal
         """
         conn_handler = SQLConnectionHandler()
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
         sql = """SELECT study_id FROM qiita.study_portal
                  WHERE portal_type_id = %s"""
         return {x[0] for x in
-                conn_handler.execute_fetchall(sql, [portal_id])}
+                conn_handler.execute_fetchall(sql, [self._id])}
 
-    def _check_studies(studies):
+    def _check_studies(self, studies):
         conn_handler = SQLConnectionHandler()
         # Check if any study IDs given do not exist.
         sql = "SELECT study_id from qiita.study WHERE study_id IN %s"
@@ -51,83 +166,76 @@ if qiita_config.portal == "QIITA":
             raise QiitaDBError("The following studies do not exist: %s" %
                                ", ".join(bad))
 
-    def add_studies_to_portal(portal, studies):
+    def add_studies(self, studies):
         """Adds studies to given portal
 
         Parameters
         ----------
         studies : list of int
             Study ids to attach to portal
-        portal : str
-            Portal to associate with.
-        """
-        _check_studies(studies)
 
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
+        Raises
+        ------
+        QiitaDBError
+            Some studies given do not exist
+        """
+        self._check_studies(studies)
+
         conn_handler = SQLConnectionHandler()
         # Clean list of studies down to ones not associated with portal already
         sql = """SELECT study_id from qiita.study_portal
                  WHERE portal_type_id != %s AND study_id IN %s"""
         clean_studies = [x[0] for x in conn_handler.execute_fetchall(
-                         sql, [portal_id, tuple(studies)])]
+                         sql, [self._id, tuple(studies)])]
 
         if len(clean_studies) != len(studies):
             rem = map(str, set(studies).difference(clean_studies))
             warnings.warn("The following studies area already part of %s: %s" %
-                          (portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)))
 
         # Add cleaned list to the portal
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
-        conn_handler = SQLConnectionHandler()
         sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
                  VALUES (%s, %s)"""
-        conn_handler.executemany(sql, [(s, portal_id) for s in clean_studies])
+        conn_handler.executemany(sql, [(s, self._id) for s in clean_studies])
 
-    def remove_studies_from_portal(portal, studies):
-        """Removes studies to given portal
+    def remove_studies(self, studies):
+        """Removes studies from given portal
 
         Parameters
         ----------
         studies : list of int
             Study ids to remove from portal
-        portal : str
-            Portal to associate with.
 
         Raises
         ------
         ValueError
-            Try and delete from QIITA portal
+            Trying to delete from QIITA portal
+        QiitaDBError
+            Some studies given do not exist
         """
-        if portal == "QIITA":
+        if self.portal == "QIITA":
             raise ValueError('Can not remove from main QIITA portal!')
-        _check_studies(studies)
+        self._check_studies(studies)
 
-        conn_handler = SQLConnectionHandler()
         # Clean list of studies down to ones associated with portal already
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
         conn_handler = SQLConnectionHandler()
         sql = """SELECT study_id from qiita.study_portal
                  WHERE portal_type_id = %s AND study_id IN %s"""
         clean_studies = [x[0] for x in conn_handler.execute_fetchall(
-                         sql, [portal_id, tuple(studies)])]
+                         sql, [self._id, tuple(studies)])]
 
         if len(clean_studies) != len(studies):
             rem = map(str, set(studies).difference(clean_studies))
             warnings.warn("The following studies are not part of %s: %s" %
-                          (portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)))
 
         sql = """DELETE FROM qiita.study_portal
                  WHERE study_id IN %s AND portal_type_id = %s"""
         if len(clean_studies) != 0:
-            conn_handler.execute(sql, [tuple(studies), portal_id])
+            conn_handler.execute(sql, [tuple(studies), self._id])
 
-    def get_analyses_by_portal(portal):
+    def get_analyses(self):
         """Returns analysis id for all Analyses belonging to a portal
-
-        Parameters
-        ----------
-        portal : str
-           Portal to check analyses belong to
 
         Returns
         -------
@@ -135,13 +243,12 @@ if qiita_config.portal == "QIITA":
             All analysis ids in the database that match the given portal
         """
         conn_handler = SQLConnectionHandler()
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
         sql = """SELECT analysis_id FROM qiita.analysis_portal
                  WHERE portal_type_id = %s"""
         return {x[0] for x in
-                conn_handler.execute_fetchall(sql, [portal_id])}
+                conn_handler.execute_fetchall(sql, [self._id])}
 
-    def _check_analyses(analyses):
+    def _check_analyses(self, analyses):
         conn_handler = SQLConnectionHandler()
         # Check if any analysis IDs given do not exist.
         sql = "SELECT analysis_id from qiita.analysis WHERE analysis_id IN %s"
@@ -159,22 +266,25 @@ if qiita_config.portal == "QIITA":
             sql, [tuple(analyses)])]
         if len(default) > 0:
             bad = map(str, set(analyses).difference(default))
-            raise QiitaDBError("The following analyses are default: %s" %
-                               ", ".join(bad))
+            raise QiitaDBError(
+                "The following analyses are default and can't be deleted or "
+                "assigned to another portal: %s" % ", ".join(bad))
 
-    def add_analyses_to_portal(portal, analyses):
+    def add_analyses(self, analyses):
         """Adds analyses to given portal
 
         Parameters
         ----------
         analyses : list of int
             Analysis ids to attach to portal
-        portal : str
-            Portal to associate with.
-        """
-        _check_analyses(analyses)
 
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
+        Raises
+        ------
+        QiitaDBError
+            Some given analyses do not exist, or are default analyses
+        """
+        self._check_analyses(analyses)
+
         conn_handler = SQLConnectionHandler()
         # Clean list of analyses to ones not already associated with portal
         sql = """SELECT analysis_id from qiita.analysis_portal
@@ -182,56 +292,49 @@ if qiita_config.portal == "QIITA":
                  WHERE portal_type_id != %s AND analysis_id IN %s
                  AND dflt != TRUE"""
         clean_analyses = [x[0] for x in conn_handler.execute_fetchall(
-            sql, [portal_id, tuple(analyses)])]
+            sql, [self._id, tuple(analyses)])]
 
         if len(clean_analyses) != len(analyses):
             rem = map(str, set(analyses).difference(clean_analyses))
             warnings.warn("The following analyses are already part of %s: %s" %
-                          (portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)))
 
         sql = """INSERT INTO qiita.analysis_portal
                  (analysis_id, portal_type_id)
                  VALUES (%s, %s)"""
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
-        conn_handler = SQLConnectionHandler()
-        conn_handler.executemany(sql, [(a, portal_id) for a in clean_analyses])
+        conn_handler.executemany(sql, [(a, self._id) for a in clean_analyses])
 
-    def remove_analyses_from_portal(portal, analyses):
-        """Removes  analyses from given portal
+    def remove_analyses(self, analyses):
+        """Removes analyses from given portal
 
         Parameters
         ----------
         analyses : list of int
             Analysis ids to remove from portal
-        portal : str
-            Portal to associate with.
 
         Raises
         ------
         ValueError
-            Try and delete from QIITA portal
+            Trying to delete from QIITA portal
         """
-        if portal == "QIITA":
+        self._check_analyses(analyses)
+        if self.portal == "QIITA":
             raise ValueError('Can not remove from main QIITA portal!')
-        _check_analyses(analyses)
-
         conn_handler = SQLConnectionHandler()
         # Clean list of analyses to ones already associated with portal
         sql = """SELECT analysis_id from qiita.analysis_portal
                  JOIN qiita.analysis USING (analysis_id)
                  WHERE portal_type_id = %s AND analysis_id IN %s
                  AND dflt != TRUE"""
-        portal_id = convert_to_id(portal, 'portal_type', 'portal')
         clean_analyses = [x[0] for x in conn_handler.execute_fetchall(
-            sql, [portal_id, tuple(analyses)])]
+            sql, [self._id, tuple(analyses)])]
 
         if len(clean_analyses) != len(analyses):
             rem = map(str, set(analyses).difference(clean_analyses))
             warnings.warn("The following analyses are not part of %s: %s" %
-                          (portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)))
 
         sql = """DELETE FROM qiita.analysis_portal
                  WHERE analysis_id IN %s AND portal_type_id = %s"""
         if len(clean_analyses) != 0:
-            conn_handler = SQLConnectionHandler()
-            conn_handler.execute(sql, [tuple(clean_analyses), portal_id])
+            conn_handler.execute(sql, [tuple(clean_analyses), self._id])
