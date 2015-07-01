@@ -190,6 +190,8 @@ class Portal(QiitaObject):
         ------
         QiitaDBError
             Some studies given do not exist
+        QiitaDBWarning
+            Some studies already exist in the given portal
         """
         self._check_studies(studies)
 
@@ -224,6 +226,8 @@ class Portal(QiitaObject):
             Trying to delete from QIITA portal
         QiitaDBError
             Some studies given do not exist
+        QiitaDBWarning
+            Some studies already do not exist in the given portal
         """
         if self.portal == "QIITA":
             raise ValueError('Can not remove from main QIITA portal!')
@@ -294,6 +298,8 @@ class Portal(QiitaObject):
         ------
         QiitaDBError
             Some given analyses do not exist, or are default analyses
+        QiitaDBWarning
+            Some analyses already exist in the given portal
         """
         self._check_analyses(analyses)
 
@@ -309,7 +315,7 @@ class Portal(QiitaObject):
         if len(clean_analyses) != len(analyses):
             rem = map(str, set(analyses).difference(clean_analyses))
             warnings.warn("The following analyses are already part of %s: %s" %
-                          (self.portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)), QiitaDBWarning)
 
         sql = """INSERT INTO qiita.analysis_portal
                  (analysis_id, portal_type_id)
@@ -328,6 +334,8 @@ class Portal(QiitaObject):
         ------
         ValueError
             Trying to delete from QIITA portal
+        QiitaDBWarning
+            Some analyses already do not exist in the given portal
         """
         self._check_analyses(analyses)
         if self.portal == "QIITA":
@@ -344,7 +352,7 @@ class Portal(QiitaObject):
         if len(clean_analyses) != len(analyses):
             rem = map(str, set(analyses).difference(clean_analyses))
             warnings.warn("The following analyses are not part of %s: %s" %
-                          (self.portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)), QiitaDBWarning)
 
         sql = """DELETE FROM qiita.analysis_portal
                  WHERE analysis_id IN %s AND portal_type_id = %s"""
