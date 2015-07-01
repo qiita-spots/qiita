@@ -17,7 +17,7 @@ Adding/Deleting studies on a portal
 -----------------------------------
 Studies will automatically be added to the main `QIITA` portal, as well as the portal set in the config file if different than `QIITA`. To add or remove a study from a portal, there are two methods: Command line and web interface.
 
-Command line additions and deletions can be done using the ``qiita db portal [add/remove]-studie [PORTAL] [LIST]``. The [PORTAL] is the name of the portal to add or remove from, and the [LIST] is a space separated list of study IDs to act on. For example, to add studies 5, 6, and 7 to the portal "EMP", you would use the following command:
+Command line additions and deletions can be done using the ``qiita db portal [add/remove]-studies [PORTAL] [LIST]``. The [PORTAL] is the name of the portal to add or remove from, and the [LIST] is a space separated list of study IDs to act on. For example, to add studies 5, 6, and 7 to the portal "EMP", you would use the following command:
 
 ``qiita db portal add-studies EMP 5 6 7``
 
