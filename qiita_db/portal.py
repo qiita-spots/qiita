@@ -10,7 +10,7 @@ import warnings
 from .sql_connection import SQLConnectionHandler
 from .util import convert_to_id
 from .base import QiitaObject
-from .exceptions import QiitaDBError, QiitaDBDuplicateError
+from .exceptions import QiitaDBError, QiitaDBDuplicateError, QiitaDBWarning
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
@@ -134,6 +134,18 @@ class Portal(QiitaObject):
 
     @staticmethod
     def exists(portal):
+        """Returns whether the portal already exists
+
+        Parameters
+        ----------
+        portal : str
+            Name of portal to check
+
+        Returns
+        -------
+        bool
+            Whether the portal exists or not
+        """
         try:
             convert_to_id(portal, 'portal_type', 'portal')
         except IncompetentQiitaDeveloperError:
@@ -191,7 +203,7 @@ class Portal(QiitaObject):
         if len(clean_studies) != len(studies):
             rem = map(str, set(studies).difference(clean_studies))
             warnings.warn("The following studies area already part of %s: %s" %
-                          (self.portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)), QiitaDBWarning)
 
         # Add cleaned list to the portal
         sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
@@ -227,7 +239,7 @@ class Portal(QiitaObject):
         if len(clean_studies) != len(studies):
             rem = map(str, set(studies).difference(clean_studies))
             warnings.warn("The following studies are not part of %s: %s" %
-                          (self.portal, ', '.join(rem)))
+                          (self.portal, ', '.join(rem)), QiitaDBWarning)
 
         sql = """DELETE FROM qiita.study_portal
                  WHERE study_id IN %s AND portal_type_id = %s"""
