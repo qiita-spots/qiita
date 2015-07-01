@@ -300,55 +300,47 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
 
 
 @portal.command(name="add-analyses")
-@click.option('--portal', required=True, type=str,
+@click.option('--portal', '-p', required=True, type=str,
               help='Portal to add the analyses to')
-@click.option('--analyses', required=True, type=str,
-              help='Comma seperated list of analyses to add')
+@click.argument('analyses', required=True, type=int, nargs=-1)
 def add_analysis(portal, analyses):
-    ids = map(int, analyses.split(','))
     try:
-        Portal(portal).add_analyses(ids)
-    except QiitaDBError:
-        raise click.BadParameter("Non-existant or default analyses passed!")
+        Portal(portal).add_analyses(analyses)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("analyses", str(e))
 
 
 @portal.command(name="remove-analyses")
-@click.option('--portal', required=True, type=str,
+@click.option('--portal', '-p', required=True, type=str,
               help='Portal to add the analyses to')
-@click.option('--analyses', required=True, type=str,
-              help='Comma seperated list of analyses to remove')
+@click.argument('analyses', required=True, type=int, nargs=-1)
 def remove_analysis(portal, analyses):
-    ids = map(int, analyses.split(','))
     try:
-        Portal(portal).remove_analyses(ids)
-    except QiitaDBError:
-        raise click.BadParameter("Non-existant or default analyses passed!")
+        Portal(portal).remove_analyses(analyses)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("analyses", str(e))
 
 
 @portal.command(name="add-studies")
-@click.option('--portal', required=True, type=str,
+@click.option('--portal', '-p', required=True, type=str,
               help='Portal to add the analyses to')
-@click.option('--studies', required=True, type=str,
-              help='Comma seperated list of studies to add')
+@click.argument('studies', required=True, type=int, nargs=-1)
 def add_study(portal, studies):
-    ids = map(int, studies.split(','))
     try:
-        Portal(portal).add_studies(ids)
-    except QiitaDBError:
-        raise click.BadParameter("Non-existant studies passed!")
+        Portal(portal).add_studies(studies)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("studies", str(e))
 
 
 @portal.command(name="remove-studies")
-@click.option('--portal', required=True, type=str,
+@click.option('--portal', '-p', required=True, type=str,
               help='Portal to add the analyses to')
-@click.option('--studies', required=True, type=str,
-              help='Comma seperated list of studies to remove')
+@click.argument('studies', required=True, type=int, nargs=-1)
 def remove_study(portal, studies):
-    ids = map(int, studies.split(','))
     try:
-        Portal(portal).remove_studies(ids)
-    except QiitaDBError:
-        raise click.BadParameter("Non-existant studies passed!")
+        Portal(portal).remove_studies(studies)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("studies", str(e))
 
 # #############################################################################
 # EBI COMMANDS
