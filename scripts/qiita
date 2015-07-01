@@ -300,7 +300,8 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
 
 
 @portal.command(name="add-analyses")
-@click.argument('portal', required=True, type=str)
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
 @click.argument('analyses', required=True, type=int, nargs=-1)
 def add_analysis(portal, analyses):
     try:
@@ -310,7 +311,8 @@ def add_analysis(portal, analyses):
 
 
 @portal.command(name="remove-analyses")
-@click.argument('portal', required=True, type=str)
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
 @click.argument('analyses', required=True, type=int, nargs=-1)
 def remove_analysis(portal, analyses):
     try:
@@ -320,7 +322,8 @@ def remove_analysis(portal, analyses):
 
 
 @portal.command(name="add-studies")
-@click.argument('portal', required=True, type=str)
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
 @click.argument('studies', required=True, type=int, nargs=-1)
 def add_study(portal, studies):
     try:
@@ -330,7 +333,8 @@ def add_study(portal, studies):
 
 
 @portal.command(name="remove-studies")
-@click.argument('portal', required=True, type=str)
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
 @click.argument('studies', required=True, type=int, nargs=-1)
 def remove_study(portal, studies):
     try:

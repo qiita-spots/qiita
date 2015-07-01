@@ -37,6 +37,23 @@ class Portal(QiitaObject):
         portal_id = convert_to_id(portal, 'portal_type', 'portal')
         super(Portal, self).__init__(portal_id)
 
+    @staticmethod
+    def list_portals():
+        """Returns list of portals available in system
+        Returns
+        -------
+        list of str
+            List of portal names for the system
+        Notes
+        -----
+        This does not return the QIITA portal in the list, as it is a required
+        portal that can not be edited.
+        """
+        sql = """SELECT portal FROM qiita.portal_type WHERE portal != 'QIITA'
+              ORDER BY portal"""
+        conn_handler = SQLConnectionHandler()
+        return [x[0] for x in conn_handler.execute_fetchall(sql)]
+
     @classmethod
     def create(cls, portal, desc):
         """Creates a new portal and its default analyses on the system
@@ -204,7 +221,7 @@ class Portal(QiitaObject):
         Raises
         ------
         QiitaDBError
-            Some studies given do not exist
+            Some studies given do not exist in the system
         QiitaDBWarning
             Some studies already exist in the given portal
         """
@@ -213,16 +230,17 @@ class Portal(QiitaObject):
         conn_handler = SQLConnectionHandler()
         # Clean list of studies down to ones not associated with portal already
         sql = """SELECT study_id from qiita.study_portal
-                 WHERE portal_type_id != %s AND study_id IN %s"""
-        clean_studies = [x[0] for x in conn_handler.execute_fetchall(
-                         sql, [self._id, tuple(studies)])]
+                 WHERE portal_type_id = %s AND study_id IN %s"""
+        duplicates = [x[0] for x in conn_handler.execute_fetchall(
+                      sql, [self._id, tuple(studies)])]
 
-        if len(clean_studies) != len(studies):
-            rem = map(str, set(studies).difference(clean_studies))
+        if len(duplicates) > 0:
             warnings.warn("The following studies area already part of %s: %s" %
-                          (self.portal, ', '.join(rem)), QiitaDBWarning)
+                          (self.portal, ', '.join(map(str, duplicates))),
+                          QiitaDBWarning)
 
         # Add cleaned list to the portal
+        clean_studies = set(studies).difference(duplicates)
         sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
                  VALUES (%s, %s)"""
         conn_handler.executemany(sql, [(s, self._id) for s in clean_studies])
@@ -240,7 +258,7 @@ class Portal(QiitaObject):
         ValueError
             Trying to delete from QIITA portal
         QiitaDBError
-            Some studies given do not exist
+            Some studies given do not exist in the system
         QiitaDBWarning
             Some studies already do not exist in the given portal
         """
@@ -312,7 +330,8 @@ class Portal(QiitaObject):
         Raises
         ------
         QiitaDBError
-            Some given analyses do not exist, or are default analyses
+            Some given analyses do not exist in the system,
+            or are default analyses
         QiitaDBWarning
             Some analyses already exist in the given portal
         """
@@ -322,19 +341,20 @@ class Portal(QiitaObject):
         # Clean list of analyses to ones not already associated with portal
         sql = """SELECT analysis_id from qiita.analysis_portal
                  JOIN qiita.analysis USING (analysis_id)
-                 WHERE portal_type_id != %s AND analysis_id IN %s
+                 WHERE portal_type_id = %s AND analysis_id IN %s
                  AND dflt != TRUE"""
-        clean_analyses = [x[0] for x in conn_handler.execute_fetchall(
+        duplicates = [x[0] for x in conn_handler.execute_fetchall(
             sql, [self._id, tuple(analyses)])]
 
-        if len(clean_analyses) != len(analyses):
-            rem = map(str, set(analyses).difference(clean_analyses))
+        if len(duplicates) > 0:
             warnings.warn("The following analyses are already part of %s: %s" %
-                          (self.portal, ', '.join(rem)), QiitaDBWarning)
+                          (self.portal, ', '.join(map(str, duplicates))),
+                          QiitaDBWarning)
 
         sql = """INSERT INTO qiita.analysis_portal
                  (analysis_id, portal_type_id)
                  VALUES (%s, %s)"""
+        clean_analyses = set(analyses).difference(duplicates)
         conn_handler.executemany(sql, [(a, self._id) for a in clean_analyses])
 
     def remove_analyses(self, analyses):

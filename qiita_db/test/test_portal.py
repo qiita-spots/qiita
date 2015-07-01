@@ -1,11 +1,14 @@
 from unittest import TestCase, main
 
+import numpy.testing as npt
+
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.portal import Portal
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
-from qiita_db.exceptions import QiitaDBError, QiitaDBDuplicateError
+from qiita_db.exceptions import (QiitaDBError, QiitaDBDuplicateError,
+                                 QiitaDBWarning)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -19,6 +22,11 @@ class TestPortal(TestCase):
 
     def tearDown(self):
         qiita_config.portal = 'QIITA'
+
+    def test_list_portals(self):
+        obs = Portal.list_portals()
+        exp = ['EMP']
+        self.assertEqual(obs, exp)
 
     def test_add_portal(self):
         Portal.create("NEWPORTAL", "SOMEDESC")
@@ -83,6 +91,9 @@ class TestPortal(TestCase):
         obs = self.study._portals
         self.assertEqual(obs, ['EMP', 'QIITA'])
 
+        obs = npt.assert_warns(
+            QiitaDBWarning, self.emp_portal.add_studies, [self.study.id])
+
     def test_remove_study_portals(self):
         with self.assertRaises(ValueError):
             self.qiita_portal.remove_studies([self.study.id])
@@ -91,6 +102,9 @@ class TestPortal(TestCase):
         self.emp_portal.remove_studies([self.study.id])
         obs = self.study._portals
         self.assertEqual(obs, ['QIITA'])
+
+        obs = npt.assert_warns(
+            QiitaDBWarning, self.emp_portal.remove_studies, [self.study.id])
 
     def test_get_analyses_by_portal(self):
         obs = self.emp_portal.get_analyses()
@@ -104,6 +118,9 @@ class TestPortal(TestCase):
         obs = self.analysis._portals
         self.assertEqual(obs, ['EMP', 'QIITA'])
 
+        obs = npt.assert_warns(
+            QiitaDBWarning, self.emp_portal.add_analyses, [self.analysis.id])
+
     def test_remove_analysis_portals(self):
         with self.assertRaises(ValueError):
             self.qiita_portal.remove_analyses([self.analysis.id])
@@ -112,6 +129,10 @@ class TestPortal(TestCase):
         self.emp_portal.remove_analyses([self.analysis.id])
         obs = self.analysis._portals
         self.assertEqual(obs, ['QIITA'])
+
+        obs = npt.assert_warns(
+            QiitaDBWarning, self.emp_portal.remove_analyses,
+            [self.analysis.id])
 
 
 if __name__ == '__main__':
