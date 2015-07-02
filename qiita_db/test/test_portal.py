@@ -6,9 +6,11 @@ from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.portal import Portal
 from qiita_db.study import Study
+from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBError, QiitaDBDuplicateError,
                                  QiitaDBWarning)
+from qiita_db.util import get_count
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -19,9 +21,10 @@ class TestPortal(TestCase):
         self.analysis = Analysis(1)
         self.qiita_portal = Portal('QIITA')
         self.emp_portal = Portal('EMP')
+        self.portal = qiita_config.portal
 
     def tearDown(self):
-        qiita_config.portal = 'QIITA'
+        qiita_config.portal = qiita_config.portal
 
     def test_list_portals(self):
         obs = Portal.list_portals()
@@ -49,6 +52,16 @@ class TestPortal(TestCase):
 
     def test_remove_portal(self):
         Portal.create("NEWPORTAL", "SOMEDESC")
+        # Select some samples on a default analysis
+        a = Analysis(User("test@foo.bar").default_analysis)
+        a.add_samples({1: ['1.SKB8.640193', '1.SKD5.640186']})
+
+        # Add analysis to this new portal
+        new_id = get_count("qiita.analysis") + 1
+        qiita_config.portal = "NEWPORTAL"
+        Analysis.create(User("test@foo.bar"), "newportal analysis", "desc")
+        qiita_config.portal = "QIITA"
+
         Portal.delete("NEWPORTAL")
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.portal_type")
@@ -60,7 +73,7 @@ class TestPortal(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.analysis_portal")
         exp = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 1], [7, 2], [8, 2],
-               [9, 2], [10, 2]]
+               [9, 2], [10, 2], [new_id, 1]]
         self.assertItemsEqual(obs, exp)
 
         with self.assertRaises(IncompetentQiitaDeveloperError):

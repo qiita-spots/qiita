@@ -139,7 +139,7 @@ class Portal(QiitaObject):
                 " Cannot delete portal '%s', analyses still attached: %s" %
                 (portal, ', '.join([str(a[0]) for a in analyses])))
 
-        # Remove portal and default analyses for all users
+        # Remove portal and default analyses for all users, unlink others
         sql = """DO $do$
             DECLARE
                 pid bigint;
@@ -147,7 +147,8 @@ class Portal(QiitaObject):
             BEGIN
                 FOR aid IN
                     SELECT analysis_id FROM qiita.analysis_portal
-                    WHERE portal_type_id = %s
+                    JOIN qiita.analysis USING (analysis_id)
+                    WHERE portal_type_id = %s and dflt = True
                 LOOP
                     DELETE FROM qiita.analysis_portal
                     WHERE analysis_id = aid;
@@ -155,14 +156,20 @@ class Portal(QiitaObject):
                     DELETE FROM qiita.analysis_workflow
                     WHERE analysis_id = aid;
 
+                    DELETE FROM qiita.analysis_sample
+                    WHERE analysis_id = aid;
+
                     DELETE FROM qiita.analysis
                     WHERE analysis_id = aid;
                 END LOOP;
 
+                DELETE FROM qiita.analysis_portal
+                WHERE portal_type_id = %s;
+
                 DELETE FROM qiita.portal_type WHERE portal_type_id = %s;
             END $do$;"""
         conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, [portal_id, portal_id])
+        conn_handler.execute(sql, [portal_id] * 3)
 
     @staticmethod
     def exists(portal):
