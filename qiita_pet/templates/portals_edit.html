@@ -46,6 +46,8 @@ function check_submit(action) {
   $.post('{{submit_url}}', data, function(data,textStatus,jqXHR){
     $("#add-button").prop('disabled', false);
     $("#remove-button").prop('disabled', false);
+    var echo = "?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=" + $("#view-portal").val();
+    $('#info-table').DataTable().ajax.url("/admin/portals/studiesAJAX/" + echo).load();
     $("#messages").html(data);
   });
 }
