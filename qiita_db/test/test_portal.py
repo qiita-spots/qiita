@@ -53,6 +53,7 @@ class TestPortal(TestCase):
     def test_remove_portal(self):
         Portal.create("NEWPORTAL", "SOMEDESC")
         # Select some samples on a default analysis
+        qiita_config.portal = "NEWPORTAL"
         a = Analysis(User("test@foo.bar").default_analysis)
         a.add_samples({1: ['1.SKB8.640193', '1.SKD5.640186']})
 
