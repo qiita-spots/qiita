@@ -54,7 +54,7 @@ from datetime import datetime
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError, QiitaDBError
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import SQLConnectionHandler, TRN
 
 
 def params_dict_to_json(options):
@@ -295,13 +295,11 @@ def check_required_columns(conn_handler, keys, table):
                                  required.difference(keys))
 
 
-def check_table_cols(conn_handler, keys, table):
+def check_table_cols(keys, table):
     """Makes sure all keys correspond to column headers in a table
 
     Parameters
     ----------
-    conn_handler: SQLConnectionHandler object
-        Previously opened connection to the database
     keys: iterable
         Holds the keys in the dictionary
     table: str
@@ -314,16 +312,19 @@ def check_table_cols(conn_handler, keys, table):
     RuntimeError
         Unable to get columns from database
     """
-    sql = ("SELECT column_name FROM information_schema.columns WHERE "
-           "table_name = %s")
-    cols = [x[0] for x in conn_handler.execute_fetchall(sql, (table, ))]
-    # Test needed because a user with certain permissions can query without
-    # error but be unable to get the column names
-    if len(cols) == 0:
-        raise RuntimeError("Unable to fetch column names for table %s" % table)
-    if len(set(keys).difference(cols)) > 0:
-        raise QiitaDBColumnError("Non-database keys found: %s" %
-                                 set(keys).difference(cols))
+    with TRN:
+        sql = """SELECT column_name FROM information_schema.columns
+                 WHERE table_name = %s"""
+        TRN.add(sql, [table])
+        cols = [x[0] for x in TRN.execute()[-1]]
+        # Test needed because a user with certain permissions can query without
+        # error but be unable to get the column names
+        if len(cols) == 0:
+            raise RuntimeError("Unable to fetch column names for table %s"
+                               % table)
+        if len(set(keys).difference(cols)) > 0:
+            raise QiitaDBColumnError("Non-database keys found: %s" %
+                                     set(keys).difference(cols))
 
 
 def get_table_cols(table):

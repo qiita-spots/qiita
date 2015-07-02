@@ -33,7 +33,7 @@ from re import sub
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .base import QiitaObject
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 from .util import (create_rand_string, check_table_cols, hash_password)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
@@ -78,13 +78,11 @@ class User(QiitaObject):
         This function overwrites the base function, as sql layout doesn't
         follow the same conventions done in the other classes.
         """
-        self._check_subclass()
-
-        conn_handler = SQLConnectionHandler()
-
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.qiita_user WHERE "
-            "email = %s)", (id_, ))[0]
+        with TRN:
+            sql = """SELECT EXISTS(
+                        SELECT * FROM qiita.qiita_user WHERE email = %s)"""
+            TRN.add(sql, [id_])
+            return TRN.execute_fetchlast()
 
     @classmethod
     def iter(cls):
@@ -96,11 +94,12 @@ class User(QiitaObject):
             Yields a user ID (email) for each user in the database,
             in order of ascending ID
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """select email from qiita.{}""".format(cls._table)
-
-        for result in conn_handler.execute_fetchall(sql):
-            yield result[0]
+        with TRN:
+            sql = """select email from qiita.{}""".format(cls._table)
+            TRN.add(sql)
+            # Using [-1] to get the results of the last SQL query
+            for result in TRN.execute_fetchindex():
+                yield result[0]
 
     @classmethod
     def login(cls, email, password):
@@ -126,31 +125,33 @@ class User(QiitaObject):
         IncorrectPasswordError
             Password passed is not correct for user
         """
-        # see if user exists
-        if not cls.exists(email):
-            raise IncorrectEmailError("Email not valid: %s" % email)
+        with TRN:
+            # see if user exists
+            if not cls.exists(email):
+                raise IncorrectEmailError("Email not valid: %s" % email)
 
-        if not validate_password(password):
-            raise IncorrectPasswordError("Password not valid!")
+            if not validate_password(password):
+                raise IncorrectPasswordError("Password not valid!")
 
-        # pull password out of database
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
-               "email = %s".format(cls._table))
-        info = conn_handler.execute_fetchone(sql, (email, ))
+            # pull password out of database
+            sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
+                   "email = %s".format(cls._table))
+            TRN.add(sql, [email])
+            # Using [0] because there is only one row
+            info = TRN.execute_fetchindex()[0]
 
-        # verify user email verification
-        # MAGIC NUMBER 5 = unverified email
-        if int(info[1]) == 5:
-            return False
+            # verify user email verification
+            # MAGIC NUMBER 5 = unverified email
+            if int(info[1]) == 5:
+                return False
 
-        # verify password
-        dbpass = info[0]
-        hashed = hash_password(password, dbpass)
-        if hashed == dbpass:
-            return cls(email)
-        else:
-            raise IncorrectPasswordError("Password not valid!")
+            # verify password
+            dbpass = info[0]
+            hashed = hash_password(password, dbpass)
+            if hashed == dbpass:
+                return cls(email)
+            else:
+                raise IncorrectPasswordError("Password not valid!")
 
     @classmethod
     def exists(cls, email):
@@ -161,13 +162,15 @@ class User(QiitaObject):
         email : str
             the email of the user
         """
-        if not validate_email(email):
-            raise IncorrectEmailError("Email string not valid: %s" % email)
-        conn_handler = SQLConnectionHandler()
+        with TRN:
+            if not validate_email(email):
+                raise IncorrectEmailError("Email string not valid: %s" % email)
 
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "email = %s)".format(cls._table), (email, ))[0]
+            sql = """SELECT EXISTS(
+                        SELECT * FROM qiita.{0}
+                        WHERE email = %s)""".format(cls._table)
+            TRN.add(sql, [email])
+            return TRN.execute_fetchlast()
 
     @classmethod
     def create(cls, email, password, info=None):
@@ -191,54 +194,50 @@ class User(QiitaObject):
         QiitaDBDuplicateError
             User already exists
         """
-        # validate email and password for new user
-        if not validate_email(email):
-            raise IncorrectEmailError("Bad email given: %s" % email)
-        if not validate_password(password):
-            raise IncorrectPasswordError("Bad password given!")
+        with TRN:
+            # validate email and password for new user
+            if not validate_email(email):
+                raise IncorrectEmailError("Bad email given: %s" % email)
+            if not validate_password(password):
+                raise IncorrectPasswordError("Bad password given!")
 
-        # make sure user does not already exist
-        if cls.exists(email):
-            raise QiitaDBDuplicateError("User", "email: %s" % email)
+            # make sure user does not already exist
+            if cls.exists(email):
+                raise QiitaDBDuplicateError("User", "email: %s" % email)
 
-        # make sure non-info columns aren't passed in info dict
-        if info:
-            if cls._non_info.intersection(info):
-                raise QiitaDBColumnError("non info keys passed: %s" %
-                                         cls._non_info.intersection(info))
-        else:
-            info = {}
+            # make sure non-info columns aren't passed in info dict
+            if info:
+                if cls._non_info.intersection(info):
+                    raise QiitaDBColumnError("non info keys passed: %s" %
+                                             cls._non_info.intersection(info))
+            else:
+                info = {}
 
-        # create email verification code and hashed password to insert
-        # add values to info
-        info["email"] = email
-        info["password"] = hash_password(password)
-        info["user_verify_code"] = create_rand_string(20, punct=False)
+            # create email verification code and hashed password to insert
+            # add values to info
+            info["email"] = email
+            info["password"] = hash_password(password)
+            info["user_verify_code"] = create_rand_string(20, punct=False)
 
-        # make sure keys in info correspond to columns in table
-        conn_handler = SQLConnectionHandler()
-        check_table_cols(conn_handler, info, cls._table)
+            # make sure keys in info correspond to columns in table
+            check_table_cols(info, cls._table)
 
-        # build info to insert making sure columns and data are in same order
-        # for sql insertion
-        columns = info.keys()
-        values = [info[col] for col in columns]
-        queue = "add_user_%s" % email
-        conn_handler.create_queue(queue)
-        # crete user
-        sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
-            cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
-        conn_handler.add_to_queue(queue, sql, values)
-        # create user default sample holder
-        sql = ("INSERT INTO qiita.analysis "
-               "(email, name, description, dflt, analysis_status_id) "
-               "VALUES (%s, %s, %s, %s, 1)")
-        conn_handler.add_to_queue(queue, sql,
-                                  (email, '%s-dflt' % email, 'dflt', True))
+            # build info to insert making sure columns and data are in
+            # same order for sql insertion
+            columns = info.keys()
+            values = [info[col] for col in columns]
+            # crete user
+            sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
+                cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
+            TRN.add(sql, values)
+            # create user default sample holder
+            sql = ("INSERT INTO qiita.analysis "
+                   "(email, name, description, dflt, analysis_status_id) "
+                   "VALUES (%s, %s, %s, %s, 1)")
+            TRN.add(sql, [email, '%s-dflt' % email, 'dflt', True])
+            TRN.execute()
 
-        conn_handler.execute_queue(queue)
-
-        return cls(email)
+            return cls(email)
 
     @classmethod
     def verify_code(cls, email, code, code_type):
@@ -261,35 +260,37 @@ class User(QiitaObject):
         IncompentQiitaDeveloper
             code_type is not create or reset
         """
-        if code_type == 'create':
-            column = 'user_verify_code'
-        elif code_type == 'reset':
-            column = 'pass_reset_code'
-        else:
-            raise IncompetentQiitaDeveloperError("code_type must be 'create'"
-                                                 " or 'reset' Uknown type "
-                                                 "%s" % code_type)
-        sql = ("SELECT {1} from qiita.{0} where email"
-               " = %s".format(cls._table, column))
-        conn_handler = SQLConnectionHandler()
-        db_code = conn_handler.execute_fetchone(sql, (email,))
+        with TRN:
+            if code_type == 'create':
+                column = 'user_verify_code'
+            elif code_type == 'reset':
+                column = 'pass_reset_code'
+            else:
+                raise IncompetentQiitaDeveloperError(
+                    "code_type must be 'create' or 'reset' Uknown type %s"
+                    % code_type)
+            sql = ("SELECT {1} from qiita.{0} where email"
+                   " = %s".format(cls._table, column))
+            TRN.add(sql, [email])
+            db_code = TRN.execute_fetchlast()
 
-        # If the query didn't return anything, then there's no way the code
-        # can match
-        if db_code is None:
-            return False
+            # If the query didn't return anything, then there's no way the code
+            # can match
+            if not db_code:
+                return False
 
-        db_code = db_code[0]
+            # db_code = db_code[0]
 
-        if db_code == code and code_type == "create":
-            # verify the user
-            level = conn_handler.execute_fetchone(
-                "SELECT user_level_id FROM qiita.user_level WHERE "
-                "name = %s", ("user", ))[0]
-            sql = ("UPDATE qiita.{} SET user_level_id = %s WHERE "
-                   "email = %s".format(cls._table))
-            conn_handler.execute(sql, (level, email))
-        return db_code == code
+            if db_code == code and code_type == "create":
+                # verify the user
+                sql = """UPDATE qiita.{} SET user_level_id = (
+                            SELECT user_level_id FROM qiita.user_level
+                            WHERE name = %s)
+                         WHERE email = %s""".format(cls._table)
+                TRN.add(sql, ["user", email])
+                TRN.execute()
+
+            return db_code == code
 
     # ---properties---
     @property
@@ -300,23 +301,29 @@ class User(QiitaObject):
     @property
     def level(self):
         """The level of privileges of the user"""
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT ul.name from qiita.user_level ul JOIN qiita.{0} u ON "
-               "ul.user_level_id = u.user_level_id WHERE "
-               "u.email = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = """SELECT ul.name
+                     FROM qiita.user_level ul
+                        JOIN qiita.{0} u
+                            ON ul.user_level_id = u.user_level_id
+                     WHERE u.email = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def info(self):
         """Dict with any other information attached to the user"""
-        conn_handler = SQLConnectionHandler()
-        sql = "SELECT * from qiita.{0} WHERE email = %s".format(self._table)
-        # Need direct typecast from psycopg2 dict to standard dict
-        info = dict(conn_handler.execute_fetchone(sql, (self._id, )))
-        # Remove non-info columns
-        for col in self._non_info:
-            info.pop(col)
-        return info
+        with TRN:
+            sql = "SELECT * from qiita.{0} WHERE email = %s".format(
+                self._table)
+            # Need direct typecast from psycopg2 dict to standard dict
+            TRN.add(sql, [self._id])
+            # [0] retrieves the first row (the only one present)
+            info = dict(TRN.execute_fetchindex()[0])
+            # Remove non-info columns
+            for col in self._non_info:
+                info.pop(col)
+            return info
 
     @info.setter
     def info(self, info):
@@ -326,79 +333,75 @@ class User(QiitaObject):
         ----------
         info : dict
         """
-        # make sure non-info columns aren't passed in info dict
-        if self._non_info.intersection(info):
-            raise QiitaDBColumnError("non info keys passed!")
+        with TRN:
+            # make sure non-info columns aren't passed in info dict
+            if self._non_info.intersection(info):
+                raise QiitaDBColumnError("non info keys passed!")
 
-        # make sure keys in info correspond to columns in table
-        conn_handler = SQLConnectionHandler()
-        check_table_cols(conn_handler, info, self._table)
+            # make sure keys in info correspond to columns in table
+            check_table_cols(info, self._table)
 
-        # build sql command and data to update
-        sql_insert = []
-        data = []
-        # items used for py3 compatability
-        for key, val in info.items():
-            sql_insert.append("{0} = %s".format(key))
-            data.append(val)
-        data.append(self._id)
+            # build sql command and data to update
+            sql_insert = []
+            data = []
+            # items used for py3 compatability
+            for key, val in info.items():
+                sql_insert.append("{0} = %s".format(key))
+                data.append(val)
+            data.append(self._id)
 
-        sql = ("UPDATE qiita.{0} SET {1} WHERE "
-               "email = %s".format(self._table, ','.join(sql_insert)))
-        conn_handler.execute(sql, data)
+            sql = ("UPDATE qiita.{0} SET {1} WHERE "
+                   "email = %s".format(self._table, ','.join(sql_insert)))
+            TRN.add(sql, data)
+            TRN.execute()
 
     @property
     def default_analysis(self):
-        sql = ("SELECT analysis_id FROM qiita.analysis WHERE email = %s AND "
-               "dflt = true")
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
-
-    @property
-    def sandbox_studies(self):
-        """Returns a list of sandboxed study ids owned by the user"""
-        sql = ("SELECT study_id FROM qiita.study s JOIN qiita.study_status ss "
-               "ON s.study_status_id = ss.study_status_id WHERE "
-               "s.email = %s AND ss.status = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        study_ids = conn_handler.execute_fetchall(sql, (self._id, 'sandbox'))
-        return [s[0] for s in study_ids]
+        with TRN:
+            sql = """SELECT analysis_id FROM qiita.analysis
+                     WHERE email = %s AND dflt = true"""
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def user_studies(self):
         """Returns a list of study ids owned by the user"""
-        sql = ("SELECT study_id FROM qiita.study WHERE "
-               "email = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return {s[0] for s in study_ids}
+        with TRN:
+            sql = "SELECT study_id FROM qiita.study WHERE email = %s".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            study_ids = TRN.execute_fetchindex()
+            return {s[0] for s in study_ids}
 
     @property
     def shared_studies(self):
         """Returns a list of study ids shared with the user"""
-        sql = ("SELECT study_id FROM qiita.study_users WHERE "
-               "email = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        study_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return {s[0] for s in study_ids}
+        with TRN:
+            sql = """SELECT study_id FROM qiita.study_users
+                     WHERE email = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            study_ids = TRN.execute_fetchindex()
+            return {s[0] for s in study_ids}
 
     @property
     def private_analyses(self):
         """Returns a list of private analysis ids owned by the user"""
-        sql = ("SELECT analysis_id FROM qiita.analysis "
-               "WHERE email = %s AND dflt = false")
-        conn_handler = SQLConnectionHandler()
-        analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return {a[0] for a in analysis_ids}
+        with TRN:
+            sql = """SELECT analysis_id FROM qiita.analysis
+                     WHERE email = %s AND dflt = false"""
+            TRN.add(sql, [self._id])
+            analysis_ids = TRN.execute_fetchindex()
+            return {a[0] for a in analysis_ids}
 
     @property
     def shared_analyses(self):
         """Returns a list of analysis ids shared with the user"""
-        sql = ("SELECT analysis_id FROM qiita.analysis_users WHERE "
-               "email = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        analysis_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return {a[0] for a in analysis_ids}
+        with TRN:
+            sql = """SELECT analysis_id FROM qiita.analysis_users
+                     WHERE email = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            analysis_ids = TRN.execute_fetchindex()
+            return {a[0] for a in analysis_ids}
 
     # ------- methods ---------
     def change_password(self, oldpass, newpass):
@@ -416,23 +419,25 @@ class User(QiitaObject):
         bool
             password changed or not
         """
-        conn_handler = SQLConnectionHandler()
-        dbpass = conn_handler.execute_fetchone(
-            "SELECT password FROM qiita.{0} WHERE email = %s".format(
-                self._table), (self._id, ))[0]
-        if dbpass == hash_password(oldpass, dbpass):
-            self._change_pass(newpass)
-            return True
-        return False
+        with TRN:
+            sql = "SELECT password FROM qiita.{0} WHERE email = %s".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            dbpass = TRN.execute_fetchlast()
+            if dbpass == hash_password(oldpass, dbpass):
+                self._change_pass(newpass)
+                return True
+            return False
 
     def generate_reset_code(self):
         """Generates a password reset code for user"""
-        reset_code = create_rand_string(20, punct=False)
-        sql = ("UPDATE qiita.{0} SET pass_reset_code = %s, "
-               "pass_reset_timestamp = NOW() WHERE email = %s".format(
-                   self._table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (reset_code, self._id))
+        with TRN:
+            reset_code = create_rand_string(20, punct=False)
+            sql = """UPDATE qiita.{0}
+                     SET pass_reset_code = %s, pass_reset_timestamp = NOW()
+                     WHERE email = %s""".format(self._table)
+            TRN.add(sql, [reset_code, self._id])
+            TRN.execute()
 
     def change_forgot_password(self, code, newpass):
         """Changes the password if the code is valid
@@ -449,19 +454,22 @@ class User(QiitaObject):
         bool
             password changed or not
         """
-        if self.verify_code(self._id, code, "reset"):
-            self._change_pass(newpass)
-            return True
-        return False
+        with TRN:
+            if self.verify_code(self._id, code, "reset"):
+                self._change_pass(newpass)
+                return True
+            return False
 
     def _change_pass(self, newpass):
-        if not validate_password(newpass):
-            raise IncorrectPasswordError("Bad password given!")
+        with TRN:
+            if not validate_password(newpass):
+                raise IncorrectPasswordError("Bad password given!")
 
-        sql = ("UPDATE qiita.{0} SET password=%s, pass_reset_code=NULL WHERE "
-               "email = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, (hash_password(newpass), self._id))
+            sql = """UPDATE qiita.{0}
+                     SET password=%s, pass_reset_code = NULL
+                     WHERE email = %s""".format(self._table)
+            TRN.add(sql, [hash_password(newpass), self._id])
+            TRN.execute()
 
 
 def validate_email(email):

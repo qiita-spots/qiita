@@ -27,7 +27,7 @@ Classes
 
 from __future__ import division
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 from .exceptions import QiitaDBNotImplementedError, QiitaDBUnknownIDError
 
 
@@ -130,11 +130,12 @@ class QiitaObject(object):
         """
         self._check_subclass()
 
-        conn_handler = SQLConnectionHandler()
-
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE "
-            "{0}_id=%s)".format(self._table), (id_, ))[0]
+        with TRN:
+            sql = """SELECT EXISTS(
+                        SELECT * FROM qiita.{0}
+                        WHERE {0}_id=%s)""".format(self._table)
+            TRN.add(sql, [id_])
+            return TRN.execute_fetchlast()
 
     def __init__(self, id_):
         r"""Initializes the object
@@ -148,8 +149,9 @@ class QiitaObject(object):
         QiitaDBUnknownIDError
             If `id_` does not correspond to any object
         """
-        if not self._check_id(id_):
-            raise QiitaDBUnknownIDError(id_, self._table)
+        with TRN:
+            if not self._check_id(id_):
+                raise QiitaDBUnknownIDError(id_, self._table)
 
         self._id = id_
 
@@ -187,18 +189,16 @@ class QiitaStatusObject(QiitaObject):
     @property
     def status(self):
         r"""String with the current status of the analysis"""
-        # Check that self._table is actually defined
-        self._check_subclass()
-
         # Get the DB status of the object
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
-            "SELECT status FROM qiita.{0}_status WHERE {0}_status_id = "
-            "(SELECT {0}_status_id FROM qiita.{0} WHERE "
-            "{0}_id = %s)".format(self._table),
-            (self._id, ))[0]
+        with TRN:
+            sql = """SELECT status FROM qiita.{0}_status
+                     WHERE {0}_status_id = (
+                        SELECT {0}_status_id FROM qiita.{0}
+                        WHERE {0}_id = %s)""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
-    def _status_setter_checks(self, conn_handler):
+    def _status_setter_checks(self):
         r"""Perform any extra checks that needed to be done before setting the
         object status on the database. Should be overwritten by the subclasses
         """
@@ -213,18 +213,18 @@ class QiitaStatusObject(QiitaObject):
         status: str
             The new object status
         """
-        # Check that self._table is actually defined
-        self._check_subclass()
+        with TRN:
+            # Perform any extra checks needed before
+            # we update the status in the DB
+            self._status_setter_checks()
 
-        # Perform any extra checks needed before we update the status in the DB
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
-
-        # Update the status of the object
-        conn_handler.execute(
-            "UPDATE qiita.{0} SET {0}_status_id = "
-            "(SELECT {0}_status_id FROM qiita.{0}_status WHERE status = %s) "
-            "WHERE {0}_id = %s".format(self._table), (status, self._id))
+            # Update the status of the object
+            sql = """UPDATE qiita.{0} SET {0}_status_id = (
+                        SELECT {0}_status_id FROM qiita.{0}_status
+                        WHERE status = %s)
+                     WHERE {0}_id = %s""".format(self._table)
+            TRN.add(sql, [status, self._id])
+            TRN.execute()
 
     def check_status(self, status, exclude=False):
         r"""Checks status of object.
@@ -256,21 +256,20 @@ class QiitaStatusObject(QiitaObject):
         Table setup:
         foo: foo_status_id  ----> foo_status: foo_status_id, status
         """
-        # Check that self._table is actually defined
-        self._check_subclass()
+        with TRN:
+            # Get all available statuses
+            sql = "SELECT DISTINCT status FROM qiita.{0}_status".format(
+                self._table)
+            TRN.add(sql)
+            # We need to access to the results of the last SQL query,
+            # hence indexing using -1
+            avail_status = [x[0] for x in TRN.execute_fetchindex()]
 
-        # Get all available statuses
-        conn_handler = SQLConnectionHandler()
+            # Check that all the provided status are valid status
+            if set(status).difference(avail_status):
+                raise ValueError("%s are not valid status values"
+                                 % set(status).difference(avail_status))
 
-        statuses = [x[0] for x in conn_handler.execute_fetchall(
-            "SELECT DISTINCT status FROM qiita.{0}_status".format(self._table),
-            (self._id, ))]
-
-        # Check that all the provided statuses are valid statuses
-        if set(status).difference(statuses):
-            raise ValueError("%s are not valid status values"
-                             % set(status).difference(statuses))
-
-        # Get the DB status of the object
-        dbstatus = self.status
-        return dbstatus not in status if exclude else dbstatus in status
+            # Get the DB status of the object
+            dbstatus = self.status
+            return dbstatus not in status if exclude else dbstatus in status

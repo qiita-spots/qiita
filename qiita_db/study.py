@@ -317,7 +317,7 @@ class Study(QiitaObject):
 
         conn_handler = SQLConnectionHandler()
         # make sure dictionary only has keys for available columns in db
-        check_table_cols(conn_handler, insertdict, cls._table)
+        check_table_cols(insertdict, cls._table)
         # make sure reqired columns in dictionary
         check_required_columns(conn_handler, insertdict, cls._table)
 
@@ -492,7 +492,7 @@ class Study(QiitaObject):
             self._lock_non_sandbox(conn_handler)
 
         # make sure dictionary only has keys for available columns in db
-        check_table_cols(conn_handler, info, self._table)
+        check_table_cols(info, self._table)
 
         sql_vals = []
         data = []

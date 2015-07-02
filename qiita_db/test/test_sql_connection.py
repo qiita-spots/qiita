@@ -681,6 +681,20 @@ class TestTransaction(TestBase):
             TRN.add(sql, [2])
             self.assertTrue(TRN.execute_fetchlast())
 
+    def test_execute_fetchindex(self):
+        with TRN:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            TRN.add(sql, args, many=True)
+            self.assertEqual(TRN.execute_fetchindex(), [['insert3', 3]])
+
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s) RETURNING str_column, int_column"""
+            args = [['insert4', 4], ['insert5', 5], ['insert6', 6]]
+            TRN.add(sql, args, many=True)
+            self.assertEqual(TRN.execute_fetchindex(3), [['insert4', 4]])
+
     def test_context_manager_rollback(self):
         try:
             with TRN:
