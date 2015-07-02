@@ -107,13 +107,12 @@ class DBUtilTests(TestCase):
 
     def test_check_table_cols(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
-        check_table_cols(self.conn_handler, self.required, self.table)
+        check_table_cols(self.required, self.table)
 
     def test_check_table_cols_fail(self):
         self.required.append('BADTHINGNOINHERE')
         with self.assertRaises(QiitaDBColumnError):
-            check_table_cols(self.conn_handler, self.required,
-                             self.table)
+            check_table_cols(self.required, self.table)
 
     def test_get_table_cols(self):
         obs = get_table_cols("qiita_user")
