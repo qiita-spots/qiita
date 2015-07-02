@@ -960,6 +960,7 @@ class Transaction(object):
         See Also
         --------
         execute_fetchlast
+        execute_fetchindex
         """
         try:
             return self._execute()
@@ -982,8 +983,34 @@ class Transaction(object):
         See Also
         --------
         execute
+        execute_fetchindex
         """
         return self.execute()[-1][0][0]
+
+    @_checker
+    def execute_fetchindex(self, idx=-1):
+        """Executes the transaction and returns the results of the `idx` query
+
+        This is a convenient function that is equivalent to
+        `self.execute()[idx]
+
+        Parameters
+        ----------
+        idx : int, optional
+            The index of the query to return the result. It defaults to -1, the
+            last query.
+
+        Returns
+        -------
+        DictCursor
+            The results of the `idx` query in the transaction
+
+        See Also
+        --------
+        execute
+        execute_fetchlast
+        """
+        return self.execute()[idx]
 
     @_checker
     def commit(self):
