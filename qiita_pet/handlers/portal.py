@@ -1,3 +1,5 @@
+import warnings
+
 from tornado.web import authenticated, HTTPError
 
 from qiita_db.study import Study
@@ -30,14 +32,20 @@ class StudyPortalHandler(BaseHandler):
     def post(self):
         self.check_admin()
         portal = self.get_argument('portal')
-        studies = self.get_arguments('selected')
+        studies = map(int, self.get_arguments('selected'))
         action = self.get_argument('action')
 
+        msg = ""
+
         portal = Portal(portal)
-        if action == "Add":
-            portal.add_studies(studies)
-        elif action == "Remove":
-            portal.remove_studies(studies)
-        else:
-            raise HTTPError(400, "Unknown action: %s" % action)
-        self.render_page()
+        with warnings.catch_warnings(record=True) as warns:
+            if action == "Add":
+                portal.add_studies(studies)
+            elif action == "Remove":
+                portal.remove_studies(studies)
+            else:
+                raise HTTPError(400, "Unknown action: %s" % action)
+
+            if warns:
+                msg = '; '.join([str(w.message) for w in warns])
+        self.write(msg)

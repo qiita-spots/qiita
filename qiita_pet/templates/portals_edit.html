@@ -12,6 +12,9 @@
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
 function check_submit(action) {
+  //disable submit buttons
+  $("#add-button").prop('disabled', true);
+  $("#remove-button").prop('disabled', true);
   var error = false;
   var data = oTable.$('input').serialize();
   if(data.length === 0) {
@@ -24,10 +27,18 @@ function check_submit(action) {
     if(!$('#portal-error').length) { $("#errors").append("<li id='portal-error'>Please select a portal</li>"); }
     error = true;
   }
-  if(error) { return false;}
+  if(error) {
+    $("#add-button").prop('disabled', false);
+    $("#remove-button").prop('disabled', false);
+    return false;
+  }
   $('#action').val(action);
   data = data + "&" + $('#portal-form').serialize();
-  $.post('{{submit_url}}', data);
+  $.post('{{submit_url}}', data, function(data,textStatus,jqXHR){
+    $("#add-button").prop('disabled', false);
+    $("#remove-button").prop('disabled', false);
+    $("#messages").html("Completed successfully<br/>"+data);
+  });
 }
 
 $(document).ready(function() {
@@ -71,19 +82,25 @@ $(document).ready(function() {
         {% end %}
       </select>
     </span>
-    <form role="form" id="portal-form">
-    <b>Portal:</b> <select name="portal" id="portal">
-      <option value=""></option>
-      {% for portal in portals %}
-      <option value="{{portal}}">{{portal}}</option>
-      {% end %}
-    </select>
-    <input type="hidden" name="action" id="action" value="">
-    <input type="button" id="add-button" value="Add" class="btn btn-success" onclick="check_submit('Add')"> <input type="submit" id="remove-button" value="Remove" class="btn btn-danger" onclick="check_submit('Remove')">
-    </form>
-    <span class="errorTxt" style="color:red">
-      <ul id="errors" class="navlist"></ul>
-    </span>
+    <table>
+      <tr><td>
+        <form role="form" id="portal-form">
+        <b>Portal:</b> <select name="portal" id="portal">
+          <option value=""></option>
+          {% for portal in portals %}
+          <option value="{{portal}}">{{portal}}</option>
+          {% end %}
+        </select>
+        <input type="hidden" name="action" id="action" value="">
+        <input type="button" id="add-button" value="Add" class="btn btn-success" onclick="check_submit('Add')"> <input type="button" id="remove-button" value="Remove" class="btn btn-danger" onclick="check_submit('Remove')">
+        </form>
+        <span class="errorTxt" style="color:red">
+          <ul id="errors" class="navlist"></ul>
+        </span>
+      </td><td>
+        <span id="messages"></span>
+      </td></tr>
+    </table>
   </div>
 </div>
 <div class='row' style="margin-top:50px">
