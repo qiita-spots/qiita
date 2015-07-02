@@ -7,6 +7,10 @@ SQL Connection object (:mod:`qiita_db.sql_connection`)
 This modules provides wrappers for the psycopg2 module to allow easy use of
 transaction blocks and SQL execution/data retrieval.
 
+This module provides the variable TRN, which is the transaction available
+to use in the system. The singleton pattern is applied and this works as long
+as the system remains single-threaded.
+
 Classes
 -------
 
@@ -652,12 +656,15 @@ class Transaction(object):
     A transaction is defined by a series of consecutive queries that need to
     be applied to the database as a single block.
 
+    Raises
+    ------
+    RuntimeError
+        If the transaction methods are invoked outside a context.
+
     Notes
     -----
     When the execution leaves the context manager, any remaining queries in
     the transaction will be executed and committed.
-    The Transaction methods can only be executed inside a context, if they are
-    invoked outside a context, a RuntimeError is raised.
     """
 
     _regex = re.compile("^{(\d+):(\d+):(\d+)}$")
@@ -665,7 +672,6 @@ class Transaction(object):
     def __init__(self):
         self._queries = []
         self._results = []
-        self.index = 0
         self._contexts_entered = 0
         self._connection = None
 
@@ -888,7 +894,6 @@ class Transaction(object):
             else:
                 args = []
             self._queries.append((sql, args))
-            self.index += 1
 
     def _execute(self):
         """Internal function that actually executes the transaction
@@ -948,7 +953,7 @@ class Transaction(object):
         Notes
         -----
         If any exception occurs during the execution transaction, a rollback
-        is executed an no changes are reflected in the database.
+        is executed and no changes are reflected in the database.
         When calling execute, the transaction will never be committed, it will
         be automatically committed when leaving the context
 
@@ -983,30 +988,42 @@ class Transaction(object):
     @_checker
     def commit(self):
         """Commits the transaction and reset the queries
+
         Raises
         ------
         RuntimeError
             If invoked outside a context
         """
-        self._connection.commit()
         # Reset the queries, the results and the index
         self._queries = []
         self._results = []
-        self.index = 0
+        try:
+            self._connection.commit()
+        except Exception:
+            self._connection.close()
+            raise
 
     @_checker
     def rollback(self):
         """Rollbacks the transaction and reset the queries
+
         Raises
         ------
         RuntimeError
             If invoked outside a context
         """
-        self._connection.rollback()
         # Reset the queries, the results and the index
         self._queries = []
         self._results = []
-        self.index = 0
+        try:
+            self._connection.rollback()
+        except Exception:
+            self._connection.close()
+            raise
+
+    @property
+    def index(self):
+        return len(self._queries) + len(self._results)
 
 # Singleton pattern, create the transaction for the entire system
-transaction = Transaction()
+TRN = Transaction()

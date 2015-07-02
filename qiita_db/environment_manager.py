@@ -19,7 +19,7 @@ from future.utils import viewitems
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
-from .sql_connection import SQLConnectionHandler, transaction
+from .sql_connection import SQLConnectionHandler, TRN
 from .reference import Reference
 from natsort import natsorted
 
@@ -251,7 +251,7 @@ def drop_environment(ask_for_confirmation):
     """
     # The transaction has an open connection to the database, so we need
     # to close it in order to drop the environment
-    transaction.close()
+    TRN.close()
     # Connect to the postgres server
     conn = SQLConnectionHandler()
     settings_sql = "SELECT test FROM settings"
