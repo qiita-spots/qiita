@@ -39,7 +39,7 @@ class Portal(QiitaObject):
 
     @staticmethod
     def list_portals():
-        """Returns list of portals available in system
+        """Returns list of non-default portals available in system
 
         Returns
         -------

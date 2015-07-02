@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 import warnings
 
 from tornado.web import authenticated, HTTPError
@@ -35,8 +42,6 @@ class StudyPortalHandler(BaseHandler):
         studies = map(int, self.get_arguments('selected'))
         action = self.get_argument('action')
 
-        msg = ""
-
         portal = Portal(portal)
         with warnings.catch_warnings(record=True) as warns:
             if action == "Add":
@@ -46,6 +51,5 @@ class StudyPortalHandler(BaseHandler):
             else:
                 raise HTTPError(400, "Unknown action: %s" % action)
 
-            if warns:
-                msg = '; '.join([str(w.message) for w in warns])
+            msg = '; '.join([str(w.message) for w in warns])
         self.write(action + " completed successfully<br/>" + msg)
