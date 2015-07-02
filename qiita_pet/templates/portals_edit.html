@@ -18,16 +18,17 @@ function check_submit(action) {
   //disable submit buttons
   $("#add-button").prop('disabled', true);
   $("#remove-button").prop('disabled', true);
+  $("#messages").html("");
   var error = false;
+  if($("#portal").val() === '') {
+    //No selected portal, so add error message if needed and then don't submit
+    if(!$('#portal-error').length) { $("#errors").append("<li id='portal-error'>Please select a portal</li>"); }
+    error = true;
+  }
   var data = oTable.$('input').serialize();
   if(data.length === 0) {
     //No checked rows, so add error message if needed and then don't submit
     if(!$('#checkbox-error').length) { $("#errors").append("<li id='checkbox-error'>Please select at least one row</li>"); }
-    error = true;
-  }
-  if($("#portal").val() === '') {
-    //No selected portal, so add error message if needed and then don't submit
-    if(!$('#portal-error').length) { $("#errors").append("<li id='portal-error'>Please select a portal</li>"); }
     error = true;
   }
   if(error) {
