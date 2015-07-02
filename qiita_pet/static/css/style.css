@@ -26,7 +26,7 @@
 
 /* Make the navbar collapse at medium size, not small.
 Fixes really ugly middle ground where menu stacking occurs
-adapted from http://stackoverflow.com/questions/23295775/bootstrap-collapse-nav-at-991px */
+adapted from http://stackoverflow.com/a/23298184 */
 @media (max-width: 991px) {
     .navbar-header {
         float: none;
