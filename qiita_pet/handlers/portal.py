@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 import warnings
+from json import dumps
+from copy import deepcopy
 
 from tornado.web import authenticated, HTTPError
 
@@ -14,28 +16,39 @@ from qiita_db.portal import Portal
 from .base_handlers import BaseHandler
 
 
-class StudyPortalHandler(BaseHandler):
+class PortalEditBase(BaseHandler):
+    study_cols = ['study_id', 'study_title', 'study_alias']
+
     def check_admin(self):
         if self.current_user.level != "admin":
             raise HTTPError(403, "%s does not have access to portal editing!" %
                             self.current_user.id)
 
-    def render_page(self):
-        # You must specify an ID column as the first item in cols list.
-        # This will be used on the page as the value for the checkboxes and
-        # therefore the value returned through the form for a checked box.
-        cols = ['study_id', 'study_title', 'study_alias']
-        studies = Study.get_info(info_cols=cols)
-        portals = Portal.list_portals()
-        self.render('portals_edit.html', headers=cols, info=studies,
-                    id_col="study_id", portals=portals,
-                    submit_url="/admin/portals/studies/")
+    def get_info(self, portal="QIITA"):
+        # Add the portals and, optionally, checkbox to the information
+        studies = Study.get_info(Portal(portal).get_studies(),
+                                 info_cols=self.study_cols)
+        info = []
+        for s in studies:
+            # Make sure in correct order
+            hold = dict(s)
+            hold['portals'] = ', '.join(sorted(Study(s['study_id'])._portals))
+            info.append(hold)
+        return info
 
+
+class StudyPortalHandler(PortalEditBase):
     @authenticated
     def get(self):
         self.check_admin()
-        self.render_page()
+        info = self.get_info()
+        portals = Portal.list_portals()
+        headers = deepcopy(self.study_cols)
+        headers.append("portals")
+        self.render('portals_edit.html', headers=headers, info=info,
+                    portals=portals, submit_url="/admin/portals/studies/")
 
+    @authenticated
     def post(self):
         self.check_admin()
         portal = self.get_argument('portal')
@@ -53,3 +66,22 @@ class StudyPortalHandler(BaseHandler):
 
             msg = '; '.join([str(w.message) for w in warns])
         self.write(action + " completed successfully<br/>" + msg)
+
+
+class StudyPortalAJAXHandler(PortalEditBase):
+    @authenticated
+    def get(self):
+        self.check_admin()
+        portal = self.get_argument('view-portal')
+        echo = self.get_argument('sEcho')
+        info = self.get_info(portal=portal)
+        # build the table json
+        results = {
+            "sEcho": echo,
+            "iTotalRecords": len(info),
+            "iTotalDisplayRecords": len(info),
+            "aaData": info
+        }
+
+        # return the json in compact form to save transmit size
+        self.write(dumps(results, separators=(',', ':')))

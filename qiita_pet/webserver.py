@@ -36,7 +36,8 @@ from qiita_pet.handlers.download import DownloadHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
-    from qiita_pet.handlers.portal import StudyPortalHandler
+    from qiita_pet.handlers.portal import (
+        StudyPortalHandler, StudyPortalAJAXHandler)
 
 
 DIRNAME = dirname(__file__)
@@ -99,7 +100,8 @@ class Application(tornado.web.Application):
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal
             portals = [
-                (r"/admin/portals/studies/", StudyPortalHandler)
+                (r"/admin/portals/studies/", StudyPortalHandler),
+                (r"/admin/portals/studiesAJAX/", StudyPortalAJAXHandler)
             ]
             handlers.extend(portals)
         # 404 PAGE MUST BE LAST IN THIS LIST!

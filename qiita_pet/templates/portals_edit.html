@@ -25,7 +25,12 @@ function check_submit(action) {
     if(!$('#portal-error').length) { $("#errors").append("<li id='portal-error'>Please select a portal</li>"); }
     error = true;
   }
-  var data = oTable.$('input').serialize();
+  var boxes = oTable.$(".selected:checked", {"page": "all"});
+  //serialize the checked boxes
+  var data = "";
+  for(i=0;i<boxes.length;i++) {
+    data += "&selected="+boxes[i].value;
+  }
   if(data.length === 0) {
     //No checked rows, so add error message if needed and then don't submit
     if(!$('#checkbox-error').length) { $("#errors").append("<li id='checkbox-error'>Please select at least one row</li>"); }
@@ -37,12 +42,20 @@ function check_submit(action) {
     return false;
   }
   $('#action').val(action);
-  data = data + "&" + $('#portal-form').serialize();
+  data = $('#portal-form').serialize() + data;
   $.post('{{submit_url}}', data, function(data,textStatus,jqXHR){
     $("#add-button").prop('disabled', false);
     $("#remove-button").prop('disabled', false);
     $("#messages").html(data);
   });
+}
+
+function render_checkbox(data, type, full) {
+  return "<input type='checkbox' class='selected' onclick='checkbox_change()' value='" + full['study_id'] + "' />";
+}
+
+function checkbox_change() {
+  $("#checkbox-error").remove();
 }
 
 $(document).ready(function() {
@@ -56,21 +69,39 @@ $(document).ready(function() {
   oTable = $('#info-table').dataTable({
     "deferRender": true,
     "iDisplayLength": 50,
-    "aoColumns": [
-            { "sSortDataType": "dom-checkbox" },
-            {% for i in headers %}
-            null,
-            {% end %}
-        ]
+    "columns": [
+      {"className": 'select', "data": null},
+      {% for h in headers %}
+      {"data": "{{h}}"},
+      {% end %}
+    ],
+    'aoColumnDefs': [
+      { 'mRender': render_checkbox, 'mData': 1, 'aTargets': [ 0 ] }
+    ],
+    "ajax": {
+      "url": "/admin/portals/studiesAJAX/?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=QIITA",
+      "aoColumns": [
+        {"sSortDataType": "dom-checkbox", "bSearchable": false},
+        {% for h in headers %}
+        {"data": "{{h}}"},
+        {% end %}
+      ],
+      "error": function(jqXHR, textStatus, ex) {
+          $("#add-button").prop('disabled', true);
+          $("#remove-button").prop('disabled', true);
+          $("#errors").append("<li id='comm-error'>Internal Server Error, please try again later</li>");
+      }
+    }
   });
-
-  $('input[type=checkbox]').change(function(){
-        $("#checkbox-error").remove();
-    });
 
   $('#portal').change(function(){
         $("#portal-error").remove();
     });
+
+  $('#view-portal').change(function() {
+    var echo = "?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=" + $("#view-portal").val();
+    $('#info-table').DataTable().ajax.url("/admin/portals/studiesAJAX/" + echo).load();
+  });
 });
 </script>
 {%end%}
@@ -119,14 +150,6 @@ $(document).ready(function() {
       </tr>
     </thead>
     <tbody>
-      {% for i in info %}
-      <tr>
-        <td><input type="checkbox" name="selected" id="selected" value="{{i[id_col]}}"></td>
-        {% for head in headers %}
-        <td>{{i[head]}}</td>
-        {% end %}
-    </tr>
-    {% end %}
     </tbody>
     </table>
   </div>
