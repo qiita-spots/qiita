@@ -27,7 +27,7 @@ Classes
 
 from __future__ import division
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .sql_connection import transaction
+from .sql_connection import TRN
 from .exceptions import QiitaDBNotImplementedError, QiitaDBUnknownIDError
 
 
@@ -130,12 +130,12 @@ class QiitaObject(object):
         """
         self._check_subclass()
 
-        with transaction:
+        with TRN:
             sql = """SELECT EXISTS(
                         SELECT * FROM qiita.{0}
                         WHERE {0}_id=%s)""".format(self._table)
-            transaction.add(sql, [id_])
-            return transaction.execute_fetchlast()
+            TRN.add(sql, [id_])
+            return TRN.execute_fetchlast()
 
     def __init__(self, id_):
         r"""Initializes the object
@@ -149,7 +149,7 @@ class QiitaObject(object):
         QiitaDBUnknownIDError
             If `id_` does not correspond to any object
         """
-        with transaction:
+        with TRN:
             if not self._check_id(id_):
                 raise QiitaDBUnknownIDError(id_, self._table)
 
@@ -190,13 +190,13 @@ class QiitaStatusObject(QiitaObject):
     def status(self):
         r"""String with the current status of the analysis"""
         # Get the DB status of the object
-        with transaction:
+        with TRN:
             sql = """SELECT status FROM qiita.{0}_status
                      WHERE {0}_status_id = (
                         SELECT {0}_status_id FROM qiita.{0}
                         WHERE {0}_id = %s)""".format(self._table)
-            transaction.add(sql, [self._id])
-            return transaction.execute_fetchlast()
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     def _status_setter_checks(self):
         r"""Perform any extra checks that needed to be done before setting the
@@ -213,7 +213,7 @@ class QiitaStatusObject(QiitaObject):
         status: str
             The new object status
         """
-        with transaction:
+        with TRN:
             # Perform any extra checks needed before
             # we update the status in the DB
             self._status_setter_checks()
@@ -223,8 +223,8 @@ class QiitaStatusObject(QiitaObject):
                         SELECT {0}_status_id FROM qiita.{0}_status
                         WHERE status = %s)
                      WHERE {0}_id = %s""".format(self._table)
-            transaction.add(sql, [status, self._id])
-            transaction.execute()
+            TRN.add(sql, [status, self._id])
+            TRN.execute()
 
     def check_status(self, status, exclude=False):
         r"""Checks status of object.
@@ -256,14 +256,14 @@ class QiitaStatusObject(QiitaObject):
         Table setup:
         foo: foo_status_id  ----> foo_status: foo_status_id, status
         """
-        with transaction:
+        with TRN:
             # Get all available statuses
             sql = "SELECT DISTINCT status FROM qiita.{0}_status".format(
                 self._table)
-            transaction.add(sql, [self._id])
+            TRN.add(sql, [self._id])
             # We need to access to the results of the last SQL query,
             # hence indexing using -1
-            avail_status = [x[0] for x in transaction.execute()[-1]]
+            avail_status = [x[0] for x in TRN.execute()[-1]]
 
             # Check that all the provided status are valid status
             if set(status).difference(avail_status):

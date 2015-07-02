@@ -33,7 +33,7 @@ from re import sub
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from .base import QiitaObject
-from .sql_connection import transaction
+from .sql_connection import TRN
 from .util import (create_rand_string, check_table_cols, hash_password)
 from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
 
@@ -78,11 +78,11 @@ class User(QiitaObject):
         This function overwrites the base function, as sql layout doesn't
         follow the same conventions done in the other classes.
         """
-        with transaction:
+        with TRN:
             sql = """SELECT EXISTS(
                         SELECT * FROM qiita.qiita_user WHERE email = %s)"""
-            transaction.add(sql, [id_])
-            return transaction.execute_fetchlast()
+            TRN.add(sql, [id_])
+            return TRN.execute_fetchlast()
 
     @classmethod
     def iter(cls):
@@ -94,11 +94,11 @@ class User(QiitaObject):
             Yields a user ID (email) for each user in the database,
             in order of ascending ID
         """
-        with transaction:
+        with TRN:
             sql = """select email from qiita.{}""".format(cls._table)
-            transaction.add(sql)
+            TRN.add(sql)
             # Using [-1] to get the results of the last SQL query
-            for result in transaction.execute()[-1]:
+            for result in TRN.execute()[-1]:
                 yield result[0]
 
     @classmethod
@@ -125,7 +125,7 @@ class User(QiitaObject):
         IncorrectPasswordError
             Password passed is not correct for user
         """
-        with transaction:
+        with TRN:
             # see if user exists
             if not cls.exists(email):
                 raise IncorrectEmailError("Email not valid: %s" % email)
@@ -136,10 +136,10 @@ class User(QiitaObject):
             # pull password out of database
             sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
                    "email = %s".format(cls._table))
-            transaction.add(sql, [email])
+            TRN.add(sql, [email])
             # Using [-1] to get the results of the last SQL query
             # and [0] because there is only one row
-            info = transaction.execute()[-1][0]
+            info = TRN.execute()[-1][0]
 
             # verify user email verification
             # MAGIC NUMBER 5 = unverified email
@@ -163,15 +163,15 @@ class User(QiitaObject):
         email : str
             the email of the user
         """
-        with transaction:
+        with TRN:
             if not validate_email(email):
                 raise IncorrectEmailError("Email string not valid: %s" % email)
 
             sql = """SELECT EXISTS(
                         SELECT * FROM qiita.{0}
                         WHERE email = %s)""".format(cls._table)
-            transaction.add(sql, [email])
-            return transaction.execute_fetchlast()
+            TRN.add(sql, [email])
+            return TRN.execute_fetchlast()
 
     @classmethod
     def create(cls, email, password, info=None):
@@ -195,7 +195,7 @@ class User(QiitaObject):
         QiitaDBDuplicateError
             User already exists
         """
-        with transaction:
+        with TRN:
             # validate email and password for new user
             if not validate_email(email):
                 raise IncorrectEmailError("Bad email given: %s" % email)
@@ -230,13 +230,13 @@ class User(QiitaObject):
             # crete user
             sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
                 cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
-            transaction.add(sql, values)
+            TRN.add(sql, values)
             # create user default sample holder
             sql = ("INSERT INTO qiita.analysis "
                    "(email, name, description, dflt, analysis_status_id) "
                    "VALUES (%s, %s, %s, %s, 1)")
-            transaction.add(sql, [email, '%s-dflt' % email, 'dflt', True])
-            transaction.execute()
+            TRN.add(sql, [email, '%s-dflt' % email, 'dflt', True])
+            TRN.execute()
 
             return cls(email)
 
@@ -261,7 +261,7 @@ class User(QiitaObject):
         IncompentQiitaDeveloper
             code_type is not create or reset
         """
-        with transaction:
+        with TRN:
             if code_type == 'create':
                 column = 'user_verify_code'
             elif code_type == 'reset':
@@ -272,8 +272,8 @@ class User(QiitaObject):
                     % code_type)
             sql = ("SELECT {1} from qiita.{0} where email"
                    " = %s".format(cls._table, column))
-            transaction.add(sql, [email])
-            db_code = transaction.execute_fetchlast()
+            TRN.add(sql, [email])
+            db_code = TRN.execute_fetchlast()
 
             # If the query didn't return anything, then there's no way the code
             # can match
@@ -288,8 +288,8 @@ class User(QiitaObject):
                             SELECT user_level_id FROM qiita.user_level
                             WHERE name = %s)
                          WHERE email = %s""".format(cls._table)
-                transaction.add(sql, ["user", email])
-                transaction.execute()
+                TRN.add(sql, ["user", email])
+                TRN.execute()
 
             return db_code == code
 
@@ -302,26 +302,26 @@ class User(QiitaObject):
     @property
     def level(self):
         """The level of privileges of the user"""
-        with transaction:
+        with TRN:
             sql = """SELECT ul.name
                      FROM qiita.user_level ul
                         JOIN qiita.{0} u
                             ON ul.user_level_id = u.user_level_id
                      WHERE u.email = %s""".format(self._table)
-            transaction.add(sql, [self._id])
-            return transaction.execute_fetchlast()
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def info(self):
         """Dict with any other information attached to the user"""
-        with transaction:
+        with TRN:
             sql = "SELECT * from qiita.{0} WHERE email = %s".format(
                 self._table)
             # Need direct typecast from psycopg2 dict to standard dict
-            transaction.add(sql, [self._id])
-            # [-1] gets the result of the last query added to the transaction
+            TRN.add(sql, [self._id])
+            # [-1] gets the result of the last query added to the TRN
             # and [0] retrieves the first row (the only one present)
-            info = dict(transaction.execute()[-1][0])
+            info = dict(TRN.execute()[-1][0])
             # Remove non-info columns
             for col in self._non_info:
                 info.pop(col)
@@ -335,7 +335,7 @@ class User(QiitaObject):
         ----------
         info : dict
         """
-        with transaction:
+        with TRN:
             # make sure non-info columns aren't passed in info dict
             if self._non_info.intersection(info):
                 raise QiitaDBColumnError("non info keys passed!")
@@ -354,55 +354,55 @@ class User(QiitaObject):
 
             sql = ("UPDATE qiita.{0} SET {1} WHERE "
                    "email = %s".format(self._table, ','.join(sql_insert)))
-            transaction.add(sql, data)
-            transaction.execute()
+            TRN.add(sql, data)
+            TRN.execute()
 
     @property
     def default_analysis(self):
-        with transaction:
+        with TRN:
             sql = """SELECT analysis_id FROM qiita.analysis
                      WHERE email = %s AND dflt = true"""
-            transaction.add(sql, [self._id])
-            return transaction.execute_fetchlast()
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def user_studies(self):
         """Returns a list of study ids owned by the user"""
-        with transaction:
+        with TRN:
             sql = "SELECT study_id FROM qiita.study WHERE email = %s".format(
                 self._table)
-            transaction.add(sql, [self._id])
-            study_ids = transaction.execute()[-1]
+            TRN.add(sql, [self._id])
+            study_ids = TRN.execute()[-1]
             return {s[0] for s in study_ids}
 
     @property
     def shared_studies(self):
         """Returns a list of study ids shared with the user"""
-        with transaction:
+        with TRN:
             sql = """SELECT study_id FROM qiita.study_users
                      WHERE email = %s""".format(self._table)
-            transaction.add(sql, [self._id])
-            study_ids = transaction.execute()[-1]
+            TRN.add(sql, [self._id])
+            study_ids = TRN.execute()[-1]
             return {s[0] for s in study_ids}
 
     @property
     def private_analyses(self):
         """Returns a list of private analysis ids owned by the user"""
-        with transaction:
+        with TRN:
             sql = """SELECT analysis_id FROM qiita.analysis
                      WHERE email = %s AND dflt = false"""
-            transaction.add(sql, [self._id])
-            analysis_ids = transaction.execute()[-1]
+            TRN.add(sql, [self._id])
+            analysis_ids = TRN.execute()[-1]
             return {a[0] for a in analysis_ids}
 
     @property
     def shared_analyses(self):
         """Returns a list of analysis ids shared with the user"""
-        with transaction:
+        with TRN:
             sql = """SELECT analysis_id FROM qiita.analysis_users
                      WHERE email = %s""".format(self._table)
-            transaction.add(sql, [self._id])
-            analysis_ids = transaction.execute()[-1]
+            TRN.add(sql, [self._id])
+            analysis_ids = TRN.execute()[-1]
             return {a[0] for a in analysis_ids}
 
     # ------- methods ---------
@@ -421,11 +421,11 @@ class User(QiitaObject):
         bool
             password changed or not
         """
-        with transaction:
+        with TRN:
             sql = "SELECT password FROM qiita.{0} WHERE email = %s".format(
                 self._table)
-            transaction.add(sql, [self._id])
-            dbpass = transaction.execute_fetchlast()
+            TRN.add(sql, [self._id])
+            dbpass = TRN.execute_fetchlast()
             if dbpass == hash_password(oldpass, dbpass):
                 self._change_pass(newpass)
                 return True
@@ -433,13 +433,13 @@ class User(QiitaObject):
 
     def generate_reset_code(self):
         """Generates a password reset code for user"""
-        with transaction:
+        with TRN:
             reset_code = create_rand_string(20, punct=False)
             sql = """UPDATE qiita.{0}
                      SET pass_reset_code = %s, pass_reset_timestamp = NOW()
                      WHERE email = %s""".format(self._table)
-            transaction.add(sql, [reset_code, self._id])
-            transaction.execute()
+            TRN.add(sql, [reset_code, self._id])
+            TRN.execute()
 
     def change_forgot_password(self, code, newpass):
         """Changes the password if the code is valid
@@ -456,22 +456,22 @@ class User(QiitaObject):
         bool
             password changed or not
         """
-        with transaction:
+        with TRN:
             if self.verify_code(self._id, code, "reset"):
                 self._change_pass(newpass)
                 return True
             return False
 
     def _change_pass(self, newpass):
-        with transaction:
+        with TRN:
             if not validate_password(newpass):
                 raise IncorrectPasswordError("Bad password given!")
 
             sql = """UPDATE qiita.{0}
                      SET password=%s, pass_reset_code = NULL
                      WHERE email = %s""".format(self._table)
-            transaction.add(sql, [hash_password(newpass), self._id])
-            transaction.execute()
+            TRN.add(sql, [hash_password(newpass), self._id])
+            TRN.execute()
 
 
 def validate_email(email):

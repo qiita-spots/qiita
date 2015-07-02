@@ -54,7 +54,7 @@ from datetime import datetime
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from .exceptions import QiitaDBColumnError, QiitaDBError
-from .sql_connection import SQLConnectionHandler, transaction
+from .sql_connection import SQLConnectionHandler, TRN
 
 
 def params_dict_to_json(options):
@@ -312,11 +312,11 @@ def check_table_cols(keys, table):
     RuntimeError
         Unable to get columns from database
     """
-    with transaction:
+    with TRN:
         sql = """SELECT column_name FROM information_schema.columns
                  WHERE table_name = %s"""
-        transaction.add(sql, [table])
-        cols = [x[0] for x in transaction.execute()[-1]]
+        TRN.add(sql, [table])
+        cols = [x[0] for x in TRN.execute()[-1]]
         # Test needed because a user with certain permissions can query without
         # error but be unable to get the column names
         if len(cols) == 0:
