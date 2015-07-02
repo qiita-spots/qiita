@@ -48,4 +48,4 @@ class StudyPortalHandler(BaseHandler):
 
             if warns:
                 msg = '; '.join([str(w.message) for w in warns])
-        self.write(msg)
+        self.write(action + " completed successfully<br/>" + msg)

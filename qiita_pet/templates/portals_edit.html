@@ -8,6 +8,9 @@
     display: inline;
     padding-right: 20px;
   }
+  .portal-select {
+    width: 15em;
+  }
 </style>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
@@ -37,7 +40,7 @@ function check_submit(action) {
   $.post('{{submit_url}}', data, function(data,textStatus,jqXHR){
     $("#add-button").prop('disabled', false);
     $("#remove-button").prop('disabled', false);
-    $("#messages").html("Completed successfully<br/>"+data);
+    $("#messages").html(data);
   });
 }
 
@@ -75,7 +78,7 @@ $(document).ready(function() {
 <div class="row topfloat">
   <div class='col-lg-12'>
     <span style="float:right"><b>View from portal:</b>
-      <select name="view-portal" id="view-portal" id="portal">
+      <select name="view-portal" id="view-portal" class="portal-select">
         <option value="QIITA">QIITA</option>
         {% for portal in portals %}
         <option value="{{portal}}">{{portal}}</option>
@@ -85,19 +88,19 @@ $(document).ready(function() {
     <table>
       <tr><td>
         <form role="form" id="portal-form">
-        <b>Portal:</b> <select name="portal" id="portal">
+        <b>Portal:</b> <select name="portal" id="portal" class="portal-select">
           <option value=""></option>
           {% for portal in portals %}
           <option value="{{portal}}">{{portal}}</option>
           {% end %}
         </select>
         <input type="hidden" name="action" id="action" value="">
-        <input type="button" id="add-button" value="Add" class="btn btn-success" onclick="check_submit('Add')"> <input type="button" id="remove-button" value="Remove" class="btn btn-danger" onclick="check_submit('Remove')">
+        <input type="button" id="add-button" value="Add" class="btn btn-sm btn-success" onclick="check_submit('Add')"> <input type="button" id="remove-button" value="Remove" class="btn btn-sm btn-danger" onclick="check_submit('Remove')">
         </form>
         <span class="errorTxt" style="color:red">
           <ul id="errors" class="navlist"></ul>
         </span>
-      </td><td>
+      </td><td style="padding-left:10px">
         <span id="messages"></span>
       </td></tr>
     </table>
