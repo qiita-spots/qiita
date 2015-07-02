@@ -44,7 +44,7 @@ class StudyPortalHandler(PortalEditBase):
         info = self.get_info()
         portals = Portal.list_portals()
         headers = deepcopy(self.study_cols)
-        headers.append("portals")
+        headers.insert(0, "portals")
         self.render('portals_edit.html', headers=headers, info=info,
                     portals=portals, submit_url="/admin/portals/studies/")
 
