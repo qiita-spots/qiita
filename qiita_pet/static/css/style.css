@@ -13,3 +13,14 @@
 .dropdown:hover .dropdown-menu {
     display: block;
  }
+
+ .topfloat
+  {
+    position: fixed;
+    padding-top: 5px;
+    height:55px;
+    top:50px;
+    z-index:50000;
+    background:white;
+    width:100%;
+  }

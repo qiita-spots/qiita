@@ -12,7 +12,9 @@ class StudyPortalHandler(BaseHandler):
                             self.current_user.id)
 
     def render_page(self):
-        # COLS MUST HAVE AN ID COLUMN!
+        # You must specify an ID column as the first item in cols list.
+        # This will be used on the page as the value for the checkboxes and
+        # therefore the value returned through the form for a checked box.
         cols = ['study_id', 'study_title', 'study_alias']
         studies = Study.get_info(info_cols=cols)
         portals = Portal.list_portals()
@@ -37,5 +39,5 @@ class StudyPortalHandler(BaseHandler):
         elif action == "Remove":
             portal.remove_studies(studies)
         else:
-            raise ValueError("Unknown action: %s" % action)
+            raise HTTPError(400, "Unknown action: %s" % action)
         self.render_page()

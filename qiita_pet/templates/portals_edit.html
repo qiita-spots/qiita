@@ -2,10 +2,17 @@
 
 {%block head%}
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+<style type="text/css">
+  .navlist li
+  {
+    display: inline;
+    padding-right: 20px;
+  }
+</style>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
 function check_submit(action) {
-  error = false;
+  var error = false;
   var data = oTable.$('input').serialize();
   if(data.length === 0) {
     //No checked rows, so add error message if needed and then don't submit
@@ -54,23 +61,33 @@ $(document).ready(function() {
 {%end%}
 
 {%block content%}
-<div class='row'>
-    <div class='col-lg-2'>
+<div class="row topfloat">
+  <div class='col-lg-12'>
+    <span style="float:right"><b>View from portal:</b>
+      <select name="view-portal" id="view-portal" id="portal">
+        <option value="QIITA">QIITA</option>
+        {% for portal in portals %}
+        <option value="{{portal}}">{{portal}}</option>
+        {% end %}
+      </select>
+    </span>
     <form role="form" id="portal-form">
-    <p><b>Portal:</b> <select name="portal" id="portal">
+    <b>Portal:</b> <select name="portal" id="portal">
       <option value=""></option>
       {% for portal in portals %}
       <option value="{{portal}}">{{portal}}</option>
       {% end %}
-    </select></p>
+    </select>
     <input type="hidden" name="action" id="action" value="">
     <input type="button" id="add-button" value="Add" class="btn btn-info" onclick="check_submit('Add')"> <input type="submit" id="remove-button" value="Remove" class="btn btn-danger" onclick="check_submit('Remove')">
     </form>
-    <div class="errorTxt" style="color:red">
-      <ul id="errors"></ul>
-    </div>
+    <span class="errorTxt" style="color:red">
+      <ul id="errors" class="navlist"></ul>
+    </span>
   </div>
-  <div class='col-lg-10' style="float:right;height:100%; border-color:black;border-left:solid;border-left-width:2px;">
+</div>
+<div class='row' style="margin-top:50px">
+  <div class='col-lg-12'>
     <table id="info-table" class="table">
     <thead>
       <tr>
