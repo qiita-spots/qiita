@@ -263,7 +263,7 @@ class QiitaStatusObject(QiitaObject):
             TRN.add(sql)
             # We need to access to the results of the last SQL query,
             # hence indexing using -1
-            avail_status = [x[0] for x in TRN.execute()[-1]]
+            avail_status = [x[0] for x in TRN.execute_fetchindex()]
 
             # Check that all the provided status are valid status
             if set(status).difference(avail_status):

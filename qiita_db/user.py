@@ -98,7 +98,7 @@ class User(QiitaObject):
             sql = """select email from qiita.{}""".format(cls._table)
             TRN.add(sql)
             # Using [-1] to get the results of the last SQL query
-            for result in TRN.execute()[-1]:
+            for result in TRN.execute_fetchindex():
                 yield result[0]
 
     @classmethod
@@ -137,9 +137,8 @@ class User(QiitaObject):
             sql = ("SELECT password, user_level_id FROM qiita.{0} WHERE "
                    "email = %s".format(cls._table))
             TRN.add(sql, [email])
-            # Using [-1] to get the results of the last SQL query
-            # and [0] because there is only one row
-            info = TRN.execute()[-1][0]
+            # Using [0] because there is only one row
+            info = TRN.execute_fetchindex()[0]
 
             # verify user email verification
             # MAGIC NUMBER 5 = unverified email
@@ -319,9 +318,8 @@ class User(QiitaObject):
                 self._table)
             # Need direct typecast from psycopg2 dict to standard dict
             TRN.add(sql, [self._id])
-            # [-1] gets the result of the last query added to the TRN
-            # and [0] retrieves the first row (the only one present)
-            info = dict(TRN.execute()[-1][0])
+            # [0] retrieves the first row (the only one present)
+            info = dict(TRN.execute_fetchindex()[0])
             # Remove non-info columns
             for col in self._non_info:
                 info.pop(col)
@@ -372,7 +370,7 @@ class User(QiitaObject):
             sql = "SELECT study_id FROM qiita.study WHERE email = %s".format(
                 self._table)
             TRN.add(sql, [self._id])
-            study_ids = TRN.execute()[-1]
+            study_ids = TRN.execute_fetchindex()
             return {s[0] for s in study_ids}
 
     @property
@@ -382,7 +380,7 @@ class User(QiitaObject):
             sql = """SELECT study_id FROM qiita.study_users
                      WHERE email = %s""".format(self._table)
             TRN.add(sql, [self._id])
-            study_ids = TRN.execute()[-1]
+            study_ids = TRN.execute_fetchindex()
             return {s[0] for s in study_ids}
 
     @property
@@ -392,7 +390,7 @@ class User(QiitaObject):
             sql = """SELECT analysis_id FROM qiita.analysis
                      WHERE email = %s AND dflt = false"""
             TRN.add(sql, [self._id])
-            analysis_ids = TRN.execute()[-1]
+            analysis_ids = TRN.execute_fetchindex()
             return {a[0] for a in analysis_ids}
 
     @property
@@ -402,7 +400,7 @@ class User(QiitaObject):
             sql = """SELECT analysis_id FROM qiita.analysis_users
                      WHERE email = %s""".format(self._table)
             TRN.add(sql, [self._id])
-            analysis_ids = TRN.execute()[-1]
+            analysis_ids = TRN.execute_fetchindex()
             return {a[0] for a in analysis_ids}
 
     # ------- methods ---------
