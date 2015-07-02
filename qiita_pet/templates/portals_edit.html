@@ -11,6 +11,13 @@
   .portal-select {
     width: 15em;
   }
+  .alert {
+    position: fixed;
+    top: 55px;
+    left:40%;
+    z-index:100;
+    white-space: nowrap;
+  }
 </style>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
@@ -19,11 +26,10 @@ function check_submit(action) {
   $("#add-button").prop('disabled', true);
   $("#remove-button").prop('disabled', true);
   $("#messages").html("");
-  var error = false;
+  var errors = "";
   if($("#portal").val() === '') {
     //No selected portal, so add error message if needed and then don't submit
-    if(!$('#portal-error').length) { $("#errors").append("<li id='portal-error'>Please select a portal</li>"); }
-    error = true;
+    if(!$('#portal-error').length) { errors += "Please select a portal<br/>"; }
   }
   var boxes = oTable.$(".selected:checked", {"page": "all"});
   //serialize the checked boxes
@@ -33,12 +39,12 @@ function check_submit(action) {
   }
   if(data.length === 0) {
     //No checked rows, so add error message if needed and then don't submit
-    if(!$('#checkbox-error').length) { $("#errors").append("<li id='checkbox-error'>Please select at least one row</li>"); }
-    error = true;
+    if(!$('#checkbox-error').length) { errors += "Please select at least one row<br/>"; }
   }
-  if(error) {
+  if(errors.length > 0) {
     $("#add-button").prop('disabled', false);
     $("#remove-button").prop('disabled', false);
+    bootstrapAlert(errors, "danger", 1900);
     return false;
   }
   $('#action').val(action);
@@ -48,7 +54,7 @@ function check_submit(action) {
     $("#remove-button").prop('disabled', false);
     var echo = "?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=" + $("#view-portal").val();
     $('#info-table').DataTable().ajax.url("/admin/portals/studiesAJAX/" + echo).load();
-    $("#messages").html(data);
+    bootstrapAlert(data, "success", 1900);
     $("#portal").val('');
   });
 }
@@ -84,7 +90,7 @@ $(document).ready(function() {
     "ajax": {
       "url": "/admin/portals/studiesAJAX/?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=QIITA",
       "aoColumns": [
-        {"sSortDataType": "dom-checkbox", "bSearchable": false},
+        {"sSortDataType": "dom-checkbox", "bSearchable": false, "bSortable": false},
         {% for h in headers %}
         {"data": "{{h}}"},
         {% end %}
