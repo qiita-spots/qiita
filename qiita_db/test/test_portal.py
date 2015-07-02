@@ -5,7 +5,8 @@ import numpy.testing as npt
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.portal import Portal
-from qiita_db.study import Study
+from qiita_db.study import Study, StudyPerson
+from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBError, QiitaDBDuplicateError,
                                  QiitaDBWarning)
@@ -14,6 +15,8 @@ from qiita_core.qiita_settings import qiita_config
 
 @qiita_test_checker()
 class TestPortal(TestCase):
+    portal = qiita_config.portal
+
     def setUp(self):
         self.study = Study(1)
         self.analysis = Analysis(1)
@@ -21,7 +24,7 @@ class TestPortal(TestCase):
         self.emp_portal = Portal('EMP')
 
     def tearDown(self):
-        qiita_config.portal = 'QIITA'
+        qiita_config.portal = self.portal
 
     def test_list_portals(self):
         obs = Portal.list_portals()
@@ -49,6 +52,11 @@ class TestPortal(TestCase):
 
     def test_remove_portal(self):
         Portal.create("NEWPORTAL", "SOMEDESC")
+        # Select some samples on a default analysis
+        qiita_config.portal = "NEWPORTAL"
+        a = Analysis(User("test@foo.bar").default_analysis)
+        a.add_samples({1: ['1.SKB8.640193', '1.SKD5.640186']})
+
         Portal.delete("NEWPORTAL")
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.portal_type")
@@ -67,6 +75,38 @@ class TestPortal(TestCase):
             Portal.delete("NOEXISTPORTAL")
         with self.assertRaises(QiitaDBError):
             Portal.delete("QIITA")
+
+        Portal.create("NEWPORTAL2", "SOMEDESC")
+        # Add analysis to this new portal and make sure error raised
+        qiita_config.portal = "NEWPORTAL2"
+        Analysis.create(User("test@foo.bar"), "newportal analysis", "desc")
+        qiita_config.portal = "QIITA"
+        with self.assertRaises(QiitaDBError):
+            Portal.delete("NEWPORTAL2")
+
+        # Add study to this new portal and make sure error raised
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        Portal.create("NEWPORTAL3", "SOMEDESC")
+        qiita_config.portal = "NEWPORTAL3"
+        Study.create(User('test@foo.bar'), "Fried chicken microbiome",
+                     [1], info)
+        qiita_config.portal = "QIITA"
+        with self.assertRaises(QiitaDBError):
+            Portal.delete("NEWPORTAL3")
 
     def test_check_studies(self):
         with self.assertRaises(QiitaDBError):
