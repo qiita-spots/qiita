@@ -67,6 +67,16 @@ function checkbox_change() {
   $("#checkbox-error").remove();
 }
 
+function checkbox_action(action) {
+  var boxes = oTable.$(":checkbox", {"page": "all"});
+  if(action == 'check') { boxes.prop('checked',true); }
+  else if(action == 'uncheck') { boxes.prop('checked',false); }
+  else if(action='invert') { boxes.each( function() {
+    $(this).is(':checked') ? $(this).prop('checked',false) : $(this).prop('checked',true);
+  });}
+  return false;
+}
+
 $(document).ready(function() {
   oTable = $('#info-table').dataTable({
     "deferRender": true,
@@ -119,8 +129,6 @@ $(document).ready(function() {
         {% end %}
       </select>
     </span>
-    <table>
-      <tr><td style="white-space: nowrap;">
         <form role="form" id="portal-form">
         <select name="portal" id="portal" class="portal-select">
           <option value="">Select Portal...</option>
@@ -131,17 +139,11 @@ $(document).ready(function() {
         <input type="hidden" name="action" id="action" value="">
         <input type="button" id="add-button" value="Add" class="btn btn-sm btn-success" onclick="check_submit('Add')"> <input type="button" id="remove-button" value="Remove" class="btn btn-sm btn-danger" onclick="check_submit('Remove')">
         </form>
-        <span class="errorTxt" style="color:red">
-          <ul id="errors" class="navlist"></ul>
-        </span>
-      </td><td style="padding-left:10px">
-        <span id="messages"></span>
-      </td></tr>
-    </table>
   </div>
 </div>
 <div class='row' style="margin-top:50px">
   <div class='col-lg-12'>
+    <input type=button onclick="checkbox_action('check')"  class="btn btn-xs btn-info" value="Select All"> | <input type=button onclick="checkbox_action('uncheck')"  class="btn btn-xs btn-info" value="Select None"> | <input type=button onclick="checkbox_action('inverse')"  class="btn btn-xs btn-info" value="Select Inverse"><br/>
     <table id="info-table" class="table">
     <thead>
       <tr>
