@@ -260,7 +260,7 @@ class QiitaStatusObject(QiitaObject):
             # Get all available statuses
             sql = "SELECT DISTINCT status FROM qiita.{0}_status".format(
                 self._table)
-            TRN.add(sql, [self._id])
+            TRN.add(sql)
             # We need to access to the results of the last SQL query,
             # hence indexing using -1
             avail_status = [x[0] for x in TRN.execute()[-1]]
