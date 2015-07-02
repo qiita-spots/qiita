@@ -80,7 +80,7 @@ class Analysis(QiitaStatusObject):
                               "error"}):
             raise QiitaDBStatusError("Analysis is locked!")
 
-    def _status_setter_checks(self, conn_handler):
+    def _status_setter_checks(self):
         r"""Perform a check to make sure not setting status away from public
         """
         if self.check_status({"public"}):
@@ -898,7 +898,7 @@ class Collection(QiitaStatusObject):
     _highlight_table = "collection_job"
     _share_table = "collection_users"
 
-    def _status_setter_checks(self, conn_handler):
+    def _status_setter_checks(self):
         r"""Perform a check to make sure not setting status away from public
         """
         if self.check_status(("public", )):
@@ -963,7 +963,7 @@ class Collection(QiitaStatusObject):
     @name.setter
     def name(self, value):
         conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        self._status_setter_checks()
 
         sql = ("UPDATE qiita.{0} SET name = %s WHERE "
                "collection_id = %s".format(self._table))
@@ -979,7 +979,7 @@ class Collection(QiitaStatusObject):
     @description.setter
     def description(self, value):
         conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        self._status_setter_checks()
 
         sql = ("UPDATE qiita.{0} SET description = %s WHERE "
                "collection_id = %s".format(self._table))
@@ -1022,7 +1022,7 @@ class Collection(QiitaStatusObject):
         analysis : Analysis object
         """
         conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        self._status_setter_checks()
 
         sql = ("INSERT INTO qiita.{0} (analysis_id, collection_id) "
                "VALUES (%s, %s)".format(self._analysis_table))
@@ -1036,7 +1036,7 @@ class Collection(QiitaStatusObject):
         analysis : Analysis object
         """
         conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        self._status_setter_checks()
 
         sql = ("DELETE FROM qiita.{0} WHERE analysis_id = %s AND "
                "collection_id = %s".format(self._analysis_table))
@@ -1051,7 +1051,7 @@ class Collection(QiitaStatusObject):
         job : Job object
         """
         conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        self._status_setter_checks()
 
         sql = ("INSERT INTO qiita.{0} (job_id, collection_id) "
                "VALUES (%s, %s)".format(self._highlight_table))
@@ -1066,7 +1066,7 @@ class Collection(QiitaStatusObject):
         job : Job object
         """
         conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        self._status_setter_checks()
 
         sql = ("DELETE FROM qiita.{0} WHERE job_id = %s AND "
                "collection_id = %s".format(self._highlight_table))
@@ -1081,7 +1081,7 @@ class Collection(QiitaStatusObject):
         user : User object
         """
         conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        self._status_setter_checks()
 
         sql = ("INSERT INTO qiita.{0} (email, collection_id) "
                "VALUES (%s, %s)".format(self._share_table))
@@ -1096,7 +1096,7 @@ class Collection(QiitaStatusObject):
         user : User object
         """
         conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        self._status_setter_checks()
 
         sql = ("DELETE FROM qiita.{0} WHERE "
                "email = %s AND collection_id = %s".format(self._share_table))

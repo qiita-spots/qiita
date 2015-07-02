@@ -60,16 +60,16 @@ class Job(QiitaStatusObject):
     """
     _table = "job"
 
-    def _lock_job(self, conn_handler):
+    def _lock_job(self):
         """Raises QiitaDBStatusError if study is public"""
         if self.check_status(("completed", "error")):
             raise QiitaDBStatusError("Can't change status of finished job!")
 
-    def _status_setter_checks(self, conn_handler):
+    def _status_setter_checks(self):
         r"""Perform a check to make sure not setting status away from completed
         or errored
         """
-        self._lock_job(conn_handler)
+        self._lock_job()
 
     @staticmethod
     def get_commands():
@@ -314,7 +314,7 @@ class Job(QiitaStatusObject):
         """
         conn_handler = SQLConnectionHandler()
         # make sure job is editable
-        self._lock_job(conn_handler)
+        self._lock_job()
 
         # JSON the options dictionary
         opts_json = params_dict_to_json(opts)
@@ -393,7 +393,7 @@ class Job(QiitaStatusObject):
         conn_handler = SQLConnectionHandler()
         log_entry = LogEntry.create('Runtime', msg,
                                     info={'job': self._id})
-        self._lock_job(conn_handler)
+        self._lock_job()
         err_id = conn_handler.execute_fetchone(
             "SELECT job_status_id FROM qiita.job_status WHERE "
             "status = 'error'")[0]
@@ -420,7 +420,7 @@ class Job(QiitaStatusObject):
         """
         # add filepaths to the job
         conn_handler = SQLConnectionHandler()
-        self._lock_job(conn_handler)
+        self._lock_job()
         # convert all file type text to file type ids
         res_ids = [(fp, convert_to_id(fptype, "filepath_type"))
                    for fp, fptype in results]
