@@ -765,7 +765,7 @@ class MetadataTemplate(QiitaObject):
             True if already exists. False otherwise.
         """
         cls._check_subclass()
-        return exists_table(cls._table_name(obj_id), SQLConnectionHandler())
+        return exists_table(cls._table_name(obj_id))
 
     def _get_sample_ids(self, conn_handler):
         r"""Returns all the available samples for the metadata template
@@ -1036,7 +1036,7 @@ class MetadataTemplate(QiitaObject):
 
         try:
             fpp_id = insert_filepaths([(filepath, fp_id)], None,
-                                      "templates", "filepath", conn_handler,
+                                      "templates", "filepath",
                                       move_files=False)[0]
             values = (self._id, fpp_id)
             conn_handler.execute(

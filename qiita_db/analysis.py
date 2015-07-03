@@ -854,7 +854,7 @@ class Analysis(QiitaStatusObject):
         _, mp = get_mountpoint('analysis')[0]
         fpid = insert_filepaths([
             (join(mp, filename), filetype_id)], -1, 'analysis', 'filepath',
-            conn_handler, move_files=False)[0]
+            move_files=False)[0]
 
         col = ""
         dtid = ""

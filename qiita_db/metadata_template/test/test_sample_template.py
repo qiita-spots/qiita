@@ -988,7 +988,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             self.conn_handler.execute_fetchone(sql, (self.new_study.id,))[0])
 
         self.assertFalse(
-            exists_table("sample_%d" % self.new_study.id, self.conn_handler))
+            exists_table("sample_%d" % self.new_study.id))
 
     def test_create(self):
         """Creates a new SampleTemplate"""
@@ -1029,7 +1029,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("sample_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("sample_%s" % new_id))
 
         # The new table hosts the correct values
         sql = "SELECT * FROM qiita.sample_{0}".format(new_id)
@@ -1118,7 +1118,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("sample_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("sample_%s" % new_id))
 
         # The new table hosts the correct values
         sql = "SELECT * FROM qiita.sample_{0}".format(new_id)
@@ -1207,7 +1207,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("sample_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("sample_%s" % new_id))
 
         # The new table hosts the correct values
         sql = "SELECT * FROM qiita.sample_{0}".format(new_id)
@@ -1297,7 +1297,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("sample_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("sample_%s" % new_id))
 
         # The new table hosts the correct values
         sql = "SELECT * FROM qiita.sample_{0}".format(new_id)

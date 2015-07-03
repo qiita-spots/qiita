@@ -425,7 +425,7 @@ class Job(QiitaStatusObject):
         res_ids = [(fp, convert_to_id(fptype, "filepath_type"))
                    for fp, fptype in results]
         file_ids = insert_filepaths(res_ids, self._id, self._table,
-                                    "filepath", conn_handler, move_files=False)
+                                    "filepath", move_files=False)
 
         # associate filepaths with job
         sql = ("INSERT INTO qiita.{0}_results_filepath (job_id, filepath_id) "
