@@ -68,7 +68,7 @@ function checkbox_change() {
 }
 
 function checkbox_action(action) {
-  var boxes = oTable.$(":checkbox", {"page": "all"});
+  var boxes = oTable.$(':checkbox',  {"filter":"applied", "page": "all"});
   if(action == 'check') { boxes.prop('checked',true); }
   else if(action == 'uncheck') { boxes.prop('checked',false); }
   else if(action='invert') { boxes.each( function() {
