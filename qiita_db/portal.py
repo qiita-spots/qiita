@@ -239,7 +239,7 @@ class Portal(QiitaObject):
                       sql, [self._id, tuple(studies)])]
 
         if len(duplicates) > 0:
-            warnings.warn("The following studies area already part of %s: %s" %
+            warnings.warn("The following studies are already part of %s: %s" %
                           (self.portal, ', '.join(map(str, duplicates))),
                           QiitaDBWarning)
 
@@ -247,7 +247,9 @@ class Portal(QiitaObject):
         clean_studies = set(studies).difference(duplicates)
         sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
                  VALUES (%s, %s)"""
-        conn_handler.executemany(sql, [(s, self._id) for s in clean_studies])
+        if len(clean_studies) != 0:
+            conn_handler.executemany(
+                sql, [(s, self._id) for s in clean_studies])
 
     def remove_studies(self, studies):
         """Removes studies from given portal
@@ -359,7 +361,9 @@ class Portal(QiitaObject):
                  (analysis_id, portal_type_id)
                  VALUES (%s, %s)"""
         clean_analyses = set(analyses).difference(duplicates)
-        conn_handler.executemany(sql, [(a, self._id) for a in clean_analyses])
+        if len(clean_analyses) != 0:
+            conn_handler.executemany(
+                sql, [(a, self._id) for a in clean_analyses])
 
     def remove_analyses(self, analyses):
         """Removes analyses from given portal
