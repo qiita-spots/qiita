@@ -1012,12 +1012,11 @@ def get_lat_longs():
         tables_gen = (t[0] for t in TRN.execute_fetchindex())
 
         sql = "SELECT latitude, longitude FROM qiita.{0}"
-        result = []
         idx = TRN.index
         for table in tables_gen:
             TRN.add(sql.format(table))
 
-        return TRN.execute_fetchindex()
+        return list(chain.from_iterable(TRN.execute()[idx:]))
 
 
 def get_environmental_packages():
