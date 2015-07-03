@@ -766,7 +766,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
             filename = basename(fp).split('_', 1)[1]
             destination = path_builder(filename)
 
-            moved_files.append(fp, destination)
+            moved_files.append((fp, destination))
             move(fp, destination)
 
         try:
