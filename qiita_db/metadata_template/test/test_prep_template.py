@@ -139,8 +139,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
-        conn_handler = SQLConnectionHandler()
-        obs = self.tester._get_categories(conn_handler)
+        obs = self.tester._get_categories()
         self.assertEqual(obs, self.exp_categories)
 
     def test_len(self):
