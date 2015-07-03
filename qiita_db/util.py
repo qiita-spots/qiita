@@ -603,7 +603,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
     r"""Inserts `filepaths` in the database.
 
     Since the files live outside the database, the directory in which the files
-    lives is controlled by the database, so it mvoes the filepaths from
+    lives is controlled by the database, so it moves the filepaths from
     its original location to the controlled directory.
 
     Parameters
@@ -674,11 +674,11 @@ def purge_filepaths():
     Raises
     ------
     IOError
-        If any error occurs while removing the fileapths from the file system
+        If any error occurs while removing the fileapths from the filesystem
 
     Notes
     -----
-    This function can potentially leave the DB and the file system out of
+    This function can potentially leave the DB and the filesystem out of
     sync if purge_filepaths is execute inside a bigger transaction. Thus,
     care should be taken when using this function and do not include it in
     a bigger transactions, as it can leave the database pointing to files that
