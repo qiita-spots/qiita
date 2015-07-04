@@ -154,7 +154,7 @@ class BaseData(QiitaObject):
         try:
             # Add the filepaths to the database
             fp_ids = insert_filepaths(filepaths, self._id, self._table,
-                                      self._filepath_table, conn_handler)
+                                      self._filepath_table)
 
             # Connect the raw data with its filepaths
             self._link_data_filepaths(fp_ids, conn_handler)
@@ -721,7 +721,7 @@ class PreprocessedData(BaseData):
 
         # Check that the preprocessed_params_table exists
         if not exists_dynamic_table(preprocessed_params_table, "preprocessed_",
-                                    "_params", conn_handler):
+                                    "_params"):
             raise IncompetentQiitaDeveloperError(
                 "Preprocessed params table '%s' does not exists!"
                 % preprocessed_params_table)
@@ -1246,7 +1246,7 @@ class ProcessedData(BaseData):
 
         # We first check that the processed_params_table exists
         if not exists_dynamic_table(processed_params_table,
-                                    "processed_params_", "", conn_handler):
+                                    "processed_params_", ""):
             raise IncompetentQiitaDeveloperError(
                 "Processed params table %s does not exists!"
                 % processed_params_table)

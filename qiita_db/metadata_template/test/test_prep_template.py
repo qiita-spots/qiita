@@ -890,7 +890,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                     WHERE prep_template_id=%s)"""
         self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
 
-        self.assertFalse(exists_table("prep_%d" % exp_id, self.conn_handler))
+        self.assertFalse(exists_table("prep_%d" % exp_id))
 
     def _common_creation_checks(self, new_id, pt, fp_count):
         # The returned object has the correct id
@@ -939,7 +939,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertItemsEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("prep_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("prep_%s" % new_id))
 
         # The new table hosts the correct values
         obs = [dict(o) for o in self.conn_handler.execute_fetchall(
@@ -1093,7 +1093,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertItemsEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("prep_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("prep_%s" % new_id))
 
         # The new table hosts the correct values
         obs = [dict(o) for o in self.conn_handler.execute_fetchall(

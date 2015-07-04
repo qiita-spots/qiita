@@ -319,7 +319,7 @@ class Study(QiitaObject):
         # make sure dictionary only has keys for available columns in db
         check_table_cols(insertdict, cls._table)
         # make sure reqired columns in dictionary
-        check_required_columns(conn_handler, insertdict, cls._table)
+        check_required_columns(insertdict, cls._table)
 
         # Insert study into database
         sql = ("INSERT INTO qiita.{0} ({1}) VALUES ({2}) RETURNING "
@@ -368,7 +368,7 @@ class Study(QiitaObject):
         cls(id_)
 
         conn_handler = SQLConnectionHandler()
-        if exists_table('sample_%d' % id_, conn_handler):
+        if exists_table('sample_%d' % id_):
             raise QiitaDBError('Study "%s" cannot be erased because it has a '
                                'sample template' % cls(id_).title)
 

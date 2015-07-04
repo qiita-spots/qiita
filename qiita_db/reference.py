@@ -72,22 +72,21 @@ class Reference(QiitaObject):
         seq_id = insert_filepaths([(seqs_fp, convert_to_id("reference_seqs",
                                                            "filepath_type"))],
                                   "%s_%s" % (name, version), "reference",
-                                  "filepath", conn_handler)[0]
+                                  "filepath")[0]
 
         # Check if the database has taxonomy file
         tax_id = None
         if tax_fp:
             fps = [(tax_fp, convert_to_id("reference_tax", "filepath_type"))]
             tax_id = insert_filepaths(fps, "%s_%s" % (name, version),
-                                      "reference", "filepath", conn_handler)[0]
+                                      "reference", "filepath")[0]
 
         # Check if the database has tree file
         tree_id = None
         if tree_fp:
             fps = [(tree_fp, convert_to_id("reference_tree", "filepath_type"))]
             tree_id = insert_filepaths(fps, "%s_%s" % (name, version),
-                                       "reference", "filepath",
-                                       conn_handler)[0]
+                                       "reference", "filepath")[0]
 
         # Insert the actual object to the db
         ref_id = conn_handler.execute_fetchone(
