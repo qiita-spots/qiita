@@ -645,8 +645,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
                     move(old_fp[0], new_fp[0])
                     # In case the transaction executes a rollback, we need to
                     # make sure the files have not been moved
-                    TRN.add_post_rollback_func(
-                        partial(move, new_fp[0], old_fp[0]))
+                    TRN.add_post_rollback_func(move, new_fp, old_fp)
 
         def str_to_id(x):
             return (x if isinstance(x, (int, long))
@@ -713,10 +712,10 @@ def purge_filepaths():
             fp = join(get_mountpoint_path_by_id(dd_id), fp)
             if exists(fp):
                 if fp_type is 'directory':
-                    func = partial(rmtree, fp)
+                    func = rmtree
                 else:
-                    func = partial(remove, fp)
-                TRN.add_post_commit_func(func)
+                    func = remove
+                TRN.add_post_commit_func(func, fp)
 
         TRN.execute()
 
@@ -745,7 +744,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
             filename = basename(fp).split('_', 1)[1]
             destination = path_builder(filename)
 
-            TRN.add_post_rollback_func(partial(move, destination, fp))
+            TRN.add_post_rollback_func(move, destination, fp)
             move(fp, destination)
 
         TRN.execute()

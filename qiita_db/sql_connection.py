@@ -1046,9 +1046,9 @@ class Transaction(object):
 
     def _funcs_executor(self, funcs, func_str):
         error_msg = []
-        for f in funcs:
+        for f, args, kwargs in funcs:
             try:
-                f()
+                f(*args, **kwargs)
             except Exception as e:
                 error_msg.append(str(e))
         # The functions in these two lines are mutually exclusive. When one of
@@ -1105,7 +1105,7 @@ class Transaction(object):
         return len(self._queries) + len(self._results)
 
     @_checker
-    def add_post_commit_func(self, func):
+    def add_post_commit_func(self, func, *args, **kwargs):
         """Adds a post commit function
 
         The function added will be executed after the next commit in the
@@ -1117,16 +1117,15 @@ class Transaction(object):
         ----------
         func : function
             The function to add for the post commit functions
-
-        Notes
-        -----
-        func should not accept any parameter, i.e. it should allow to be
-        invoked as `func()`
+        args : tuple
+            The arguments of the function
+        kwargs : dict
+            The keyword arguments of the function
         """
-        self._post_commit_funcs.append(func)
+        self._post_commit_funcs.append((func, args, kwargs))
 
     @_checker
-    def add_post_rollback_func(self, func):
+    def add_post_rollback_func(self, func, *args, **kwargs):
         """Adds a post rollback function
 
         The function added will be executed after the next rollback in the
@@ -1138,13 +1137,12 @@ class Transaction(object):
         ----------
         func : function
             The function to add for the post rollback functions
-
-        Notes
-        -----
-        func should not accept any parameter, i.e. it should allow to be
-        invoked as `func()`
+        args : tuple
+            The arguments of the function
+        kwargs : dict
+            The keyword arguments of the function
         """
-        self._post_rollback_funcs.append(func)
+        self._post_rollback_funcs.append((func, args, kwargs))
 
 # Singleton pattern, create the transaction for the entire system
 TRN = Transaction()

@@ -841,11 +841,9 @@ class TestTransaction(TestBase):
             with open(fp, 'w') as f:
                 f.write('\n')
 
-        f1 = partial(func, fp)
-
         with TRN:
             TRN.add("SELECT 42")
-            TRN.add_post_commit_func(f1)
+            TRN.add_post_commit_func(func, fp)
 
         self.assertTrue(exists(fp))
 
@@ -867,11 +865,9 @@ class TestTransaction(TestBase):
             with open(fp, 'w') as f:
                 f.write('\n')
 
-        f1 = partial(func, fp)
-
         with TRN:
             TRN.add("SELECT 42")
-            TRN.add_post_rollback_func(f1)
+            TRN.add_post_rollback_func(func, fp)
             TRN.rollback()
 
         self.assertTrue(exists(fp))
