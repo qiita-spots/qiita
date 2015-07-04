@@ -81,6 +81,9 @@ $(document).ready(function() {
   oTable = $('#info-table').dataTable({
     "deferRender": true,
     "iDisplayLength": 50,
+    "oLanguage": {
+      "sZeroRecords": "No studies belong to selected portal"
+    },
     "columns": [
       {"className": 'select', "data": null},
       {% for h in headers %}

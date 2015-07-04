@@ -26,10 +26,13 @@ class PortalEditBase(BaseHandler):
 
     def get_info(self, portal="QIITA"):
         # Add the portals and, optionally, checkbox to the information
-        studies = Study.get_info(Portal(portal).get_studies(),
-                                 info_cols=self.study_cols)
+        studies = Portal(portal).get_studies()
+        if not studies:
+            return []
+
+        study_info = Study.get_info(studies, info_cols=self.study_cols)
         info = []
-        for s in studies:
+        for s in study_info:
             # Make sure in correct order
             hold = dict(s)
             hold['portals'] = ', '.join(sorted(Study(s['study_id'])._portals))
