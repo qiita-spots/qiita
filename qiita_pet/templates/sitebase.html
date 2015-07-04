@@ -1,4 +1,5 @@
 {% from moi import r_client %}
+{% from qiita_core.qiita_settings import qiita_config %}
 {% from qiita_pet import allowed_min_browser_versions %}
 {% from qiita_pet.portal import portal_styling %}
 {% set maintenance = r_client.get('maintenance') %}
@@ -145,6 +146,9 @@
               <ul class="dropdown-menu">
                 <li><a href="/admin/error/">View Errors</a></li>
                 <li><a href="/admin/approval/">View Studies awaiting approval</a></li>
+                {% if qiita_config.portal == "QIITA" %}
+                <li><a href="/admin/portals/studies/">Edit study portal connections</a></li>
+                {% end %}
               </ul>
             </li>
               {% elif user_level == 'dev' %}

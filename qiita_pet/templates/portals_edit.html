@@ -1,0 +1,164 @@
+{% extends sitebase.html%}
+
+{%block head%}
+<link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+<style type="text/css">
+  .navlist li
+  {
+    display: inline;
+    padding-right: 20px;
+  }
+  .portal-select {
+    width: 15em;
+  }
+  .alert {
+    position: fixed;
+    top: 55px;
+    left:40%;
+    z-index:100;
+    white-space: nowrap;
+  }
+</style>
+<script src="/static/vendor/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+function check_submit(action) {
+  //disable submit buttons
+  $("#add-button").prop('disabled', true);
+  $("#remove-button").prop('disabled', true);
+  $("#messages").html("");
+  var errors = "";
+  if($("#portal").val() === '') {
+    //No selected portal, so add error message if needed and then don't submit
+    if(!$('#portal-error').length) { errors += "Please select a portal<br/>"; }
+  }
+  var boxes = oTable.$(".selected:checked", {"page": "all"});
+  //serialize the checked boxes
+  var data = "";
+  for(i=0;i<boxes.length;i++) {
+    data += "&selected="+boxes[i].value;
+  }
+  if(data.length === 0) {
+    //No checked rows, so add error message if needed and then don't submit
+    if(!$('#checkbox-error').length) { errors += "Please select at least one row<br/>"; }
+  }
+  if(errors.length > 0) {
+    $("#add-button").prop('disabled', false);
+    $("#remove-button").prop('disabled', false);
+    bootstrapAlert(errors, "danger", 1900);
+    return false;
+  }
+  $('#action').val(action);
+  data = $('#portal-form').serialize() + data;
+  $.post('{{submit_url}}', data, function(data,textStatus,jqXHR){
+    $("#add-button").prop('disabled', false);
+    $("#remove-button").prop('disabled', false);
+    var echo = "?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=" + $("#view-portal").val();
+    $('#info-table').DataTable().ajax.url("/admin/portals/studiesAJAX/" + echo).load();
+    bootstrapAlert(data, "success", 1900);
+    $("#portal").val('');
+  });
+}
+
+function render_checkbox(data, type, full) {
+  return "<input type='checkbox' class='selected' onclick='checkbox_change()' value='" + full['study_id'] + "' />";
+}
+
+function checkbox_change() {
+  $("#checkbox-error").remove();
+}
+
+function checkbox_action(action) {
+  var boxes = oTable.$(':checkbox',  {"filter":"applied", "page": "all"});
+  if(action == 'check') { boxes.prop('checked',true); }
+  else if(action == 'uncheck') { boxes.prop('checked',false); }
+  else if(action='invert') { boxes.each( function() {
+    $(this).is(':checked') ? $(this).prop('checked',false) : $(this).prop('checked',true);
+  });}
+  return false;
+}
+
+$(document).ready(function() {
+  oTable = $('#info-table').dataTable({
+    "deferRender": true,
+    "iDisplayLength": 50,
+    "oLanguage": {
+      "sZeroRecords": "No studies belong to selected portal"
+    },
+    "columns": [
+      {"className": 'select', "data": null},
+      {% for h in headers %}
+      {"data": "{{h}}"},
+      {% end %}
+    ],
+    'aoColumnDefs': [
+      { 'mRender': render_checkbox, 'mData': 2, 'aTargets': [ 0 ] }
+    ],
+    "ajax": {
+      "url": "/admin/portals/studiesAJAX/?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=QIITA",
+      "aoColumns": [
+        {"sSortDataType": "dom-checkbox", "bSearchable": false, "bSortable": false},
+        {% for h in headers %}
+        {"data": "{{h}}"},
+        {% end %}
+      ],
+      "error": function(jqXHR, textStatus, ex) {
+          $("#add-button").prop('disabled', true);
+          $("#remove-button").prop('disabled', true);
+          $("#errors").append("<li id='comm-error'>Internal Server Error, please try again later</li>");
+      }
+    }
+  });
+
+  $('#portal').change(function(){
+        $("#portal-error").remove();
+    });
+
+  $('#view-portal').change(function() {
+    var echo = "?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=" + $("#view-portal").val();
+    $('#info-table').DataTable().ajax.url("/admin/portals/studiesAJAX/" + echo).load();
+  });
+});
+</script>
+{%end%}
+
+{%block content%}
+<div class="row topfloat">
+  <div class='col-lg-12'>
+    <span style="float:right"><b>View from portal:</b>
+      <select name="view-portal" id="view-portal" class="portal-select">
+        <option value="QIITA">QIITA</option>
+        {% for portal in portals %}
+        <option value="{{portal}}">{{portal}}</option>
+        {% end %}
+      </select>
+    </span>
+        <form role="form" id="portal-form">
+        <select name="portal" id="portal" class="portal-select">
+          <option value="">Select Portal...</option>
+          {% for portal in portals %}
+          <option value="{{portal}}">{{portal}}</option>
+          {% end %}
+        </select>
+        <input type="hidden" name="action" id="action" value="">
+        <input type="button" id="add-button" value="Add" class="btn btn-sm btn-success" onclick="check_submit('Add')"> <input type="button" id="remove-button" value="Remove" class="btn btn-sm btn-danger" onclick="check_submit('Remove')">
+        </form>
+  </div>
+</div>
+<div class='row' style="margin-top:50px">
+  <div class='col-lg-12'>
+    <input type=button onclick="checkbox_action('check')"  class="btn btn-xs btn-info" value="Select All"> | <input type=button onclick="checkbox_action('uncheck')"  class="btn btn-xs btn-info" value="Select None"> | <input type=button onclick="checkbox_action('inverse')"  class="btn btn-xs btn-info" value="Select Inverse"><br/>
+    <table id="info-table" class="table">
+    <thead>
+      <tr>
+        <td>Select</td>
+        {% for head in headers %}
+        <td>{{head}}</td>
+        {% end %}
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+    </table>
+  </div>
+</div>
+{% end %}

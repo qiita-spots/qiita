@@ -248,7 +248,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
         sql = """INSERT INTO qiita.analysis_portal
                  (analysis_id, portal_type_id)
                  VALUES (%s, %s)"""
-        conn.execute_many(sql, args)
+        conn.executemany(sql, args)
 
         print('Demo user successfully created')
 
