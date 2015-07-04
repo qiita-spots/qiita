@@ -638,8 +638,8 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
             # alrady exists on the DB
             db_path = partial(join, base_fp)
             new_filepaths = [
-                (db_path("%s_%s" % (obj_id, basename(path))), id)
-                for path, id in filepaths]
+                (db_path("%s_%s" % (obj_id, basename(path))), id_)
+                for path, id_ in filepaths]
             # Move the original files to the controlled DB directory
             for old_fp, new_fp in zip(filepaths, new_filepaths):
                     move(old_fp[0], new_fp[0])
@@ -647,9 +647,9 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
         def str_to_id(x):
             return (x if isinstance(x, (int, long))
                     else convert_to_id(x, "filepath_type"))
-        paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
+        paths_w_checksum = [(relpath(path, base_fp), str_to_id(id_),
                             compute_checksum(path))
-                            for path, id in new_filepaths]
+                            for path, id_ in new_filepaths]
         # Create the list of SQL values to add
         values = [[path, pid, checksum, 1, dd_id]
                   for path, pid, checksum in paths_w_checksum]
@@ -679,7 +679,7 @@ def purge_filepaths():
     Notes
     -----
     This function can potentially leave the DB and the filesystem out of
-    sync if purge_filepaths is execute inside a bigger transaction. Thus,
+    sync if purge_filepaths is executed inside a bigger transaction. Thus,
     care should be taken when using this function and do not include it in
     a bigger transactions, as it can leave the database pointing to files that
     no longer exist.
@@ -1081,7 +1081,7 @@ def check_access_to_analysis_result(user_id, requested_path):
                     SELECT analysis_id FROM qiita.analysis_users
                     WHERE email = %s
                     UNION
-                    select analysis_id FROM qiita.analysis WHERE email = %s
+                    SELECT analysis_id FROM qiita.analysis WHERE email = %s
                  ) ids ON aj.analysis_id = ids.analysis_id
                  JOIN qiita.job_results_filepath jrfp ON
                     aj.job_id = jrfp.job_id
