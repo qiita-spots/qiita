@@ -705,6 +705,26 @@ class TestTransaction(TestBase):
             TRN.add(sql, args, many=True)
             self.assertEqual(TRN.execute_fetchindex(3), [['insert4', 4]])
 
+    def test_execute_fetchflatten(self):
+        with TRN:
+            sql = """INSERT INTO qiita.test_table (str_column, int_column)
+                     VALUES (%s, %s)"""
+            args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
+            TRN.add(sql, args, many=True)
+
+            sql = "SELECT str_column, int_column FROM qiita.test_table"
+            TRN.add(sql)
+
+            sql = "SELECT int_column FROM qiita.test_table"
+            TRN.add(sql)
+            obs = TRN.execute_fetchflatten()
+            self.assertEqual(obs, [1, 2, 3])
+
+            sql = "SELECT 42"
+            TRN.add(sql)
+            obs = TRN.execute_fetchflatten(idx=3)
+            self.assertEqual(obs, ['insert1', 1, 'insert2', 2, 'insert3', 3])
+
     def test_context_manager_rollback(self):
         try:
             with TRN:
@@ -812,7 +832,7 @@ class TestTransaction(TestBase):
             TRN._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
 
-    def test_post_commit_cmds(self):
+    def test_post_commit_funcs(self):
         fd, fp = mkstemp()
         close(fd)
         self._files_to_remove.append(fp)
@@ -829,7 +849,7 @@ class TestTransaction(TestBase):
 
         self.assertTrue(exists(fp))
 
-    def test_post_commit_cmds_error(self):
+    def test_post_commit_funcs_error(self):
         def func():
             raise ValueError()
 
@@ -838,7 +858,7 @@ class TestTransaction(TestBase):
                 TRN.add("SELECT 42")
                 TRN.add_post_commit_func(func)
 
-    def test_post_rollback_cmds(self):
+    def test_post_rollback_funcs(self):
         fd, fp = mkstemp()
         close(fd)
         self._files_to_remove.append(fp)
@@ -856,7 +876,7 @@ class TestTransaction(TestBase):
 
         self.assertTrue(exists(fp))
 
-    def test_post_rollback_cmds_error(self):
+    def test_post_rollback_funcs_error(self):
         def func():
             raise ValueError()
 

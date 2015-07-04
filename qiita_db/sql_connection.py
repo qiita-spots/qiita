@@ -963,6 +963,7 @@ class Transaction(object):
         --------
         execute_fetchlast
         execute_fetchindex
+        execute_fetchflatten
         """
         try:
             return self._execute()
@@ -986,6 +987,7 @@ class Transaction(object):
         --------
         execute
         execute_fetchindex
+        execute_fetchflatten
         """
         return self.execute()[-1][0][0]
 
@@ -1011,14 +1013,42 @@ class Transaction(object):
         --------
         execute
         execute_fetchlast
+        execute_fetchflatten
         """
         return self.execute()[idx]
 
-    def _funcs_executor(self, cmds, func_str):
+    @_checker
+    def execute_fetchflatten(self, idx=-1):
+        """Executes the transaction and returns the flattened results of the
+        `idx` query
+
+        This is a convenient function that is equivalen to
+        `chain.from_iterable(self.execute()[idx])`
+
+        Parameters
+        ----------
+        idx : int, optional
+            The index of the query to return the result. It defaults to -1, the
+            last query.
+
+        Returns
+        -------
+        list of objects
+            The flattened results of the `idx` query
+
+        See Also
+        --------
+        execute
+        execute_fetchlast
+        execute_fetchindex
+        """
+        return list(chain.from_iterable(self.execute()[idx]))
+
+    def _funcs_executor(self, funcs, func_str):
         error_msg = []
-        for cmd in cmds:
+        for f in funcs:
             try:
-                cmd()
+                f()
             except Exception as e:
                 error_msg.append(str(e))
         # The functions in these two lines are mutually exclusive. When one of
