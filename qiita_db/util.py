@@ -320,7 +320,7 @@ def check_table_cols(keys, table):
         sql = """SELECT column_name FROM information_schema.columns
                  WHERE table_name = %s"""
         TRN.add(sql, [table])
-        cols = [x[0] for x in TRN.execute()[-1]]
+        cols = TRN.execute_fetchflatten()
         # Test needed because a user with certain permissions can query without
         # error but be unable to get the column names
         if len(cols) == 0:
@@ -348,7 +348,7 @@ def get_table_cols(table):
         sql = """SELECT column_name FROM information_schema.columns
                  WHERE table_name=%s AND table_schema='qiita'"""
         TRN.add(sql, [table])
-        return [h[0] for h in TRN.execute_fetchindex()]
+        return TRN.execute_fetchflatten()
 
 
 def get_table_cols_w_type(table):
@@ -949,7 +949,7 @@ def get_preprocessed_params_tables():
                                            'preprocessed_processed_data')
                  ORDER BY table_name"""
         TRN.add(sql)
-        return [row[0] for row in TRN.execute_fetchindex()]
+        return TRN.execute_fetchflatten()
 
 
 def get_processed_params_tables():
@@ -965,7 +965,7 @@ def get_processed_params_tables():
                     AND SUBSTR(table_name, 1, 17) = 'processed_params_'
                  ORDER BY table_name"""
         TRN.add(sql)
-        return [row[0] for row in TRN.execute_fetchindex()]
+        return TRN.execute_fetchflatten()
 
 
 def get_lat_longs():
@@ -983,11 +983,10 @@ def get_lat_longs():
                     AND table_schema = 'qiita'
                     AND column_name IN ('latitude', 'longitude');"""
         TRN.add(sql)
-        tables_gen = (t[0] for t in TRN.execute_fetchindex())
 
         sql = "SELECT latitude, longitude FROM qiita.{0}"
         idx = TRN.index
-        for table in tables_gen:
+        for table in TRN.execute_fetchflatten():
             TRN.add(sql.format(table))
 
         return list(chain.from_iterable(TRN.execute()[idx:]))
@@ -1063,7 +1062,7 @@ def check_access_to_analysis_result(user_id, requested_path):
                  WHERE fp.filepath = %s"""
         TRN.add(sql, [user_id, user_id, requested_path])
 
-        return [row[0] for row in TRN.execute_fetchindex()]
+        return TRN.execute_fetchflatten()
 
 
 def infer_status(statuses):
