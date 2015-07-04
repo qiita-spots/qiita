@@ -829,6 +829,15 @@ class TestTransaction(TestBase):
 
         self.assertTrue(exists(fp))
 
+    def test_post_commit_cmds_error(self):
+        def func():
+            raise ValueError()
+
+        with self.assertRaises(RuntimeError):
+            with TRN:
+                TRN.add("SELECT 42")
+                TRN.add_post_commit_func(func)
+
     def test_post_rollback_cmds(self):
         fd, fp = mkstemp()
         close(fd)
@@ -846,6 +855,16 @@ class TestTransaction(TestBase):
             TRN.rollback()
 
         self.assertTrue(exists(fp))
+
+    def test_post_rollback_cmds_error(self):
+        def func():
+            raise ValueError()
+
+        with self.assertRaises(RuntimeError):
+            with TRN:
+                TRN.add("SELECT 42")
+                TRN.add_post_rollback_func(func)
+                TRN.rollback()
 
     def test_context_manager_checker(self):
         with self.assertRaises(RuntimeError):

@@ -1014,7 +1014,7 @@ class Transaction(object):
         """
         return self.execute()[idx]
 
-    def _cmds_executor(self, cmds, func_str):
+    def _funcs_executor(self, cmds, func_str):
         error_msg = []
         for cmd in cmds:
             try:
@@ -1045,8 +1045,8 @@ class Transaction(object):
         except Exception:
             self._connection.close()
             raise
-        # Execute the post commit commands
-        self._cmds_executor(self._post_commit_funcs, "commit")
+        # Execute the post commit functions
+        self._funcs_executor(self._post_commit_funcs, "commit")
 
     @_checker
     def rollback(self):
@@ -1065,8 +1065,8 @@ class Transaction(object):
         except Exception:
             self._connection.close()
             raise
-        # Execute the post rollback commands
-        self._cmds_executor(self._post_rollback_funcs, "rollback")
+        # Execute the post rollback functions
+        self._funcs_executor(self._post_rollback_funcs, "rollback")
 
     @property
     def index(self):
@@ -1074,12 +1074,17 @@ class Transaction(object):
 
     @_checker
     def add_post_commit_func(self, func):
-        """Adds a post commit command
+        """Adds a post commit function
+
+        The function added will be executed after the next commit in the
+        transaction, unless a rollback is executed. This is useful, for
+        example, to perform some filesystem clean up once the transaction is
+        committed.
 
         Parameters
         ----------
         func : function
-            The function to add for the post commit commands
+            The function to add for the post commit functions
 
         Notes
         -----
@@ -1090,12 +1095,17 @@ class Transaction(object):
 
     @_checker
     def add_post_rollback_func(self, func):
-        """Adds a post rollback command
+        """Adds a post rollback function
+
+        The function added will be executed after the next rollback in the
+        transaction, unless a commit is executed. This is useful, for example,
+        to restore the filesystem in case a rollback occurs, avoiding leaving
+        the database and the filesystem in an out of sync state.
 
         Parameters
         ----------
         func : function
-            The function to add for the post rollback commands
+            The function to add for the post rollback functions
 
         Notes
         -----
