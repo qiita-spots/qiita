@@ -1021,6 +1021,8 @@ class Transaction(object):
                 cmd()
             except Exception as e:
                 error_msg.append(str(e))
+        # The functions in these two lines are mutually exclusive. When one of
+        # them is executed, we can restore both of them.
         self._post_commit_funcs = []
         self._post_rollback_funcs = []
         if error_msg:
