@@ -674,6 +674,8 @@ class Transaction(object):
         self._results = []
         self._contexts_entered = 0
         self._connection = None
+        self._post_commit_funcs = []
+        self._post_rollback_funcs = []
 
     def _open_connection(self):
         # If the connection already exists and is not closed, don't do anything
@@ -1012,6 +1014,20 @@ class Transaction(object):
         """
         return self.execute()[idx]
 
+    def _cmds_executor(self, cmds, func_str):
+        error_msg = []
+        for cmd in cmds:
+            try:
+                cmd()
+            except Exception as e:
+                error_msg.append(str(e))
+        self._post_commit_funcs = []
+        self._post_rollback_funcs = []
+        if error_msg:
+            raise RuntimeError(
+                "An error occurred during the post %s commands:\n%s"
+                % (func_str, "\n".join(error_msg)))
+
     @_checker
     def commit(self):
         """Commits the transaction and reset the queries
@@ -1029,6 +1045,8 @@ class Transaction(object):
         except Exception:
             self._connection.close()
             raise
+        # Execute the post commit commands
+        self._cmds_executor(self._post_commit_funcs, "commit")
 
     @_checker
     def rollback(self):
@@ -1047,10 +1065,44 @@ class Transaction(object):
         except Exception:
             self._connection.close()
             raise
+        # Execute the post rollback commands
+        self._cmds_executor(self._post_rollback_funcs, "rollback")
 
     @property
     def index(self):
         return len(self._queries) + len(self._results)
+
+    @_checker
+    def add_post_commit_func(self, func):
+        """Adds a post commit command
+
+        Parameters
+        ----------
+        func : function
+            The function to add for the post commit commands
+
+        Notes
+        -----
+        func should not accept any parameter, i.e. it should allow to be
+        invoked as `func()`
+        """
+        self._post_commit_funcs.append(func)
+
+    @_checker
+    def add_post_rollback_func(self, func):
+        """Adds a post rollback command
+
+        Parameters
+        ----------
+        func : function
+            The function to add for the post rollback commands
+
+        Notes
+        -----
+        func should not accept any parameter, i.e. it should allow to be
+        invoked as `func()`
+        """
+        self._post_rollback_funcs.append(func)
 
 # Singleton pattern, create the transaction for the entire system
 TRN = Transaction()

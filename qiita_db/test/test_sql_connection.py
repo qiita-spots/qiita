@@ -1,4 +1,8 @@
 from unittest import TestCase, main
+from os import remove, close
+from os.path import exists
+from tempfile import mkstemp
+from functools import partial
 
 from psycopg2._psycopg import connection
 from psycopg2.extras import DictCursor
@@ -27,6 +31,12 @@ class TestBase(TestCase):
                      database=qiita_config.database) as con:
             with con.cursor() as cur:
                 cur.execute(DB_TEST_TABLE)
+        self._files_to_remove = []
+
+    def tearDown(self):
+        for fp in self._files_to_remove:
+            if exists(fp):
+                remove(fp)
 
     def _populate_test_table(self):
         """Aux function that populates the test table"""
@@ -801,6 +811,41 @@ class TestTransaction(TestBase):
         self.assertEqual(
             TRN._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
+
+    def test_post_commit_cmds(self):
+        fd, fp = mkstemp()
+        close(fd)
+        self._files_to_remove.append(fp)
+
+        def func(fp):
+            with open(fp, 'w') as f:
+                f.write('\n')
+
+        f1 = partial(func, fp)
+
+        with TRN:
+            TRN.add("SELECT 42")
+            TRN.add_post_commit_func(f1)
+
+        self.assertTrue(exists(fp))
+
+    def test_post_rollback_cmds(self):
+        fd, fp = mkstemp()
+        close(fd)
+        self._files_to_remove.append(fp)
+
+        def func(fp):
+            with open(fp, 'w') as f:
+                f.write('\n')
+
+        f1 = partial(func, fp)
+
+        with TRN:
+            TRN.add("SELECT 42")
+            TRN.add_post_rollback_func(f1)
+            TRN.rollback()
+
+        self.assertTrue(exists(fp))
 
     def test_context_manager_checker(self):
         with self.assertRaises(RuntimeError):
