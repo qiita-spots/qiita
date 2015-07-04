@@ -643,6 +643,10 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
             # Move the original files to the controlled DB directory
             for old_fp, new_fp in zip(filepaths, new_filepaths):
                     move(old_fp[0], new_fp[0])
+                    # In case the transaction executes a rollback, we need to
+                    # make sure the files have not been moved
+                    TRN.add_post_rollback_func(
+                        partial(move, new_fp[0], old_fp[0]))
 
         def str_to_id(x):
             return (x if isinstance(x, (int, long))
@@ -670,19 +674,6 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
 def purge_filepaths():
     r"""Goes over the filepath table and remove all the filepaths that are not
     used in any place
-
-    Raises
-    ------
-    IOError
-        If any error occurs while removing the fileapths from the filesystem
-
-    Notes
-    -----
-    This function can potentially leave the DB and the filesystem out of
-    sync if purge_filepaths is executed inside a bigger transaction. Thus,
-    care should be taken when using this function and do not include it in
-    a bigger transactions, as it can leave the database pointing to files that
-    no longer exist.
     """
     with TRN:
         # Get all the (table, column) pairs that reference to the filepath
@@ -715,7 +706,6 @@ def purge_filepaths():
 
         # We can now go over and remove all the filepaths
         sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
-        funcs = []
         for fp_id, fp, fp_type, dd_id in TRN.execute_fetchindex():
             TRN.add(sql, [fp_id])
 
@@ -723,22 +713,12 @@ def purge_filepaths():
             fp = join(get_mountpoint_path_by_id(dd_id), fp)
             if exists(fp):
                 if fp_type is 'directory':
-                    funcs.append(partial(rmtree, fp))
+                    func = partial(rmtree, fp)
                 else:
-                    funcs.append(partial(remove, fp))
+                    func = partial(remove, fp)
+                TRN.add_post_commit_func(func)
 
         TRN.execute()
-    # Now that the filepaths have been removed from the DB, we can go and
-    # remove them from the file system
-    error_msg = []
-    for f in funcs:
-        try:
-            f()
-        except Exception as e:
-            error_msg.append(str(e))
-    if error_msg:
-        raise IOError("An error occurred while purging filepaths:\n\t%s"
-                      % "\n\t".join(error_msg))
 
 
 def move_filepaths_to_upload_folder(study_id, filepaths):
@@ -758,7 +738,6 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
 
         # We can now go over and remove all the filepaths
         sql = """DELETE FROM qiita.filepath WHERE filepath_id=%s"""
-        moved_files = []
         for fp_id, fp, _ in filepaths:
             TRN.add(sql, [fp_id])
 
@@ -766,15 +745,10 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
             filename = basename(fp).split('_', 1)[1]
             destination = path_builder(filename)
 
-            moved_files.append((fp, destination))
+            TRN.add_post_rollback_func(partial(move, destination, fp))
             move(fp, destination)
 
-        try:
-            TRN.execute()
-        except Exception:
-            # Undo the moving of the files
-            for dest, src in moved_files:
-                move(src, dest)
+        TRN.execute()
 
 
 def get_filepath_id(table, fp):
