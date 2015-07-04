@@ -320,7 +320,7 @@ def check_table_cols(keys, table):
         sql = """SELECT column_name FROM information_schema.columns
                  WHERE table_name = %s"""
         TRN.add(sql, [table])
-        cols = [x[0] for x in TRN.execute()[-1]]
+        cols = TRN.execute_fetchflatten()
         # Test needed because a user with certain permissions can query without
         # error but be unable to get the column names
         if len(cols) == 0:
@@ -348,7 +348,7 @@ def get_table_cols(table):
         sql = """SELECT column_name FROM information_schema.columns
                  WHERE table_name=%s AND table_schema='qiita'"""
         TRN.add(sql, [table])
-        return [h[0] for h in TRN.execute_fetchindex()]
+        return TRN.execute_fetchflatten()
 
 
 def get_table_cols_w_type(table):
@@ -638,18 +638,21 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
             # alrady exists on the DB
             db_path = partial(join, base_fp)
             new_filepaths = [
-                (db_path("%s_%s" % (obj_id, basename(path))), id)
-                for path, id in filepaths]
+                (db_path("%s_%s" % (obj_id, basename(path))), id_)
+                for path, id_ in filepaths]
             # Move the original files to the controlled DB directory
             for old_fp, new_fp in zip(filepaths, new_filepaths):
                     move(old_fp[0], new_fp[0])
+                    # In case the transaction executes a rollback, we need to
+                    # make sure the files have not been moved
+                    TRN.add_post_rollback_func(move, new_fp, old_fp)
 
         def str_to_id(x):
             return (x if isinstance(x, (int, long))
                     else convert_to_id(x, "filepath_type"))
-        paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
+        paths_w_checksum = [(relpath(path, base_fp), str_to_id(id_),
                             compute_checksum(path))
-                            for path, id in new_filepaths]
+                            for path, id_ in new_filepaths]
         # Create the list of SQL values to add
         values = [[path, pid, checksum, 1, dd_id]
                   for path, pid, checksum in paths_w_checksum]
@@ -670,19 +673,6 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
 def purge_filepaths():
     r"""Goes over the filepath table and remove all the filepaths that are not
     used in any place
-
-    Raises
-    ------
-    IOError
-        If any error occurs while removing the fileapths from the filesystem
-
-    Notes
-    -----
-    This function can potentially leave the DB and the filesystem out of
-    sync if purge_filepaths is execute inside a bigger transaction. Thus,
-    care should be taken when using this function and do not include it in
-    a bigger transactions, as it can leave the database pointing to files that
-    no longer exist.
     """
     with TRN:
         # Get all the (table, column) pairs that reference to the filepath
@@ -715,7 +705,6 @@ def purge_filepaths():
 
         # We can now go over and remove all the filepaths
         sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
-        funcs = []
         for fp_id, fp, fp_type, dd_id in TRN.execute_fetchindex():
             TRN.add(sql, [fp_id])
 
@@ -723,22 +712,12 @@ def purge_filepaths():
             fp = join(get_mountpoint_path_by_id(dd_id), fp)
             if exists(fp):
                 if fp_type is 'directory':
-                    funcs.append(partial(rmtree, fp))
+                    func = rmtree
                 else:
-                    funcs.append(partial(remove, fp))
+                    func = remove
+                TRN.add_post_commit_func(func, fp)
 
         TRN.execute()
-    # Now that the filepaths have been removed from the DB, we can go and
-    # remove them from the file system
-    error_msg = []
-    for f in funcs:
-        try:
-            f()
-        except Exception as e:
-            error_msg.append(str(e))
-    if error_msg:
-        raise IOError("An error occurred while purging filepaths:\n\t%s"
-                      % "\n\t".join(error_msg))
 
 
 def move_filepaths_to_upload_folder(study_id, filepaths):
@@ -758,7 +737,6 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
 
         # We can now go over and remove all the filepaths
         sql = """DELETE FROM qiita.filepath WHERE filepath_id=%s"""
-        moved_files = []
         for fp_id, fp, _ in filepaths:
             TRN.add(sql, [fp_id])
 
@@ -766,15 +744,10 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
             filename = basename(fp).split('_', 1)[1]
             destination = path_builder(filename)
 
-            moved_files.append((fp, destination))
+            TRN.add_post_rollback_func(move, destination, fp)
             move(fp, destination)
 
-        try:
-            TRN.execute()
-        except Exception:
-            # Undo the moving of the files
-            for dest, src in moved_files:
-                move(src, dest)
+        TRN.execute()
 
 
 def get_filepath_id(table, fp):
@@ -975,7 +948,7 @@ def get_preprocessed_params_tables():
                                            'preprocessed_processed_data')
                  ORDER BY table_name"""
         TRN.add(sql)
-        return [row[0] for row in TRN.execute_fetchindex()]
+        return TRN.execute_fetchflatten()
 
 
 def get_processed_params_tables():
@@ -991,7 +964,7 @@ def get_processed_params_tables():
                     AND SUBSTR(table_name, 1, 17) = 'processed_params_'
                  ORDER BY table_name"""
         TRN.add(sql)
-        return [row[0] for row in TRN.execute_fetchindex()]
+        return TRN.execute_fetchflatten()
 
 
 def get_lat_longs():
@@ -1009,11 +982,10 @@ def get_lat_longs():
                     AND table_schema = 'qiita'
                     AND column_name IN ('latitude', 'longitude');"""
         TRN.add(sql)
-        tables_gen = (t[0] for t in TRN.execute_fetchindex())
 
         sql = "SELECT latitude, longitude FROM qiita.{0}"
         idx = TRN.index
-        for table in tables_gen:
+        for table in TRN.execute_fetchflatten():
             TRN.add(sql.format(table))
 
         return list(chain.from_iterable(TRN.execute()[idx:]))
@@ -1081,7 +1053,7 @@ def check_access_to_analysis_result(user_id, requested_path):
                     SELECT analysis_id FROM qiita.analysis_users
                     WHERE email = %s
                     UNION
-                    select analysis_id FROM qiita.analysis WHERE email = %s
+                    SELECT analysis_id FROM qiita.analysis WHERE email = %s
                  ) ids ON aj.analysis_id = ids.analysis_id
                  JOIN qiita.job_results_filepath jrfp ON
                     aj.job_id = jrfp.job_id
@@ -1089,7 +1061,7 @@ def check_access_to_analysis_result(user_id, requested_path):
                  WHERE fp.filepath = %s"""
         TRN.add(sql, [user_id, user_id, requested_path])
 
-        return [row[0] for row in TRN.execute_fetchindex()]
+        return TRN.execute_fetchflatten()
 
 
 def infer_status(statuses):

@@ -674,6 +674,8 @@ class Transaction(object):
         self._results = []
         self._contexts_entered = 0
         self._connection = None
+        self._post_commit_funcs = []
+        self._post_rollback_funcs = []
 
     def _open_connection(self):
         # If the connection already exists and is not closed, don't do anything
@@ -961,6 +963,7 @@ class Transaction(object):
         --------
         execute_fetchlast
         execute_fetchindex
+        execute_fetchflatten
         """
         try:
             return self._execute()
@@ -984,6 +987,7 @@ class Transaction(object):
         --------
         execute
         execute_fetchindex
+        execute_fetchflatten
         """
         return self.execute()[-1][0][0]
 
@@ -1009,8 +1013,52 @@ class Transaction(object):
         --------
         execute
         execute_fetchlast
+        execute_fetchflatten
         """
         return self.execute()[idx]
+
+    @_checker
+    def execute_fetchflatten(self, idx=-1):
+        """Executes the transaction and returns the flattened results of the
+        `idx` query
+
+        This is a convenient function that is equivalen to
+        `chain.from_iterable(self.execute()[idx])`
+
+        Parameters
+        ----------
+        idx : int, optional
+            The index of the query to return the result. It defaults to -1, the
+            last query.
+
+        Returns
+        -------
+        list of objects
+            The flattened results of the `idx` query
+
+        See Also
+        --------
+        execute
+        execute_fetchlast
+        execute_fetchindex
+        """
+        return list(chain.from_iterable(self.execute()[idx]))
+
+    def _funcs_executor(self, funcs, func_str):
+        error_msg = []
+        for f, args, kwargs in funcs:
+            try:
+                f(*args, **kwargs)
+            except Exception as e:
+                error_msg.append(str(e))
+        # The functions in these two lines are mutually exclusive. When one of
+        # them is executed, we can restore both of them.
+        self._post_commit_funcs = []
+        self._post_rollback_funcs = []
+        if error_msg:
+            raise RuntimeError(
+                "An error occurred during the post %s commands:\n%s"
+                % (func_str, "\n".join(error_msg)))
 
     @_checker
     def commit(self):
@@ -1029,6 +1077,8 @@ class Transaction(object):
         except Exception:
             self._connection.close()
             raise
+        # Execute the post commit functions
+        self._funcs_executor(self._post_commit_funcs, "commit")
 
     @_checker
     def rollback(self):
@@ -1047,10 +1097,52 @@ class Transaction(object):
         except Exception:
             self._connection.close()
             raise
+        # Execute the post rollback functions
+        self._funcs_executor(self._post_rollback_funcs, "rollback")
 
     @property
     def index(self):
         return len(self._queries) + len(self._results)
+
+    @_checker
+    def add_post_commit_func(self, func, *args, **kwargs):
+        """Adds a post commit function
+
+        The function added will be executed after the next commit in the
+        transaction, unless a rollback is executed. This is useful, for
+        example, to perform some filesystem clean up once the transaction is
+        committed.
+
+        Parameters
+        ----------
+        func : function
+            The function to add for the post commit functions
+        args : tuple
+            The arguments of the function
+        kwargs : dict
+            The keyword arguments of the function
+        """
+        self._post_commit_funcs.append((func, args, kwargs))
+
+    @_checker
+    def add_post_rollback_func(self, func, *args, **kwargs):
+        """Adds a post rollback function
+
+        The function added will be executed after the next rollback in the
+        transaction, unless a commit is executed. This is useful, for example,
+        to restore the filesystem in case a rollback occurs, avoiding leaving
+        the database and the filesystem in an out of sync state.
+
+        Parameters
+        ----------
+        func : function
+            The function to add for the post rollback functions
+        args : tuple
+            The arguments of the function
+        kwargs : dict
+            The keyword arguments of the function
+        """
+        self._post_rollback_funcs.append((func, args, kwargs))
 
 # Singleton pattern, create the transaction for the entire system
 TRN = Transaction()
