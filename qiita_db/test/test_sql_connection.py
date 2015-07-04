@@ -2,7 +2,6 @@ from unittest import TestCase, main
 from os import remove, close
 from os.path import exists
 from tempfile import mkstemp
-from functools import partial
 
 from psycopg2._psycopg import connection
 from psycopg2.extras import DictCursor
