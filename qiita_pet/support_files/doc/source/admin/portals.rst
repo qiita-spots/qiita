@@ -63,7 +63,7 @@ following command:
 
 Customizing portal text and style
 ---------------------------------
-Portals can have their own custom welcome text and css styling. Portals have
+Portals can have their own custom welcome text and CSS styling. Portals have
 their own configuration file, an example of which is in
 qiita_pet/support_files/portal_config.cfg
 
