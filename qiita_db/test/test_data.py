@@ -19,7 +19,7 @@ import pandas as pd
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBError, QiitaDBUnknownIDError,
-                                 QiitaDBStatusError)
+                                 QiitaDBStatusError, QiitaDBLookupError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_mountpoint, get_count
@@ -527,7 +527,7 @@ class PreprocessedDataTests(TestCase):
                                     data_type="18S")
 
     def test_create_error_data_type(self):
-        with self.assertRaises(IncompetentQiitaDeveloperError):
+        with self.assertRaises(QiitaDBLookupError):
             PreprocessedData.create(self.study,
                                     "preprocessed_sequence_illumina_params",
                                     self.params_id, self.filepaths,
@@ -1036,7 +1036,7 @@ class ProcessedDataTests(TestCase):
 
     def test_status_setter_error_not_existant(self):
         pd = ProcessedData(1)
-        with self.assertRaises(IncompetentQiitaDeveloperError):
+        with self.assertRaises(QiitaDBLookupError):
             pd.status = 'does-not-exist'
 
     def test_get_by_status(self):

@@ -53,7 +53,7 @@ from json import dumps
 from datetime import datetime
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .exceptions import QiitaDBColumnError, QiitaDBError
+from .exceptions import QiitaDBColumnError, QiitaDBError, QiitaDBLookupError
 from .sql_connection import SQLConnectionHandler
 
 
@@ -828,7 +828,7 @@ def convert_to_id(value, table, text_col=None):
 
     Raises
     ------
-    IncompetentQiitaDeveloperError
+    QiitaDBLookupError
         The passed string has no associated id
     """
     text_col = table if text_col is None else text_col
@@ -836,8 +836,7 @@ def convert_to_id(value, table, text_col=None):
     sql = "SELECT {0}_id FROM qiita.{0} WHERE {1} = %s".format(table, text_col)
     _id = conn_handler.execute_fetchone(sql, (value, ))
     if _id is None:
-        raise IncompetentQiitaDeveloperError("%s not valid for table %s"
-                                             % (value, table))
+        raise QiitaDBLookupError("%s not valid for table %s" % (value, table))
     return _id[0]
 
 
@@ -858,7 +857,7 @@ def convert_from_id(value, table):
 
     Raises
     ------
-    ValueError
+    QiitaDBLookupError
         The passed id has no associated string
     """
     conn_handler = SQLConnectionHandler()
@@ -866,7 +865,7 @@ def convert_from_id(value, table):
         "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table),
         (value, ))
     if string is None:
-        raise ValueError("%s not valid for table %s" % (value, table))
+        raise QiitaDBLookupError("%s not valid for table %s" % (value, table))
     return string[0]
 
 

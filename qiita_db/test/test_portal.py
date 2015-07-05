@@ -3,13 +3,12 @@ from unittest import TestCase, main
 import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.portal import Portal
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_db.exceptions import (QiitaDBError, QiitaDBDuplicateError,
-                                 QiitaDBWarning)
+                                 QiitaDBWarning, QiitaDBLookupError)
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -71,7 +70,7 @@ class TestPortal(TestCase):
                [9, 2], [10, 2]]
         self.assertItemsEqual(obs, exp)
 
-        with self.assertRaises(IncompetentQiitaDeveloperError):
+        with self.assertRaises(QiitaDBLookupError):
             Portal.delete("NOEXISTPORTAL")
         with self.assertRaises(QiitaDBError):
             Portal.delete("QIITA")

@@ -10,8 +10,8 @@ import warnings
 from .sql_connection import SQLConnectionHandler
 from .util import convert_to_id
 from .base import QiitaObject
-from .exceptions import QiitaDBError, QiitaDBDuplicateError, QiitaDBWarning
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from .exceptions import (QiitaDBError, QiitaDBDuplicateError, QiitaDBWarning,
+                         QiitaDBLookupError)
 
 
 class Portal(QiitaObject):
@@ -184,7 +184,7 @@ class Portal(QiitaObject):
         """
         try:
             convert_to_id(portal, 'portal_type', 'portal')
-        except IncompetentQiitaDeveloperError:
+        except QiitaDBLookupError:
             return False
         else:
             return True
