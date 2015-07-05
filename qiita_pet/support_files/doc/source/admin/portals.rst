@@ -20,7 +20,7 @@ Creating/Deleting a portal
 Portals are created using the command line interface. A portal may be added
 using the command ``qiita-env create-portal PORTAL_NAME PORTAL_DESC``.
 Conversely, a portal may be deleted by the command
-``qiita-env remove-portal --portal PORTAL_NAME``.
+``qiita-env remove-portal PORTAL_NAME``.
 Note, however, that you can not remove a portal that has one or more
 studies/analyses attached to it. The portal must be completely connectionless
 to be deleted.
