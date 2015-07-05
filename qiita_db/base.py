@@ -128,8 +128,6 @@ class QiitaObject(object):
         the other classes. However, still defining here as there is only one
         subclass that doesn't follow this convention and it can override this.
         """
-        self._check_subclass()
-
         with TRN:
             sql = """SELECT EXISTS(
                         SELECT * FROM qiita.{0}
@@ -150,6 +148,7 @@ class QiitaObject(object):
             If `id_` does not correspond to any object
         """
         with TRN:
+            self._check_subclass()
             if not self._check_id(id_):
                 raise QiitaDBUnknownIDError(id_, self._table)
 
