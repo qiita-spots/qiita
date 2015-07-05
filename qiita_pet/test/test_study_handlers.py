@@ -454,7 +454,7 @@ class TestDelete(TestHandlerBase):
 
         # checking that the action was sent
         self.assertIn("Sample template can not be erased because there are "
-                      "raw datas", response.body)
+                      "prep templates", response.body)
 
     def test_delete_raw_data(self):
         response = self.post('/study/description/1',

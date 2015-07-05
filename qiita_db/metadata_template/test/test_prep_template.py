@@ -27,7 +27,6 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
                                  QiitaDBColumnError,
                                  QiitaDBWarning,
                                  QiitaDBError)
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import exists_table, get_mountpoint, get_count
