@@ -174,7 +174,6 @@ class BaseSample(QiitaObject):
         """
         with TRN:
             cls._check_subclass()
-            conn_handler = SQLConnectionHandler()
             sql = """SELECT EXISTS(
                         SELECT * FROM qiita.{0}
                         WHERE sample_id=%s AND {1}=%s
@@ -321,7 +320,7 @@ class BaseSample(QiitaObject):
                             AND table_schema = 'qiita'
                             AND (table_name = %s OR table_name = %s)"""
                 TRN.add(sql, [column, self._table, self._dynamic_table])
-                column_type = TRN.execute_fetchlast()[0]
+                column_type = TRN.execute_fetchlast()
 
                 if column_type != value_type:
                     raise ValueError(
@@ -572,7 +571,7 @@ class MetadataTemplate(QiitaObject):
 
     @classmethod
     def _common_creation_steps(cls, md_template, obj_id):
-        r"""Adds the common creation steps to the queue in conn_handler
+        r"""Executes the common creation steps
 
         Parameters
         ----------
@@ -589,7 +588,7 @@ class MetadataTemplate(QiitaObject):
             headers = sorted(md_template.keys().tolist())
 
             # Insert values on template_sample table
-            values = [(obj_id, s_id) for s_id in sample_ids]
+            values = [[obj_id, s_id] for s_id in sample_ids]
             sql = """INSERT INTO qiita.{0} ({1}, sample_id)
                      VALUES (%s, %s)""".format(cls._table, cls._id_column)
             TRN.add(sql, values, many=True)
@@ -628,8 +627,11 @@ class MetadataTemplate(QiitaObject):
                 ', '.join(["%s"] * len(headers)))
             TRN.add(sql, values, many=True)
 
+            # Execute all the steps
+            TRN.execute()
+
     def _common_extend_steps(self, md_template):
-        r"""Adds the common extend steps to the queue in conn_handler
+        r"""executes the common extend steps
 
         Parameters
         ----------
@@ -728,6 +730,9 @@ class MetadataTemplate(QiitaObject):
                     ', '.join(["%s"] * len(headers)))
                 TRN.add(sql, values, many=True)
 
+            # Execute all the steps
+            TRN.execute()
+
     @classmethod
     def exists(cls, obj_id):
         r"""Checks if already exists a MetadataTemplate for the provided object
@@ -757,8 +762,7 @@ class MetadataTemplate(QiitaObject):
             sql = "SELECT sample_id FROM qiita.{0} WHERE {1}=%s".format(
                 self._table, self._id_column)
             TRN.add(sql, [self._id])
-            sample_ids = TRN.execute_fetchlast()
-            return set(sample_id[0] for sample_id in sample_ids)
+            return set(TRN.execute_fetchflatten())
 
     def __len__(self):
         r"""Returns the number of samples in the metadata template
@@ -849,7 +853,7 @@ class MetadataTemplate(QiitaObject):
             True if the sample id `key` is in the metadata template, false
             otherwise
         """
-        return key in self._get_sample_ids(conn_handler)
+        return key in self._get_sample_ids()
 
     def keys(self):
         r"""Iterator over the sorted sample ids
@@ -887,7 +891,7 @@ class MetadataTemplate(QiitaObject):
         """
         with TRN:
             return iter((sample_id, self._sample_cls(sample_id, self))
-                        for sample_id in self._get_sample_ids(conn_handler))
+                        for sample_id in self._get_sample_ids())
 
     def get(self, key):
         r"""Returns the metadata values for sample id `key`, or None if the
@@ -973,7 +977,8 @@ class MetadataTemplate(QiitaObject):
             df.sort_index(axis=1, inplace=True)
 
             # Store the template in a file
-            df.to_csv(fp, index_label='sample_name', na_rep="", sep='\t')
+            df.to_csv(fp, index_label='sample_name', na_rep="", sep='\t',
+                      encoding='utf-8')
 
     def to_dataframe(self):
         """Returns the metadata template as a dataframe
@@ -989,7 +994,7 @@ class MetadataTemplate(QiitaObject):
             sql = "SELECT {0} FROM qiita.{1}".format(", ".join(cols),
                                                      self._table_name(self.id))
             TRN.add(sql, [self._id])
-            meta = conn_handler.execute_fetchindex()
+            meta = TRN.execute_fetchindex()
 
             # Create the dataframe and clean it up a bit
             df = pd.DataFrame((list(x) for x in meta), columns=cols)
@@ -1007,12 +1012,11 @@ class MetadataTemplate(QiitaObject):
                 fpp_id = insert_filepaths([(filepath, fp_id)], None,
                                           "templates", "filepath",
                                           move_files=False)[0]
-                values = (self._id, fpp_id)
                 sql = """INSERT INTO qiita.{0} ({1}, filepath_id)
                          VALUES (%s, %s)""".format(self._filepath_table,
                                                    self._id_column)
-                TRN.add(sql, values)
-                TRN.excecute()
+                TRN.add(sql, [self._id, fpp_id])
+                TRN.execute()
             except Exception as e:
                 LogEntry.create('Runtime', str(e),
                                 info={self.__class__.__name__: self.id})
