@@ -58,11 +58,11 @@ class TestAnalysis(TestCase):
                                   "A New Analysis")
             new.status = status
             with self.assertRaises(QiitaDBStatusError):
-                new._lock_check(self.conn_handler)
+                new._lock_check()
 
     def test_lock_check_ok(self):
         self.analysis.status = "in_construction"
-        self.analysis._lock_check(self.conn_handler)
+        self.analysis._lock_check()
 
     def test_status_setter_checks(self):
         self.analysis.status = "public"

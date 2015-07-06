@@ -128,21 +128,16 @@ class Analysis(QiitaStatusObject):
             Default False.
         """
         with TRN:
-            # TODO after demo: if exists()
-            # Needed since issue #292 exists
-            sql = """SELECT analysis_status_id
-                     FROM qiita.analysis_status
-                     WHERE status = %s"""
-            TRN.add(sql, 'in_construction')
-            status_id = TRN.execute_fetchlast()
-
-            # Get the analysis id placeholder
-            a_id_idx = TRN.index
-            a_id_ph = "{%s:0:0}" % a_id_idx
+            status_id = convert_to_id('in_construction',
+                                      'analysis_status', 'status')
 
             if from_default:
                 # insert analysis and move samples into that new analysis
                 dflt_id = owner.default_analysis
+
+                # Get the analysis id placeholder
+                a_id_idx = TRN.index
+                a_id_ph = "{%s:0:0}" % a_id_idx
                 sql = """INSERT INTO qiita.{0}
                             (email, name, description, analysis_status_id)
                         VALUES (%s, %s, %s, %s)
@@ -160,6 +155,9 @@ class Analysis(QiitaStatusObject):
                          WHERE analysis_id = %s"""
                 TRN.add(sql, [a_id_ph, dflt_id])
             else:
+                # Get the analysis id placeholder
+                a_id_idx = TRN.index
+                a_id_ph = "{%s:0:0}" % a_id_idx
                 # insert analysis information into table as "in construction"
                 sql = """INSERT INTO qiita.{0}
                             (email, name, description, analysis_status_id)
@@ -175,8 +173,7 @@ class Analysis(QiitaStatusObject):
                 TRN.add(sql, [parent.id, a_id_ph])
 
             # The analysis id is in the `a_id_idx` query, first row, first elem
-            a_id = TRN.execute()[a_id_idx][0][0]
-            return cls(a_id)
+            return cls(TRN.execute()[a_id_idx][0][0])
 
     @classmethod
     def delete(cls, _id):
@@ -242,7 +239,7 @@ class Analysis(QiitaStatusObject):
                         WHERE {1}=%s)""".format(cls._table,
                                                 cls._analysis_id_column)
             TRN.add(sql, [analysis_id])
-        return TRN.execute_fetchlast()
+            return TRN.execute_fetchlast()
 
     # ---- Properties ----
     @property
@@ -392,7 +389,7 @@ class Analysis(QiitaStatusObject):
                     WHERE a.analysis_id = %s
                     ORDER BY data_type"""
             TRN.add(sql, [self._id])
-            return [TRN.execute_fetchflatten()]
+            return TRN.execute_fetchflatten()
 
     @property
     def shared_with(self):
@@ -456,7 +453,7 @@ class Analysis(QiitaStatusObject):
                             ON dt.data_type_id = af.data_type_id
                      WHERE af.analysis_id = %s AND f.filepath_type_id = %s"""
             TRN.add(sql, [self._id, fptypeid])
-            tables = TRN.execute_fetchall()
+            tables = TRN.execute_fetchindex()
             if not tables:
                 return {}
             ret_tables = {}
@@ -510,7 +507,7 @@ class Analysis(QiitaStatusObject):
             TRN.add(sql, [self._id])
             try:
                 return TRN.execute_fetchlast()
-            except TypeError:
+            except IndexError:
                 raise ValueError("Step not set yet!")
 
     @step.setter
@@ -637,7 +634,7 @@ class Analysis(QiitaStatusObject):
                         JOIN qiita.analysis_sample USING (processed_data_id)
                     WHERE analysis_id = %s"""
             TRN.add(sql, [self._id])
-            return dict(TRN.execute_fetchindex())
+            return dict(TRN.execute_fetchindex()[0])
 
     def share(self, user):
         """Share the analysis with another user
@@ -733,7 +730,7 @@ class Analysis(QiitaStatusObject):
                             AND sample_id = %s"""
                 # build tuples for what samples to remove from what
                 # processed data
-                args = [(self._id, p, s)
+                args = [[self._id, p, s]
                         for p, s in product(proc_data, samples)]
             elif proc_data:
                 sql = """DELETE FROM qiita.analysis_sample
