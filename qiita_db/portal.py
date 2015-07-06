@@ -357,20 +357,21 @@ class Portal(QiitaObject):
         self._check_analyses(analyses)
 
         conn_handler = SQLConnectionHandler()
-        # Make sure new portal has access to all studies in analysis
-        sql = """SELECT DISTINCT analysis_id from qiita.analysis_sample
-                 JOIN qiita.study_processed_data USING (processed_data_id)
-                 WHERE study_id NOT IN (
-                    SELECT study_id from qiita.study_portal
-                    WHERE portal_type_id = %s)
-                AND analysis_id IN %s ORDER BY analysis_id"""
-        missing_info = [x[0] for x in conn_handler.execute_fetchall(
-                        sql, [self._id, tuple(analyses)])]
-        if missing_info:
-            raise QiitaDBError("Portal %s is mising studies used in the "
-                               "following analyses: %s" %
-                               (self.portal,
-                                ", ".join(map(str, missing_info))))
+        if self.portal != "QIITA":
+            # Make sure new portal has access to all studies in analysis
+            sql = """SELECT DISTINCT analysis_id from qiita.analysis_sample
+                     JOIN qiita.study_processed_data USING (processed_data_id)
+                     WHERE study_id NOT IN (
+                        SELECT study_id from qiita.study_portal
+                        WHERE portal_type_id = %s)
+                    AND analysis_id IN %s ORDER BY analysis_id"""
+            missing_info = [x[0] for x in conn_handler.execute_fetchall(
+                            sql, [self._id, tuple(analyses)])]
+            if missing_info:
+                raise QiitaDBError("Portal %s is mising studies used in the "
+                                   "following analyses: %s" %
+                                   (self.portal,
+                                    ", ".join(map(str, missing_info))))
 
         # Clean list of analyses to ones not already associated with portal
         sql = """SELECT analysis_id from qiita.analysis_portal
