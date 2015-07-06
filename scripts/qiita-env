@@ -16,12 +16,12 @@ from qiita_db.environment_manager import (
     make_environment, drop_environment, clean_test_environment,
     patch as _patch)
 from qiita_db.portal import Portal
-from qiita_db.exceptions import QiitaDBError, QiitaDBDuplicateError
+from qiita_db.exceptions import (QiitaDBError, QiitaDBDuplicateError,
+                                 QiitaDBLookupError)
 from qiita_core.environment_manager import (
     start_cluster as _start_cluster, stop_cluster as _stop_cluster,
     test as _test, TEST_RUNNERS)
 from qiita_core.configuration_manager import ConfigurationManager
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 _CONFIG = ConfigurationManager()
 
@@ -176,7 +176,7 @@ def rem_portal(portal):
         Portal.delete(portal)
     except QiitaDBError as e:
         raise click.BadParameter(str(e))
-    except IncompetentQiitaDeveloperError:
+    except QiitaDBLookupError:
         raise click.BadParameter("Portal name does not exist!")
 
 if __name__ == '__main__':

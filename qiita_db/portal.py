@@ -10,8 +10,8 @@ import warnings
 from .sql_connection import SQLConnectionHandler
 from .util import convert_to_id
 from .base import QiitaObject
-from .exceptions import QiitaDBError, QiitaDBDuplicateError, QiitaDBWarning
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from .exceptions import (QiitaDBError, QiitaDBDuplicateError, QiitaDBWarning,
+                         QiitaDBLookupError)
 
 
 class Portal(QiitaObject):
@@ -39,11 +39,13 @@ class Portal(QiitaObject):
 
     @staticmethod
     def list_portals():
-        """Returns list of portals available in system
+        """Returns list of non-default portals available in system
+
         Returns
         -------
         list of str
             List of portal names for the system
+
         Notes
         -----
         This does not return the QIITA portal in the list, as it is a required
@@ -134,7 +136,7 @@ class Portal(QiitaObject):
                  JOIN qiita.analysis USING (analysis_id)
                  WHERE portal_type_id = %s and dflt = FALSE"""
         analyses = conn_handler.execute_fetchall(sql, [portal_id])
-        if studies:
+        if analyses:
             raise QiitaDBError(
                 " Cannot delete portal '%s', analyses still attached: %s" %
                 (portal, ', '.join([str(a[0]) for a in analyses])))
@@ -142,12 +144,12 @@ class Portal(QiitaObject):
         # Remove portal and default analyses for all users
         sql = """DO $do$
             DECLARE
-                pid bigint;
                 aid bigint;
             BEGIN
                 FOR aid IN
                     SELECT analysis_id FROM qiita.analysis_portal
-                    WHERE portal_type_id = %s
+                    JOIN qiita.analysis USING (analysis_id)
+                    WHERE portal_type_id = %s and dflt = True
                 LOOP
                     DELETE FROM qiita.analysis_portal
                     WHERE analysis_id = aid;
@@ -155,14 +157,16 @@ class Portal(QiitaObject):
                     DELETE FROM qiita.analysis_workflow
                     WHERE analysis_id = aid;
 
+                    DELETE FROM qiita.analysis_sample
+                    WHERE analysis_id = aid;
+
                     DELETE FROM qiita.analysis
                     WHERE analysis_id = aid;
                 END LOOP;
-
                 DELETE FROM qiita.portal_type WHERE portal_type_id = %s;
             END $do$;"""
         conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, [portal_id, portal_id])
+        conn_handler.execute(sql, [portal_id] * 2)
 
     @staticmethod
     def exists(portal):
@@ -180,7 +184,7 @@ class Portal(QiitaObject):
         """
         try:
             convert_to_id(portal, 'portal_type', 'portal')
-        except IncompetentQiitaDeveloperError:
+        except QiitaDBLookupError:
             return False
         else:
             return True
@@ -235,7 +239,7 @@ class Portal(QiitaObject):
                       sql, [self._id, tuple(studies)])]
 
         if len(duplicates) > 0:
-            warnings.warn("The following studies area already part of %s: %s" %
+            warnings.warn("The following studies are already part of %s: %s" %
                           (self.portal, ', '.join(map(str, duplicates))),
                           QiitaDBWarning)
 
@@ -243,7 +247,9 @@ class Portal(QiitaObject):
         clean_studies = set(studies).difference(duplicates)
         sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
                  VALUES (%s, %s)"""
-        conn_handler.executemany(sql, [(s, self._id) for s in clean_studies])
+        if len(clean_studies) != 0:
+            conn_handler.executemany(
+                sql, [(s, self._id) for s in clean_studies])
 
     def remove_studies(self, studies):
         """Removes studies from given portal
@@ -355,7 +361,9 @@ class Portal(QiitaObject):
                  (analysis_id, portal_type_id)
                  VALUES (%s, %s)"""
         clean_analyses = set(analyses).difference(duplicates)
-        conn_handler.executemany(sql, [(a, self._id) for a in clean_analyses])
+        if len(clean_analyses) != 0:
+            conn_handler.executemany(
+                sql, [(a, self._id) for a in clean_analyses])
 
     def remove_analyses(self, analyses):
         """Removes analyses from given portal
