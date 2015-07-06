@@ -205,7 +205,7 @@ class BaseSample(QiitaObject):
             A dictionary of the form {category: value}
         """
         with TRN:
-            sql = "SELECT * from qiita.{0} WHERE sample_id=%s".format(
+            sql = "SELECT * FROM qiita.{0} WHERE sample_id=%s".format(
                 self._dynamic_table)
             TRN.add(sql, [self._id])
             d = dict(TRN.execute_fetchindex()[0])
