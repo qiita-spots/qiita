@@ -265,6 +265,7 @@ class Portal(QiitaObject):
             Trying to delete from QIITA portal
         QiitaDBError
             Some studies given do not exist in the system
+            Some studies are already used in an analysis on the portal
         QiitaDBWarning
             Some studies already do not exist in the given portal
         """
@@ -274,7 +275,7 @@ class Portal(QiitaObject):
 
         conn_handler = SQLConnectionHandler()
         # Make sure study not used in analysis in portal
-        sql = """SELECT DISTINCT study_id from qiita.study_processed_data
+        sql = """SELECT DISTINCT study_id FROM qiita.study_processed_data
                  JOIN qiita.analysis_sample USING (processed_data_id)
                  JOIN qiita.analysis_portal USING (analysis_id)
                  WHERE portal_type_id = %s AND study_id IN %s"""
