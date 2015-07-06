@@ -265,6 +265,7 @@ class Portal(QiitaObject):
             Trying to delete from QIITA portal
         QiitaDBError
             Some studies given do not exist in the system
+            Some studies are already used in an analysis on the portal
         QiitaDBWarning
             Some studies already do not exist in the given portal
         """
@@ -272,8 +273,20 @@ class Portal(QiitaObject):
             raise ValueError('Can not remove from main QIITA portal!')
         self._check_studies(studies)
 
-        # Clean list of studies down to ones associated with portal already
         conn_handler = SQLConnectionHandler()
+        # Make sure study not used in analysis in portal
+        sql = """SELECT DISTINCT study_id FROM qiita.study_processed_data
+                 JOIN qiita.analysis_sample USING (processed_data_id)
+                 JOIN qiita.analysis_portal USING (analysis_id)
+                 WHERE portal_type_id = %s AND study_id IN %s"""
+        analysed = [x[0] for x in conn_handler.execute_fetchall(
+            sql, [self.id, tuple(studies)])]
+        if analysed:
+            raise QiitaDBError("The following studies are used in an analysis "
+                               "on portal %s and can't be removed: %s" %
+                               (self.portal, ", ".join(map(str, analysed))))
+
+        # Clean list of studies down to ones associated with portal already
         sql = """SELECT study_id from qiita.study_portal
                  WHERE portal_type_id = %s AND study_id IN %s"""
         clean_studies = [x[0] for x in conn_handler.execute_fetchall(
@@ -338,12 +351,29 @@ class Portal(QiitaObject):
         QiitaDBError
             Some given analyses do not exist in the system,
             or are default analyses
+            Portal does not contain all studies used in analyses
         QiitaDBWarning
             Some analyses already exist in the given portal
         """
         self._check_analyses(analyses)
 
         conn_handler = SQLConnectionHandler()
+        if self.portal != "QIITA":
+            # Make sure new portal has access to all studies in analysis
+            sql = """SELECT DISTINCT analysis_id from qiita.analysis_sample
+                     JOIN qiita.study_processed_data USING (processed_data_id)
+                     WHERE study_id NOT IN (
+                        SELECT study_id from qiita.study_portal
+                        WHERE portal_type_id = %s)
+                    AND analysis_id IN %s ORDER BY analysis_id"""
+            missing_info = [x[0] for x in conn_handler.execute_fetchall(
+                            sql, [self._id, tuple(analyses)])]
+            if missing_info:
+                raise QiitaDBError("Portal %s is mising studies used in the "
+                                   "following analyses: %s" %
+                                   (self.portal,
+                                    ", ".join(map(str, missing_info))))
+
         # Clean list of analyses to ones not already associated with portal
         sql = """SELECT analysis_id from qiita.analysis_portal
                  JOIN qiita.analysis USING (analysis_id)
@@ -383,6 +413,7 @@ class Portal(QiitaObject):
         self._check_analyses(analyses)
         if self.portal == "QIITA":
             raise ValueError('Can not remove from main QIITA portal!')
+
         conn_handler = SQLConnectionHandler()
         # Clean list of analyses to ones already associated with portal
         sql = """SELECT analysis_id from qiita.analysis_portal

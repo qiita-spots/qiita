@@ -14,7 +14,7 @@
   .alert {
     position: fixed;
     top: 55px;
-    left:40%;
+    left:30%;
     z-index:100;
     white-space: nowrap;
   }
@@ -53,8 +53,13 @@ function check_submit(action) {
     $("#add-button").prop('disabled', false);
     $("#remove-button").prop('disabled', false);
     var echo = "?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=" + $("#view-portal").val();
-    $('#info-table').DataTable().ajax.url("/admin/portals/studiesAJAX/" + echo).load();
-    bootstrapAlert(data, "success", 1900);
+    if(data.indexOf("ERROR") > -1) {
+      bootstrapAlert(data, "danger", 2200);
+    }
+    else {
+      $('#info-table').DataTable().ajax.url("/admin/portals/studiesAJAX/" + echo).load();
+      bootstrapAlert(data, "success", 2200);
+    }
     $("#portal").val('');
   });
 }
