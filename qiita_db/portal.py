@@ -278,12 +278,12 @@ class Portal(QiitaObject):
                  JOIN qiita.analysis_sample USING (processed_data_id)
                  JOIN qiita.analysis_portal USING (analysis_id)
                  WHERE portal_type_id = %s AND study_id IN %s"""
-        analysed = [x[0] for x in conn_handler.execute_fetchall(sql,
-                                                                [self.id])]
+        analysed = [x[0] for x in conn_handler.execute_fetchall(
+            sql, [self.id, tuple(studies)])]
         if analysed:
             raise QiitaDBError("The following studies are used in an analysis "
                                "on portal %s and can't be removed: %s" %
-                               (self.portal, ", ".join(analysed)))
+                               (self.portal, ", ".join(map(str, analysed))))
 
         # Clean list of studies down to ones associated with portal already
         sql = """SELECT study_id from qiita.study_portal
@@ -369,7 +369,8 @@ class Portal(QiitaObject):
         if missing_info:
             raise QiitaDBError("Portal %s is mising studies used in the "
                                "following analyses: %s" %
-                               (self.portal, ", ".join(missing_info)))
+                               (self.portal,
+                                ", ".join(map(str, missing_info))))
 
         # Clean list of analyses to ones not already associated with portal
         sql = """SELECT analysis_id from qiita.analysis_portal
