@@ -137,7 +137,20 @@ class TestPortal(TestCase):
         with self.assertRaises(ValueError):
             self.qiita_portal.remove_studies([self.study.id])
 
-        self.emp_portal.add_studies([self.study.id])
+        self.emp_portal.add_studies([1])
+        # Set up the analysis in EMP portal
+        self.emp_portal.add_analyses([self.analysis.id])
+        obs = self.analysis._portals
+        self.assertItemsEqual(obs, ['QIITA', 'EMP'])
+
+        # Test study removal failure
+        with self.assertRaises(QiitaDBError):
+            self.emp_portal.remove_studies([self.study.id])
+        obs = self.study._portals
+        self.assertItemsEqual(obs, ['QIITA', 'EMP'])
+
+        # Test study removal
+        self.emp_portal.remove_analyses([self.analysis.id])
         self.emp_portal.remove_studies([self.study.id])
         obs = self.study._portals
         self.assertEqual(obs, ['QIITA'])
@@ -153,6 +166,14 @@ class TestPortal(TestCase):
         self.assertEqual(obs, {1, 2, 3, 4, 5, 6})
 
     def test_add_analysis_portals(self):
+        obs = self.analysis._portals
+        self.assertEqual(obs, ['QIITA'])
+        with self.assertRaises(QiitaDBError):
+            self.emp_portal.add_analyses([self.analysis.id])
+        obs = self.analysis._portals
+        self.assertEqual(obs, ['QIITA'])
+
+        self.emp_portal.add_studies([1])
         self.emp_portal.add_analyses([self.analysis.id])
         obs = self.analysis._portals
         self.assertEqual(obs, ['EMP', 'QIITA'])
@@ -164,7 +185,12 @@ class TestPortal(TestCase):
         with self.assertRaises(ValueError):
             self.qiita_portal.remove_analyses([self.analysis.id])
 
+        # set up the analysis in EMP portal
+        self.emp_portal.add_studies([1])
         self.emp_portal.add_analyses([self.analysis.id])
+        obs = self.analysis._portals
+        self.assertItemsEqual(obs, ['QIITA', 'EMP'])
+        # Test removal
         self.emp_portal.remove_analyses([self.analysis.id])
         obs = self.analysis._portals
         self.assertEqual(obs, ['QIITA'])
