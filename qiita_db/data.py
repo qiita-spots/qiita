@@ -386,7 +386,7 @@ class RawData(BaseData):
             raw_data_count = TRN.execute_fetchlast()
             if raw_data_count == 1 and RawData(raw_data_id).get_filepath_ids():
                 raise QiitaDBError(
-                    "Raw data (%d) can't be remove because it has linked "
+                    "Raw data (%d) can't be removed because it has linked "
                     "files. To remove it, first unlink files." % raw_data_id)
 
             # delete
@@ -1039,11 +1039,10 @@ class PreprocessedData(BaseData):
         ValueError
             If the status is not known.
         """
-        with TRN:
-            if status not in ('not submitted', 'submitting', 'success',
-                              'failed'):
-                raise ValueError("Unknown status: %s" % status)
+        if status not in ('not submitted', 'submitting', 'success', 'failed'):
+            raise ValueError("Unknown status: %s" % status)
 
+        with TRN:
             sql = """UPDATE qiita.{0}
                      SET submitted_to_vamps_status = %s
                      WHERE preprocessed_data_id=%s""".format(self._table)
@@ -1080,11 +1079,10 @@ class PreprocessedData(BaseData):
         ValueError
             If the state is not known
         """
+        if (state not in ('not_processed', 'processing', 'processed') and
+                not state.startswith('failed')):
+            raise ValueError('Unknown state: %s' % state)
         with TRN:
-            if (state not in ('not_processed', 'processing', 'processed') and
-                    not state.startswith('failed')):
-                raise ValueError('Unknown state: %s' % state)
-
             sql = """UPDATE qiita.{0} SET processing_status=%s
                      WHERE preprocessed_data_id=%s""".format(self._table)
             TRN.add(sql, [state, self.id])
@@ -1419,7 +1417,7 @@ class ProcessedData(BaseData):
             static_info = TRN.execute_fetchindex()[0]
 
             # Get the info from the dynamic table, including reference used
-            sql = """SELECT * from qiita.{0}
+            sql = """SELECT * FROM qiita.{0}
                      JOIN qiita.reference USING (reference_id)
                      WHERE processed_params_id = %s""".format(
                 static_info['processed_params_table'])
