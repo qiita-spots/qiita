@@ -4,9 +4,10 @@
 
 User Portals
 ============
+ 
 User portals allow a user to cordon off specific studies and analyses into their
- own user interface, which we call a portal, selectively slicing the data
- available through that portal.
+own user interface, which we call a portal, selectively slicing the data
+available through that portal.
 
 The main ``QIITA`` portal gives access to all studies in the database, while
 adding studies to a specific portal and changing the config file to point to the
