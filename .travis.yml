@@ -14,6 +14,8 @@ before_install:
   - export PATH=/home/travis/miniconda3/bin:$PATH
   # Update conda itself
   - conda update --yes conda
+  # Update pip itself
+  - pip install --upgrade pip
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
