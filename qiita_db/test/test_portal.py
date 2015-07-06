@@ -137,7 +137,20 @@ class TestPortal(TestCase):
         with self.assertRaises(ValueError):
             self.qiita_portal.remove_studies([self.study.id])
 
-        self.emp_portal.add_studies([self.study.id])
+        self.emp_portal.add_studies([1])
+        # Set up the analysis in EMP portal
+        self.emp_portal.add_analyses([self.analysis.id])
+        obs = self.analysis._portals
+        self.assertItemsEqual(obs, ['QIITA', 'EMP'])
+
+        # Test study removal failure
+        with self.assertRaises(QiitaDBError):
+            self.emp_portal.remove_studies([self.study.id])
+        obs = self.study._portals
+        self.assertItemsEqual(obs, ['QIITA', 'EMP'])
+
+        # Test study removal
+        self.emp_portal.remove_analyses([self.analysis.id])
         self.emp_portal.remove_studies([self.study.id])
         obs = self.study._portals
         self.assertEqual(obs, ['QIITA'])
