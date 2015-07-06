@@ -22,7 +22,7 @@ using the command ``qiita-env create-portal PORTAL_NAME PORTAL_DESC``.
 Conversely, a portal may be deleted by the command
 ``qiita-env remove-portal PORTAL_NAME``.
 Note, however, that you can not remove a portal that has one or more
-studies/analyses attached to it. Also, the ``QIITA`` portal is also a base
+studies/analyses attached to it. Also, the ``QIITA`` portal is a base
 system portal and therefore can not be deleted.
 
 Adding/Deleting studies on a portal
