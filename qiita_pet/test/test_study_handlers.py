@@ -465,7 +465,7 @@ class TestDelete(TestHandlerBase):
 
         # checking that the action was sent
         self.assertIn("Couldn't remove raw data 1: Raw data (1) can't be "
-                      "remove because it has linked files", response.body)
+                      "removed because it has linked files", response.body)
 
     def test_delete_prep_template(self):
         response = self.post('/study/description/1',
