@@ -964,7 +964,7 @@ class StudyPerson(QiitaObject):
             in order of ascending study_person_id
         """
         with TRN:
-            sql = """SELECT study_person_id FROm qiita.{}
+            sql = """SELECT study_person_id FROM qiita.{}
                      ORDER BY study_person_id""".format(cls._table)
             TRN.add(sql)
 
