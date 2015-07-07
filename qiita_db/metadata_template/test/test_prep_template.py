@@ -27,7 +27,6 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
                                  QiitaDBColumnError,
                                  QiitaDBWarning,
                                  QiitaDBError)
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import exists_table, get_mountpoint, get_count
@@ -55,45 +54,6 @@ class BaseTestPrepSample(TestCase):
 
 
 class TestPrepSampleReadOnly(BaseTestPrepSample):
-    def test_add_setitem_queries_error(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
-
-        with self.assertRaises(QiitaDBColumnError):
-            self.tester.add_setitem_queries(
-                'COL_DOES_NOT_EXIST', 'Foo', conn_handler, queue)
-
-    def test_add_setitem_queries_required(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
-
-        self.tester.add_setitem_queries(
-            'center_name', 'FOO', conn_handler, queue)
-
-        obs = conn_handler.queues[queue]
-        sql = """UPDATE qiita.prep_1
-                 SET center_name=%s
-                 WHERE sample_id=%s"""
-        exp = [(sql, ('FOO', '1.SKB8.640193'))]
-        self.assertEqual(obs, exp)
-
-    def test_add_setitem_queries_dynamic(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
-
-        self.tester.add_setitem_queries(
-            'barcode', 'AAAAAAAAAAAA', conn_handler, queue)
-
-        obs = conn_handler.queues[queue]
-        sql = """UPDATE qiita.prep_1
-                 SET barcode=%s
-                 WHERE sample_id=%s"""
-        exp = [(sql, ('AAAAAAAAAAAA', '1.SKB8.640193'))]
-        self.assertEqual(obs, exp)
-
     def test_init_unknown_error(self):
         """Init errors if the PrepSample id is not found in the template"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -139,8 +99,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
-        conn_handler = SQLConnectionHandler()
-        obs = self.tester._get_categories(conn_handler)
+        obs = self.tester._get_categories()
         self.assertEqual(obs, self.exp_categories)
 
     def test_len(self):
@@ -419,8 +378,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
 
     def test_get_sample_ids(self):
         """get_sample_ids returns the correct set of sample ids"""
-        conn_handler = SQLConnectionHandler()
-        obs = self.tester._get_sample_ids(conn_handler)
+        obs = self.tester._get_sample_ids()
         self.assertEqual(obs, self.exp_sample_ids)
 
     def test_len(self):
@@ -584,99 +542,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             u'experiment_design_description', u'experiment_title', u'platform',
             u'samp_size', u'sequencing_meth', u'illumina_technology',
             u'sample_center', u'pcr_primers', u'study_center'})
-
-    def test_add_common_creation_steps_to_queue(self):
-        """add_common_creation_steps_to_queue adds the correct sql statements
-        """
-        metadata_dict = {
-            '2.SKB8.640193': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'emp_status': 'EMP',
-                              'str_column': 'Value for sample 1',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'GTCCGCAAGTTA',
-                              'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
-                              'library_construction_protocol': 'AAAA',
-                              'experiment_design_description': 'BBBB'},
-            '2.SKD8.640184': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'emp_status': 'EMP',
-                              'str_column': 'Value for sample 2',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CGTAGAGCTCTC',
-                              'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
-                              'library_construction_protocol': 'AAAA',
-                              'experiment_design_description': 'BBBB'},
-            }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-
-        conn_handler = SQLConnectionHandler()
-        queue_name = "TEST_QUEUE"
-        conn_handler.create_queue(queue_name)
-        PrepTemplate._add_common_creation_steps_to_queue(
-            metadata, 2, conn_handler, queue_name)
-
-        sql_insert_common = (
-            'INSERT INTO qiita.prep_template_sample '
-            '(prep_template_id, sample_id) VALUES (%s, %s)')
-        sql_insert_common_params_1 = (2, '2.SKB8.640193')
-        sql_insert_common_params_2 = (2, '2.SKD8.640184')
-
-        sql_insert_prep_columns = (
-            'INSERT INTO qiita.prep_columns '
-            '(prep_template_id, column_name, column_type) '
-            'VALUES (%s, %s, %s)')
-
-        sql_create_table = (
-            'CREATE TABLE qiita.prep_2 '
-            '(sample_id varchar NOT NULL, barcodesequence varchar, '
-            'center_name varchar, center_project_name varchar, '
-            'emp_status varchar, experiment_design_description varchar, '
-            'library_construction_protocol varchar, '
-            'linkerprimersequence varchar, platform varchar, '
-            'run_prefix varchar, str_column varchar, '
-            'CONSTRAINT fk_prep_2 FOREIGN KEY (sample_id) REFERENCES '
-            'qiita.study_sample (sample_id) ON UPDATE CASCADE)')
-
-        sql_insert_dynamic = (
-            'INSERT INTO qiita.prep_2 '
-            '(sample_id, barcodesequence, center_name, center_project_name, '
-            'emp_status, experiment_design_description, '
-            'library_construction_protocol, linkerprimersequence, platform, '
-            'run_prefix, str_column) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
-
-        sql_insert_dynamic_params_1 = (
-            '2.SKB8.640193', 'GTCCGCAAGTTA', 'ANL', 'Test Project', 'EMP',
-            'BBBB', 'AAAA', 'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA',
-            's_G1_L001_sequences', 'Value for sample 1')
-        sql_insert_dynamic_params_2 = (
-            '2.SKD8.640184', 'CGTAGAGCTCTC', 'ANL', 'Test Project', 'EMP',
-            'BBBB', 'AAAA', 'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA',
-            's_G1_L001_sequences', 'Value for sample 2')
-
-        exp = [
-            (sql_insert_common, sql_insert_common_params_1),
-            (sql_insert_common, sql_insert_common_params_2),
-            (sql_insert_prep_columns, (2, 'barcodesequence', 'varchar')),
-            (sql_insert_prep_columns, (2, 'center_name', 'varchar')),
-            (sql_insert_prep_columns, (2, 'center_project_name', 'varchar')),
-            (sql_insert_prep_columns, (2, 'emp_status', 'varchar')),
-            (sql_insert_prep_columns,
-                (2, 'experiment_design_description', 'varchar')),
-            (sql_insert_prep_columns,
-                (2, 'library_construction_protocol', 'varchar')),
-            (sql_insert_prep_columns, (2, 'linkerprimersequence', 'varchar')),
-            (sql_insert_prep_columns, (2, 'platform', 'varchar')),
-            (sql_insert_prep_columns, (2, 'run_prefix', 'varchar')),
-            (sql_insert_prep_columns, (2, 'str_column', 'varchar')),
-            (sql_create_table, None),
-            (sql_insert_dynamic, sql_insert_dynamic_params_1),
-            (sql_insert_dynamic, sql_insert_dynamic_params_2)]
-
-        self.assertEqual(conn_handler.queues[queue_name], exp)
 
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
