@@ -12,7 +12,7 @@ from qiita_db.user import User
 from qiita_db.util import convert_to_id
 from qiita_db.exceptions import (
     QiitaDBColumnError, QiitaDBStatusError, QiitaDBError,
-    QiitaDBUnknownIDError)
+    QiitaDBUnknownIDError, QiitaDBDuplicateError)
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -45,17 +45,21 @@ class TestStudyPerson(TestCase):
             ('empDude', 'emp_dude@foo.bar', 'broad', None, '444-222-3333'),
             ('PIDude', 'PI_dude@foo.bar', 'Wash U', '123 PI street', None)]
         for i, person in enumerate(StudyPerson.iter()):
-            self.assertTrue(person.id == i+1)
-            self.assertTrue(person.name == expected[i][0])
-            self.assertTrue(person.email == expected[i][1])
-            self.assertTrue(person.affiliation == expected[i][2])
-            self.assertTrue(person.address == expected[i][3])
-            self.assertTrue(person.phone == expected[i][4])
+            self.assertEqual(person.id, i+1)
+            self.assertEqual(person.name, expected[i][0])
+            self.assertEqual(person.email, expected[i][1])
+            self.assertEqual(person.affiliation, expected[i][2])
+            self.assertEqual(person.address, expected[i][3])
+            self.assertEqual(person.phone, expected[i][4])
+
+    def test_exists(self):
+        self.assertTrue(StudyPerson.exists('LabDude', 'knight lab'))
+        self.assertFalse(StudyPerson.exists('AnotherDude', 'knight lab'))
+        self.assertFalse(StudyPerson.exists('LabDude', 'Another lab'))
 
     def test_create_studyperson_already_exists(self):
-        obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar', 'knight lab')
-        self.assertEqual(obs.name, 'LabDude')
-        self.assertEqual(obs.email, 'lab_dude@foo.bar')
+        with self.assertRaises(QiitaDBDuplicateError):
+            StudyPerson.create('LabDude', 'lab_dude@foo.bar', 'knight lab')
 
     def test_retrieve_name(self):
         self.assertEqual(self.studyperson.name, 'LabDude')
