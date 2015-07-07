@@ -231,10 +231,8 @@ class StudyEditHandler(BaseHandler):
         else:
             lab_person = None
 
-        # TODO: Get the portal type from... somewhere - See issue #720
         # TODO: MIXS compliant?  Always true, right?
         info = {
-            'portal_type_id': 1,
             'lab_person_id': lab_person,
             'principal_investigator_id': PI,
             'metadata_complete': False,

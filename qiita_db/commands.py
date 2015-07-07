@@ -59,7 +59,7 @@ def load_study_from_cmd(owner, title, info):
 
     get_required = partial(config.get, 'required')
     required_fields = ['timeseries_type_id', 'mixs_compliant',
-                       'portal_type_id', 'reprocess', 'study_alias',
+                       'reprocess', 'study_alias',
                        'study_description', 'study_abstract',
                        'metadata_complete', 'efo_ids',
                        'principal_investigator']

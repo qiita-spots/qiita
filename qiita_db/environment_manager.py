@@ -231,11 +231,24 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             ('demo@microbio.me', 4,
              '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe',
              'Demo', 'Qitta Dev', '1345 Colorado Avenue', '303-492-1984')""")
-        conn.execute("""
+        analysis_id = conn.execute_fetchone("""
             INSERT INTO qiita.analysis (email, name, description, dflt,
                                         analysis_status_id)
             VALUES
-            ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', 't', 1)""")
+            ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', 't', 1)
+            RETURNING analysis_id
+        """)[0]
+
+        # Add default analysis to all portals
+        args = []
+        sql = "SELECT portal_type_id FROM qiita.portal_type"
+        for portal_id in conn.execute_fetchall(sql):
+            args.append([analysis_id, portal_id[0]])
+
+        sql = """INSERT INTO qiita.analysis_portal
+                 (analysis_id, portal_type_id)
+                 VALUES (%s, %s)"""
+        conn.executemany(sql, args)
 
         print('Demo user successfully created')
 

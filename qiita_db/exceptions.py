@@ -37,6 +37,11 @@ class QiitaDBColumnError(QiitaDBError):
     pass
 
 
+class QiitaDBLookupError(QiitaDBError, LookupError):
+    """Exception when converting or getting non-existant values in DB"""
+    pass
+
+
 class QiitaDBDuplicateError(QiitaDBError):
     """Exception when duplicating something in the database"""
     def __init__(self, obj_name, attributes):

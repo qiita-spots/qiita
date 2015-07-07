@@ -15,8 +15,8 @@ from shutil import rmtree
 import pandas as pd
 
 from qiita_core.util import qiita_test_checker
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBError,
+                                 QiitaDBLookupError)
 from qiita_db.data import RawData
 from qiita_db.study import Study
 from qiita_db.reference import Reference
@@ -47,7 +47,7 @@ class DBUtilTests(TestCase):
         self.required = [
             'number_samples_promised', 'study_title', 'mixs_compliant',
             'metadata_complete', 'study_description', 'first_contact',
-            'reprocess', 'portal_type_id', 'timeseries_type_id', 'study_alias',
+            'reprocess', 'timeseries_type_id', 'study_alias',
             'study_abstract', 'principal_investigator_id', 'email',
             'number_samples_collected']
         self.files_to_remove = []
@@ -187,7 +187,7 @@ class DBUtilTests(TestCase):
 
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
-        with self.assertRaises(IncompetentQiitaDeveloperError):
+        with self.assertRaises(QiitaDBLookupError):
             convert_to_id("FAKE", "filepath_type")
 
     def test_get_filetypes(self):

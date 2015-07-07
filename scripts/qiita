@@ -30,8 +30,9 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_prep_template_from_cmd,
                                load_parameters_from_cmd, SUPPORTED_PARAMS,
                                update_preprocessed_data_from_cmd)
+from qiita_db.portal import Portal
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.exceptions import QiitaDBConnectionError
+from qiita_db.exceptions import QiitaDBConnectionError, QiitaDBError
 from qiita_db.reference import Reference
 from qiita_db.logger import LogEntry
 from qiita_core.configuration_manager import ConfigurationManager
@@ -102,6 +103,10 @@ def ware():
 def ebi():
     pass
 
+
+@db.group()
+def portal():
+    pass
 
 # #############################################################################
 # DB COMMANDS
@@ -289,6 +294,53 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
                                             preprocessed_data)
     click.echo("Preprocessed data %s successfully updated" % ppd.id)
 
+# #############################################################################
+# PORTAL COMMANDS
+# #############################################################################
+
+
+@portal.command(name="add-analyses")
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
+@click.argument('analyses', required=True, type=int, nargs=-1)
+def add_analysis(portal, analyses):
+    try:
+        Portal(portal).add_analyses(analyses)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("analyses", str(e))
+
+
+@portal.command(name="remove-analyses")
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
+@click.argument('analyses', required=True, type=int, nargs=-1)
+def remove_analysis(portal, analyses):
+    try:
+        Portal(portal).remove_analyses(analyses)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("analyses", str(e))
+
+
+@portal.command(name="add-studies")
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
+@click.argument('studies', required=True, type=int, nargs=-1)
+def add_study(portal, studies):
+    try:
+        Portal(portal).add_studies(studies)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("studies", str(e))
+
+
+@portal.command(name="remove-studies")
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
+@click.argument('studies', required=True, type=int, nargs=-1)
+def remove_study(portal, studies):
+    try:
+        Portal(portal).remove_studies(studies)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("studies", str(e))
 
 # #############################################################################
 # EBI COMMANDS
