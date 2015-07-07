@@ -23,7 +23,7 @@ class ConfigurationManager(object):
     Parameters
     ----------
     conf_fp: str, optional
-        Filepath to the configuration file. Default: config_test.txt
+        Filepath to the configuration file. Default: config_test.cfg
 
     Attributes
     ----------
@@ -109,6 +109,8 @@ class ConfigurationManager(object):
         The VAMPS URL
     conf_fp : str
         The filepath for the configuration file that is loaded
+    portal_fp : str
+        The filepath to the portal styling config file
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -116,7 +118,7 @@ class ConfigurationManager(object):
             conf_fp = environ['QIITA_CONFIG_FP']
         except KeyError:
             conf_fp = join(dirname(abspath(__file__)),
-                           'support_files/config_test.txt')
+                           'support_files/config_test.cfg')
         self.conf_fp = conf_fp
 
         # Parse the configuration file
@@ -125,7 +127,7 @@ class ConfigurationManager(object):
             config.readfp(conf_file)
 
         _required_sections = {'main', 'redis', 'postgres', 'smtp', 'ebi',
-                              'ipython'}
+                              'ipython', 'portal'}
         if not _required_sections.issubset(set(config.sections())):
             missing = _required_sections - set(config.sections())
             raise MissingConfigSection(', '.join(missing))
@@ -137,6 +139,7 @@ class ConfigurationManager(object):
         self._get_ebi(config)
         self._get_ipython(config)
         self._get_vamps(config)
+        self._get_portal(config)
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
@@ -159,6 +162,7 @@ class ConfigurationManager(object):
                              self.working_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
         self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
+        self.portal = config.get('main', 'PORTAL')
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]
@@ -227,3 +231,6 @@ class ConfigurationManager(object):
         self.vamps_user = config.get('vamps', 'USER')
         self.vamps_pass = config.get('vamps', 'PASSWORD')
         self.vamps_url = config.get('vamps', 'URL')
+
+    def _get_portal(self, config):
+        self.portal_fp = config.get('portal', 'PORTAL_FP')

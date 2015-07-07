@@ -54,7 +54,7 @@ from datetime import datetime
 from itertools import chain
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .exceptions import QiitaDBColumnError, QiitaDBError
+from .exceptions import QiitaDBColumnError, QiitaDBError, QiitaDBLookupError
 from .sql_connection import TRN
 
 
@@ -848,7 +848,7 @@ def convert_to_id(value, table, text_col=None):
 
     Raises
     ------
-    IncompetentQiitaDeveloperError
+    QiitaDBLookupError
         The passed string has no associated id
     """
     text_col = table if text_col is None else text_col
@@ -858,8 +858,8 @@ def convert_to_id(value, table, text_col=None):
         TRN.add(sql, [value])
         _id = TRN.execute_fetchindex()
         if not _id:
-            raise IncompetentQiitaDeveloperError("%s not valid for table %s"
-                                                 % (value, table))
+            raise QiitaDBLookupError("%s not valid for table %s"
+                                     % (value, table))
         # If there was a result it was a single row and and single value,
         # hence access to [0][0]
         return _id[0][0]
@@ -882,7 +882,7 @@ def convert_from_id(value, table):
 
     Raises
     ------
-    ValueError
+    QiitaDBLookupError
         The passed id has no associated string
     """
     with TRN:
@@ -890,7 +890,8 @@ def convert_from_id(value, table):
         TRN.add(sql, [value])
         string = TRN.execute_fetchindex()
         if not string:
-            raise ValueError("%s not valid for table %s" % (value, table))
+            raise QiitaDBLookupError("%s not valid for table %s"
+                                     % (value, table))
         # If there was a result it was a single row and and single value,
         # hence access to [0][0]
         return string[0][0]

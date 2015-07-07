@@ -244,6 +244,16 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                      VALUES ('demo@microbio.me', 'demo@microbio.me-dflt',
                              'dflt', 't', 1)"""
             TRN.add(sql)
+            analysis_id = TRN.execute_fetchlast()
+
+            # Add default analysis to all portals
+            sql = "SELECT portal_type_id FROM qiita.portal_type"
+            TRN.add(sql)
+            args = [[analysis_id, p_id] for p_id in TRN.execute_fetchflatten()]
+            sql = """INSERT INTO qiita.analysis_portal
+                        (analysis_id, portal_type_id)
+                     VALUES (%s, %s)"""
+            TRN.add(sql, args, many=True)
             TRN.execute()
 
             print('Demo user successfully created')

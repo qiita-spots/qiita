@@ -9,7 +9,7 @@
 from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_db.exceptions import QiitaDBLookupError
 from qiita_db.logger import LogEntry
 
 
@@ -20,7 +20,7 @@ class LoggerTests(TestCase):
         LogEntry.create('Runtime', 'runtime message')
         LogEntry.create('Fatal', 'fatal message', info={1: 2})
         LogEntry.create('Warning', 'warning message', info={9: 0})
-        with self.assertRaises(IncompetentQiitaDeveloperError):
+        with self.assertRaises(QiitaDBLookupError):
             # This severity level does not exist in the test schema
             LogEntry.create('Chicken', 'warning message',
                             info={9: 0})
