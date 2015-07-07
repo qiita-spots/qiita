@@ -1019,15 +1019,19 @@ class StudyPerson(QiitaObject):
         """
         with TRN:
             if cls.exists(name, affiliation):
-                raise QiitaDBDuplicateError(
-                    "StudyPerson",
-                    "name: %s, affiliation:%s" % (name, affiliation))
+                sql = """SELECT study_person_id
+                         FROM qiita.{0}
+                         WHERE name = %s
+                            AND affiliation = %s""".format(cls._table)
+                args = [name, affiliation]
+            else:
+                sql = """INSERT INTO qiita.{0} (name, email, affiliation,
+                                                address, phone)
+                         VALUES (%s, %s, %s, %s, %s)
+                         RETURNING study_person_id""".format(cls._table)
+                args = [name, email, affiliation, address, phone]
 
-            sql = """INSERT INTO qiita.{0} (name, email, affiliation, address,
-                                            phone)
-                     VALUES (%s, %s, %s, %s, %s)
-                     RETURNING study_person_id""".format(cls._table)
-            TRN.add(sql, [name, email, affiliation, address, phone])
+            TRN.add(sql, args)
             return cls(TRN.execute_fetchlast())
 
     # Properties

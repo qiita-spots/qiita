@@ -58,8 +58,9 @@ class TestStudyPerson(TestCase):
         self.assertFalse(StudyPerson.exists('LabDude', 'Another lab'))
 
     def test_create_studyperson_already_exists(self):
-        with self.assertRaises(QiitaDBDuplicateError):
-            StudyPerson.create('LabDude', 'lab_dude@foo.bar', 'knight lab')
+        obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar', 'knight lab')
+        self.assertEqual(obs.name, 'LabDude')
+        self.assertEqual(obs.email, 'lab_dude@foo.bar')
 
     def test_retrieve_name(self):
         self.assertEqual(self.studyperson.name, 'LabDude')
