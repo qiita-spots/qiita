@@ -28,7 +28,7 @@ from __future__ import division
 from json import loads, dumps
 
 from qiita_db.util import convert_to_id
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 from .base import QiitaObject
 
 
@@ -63,13 +63,13 @@ class LogEntry(QiitaObject):
         list of LogEntry objects
             list of the log entries
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT logging_id FROM qiita.{0} ORDER BY logging_id DESC "
-               "LIMIT %s".format(cls._table))
-        ids = [x[0]
-               for x in conn_handler.execute_fetchall(sql, (numrecords, ))]
+        with TRN:
+            sql = """SELECT logging_id
+                     FROM qiita.{0}
+                     ORDER BY logging_id DESC LIMIT %s""".format(cls._table)
+            TRN.add(sql, [numrecords])
 
-        return [cls(i) for i in ids]
+            return [cls(i) for i in TRN.execute_fetchflatten()]
 
     @classmethod
     def create(cls, severity, msg, info=None):
@@ -97,14 +97,14 @@ class LogEntry(QiitaObject):
 
         info = dumps([info])
 
-        conn_handler = SQLConnectionHandler()
-        sql = ("INSERT INTO qiita.{} (time, severity_id, msg, information) "
-               "VALUES (NOW(), %s, %s, %s) "
-               "RETURNING logging_id".format(cls._table))
-        severity_id = convert_to_id(severity, "severity")
-        id_ = conn_handler.execute_fetchone(sql, (severity_id, msg, info))[0]
+        with TRN:
+            sql = """INSERT INTO qiita.{} (time, severity_id, msg, information)
+                     VALUES (NOW(), %s, %s, %s)
+                     RETURNING logging_id""".format(cls._table)
+            severity_id = convert_to_id(severity, "severity")
+            TRN.add(sql, [severity_id, msg, info])
 
-        return cls(id_)
+            return cls(TRN.execute_fetchlast())
 
     @property
     def severity(self):
@@ -115,11 +115,11 @@ class LogEntry(QiitaObject):
         int
             This is a key to the SEVERITY table
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT severity_id FROM qiita.{} WHERE "
-               "logging_id = %s".format(self._table))
-
-        return conn_handler.execute_fetchone(sql, (self.id,))[0]
+        with TRN:
+            sql = """SELECT severity_id FROM qiita.{}
+                     WHERE logging_id = %s""".format(self._table)
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
 
     @property
     def time(self):
@@ -129,12 +129,12 @@ class LogEntry(QiitaObject):
         -------
         datetime
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT time FROM qiita.{} "
-               "WHERE logging_id = %s".format(self._table))
-        timestamp = conn_handler.execute_fetchone(sql, (self.id,))[0]
+        with TRN:
+            sql = "SELECT time FROM qiita.{} WHERE logging_id = %s".format(
+                self._table)
+            TRN.add(sql, [self.id])
 
-        return timestamp
+            return TRN.execute_fetchlast()
 
     @property
     def info(self):
@@ -153,12 +153,12 @@ class LogEntry(QiitaObject):
         - When `info` is added, keys can be of any type, but upon retrieval,
           they will be of type str
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT information FROM qiita.{} "
-               "WHERE logging_id = %s".format(self._table))
-        info = conn_handler.execute_fetchone(sql, (self.id,))[0]
+        with TRN:
+            sql = """SELECT information FROM qiita.{} WHERE
+                     logging_id = %s""".format(self._table)
+            TRN.add(sql, [self.id])
 
-        return loads(info)
+            return loads(TRN.execute_fetchlast())
 
     @property
     def msg(self):
@@ -168,21 +168,22 @@ class LogEntry(QiitaObject):
         -------
         str
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT msg FROM qiita.{0} "
-               "WHERE logging_id = %s".format(self._table))
+        with TRN:
+            sql = "SELECT msg FROM qiita.{0} WHERE logging_id = %s".format(
+                self._table)
+            TRN.add(sql, [self.id])
 
-        return conn_handler.execute_fetchone(sql, (self.id,))[0]
+            return TRN.execute_fetchlast()
 
     def clear_info(self):
         """Resets the list of info dicts to be an empty list
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{} set information = %s "
-               "WHERE logging_id = %s".format(self._table))
-        new_info = dumps([])
+        with TRN:
+            sql = """UPDATE qiita.{} SET information = %s
+                     WHERE logging_id = %s""".format(self._table)
+            TRN.add(sql, [dumps([]), self.id])
 
-        conn_handler.execute(sql, (new_info, self.id))
+            TRN.execute()
 
     def add_info(self, info):
         """Adds new information to the info associated with this LogEntry
@@ -197,11 +198,12 @@ class LogEntry(QiitaObject):
         - When `info` is added, keys can be of any type, but upon retrieval,
           they will be of type str
         """
-        conn_handler = SQLConnectionHandler()
-        current_info = self.info
-        current_info.append(info)
-        new_info = dumps(current_info)
+        with TRN:
+            current_info = self.info
+            current_info.append(info)
+            new_info = dumps(current_info)
 
-        sql = ("UPDATE qiita.{} SET information = %s "
-               "WHERE logging_id = %s".format(self._table))
-        conn_handler.execute(sql, (new_info, self.id))
+            sql = """UPDATE qiita.{} SET information = %s
+                     WHERE logging_id = %s""".format(self._table)
+            TRN.add(sql, [new_info, self.id])
+            TRN.execute()
