@@ -24,7 +24,7 @@ from .metadata_template import (SampleTemplate, PrepTemplate,
                                 load_template_to_dataframe)
 from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
                          ProcessedSortmernaParams)
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 
 with standard_library.hooks():
     from configparser import ConfigParser
@@ -80,25 +80,25 @@ def load_study_from_cmd(owner, title, info):
         if optvalue is not None:
             infodict[value] = optvalue
 
-    emp_person_name_email = get_optional('emp_person_name')
-    if emp_person_name_email is not None:
-        emp_name, emp_email, emp_affiliation = emp_person_name_email.split(',')
-        infodict['emp_person_id'] = StudyPerson.create(emp_name.strip(),
-                                                       emp_email.strip(),
-                                                       emp_affiliation.strip())
-    lab_name_email = get_optional('lab_person')
-    if lab_name_email is not None:
-        lab_name, lab_email, lab_affiliation = lab_name_email.split(',')
-        infodict['lab_person_id'] = StudyPerson.create(lab_name.strip(),
-                                                       lab_email.strip(),
-                                                       lab_affiliation.strip())
+    with TRN:
+        emp_person_name_email = get_optional('emp_person_name')
+        if emp_person_name_email is not None:
+            emp_name, emp_email, emp_affiliation = \
+                emp_person_name_email.split(',')
+            infodict['emp_person_id'] = StudyPerson.create(
+                emp_name.strip(), emp_email.strip(), emp_affiliation.strip())
+        lab_name_email = get_optional('lab_person')
+        if lab_name_email is not None:
+            lab_name, lab_email, lab_affiliation = lab_name_email.split(',')
+            infodict['lab_person_id'] = StudyPerson.create(
+                lab_name.strip(), lab_email.strip(), lab_affiliation.strip())
 
-    pi_name_email = infodict.pop('principal_investigator')
-    pi_name, pi_email, pi_affiliation = pi_name_email.split(',', 2)
-    infodict['principal_investigator_id'] = StudyPerson.create(
-        pi_name.strip(), pi_email.strip(), pi_affiliation.strip())
+        pi_name_email = infodict.pop('principal_investigator')
+        pi_name, pi_email, pi_affiliation = pi_name_email.split(',', 2)
+        infodict['principal_investigator_id'] = StudyPerson.create(
+            pi_name.strip(), pi_email.strip(), pi_affiliation.strip())
 
-    return Study.create(User(owner), title, efo_ids, infodict)
+        return Study.create(User(owner), title, efo_ids, infodict)
 
 
 def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
@@ -128,14 +128,17 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
     data_type : str
         The data type of the template
     """
-    fp_types_dict = get_filepath_types()
-    fp_type = fp_types_dict[filepathtype]
-    filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
-    pt = None if prep_template_id is None else PrepTemplate(prep_template_id)
-    return PreprocessedData.create(
-        Study(study_id), params_table, params_id, filepaths, prep_template=pt,
-        submitted_to_insdc_status=submitted_to_insdc_status,
-        data_type=data_type)
+    with TRN:
+        fp_types_dict = get_filepath_types()
+        fp_type = fp_types_dict[filepathtype]
+        filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
+        pt = (None if prep_template_id is None
+              else PrepTemplate(prep_template_id))
+        return PreprocessedData.create(
+            Study(study_id), params_table, params_id, filepaths,
+            prep_template=pt,
+            submitted_to_insdc_status=submitted_to_insdc_status,
+            data_type=data_type)
 
 
 def load_sample_template_from_cmd(sample_temp_path, study_id):
@@ -149,7 +152,6 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
         The study id to which the sample template belongs
     """
     sample_temp = load_template_to_dataframe(sample_temp_path)
-
     return SampleTemplate.create(sample_temp, Study(study_id))
 
 
@@ -192,16 +194,17 @@ def load_raw_data_cmd(filepaths, filepath_types, filetype, prep_template_ids):
         raise ValueError("Please pass exactly one filepath_type for each "
                          "and every filepath")
 
-    filetypes_dict = get_filetypes()
-    filetype_id = filetypes_dict[filetype]
+    with TRN:
+        filetypes_dict = get_filetypes()
+        filetype_id = filetypes_dict[filetype]
 
-    filepath_types_dict = get_filepath_types()
-    filepath_types = [filepath_types_dict[x] for x in filepath_types]
+        filepath_types_dict = get_filepath_types()
+        filepath_types = [filepath_types_dict[x] for x in filepath_types]
 
-    prep_templates = [PrepTemplate(x) for x in prep_template_ids]
+        prep_templates = [PrepTemplate(x) for x in prep_template_ids]
 
-    return RawData.create(filetype_id, prep_templates,
-                          filepaths=list(zip(filepaths, filepath_types)))
+        return RawData.create(filetype_id, prep_templates,
+                              filepaths=list(zip(filepaths, filepath_types)))
 
 
 def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
@@ -235,25 +238,26 @@ def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
         raise ValueError("Please pass exactly one fp_type for each "
                          "and every fp")
 
-    fp_types_dict = get_filepath_types()
-    fp_types = [fp_types_dict[x] for x in fp_types]
+    with TRN:
+        fp_types_dict = get_filepath_types()
+        fp_types = [fp_types_dict[x] for x in fp_types]
 
-    if preprocessed_data_id is not None:
-        preprocessed_data = PreprocessedData(preprocessed_data_id)
-    else:
-        preprocessed_data = None
+        if preprocessed_data_id is not None:
+            preprocessed_data = PreprocessedData(preprocessed_data_id)
+        else:
+            preprocessed_data = None
 
-    if study_id is not None:
-        study = Study(study_id)
-    else:
-        study = None
+        if study_id is not None:
+            study = Study(study_id)
+        else:
+            study = None
 
-    if processed_date is not None:
-        processed_date = parse(processed_date)
+        if processed_date is not None:
+            processed_date = parse(processed_date)
 
-    return ProcessedData.create(processed_params_table_name,
-                                processed_params_id, list(zip(fps, fp_types)),
-                                preprocessed_data, study, processed_date)
+        return ProcessedData.create(
+            processed_params_table_name, processed_params_id,
+            list(zip(fps, fp_types)), preprocessed_data, study, processed_date)
 
 
 def load_parameters_from_cmd(name, fp, table):
@@ -348,77 +352,63 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
             "%s" % (sl_out_dir, ', '.join(missing_files)))
 
     # Get the preprocessed data to be updated
-    study = Study(study_id)
-    ppds = study.preprocessed_data()
-    if not ppds:
-        raise ValueError("Study %s does not have any preprocessed data")
+    with TRN:
+        study = Study(study_id)
+        ppds = study.preprocessed_data()
+        if not ppds:
+            raise ValueError("Study %s does not have any preprocessed data")
 
-    if ppd_id:
-        if ppd_id not in ppds:
-            raise ValueError("The preprocessed data %d does not exist in "
-                             "study %d. Available preprocessed data: %s"
-                             % (ppd_id, study_id, ', '.join(map(str, ppds))))
-        ppd = PreprocessedData(ppd_id)
-    else:
-        ppd = PreprocessedData(sorted(ppds)[0])
-
-    # We need to loop through the fps list to get the db filepaths that we
-    # need to modify
-    fps = defaultdict(list)
-    for fp_id, fp, fp_type in sorted(ppd.get_filepaths()):
-        fps[fp_type].append((fp_id, fp))
-
-    fps_to_add = []
-    fps_to_modify = []
-    keys = ['preprocessed_fasta', 'preprocessed_fastq', 'preprocessed_demux',
-            'log']
-
-    for key in keys:
-        if key in fps:
-            db_id, db_fp = fps[key][0]
-            fp_checksum = compute_checksum(new_fps[key])
-            fps_to_modify.append((db_id, db_fp, new_fps[key], fp_checksum))
+        if ppd_id:
+            if ppd_id not in ppds:
+                raise ValueError(
+                    "The preprocessed data %d does not exist in "
+                    "study %d. Available preprocessed data: %s"
+                    % (ppd_id, study_id, ', '.join(map(str, ppds))))
+            ppd = PreprocessedData(ppd_id)
         else:
-            fps_to_add.append(
-                (new_fps[key], convert_to_id(key, 'filepath_type')))
+            ppd = PreprocessedData(sorted(ppds)[0])
 
-    # Insert the new files in the database, if any
-    if fps_to_add:
-        ppd.add_filepaths(fps_to_add)
+        # We need to loop through the fps list to get the db filepaths that we
+        # need to modify
+        fps = defaultdict(list)
+        for fp_id, fp, fp_type in sorted(ppd.get_filepaths()):
+            fps[fp_type].append((fp_id, fp))
 
-    # Update the files and the database
-    conn_handler = SQLConnectionHandler()
-    # Create a queue so we can execute all the modifications on the DB in
-    # a transaction block
-    queue_name = "update_ppd_%d" % ppd.id
-    conn_handler.create_queue(queue_name)
-    sql = "UPDATE qiita.filepath SET checksum=%s WHERE filepath_id=%s"
-    bkp_files = []
-    for db_id, db_fp, new_fp, checksum in fps_to_modify:
-        # Move the db_file in case something goes wrong
-        bkp_fp = "%s.bkp" % db_fp
-        move(db_fp, bkp_fp)
-        bkp_files.append((bkp_fp, db_fp))
+        fps_to_add = []
+        fps_to_modify = []
+        keys = ['preprocessed_fasta', 'preprocessed_fastq',
+                'preprocessed_demux', 'log']
 
-        # Start the update for the current file
-        # Move the file to the database location
-        move(new_fp, db_fp)
-        # Add the SQL instruction to the DB
-        conn_handler.add_to_queue(queue_name, sql, (checksum, db_id))
+        for key in keys:
+            if key in fps:
+                db_id, db_fp = fps[key][0]
+                fp_checksum = compute_checksum(new_fps[key])
+                fps_to_modify.append((db_id, db_fp, new_fps[key], fp_checksum))
+            else:
+                fps_to_add.append(
+                    (new_fps[key], convert_to_id(key, 'filepath_type')))
 
-    # Execute the queue
-    try:
-        conn_handler.execute_queue(queue_name)
-    except Exception:
-        # We need to catch any exception so we can restore the db files
-        for bkp_fp, db_fp in bkp_files:
-            move(bkp_fp, db_fp)
-        # Using just raise so the original traceback is shown
-        raise
+        # Insert the new files in the database, if any
+        if fps_to_add:
+            ppd.add_filepaths(fps_to_add)
 
-    # Since the files and the database have been updated correctly,
-    # remove the backup files
-    for bkp_fp, _ in bkp_files:
-        remove(bkp_fp)
+        sql = "UPDATE qiita.filepath SET checksum=%s WHERE filepath_id=%s"
+        for db_id, db_fp, new_fp, checksum in fps_to_modify:
+            # Move the db_file in case something goes wrong
+            bkp_fp = "%s.bkp" % db_fp
+            move(db_fp, bkp_fp)
 
-    return ppd
+            # Start the update for the current file
+            # Move the file to the database location
+            move(new_fp, db_fp)
+            # Add the SQL instruction to the DB
+            TRN.add(sql, [checksum, db_id])
+
+            # In case that a rollback occurs, we need to restore the files
+            TRN.add_post_rollback_func(move, bkp_fp, db_fp)
+            # In case of commit, we can remove the backup files
+            TRN.add_post_commit_func(remove, bkp_fp)
+
+        TRN.execute()
+
+        return ppd
