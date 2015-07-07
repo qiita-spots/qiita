@@ -8,6 +8,8 @@ env:
     - TEST_ADD_STUDIES=True
 before_install:
   - redis-server --version
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libhdf5-serial-dev
   # Update pip itself
   - pip install --upgrade pip
 install:
