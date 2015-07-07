@@ -8,19 +8,12 @@ env:
     - TEST_ADD_STUDIES=True
 before_install:
   - redis-server --version
-  - wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-  - export PATH=/home/travis/miniconda3/bin:$PATH
-  # Update conda itself
-  - conda update --yes conda
+  - apt-get update -qq
+  - apt-get install -qq libhdf5-serial-dev
+  # Update pip itself
+  - pip install --upgrade pip
 install:
-  # install a few of the dependencies that pip would otherwise try to install
-  # when intalling scikit-bio
-  - travis_retry conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8 pyzmq networkx pyparsing natsort mock 'pandas>=0.15' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>= 1.7' 'h5py>=2.3.1' 'future==0.13.0'
   - source activate env_name
-  - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
-  - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
   - travis_retry pip install .
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
