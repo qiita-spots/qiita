@@ -386,5 +386,6 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
 
             if exists(py_patch_fp):
                 if verbose:
-                    print('\t\tApplying python patch %s...' % py_patch_filename)
+                    print('\t\tApplying python patch %s...'
+                          % py_patch_filename)
                 execfile(py_patch_fp)
