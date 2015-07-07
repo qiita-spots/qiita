@@ -740,11 +740,13 @@ PREP_TEMPLATE = (
 
 PY_PATCH = """
 from qiita_db.study import Study
+from qiita_db.sql_connection import TRN
 study = Study(1)
-conn = SQLConnectionHandler()
-conn.executemany(
-    "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)",
-    [[study.id], [study.id*100]])
+
+with TRN:
+    sql = "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)"
+    TRN.add(sql, [[study.id], [study.id*100]], many=True)
+    TRN.execute()
 """
 
 PARAMETERS = """max_bad_run_length\t3
