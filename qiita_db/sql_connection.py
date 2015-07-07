@@ -847,6 +847,10 @@ class Transaction(object):
                             "The placeholder {%d:%d:%d} is referring to "
                             "a SQL query that does not retrieve data"
                             % (q_idx, r_idx, v_idx))
+
+        # If sql_args is an empty list, psycopg2 doesn't work correctly if we
+        # are passing '%' characters to the SQL query in a LIKE statement
+        sql_args = sql_args if sql_args else None
         return sql, sql_args
 
     @_checker
