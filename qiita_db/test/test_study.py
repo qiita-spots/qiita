@@ -323,6 +323,13 @@ class TestStudy(TestCase):
                                      'Cannabis Soils'))
         self.assertFalse(Study.exists('Not Cannabis Soils'))
 
+    def test_create_duplicate(self):
+        with self.assertRaises(QiitaDBDuplicateError):
+            Study.create(
+                User('test@foo.bar'),
+                'Identification of the Microbiomes for Cannabis Soils',
+                [1], self.info)
+
     def test_create_study_min_data(self):
         """Insert a study into the database"""
         before = datetime.now()
