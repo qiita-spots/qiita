@@ -164,12 +164,12 @@ class Study(QiitaObject):
         with TRN:
             # Get the status of all its processed data
             sql = """SELECT processed_data_status
-                    FROM qiita.processed_data_status pds
-                      JOIN qiita.processed_data pd
-                        USING (processed_data_status_id)
-                      JOIN qiita.study_processed_data spd
-                        USING (processed_data_id)
-                    WHERE spd.study_id = %s"""
+                     FROM qiita.processed_data_status pds
+                        JOIN qiita.processed_data pd
+                            USING (processed_data_status_id)
+                        JOIN qiita.study_processed_data spd
+                            USING (processed_data_id)
+                     WHERE spd.study_id = %s"""
             TRN.add(sql, [self._id])
             return infer_status(TRN.execute_fetchindex())
 
