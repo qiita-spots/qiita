@@ -242,15 +242,10 @@ def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
         fp_types_dict = get_filepath_types()
         fp_types = [fp_types_dict[x] for x in fp_types]
 
-        if preprocessed_data_id is not None:
-            preprocessed_data = PreprocessedData(preprocessed_data_id)
-        else:
-            preprocessed_data = None
+        preprocessed_data = (None if preprocessed_data_id is None
+                             else PreprocessedData(preprocessed_data_id))
 
-        if study_id is not None:
-            study = Study(study_id)
-        else:
-            study = None
+        study = None if study_id is None else Study(study_id)
 
         if processed_date is not None:
             processed_date = parse(processed_date)
