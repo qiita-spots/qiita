@@ -35,6 +35,7 @@ from .study import Study
 from .exceptions import QiitaDBStatusError, QiitaDBError, QiitaDBUnknownIDError
 from .util import (convert_to_id, get_work_base_dir,
                    get_mountpoint, insert_filepaths)
+from qiita_core.qiita_settings import qiita_config
 
 
 class Analysis(QiitaStatusObject):
@@ -72,6 +73,7 @@ class Analysis(QiitaStatusObject):
     """
 
     _table = "analysis"
+    _portal_table = "analysis_portal"
     _analysis_id_column = 'analysis_id'
 
     def _lock_check(self):
@@ -104,8 +106,10 @@ class Analysis(QiitaStatusObject):
             sql = """SELECT analysis_id
                      FROM qiita.{0}
                         JOIN qiita.{0}_status USING (analysis_status_id)
-                     WHERE status = %s""".format(cls._table)
-            TRN.add(sql, [status])
+                        JOIN qiita.analysis_portal USING (analysis_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE status = %s AND portal = %s""".format(cls._table)
+            TRN.add(sql, [status, qiita_config.portal])
             return set(TRN.execute_fetchflatten())
 
     @classmethod
@@ -129,6 +133,8 @@ class Analysis(QiitaStatusObject):
         with TRN:
             status_id = convert_to_id('in_construction',
                                       'analysis_status', 'status')
+            portal_id = convert_to_id(qiita_config.portal, 'portal_type',
+                                      'portal')
 
             if from_default:
                 # insert analysis and move samples into that new analysis
@@ -163,6 +169,17 @@ class Analysis(QiitaStatusObject):
                          VALUES (%s, %s, %s, %s)
                          RETURNING analysis_id""".format(cls._table)
                 TRN.add(sql, [owner.id, name, description, status_id])
+
+            # Add to both QIITA and given portal (if not QIITA)
+            sql = """INSERT INTO qiita.analysis_portal
+                        (analysis_id, portal_type_id)
+                     VALUES (%s, %s)"""
+            args = [[a_id_ph, portal_id]]
+
+            if qiita_config.portal != 'QIITA':
+                qp_id = convert_to_id('QIITA', 'portal_type', 'portal')
+                args.append([a_id_ph, qp_id])
+            TRN.add(sql, args, many=True)
 
             # add parent if necessary
             if parent:
@@ -202,6 +219,10 @@ class Analysis(QiitaStatusObject):
                 cls._analysis_id_column)
             TRN.add(sql, args)
 
+            sql = "DELETE FROM qiita.analysis_portal WHERE {0} = %s".format(
+                cls._analysis_id_column)
+            TRN.add(sql, args)
+
             sql = "DELETE FROM qiita.analysis_sample WHERE {0} = %s".format(
                 cls._analysis_id_column)
             TRN.add(sql, args)
@@ -234,10 +255,14 @@ class Analysis(QiitaStatusObject):
         """
         with TRN:
             sql = """SELECT EXISTS(
-                        SELECT * FROM qiita.{0}
-                        WHERE {1}=%s)""".format(cls._table,
-                                                cls._analysis_id_column)
-            TRN.add(sql, [analysis_id])
+                        SELECT *
+                        FROM qiita.{0}
+                            JOIN qiita.analysis_portal USING (analysis_id)
+                            JOIN qiita.portal_type USING (portal_type_id)
+                        WHERE {1}=%s
+                            AND portal=%s)""".format(cls._table,
+                                                     cls._analysis_id_column)
+            TRN.add(sql, [analysis_id, qiita_config.portal])
             return TRN.execute_fetchlast()
 
     # ---- Properties ----
@@ -270,6 +295,23 @@ class Analysis(QiitaStatusObject):
                 self._table)
             TRN.add(sql, [self._id])
             return TRN.execute_fetchlast()
+
+    @property
+    def _portals(self):
+        """The portals used to create the analysis
+
+        Returns
+        -------
+        str
+            Name of the portal
+        """
+        with TRN:
+            sql = """SELECT portal
+                     FROM qiita.analysis_portal
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE analysis_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @property
     def timestamp(self):

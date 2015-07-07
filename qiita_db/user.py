@@ -32,10 +32,13 @@ from re import sub
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
+from qiita_core.qiita_settings import qiita_config
 from .base import QiitaObject
 from .sql_connection import TRN
-from .util import (create_rand_string, check_table_cols, hash_password)
-from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError)
+from .util import (create_rand_string, check_table_cols, hash_password,
+                   convert_to_id)
+from .exceptions import (QiitaDBColumnError, QiitaDBDuplicateError,
+                         QiitaDBError)
 
 
 class User(QiitaObject):
@@ -230,12 +233,6 @@ class User(QiitaObject):
             sql = "INSERT INTO qiita.{0} ({1}) VALUES ({2})".format(
                 cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
             TRN.add(sql, values)
-            # create user default sample holder
-            sql = ("INSERT INTO qiita.analysis "
-                   "(email, name, description, dflt, analysis_status_id) "
-                   "VALUES (%s, %s, %s, %s, 1)")
-            TRN.add(sql, [email, '%s-dflt' % email, 'dflt', True])
-            TRN.execute()
 
             return cls(email)
 
@@ -250,6 +247,7 @@ class User(QiitaObject):
         code : str
             code to verify
         code_type : {'create', 'reset'}
+            type of code being verified, whether creating user or reset pass.
 
         Returns
         -------
@@ -259,6 +257,8 @@ class User(QiitaObject):
         ------
         IncompentQiitaDeveloper
             code_type is not create or reset
+        QiitaDBError
+            User has no code of the given type
         """
         with TRN:
             if code_type == 'create':
@@ -274,23 +274,46 @@ class User(QiitaObject):
             TRN.add(sql, [email])
             db_code = TRN.execute_fetchlast()
 
+            if db_code == '':
+                raise QiitaDBError("No %s code for user %s" %
+                                   (column, email))
+
             # If the query didn't return anything, then there's no way the code
             # can match
             if not db_code:
                 return False
 
-            # db_code = db_code[0]
+            correct_code = db_code == code
 
-            if db_code == code and code_type == "create":
-                # verify the user
-                sql = """UPDATE qiita.{} SET user_level_id = (
-                            SELECT user_level_id FROM qiita.user_level
-                            WHERE name = %s)
-                         WHERE email = %s""".format(cls._table)
-                TRN.add(sql, ["user", email])
-                TRN.execute()
+            if correct_code:
+                sql = """UPDATE qiita.{0} SET {1} = ''
+                         WHERE email = %s""".format(cls._table, column)
+                TRN.add(sql, [email])
 
-            return db_code == code
+                if code_type == "create":
+                    # verify the user
+                    level = convert_to_id('user', 'user_level', 'name')
+                    sql = """UPDATE qiita.{} SET user_level_id = %s
+                             WHERE email = %s""".format(cls._table)
+                    TRN.add(sql, [level, email])
+
+                    # create user default sample holders once verified
+                    # create one per portal
+                    sql = "SELECT portal_type_id from qiita.portal_type"
+                    TRN.add(sql)
+
+                    an_sql = """INSERT INTO qiita.analysis
+                                    (email, name, description, dflt,
+                                     analysis_status_id)
+                                VALUES (%s, %s, %s, %s, 1)"""
+                    an_args = [
+                        [email, '%s-dflt-%d' % (email, portal), 'dflt', True]
+                        for portal in TRN.execute_fetchflatten()]
+                    TRN.add(an_sql, an_args, many=True)
+
+                    TRN.execute()
+
+            return correct_code
 
     # ---properties---
     @property
@@ -358,50 +381,59 @@ class User(QiitaObject):
     @property
     def default_analysis(self):
         with TRN:
-            sql = """SELECT analysis_id FROM qiita.analysis
-                     WHERE email = %s AND dflt = true"""
-            TRN.add(sql, [self._id])
+            sql = """SELECT analysis_id
+                     FROM qiita.analysis
+                        JOIN qiita.analysis_portal USING (analysis_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE email = %s AND dflt = true AND portal = %s"""
+            TRN.add(sql, [self._id, qiita_config.portal])
             return TRN.execute_fetchlast()
 
     @property
     def user_studies(self):
         """Returns a list of study ids owned by the user"""
         with TRN:
-            sql = "SELECT study_id FROM qiita.study WHERE email = %s".format(
-                self._table)
-            TRN.add(sql, [self._id])
-            study_ids = TRN.execute_fetchindex()
-            return {s[0] for s in study_ids}
+            sql = """SELECT study_id
+                     FROM qiita.study
+                        JOIN qiita.study_portal USING (study_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE email = %s AND portal = %s"""
+            TRN.add(sql, [self._id, qiita_config.portal])
+            return set(TRN.execute_fetchflatten())
 
     @property
     def shared_studies(self):
         """Returns a list of study ids shared with the user"""
         with TRN:
-            sql = """SELECT study_id FROM qiita.study_users
-                     WHERE email = %s""".format(self._table)
-            TRN.add(sql, [self._id])
-            study_ids = TRN.execute_fetchindex()
-            return {s[0] for s in study_ids}
+            sql = """SELECT study_id
+                     FROM qiita.study_users
+                        JOIN qiita.study_portal USING (study_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE email = %s and portal = %s"""
+            TRN.add(sql, [self._id, qiita_config.portal])
+            return set(TRN.execute_fetchflatten())
 
     @property
     def private_analyses(self):
         """Returns a list of private analysis ids owned by the user"""
         with TRN:
             sql = """SELECT analysis_id FROM qiita.analysis
-                     WHERE email = %s AND dflt = false"""
-            TRN.add(sql, [self._id])
-            analysis_ids = TRN.execute_fetchindex()
-            return {a[0] for a in analysis_ids}
+                        JOIN qiita.analysis_portal USING (analysis_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE email = %s AND dflt = false AND portal = %s"""
+            TRN.add(sql, [self._id, qiita_config.portal])
+            return set(TRN.execute_fetchflatten())
 
     @property
     def shared_analyses(self):
         """Returns a list of analysis ids shared with the user"""
         with TRN:
             sql = """SELECT analysis_id FROM qiita.analysis_users
-                     WHERE email = %s""".format(self._table)
-            TRN.add(sql, [self._id])
-            analysis_ids = TRN.execute_fetchindex()
-            return {a[0] for a in analysis_ids}
+                        JOIN qiita.analysis_portal USING (analysis_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE email = %s AND portal = %s"""
+            TRN.add(sql, [self._id, qiita_config.portal])
+            return set(TRN.execute_fetchflatten())
 
     # ------- methods ---------
     def change_password(self, oldpass, newpass):

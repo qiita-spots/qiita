@@ -121,7 +121,6 @@ class TestHelpers(TestHandlerBase):
     def test_build_study_info_new_study(self):
         info = {
             'timeseries_type_id': 1,
-            'portal_type_id': 1,
             'lab_person_id': None,
             'principal_investigator_id': 3,
             'metadata_complete': False,

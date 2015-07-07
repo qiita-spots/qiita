@@ -24,5 +24,6 @@ following documents:
    :maxdepth: 1
 
    tutorials/index.rst
+   admin/index.rst
    faq.rst
 
