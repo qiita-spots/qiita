@@ -44,7 +44,7 @@ function check_submit(action) {
   if(errors.length > 0) {
     $("#add-button").prop('disabled', false);
     $("#remove-button").prop('disabled', false);
-    bootstrapAlert(errors, "danger", 1900);
+    bootstrapAlert(errors, "danger", 80000);
     return false;
   }
   $('#action').val(action);
