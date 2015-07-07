@@ -21,6 +21,8 @@ class TestAuthCreateHandler(TestHandlerBase):
 
 
 class TestAuthVerifyHandler(TestHandlerBase):
+    database = True
+
     def test_get(self):
         response = self.get('/auth/verify/SOMETHINGHERE?email=test%40foo.bar')
         self.assertEqual(response.code, 500)
