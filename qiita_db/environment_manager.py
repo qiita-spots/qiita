@@ -55,34 +55,36 @@ def _check_db_exists(db, conn_handler):
     return (db,) in dbs
 
 
-def create_layout_and_patch(conn, verbose=False):
+def create_layout_and_patch(verbose=False):
     r"""Builds the SQL layout and applies all the patches
 
     Parameters
     ----------
-    conn : SQLConnectionHandler
-        The handler connected to the DB
     verbose : bool, optional
         If true, print the current step. Default: False.
     """
-    if verbose:
-        print('Building SQL layout')
-    # Create the schema
-    with open(LAYOUT_FP, 'U') as f:
-        conn.execute(f.read())
+    with TRN:
+        if verbose:
+            print('Building SQL layout')
+        # Create the schema
+        with open(LAYOUT_FP, 'U') as f:
+            TRN.add(f.read())
+        TRN.execute()
 
-    if verbose:
-        print('Patching Database...')
-    patch(verbose=verbose)
+        if verbose:
+            print('Patching Database...')
+        patch(verbose=verbose)
 
 
-def _populate_test_db(conn):
+def _populate_test_db():
     print('Populating database with demo data')
-    with open(POPULATE_FP, 'U') as f:
-        conn.execute(f.read())
+    with TRN:
+        with open(POPULATE_FP, 'U') as f:
+            TRN.add(f.read())
+        TRN.execute()
 
 
-def _add_ontology_data(conn):
+def _add_ontology_data():
     print ('Loading Ontology Data')
     if not exists(reference_base_dir):
         mkdir(reference_base_dir)
@@ -101,18 +103,21 @@ def _add_ontology_data(conn):
             raise IOError("Error: Could not fetch ontologies file from %s" %
                           url)
 
-    with gzip.open(fp, 'rb') as f:
-        conn.execute(f.read())
+    with TRN:
+        with gzip.open(fp, 'rb') as f:
+            TRN.add(f.read())
+        TRN.execute()
 
 
-def _insert_processed_params(conn, ref):
-    sortmerna_sql = """INSERT INTO qiita.processed_params_sortmerna
-                       (reference_id, sortmerna_e_value, sortmerna_max_pos,
-                        similarity, sortmerna_coverage, threads)
-                       VALUES
-                       (%s, 1, 10000, 0.97, 0.97, 1)"""
-
-    conn.execute(sortmerna_sql, [ref._id])
+def _insert_processed_params(ref):
+    with TRN:
+        sortmerna_sql = """INSERT INTO qiita.processed_params_sortmerna
+                           (reference_id, sortmerna_e_value, sortmerna_max_pos,
+                            similarity, sortmerna_coverage, threads)
+                           VALUES
+                           (%s, 1, 10000, 0.97, 0.97, 1)"""
+        TRN.add(sortmerna_sql, [ref._id])
+        TRN.execute()
 
 
 def _download_reference_files(conn):
@@ -142,11 +147,11 @@ def _download_reference_files(conn):
             except:
                 raise IOError("Error: Could not fetch %s file from %s" %
                               (file_type, url))
+    with TRN:
+        ref = Reference.create('Greengenes', '13_8', files['sequence'][0],
+                               files['taxonomy'][0], files['tree'][0])
 
-    ref = Reference.create('Greengenes', '13_8', files['sequence'][0],
-                           files['taxonomy'][0], files['tree'][0])
-
-    _insert_processed_params(conn, ref)
+        _insert_processed_params(ref)
 
 
 def make_environment(load_ontologies, download_reference, add_demo_user):
@@ -192,58 +197,62 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
     admin_conn.autocommit = False
 
     del admin_conn
+    SQLConnectionHandler.close()
 
-    # Connect to the postgres server, but this time to the just created db
-    conn = SQLConnectionHandler()
+    with TRN:
+        print('Inserting database metadata')
+        # Build the SQL layout into the database
+        with open(SETTINGS_FP, 'U') as f:
+            TRN.add(f.read())
+        TRN.execute()
 
-    print('Inserting database metadata')
-    # Build the SQL layout into the database
-    with open(SETTINGS_FP, 'U') as f:
-        conn.execute(f.read())
+        # Insert the settings values to the database
+        sql = """INSERT INTO settings (test, base_data_dir, base_work_dir)
+                 VALUES (%s, %s, %s)"""
+        TRN.add(sql, [qiita_config.test_environment,
+                      qiita_config.base_data_dir,
+                      qiita_config.working_dir])
+        TRN.execute()
 
-    # Insert the settings values to the database
-    conn.execute("INSERT INTO settings (test, base_data_dir, base_work_dir) "
-                 "VALUES (%s, %s, %s)",
-                 (qiita_config.test_environment, qiita_config.base_data_dir,
-                  qiita_config.working_dir))
+        create_layout_and_patch(verbose=True)
 
-    create_layout_and_patch(conn, verbose=True)
+        if load_ontologies:
+            _add_ontology_data()
 
-    if load_ontologies:
-        _add_ontology_data(conn)
+            # these values can only be added if the environment is being loaded
+            # with the ontologies, thus this cannot exist inside intialize.sql
+            # because otherwise loading the ontologies would be a requirement
+            ontology = Ontology(convert_to_id('ENA', 'ontology'))
+            ontology.add_user_defined_term('Amplicon Sequencing')
 
-        # these values can only be added if the environment is being loaded
-        # with the ontologies, thus this cannot exist inside intialize.sql
-        # because otherwise loading the ontologies would be a requirement
-        ontology = Ontology(convert_to_id('ENA', 'ontology'))
-        ontology.add_user_defined_term('Amplicon Sequencing')
+        if download_reference:
+            _download_reference_files()
 
-    if download_reference:
-        _download_reference_files(conn)
+        # we don't do this if it's a test environment because populate.sql
+        # already adds this user...
+        if add_demo_user and not qiita_config.test_environment:
+            sql = """INSERT INTO qiita.qiita_user (email, user_level_id,
+                                                   password, name, affiliation,
+                                                   address, phone)
+                VALUES
+                ('demo@microbio.me', 4,
+                '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe',
+                'Demo', 'Qitta Dev', '1345 Colorado Avenue', '303-492-1984')"""
+            TRN.add(sql)
+            sql = """INSERT INTO qiita.analysis (email, name, description,
+                                                 dflt, analysis_status_id)
+                     VALUES ('demo@microbio.me', 'demo@microbio.me-dflt',
+                             'dflt', 't', 1)"""
+            TRN.add(sql)
+            TRN.execute()
 
-    # we don't do this if it's a test environment because populate.sql
-    # already adds this user...
-    if add_demo_user and not qiita_config.test_environment:
-        conn.execute("""
-            INSERT INTO qiita.qiita_user (email, user_level_id, password,
-                                          name, affiliation, address, phone)
-            VALUES
-            ('demo@microbio.me', 4,
-             '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe',
-             'Demo', 'Qitta Dev', '1345 Colorado Avenue', '303-492-1984')""")
-        conn.execute("""
-            INSERT INTO qiita.analysis (email, name, description, dflt,
-                                        analysis_status_id)
-            VALUES
-            ('demo@microbio.me', 'demo@microbio.me-dflt', 'dflt', 't', 1)""")
+            print('Demo user successfully created')
 
-        print('Demo user successfully created')
-
-    if qiita_config.test_environment:
-        _populate_test_db(conn)
-        print('Test environment successfully created')
-    else:
-        print('Production environment successfully created')
+        if qiita_config.test_environment:
+            _populate_test_db()
+            print('Test environment successfully created')
+        else:
+            print('Production environment successfully created')
 
 
 def drop_environment(ask_for_confirmation):
@@ -282,34 +291,31 @@ def drop_environment(ask_for_confirmation):
         print('ABORTING')
 
 
-def drop_and_rebuild_tst_database(conn_handler):
+def drop_and_rebuild_tst_database():
     """Drops the qiita schema and rebuilds the test database
-
-    Parameters
-    ----------
-    conn_handler : SQLConnectionHandler
-        The handler connected to the database
     """
-    # Drop the schema
-    conn_handler.execute("DROP SCHEMA IF EXISTS qiita CASCADE")
-    # Set the database to unpatched
-    conn_handler.execute("UPDATE settings SET current_patch = 'unpatched'")
-    # Create the database and apply patches
-    create_layout_and_patch(conn_handler)
-    # Populate the database
-    with open(POPULATE_FP, 'U') as f:
-        conn_handler.execute(f.read())
+    with TRN:
+        # Drop the schema
+        TRN.add("DROP SCHEMA IF EXISTS qiita CASCADE")
+        # Set the database to unpatched
+        TRN.add("UPDATE settings SET current_patch = 'unpatched'")
+        # Create the database and apply patches
+        create_layout_and_patch()
+        # Populate the database
+        with open(POPULATE_FP, 'U') as f:
+            TRN.add(f.read())
+
+        TRN.execute()
 
 
 def reset_test_database(wrapped_fn):
     """Decorator that drops the qiita schema, rebuilds and repopulates the
     schema with test data, then executes wrapped_fn
     """
-    conn_handler = SQLConnectionHandler()
 
     def decorated_wrapped_fn(*args, **kwargs):
         # Reset the test database
-        drop_and_rebuild_tst_database(conn_handler)
+        drop_and_rebuild_tst_database()
         # Execute the wrapped function
         return wrapped_fn(*args, **kwargs)
 
@@ -346,41 +352,39 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
     Pulls the current patch from the settings table and applies all subsequent
     patches found in the patches directory.
     """
-    conn = SQLConnectionHandler()
+    with TRN:
+        TRN.add("SELECT current_patch FROM settings")
+        current_patch = TRN.execute_fetchlast()
+        current_sql_patch_fp = join(patches_dir, current_patch)
+        corresponding_py_patch = partial(join, patches_dir, 'python_patches')
 
-    current_patch = conn.execute_fetchone(
-        "select current_patch from settings")[0]
-    current_sql_patch_fp = join(patches_dir, current_patch)
-    corresponding_py_patch = partial(join, patches_dir, 'python_patches')
+        sql_glob = join(patches_dir, '*.sql')
+        sql_patch_files = natsorted(glob(sql_glob))
 
-    sql_glob = join(patches_dir, '*.sql')
-    sql_patch_files = natsorted(glob(sql_glob))
+        if current_patch == 'unpatched':
+            next_patch_index = 0
+        elif current_sql_patch_fp not in sql_patch_files:
+            raise RuntimeError("Cannot find patch file %s" % current_patch)
+        else:
+            next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
 
-    if current_patch == 'unpatched':
-        next_patch_index = 0
-    elif current_sql_patch_fp not in sql_patch_files:
-        raise RuntimeError("Cannot find patch file %s" % current_patch)
-    else:
-        next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
+        patch_update_sql = "UPDATE settings SET current_patch = %s"
 
-    patch_update_sql = "update settings set current_patch = %s"
+        for sql_patch_fp in sql_patch_files[next_patch_index:]:
+            sql_patch_filename = basename(sql_patch_fp)
+            py_patch_fp = corresponding_py_patch(
+                splitext(basename(sql_patch_fp))[0] + '.py')
+            py_patch_filename = basename(py_patch_fp)
 
-    for sql_patch_fp in sql_patch_files[next_patch_index:]:
-        sql_patch_filename = basename(sql_patch_fp)
-        py_patch_fp = corresponding_py_patch(
-            splitext(basename(sql_patch_fp))[0] + '.py')
-        py_patch_filename = basename(py_patch_fp)
-        conn.create_queue(sql_patch_filename)
-        with open(sql_patch_fp, 'U') as patch_file:
-            if verbose:
-                print('\tApplying patch %s...' % sql_patch_filename)
-            conn.add_to_queue(sql_patch_filename, patch_file.read())
-            conn.add_to_queue(sql_patch_filename, patch_update_sql,
-                              [sql_patch_filename])
+            with open(sql_patch_fp, 'U') as patch_file:
+                if verbose:
+                    print('\tApplying patch %s...' % sql_patch_filename)
+                TRN.add(patch_file.read())
+                TRN.add(patch_update_sql, [sql_patch_filename])
 
-        conn.execute_queue(sql_patch_filename)
+            TRN.execute()
 
-        if exists(py_patch_fp):
-            if verbose:
-                print('\t\tApplying python patch %s...' % py_patch_filename)
-            execfile(py_patch_fp)
+            if exists(py_patch_fp):
+                if verbose:
+                    print('\t\tApplying python patch %s...' % py_patch_filename)
+                execfile(py_patch_fp)
