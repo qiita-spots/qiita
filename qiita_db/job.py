@@ -116,12 +116,12 @@ class Job(QiitaStatusObject):
             command_id = TRN.execute_fetchlast()
 
             opts_json = params_dict_to_json(options)
-            sql = """SELECT DISTINCT aj.analysis_id, aj.job_id
-                     FROM qiita.analysis_job aj
-                        JOIN qiita.{0} j ON aj.job_id = j.job_id
-                     WHERE j.data_type_id = %s
-                        AND j.command_id = %s
-                        AND j.options = %s""".format(cls._table)
+            sql = """SELECT DISTINCT analysis_id, job_id
+                     FROM qiita.analysis_job
+                        JOIN qiita.{0} USING (job_id)
+                     WHERE data_type_id = %s
+                        AND command_id = %s
+                        AND options = %s""".format(cls._table)
             TRN.add(sql, [datatype_id, command_id, opts_json])
             analyses = TRN.execute_fetchindex()
 
@@ -178,11 +178,10 @@ class Job(QiitaStatusObject):
         """
         with TRN:
             # store filepath info for later use
-            sql = """SELECT f.filepath, f.filepath_id
-                     FROM qiita.filepath f
-                        JOIN qiita.job_results_filepath jf
-                            ON jf.filepath_id = f.filepath_id
-                     WHERE jf.job_id = %s"""
+            sql = """SELECT filepath, filepath_id
+                     FROM qiita.filepath
+                        JOIN qiita.job_results_filepath USING (filepath_id)
+                     WHERE job_id = %s"""
             args = [jobid]
             TRN.add(sql, args)
             filepaths = TRN.execute_fetchindex()
@@ -379,13 +378,11 @@ class Job(QiitaStatusObject):
         # Select results filepaths and filepath types from the database
         with TRN:
             _, basedir = get_mountpoint('job')[0]
-            sql = """SELECT fp.filepath, fpt.filepath_type
-                     FROM qiita.filepath fp
-                        JOIN qiita.filepath_type fpt
-                            ON fp.filepath_type_id = fpt.filepath_type_id
-                        JOIN qiita.job_results_filepath jrfp
-                            ON fp.filepath_id = jrfp.filepath_id
-                     WHERE jrfp.job_id = %s"""
+            sql = """SELECT filepath, filepath_type
+                     FROM qiita.filepath
+                        JOIN qiita.filepath_type USING (filepath_type_id)
+                        JOIN qiita.job_results_filepath USING (filepath_id)
+                     WHERE job_id = %s"""
             TRN.add(sql, [self._id])
             results = TRN.execute_fetchindex()
 
@@ -540,9 +537,8 @@ class Command(object):
             # get commands for each datatype
             sql = """SELECT C.*
                      FROM qiita.command C
-                        JOIN qiita.command_data_type CD
-                            ON C.command_id = CD.command_id
-                     WHERE CD.data_type_id = %s"""
+                        JOIN qiita.command_data_type USING (command_id)
+                     WHERE data_type_id = %s"""
             for dt_id, dt in datatype_info:
                 TRN.add(sql, [dt_id])
                 comms = TRN.execute_fetchindex()

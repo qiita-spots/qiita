@@ -102,10 +102,9 @@ class Analysis(QiitaStatusObject):
         """
         with TRN:
             sql = """SELECT analysis_id
-                     FROM qiita.{0} a
-                        JOIN qiita.{0}_status ans
-                            ON a.analysis_status_id = ans.analysis_status_id
-                     WHERE ans.status = %s""".format(cls._table)
+                     FROM qiita.{0}
+                        JOIN qiita.{0}_status USING (analysis_status_id)
+                     WHERE status = %s""".format(cls._table)
             TRN.add(sql, [status])
             return set(TRN.execute_fetchflatten())
 
@@ -381,13 +380,11 @@ class Analysis(QiitaStatusObject):
         """
         with TRN:
             sql = """SELECT DISTINCT data_type
-                     FROM qiita.data_type d
-                        JOIN qiita.processed_data p
-                            ON p.data_type_id = d.data_type_id
-                        JOIN qiita.analysis_sample a
-                            ON p.processed_data_id = a.processed_data_id
-                    WHERE a.analysis_id = %s
-                    ORDER BY data_type"""
+                     FROM qiita.data_type
+                        JOIN qiita.processed_data USING (data_type_id)
+                        JOIN qiita.analysis_sample USING (processed_data_id)
+                     WHERE analysis_id = %s
+                     ORDER BY data_type"""
             TRN.add(sql, [self._id])
             return TRN.execute_fetchflatten()
 
@@ -415,22 +412,19 @@ class Analysis(QiitaStatusObject):
         list
         """
         with TRN:
-            sql = """SELECT f.filepath_id
-                     FROM qiita.filepath f
-                        JOIN qiita.analysis_filepath af
-                            ON f.filepath_id = af.filepath_id
-                     WHERE af.analysis_id = %s"""
+            sql = """SELECT filepath_id
+                     FROM qiita.filepath
+                        JOIN qiita.analysis_filepath USING (filepath_id)
+                     WHERE analysis_id = %s"""
             TRN.add(sql, [self._id])
             filepaths = set(TRN.execute_fetchflatten())
 
-            sql = """SELECT fp.filepath_id
-                     FROM qiita.analysis_job aj
-                        JOIN qiita.job j ON aj.job_id = j.job_id
-                        JOIN qiita.job_results_filepath jrfp
-                            ON aj.job_id = jrfp.job_id
-                        JOIN qiita.filepath fp
-                            ON jrfp.filepath_id = fp.filepath_id
-                        WHERE aj.analysis_id = %s"""
+            sql = """SELECT filepath_id
+                     FROM qiita.analysis_job
+                        JOIN qiita.job USING (job_id)
+                        JOIN qiita.job_results_filepath USING (job_id)
+                        JOIN qiita.filepath USING (filepath_id)
+                     WHERE analysis_id = %s"""
             TRN.add(sql, [self._id])
             return filepaths.union(TRN.execute_fetchflatten())
 
@@ -445,13 +439,11 @@ class Analysis(QiitaStatusObject):
         """
         with TRN:
             fptypeid = convert_to_id("biom", "filepath_type")
-            sql = """SELECT dt.data_type, f.filepath
-                     FROM qiita.filepath f
-                        JOIN qiita.analysis_filepath af
-                            ON f.filepath_id = af.filepath_id
-                        JOIN qiita.data_type dt
-                            ON dt.data_type_id = af.data_type_id
-                     WHERE af.analysis_id = %s AND f.filepath_type_id = %s"""
+            sql = """SELECT data_type, filepath
+                     FROM qiita.filepath
+                        JOIN qiita.analysis_filepath USING (filepath_id)
+                        JOIN qiita.data_type USING (data_type_id)
+                     WHERE analysis_id = %s AND filepath_type_id = %s"""
             TRN.add(sql, [self._id, fptypeid])
             tables = TRN.execute_fetchindex()
             if not tables:
@@ -473,11 +465,10 @@ class Analysis(QiitaStatusObject):
         """
         with TRN:
             fptypeid = convert_to_id("plain_text", "filepath_type")
-            sql = """SELECT f.filepath
-                     FROM qiita.filepath f
-                        JOIN qiita.analysis_filepath af
-                            ON f.filepath_id = af.filepath_id
-                     WHERE af.analysis_id = %s AND f.filepath_type_id = %s"""
+            sql = """SELECT filepath
+                     FROM qiita.filepath
+                        JOIN qiita.analysis_filepath USING (filepath_id)
+                     WHERE analysis_id = %s AND filepath_type_id = %s"""
             TRN.add(sql, [self._id, fptypeid])
             mapping_fp = TRN.execute_fetchindex()
             if not mapping_fp:
