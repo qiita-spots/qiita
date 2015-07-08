@@ -19,9 +19,11 @@ from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_core.util import execute_as_transaction
 
 
 class EBISubmitHandler(BaseHandler):
+    @execute_as_transaction
     def display_template(self, preprocessed_data_id, msg, msg_level):
         """Simple function to avoid duplication of code"""
         preprocessed_data_id = int(preprocessed_data_id)
@@ -93,6 +95,7 @@ class EBISubmitHandler(BaseHandler):
         self.display_template(preprocessed_data_id, "", "")
 
     @authenticated
+    @execute_as_transaction
     def post(self, preprocessed_data_id):
         user = self.current_user
         # make sure user is admin and can therefore actually submit to EBI

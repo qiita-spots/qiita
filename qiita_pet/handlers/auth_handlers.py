@@ -25,6 +25,7 @@ class AuthCreateHandler(BaseHandler):
             error_message = ""
         self.render("create_user.html", error=error_message)
 
+    @execute_as_transaction
     def post(self):
         username = self.get_argument("email", "").strip().lower()
         password = self.get_argument("newpass", "")
