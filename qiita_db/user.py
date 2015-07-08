@@ -269,24 +269,23 @@ class User(QiitaObject):
                 raise IncompetentQiitaDeveloperError(
                     "code_type must be 'create' or 'reset' Uknown type %s"
                     % code_type)
-            sql = ("SELECT {1} from qiita.{0} where email"
-                   " = %s".format(cls._table, column))
+            sql = "SELECT {0} FROM qiita.{1} WHERE email = %s".format(
+                column, cls._table)
             TRN.add(sql, [email])
-            db_code = TRN.execute_fetchlast()
+            db_code = TRN.execute_fetchindex()
 
-            if db_code == '':
-                raise QiitaDBError("No %s code for user %s" %
-                                   (column, email))
-
-            # If the query didn't return anything, then there's no way the code
-            # can match
             if not db_code:
                 return False
+
+            db_code = db_code[0][0]
+            if db_code is None:
+                raise QiitaDBError("No %s code for user %s" %
+                                   (column, email))
 
             correct_code = db_code == code
 
             if correct_code:
-                sql = """UPDATE qiita.{0} SET {1} = ''
+                sql = """UPDATE qiita.{0} SET {1} = NULL
                          WHERE email = %s""".format(cls._table, column)
                 TRN.add(sql, [email])
 
