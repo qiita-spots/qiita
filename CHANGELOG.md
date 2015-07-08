@@ -25,6 +25,7 @@ http://qiime.org/documentation/file_formats.html#mapping-file-overview.
 * `qiita-general` is now used as a default argument to `qiita-env start_cluster` and `qiita-env stop_cluster` if no cluster name is specified
 * Qiita now now allows for processing of already demultiplexed data without any technical (barcode and primer) section of the read.
 * Qiita now includes full portal support, limiting study and analysis access at below the qiita_db level. This allows one database to act as if subsets of studies/analyses are their own specific interface. Commands added for portals creation and maintenance, under `qiita db portal ...` and `qiita-env`. Portal specific web user interface support has also been added; each portal is fully CSS customizable.
+* Qiita has been know modified to execute all the DB interactions using a transaction. The queue code present on the `SQLConnectionHandler` has been removed and a new `Transaction` object has been implemented. The system implements the singleton method and all the DB interaction through the code base are done through the `TRN` variable (`Transaction` instance) exposed through `qiita_db.sql_connection`.
 
 Version 0.1.0 (2015-04-30)
 --------------------------
