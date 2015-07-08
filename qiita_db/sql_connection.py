@@ -85,7 +85,6 @@ from __future__ import division
 from contextlib import contextmanager
 from itertools import chain
 from functools import partial, wraps
-from tempfile import mktemp
 from datetime import date, time, datetime
 import re
 
