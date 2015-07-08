@@ -6,7 +6,7 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.user import User
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_core.util import send_email
+from qiita_core.util import send_email, execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -26,6 +26,7 @@ class UserProfileHandler(BaseHandler):
         self.render("user_profile.html", profile=profile, msg="", passmsg="")
 
     @authenticated
+    @execute_as_transaction
     def post(self):
         passmsg = ""
         msg = ""
@@ -75,6 +76,7 @@ class ForgotPasswordHandler(BaseHandler):
     def get(self):
         self.render("lost_pass.html", user=None, message="", level="")
 
+    @execute_as_transaction
     def post(self):
         message = ""
         level = ""
@@ -117,6 +119,7 @@ class ChangeForgotPasswordHandler(BaseHandler):
             self.render("change_lost_pass.html", user=None, message="",
                         level="", code=code)
 
+    @execute_as_transaction
     def post(self, code):
         message = ""
         level = ""

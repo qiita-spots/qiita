@@ -7,10 +7,12 @@ from qiita_db.parameters import (PreprocessedIlluminaParams,
                                  Preprocessed454Params)
 from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.context import submit
+from qiita_core.util import execute_as_transaction
 
 
 class PreprocessHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def post(self):
         study_id = int(self.get_argument('study_id'))
         prep_template_id = int(self.get_argument('prep_template_id'))
