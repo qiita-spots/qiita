@@ -23,11 +23,12 @@ from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import get_table_cols
 from qiita_db.data import ProcessedData
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-
+from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import study_person_linkifier, pubmed_linkifier
 
 
+@execute_as_transaction
 def _get_shared_links_for_study(study):
     shared = []
     for person in study.shared_with:
@@ -44,6 +45,7 @@ def _get_shared_links_for_study(study):
     return ", ".join(shared)
 
 
+@execute_as_transaction
 def _build_single_study_info(study, info, study_proc, proc_samples):
     """Clean up and add to the study info for HTML purposes
 
@@ -91,6 +93,7 @@ def _build_single_study_info(study, info, study_proc, proc_samples):
     return info
 
 
+@execute_as_transaction
 def _build_single_proc_data_info(proc_data_id, data_type, samples):
     """Build the proc data info list for the child row in datatable
 
@@ -119,6 +122,7 @@ def _build_single_proc_data_info(proc_data_id, data_type, samples):
     return proc_info
 
 
+@execute_as_transaction
 def _build_study_info(user, study_proc=None, proc_samples=None):
     """Builds list of dicts for studies table, with all HTML formatted
 
@@ -190,6 +194,7 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     return infolist
 
 
+@execute_as_transaction
 def _check_owner(user, study):
     """make sure user is the owner of the study requested"""
     if not user.id == study.owner:
@@ -200,6 +205,7 @@ def _check_owner(user, study):
 class ListStudiesHandler(BaseHandler):
     @authenticated
     @coroutine
+    @execute_as_transaction
     def get(self, message="", msg_level=None):
         all_emails_except_current = yield Task(self._get_all_emails)
         all_emails_except_current.remove(self.current_user.id)
@@ -217,6 +223,7 @@ class ListStudiesHandler(BaseHandler):
 
 class StudyApprovalList(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self):
         user = self.current_user
         if user.level != 'admin':
@@ -233,21 +240,25 @@ class StudyApprovalList(BaseHandler):
 
 
 class ShareStudyAJAX(BaseHandler):
+    @execute_as_transaction
     def _get_shared_for_study(self, study, callback):
         shared_links = _get_shared_links_for_study(study)
         users = study.shared_with
         callback((users, shared_links))
 
+    @execute_as_transaction
     def _share(self, study, user, callback):
         user = User(user)
         callback(study.share(user))
 
+    @execute_as_transaction
     def _unshare(self, study, user, callback):
         user = User(user)
         callback(study.unshare(user))
 
     @authenticated
     @coroutine
+    @execute_as_transaction
     def get(self):
         study_id = int(self.get_argument('study_id'))
         study = Study(study_id)
@@ -268,6 +279,7 @@ class ShareStudyAJAX(BaseHandler):
 
 class SearchStudiesAJAX(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self, ignore):
         user = self.get_argument('user')
         query = self.get_argument('query')

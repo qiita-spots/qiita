@@ -11,8 +11,10 @@ from functools import partial
 from tornado.web import HTTPError
 
 from qiita_pet.util import linkify
+from qiita_core.util import execute_as_transaction
 
 
+@execute_as_transaction
 def check_access(user, study, no_public=False, raise_error=False):
     """make sure user has access to the study requested"""
     if not study.has_access(user, no_public):

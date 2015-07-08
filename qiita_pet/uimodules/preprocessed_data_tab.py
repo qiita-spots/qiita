@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from qiita_core.util import execute_as_transaction
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.ontology import Ontology
@@ -16,6 +17,7 @@ from qiita_pet.util import generate_param_str, STATUS_STYLER
 
 
 class PreprocessedDataTab(BaseUIModule):
+    @execute_as_transaction
     def render(self, study, full_access):
         ppd_gen = (PreprocessedData(ppd_id)
                    for ppd_id in study.preprocessed_data())
@@ -29,6 +31,7 @@ class PreprocessedDataTab(BaseUIModule):
 
 
 class PreprocessedDataInfoTab(BaseUIModule):
+    @execute_as_transaction
     def render(self, study_id, preprocessed_data):
         user = self.current_user
         ppd_id = preprocessed_data.id

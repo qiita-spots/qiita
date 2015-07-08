@@ -9,7 +9,7 @@ from .util import check_access
 from .base_handlers import BaseHandler
 
 from qiita_core.qiita_settings import qiita_config
-
+from qiita_core.util import execute_as_transaction
 from qiita_db.util import (get_files_from_uploads_folders,
                            get_mountpoint, move_upload_files_to_trash)
 from qiita_db.study import Study
@@ -18,6 +18,7 @@ from qiita_db.exceptions import QiitaDBUnknownIDError
 
 class StudyUploadFileHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def display_template(self, study_id, msg):
         """Simple function to avoid duplication of code"""
         study_id = int(study_id)
@@ -34,6 +35,7 @@ class StudyUploadFileHandler(BaseHandler):
                     files=get_files_from_uploads_folders(str(study_id)))
 
     @authenticated
+    @execute_as_transaction
     def get(self, study_id):
         try:
             study = Study(int(study_id))
@@ -44,6 +46,7 @@ class StudyUploadFileHandler(BaseHandler):
         self.display_template(study_id, "")
 
     @authenticated
+    @execute_as_transaction
     def post(self, study_id):
         try:
             study = Study(int(study_id))
@@ -84,6 +87,7 @@ class UploadFileHandler(BaseHandler):
                                  (self.current_user, str(filename)))
 
     @authenticated
+    @execute_as_transaction
     def post(self):
         resumable_identifier = self.get_argument('resumableIdentifier')
         resumable_filename = self.get_argument('resumableFilename')
@@ -126,6 +130,7 @@ class UploadFileHandler(BaseHandler):
             self.set_status(200)
 
     @authenticated
+    @execute_as_transaction
     def get(self):
         """ this is the first point of entry into the upload service
 

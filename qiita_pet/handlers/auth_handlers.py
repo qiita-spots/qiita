@@ -7,7 +7,7 @@ from moi import r_client
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config
-from qiita_core.util import send_email
+from qiita_core.util import send_email, execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
 from qiita_db.user import User
@@ -75,6 +75,7 @@ class AuthLoginHandler(BaseHandler):
     def get(self):
         self.redirect("/")
 
+    @execute_as_transaction
     def post(self):
         if r_client.get('maintenance') is not None:
             raise HTTPError(503, "Site is down for maintenance")

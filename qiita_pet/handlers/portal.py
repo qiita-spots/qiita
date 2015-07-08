@@ -11,6 +11,7 @@ from copy import deepcopy
 
 from tornado.web import authenticated, HTTPError
 
+from qiita_core.util import execute_as_transaction
 from qiita_db.study import Study
 from qiita_db.portal import Portal
 from qiita_db.exceptions import QiitaDBError
@@ -25,6 +26,7 @@ class PortalEditBase(BaseHandler):
             raise HTTPError(403, "%s does not have access to portal editing!" %
                             self.current_user.id)
 
+    @execute_as_transaction
     def get_info(self, portal="QIITA"):
         # Add the portals and, optionally, checkbox to the information
         studies = Portal(portal).get_studies()
@@ -43,6 +45,7 @@ class PortalEditBase(BaseHandler):
 
 class StudyPortalHandler(PortalEditBase):
     @authenticated
+    @execute_as_transaction
     def get(self):
         self.check_admin()
         info = self.get_info()
@@ -53,6 +56,7 @@ class StudyPortalHandler(PortalEditBase):
                     portals=portals, submit_url="/admin/portals/studies/")
 
     @authenticated
+    @execute_as_transaction
     def post(self):
         self.check_admin()
         portal = self.get_argument('portal')
@@ -78,6 +82,7 @@ class StudyPortalHandler(PortalEditBase):
 
 class StudyPortalAJAXHandler(PortalEditBase):
     @authenticated
+    @execute_as_transaction
     def get(self):
         self.check_admin()
         portal = self.get_argument('view-portal')
