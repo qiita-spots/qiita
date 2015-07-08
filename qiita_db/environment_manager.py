@@ -356,24 +356,59 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
     Pulls the current patch from the settings table and applies all subsequent
     patches found in the patches directory.
     """
+
+    patch_update_sql = "update settings set current_patch = %s"
+    patch_update_py = "update settings set current_patch_py = %s"
+
     conn = SQLConnectionHandler()
 
-    current_patch = conn.execute_fetchone(
+    # Test to see if the settings table up to date. The settings table is not
+    # included in the qiita schema, which means it is not dropped during
+    # clean_test, which means alterations to the settings table cannot be
+    # safely applied using the existing patch system. As a result, the "best"
+    # option right now is to hard code a patch to the settings table and
+    # apply if necessary.
+    py_patch_exists = conn.execute_fetchone("""
+        SELECT EXISTS(SELECT column_name
+                      FROM information_schema.columns
+                      WHERE table_name='settings'
+                          AND column_name='current_patch_py')""")[0]
+    if not py_patch_exists:
+        conn.execute("""ALTER TABLE settings
+                        ADD COLUMN current_patch_py VARCHAR""")
+
+    current_patch_sql = conn.execute_fetchone(
         "select current_patch from settings")[0]
-    current_sql_patch_fp = join(patches_dir, current_patch)
+    current_patch_py = conn.execute_fetchone(
+        "select current_patch_py from settings")[0]
+
+    current_sql_patch_fp = join(patches_dir, current_patch_sql)
     corresponding_py_patch = partial(join, patches_dir, 'python_patches')
+    current_py_patch_fp = corresponding_py_patch(
+            splitext(basename(current_sql_patch_fp))[0] + '.py')
+    current_py_base = basename(current_py_patch_fp)
 
     sql_glob = join(patches_dir, '*.sql')
     sql_patch_files = natsorted(glob(sql_glob))
 
-    if current_patch == 'unpatched':
+    if current_patch_sql == 'unpatched':
         next_patch_index = 0
     elif current_sql_patch_fp not in sql_patch_files:
-        raise RuntimeError("Cannot find patch file %s" % current_patch)
+        raise RuntimeError("Cannot find patch file %s" % current_patch_sql)
+    elif current_patch_py is not None:
+        if exists(current_py_patch_fp) and current_py_base != current_patch_py:
+            # the previous attempt at applying the python patch failed
+            if verbose:
+                print('\t\tApplying python patch %s...' % current_patch_py)
+            try:
+                execfile(current_py_patch_fp)
+            except:
+                raise
+            else:
+                conn.execute(patch_update_py % current_py_base)
+        next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
     else:
         next_patch_index = sql_patch_files.index(current_sql_patch_fp) + 1
-
-    patch_update_sql = "update settings set current_patch = %s"
 
     for sql_patch_fp in sql_patch_files[next_patch_index:]:
         sql_patch_filename = basename(sql_patch_fp)
@@ -388,9 +423,14 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
             conn.add_to_queue(sql_patch_filename, patch_update_sql,
                               [sql_patch_filename])
 
-        conn.execute_queue(sql_patch_filename)
+            conn.execute_queue(sql_patch_filename)
 
         if exists(py_patch_fp):
             if verbose:
                 print('\t\tApplying python patch %s...' % py_patch_filename)
-            execfile(py_patch_fp)
+            try:
+                execfile(py_patch_fp)
+            except:
+                raise
+            else:
+                conn.execute(patch_update_py, [py_patch_filename])
