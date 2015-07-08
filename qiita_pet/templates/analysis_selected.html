@@ -72,6 +72,12 @@ $(document).ready(function() {
 {% set static_info = {'data_type', 'processed_date', 'algorithm', 'reference_name', 'reference_version', 'sequence_filepath', 'taxonomy_filepath', 'tree_filepath'}%}
 <h1>Selected Samples</h1>
 <span id="ws-error" style="color:red"></span>
+{% if not sel_data %}
+<div id="jumbotron" class="jumbotron">
+  <h1>No samples selected</h1>
+  <h3>Please select at least one sample to continue<h3>
+</div>
+{% end %}
 {% for sid, proc_datas in viewitems(sel_data) %}
   {% set study = Study(sid) %}
 <div class="row" id="study{{sid}}">
