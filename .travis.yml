@@ -20,7 +20,6 @@ install:
   - travis_retry conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8 pyzmq networkx pyparsing natsort mock 'pandas>=0.15' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>= 1.7' 'h5py>=2.3.1' 'future==0.13.0'
   - source activate env_name
   - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
-  - pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
   - travis_retry pip install .
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg

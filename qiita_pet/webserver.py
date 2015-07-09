@@ -3,9 +3,11 @@ import tornado.auth
 import tornado.escape
 import tornado.web
 import tornado.websocket
-from os.path import dirname, join
+from os.path import dirname, join, exists
+from shutil import copy
 from base64 import b64encode
 from uuid import uuid4
+from moi import moi_js, moi_list_js
 from moi.websocket import MOIMessageHandler
 
 from qiita_core.qiita_settings import qiita_config
@@ -46,6 +48,12 @@ TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
 _, RES_PATH = get_mountpoint('job')[0]
 COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
 DEBUG = qiita_config.test_environment
+
+
+_vendor_js = join(STATIC_PATH, 'vendor', 'js')
+if not exists(join(_vendor_js, 'moi.js')):
+    copy(moi_js(), _vendor_js)
+    copy(moi_list_js(), _vendor_js)
 
 
 class Application(tornado.web.Application):
