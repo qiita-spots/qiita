@@ -9,7 +9,7 @@ from .util import check_access
 from qiita_ware.context import submit
 from qiita_ware.dispatchable import (add_files_to_raw_data, unlink_all_files,
                                      create_raw_data)
-
+from qiita_core.util import execute_as_transaction
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.util import get_mountpoint
@@ -32,6 +32,7 @@ class ComputeCompleteHandler(BaseHandler):
 
 class CreateRawData(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def post(self):
         pt_id = self.get_argument('prep_template_id')
         raw_data_filetype = self.get_argument('filetype')
@@ -79,6 +80,7 @@ class CreateRawData(BaseHandler):
 
 class AddFilesToRawData(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def post(self):
 
         # vars to add files to raw data
@@ -131,6 +133,7 @@ class AddFilesToRawData(BaseHandler):
 
 class UnlinkAllFiles(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def post(self):
         # vars to remove all files from a raw data
         study_id = self.get_argument('study_id', None)

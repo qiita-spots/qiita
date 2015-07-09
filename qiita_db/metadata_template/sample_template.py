@@ -13,7 +13,7 @@ from time import strftime
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
                                  QiitaDBUnknownIDError)
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import TRN
 from qiita_db.util import get_mountpoint, convert_to_id
 from qiita_db.study import Study
 from qiita_db.data import RawData
@@ -78,11 +78,11 @@ class SampleTemplate(MetadataTemplate):
         list
             Alphabetical list of all metadata headers available
         """
-        conn_handler = SQLConnectionHandler()
-        return [x[0] for x in
-                conn_handler.execute_fetchall(
-                "SELECT DISTINCT column_name FROM qiita.study_sample_columns "
-                "ORDER BY column_name")]
+        with TRN:
+            sql = """SELECT DISTINCT column_name
+                     FROM qiita.study_sample_columns ORDER BY column_name"""
+            TRN.add(sql)
+            return TRN.execute_fetchflatten()
 
     @classmethod
     def create(cls, md_template, study):
@@ -95,29 +95,23 @@ class SampleTemplate(MetadataTemplate):
         study : Study
             The study to which the sample template belongs to.
         """
-        cls._check_subclass()
+        with TRN:
+            cls._check_subclass()
 
-        # Check that we don't have a MetadataTemplate for study
-        if cls.exists(study.id):
-            raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
+            # Check that we don't have a MetadataTemplate for study
+            if cls.exists(study.id):
+                raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
 
-        conn_handler = SQLConnectionHandler()
-        queue_name = "CREATE_SAMPLE_TEMPLATE_%d" % study.id
-        conn_handler.create_queue(queue_name)
+            # Clean and validate the metadata template given
+            md_template = cls._clean_validate_template(md_template, study.id,
+                                                       SAMPLE_TEMPLATE_COLUMNS)
 
-        # Clean and validate the metadata template given
-        md_template = cls._clean_validate_template(md_template, study.id,
-                                                   SAMPLE_TEMPLATE_COLUMNS)
+            cls._common_creation_steps(md_template, study.id)
 
-        cls._add_common_creation_steps_to_queue(md_template, study.id,
-                                                conn_handler, queue_name)
+            st = cls(study.id)
+            st.generate_files()
 
-        conn_handler.execute_queue(queue_name)
-
-        st = cls(study.id)
-        st.generate_files()
-
-        return st
+            return st
 
     @classmethod
     def delete(cls, id_):
@@ -135,46 +129,40 @@ class SampleTemplate(MetadataTemplate):
         QiitaDBError
             If the study that owns this sample template has raw datas
         """
-        cls._check_subclass()
+        with TRN:
+            cls._check_subclass()
 
-        if not cls.exists(id_):
-            raise QiitaDBUnknownIDError(id_, cls.__name__)
+            if not cls.exists(id_):
+                raise QiitaDBUnknownIDError(id_, cls.__name__)
 
-        raw_datas = [str(rd) for rd in Study(cls(id_).study_id).raw_data()]
-        if raw_datas:
-            raise QiitaDBError("Sample template can not be erased because "
-                               "there are raw datas (%s) associated." %
-                               ', '.join(raw_datas))
+            # Check if there is any PrepTemplate
+            sql = """SELECT EXISTS(SELECT * FROM qiita.study_prep_template
+                                   WHERE study_id=%s)"""
+            TRN.add(sql, [id_])
+            has_prep_templates = TRN.execute_fetchlast()
+            if has_prep_templates:
+                raise QiitaDBError("Sample template can not be erased because "
+                                   "there are prep templates associated.")
 
-        table_name = cls._table_name(id_)
-        conn_handler = SQLConnectionHandler()
+            table_name = cls._table_name(id_)
 
-        # Delete the sample template filepaths
-        queue = "delete_sample_template_%d" % id_
-        conn_handler.create_queue(queue)
+            # Delete the sample template filepaths
+            sql = """DELETE FROM qiita.sample_template_filepath
+                     WHERE study_id = %s"""
+            args = [id_]
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.sample_template_filepath WHERE study_id = %s",
-            (id_, ))
+            TRN.add("DROP TABLE qiita.{0}".format(table_name))
 
-        conn_handler.add_to_queue(
-            queue,
-            "DROP TABLE qiita.{0}".format(table_name))
+            sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
+                cls._table, cls._id_column)
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._table,
-                                                          cls._id_column),
-            (id_,))
+            sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
+                cls._column_table, cls._id_column)
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.{0} where {1} = %s".format(cls._column_table,
-                                                          cls._id_column),
-            (id_,))
-
-        conn_handler.execute_queue(queue)
+            TRN.execute()
 
     @property
     def study_id(self):
@@ -225,19 +213,20 @@ class SampleTemplate(MetadataTemplate):
     def generate_files(self):
         r"""Generates all the files that contain data from this template
         """
-        # figuring out the filepath of the sample template
-        _id, fp = get_mountpoint('templates')[0]
-        fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
-        # storing the sample template
-        self.to_file(fp)
+        with TRN:
+            # figuring out the filepath of the sample template
+            _id, fp = get_mountpoint('templates')[0]
+            fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
+            # storing the sample template
+            self.to_file(fp)
 
-        # adding the fp to the object
-        self.add_filepath(fp)
+            # adding the fp to the object
+            self.add_filepath(fp)
 
-        # generating all new QIIME mapping files
-        for rd_id in Study(self.id).raw_data():
-            for pt_id in RawData(rd_id).prep_templates:
-                PrepTemplate(pt_id).generate_files()
+            # generating all new QIIME mapping files
+            for rd_id in Study(self.id).raw_data():
+                for pt_id in RawData(rd_id).prep_templates:
+                    PrepTemplate(pt_id).generate_files()
 
     def extend(self, md_template):
         """Adds the given sample template to the current one
@@ -247,15 +236,10 @@ class SampleTemplate(MetadataTemplate):
         md_template : DataFrame
             The metadata template file contents indexed by samples Ids
         """
-        conn_handler = SQLConnectionHandler()
-        queue_name = "EXTEND_SAMPLE_TEMPLATE_%d" % self.id
-        conn_handler.create_queue(queue_name)
+        with TRN:
+            md_template = self._clean_validate_template(
+                md_template, self.study_id, SAMPLE_TEMPLATE_COLUMNS)
 
-        md_template = self._clean_validate_template(md_template, self.study_id,
-                                                    SAMPLE_TEMPLATE_COLUMNS)
+            self._common_extend_steps(md_template)
 
-        self._add_common_extend_steps_to_queue(md_template, conn_handler,
-                                               queue_name)
-        conn_handler.execute_queue(queue_name)
-
-        self.generate_files()
+            self.generate_files()

@@ -26,7 +26,7 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from json import loads
-from os.path import join, relpath
+from os.path import join, relpath, isdir
 from os import remove
 from glob import glob
 from shutil import rmtree
@@ -36,7 +36,7 @@ from collections import defaultdict
 from .base import QiitaStatusObject
 from .util import (insert_filepaths, convert_to_id, get_db_files_base_dir,
                    params_dict_to_json, get_mountpoint)
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 from .logger import LogEntry
 from .exceptions import QiitaDBStatusError, QiitaDBDuplicateError
 
@@ -60,16 +60,16 @@ class Job(QiitaStatusObject):
     """
     _table = "job"
 
-    def _lock_job(self, conn_handler):
+    def _lock_job(self):
         """Raises QiitaDBStatusError if study is public"""
         if self.check_status(("completed", "error")):
             raise QiitaDBStatusError("Can't change status of finished job!")
 
-    def _status_setter_checks(self, conn_handler):
+    def _status_setter_checks(self):
         r"""Perform a check to make sure not setting status away from completed
         or errored
         """
-        self._lock_job(conn_handler)
+        self._lock_job()
 
     @staticmethod
     def get_commands():
@@ -108,43 +108,56 @@ class Job(QiitaStatusObject):
             If return_existing is True, the Job object of the matching job or
             None if none exists
         """
-        conn_handler = SQLConnectionHandler()
-        # check passed arguments and grab analyses for matching jobs
-        datatype_id = convert_to_id(datatype, "data_type")
-        sql = "SELECT command_id FROM qiita.command WHERE name = %s"
-        command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
-        opts_json = params_dict_to_json(options)
-        sql = ("SELECT DISTINCT aj.analysis_id, aj.job_id FROM "
-               "qiita.analysis_job aj JOIN qiita.{0} j ON aj.job_id = j.job_id"
-               " WHERE j.data_type_id = %s AND j.command_id = %s "
-               "AND j.options = %s".format(cls._table))
-        analyses = conn_handler.execute_fetchall(
-            sql, (datatype_id, command_id, opts_json))
-        if not analyses and return_existing:
-            # stop looking since we have no possible matches
-            return False, None
-        elif not analyses:
-            return False
+        with TRN:
+            # check passed arguments and grab analyses for matching jobs
+            datatype_id = convert_to_id(datatype, "data_type")
+            sql = "SELECT command_id FROM qiita.command WHERE name = %s"
+            TRN.add(sql, [command])
+            command_id = TRN.execute_fetchlast()
 
-        # build the samples dict as list of samples keyed to their proc_data_id
-        sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
-               "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
-               "GROUP BY processed_data_id")
-        samples = dict(conn_handler.execute_fetchall(sql, [analysis.id]))
-        # check passed analyses' samples dict against all found analyses
-        matched_job = None
-        for aid, jid in analyses:
-            # build the samples dict for a found analysis
-            comp_samples = dict(conn_handler.execute_fetchall(sql, [aid]))
-            # compare samples and stop checking if a match is found
-            matched_samples = True if samples == comp_samples else False
-            if matched_samples:
-                matched_job = jid
-                break
+            opts_json = params_dict_to_json(options)
+            sql = """SELECT DISTINCT analysis_id, job_id
+                     FROM qiita.analysis_job
+                        JOIN qiita.{0} USING (job_id)
+                     WHERE data_type_id = %s
+                        AND command_id = %s
+                        AND options = %s""".format(cls._table)
+            TRN.add(sql, [datatype_id, command_id, opts_json])
+            analyses = TRN.execute_fetchindex()
 
-        if return_existing:
-            return matched_samples, (cls(matched_job) if matched_job else None)
-        return matched_samples
+            if not analyses and return_existing:
+                # stop looking since we have no possible matches
+                return False, None
+            elif not analyses:
+                return False
+
+            # build the samples dict as list of samples keyed to
+            # their proc_data_id
+            sql = """SELECT processed_data_id, array_agg(
+                        sample_id ORDER BY sample_id)
+                     FROM qiita.analysis_sample
+                     WHERE analysis_id = %s GROUP BY processed_data_id"""
+            TRN.add(sql, [analysis.id])
+            samples = dict(TRN.execute_fetchindex())
+
+            # check passed analyses' samples dict against all found analyses
+            matched_job = None
+            for aid, jid in analyses:
+                # build the samples dict for a found analysis
+                TRN.add(sql, [aid])
+                comp_samples = dict(TRN.execute_fetchindex())
+
+                # compare samples and stop checking if a match is found
+                matched_samples = samples == comp_samples
+                if matched_samples:
+                    matched_job = jid
+                    break
+
+            if return_existing:
+                return matched_samples, (cls(matched_job) if matched_job
+                                         else None)
+
+            return matched_samples
 
     @classmethod
     def delete(cls, jobid):
@@ -163,36 +176,42 @@ class Job(QiitaStatusObject):
         filepath and job_results_filepath tables. All the job's files on the
         filesystem will also be removed.
         """
-        conn_handler = SQLConnectionHandler()
-        # store filepath info for later use
-        sql = ("SELECT f.filepath, f.filepath_id FROM qiita.filepath f JOIN "
-               "qiita.job_results_filepath jf ON jf.filepath_id = "
-               "f.filepath_id WHERE jf.job_id = %s")
-        filepaths = conn_handler.execute_fetchall(sql, [jobid])
+        with TRN:
+            # store filepath info for later use
+            sql = """SELECT filepath, filepath_id
+                     FROM qiita.filepath
+                        JOIN qiita.job_results_filepath USING (filepath_id)
+                     WHERE job_id = %s"""
+            args = [jobid]
+            TRN.add(sql, args)
+            filepaths = TRN.execute_fetchindex()
 
-        # remove fiepath links in DB
-        conn_handler.execute("DELETE FROM qiita.job_results_filepath WHERE "
-                             "job_id = %s", [jobid])
-        sql = "DELETE FROM qiita.filepath WHERE"
-        for x in range(len(filepaths)):
-            sql = ' '.join((sql, "filepath_id = %s"))
-        conn_handler.execute(sql, [fp[1] for fp in filepaths])
+            # remove fiepath links in DB
+            sql = "DELETE FROM qiita.job_results_filepath WHERE job_id = %s"
+            TRN.add(sql, args)
 
-        # remove job
-        conn_handler.execute("DELETE FROM qiita.analysis_job WHERE "
-                             "job_id = %s", [jobid])
-        conn_handler.execute("DELETE FROM qiita.collection_job WHERE "
-                             "job_id = %s", [jobid])
-        conn_handler.execute("DELETE FROM qiita.job WHERE job_id = %s",
-                             [jobid])
+            sql = "DELETE FROM qiita.filepath WHERE filepath_id IN %s"
+            TRN.add(sql, [tuple(fp[1] for fp in filepaths)])
 
-        # remove files/folders attached to job
-        _, basedir = get_mountpoint("job")[0]
-        for fp in filepaths:
-            try:
-                rmtree(join(basedir, fp[0]))
-            except OSError:
-                remove(join(basedir, fp[0]))
+            # remove job
+            sql = "DELETE FROM qiita.analysis_job WHERE job_id = %s"
+            TRN.add(sql, args)
+            sql = "DELETE FROM qiita.collection_job WHERE job_id = %s"
+            TRN.add(sql, args)
+            sql = "DELETE FROM qiita.job WHERE job_id = %s"
+            TRN.add(sql, args)
+
+            TRN.execute()
+
+            # remove files/folders attached to job
+            _, basedir = get_mountpoint("job")[0]
+            path_builder = partial(join, basedir)
+            for fp, _ in filepaths:
+                fp = path_builder(fp)
+                if isdir(fp):
+                    TRN.add_post_commit_func(rmtree, fp)
+                else:
+                    TRN.add_post_commit_func(remove, fp)
 
     @classmethod
     def create(cls, datatype, command, options, analysis,
@@ -222,46 +241,56 @@ class Job(QiitaStatusObject):
             return_existing is False and an exact duplicate of the job already
             exists in the DB.
         """
-        analysis_sql = ("INSERT INTO qiita.analysis_job (analysis_id, job_id) "
-                        "VALUES (%s, %s)")
-        exists, job = cls.exists(datatype, command, options, analysis,
-                                 return_existing=True)
-        conn_handler = SQLConnectionHandler()
-        if exists:
-            if return_existing:
-                # add job to analysis
-                conn_handler.execute(analysis_sql, (analysis.id, job.id))
-                return job
-            else:
-                raise QiitaDBDuplicateError(
-                    "Job", "datatype: %s, command: %s, options: %s, "
-                    "analysis: %s" % (datatype, command, options, analysis.id))
+        with TRN:
+            analysis_sql = """INSERT INTO qiita.analysis_job
+                                (analysis_id, job_id) VALUES (%s, %s)"""
+            exists, job = cls.exists(datatype, command, options, analysis,
+                                     return_existing=True)
 
-        # Get the datatype and command ids from the strings
-        datatype_id = convert_to_id(datatype, "data_type")
-        sql = "SELECT command_id FROM qiita.command WHERE name = %s"
-        command_id = conn_handler.execute_fetchone(sql, (command, ))[0]
-        opts_json = params_dict_to_json(options)
+            if exists:
+                if return_existing:
+                    # add job to analysis
+                    TRN.add(analysis_sql, [analysis.id, job.id])
+                    TRN.execute()
+                    return job
+                else:
+                    raise QiitaDBDuplicateError(
+                        "Job", "datatype: %s, command: %s, options: %s, "
+                        "analysis: %s"
+                        % (datatype, command, options, analysis.id))
 
-        # Create the job and return it
-        sql = ("INSERT INTO qiita.{0} (data_type_id, job_status_id, "
-               "command_id, options) VALUES "
-               "(%s, %s, %s, %s) RETURNING job_id").format(cls._table)
-        job_id = conn_handler.execute_fetchone(sql, (datatype_id, 1,
-                                               command_id, opts_json))[0]
+            # Get the datatype and command ids from the strings
+            datatype_id = convert_to_id(datatype, "data_type")
+            sql = "SELECT command_id FROM qiita.command WHERE name = %s"
+            TRN.add(sql, [command])
+            command_id = TRN.execute_fetchlast()
+            opts_json = params_dict_to_json(options)
 
-        # add job to analysis
-        conn_handler.execute(analysis_sql, (analysis.id, job_id))
+            # Create the job and return it
+            sql = """INSERT INTO qiita.{0} (data_type_id, job_status_id,
+                                            command_id, options)
+                     VALUES (%s, %s, %s, %s)
+                     RETURNING job_id""".format(cls._table)
+            TRN.add(sql, [datatype_id, 1, command_id, opts_json])
+            job_id = TRN.execute_fetchlast()
 
-        return cls(job_id)
+            # add job to analysis
+            TRN.add(analysis_sql, [analysis.id, job_id])
+            TRN.execute()
+
+            return cls(job_id)
 
     @property
     def datatype(self):
-        sql = ("SELECT data_type from qiita.data_type WHERE data_type_id = "
-               "(SELECT data_type_id from qiita.{0} WHERE "
-               "job_id = %s)".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = """SELECT data_type
+                     FROM qiita.data_type
+                     WHERE data_type_id = (
+                        SELECT data_type_id
+                        FROM qiita.{0}
+                        WHERE job_id = %s)""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def command(self):
@@ -272,11 +301,16 @@ class Job(QiitaStatusObject):
         str
             command run by the job
         """
-        sql = ("SELECT name, command from qiita.command WHERE command_id = "
-               "(SELECT command_id from qiita.{0} WHERE "
-               "job_id = %s)".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(sql, (self._id, ))
+        with TRN:
+            sql = """SELECT name, command
+                     FROM qiita.command
+                     WHERE command_id = (
+                        SELECT command_id
+                        FROM qiita.{0}
+                        WHERE job_id = %s)""".format(self._table)
+            TRN.add(sql, [self._id])
+            # We only want the first row (the only one present)
+            return TRN.execute_fetchindex()[0]
 
     @property
     def options(self):
@@ -287,21 +321,29 @@ class Job(QiitaStatusObject):
         dict
             options in the format {option: setting}
         """
-        sql = ("SELECT options FROM qiita.{0} WHERE "
-               "job_id = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        db_opts = conn_handler.execute_fetchone(sql, (self._id, ))[0]
-        opts = loads(db_opts) if db_opts else {}
-        sql = ("SELECT command, output from qiita.command WHERE command_id = ("
-               "SELECT command_id from qiita.{0} WHERE "
-               "job_id = %s)".format(self._table))
-        db_comm = conn_handler.execute_fetchone(sql, (self._id, ))
-        out_opt = loads(db_comm[1])
-        basedir = get_db_files_base_dir()
-        join_f = partial(join, join(basedir, "job"))
-        for k in out_opt:
-            opts[k] = join_f("%s_%s_%s" % (self._id, db_comm[0], k.strip("-")))
-        return opts
+        with TRN:
+            sql = """SELECT options FROM qiita.{0}
+                     WHERE job_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            db_opts = TRN.execute_fetchlast()
+            opts = loads(db_opts) if db_opts else {}
+
+            sql = """SELECT command, output
+                     FROM qiita.command
+                     WHERE command_id = (
+                        SELECT command_id
+                        FROM qiita.{0}
+                        WHERE job_id = %s)""".format(self._table)
+            TRN.add(sql, [self._id])
+            db_comm = TRN.execute_fetchindex()[0]
+
+            out_opt = loads(db_comm[1])
+            basedir = get_db_files_base_dir()
+            join_f = partial(join, join(basedir, "job"))
+            for k in out_opt:
+                opts[k] = join_f("%s_%s_%s" % (self._id, db_comm[0],
+                                               k.strip("-")))
+            return opts
 
     @options.setter
     def options(self, opts):
@@ -312,16 +354,17 @@ class Job(QiitaStatusObject):
         opts: dict
             The options for the command in format {option: value}
         """
-        conn_handler = SQLConnectionHandler()
-        # make sure job is editable
-        self._lock_job(conn_handler)
+        with TRN:
+            # make sure job is editable
+            self._lock_job()
 
-        # JSON the options dictionary
-        opts_json = params_dict_to_json(opts)
-        # Add the options to the job
-        sql = ("UPDATE qiita.{0} SET options = %s WHERE "
-               "job_id = %s").format(self._table)
-        conn_handler.execute(sql, (opts_json, self._id))
+            # JSON the options dictionary
+            opts_json = params_dict_to_json(opts)
+            # Add the options to the job
+            sql = """UPDATE qiita.{0} SET options = %s
+                     WHERE job_id = %s""".format(self._table)
+            TRN.add(sql, [opts_json, self._id])
+            TRN.execute()
 
     @property
     def results(self):
@@ -333,33 +376,34 @@ class Job(QiitaStatusObject):
             Filepaths to the result files
         """
         # Select results filepaths and filepath types from the database
-        conn_handler = SQLConnectionHandler()
-        _, basedir = get_mountpoint('job')[0]
-        results = conn_handler.execute_fetchall(
-            "SELECT fp.filepath, fpt.filepath_type FROM qiita.filepath fp "
-            "JOIN qiita.filepath_type fpt ON fp.filepath_type_id = "
-            "fpt.filepath_type_id JOIN qiita.job_results_filepath jrfp ON "
-            "fp.filepath_id = jrfp.filepath_id WHERE jrfp.job_id = %s",
-            (self._id, ))
+        with TRN:
+            _, basedir = get_mountpoint('job')[0]
+            sql = """SELECT filepath, filepath_type
+                     FROM qiita.filepath
+                        JOIN qiita.filepath_type USING (filepath_type_id)
+                        JOIN qiita.job_results_filepath USING (filepath_id)
+                     WHERE job_id = %s"""
+            TRN.add(sql, [self._id])
+            results = TRN.execute_fetchindex()
 
-        def add_html(basedir, check_dir, result_fps):
-            for res in glob(join(basedir, check_dir, "*.htm")) + \
-                    glob(join(basedir, check_dir, "*.html")):
-                result_fps.append(relpath(res, basedir))
+            def add_html(basedir, check_dir, result_fps):
+                for res in glob(join(basedir, check_dir, "*.htm")) + \
+                        glob(join(basedir, check_dir, "*.html")):
+                    result_fps.append(relpath(res, basedir))
 
-        # create new list, with relative paths from db base
-        result_fps = []
-        for fp in results:
-            if fp[1] == "directory":
-                # directory, so all html files in it are results
-                # first, see if we have any in the main directory
-                add_html(basedir, fp[0], result_fps)
-                # now do all subdirectories
-                add_html(basedir, join(fp[0], "*"), result_fps)
-            else:
-                # result is exact filepath given
-                result_fps.append(fp[0])
-        return result_fps
+            # create new list, with relative paths from db base
+            result_fps = []
+            for fp in results:
+                if fp[1] == "directory":
+                    # directory, so all html files in it are results
+                    # first, see if we have any in the main directory
+                    add_html(basedir, fp[0], result_fps)
+                    # now do all subdirectories
+                    add_html(basedir, join(fp[0], "*"), result_fps)
+                else:
+                    # result is exact filepath given
+                    result_fps.append(fp[0])
+            return result_fps
 
     @property
     def error(self):
@@ -370,16 +414,12 @@ class Job(QiitaStatusObject):
         str or None
             error message/traceback for a job, or None if none exists
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT log_id FROM qiita.{0} "
-               "WHERE job_id = %s".format(self._table))
-        logging_id = conn_handler.execute_fetchone(sql, (self._id, ))[0]
-        if logging_id is None:
-            ret = None
-        else:
-            ret = LogEntry(logging_id)
-
-        return ret
+        with TRN:
+            sql = "SELECT log_id FROM qiita.{0} WHERE job_id = %s".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            logging_id = TRN.execute_fetchlast()
+            return LogEntry(logging_id) if logging_id is not None else None
 
 # --- Functions ---
     def set_error(self, msg):
@@ -390,18 +430,17 @@ class Job(QiitaStatusObject):
         msg : str
             Error message/stacktrace if available
         """
-        conn_handler = SQLConnectionHandler()
-        log_entry = LogEntry.create('Runtime', msg,
-                                    info={'job': self._id})
-        self._lock_job(conn_handler)
-        err_id = conn_handler.execute_fetchone(
-            "SELECT job_status_id FROM qiita.job_status WHERE "
-            "status = 'error'")[0]
-        # attach the error to the job and set to error
-        sql = ("UPDATE qiita.{0} SET log_id = %s, job_status_id = %s WHERE "
-               "job_id = %s".format(self._table))
+        with TRN:
+            log_entry = LogEntry.create('Runtime', msg,
+                                        info={'job': self._id})
+            self._lock_job()
 
-        conn_handler.execute(sql, (log_entry.id, err_id, self._id))
+            err_id = convert_to_id('error', 'job_status', 'status')
+            # attach the error to the job and set to error
+            sql = """UPDATE qiita.{0} SET log_id = %s, job_status_id = %s
+                     WHERE job_id = %s""".format(self._table)
+            TRN.add(sql, [log_entry.id, err_id, self._id])
+            TRN.execute()
 
     def add_results(self, results):
         """Adds a list of results to the results
@@ -418,19 +457,20 @@ class Job(QiitaStatusObject):
         Curently available file types are:
         biom, directory, plain_text
         """
-        # add filepaths to the job
-        conn_handler = SQLConnectionHandler()
-        self._lock_job(conn_handler)
-        # convert all file type text to file type ids
-        res_ids = [(fp, convert_to_id(fptype, "filepath_type"))
-                   for fp, fptype in results]
-        file_ids = insert_filepaths(res_ids, self._id, self._table,
-                                    "filepath", conn_handler, move_files=False)
+        with TRN:
+            self._lock_job()
+            # convert all file type text to file type ids
+            res_ids = [(fp, convert_to_id(fptype, "filepath_type"))
+                       for fp, fptype in results]
+            file_ids = insert_filepaths(res_ids, self._id, self._table,
+                                        "filepath", move_files=False)
 
-        # associate filepaths with job
-        sql = ("INSERT INTO qiita.{0}_results_filepath (job_id, filepath_id) "
-               "VALUES (%s, %s)".format(self._table))
-        conn_handler.executemany(sql, [(self._id, fid) for fid in file_ids])
+            # associate filepaths with job
+            sql = """INSERT INTO qiita.{0}_results_filepath
+                        (job_id, filepath_id)
+                     VALUES (%s, %s)""".format(self._table)
+            TRN.add(sql, [[self._id, fid] for fid in file_ids], many=True)
+            TRN.execute()
 
 
 class Command(object):
@@ -457,11 +497,12 @@ class Command(object):
         -------
         list of Command objects
         """
-        conn_handler = SQLConnectionHandler()
-        commands = conn_handler.execute_fetchall("SELECT * FROM qiita.command")
-        # create the list of command objects
-        return [cls(c["name"], c["command"], c["input"], c["required"],
-                c["optional"], c["output"]) for c in commands]
+        with TRN:
+            TRN.add("SELECT * FROM qiita.command")
+            commands = TRN.execute_fetchindex()
+            # create the list of command objects
+            return [cls(c["name"], c["command"], c["input"], c["required"],
+                    c["optional"], c["output"]) for c in commands]
 
     @classmethod
     def get_commands_by_datatype(cls, datatypes=None):
@@ -482,28 +523,32 @@ class Command(object):
         If no datatypes are passed, the function will default to returning all
         datatypes available.
         """
-        conn_handler = SQLConnectionHandler()
-        # get the ids of the datatypes to get commands for
-        if datatypes is not None:
-            datatype_info = [(convert_to_id(dt, "data_type"), dt)
-                             for dt in datatypes]
-        else:
-            datatype_info = conn_handler.execute_fetchall(
-                "SELECT data_type_id, data_type from qiita.data_type")
+        with TRN:
+            # get the ids of the datatypes to get commands for
+            if datatypes is not None:
+                datatype_info = [(convert_to_id(dt, "data_type"), dt)
+                                 for dt in datatypes]
+            else:
+                sql = "SELECT data_type_id, data_type from qiita.data_type"
+                TRN.add(sql)
+                datatype_info = TRN.execute_fetchindex()
 
-        commands = defaultdict(list)
-        # get commands for each datatype
-        sql = ("SELECT C.* FROM qiita.command C JOIN qiita.command_data_type "
-               "CD on C.command_id = CD.command_id WHERE CD.data_type_id = %s")
-        for dt_id, dt in datatype_info:
-            comms = conn_handler.execute_fetchall(sql, (dt_id, ))
-            for comm in comms:
-                commands[dt].append(cls(comm["name"], comm["command"],
-                                        comm["input"],
-                                        comm["required"],
-                                        comm["optional"],
-                                        comm["output"]))
-        return commands
+            commands = defaultdict(list)
+            # get commands for each datatype
+            sql = """SELECT C.*
+                     FROM qiita.command C
+                        JOIN qiita.command_data_type USING (command_id)
+                     WHERE data_type_id = %s"""
+            for dt_id, dt in datatype_info:
+                TRN.add(sql, [dt_id])
+                comms = TRN.execute_fetchindex()
+                for comm in comms:
+                    commands[dt].append(cls(comm["name"], comm["command"],
+                                            comm["input"],
+                                            comm["required"],
+                                            comm["optional"],
+                                            comm["output"]))
+            return commands
 
     def __eq__(self, other):
         if type(self) != type(other):

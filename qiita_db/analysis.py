@@ -28,7 +28,7 @@ import pandas as pd
 from skbio.util import find_duplicates
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 from .base import QiitaStatusObject
 from .data import ProcessedData
 from .study import Study
@@ -76,13 +76,13 @@ class Analysis(QiitaStatusObject):
     _portal_table = "analysis_portal"
     _analysis_id_column = 'analysis_id'
 
-    def _lock_check(self, conn_handler):
+    def _lock_check(self):
         """Raises QiitaDBStatusError if analysis is not in_progress"""
         if self.check_status({"queued", "running", "public", "completed",
                               "error"}):
             raise QiitaDBStatusError("Analysis is locked!")
 
-    def _status_setter_checks(self, conn_handler):
+    def _status_setter_checks(self):
         r"""Perform a check to make sure not setting status away from public
         """
         if self.check_status({"public"}):
@@ -102,14 +102,15 @@ class Analysis(QiitaStatusObject):
         set of int
             All analyses in the database with the given status
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT analysis_id FROM qiita.{0}
-                 JOIN qiita.{0}_status USING (analysis_status_id)
-                 JOIN qiita.analysis_portal USING (analysis_id)
-                 JOIN qiita.portal_type USING (portal_type_id)
-                 WHERE status = %s AND portal = %s""".format(cls._table)
-        return {x[0] for x in conn_handler.execute_fetchall(
-            sql, (status, qiita_config.portal))}
+        with TRN:
+            sql = """SELECT analysis_id
+                     FROM qiita.{0}
+                        JOIN qiita.{0}_status USING (analysis_status_id)
+                        JOIN qiita.analysis_portal USING (analysis_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE status = %s AND portal = %s""".format(cls._table)
+            TRN.add(sql, [status, qiita_config.portal])
+            return set(TRN.execute_fetchflatten())
 
     @classmethod
     def create(cls, owner, name, description, parent=None, from_default=False):
@@ -129,61 +130,66 @@ class Analysis(QiitaStatusObject):
             If True, use the default analysis to populate selected samples.
             Default False.
         """
-        queue = "create_analysis"
-        conn_handler = SQLConnectionHandler()
-        conn_handler.create_queue(queue)
-        # TODO after demo: if exists()
-        # Needed since issue #292 exists
-        status_id = convert_to_id('in_construction', 'analysis_status',
-                                  'status')
-        portal_id = convert_to_id(qiita_config.portal, 'portal_type',
-                                  'portal')
-        if from_default:
-            # insert analysis and move samples into that new analysis
-            dflt_id = owner.default_analysis
-            sql = """INSERT INTO qiita.{0}
-                    (email, name, description, analysis_status_id)
-                    VALUES (%s, %s, %s, %s)
-                    RETURNING analysis_id""".format(cls._table)
-            conn_handler.add_to_queue(queue, sql, (
-                owner.id, name, description, status_id))
-            # MAGIC NUMBER 3: command selection step
-            # needed so we skip the sample selection step
-            sql = """INSERT INTO qiita.analysis_workflow
-                    (analysis_id, step) VALUES (%s, %s)
-                    RETURNING %s"""
-            conn_handler.add_to_queue(queue, sql, ['{0}', 3, '{0}'])
-            sql = """UPDATE qiita.analysis_sample
-                     SET analysis_id = %s
-                     WHERE analysis_id = %s RETURNING %s"""
-            conn_handler.add_to_queue(queue, sql, ['{0}', dflt_id, '{0}'])
-        else:
-            # insert analysis information into table as "in construction"
-            sql = """INSERT INTO qiita.{0}
-                  (email, name, description, analysis_status_id)
-                  VALUES (%s, %s, %s, %s)
-                  RETURNING analysis_id""".format(cls._table)
-            conn_handler.add_to_queue(
-                queue, sql, (owner.id, name, description, status_id))
+        with TRN:
+            status_id = convert_to_id('in_construction',
+                                      'analysis_status', 'status')
+            portal_id = convert_to_id(qiita_config.portal, 'portal_type',
+                                      'portal')
 
-        # Add to both QIITA and given portal (if not QIITA)
-        sql = """INSERT INTO qiita.analysis_portal
-                 (analysis_id, portal_type_id)
-                 VALUES (%s, %s) RETURNING %s"""
-        args = [['{0}', portal_id, '{0}']]
-        if qiita_config.portal != 'QIITA':
-            qp_id = convert_to_id('QIITA', 'portal_type', 'portal')
-            args.append(['{0}', qp_id, '{0}'])
-        conn_handler.add_to_queue(queue, sql, args, many=True)
+            if from_default:
+                # insert analysis and move samples into that new analysis
+                dflt_id = owner.default_analysis
 
-        # add parent if necessary
-        if parent:
-            sql = ("INSERT INTO qiita.analysis_chain (parent_id, child_id) "
-                   "VALUES (%s, %s) RETURNING child_id")
-            conn_handler.add_to_queue(queue, sql, [parent.id, '{0}'])
+                # Get the analysis id placeholder
+                a_id_idx = TRN.index
+                a_id_ph = "{%s:0:0}" % a_id_idx
+                sql = """INSERT INTO qiita.{0}
+                            (email, name, description, analysis_status_id)
+                        VALUES (%s, %s, %s, %s)
+                        RETURNING analysis_id""".format(cls._table)
+                TRN.add(sql, [owner.id, name, description, status_id])
+                # MAGIC NUMBER 3: command selection step
+                # needed so we skip the sample selection step
+                sql = """INSERT INTO qiita.analysis_workflow
+                            (analysis_id, step)
+                        VALUES (%s, %s)"""
+                TRN.add(sql, [a_id_ph, 3])
 
-        a_id = conn_handler.execute_queue(queue)[0]
-        return cls(a_id)
+                sql = """UPDATE qiita.analysis_sample
+                         SET analysis_id = %s
+                         WHERE analysis_id = %s"""
+                TRN.add(sql, [a_id_ph, dflt_id])
+            else:
+                # Get the analysis id placeholder
+                a_id_idx = TRN.index
+                a_id_ph = "{%s:0:0}" % a_id_idx
+                # insert analysis information into table as "in construction"
+                sql = """INSERT INTO qiita.{0}
+                            (email, name, description, analysis_status_id)
+                         VALUES (%s, %s, %s, %s)
+                         RETURNING analysis_id""".format(cls._table)
+                TRN.add(sql, [owner.id, name, description, status_id])
+
+            # Add to both QIITA and given portal (if not QIITA)
+            sql = """INSERT INTO qiita.analysis_portal
+                        (analysis_id, portal_type_id)
+                     VALUES (%s, %s)"""
+            args = [[a_id_ph, portal_id]]
+
+            if qiita_config.portal != 'QIITA':
+                qp_id = convert_to_id('QIITA', 'portal_type', 'portal')
+                args.append([a_id_ph, qp_id])
+            TRN.add(sql, args, many=True)
+
+            # add parent if necessary
+            if parent:
+                sql = """INSERT INTO qiita.analysis_chain
+                            (parent_id, child_id)
+                         VALUES (%s, %s)"""
+                TRN.add(sql, [parent.id, a_id_ph])
+
+            # The analysis id is in the `a_id_idx` query, first row, first elem
+            return cls(TRN.execute()[a_id_idx][0][0])
 
     @classmethod
     def delete(cls, _id):
@@ -199,41 +205,39 @@ class Analysis(QiitaStatusObject):
         QiitaDBUnknownIDError
             If the analysis id doesn't exist
         """
-        # check if the analysis exist
-        if not cls.exists(_id):
-            raise QiitaDBUnknownIDError(_id, "analysis")
+        with TRN:
+            # check if the analysis exist
+            if not cls.exists(_id):
+                raise QiitaDBUnknownIDError(_id, "analysis")
 
-        queue = "delete_analysis_%d" % _id
-        conn_handler = SQLConnectionHandler()
-        conn_handler.create_queue(queue)
+            sql = "DELETE FROM qiita.analysis_filepath WHERE {0} = %s".format(
+                cls._analysis_id_column)
+            args = [_id]
+            TRN.add(sql, args)
 
-        sql = ("DELETE FROM qiita.analysis_filepath WHERE "
-               "{0} = {1}".format(cls._analysis_id_column, _id))
-        conn_handler.add_to_queue(queue, sql)
+            sql = "DELETE FROM qiita.analysis_workflow WHERE {0} = %s".format(
+                cls._analysis_id_column)
+            TRN.add(sql, args)
 
-        sql = ("DELETE FROM qiita.analysis_workflow WHERE "
-               "{0} = {1}".format(cls._analysis_id_column, _id))
-        conn_handler.add_to_queue(queue, sql)
+            sql = "DELETE FROM qiita.analysis_portal WHERE {0} = %s".format(
+                cls._analysis_id_column)
+            TRN.add(sql, args)
 
-        sql = ("DELETE FROM qiita.analysis_portal WHERE "
-               "{0} = {1}".format(cls._analysis_id_column, _id))
-        conn_handler.add_to_queue(queue, sql)
+            sql = "DELETE FROM qiita.analysis_sample WHERE {0} = %s".format(
+                cls._analysis_id_column)
+            TRN.add(sql, args)
 
-        sql = ("DELETE FROM qiita.analysis_sample WHERE "
-               "{0} = {1}".format(cls._analysis_id_column, _id))
-        conn_handler.add_to_queue(queue, sql)
+            sql = """DELETE FROM qiita.collection_analysis
+                     WHERE {0} = %s""".format(cls._analysis_id_column)
+            TRN.add(sql, args)
 
-        sql = ("DELETE FROM qiita.collection_analysis WHERE "
-               "{0} = {1}".format(cls._analysis_id_column, _id))
-        conn_handler.add_to_queue(queue, sql)
+            # TODO: issue #1176
 
-        # TODO: issue #1176
+            sql = """DELETE FROM qiita.{0} WHERE {1} = %s""".format(
+                cls._table, cls._analysis_id_column)
+            TRN.add(sql, args)
 
-        sql = ("DELETE FROM qiita.{0} WHERE "
-               "{1} = {2}".format(cls._table, cls._analysis_id_column, _id))
-        conn_handler.add_to_queue(queue, sql)
-
-        conn_handler.execute_queue(queue)
+            TRN.execute()
 
     @classmethod
     def exists(cls, analysis_id):
@@ -249,15 +253,17 @@ class Analysis(QiitaStatusObject):
         bool
             True if exists, false otherwise.
         """
-        conn_handler = SQLConnectionHandler()
-
-        return conn_handler.execute_fetchone(
-            """SELECT EXISTS(SELECT * FROM qiita.{0}
-            JOIN qiita.analysis_portal USING (analysis_id)
-            JOIN qiita.portal_type USING (portal_type_id)
-            WHERE {1}=%s AND portal=%s)""".format(
-                cls._table, cls._analysis_id_column),
-            (analysis_id, qiita_config.portal))[0]
+        with TRN:
+            sql = """SELECT EXISTS(
+                        SELECT *
+                        FROM qiita.{0}
+                            JOIN qiita.analysis_portal USING (analysis_id)
+                            JOIN qiita.portal_type USING (portal_type_id)
+                        WHERE {1}=%s
+                            AND portal=%s)""".format(cls._table,
+                                                     cls._analysis_id_column)
+            TRN.add(sql, [analysis_id, qiita_config.portal])
+            return TRN.execute_fetchlast()
 
     # ---- Properties ----
     @property
@@ -269,10 +275,11 @@ class Analysis(QiitaStatusObject):
         str
             Name of the Analysis
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT email FROM qiita.{0} WHERE "
-               "analysis_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = "SELECT email FROM qiita.{0} WHERE analysis_id = %s".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def name(self):
@@ -283,10 +290,11 @@ class Analysis(QiitaStatusObject):
         str
             Name of the Analysis
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT name FROM qiita.{0} WHERE "
-               "analysis_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = "SELECT name FROM qiita.{0} WHERE analysis_id = %s".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def _portals(self):
@@ -297,11 +305,13 @@ class Analysis(QiitaStatusObject):
         str
             Name of the portal
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT portal FROM qiita.analysis_portal
-               JOIN qiita.portal_type USING (portal_type_id)
-               WHERE analysis_id = %s""".format(self._table)
-        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
+        with TRN:
+            sql = """SELECT portal
+                     FROM qiita.analysis_portal
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE analysis_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @property
     def timestamp(self):
@@ -312,18 +322,20 @@ class Analysis(QiitaStatusObject):
         datetime
             Timestamp of the Analysis
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT timestamp FROM qiita.{0} WHERE "
-               "analysis_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = """SELECT timestamp FROM qiita.{0}
+                     WHERE analysis_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def description(self):
         """Returns the description of the analysis"""
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT description FROM qiita.{0} WHERE "
-               "analysis_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = """SELECT description FROM qiita.{0}
+                     WHERE analysis_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @description.setter
     def description(self, description):
@@ -339,11 +351,12 @@ class Analysis(QiitaStatusObject):
         QiitaDBStatusError
             Analysis is public
         """
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
-        sql = ("UPDATE qiita.{0} SET description = %s WHERE "
-               "analysis_id = %s".format(self._table))
-        conn_handler.execute(sql, (description, self._id))
+        with TRN:
+            self._lock_check()
+            sql = """UPDATE qiita.{0} SET description = %s
+                     WHERE analysis_id = %s""".format(self._table)
+            TRN.add(sql, [description, self._id])
+            TRN.execute()
 
     @property
     def samples(self):
@@ -354,14 +367,17 @@ class Analysis(QiitaStatusObject):
         dict
             Format is {processed_data_id: [sample_id, sample_id, ...]}
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT processed_data_id, sample_id FROM qiita.analysis_sample"
-               " WHERE analysis_id = %s ORDER BY processed_data_id")
-        ret_samples = defaultdict(list)
-        # turn into dict of samples keyed to processed_data_id
-        for pid, sample in conn_handler.execute_fetchall(sql, (self._id, )):
-            ret_samples[pid].append(sample)
-        return ret_samples
+        with TRN:
+            sql = """SELECT processed_data_id, sample_id
+                     FROM qiita.analysis_sample
+                     WHERE analysis_id = %s
+                     ORDER BY processed_data_id"""
+            ret_samples = defaultdict(list)
+            TRN.add(sql, [self._id])
+            # turn into dict of samples keyed to processed_data_id
+            for pid, sample in TRN.execute_fetchindex():
+                ret_samples[pid].append(sample)
+            return ret_samples
 
     @property
     def dropped_samples(self):
@@ -372,25 +388,28 @@ class Analysis(QiitaStatusObject):
         dict of sets
             Format is {processed_data_id: {sample_id, sample_id, ...}, ...}
         """
-        bioms = self.biom_tables
-        if not bioms:
-            return {}
+        with TRN:
+            bioms = self.biom_tables
+            if not bioms:
+                return {}
 
-        # get all samples selected for the analysis, converting lists to
-        # sets for fast searching. Overhead less this way for large analyses
-        all_samples = {k: set(v) for k, v in viewitems(self.samples)}
+            # get all samples selected for the analysis, converting lists to
+            # sets for fast searching. Overhead less this way
+            # for large analyses
+            all_samples = {k: set(v) for k, v in viewitems(self.samples)}
 
-        for biom, filepath in viewitems(bioms):
-            table = load_table(filepath)
-            # remove the samples from the sets as they are found in the table
-            proc_data_ids = set(sample['Processed_id']
-                                for sample in table.metadata())
-            ids = set(table.ids())
-            for proc_data_id in proc_data_ids:
-                all_samples[proc_data_id] = all_samples[proc_data_id] - ids
+            for biom, filepath in viewitems(bioms):
+                table = load_table(filepath)
+                # remove the samples from the sets as they
+                # are found in the table
+                proc_data_ids = set(sample['Processed_id']
+                                    for sample in table.metadata())
+                ids = set(table.ids())
+                for proc_data_id in proc_data_ids:
+                    all_samples[proc_data_id] = all_samples[proc_data_id] - ids
 
-        # what's left are unprocessed samples, so return
-        return all_samples
+            # what's left are unprocessed samples, so return
+            return all_samples
 
     @property
     def data_types(self):
@@ -401,13 +420,15 @@ class Analysis(QiitaStatusObject):
         list of str
             Data types in the analysis
         """
-        sql = ("SELECT DISTINCT data_type from qiita.data_type d JOIN "
-               "qiita.processed_data p ON p.data_type_id = d.data_type_id "
-               "JOIN qiita.analysis_sample a ON p.processed_data_id = "
-               "a.processed_data_id WHERE a.analysis_id = %s ORDER BY "
-               "data_type")
-        conn_handler = SQLConnectionHandler()
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
+        with TRN:
+            sql = """SELECT DISTINCT data_type
+                     FROM qiita.data_type
+                        JOIN qiita.processed_data USING (data_type_id)
+                        JOIN qiita.analysis_sample USING (processed_data_id)
+                     WHERE analysis_id = %s
+                     ORDER BY data_type"""
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @property
     def shared_with(self):
@@ -418,10 +439,11 @@ class Analysis(QiitaStatusObject):
         list of int
             User ids analysis is shared with
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT email FROM qiita.analysis_users WHERE "
-               "analysis_id = %s")
-        return [u[0] for u in conn_handler.execute_fetchall(sql, (self._id, ))]
+        with TRN:
+            sql = """SELECT email FROM qiita.analysis_users
+                     WHERE analysis_id = %s"""
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @property
     def all_associated_filepath_ids(self):
@@ -431,28 +453,22 @@ class Analysis(QiitaStatusObject):
         -------
         list
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT f.filepath_id
-              FROM qiita.filepath f JOIN
-              qiita.analysis_filepath af ON f.filepath_id = af.filepath_id
-              WHERE af.analysis_id = %s"""
-        filepaths = {row[0]
-                     for row in conn_handler.execute_fetchall(sql, [self._id])}
+        with TRN:
+            sql = """SELECT filepath_id
+                     FROM qiita.filepath
+                        JOIN qiita.analysis_filepath USING (filepath_id)
+                     WHERE analysis_id = %s"""
+            TRN.add(sql, [self._id])
+            filepaths = set(TRN.execute_fetchflatten())
 
-        sql = """SELECT fp.filepath_id
-              FROM qiita.analysis_job aj
-                JOIN qiita.job j ON aj.job_id = j.job_id
-                JOIN qiita.job_results_filepath jrfp ON aj.job_id = jrfp.job_id
-                JOIN qiita.filepath fp ON jrfp.filepath_id = fp.filepath_id
-              WHERE aj.analysis_id = %s"""
-
-        job_filepaths = {row[0]
-                         for row in conn_handler.execute_fetchall(sql,
-                                                                  [self._id])}
-
-        filepaths = filepaths.union(job_filepaths)
-
-        return filepaths
+            sql = """SELECT filepath_id
+                     FROM qiita.analysis_job
+                        JOIN qiita.job USING (job_id)
+                        JOIN qiita.job_results_filepath USING (job_id)
+                        JOIN qiita.filepath USING (filepath_id)
+                     WHERE analysis_id = %s"""
+            TRN.add(sql, [self._id])
+            return filepaths.union(TRN.execute_fetchflatten())
 
     @property
     def biom_tables(self):
@@ -463,20 +479,22 @@ class Analysis(QiitaStatusObject):
         dict
             Dictonary in the form {data_type: full BIOM filepath}
         """
-        conn_handler = SQLConnectionHandler()
-        fptypeid = convert_to_id("biom", "filepath_type")
-        sql = ("SELECT dt.data_type, f.filepath FROM qiita.filepath f JOIN "
-               "qiita.analysis_filepath af ON f.filepath_id = af.filepath_id "
-               "JOIN qiita.data_type dt ON dt.data_type_id = af.data_type_id "
-               "WHERE af.analysis_id = %s AND f.filepath_type_id = %s")
-        tables = conn_handler.execute_fetchall(sql, (self._id, fptypeid))
-        if not tables:
-            return {}
-        ret_tables = {}
-        _, base_fp = get_mountpoint(self._table)[0]
-        for fp in tables:
-            ret_tables[fp[0]] = join(base_fp, fp[1])
-        return ret_tables
+        with TRN:
+            fptypeid = convert_to_id("biom", "filepath_type")
+            sql = """SELECT data_type, filepath
+                     FROM qiita.filepath
+                        JOIN qiita.analysis_filepath USING (filepath_id)
+                        JOIN qiita.data_type USING (data_type_id)
+                     WHERE analysis_id = %s AND filepath_type_id = %s"""
+            TRN.add(sql, [self._id, fptypeid])
+            tables = TRN.execute_fetchindex()
+            if not tables:
+                return {}
+            ret_tables = {}
+            _, base_fp = get_mountpoint(self._table)[0]
+            for fp in tables:
+                ret_tables[fp[0]] = join(base_fp, fp[1])
+            return ret_tables
 
     @property
     def mapping_file(self):
@@ -487,43 +505,64 @@ class Analysis(QiitaStatusObject):
         str or None
             full filepath to the mapping file or None if not generated
         """
-        conn_handler = SQLConnectionHandler()
-        fptypeid = convert_to_id("plain_text", "filepath_type")
-        sql = ("SELECT f.filepath FROM qiita.filepath f JOIN "
-               "qiita.analysis_filepath af ON f.filepath_id = af.filepath_id "
-               "WHERE af.analysis_id = %s AND f.filepath_type_id = %s")
-        mapping_fp = conn_handler.execute_fetchone(sql, (self._id, fptypeid))
-        if not mapping_fp:
-            return None
+        with TRN:
+            fptypeid = convert_to_id("plain_text", "filepath_type")
+            sql = """SELECT filepath
+                     FROM qiita.filepath
+                        JOIN qiita.analysis_filepath USING (filepath_id)
+                     WHERE analysis_id = %s AND filepath_type_id = %s"""
+            TRN.add(sql, [self._id, fptypeid])
+            mapping_fp = TRN.execute_fetchindex()
+            if not mapping_fp:
+                return None
 
-        _, base_fp = get_mountpoint(self._table)[0]
-        return join(base_fp, mapping_fp[0])
+            _, base_fp = get_mountpoint(self._table)[0]
+            return join(base_fp, mapping_fp[0][0])
 
     @property
     def step(self):
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
-        sql = "SELECT step from qiita.analysis_workflow WHERE analysis_id = %s"
-        try:
-            return conn_handler.execute_fetchone(sql, (self._id,))[0]
-        except TypeError:
-            raise ValueError("Step not set yet!")
+        """Returns the current step of the analysis
+
+        Returns
+        -------
+        str
+            The current step of the analysis
+
+        Raises
+        ------
+        ValueError
+            If the step is not set up
+        """
+        with TRN:
+            self._lock_check()
+            sql = """SELECT step FROM qiita.analysis_workflow
+                     WHERE analysis_id = %s"""
+            TRN.add(sql, [self._id])
+            try:
+                return TRN.execute_fetchlast()
+            except IndexError:
+                raise ValueError("Step not set yet!")
 
     @step.setter
     def step(self, value):
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
-        sql = ("SELECT EXISTS(SELECT analysis_id from qiita.analysis_workflow "
-               "WHERE analysis_id = %s)")
-        step_exists = conn_handler.execute_fetchone(sql, (self._id,))[0]
+        with TRN:
+            self._lock_check()
+            sql = """SELECT EXISTS(
+                        SELECT analysis_id
+                        FROM qiita.analysis_workflow
+                        WHERE analysis_id = %s)"""
+            TRN.add(sql, [self._id])
+            step_exists = TRN.execute_fetchlast()
 
-        if step_exists:
-            sql = ("UPDATE qiita.analysis_workflow SET step = %s WHERE "
-                   "analysis_id = %s")
-        else:
-            sql = ("INSERT INTO qiita.analysis_workflow (step, analysis_id) "
-                   "VALUES (%s, %s)")
-        conn_handler.execute(sql, (value, self._id))
+            if step_exists:
+                sql = """UPDATE qiita.analysis_workflow SET step = %s
+                         WHERE analysis_id = %s"""
+            else:
+                sql = """INSERT INTO qiita.analysis_workflow
+                            (step, analysis_id)
+                         VALUES (%s, %s)"""
+            TRN.add(sql, [value, self._id])
+            TRN.execute()
 
     @property
     def jobs(self):
@@ -534,11 +573,11 @@ class Analysis(QiitaStatusObject):
         list of ints
             Job ids for jobs in analysis. Empty list if no jobs attached.
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT job_id FROM qiita.analysis_job WHERE "
-               "analysis_id = %s".format(self._table))
-        job_ids = conn_handler.execute_fetchall(sql, (self._id, ))
-        return [job_id[0] for job_id in job_ids]
+        with TRN:
+            sql = """SELECT job_id FROM qiita.analysis_job
+                     WHERE analysis_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @property
     def pmid(self):
@@ -549,11 +588,11 @@ class Analysis(QiitaStatusObject):
         str or None
             returns the PMID or None if none is attached
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT pmid FROM qiita.{0} WHERE "
-               "analysis_id = %s".format(self._table))
-        pmid = conn_handler.execute_fetchone(sql, (self._id, ))[0]
-        return pmid
+        with TRN:
+            sql = "SELECT pmid FROM qiita.{0} WHERE analysis_id = %s".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @pmid.setter
     def pmid(self, pmid):
@@ -573,11 +612,12 @@ class Analysis(QiitaStatusObject):
         -----
         An analysis should only ever have one PMID attached to it.
         """
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
-        sql = ("UPDATE qiita.{0} SET pmid = %s WHERE "
-               "analysis_id = %s".format(self._table))
-        conn_handler.execute(sql, (pmid, self._id))
+        with TRN:
+            self._lock_check()
+            sql = """UPDATE qiita.{0} SET pmid = %s
+                     WHERE analysis_id = %s""".format(self._table)
+            TRN.add(sql, [pmid, self._id])
+            TRN.execute()
 
     # @property
     # def parent(self):
@@ -602,12 +642,13 @@ class Analysis(QiitaStatusObject):
         bool
             Whether user has access to analysis or not
         """
-        # if admin or superuser, just return true
-        if user.level in {'superuser', 'admin'}:
-            return True
+        with TRN:
+            # if admin or superuser, just return true
+            if user.level in {'superuser', 'admin'}:
+                return True
 
-        return self._id in Analysis.get_by_status('public') | \
-            user.private_analyses | user.shared_analyses
+            return self._id in Analysis.get_by_status('public') | \
+                user.private_analyses | user.shared_analyses
 
     def summary_data(self):
         """Return number of studies, processed data, and samples selected
@@ -617,14 +658,16 @@ class Analysis(QiitaStatusObject):
         dict
             counts keyed to their relevant type
         """
-        sql = """SELECT COUNT(DISTINCT study_id) as studies,
-                COUNT(DISTINCT processed_data_id) as processed_data,
-                COUNT(DISTINCT sample_id) as samples
-                FROM qiita.study_processed_data
-                JOIN qiita.analysis_sample USING (processed_data_id)
-                WHERE analysis_id = %s"""
-        conn_handler = SQLConnectionHandler()
-        return dict(conn_handler.execute_fetchone(sql, [self._id]))
+        with TRN:
+            sql = """SELECT
+                        COUNT(DISTINCT study_id) as studies,
+                        COUNT(DISTINCT processed_data_id) as processed_data,
+                        COUNT(DISTINCT sample_id) as samples
+                    FROM qiita.study_processed_data
+                        JOIN qiita.analysis_sample USING (processed_data_id)
+                    WHERE analysis_id = %s"""
+            TRN.add(sql, [self._id])
+            return dict(TRN.execute_fetchindex()[0])
 
     def share(self, user):
         """Share the analysis with another user
@@ -634,17 +677,17 @@ class Analysis(QiitaStatusObject):
         user: User object
             The user to share the analysis with
         """
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
+        with TRN:
+            self._lock_check()
 
-        # Make sure the analysis is not already shared with the given user
-        if user.id in self.shared_with:
-            return
+            # Make sure the analysis is not already shared with the given user
+            if user.id in self.shared_with:
+                return
 
-        sql = ("INSERT INTO qiita.analysis_users (analysis_id, email) VALUES "
-               "(%s, %s)")
-
-        conn_handler.execute(sql, (self._id, user.id))
+            sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
+                     VALUES (%s, %s)"""
+            TRN.add(sql, [self._id, user.id])
+            TRN.execute()
 
     def unshare(self, user):
         """Unshare the analysis with another user
@@ -654,13 +697,13 @@ class Analysis(QiitaStatusObject):
         user: User object
             The user to unshare the analysis with
         """
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
+        with TRN:
+            self._lock_check()
 
-        sql = ("DELETE FROM qiita.analysis_users WHERE analysis_id = %s AND "
-               "email = %s")
-
-        conn_handler.execute(sql, (self._id, user.id))
+            sql = """DELETE FROM qiita.analysis_users
+                     WHERE analysis_id = %s AND email = %s"""
+            TRN.add(sql, [self._id, user.id])
+            TRN.execute()
 
     def add_samples(self, samples):
         """Adds samples to the analysis
@@ -671,22 +714,24 @@ class Analysis(QiitaStatusObject):
             samples and the processed data id they come from in form
             {processed_data_id: [sample1, sample2, ...], ...}
         """
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
+        with TRN:
+            self._lock_check()
 
-        for pid, samps in viewitems(samples):
-            # get previously selected samples  for pid and filter them out
-            sql = """SELECT sample_id FROM qiita.analysis_sample
-                WHERE processed_data_id = %s and analysis_id = %s"""
-            prev_selected = [x[0] for x in
-                             conn_handler.execute_fetchall(sql,
-                                                           (pid, self._id))]
+            for pid, samps in viewitems(samples):
+                # get previously selected samples  for pid and filter them out
+                sql = """SELECT sample_id
+                         FROM qiita.analysis_sample
+                         WHERE processed_data_id = %s AND analysis_id = %s"""
+                TRN.add(sql, [pid, self._id])
+                prev_selected = TRN.execute_fetchflatten()
 
-            select = set(samps).difference(prev_selected)
-            sql = ("INSERT INTO qiita.analysis_sample "
-                   "(analysis_id, processed_data_id, sample_id) VALUES "
-                   "({}, %s, %s)".format(self._id))
-            conn_handler.executemany(sql, [x for x in product([pid], select)])
+                select = set(samps).difference(prev_selected)
+                sql = """INSERT INTO qiita.analysis_sample
+                            (analysis_id, processed_data_id, sample_id)
+                         VALUES (%s, %s, %s)"""
+                args = [[self._id, pid, s] for s in select]
+                TRN.add(sql, args, many=True)
+                TRN.execute()
 
     def remove_samples(self, proc_data=None, samples=None):
         """Removes samples from the analysis
@@ -709,29 +754,32 @@ class Analysis(QiitaStatusObject):
         If both are passed, the given samples are removed from the given
         processed data ids
         """
-        conn_handler = SQLConnectionHandler()
-        self._lock_check(conn_handler)
-        if proc_data and samples:
-            sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
-                   "AND processed_data_id = %s AND sample_id = %s")
-            remove = []
-            # build tuples for what samples to remove from what processed data
-            for proc_id in proc_data:
-                for sample_id in samples:
-                    remove.append((self._id, proc_id, sample_id))
-        elif proc_data:
-            sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
-                   "AND processed_data_id = %s")
-            remove = [(self._id, p) for p in proc_data]
-        elif samples:
-            sql = ("DELETE FROM qiita.analysis_sample WHERE analysis_id = %s "
-                   "AND sample_id = %s")
-            remove = [(self._id, s) for s in samples]
-        else:
-            raise IncompetentQiitaDeveloperError(
-                "Must provide list of samples and/or proc_data for removal!")
+        with TRN:
+            self._lock_check()
+            if proc_data and samples:
+                sql = """DELETE FROM qiita.analysis_sample
+                         WHERE analysis_id = %s
+                            AND processed_data_id = %s
+                            AND sample_id = %s"""
+                # build tuples for what samples to remove from what
+                # processed data
+                args = [[self._id, p, s]
+                        for p, s in product(proc_data, samples)]
+            elif proc_data:
+                sql = """DELETE FROM qiita.analysis_sample
+                         WHERE analysis_id = %s AND processed_data_id = %s"""
+                args = [[self._id, p] for p in proc_data]
+            elif samples:
+                sql = """DELETE FROM qiita.analysis_sample
+                         WHERE analysis_id = %s AND sample_id = %s"""
+                args = [[self._id, s] for s in samples]
+            else:
+                raise IncompetentQiitaDeveloperError(
+                    "Must provide list of samples and/or proc_data for "
+                    "removal")
 
-        conn_handler.executemany(sql, remove)
+            TRN.add(sql, args, many=True)
+            TRN.execute()
 
     def build_files(self, rarefaction_depth=None):
         """Builds biom and mapping files needed for analysis
@@ -754,127 +802,136 @@ class Analysis(QiitaStatusObject):
         Creates biom tables for each requested data type
         Creates mapping file for requested samples
         """
-        if rarefaction_depth is not None:
-            if type(rarefaction_depth) is not int:
-                raise TypeError("rarefaction_depth must be in integer")
-            if rarefaction_depth <= 0:
-                raise ValueError("rarefaction_depth must be greater than 0")
+        with TRN:
+            if rarefaction_depth is not None:
+                if type(rarefaction_depth) is not int:
+                    raise TypeError("rarefaction_depth must be in integer")
+                if rarefaction_depth <= 0:
+                    raise ValueError(
+                        "rarefaction_depth must be greater than 0")
 
-        samples = self._get_samples()
-        self._build_mapping_file(samples)
-        self._build_biom_tables(samples, rarefaction_depth)
+            samples = self._get_samples()
+            self._build_mapping_file(samples)
+            self._build_biom_tables(samples, rarefaction_depth)
 
     def _get_samples(self):
         """Retrieves dict of samples to proc_data_id for the analysis"""
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT processed_data_id, array_agg(sample_id ORDER BY "
-               "sample_id) FROM qiita.analysis_sample WHERE analysis_id = %s "
-               "GROUP BY processed_data_id")
-        return dict(conn_handler.execute_fetchall(sql, [self._id]))
+        with TRN:
+            sql = """SELECT processed_data_id, array_agg(
+                        sample_id ORDER BY sample_id)
+                     FROM qiita.analysis_sample
+                     WHERE analysis_id = %s
+                     GROUP BY processed_data_id"""
+            TRN.add(sql, [self._id])
+            return dict(TRN.execute_fetchindex())
 
     def _build_biom_tables(self, samples, rarefaction_depth):
         """Build tables and add them to the analysis"""
-        # filter and combine all study BIOM tables needed for each data type
-        new_tables = {dt: None for dt in self.data_types}
-        base_fp = get_work_base_dir()
-        for pid, samps in viewitems(samples):
-            # one biom table attached to each processed data object
-            proc_data = ProcessedData(pid)
-            proc_data_fp = proc_data.get_filepaths()[0][1]
-            table_fp = join(base_fp, proc_data_fp)
-            table = load_table(table_fp)
-            # HACKY WORKAROUND FOR DEMO. Issue # 246
-            # make sure samples not in biom table are not filtered for
-            table_samps = set(table.ids())
-            filter_samps = table_samps.intersection(samps)
-            # add the metadata column for study the samples come from
-            study_meta = {'Study': Study(proc_data.study).title,
-                          'Processed_id': proc_data.id}
-            samples_meta = {sid: study_meta for sid in filter_samps}
-            # filter for just the wanted samples and merge into new table
-            # this if/else setup avoids needing a blank table to start merges
-            table.filter(filter_samps, axis='sample', inplace=True)
-            table.add_metadata(samples_meta, axis='sample')
-            data_type = proc_data.data_type()
-            if new_tables[data_type] is None:
-                new_tables[data_type] = table
-            else:
-                new_tables[data_type] = new_tables[data_type].merge(table)
+        with TRN:
+            # filter and combine all study BIOM tables needed for
+            # each data type
+            new_tables = {dt: None for dt in self.data_types}
+            base_fp = get_work_base_dir()
+            for pid, samps in viewitems(samples):
+                # one biom table attached to each processed data object
+                proc_data = ProcessedData(pid)
+                proc_data_fp = proc_data.get_filepaths()[0][1]
+                table_fp = join(base_fp, proc_data_fp)
+                table = load_table(table_fp)
+                # HACKY WORKAROUND FOR DEMO. Issue # 246
+                # make sure samples not in biom table are not filtered for
+                table_samps = set(table.ids())
+                filter_samps = table_samps.intersection(samps)
+                # add the metadata column for study the samples come from
+                study_meta = {'Study': Study(proc_data.study).title,
+                              'Processed_id': proc_data.id}
+                samples_meta = {sid: study_meta for sid in filter_samps}
+                # filter for just the wanted samples and merge into new table
+                # this if/else setup avoids needing a blank table to
+                # start merges
+                table.filter(filter_samps, axis='sample', inplace=True)
+                table.add_metadata(samples_meta, axis='sample')
+                data_type = proc_data.data_type()
+                if new_tables[data_type] is None:
+                    new_tables[data_type] = table
+                else:
+                    new_tables[data_type] = new_tables[data_type].merge(table)
 
-        # add the new tables to the analysis
-        _, base_fp = get_mountpoint(self._table)[0]
-        for dt, biom_table in viewitems(new_tables):
-            # rarefy, if specified
-            if rarefaction_depth is not None:
-                biom_table = biom_table.subsample(rarefaction_depth)
-            # write out the file
-            biom_fp = join(base_fp, "%d_analysis_%s.biom" % (self._id, dt))
-            with biom_open(biom_fp, 'w') as f:
-                biom_table.to_hdf5(f, "Analysis %s Datatype %s" %
-                                   (self._id, dt))
-            self._add_file("%d_analysis_%s.biom" % (self._id, dt),
-                           "biom", data_type=dt)
+            # add the new tables to the analysis
+            _, base_fp = get_mountpoint(self._table)[0]
+            for dt, biom_table in viewitems(new_tables):
+                # rarefy, if specified
+                if rarefaction_depth is not None:
+                    biom_table = biom_table.subsample(rarefaction_depth)
+                # write out the file
+                biom_fp = join(base_fp, "%d_analysis_%s.biom" % (self._id, dt))
+                with biom_open(biom_fp, 'w') as f:
+                    biom_table.to_hdf5(f, "Analysis %s Datatype %s" %
+                                       (self._id, dt))
+                self._add_file("%d_analysis_%s.biom" % (self._id, dt),
+                               "biom", data_type=dt)
 
     def _build_mapping_file(self, samples):
         """Builds the combined mapping file for all samples
            Code modified slightly from qiime.util.MetadataMap.__add__"""
-        conn_handler = SQLConnectionHandler()
-        all_sample_ids = set()
-        sql = """SELECT filepath_id, filepath
-                 FROM qiita.filepath
-                    JOIN qiita.prep_template_filepath USING (filepath_id)
-                    JOIN qiita.prep_template_preprocessed_data
-                        USING (prep_template_id)
-                    JOIN qiita.preprocessed_processed_data
-                        USING (preprocessed_data_id)
-                    JOIN qiita.filepath_type USING (filepath_type_id)
-                 WHERE processed_data_id = %s
-                    AND filepath_type = 'qiime_map'
-                 ORDER BY filepath_id DESC"""
-        _id, fp = get_mountpoint('templates')[0]
-        to_concat = []
+        with TRN:
+            all_sample_ids = set()
+            sql = """SELECT filepath_id, filepath
+                     FROM qiita.filepath
+                        JOIN qiita.prep_template_filepath USING (filepath_id)
+                        JOIN qiita.prep_template_preprocessed_data
+                            USING (prep_template_id)
+                        JOIN qiita.preprocessed_processed_data
+                            USING (preprocessed_data_id)
+                        JOIN qiita.filepath_type USING (filepath_type_id)
+                     WHERE processed_data_id = %s
+                        AND filepath_type = 'qiime_map'
+                     ORDER BY filepath_id DESC"""
+            _id, fp = get_mountpoint('templates')[0]
+            to_concat = []
 
-        for pid, samples in viewitems(samples):
-            if len(samples) != len(set(samples)):
-                duplicates = find_duplicates(samples)
-                raise QiitaDBError("Duplicate sample ids found: %s"
-                                   % ', '.join(duplicates))
-            # Get the QIIME mapping file
-            qiime_map_fp = conn_handler.execute_fetchall(sql, (pid,))[0][1]
-            # Parse the mapping file
-            qiime_map = pd.read_csv(
-                join(fp, qiime_map_fp), sep='\t', keep_default_na=False,
-                na_values=['unknown'], index_col=False,
-                converters=defaultdict(lambda: str))
-            qiime_map.set_index('#SampleID', inplace=True, drop=True)
-            qiime_map = qiime_map.loc[samples]
+            for pid, samples in viewitems(samples):
+                if len(samples) != len(set(samples)):
+                    duplicates = find_duplicates(samples)
+                    raise QiitaDBError("Duplicate sample ids found: %s"
+                                       % ', '.join(duplicates))
+                # Get the QIIME mapping file
+                TRN.add(sql, [pid])
+                qiime_map_fp = TRN.execute_fetchindex()[0][1]
+                # Parse the mapping file
+                qiime_map = pd.read_csv(
+                    join(fp, qiime_map_fp), sep='\t', keep_default_na=False,
+                    na_values=['unknown'], index_col=False,
+                    converters=defaultdict(lambda: str))
+                qiime_map.set_index('#SampleID', inplace=True, drop=True)
+                qiime_map = qiime_map.loc[samples]
 
-            duplicates = all_sample_ids.intersection(qiime_map.index)
-            if duplicates or len(samples) != len(set(samples)):
-                # Duplicate samples so raise error
-                raise QiitaDBError("Duplicate sample ids found: %s"
-                                   % ', '.join(duplicates))
-            all_sample_ids.update(qiime_map.index)
-            to_concat.append(qiime_map)
+                duplicates = all_sample_ids.intersection(qiime_map.index)
+                if duplicates or len(samples) != len(set(samples)):
+                    # Duplicate samples so raise error
+                    raise QiitaDBError("Duplicate sample ids found: %s"
+                                       % ', '.join(duplicates))
+                all_sample_ids.update(qiime_map.index)
+                to_concat.append(qiime_map)
 
-        merged_map = pd.concat(to_concat)
+            merged_map = pd.concat(to_concat)
 
-        cols = merged_map.columns.values.tolist()
-        cols.remove('BarcodeSequence')
-        cols.remove('LinkerPrimerSequence')
-        cols.remove('Description')
-        new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
-        new_cols.extend(cols)
-        new_cols.append('Description')
-        merged_map = merged_map[new_cols]
+            cols = merged_map.columns.values.tolist()
+            cols.remove('BarcodeSequence')
+            cols.remove('LinkerPrimerSequence')
+            cols.remove('Description')
+            new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
+            new_cols.extend(cols)
+            new_cols.append('Description')
+            merged_map = merged_map[new_cols]
 
-        # Save the mapping file
-        _, base_fp = get_mountpoint(self._table)[0]
-        mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
-        merged_map.to_csv(mapping_fp, index_label='#SampleID',
-                          na_rep='unknown', sep='\t')
+            # Save the mapping file
+            _, base_fp = get_mountpoint(self._table)[0]
+            mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
+            merged_map.to_csv(mapping_fp, index_label='#SampleID',
+                              na_rep='unknown', sep='\t')
 
-        self._add_file("%d_analysis_mapping.txt" % self._id, "plain_text")
+            self._add_file("%d_analysis_mapping.txt" % self._id, "plain_text")
 
     def _add_file(self, filename, filetype, data_type=None):
         """adds analysis item to database
@@ -886,23 +943,24 @@ class Analysis(QiitaStatusObject):
         filetype : {plain_text, biom}
         data_type : str, optional
         """
-        conn_handler = SQLConnectionHandler()
+        with TRN:
+            filetype_id = convert_to_id(filetype, 'filepath_type')
+            _, mp = get_mountpoint('analysis')[0]
+            fpid = insert_filepaths([
+                (join(mp, filename), filetype_id)], -1, 'analysis', 'filepath',
+                move_files=False)[0]
 
-        filetype_id = convert_to_id(filetype, 'filepath_type')
-        _, mp = get_mountpoint('analysis')[0]
-        fpid = insert_filepaths([
-            (join(mp, filename), filetype_id)], -1, 'analysis', 'filepath',
-            conn_handler, move_files=False)[0]
+            col = ""
+            dtid = ""
+            if data_type:
+                col = ", data_type_id"
+                dtid = ", %d" % convert_to_id(data_type, "data_type")
 
-        col = ""
-        dtid = ""
-        if data_type:
-            col = ",data_type_id"
-            dtid = ",%d" % convert_to_id(data_type, "data_type")
-
-        sql = ("INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id"
-               "{0}) VALUES (%s, %s{1})".format(col, dtid))
-        conn_handler.execute(sql, (self._id, fpid))
+            sql = """INSERT INTO qiita.analysis_filepath
+                        (analysis_id, filepath_id{0})
+                     VALUES (%s, %s{1})""".format(col, dtid)
+            TRN.add(sql, [self._id, fpid])
+            TRN.execute()
 
 
 class Collection(QiitaStatusObject):
@@ -936,7 +994,7 @@ class Collection(QiitaStatusObject):
     _highlight_table = "collection_job"
     _share_table = "collection_users"
 
-    def _status_setter_checks(self, conn_handler):
+    def _status_setter_checks(self):
         r"""Perform a check to make sure not setting status away from public
         """
         if self.check_status(("public", )):
@@ -955,11 +1013,11 @@ class Collection(QiitaStatusObject):
         description : str, optional
             Brief description of the collecton's overarching goal
         """
-        conn_handler = SQLConnectionHandler()
-
-        sql = ("INSERT INTO qiita.{0} (email, name, description) "
-               "VALUES (%s, %s, %s)".format(cls._table))
-        conn_handler.execute(sql, [owner.id, name, description])
+        with TRN:
+            sql = """INSERT INTO qiita.{0} (email, name, description)
+                     VALUES (%s, %s, %s)""".format(cls._table)
+            TRN.add(sql, [owner.id, name, description])
+            TRN.execute()
 
     @classmethod
     def delete(cls, id_):
@@ -975,81 +1033,85 @@ class Collection(QiitaStatusObject):
         QiitaDBStatusError
             Trying to delete a public collection
         """
-        conn_handler = SQLConnectionHandler()
-        if cls(id_).status == "public":
-            raise QiitaDBStatusError("Can't delete public collection!")
+        with TRN:
+            if cls(id_).status == "public":
+                raise QiitaDBStatusError("Can't delete public collection!")
 
-        queue = "remove_collection_%d" % id_
-        conn_handler.create_queue(queue)
+            sql = "DELETE FROM qiita.{0} WHERE collection_id = %s"
+            for table in (cls._analysis_table, cls._highlight_table,
+                          cls._share_table, cls._table):
+                TRN.add(sql.format(table), [id_])
 
-        for table in (cls._analysis_table, cls._highlight_table,
-                      cls._share_table, cls._table):
-            conn_handler.add_to_queue(
-                queue, "DELETE FROM qiita.{0} WHERE "
-                "collection_id = %s".format(table), [id_])
-
-        conn_handler.execute_queue(queue)
+            TRN.execute()
 
     # --- Properties ---
     @property
     def name(self):
-        sql = ("SELECT name FROM qiita.{0} WHERE "
-               "collection_id = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
+        with TRN:
+            sql = "SELECT name FROM qiita.{0} WHERE collection_id = %s".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @name.setter
     def name(self, value):
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        with TRN:
+            self._status_setter_checks()
 
-        sql = ("UPDATE qiita.{0} SET name = %s WHERE "
-               "collection_id = %s".format(self._table))
-        conn_handler.execute(sql, [value, self._id])
+            sql = """UPDATE qiita.{0} SET name = %s
+                     WHERE collection_id = %s""".format(self._table)
+            TRN.add(sql, [value, self._id])
+            TRN.execute()
 
     @property
     def description(self):
-        sql = ("SELECT description FROM qiita.{0} WHERE "
-               "collection_id = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
+        with TRN:
+            sql = """SELECT description FROM qiita.{0}
+                     WHERE collection_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @description.setter
     def description(self, value):
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        with TRN:
+            self._status_setter_checks()
 
-        sql = ("UPDATE qiita.{0} SET description = %s WHERE "
-               "collection_id = %s".format(self._table))
-        conn_handler.execute(sql, [value, self._id])
+            sql = """UPDATE qiita.{0} SET description = %s
+                     WHERE collection_id = %s""".format(self._table)
+            TRN.add(sql, [value, self._id])
+            TRN.execute()
 
     @property
     def owner(self):
-        sql = ("SELECT email FROM qiita.{0} WHERE "
-               "collection_id = %s".format(self._table))
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
+        with TRN:
+            sql = """SELECT email FROM qiita.{0}
+                     WHERE collection_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def analyses(self):
-        sql = ("SELECT analysis_id FROM qiita.{0} WHERE "
-               "collection_id = %s".format(self._analysis_table))
-        conn_handler = SQLConnectionHandler()
-        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
+        with TRN:
+            sql = """SELECT analysis_id FROM qiita.{0}
+                     WHERE collection_id = %s""".format(self._analysis_table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @property
     def highlights(self):
-        sql = ("SELECT job_id FROM qiita.{0} WHERE "
-               "collection_id = %s".format(self._highlight_table))
-        conn_handler = SQLConnectionHandler()
-        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
+        with TRN:
+            sql = """SELECT job_id FROM qiita.{0}
+                     WHERE collection_id = %s""".format(self._highlight_table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @property
     def shared_with(self):
-        sql = ("SELECT email FROM qiita.{0} WHERE "
-               "collection_id = %s".format(self._share_table))
-        conn_handler = SQLConnectionHandler()
-        return [x[0] for x in conn_handler.execute_fetchall(sql, [self._id])]
+        with TRN:
+            sql = """SELECT email FROM qiita.{0}
+                     WHERE collection_id = %s""".format(self._share_table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     # --- Functions ---
     def add_analysis(self, analysis):
@@ -1059,12 +1121,13 @@ class Collection(QiitaStatusObject):
         ----------
         analysis : Analysis object
         """
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        with TRN:
+            self._status_setter_checks()
 
-        sql = ("INSERT INTO qiita.{0} (analysis_id, collection_id) "
-               "VALUES (%s, %s)".format(self._analysis_table))
-        conn_handler.execute(sql, [analysis.id, self._id])
+            sql = """INSERT INTO qiita.{0} (analysis_id, collection_id)
+                     VALUES (%s, %s)""".format(self._analysis_table)
+            TRN.add(sql, [analysis.id, self._id])
+            TRN.execute()
 
     def remove_analysis(self, analysis):
         """Remove an analysis from the collection object
@@ -1073,13 +1136,14 @@ class Collection(QiitaStatusObject):
         ----------
         analysis : Analysis object
         """
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        with TRN:
+            self._status_setter_checks()
 
-        sql = ("DELETE FROM qiita.{0} WHERE analysis_id = %s AND "
-               "collection_id = %s".format(self._analysis_table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, [analysis.id, self._id])
+            sql = """DELETE FROM qiita.{0}
+                     WHERE analysis_id = %s
+                        AND collection_id = %s""".format(self._analysis_table)
+            TRN.add(sql, [analysis.id, self._id])
+            TRN.execute()
 
     def highlight_job(self, job):
         """Marks a job as important to the collection
@@ -1088,13 +1152,13 @@ class Collection(QiitaStatusObject):
         ----------
         job : Job object
         """
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        with TRN:
+            self._status_setter_checks()
 
-        sql = ("INSERT INTO qiita.{0} (job_id, collection_id) "
-               "VALUES (%s, %s)".format(self._highlight_table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, [job.id, self._id])
+            sql = """INSERT INTO qiita.{0} (job_id, collection_id)
+                     VALUES (%s, %s)""".format(self._highlight_table)
+            TRN.add(sql, [job.id, self._id])
+            TRN.execute()
 
     def remove_highlight(self, job):
         """Removes job importance from the collection
@@ -1103,13 +1167,14 @@ class Collection(QiitaStatusObject):
         ----------
         job : Job object
         """
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        with TRN:
+            self._status_setter_checks()
 
-        sql = ("DELETE FROM qiita.{0} WHERE job_id = %s AND "
-               "collection_id = %s".format(self._highlight_table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, [job.id, self._id])
+            sql = """DELETE FROM qiita.{0}
+                     WHERE job_id = %s
+                        AND collection_id = %s""".format(self._highlight_table)
+            TRN.add(sql, [job.id, self._id])
+            TRN.execute()
 
     def share(self, user):
         """Shares the collection with another user
@@ -1118,13 +1183,13 @@ class Collection(QiitaStatusObject):
         ----------
         user : User object
         """
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        with TRN:
+            self._status_setter_checks()
 
-        sql = ("INSERT INTO qiita.{0} (email, collection_id) "
-               "VALUES (%s, %s)".format(self._share_table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, [user.id, self._id])
+            sql = """INSERT INTO qiita.{0} (email, collection_id)
+                     VALUES (%s, %s)""".format(self._share_table)
+            TRN.add(sql, [user.id, self._id])
+            TRN.execute()
 
     def unshare(self, user):
         """Unshares the collection with another user
@@ -1133,10 +1198,11 @@ class Collection(QiitaStatusObject):
         ----------
         user : User object
         """
-        conn_handler = SQLConnectionHandler()
-        self._status_setter_checks(conn_handler)
+        with TRN:
+            self._status_setter_checks()
 
-        sql = ("DELETE FROM qiita.{0} WHERE "
-               "email = %s AND collection_id = %s".format(self._share_table))
-        conn_handler = SQLConnectionHandler()
-        conn_handler.execute(sql, [user.id, self._id])
+            sql = """DELETE FROM qiita.{0}
+                     WHERE email = %s
+                        AND collection_id = %s""".format(self._share_table)
+            TRN.add(sql, [user.id, self._id])
+            TRN.execute()

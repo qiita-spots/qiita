@@ -28,7 +28,7 @@ from __future__ import division
 
 from .base import QiitaObject
 from .util import convert_from_id
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 
 
 class Ontology(QiitaObject):
@@ -42,30 +42,33 @@ class Ontology(QiitaObject):
     _table = 'ontology'
 
     def __contains__(self, value):
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT EXISTS (SELECT * FROM qiita.term t JOIN qiita.{0} o
-                 on t.ontology_id = o.ontology_id WHERE o.ontology_id = %s and
-                 term = %s)""".format(self._table)
-
-        return conn_handler.execute_fetchone(sql, (self._id, value))[0]
+        with TRN:
+            sql = """SELECT EXISTS (
+                        SELECT *
+                        FROM qiita.term t
+                            JOIN qiita.{0} o ON t.ontology_id = o.ontology_id
+                        WHERE o.ontology_id = %s
+                            AND term = %s)""".format(self._table)
+            TRN.add(sql, [self._id, value])
+            return TRN.execute_fetchlast()
 
     @property
     def terms(self):
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
-                 user_defined = false"""
-
-        return [row[0] for row in
-                conn_handler.execute_fetchall(sql, [self.id])]
+        with TRN:
+            sql = """SELECT term
+                     FROM qiita.term
+                     WHERE ontology_id = %s AND user_defined = false"""
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchflatten()
 
     @property
     def user_defined_terms(self):
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT term FROM qiita.term WHERE ontology_id = %s AND
-                 user_defined = true"""
-
-        return [row[0] for row in
-                conn_handler.execute_fetchall(sql, [self.id])]
+        with TRN:
+            sql = """SELECT term
+                     FROM qiita.term
+                     WHERE ontology_id = %s AND user_defined = true"""
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchflatten()
 
     @property
     def shortname(self):
@@ -79,18 +82,16 @@ class Ontology(QiitaObject):
         term : str
             New user defined term to add into a given ontology
         """
+        with TRN:
+            # we don't need to add an existing term
+            terms = self.user_defined_terms + self.terms
 
-        # we don't need to add an existing term
-        terms = self.user_defined_terms + self.terms
-
-        if term not in terms:
-            conn_handler = SQLConnectionHandler()
-            sql = """INSERT INTO qiita.term
-                     (ontology_id, term, user_defined)
-                     VALUES
-                     (%s, %s, true);"""
-
-            conn_handler.execute(sql, [self.id, term])
+            if term not in terms:
+                sql = """INSERT INTO qiita.term
+                            (ontology_id, term, user_defined)
+                         VALUES (%s, %s, true);"""
+                TRN.add(sql, [self.id, term])
+                TRN.execute()
 
     def term_type(self, term):
         """Get the type of a given ontology term
@@ -108,16 +109,16 @@ class Ontology(QiitaObject):
             user-defined and 'not_ontology' if the term is not part of the
             ontology.
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT user_defined FROM
-                 qiita.term
-                 WHERE term = %s AND ontology_id = %s
-              """
-        result = conn_handler.execute_fetchone(sql, [term, self.id])
+        with TRN:
+            sql = """SELECT user_defined FROM
+                     qiita.term
+                     WHERE term = %s AND ontology_id = %s"""
+            TRN.add(sql, [term, self.id])
+            result = TRN.execute_fetchindex()
 
-        if result is None:
-            return 'not_ontology'
-        elif result[0]:
-            return 'user_defined'
-        elif not result[0]:
-            return 'ontology'
+            if not result:
+                return 'not_ontology'
+            elif result[0][0]:
+                return 'user_defined'
+            elif not result[0][0]:
+                return 'ontology'

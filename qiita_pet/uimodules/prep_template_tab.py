@@ -24,6 +24,7 @@ from qiita_db.parameters import (Preprocessed454Params,
 from qiita_pet.util import STATUS_STYLER
 from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
+from qiita_core.util import execute_as_transaction
 
 
 filepath_types = [k.split('_', 1)[1].replace('_', ' ')
@@ -36,6 +37,7 @@ fp_type_by_ft = defaultdict(
     per_sample_FASTQ=['forward seqs', 'reverse seqs'])
 
 
+@execute_as_transaction
 def _get_accessible_raw_data(user):
     """Retrieves a tuple of raw_data_id and one study title for that
     raw_data
@@ -50,6 +52,7 @@ def _get_accessible_raw_data(user):
     return d
 
 
+@execute_as_transaction
 def _template_generator(study, full_access):
     """Generates tuples of prep template information
 
@@ -75,6 +78,7 @@ def _template_generator(study, full_access):
 
 
 class PrepTemplateTab(BaseUIModule):
+    @execute_as_transaction
     def render(self, study, full_access):
         files = [f for _, f in get_files_from_uploads_folders(str(study.id))
                  if f.endswith(('txt', 'tsv'))]
@@ -105,6 +109,7 @@ class PrepTemplateTab(BaseUIModule):
 
 
 class PrepTemplateInfoTab(BaseUIModule):
+    @execute_as_transaction
     def render(self, study, prep_template, full_access, ena_terms,
                user_defined_terms):
         user = self.current_user
@@ -247,6 +252,7 @@ class PrepTemplateInfoTab(BaseUIModule):
 
 
 class RawDataInfoDiv(BaseUIModule):
+    @execute_as_transaction
     def render(self, raw_data_id, prep_template, study, files):
         rd = RawData(raw_data_id)
         raw_data_files = [(basename(fp), fp_type[4:])
@@ -282,6 +288,7 @@ class RawDataInfoDiv(BaseUIModule):
 
 
 class EditInvestigationType(BaseUIModule):
+    @execute_as_transaction
     def render(self, ena_terms, user_defined_terms, prep_id, inv_type, ppd_id):
         return self.render_string(
             "study_description_templates/edit_investigation_type.html",

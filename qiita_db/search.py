@@ -71,8 +71,8 @@ import pandas as pd
 from future.utils import viewitems
 
 from qiita_db.util import scrub_data, convert_type, get_table_cols
+from qiita_db.sql_connection import TRN
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import ProcessedData
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
@@ -193,27 +193,31 @@ class QiitaStudySearch(object):
 
         Metadata column names and string searches are case-sensitive
         """
-        study_sql, sample_sql, meta_headers = \
-            self._parse_study_search_string(searchstr, True)
-        conn_handler = SQLConnectionHandler()
-        # get all studies containing the metadata headers requested
-        study_ids = {x[0] for x in conn_handler.execute_fetchall(study_sql)}
-        # strip to only studies user has access to
-        if user.level not in {'admin', 'dev', 'superuser'}:
-            study_ids = study_ids.intersection(Study.get_by_status('public') |
-                                               user.user_studies |
-                                               user.shared_studies)
+        with TRN:
+            study_sql, sample_sql, meta_headers = \
+                self._parse_study_search_string(searchstr, True)
 
-        results = {}
-        # run search on each study to get out the matching samples
-        for sid in study_ids:
-            study_res = conn_handler.execute_fetchall(sample_sql.format(sid))
-            if study_res:
-                # only add study to results if actually has samples in results
-                results[sid] = study_res
-        self.results = results
-        self.meta_headers = meta_headers
-        return results, meta_headers
+            # get all studies containing the metadata headers requested
+            TRN.add(study_sql)
+            study_ids = set(TRN.execute_fetchflatten())
+            # strip to only studies user has access to
+            if user.level not in {'admin', 'dev', 'superuser'}:
+                study_ids = study_ids.intersection(
+                    Study.get_by_status('public') | user.user_studies |
+                    user.shared_studies)
+
+            results = {}
+            # run search on each study to get out the matching samples
+            for sid in study_ids:
+                TRN.add(sample_sql.format(sid))
+                study_res = TRN.execute_fetchindex()
+                if study_res:
+                    # only add study to results if actually has samples
+                    # in results
+                    results[sid] = study_res
+            self.results = results
+            self.meta_headers = meta_headers
+            return results, meta_headers
 
     def _parse_study_search_string(self, searchstr,
                                    only_with_processed_data=False):
@@ -376,32 +380,34 @@ class QiitaStudySearch(object):
             sample_id, column headers are the metadata categories searched
             over
         """
-        if datatypes is not None:
-            # convert to set for easy lookups
-            datatypes = set(datatypes)
-        study_proc_ids = {}
-        proc_data_samples = {}
-        samples_meta = {}
-        headers = {c: val for c, val in enumerate(self.meta_headers)}
-        for study_id, study_meta in viewitems(self.results):
-            # add metadata to dataframe and dict
-            # use from_dict because pandas doesn't like cursor objects
-            samples_meta[study_id] = pd.DataFrame.from_dict(
-                {s[0]: s[1:] for s in study_meta}, orient='index')
-            samples_meta[study_id].rename(columns=headers, inplace=True)
-            # set up study-based data needed
-            study = Study(study_id)
-            study_sample_ids = {s[0] for s in study_meta}
-            study_proc_ids[study_id] = defaultdict(list)
-            for proc_data_id in study.processed_data():
-                proc_data = ProcessedData(proc_data_id)
-                datatype = proc_data.data_type()
-                # skip processed data if it doesn't fit the given datatypes
-                if datatypes is not None and datatype not in datatypes:
-                    continue
-                filter_samps = proc_data.samples.intersection(study_sample_ids)
-                if filter_samps:
-                    proc_data_samples[proc_data_id] = sorted(filter_samps)
-                    study_proc_ids[study_id][datatype].append(proc_data_id)
+        with TRN:
+            if datatypes is not None:
+                # convert to set for easy lookups
+                datatypes = set(datatypes)
+            study_proc_ids = {}
+            proc_data_samples = {}
+            samples_meta = {}
+            headers = {c: val for c, val in enumerate(self.meta_headers)}
+            for study_id, study_meta in viewitems(self.results):
+                # add metadata to dataframe and dict
+                # use from_dict because pandas doesn't like cursor objects
+                samples_meta[study_id] = pd.DataFrame.from_dict(
+                    {s[0]: s[1:] for s in study_meta}, orient='index')
+                samples_meta[study_id].rename(columns=headers, inplace=True)
+                # set up study-based data needed
+                study = Study(study_id)
+                study_sample_ids = {s[0] for s in study_meta}
+                study_proc_ids[study_id] = defaultdict(list)
+                for proc_data_id in study.processed_data():
+                    proc_data = ProcessedData(proc_data_id)
+                    datatype = proc_data.data_type()
+                    # skip processed data if it doesn't fit the given datatypes
+                    if datatypes is not None and datatype not in datatypes:
+                        continue
+                    filter_samps = proc_data.samples.intersection(
+                        study_sample_ids)
+                    if filter_samps:
+                        proc_data_samples[proc_data_id] = sorted(filter_samps)
+                        study_proc_ids[study_id][datatype].append(proc_data_id)
 
-        return study_proc_ids, proc_data_samples, samples_meta
+            return study_proc_ids, proc_data_samples, samples_meta

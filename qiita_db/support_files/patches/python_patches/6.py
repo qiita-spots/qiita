@@ -6,29 +6,28 @@ from os.path import join
 from time import strftime
 
 from qiita_db.util import get_mountpoint
-from qiita_db.sql_connection import SQLConnectionHandler
+from qiita_db.sql_connection import TRN
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 
-conn_handler = SQLConnectionHandler()
+with TRN:
+    _id, fp_base = get_mountpoint('templates')[0]
 
-_id, fp_base = get_mountpoint('templates')[0]
+    TRN.add("SELECT study_id FROM qiita.study")
+    for study_id in TRN.execute_fetchflatten():
+        if SampleTemplate.exists(study_id):
+            st = SampleTemplate(study_id)
+            fp = join(fp_base,
+                      '%d_%s.txt' % (study_id, strftime("%Y%m%d-%H%M%S")))
+            st.to_file(fp)
+            st.add_filepath(fp)
 
-for study_id in conn_handler.execute_fetchall(
-        "SELECT study_id FROM qiita.study"):
-    study_id = study_id[0]
-    if SampleTemplate.exists(study_id):
-        st = SampleTemplate(study_id)
-        fp = join(fp_base, '%d_%s.txt' % (study_id, strftime("%Y%m%d-%H%M%S")))
-        st.to_file(fp)
-        st.add_filepath(fp)
+    TRN.add("SELECT prep_template_id FROM qiita.prep_template")
+    for prep_template_id in TRN.execute_fetchflatten():
+        pt = PrepTemplate(prep_template_id)
+        study_id = pt.study_id
 
-for prep_template_id in conn_handler.execute_fetchall(
-        "SELECT prep_template_id FROM qiita.prep_template"):
-    prep_template_id = prep_template_id[0]
-    pt = PrepTemplate(prep_template_id)
-    study_id = pt.study_id
-
-    fp = join(fp_base, '%d_prep_%d_%s.txt' % (pt.study_id, prep_template_id,
-              strftime("%Y%m%d-%H%M%S")))
-    pt.to_file(fp)
-    pt.add_filepath(fp)
+        fp = join(fp_base,
+                  '%d_prep_%d_%s.txt' % (pt.study_id, prep_template_id,
+                                         strftime("%Y%m%d-%H%M%S")))
+        pt.to_file(fp)
+        pt.add_filepath(fp)

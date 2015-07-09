@@ -16,6 +16,7 @@ from qiita_db.util import get_timeseries_types, get_environmental_packages
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
+from qiita_core.util import execute_as_transaction
 
 
 class StudyEditorForm(Form):
@@ -58,6 +59,7 @@ class StudyEditorForm(Form):
 
     lab_person = SelectField('Lab Person', coerce=lambda x: x)
 
+    @execute_as_transaction
     def __init__(self, study=None, **kwargs):
         super(StudyEditorForm, self).__init__(**kwargs)
 
@@ -111,6 +113,7 @@ class StudyEditorExtendedForm(StudyEditorForm):
                                                  [validators.Required()])
     timeseries = SelectField('Event-Based Data', coerce=lambda x: x)
 
+    @execute_as_transaction
     def __init__(self, study=None, **kwargs):
         super(StudyEditorExtendedForm, self).__init__(study=study, **kwargs)
 
@@ -138,6 +141,7 @@ class StudyEditorExtendedForm(StudyEditorForm):
 
 
 class StudyEditHandler(BaseHandler):
+    @execute_as_transaction
     def _check_study_exists_and_user_access(self, study_id):
         try:
             study = Study(int(study_id))
@@ -175,6 +179,7 @@ class StudyEditHandler(BaseHandler):
         return index
 
     @authenticated
+    @execute_as_transaction
     def get(self, study_id=None):
         study = None
         form_factory = StudyEditorExtendedForm
@@ -192,6 +197,7 @@ class StudyEditHandler(BaseHandler):
                     creation_form=creation_form, study=study)
 
     @authenticated
+    @execute_as_transaction
     def post(self, study=None):
         the_study = None
         form_factory = StudyEditorExtendedForm

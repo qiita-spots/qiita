@@ -32,6 +32,7 @@ from qiita_db.util import (get_db_files_base_dir,
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
 from qiita_db.logger import LogEntry
+from qiita_core.util import execute_as_transaction
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -59,6 +60,7 @@ def check_analysis_access(user, analysis):
 class SelectCommandsHandler(BaseHandler):
     """Select commands to be executed"""
     @authenticated
+    @execute_as_transaction
     def get(self):
         analysis_id = int(self.get_argument('aid'))
         analysis = Analysis(analysis_id)
@@ -71,6 +73,7 @@ class SelectCommandsHandler(BaseHandler):
                     commands=commands, data_types=data_types, aid=analysis.id)
 
     @authenticated
+    @execute_as_transaction
     def post(self):
         name = self.get_argument('name')
         desc = self.get_argument('description')
@@ -86,6 +89,7 @@ class SelectCommandsHandler(BaseHandler):
 
 class AnalysisWaitHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self, analysis_id):
         analysis_id = int(analysis_id)
         try:
@@ -100,6 +104,7 @@ class AnalysisWaitHandler(BaseHandler):
                     group_id=group_id, aname=analysis.name)
 
     @authenticated
+    @execute_as_transaction
     def post(self, analysis_id):
         analysis_id = int(analysis_id)
         rarefaction_depth = self.get_argument('rarefaction-depth')
@@ -133,6 +138,7 @@ class AnalysisWaitHandler(BaseHandler):
 
 class AnalysisResultsHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self, analysis_id):
         analysis_id = int(analysis_id.split("/")[0])
         analysis = Analysis(analysis_id)
@@ -160,6 +166,7 @@ class AnalysisResultsHandler(BaseHandler):
                     basefolder=get_db_files_base_dir())
 
     @authenticated
+    @execute_as_transaction
     def post(self, analysis_id):
         analysis_id = int(analysis_id.split("/")[0])
         analysis_id_sent = int(self.get_argument('analysis_id'))
@@ -193,6 +200,7 @@ class AnalysisResultsHandler(BaseHandler):
 class ShowAnalysesHandler(BaseHandler):
     """Shows the user's analyses"""
     @authenticated
+    @execute_as_transaction
     def get(self):
         message = self.get_argument('message', '')
         level = self.get_argument('level', '')
@@ -206,6 +214,7 @@ class ShowAnalysesHandler(BaseHandler):
 
 
 class ResultsHandler(StaticFileHandler, BaseHandler):
+    @execute_as_transaction
     def validate_absolute_path(self, root, absolute_path):
         """Overrides StaticFileHandler's method to include authentication
         """
@@ -244,6 +253,7 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
 
 class SelectedSamplesHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self):
         # Format sel_data to get study IDs for the processed data
         sel_data = defaultdict(dict)
@@ -261,6 +271,7 @@ class SelectedSamplesHandler(BaseHandler):
 
 class AnalysisSummaryAJAX(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self):
         info = Analysis(self.current_user.default_analysis).summary_data()
         self.write(dumps(info))
