@@ -2,13 +2,6 @@
 -- Adds the connections between the default analysis from new user and
 -- the portals.
 
-CREATE FUNCTION fetch_analysis (p_id bigint) RETURNS integer AS $$
-    BEGIN
-        
-    END;
-$$ LANGUAGE plpgsql;
-
-
 DO $do$
 DECLARE
     aid bigint;
@@ -25,7 +18,7 @@ LOOP
         WHERE dflt = TRUE
             AND name LIKE CONCAT('%-dflt-', portal)
             AND analysis_id NOT IN (
-                SELECT analysis_id FROM qiita.analysis_portal);
+                SELECT analysis_id FROM qiita.analysis_portal)
     LOOP
         INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id)
         VALUES (aid, portal);
