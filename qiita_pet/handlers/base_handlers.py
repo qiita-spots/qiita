@@ -22,6 +22,10 @@ class BaseHandler(RequestHandler):
             self.render("404.html")
             return
 
+        if status_code == 403:
+            # We don't need to log this failues in the logging table
+            return
+
         is_admin = False
         user = self.get_current_user()
         if user:
