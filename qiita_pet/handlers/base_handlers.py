@@ -44,7 +44,7 @@ class BaseHandler(RequestHandler):
         req_dict['body'] = req_dict.get('body', '')[:1024]
         request_info = ''.join(["<strong>%s</strong>: %s\n" %
                                (k, req_dict[k]) for k in
-                                req_dict.keys()])
+                                req_dict.keys() if k != 'files'])
         error = exc_info[1]
         LogEntry.create(
             'Runtime',
