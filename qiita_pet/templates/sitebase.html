@@ -197,12 +197,12 @@
           {% elif  maintenance is None %}
           <ul class="nav navbar-nav">
             <li>
-              <a href="/auth/create/">New User</a>
-            </li>
-            <li>
               <a href="/auth/forgot/">Forgot Password</a>
             </li>
           </ul>
+          <form action="/auth/create/" class="navbar-form navbar-right">
+            <input type="submit" value="Sign up" class="btn btn-info">
+          </form>
           <form class="navbar-form navbar-right" role="form" action="/auth/login/" method="post">
             <div class="form-group">
               <input tabindex="1" type="text" id="username" name="username" placeholder="Email" class="form-control">
