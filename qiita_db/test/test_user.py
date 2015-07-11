@@ -294,6 +294,14 @@ class UserTest(TestCase):
                ['new@test.bar', 'new@test.bar-dflt-1', 'dflt', True]]
         self.assertEqual(obs, exp)
 
+        # Make sure default analyses are linked with the portal
+        sql = """SELECT COUNT(1)
+                 FROM qiita.analysis
+                    JOIN qiita.analysis_portal USING (analysis_id)
+                    JOIN qiita.portal_type USING (portal_type_id)
+                 WHERE email = 'new@test.bar' AND dflt = true"""
+        self.assertEqual(self.conn_handler.execute_fetchone(sql)[0], 2)
+
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(
             "SELECT password FROM qiita.qiita_user WHERE email = %s",
