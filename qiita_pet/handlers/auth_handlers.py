@@ -66,9 +66,12 @@ class AuthVerifyHandler(BaseHandler):
         email = self.get_argument("email").strip().lower()
         if User.verify_code(email, code, "create"):
             msg = "Successfully verified user! You are now free to log in."
+            color = "black"
         else:
             msg = "Code not valid!"
-        self.render("user_verified.html", msg=msg)
+            color = "red"
+        self.render("user_verified.html", msg=msg, color=color,
+                    email=self.get_argument("email").strip())
 
 
 class AuthLoginHandler(BaseHandler):
