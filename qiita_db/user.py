@@ -298,17 +298,24 @@ class User(QiitaObject):
 
                     # create user default sample holders once verified
                     # create one per portal
-                    sql = "SELECT portal_type_id from qiita.portal_type"
+                    sql = "SELECT portal_type_id FROM qiita.portal_type"
                     TRN.add(sql)
 
                     an_sql = """INSERT INTO qiita.analysis
                                     (email, name, description, dflt,
                                      analysis_status_id)
-                                VALUES (%s, %s, %s, %s, 1)"""
-                    an_args = [
-                        [email, '%s-dflt-%d' % (email, portal), 'dflt', True]
-                        for portal in TRN.execute_fetchflatten()]
-                    TRN.add(an_sql, an_args, many=True)
+                                VALUES (%s, %s, %s, %s, 1)
+                                RETURNING analysis_id"""
+                    ap_sql = """INSERT INTO qiita.analysis_portal
+                                    (analysis_id, portal_type_id)
+                                VALUES (%s, %s)"""
+
+                    for portal_id in TRN.execute_fetchflatten():
+                        placeholder = "{%s:0:0}" % TRN.index
+                        args = [email, '%s-dflt-%d' % (email, portal_id),
+                                'dflt', True]
+                        TRN.add(an_sql, args)
+                        TRN.add(ap_sql, [placeholder, portal_id])
 
                     TRN.execute()
 

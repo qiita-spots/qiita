@@ -66,9 +66,12 @@ class AuthVerifyHandler(BaseHandler):
         email = self.get_argument("email").strip().lower()
         if User.verify_code(email, code, "create"):
             msg = "Successfully verified user! You are now free to log in."
+            color = "black"
         else:
             msg = "Code not valid!"
-        self.render("user_verified.html", msg=msg)
+            color = "red"
+        self.render("user_verified.html", msg=msg, color=color,
+                    email=self.get_argument("email").strip())
 
 
 class AuthLoginHandler(BaseHandler):
@@ -95,7 +98,11 @@ class AuthLoginHandler(BaseHandler):
         try:
             if User(username).level == "unverified":
                 # email not verified so dont log in
-                msg = "Email not verified"
+                msg = ("Email not verified. Please check your email and click "
+                       "the verify link. You may need to check your spam "
+                       "folder to find the email.<br/>If a verification email"
+                       " has not arrived in 15 minutes, please email <a href='"
+                       "mailto:qiita.help@gmail.com'>qiita.help@gmail.com</a>")
         except QiitaDBUnknownIDError:
             msg = "Unknown user"
         except RuntimeError:

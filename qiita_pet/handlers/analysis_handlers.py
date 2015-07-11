@@ -12,7 +12,7 @@ Qitta analysis handlers for the Tornado webserver.
 from __future__ import division
 from future.utils import viewitems
 from collections import defaultdict
-from os.path import join, sep, commonprefix
+from os.path import join, sep, commonprefix, basename, dirname
 from json import dumps
 
 from tornado.web import authenticated, HTTPError, StaticFileHandler
@@ -147,8 +147,14 @@ class AnalysisResultsHandler(BaseHandler):
         jobres = defaultdict(list)
         for job in analysis.jobs:
             jobject = Job(job)
+            results = []
+            for res in jobject.results:
+                name = basename(res)
+                if name.startswith('index'):
+                    name = basename(dirname(res)).replace('_', ' ')
+                results.append((res, name))
             jobres[jobject.datatype].append((jobject.command[0],
-                                             jobject.results))
+                                             results))
 
         dropped_samples = analysis.dropped_samples
         dropped = defaultdict(list)
@@ -211,6 +217,30 @@ class ShowAnalysesHandler(BaseHandler):
 
         self.render("show_analyses.html", analyses=analyses, message=message,
                     level=level)
+
+    @authenticated
+    @execute_as_transaction
+    def post(self):
+        analysis_id = int(self.get_argument('analysis_id'))
+        analysis = Analysis(analysis_id)
+        analysis_name = analysis.name
+
+        check_analysis_access(self.current_user, analysis)
+
+        try:
+            Analysis.delete(analysis_id)
+            msg = ("Analysis <b><i>%s</i></b> has been deleted." % (
+                analysis_name))
+            level = "success"
+        except Exception as e:
+            e = str(e)
+            msg = ("Couldn't remove <b><i>%s</i></b> analysis: %s" % (
+                analysis_name, e))
+            level = "danger"
+            LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
+                            (analysis_id, e))
+
+        self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
 
 
 class ResultsHandler(StaticFileHandler, BaseHandler):

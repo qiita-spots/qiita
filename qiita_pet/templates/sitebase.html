@@ -75,6 +75,19 @@
             $("#dflt-samp-count").text(result.samples);
           });
         });
+
+        $("#analysis-drop-down").mouseover(function() {
+          $.getJSON("/analysis/dflt/sumary/", function(result){
+            if(parseInt(result.studies) > 0){
+              $("#selected_samples_menu").removeClass('disabled');
+              $("#selected_samples_link").attr('href', '/analysis/selected/');
+            }
+            else{
+              $("#selected_samples_menu").addClass('disabled');
+              $("#selected_samples_link").attr('href', '#');
+            }
+          });
+        });
       });
       </script>
     {% block head %}{% end %}
@@ -126,9 +139,10 @@
             <!-- analysis menu -->
             {% if user %}
             <li class="dropdown">
-              <a href="#" data-toggle="dropdown" class="dropdown-toggle">Analysis<b class="caret"></b></a>
+              <a href="#" data-toggle="dropdown" class="dropdown-toggle" id="analysis-drop-down">Analysis<b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li><a href="/analysis/selected/">Create From Selected Samples</a></li>
+                <li><a href="/study/list/">Create new analysis</a>
+                <li id="selected_samples_menu"><a id="selected_samples_link" href="/analysis/selected/">Create From Selected Samples</a></li>
                 <li><a href="/analysis/show/">See Previous Analyses</a></li>
               </ul>
             </li>
@@ -183,12 +197,12 @@
           {% elif  maintenance is None %}
           <ul class="nav navbar-nav">
             <li>
-              <a href="/auth/create/">New User</a>
-            </li>
-            <li>
               <a href="/auth/forgot/">Forgot Password</a>
             </li>
           </ul>
+          <form action="/auth/create/" class="navbar-form navbar-right">
+            <input type="submit" value="Sign up" class="btn btn-info">
+          </form>
           <form class="navbar-form navbar-right" role="form" action="/auth/login/" method="post">
             <div class="form-group">
               <input tabindex="1" type="text" id="username" name="username" placeholder="Email" class="form-control">
