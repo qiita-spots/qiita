@@ -6,6 +6,7 @@
     <th>Analysis Description</th>
     <th>Status</th>
     <th>Timestamp</th>
+    <th>Delete?</th>
   </tr>
   {% for analysis in analyses %}
     {% set status = analysis.status %}
@@ -39,6 +40,9 @@
      </td>
       <td>
        {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
+      </td>
+      <td>
+       <a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>
       </td>
     </tr>
   {% end %}

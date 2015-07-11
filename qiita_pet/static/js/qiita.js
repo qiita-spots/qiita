@@ -31,3 +31,22 @@ function bootstrapAlert(message, severity, timeout){
 function show_hide(div) {
 	$('#' + div).toggle();
 }
+
+
+function delete_analysis(aname, analysis_id) {
+  if (confirm('Are you sure you want to delete analysis: ' + aname + '?')) {
+    var form = $("<form>")
+    .attr("action", window.location.href)
+    .attr("method", "post")
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "analysis_id")
+    .attr("value", analysis_id))
+    .append($("<input>")
+    .attr("type", "hidden")
+    .attr("name", "action")
+    .attr("value", "delete_analysis"));
+    $("body").append(form);
+    form.submit();
+  }
+}
