@@ -75,6 +75,19 @@
             $("#dflt-samp-count").text(result.samples);
           });
         });
+
+        $("#analysis-drop-down").mouseover(function() {
+          $.getJSON("/analysis/dflt/sumary/", function(result){
+            if(parseInt(result.studies) > 0){
+              $("#selected_samples_menu").removeClass('disabled');
+              $("#selected_samples_link").attr('href', '/analysis/selected/');
+            }
+            else{
+              $("#selected_samples_menu").addClass('disabled');
+              $("#selected_samples_link").attr('href', '#');
+            }
+          });
+        });
       });
       </script>
     {% block head %}{% end %}
@@ -126,9 +139,10 @@
             <!-- analysis menu -->
             {% if user %}
             <li class="dropdown">
-              <a href="#" data-toggle="dropdown" class="dropdown-toggle">Analysis<b class="caret"></b></a>
+              <a href="#" data-toggle="dropdown" class="dropdown-toggle" id="analysis-drop-down">Analysis<b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li><a href="/analysis/selected/">Create From Selected Samples</a></li>
+                <li><a href="/study/list/">Create new analysis</a>
+                <li id="selected_samples_menu"><a id="selected_samples_link" href="/analysis/selected/">Create From Selected Samples</a></li>
                 <li><a href="/analysis/show/">See Previous Analyses</a></li>
               </ul>
             </li>
