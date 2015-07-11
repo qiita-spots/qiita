@@ -6,7 +6,6 @@
 {%end%}
 
 {%block content%}
-{% from os.path import basename %}
 {% from future.utils import viewitems %}
 
 
@@ -69,8 +68,8 @@
                 {% if len(results) == 0 %}
                   <h3 style="color:red">ERROR</h3>
                 {% end %}
-                {%for result in results%}
-                  <a href='{{"/results/%s" % result}}' target="resframe">{{basename(result)}}</a><br />
+                {%for result, result_name in results%}
+                  <a href='{{"/results/%s" % result}}' target="resframe">{{result_name}}</a><br />
                 {% end %}
               </div>
             {% end %}
