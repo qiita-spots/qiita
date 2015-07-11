@@ -212,6 +212,30 @@ class ShowAnalysesHandler(BaseHandler):
         self.render("show_analyses.html", analyses=analyses, message=message,
                     level=level)
 
+    @authenticated
+    @execute_as_transaction
+    def post(self):
+        analysis_id = int(self.get_argument('analysis_id'))
+        analysis = Analysis(analysis_id)
+        analysis_name = analysis.name
+
+        check_analysis_access(self.current_user, analysis)
+
+        try:
+            Analysis.delete(analysis_id)
+            msg = ("Analysis <b><i>%s</i></b> has been deleted." % (
+                analysis_name))
+            level = "success"
+        except Exception as e:
+            e = str(e)
+            msg = ("Couldn't remove <b><i>%s</i></b> analysis: %s" % (
+                analysis_name, e))
+            level = "danger"
+            LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
+                            (analysis_id, e))
+
+        self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
+
 
 class ResultsHandler(StaticFileHandler, BaseHandler):
     @execute_as_transaction
