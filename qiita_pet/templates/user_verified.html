@@ -1,5 +1,11 @@
 {%extends sitebase.html%}
+{% block head %}
+<script type="text/javascript">
+  $(document).ready(function() { $('#username').val('{{email}}'); });
+</script>
+{% end %}
+
 {%block content%}
-<h1>User Verification</h1>
-<div style="color: red;">{{msg}}</div>
+<h1>User Verification: {{email}}</h1>
+<div style="color: {{color}};"><h3>{{msg}}</h3></div>
 {%end%}
