@@ -12,7 +12,7 @@ Qitta analysis handlers for the Tornado webserver.
 from __future__ import division
 from future.utils import viewitems
 from collections import defaultdict
-from os.path import join, sep, commonprefix
+from os.path import join, sep, commonprefix, basename, dirname
 from json import dumps
 
 from tornado.web import authenticated, HTTPError, StaticFileHandler
@@ -147,8 +147,14 @@ class AnalysisResultsHandler(BaseHandler):
         jobres = defaultdict(list)
         for job in analysis.jobs:
             jobject = Job(job)
+            results = []
+            for res in jobject.results:
+                name = basename(res)
+                if name.startswith('index'):
+                    name = basename(dirname(res)).replace('_', ' ')
+                results.append((res, name))
             jobres[jobject.datatype].append((jobject.command[0],
-                                             jobject.results))
+                                             results))
 
         dropped_samples = analysis.dropped_samples
         dropped = defaultdict(list)
