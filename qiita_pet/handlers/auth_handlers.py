@@ -98,7 +98,8 @@ class AuthLoginHandler(BaseHandler):
         try:
             if User(username).level == "unverified":
                 # email not verified so dont log in
-                msg = "Email not verified"
+                msg = ("Email not verified. Please check your email and click "
+                       "the verify link.")
         except QiitaDBUnknownIDError:
             msg = "Unknown user"
         except RuntimeError:
