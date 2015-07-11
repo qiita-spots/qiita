@@ -42,7 +42,7 @@
        {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
       </td>
       <td>
-       <a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>
+       <a class="btn btn-danger glyphicon glyphicon-trash {% if status == 'running' %} disabled {% end %}" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>
       </td>
     </tr>
   {% end %}
