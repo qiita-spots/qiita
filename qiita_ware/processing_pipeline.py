@@ -319,6 +319,9 @@ def _get_preprocess_fasta_cmd(raw_data, prep_template, params):
         prepreprocess_cmds = []
         for sff in sffs:
             base = splitext(basename(sff))[0]
+            if sff.endswith('.gz'):
+                base = splitext(base)[0]
+
             sff_cmd = "process_sff.py -i %s -o %s" % (sff, output_dir)
             prepreprocess_cmds.append(sff_cmd)
             seqs.append(join(output_dir, '%s.fna' % base))
