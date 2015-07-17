@@ -150,7 +150,7 @@ class ConfigurationManager(object):
         self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
             default_base_data_dir
 
-        self.base_url = config.get('main', 'LOG_PATH')
+        self.log_path = config.get('main', 'LOG_PATH')
         self.base_url = config.get('main', 'BASE_URL')
 
         if not isdir(self.base_data_dir):
