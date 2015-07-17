@@ -15,6 +15,7 @@ from functools import partial
 from shutil import rmtree
 
 import pandas as pd
+import gzip
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.util import (get_db_files_base_dir, get_mountpoint,
@@ -84,6 +85,14 @@ class ProcessingPipelineTests(TestCase):
 
         # Magic number 1: is the filetype id
         self.raw_data = RawData.create(1, [self.sff_prep_template], fps)
+
+        md = pd.DataFrame.from_dict(md_dict, orient='index')
+        self.sff_prep_template_gz = PrepTemplate.create(md, study, "16S")
+        fp1_gz = self.path_builder('preprocess_test1.sff.gz')
+        with gzip.open(fp1_gz, 'w') as f:
+            f.write('\n')
+        fps = [(fp1_gz, self.raw_sff_id)]
+        self.raw_data_gz = RawData.create(1, [self.sff_prep_template_gz], fps)
 
         # Create a SFF dataset with multiple run prefix:
         # add prep template and a RawData
@@ -476,9 +485,29 @@ class ProcessingPipelineTests(TestCase):
         self.assertTrue(obs_cmds[4].startswith('cat'))
         self.assertIn('split_library_log.txt', obs_cmds[4])
         self.assertTrue(obs_cmds[5].startswith('cat'))
-        self.assertTrue('seqs.fna', obs_cmds[5])
+        self.assertIn('seqs.fna', obs_cmds[5])
         self.assertTrue(obs_cmds[6].startswith('cat'))
         self.assertIn('seqs_filtered.qual', obs_cmds[6])
+
+    def test_get_preprocess_sff_gz_cmd(self):
+        # test the *.sff.gz files are handled correctly
+        params = Preprocessed454Params(1)
+        obs_cmd, obs_output_dir = _get_preprocess_fasta_cmd(
+            self.raw_data_gz, self.sff_prep_template, params)
+
+        obs_cmds = obs_cmd.split('; ')
+        # assumming that all the other tests pass, we only need to test
+        # gz file format.
+        self.assertEqual(len(obs_cmds), 3)
+
+        self.assertRegexpMatches(obs_cmds[0], r'process_sff.py\s+.*'
+                                 '-i\s+.*.sff.gz\s+')
+        self.assertRegexpMatches(obs_cmds[1], r'split_libraries.py\s+.*'
+                                 '-f\s+.*.fna\s+.*'
+                                 '-q\s+.*.qual\s+')
+        self.assertRegexpMatches(obs_cmds[2], r'convert_fastaqual_fastq.py.*'
+                                 '-f\s+.*seqs.fna\s+.*'
+                                 '-q\s+.*seqs_filtered.qual\s+')
 
     def test_get_preprocess_fasta_cmd_sff_run_prefix_match(self):
         # Test that the run prefixes in the prep_template and the file names
