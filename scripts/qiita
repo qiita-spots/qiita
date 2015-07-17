@@ -454,8 +454,8 @@ def start(port):
     from qiita_pet.webserver import Application
     from tornado.options import options, parse_command_line
 
-    if _CONFIG.write_log_file:
-        options.log_file_prefix = _CONFIG.log_file
+    if _CONFIG.log_path:
+        options.log_file_prefix = _CONFIG.log_path
         options.logging = 'warning'
         parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application())
