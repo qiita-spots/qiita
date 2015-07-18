@@ -35,7 +35,7 @@ from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError, QiitaDBError
 from qiita_db.reference import Reference
 from qiita_db.logger import LogEntry
-from qiita_core.settings import qiita_config
+from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from qiita_ware.processing_pipeline import generate_demux_file
 from qiita_ware.context import system_call, ComputeError
