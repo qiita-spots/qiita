@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from os import environ
-from os.path import join, dirname, abspath
+from os.path import join, dirname, abspath, splitext
 from sys import platform, version as python_version, exit, executable, stdout
 from unittest import TestLoader, TextTestRunner, TestCase
 from smtplib import SMTP, SMTP_SSL
+from qiita_db.sql_connection import TRN
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -153,6 +154,12 @@ if missing_deps_errors:
 if missing_deps_warnings:
     for e, t in missing_deps_errors:
         print '%s\n=============' % (t)
+
+with TRN:
+    TRN.add("SELECT current_patch FROM settings")
+    current_patch = TRN.execute_fetchlast()
+    qiita_db_patch_number = splitext(current_patch)[0]
+
 
 # trick flake8 to not complain about module-level imports not being at the top
 # of the file. These imports can only really happen if none of the core
@@ -326,6 +333,7 @@ def main():
         ('psycopg2 library version', psycopg2_lib_version),
         ('Qiita core library version', qiita_core_lib_version),
         ('Qiita db library version', qiita_db_lib_version),
+        ('Qiita db patch number', qiita_db_patch_number),
         ('Qiita pet library version', qiita_pet_lib_version),
         ('Qiita ware library version', qiita_ware_lib_version)
     ]
