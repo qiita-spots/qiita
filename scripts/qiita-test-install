@@ -4,7 +4,6 @@ from os.path import join, dirname, abspath, splitext
 from sys import platform, version as python_version, exit, executable, stdout
 from unittest import TestLoader, TextTestRunner, TestCase
 from smtplib import SMTP, SMTP_SSL
-from qiita_db.sql_connection import TRN
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -154,11 +153,6 @@ if missing_deps_errors:
 if missing_deps_warnings:
     for e, t in missing_deps_errors:
         print '%s\n=============' % (t)
-
-with TRN:
-    TRN.add("SELECT current_patch FROM settings")
-    current_patch = TRN.execute_fetchlast()
-    qiita_db_patch_number = splitext(current_patch)[0]
 
 
 # trick flake8 to not complain about module-level imports not being at the top
@@ -312,6 +306,11 @@ def main():
     print system_info_header
     for v in system_info:
         print "%*s:\t%s" % (max_len, v[0], v[1])
+
+    conn_handler = SQLConnectionHandler()
+    current_patch = conn_handler.execute_fetchone(
+        "SELECT current_patch FROM settings")[0]
+    qiita_db_patch_number = splitext(current_patch)[0]
 
     version_info = [
         ('click library version', click_lib_version),
