@@ -357,14 +357,14 @@ class UserTest(TestCase):
     def test_messages(self):
         user = User('test@foo.bar')
         obs = user.messages()
-        exp_msg = ['message 1', 'message 2', 'message 3']
-        self.assertEqual([x[0] for x in obs], exp_msg)
-        self.assertTrue(all(x[1] < datetime.now() for x in obs))
-        self.assertFalse(all(x[2] for x in obs))
+        exp_msg = [(1, 'message 1'), (2, 'message 2'), (3, 'message 3')]
+        self.assertEqual([(x[0], x[1]) for x in obs], exp_msg)
+        self.assertTrue(all(x[2] < datetime.now() for x in obs))
+        self.assertFalse(all(x[3] for x in obs))
 
         obs = user.messages(1)
         exp_msg = ['message 1']
-        self.assertEqual([x[0] for x in obs], exp_msg)
+        self.assertEqual([x[1] for x in obs], exp_msg)
 
 if __name__ == "__main__":
     main()

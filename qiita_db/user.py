@@ -63,7 +63,7 @@ class User(QiitaObject):
     change_forgot_password
     iter
     messages
-    messages_read
+    mark_messages_read
     delete_messages
     """
 
@@ -523,14 +523,22 @@ class User(QiitaObject):
         Returns
         -------
         list of tuples
-            Messages in the queue, in the form [(msg, timestamp, read), ...]
+            Messages in the queue, in the form
+            [(msg_id, msg, timestamp, read), ...]
         """
         with TRN:
-            sql = """SELECT message, message_time, read FROM qiita.message_user
+            sql = """SELECT message_id, message, message_time, read
+                     FROM qiita.message_user
                      JOIN qiita.message USING (message_id)
                      WHERE email = %s ORDER BY message_time DESC LIMIT %s"""
             TRN.add(sql, [self._id, count])
             return TRN.execute_fetchindex(-1)
+
+    def mark_messages_read(messages):
+        pass
+
+    def delete_messages(messages):
+        pass
 
 
 def validate_email(email):
