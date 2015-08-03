@@ -186,7 +186,7 @@
             </li>
             <li class="dropdown">
               {% set user_messages = current_user.messages(5) %}
-              {% set unread =  sum(1 for x in user_messages if x[3] == False)%}
+              {% set unread =  len(current_user.unread_messages) %}
               <a href="/user/messages/"><span class="glyphicon glyphicon-envelope" {% if unread > 0 %} style="color:red"{% end %}>({{unread}})</span></a>
               <ul class="dropdown-menu info-menu" style="padding: 5px">
               {% if user_messages %}

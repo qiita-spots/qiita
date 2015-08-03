@@ -55,6 +55,7 @@ class User(QiitaObject):
     default_analysis
     private_analyses
     shared_analyses
+    unread_messages
 
     Methods
     -------
@@ -443,6 +444,18 @@ class User(QiitaObject):
                      WHERE email = %s AND portal = %s"""
             TRN.add(sql, [self._id, qiita_config.portal])
             return set(TRN.execute_fetchflatten())
+
+    @property
+    def unread_messages(self):
+        """Returns all unread messages for a user"""
+        with TRN:
+            sql = """SELECT message_id, message, message_time, read
+                     FROM qiita.message_user
+                     JOIN qiita.message USING (message_id)
+                     WHERE email = %s AND read = FALSE
+                     ORDER BY message_time DESC"""
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchindex(-1)
 
     # ------- methods ---------
     def change_password(self, oldpass, newpass):
