@@ -30,6 +30,7 @@ Methods
     purge_filepaths
     move_filepaths_to_upload_folder
     move_upload_files_to_trash
+    add_message
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -1098,3 +1099,25 @@ def infer_status(statuses):
     # If there are no statuses, or any of the previous ones have been found
     # then the inferred status is 'sandbox'
     return 'sandbox'
+
+
+def add_message(message, users):
+    """Adds a message to the messages table, attaching it to given users
+
+    Parameters
+    ----------
+    message : str
+        Message to add
+    users : list of User objects
+        Users to connect the message to
+    """
+    with TRN:
+        sql = """INSERT INTO qiita.message (message) VALUES (%s)
+                 RETURNING message_id"""
+        TRN.add(sql, [message])
+        msg_id = TRN.execute_fetchflatten()[0]
+        sql = """INSERT INTO qiita.message_user (email, message_id)
+                 VALUES (%s, %s)"""
+        for user in users:
+            TRN.add(sql, [user.id, msg_id])
+        TRN.execute()

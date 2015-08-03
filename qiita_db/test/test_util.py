@@ -21,6 +21,7 @@ from qiita_db.data import RawData
 from qiita_db.study import Study
 from qiita_db.reference import Reference
 from qiita_db.metadata_template import PrepTemplate
+from qiita_db.user import User
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
@@ -38,7 +39,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            move_filepaths_to_upload_folder,
                            move_upload_files_to_trash,
                            check_access_to_analysis_result, infer_status,
-                           get_preprocessed_params_tables)
+                           get_preprocessed_params_tables, add_message)
 
 
 @qiita_test_checker()
@@ -614,6 +615,17 @@ class DBUtilTests(TestCase):
                                               '1_job_result.txt')
         exp = [10]
 
+        self.assertEqual(obs, exp)
+
+    def test_add_message(self):
+        users = [User('shared@foo.bar'), User('admin@foo.bar')]
+        add_message("TEST MESSAGE", users)
+
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[4, 'TEST MESSAGE'], [1, 'message 1']]
+        self.assertEqual(obs, exp)
+        obs = [[x[0], x[1]] for x in User('admin@foo.bar').messages()]
+        exp = [[4, 'TEST MESSAGE']]
         self.assertEqual(obs, exp)
 
 
