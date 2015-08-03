@@ -378,5 +378,16 @@ class UserTest(TestCase):
         exp = [False, True, False]
         self.assertEqual([x[3] for x in obs], exp)
 
+    def test_delete_messages(self):
+        user = User('test@foo.bar')
+        user.delete_messages([1, 2])
+        obs = user.messages()
+        exp_msg = [(3, 'message 3')]
+        self.assertEqual([(x[0], x[1]) for x in obs], exp_msg)
+
+        sql = ("SELECT message_id FROM qiita.message")
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(obs, [[1], [3]])
+
 if __name__ == "__main__":
     main()

@@ -551,8 +551,24 @@ class User(QiitaObject):
             TRN.add(sql, [read, tuple(messages), self._id])
             return TRN.execute_fetchindex(-1)
 
-    def delete_messages(messages):
-        pass
+    def delete_messages(self, messages):
+        """Delete given messages for the user
+
+        Parameters
+        ----------
+        messages : list of ints
+            Message IDs to delete
+        """
+        with TRN:
+            # remove message from user
+            sql = """DELETE FROM qiita.message_user
+                     WHERE message_id in %s and email = %s"""
+            TRN.add(sql, [tuple(messages), self._id])
+            # Remove any messages that no longer are attached to a user
+            sql = """DELETE FROM qiita.message WHERE message_id NOT IN
+                     (SELECT DISTINCT message_id FROM qiita.message_user)"""
+            TRN.add(sql)
+            TRN.execute()
 
 
 def validate_email(email):
