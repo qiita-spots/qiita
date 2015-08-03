@@ -525,13 +525,13 @@ class User(QiitaObject):
             TRN.add(sql, [hash_password(newpass), self._id])
             TRN.execute()
 
-    def messages(self, count=100):
+    def messages(self, count=None):
         """Return messages in user's queue
 
         Parameters
         ----------
         count : int, optional
-            Number of messages to return, starting with newest. Default 100
+            Number of messages to return, starting with newest. Default all
 
         Returns
         -------
@@ -540,11 +540,15 @@ class User(QiitaObject):
             [(msg_id, msg, timestamp, read), ...]
         """
         with TRN:
+            sql_info = [self._id]
             sql = """SELECT message_id, message, message_time, read
                      FROM qiita.message_user
                      JOIN qiita.message USING (message_id)
-                     WHERE email = %s ORDER BY message_time DESC LIMIT %s"""
-            TRN.add(sql, [self._id, count])
+                     WHERE email = %s ORDER BY message_time DESC"""
+            if count is not None:
+                sql += " LIMIT %s"
+                sql_info.append(count)
+            TRN.add(sql, sql_info)
             return TRN.execute_fetchindex(-1)
 
     def mark_messages(self, messages, read=True):
