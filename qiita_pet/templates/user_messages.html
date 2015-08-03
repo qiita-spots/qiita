@@ -1,14 +1,37 @@
 {% extends sitebase.html %}
+{% block head %}
+<script type="text/javascript">
+  function checkbox_action(action) {
+    var boxes = $('.msg-checkbox');
+    if(action == 'check') { boxes.prop('checked',true); }
+    else if(action == 'uncheck') { boxes.prop('checked',false); }
+    else if(action='invert') { boxes.each( function() {
+      $(this).is(':checked') ? $(this).prop('checked',false) : $(this).prop('checked',true);
+    });}
+    return false;
+  }
+</script>
+{% end %}
+
 {% block content%}
 <h2 style="text-decoration: underline;">System Messages</h2>
-<ul>
-  {% set user_messages = current_user.messages(5) %}
+<div class="row">
+  <div class="col-sm-6"><a href="#" onclick="checkbox_action('check')">Select all</a> | <a href="#" onclick="checkbox_action('uncheck')">Select None</a> | <a href="#" onclick="checkbox_action('invert')">Select Inverse</a></div>
+  <div class="col-sm-6" style="text-align:right">Mark as Read | Mark as Unread | Delete</div>
+</div>
+  {% set user_messages = current_user.messages() %}
     {% if user_messages %}
-      {% for um, ts in user_messages %}
-        <li>{%raw um %}<br /><span style="font-size:60%;color:gray;">{{ts}}</span></li>
-      {% end %}
+    <table class="table">
+      <thead>
+        <td></td><td>Message</td><td>Timestamp</td></tr>
+      </thead>
+      <tbody>
+        {% for m_id, message, ts, read in user_messages %}
+          <tr><td><input type="checkbox" class="msg-checkbox" name="messages" value="{{m_id}}"></td><td {% if not read %}style="font-weight:bold"{% end %}>{{message}}</td><td>{{ts}}</td></tr>
+        {% end %}
+      </tbody>
+    </table>
     {% else %}
-      <li>You have no messages</li>
+      <h3>You have no messages</h3>
     {% end %}
-</ul>
 {% end %}
