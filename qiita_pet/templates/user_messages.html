@@ -10,20 +10,27 @@
     });}
     return false;
   }
+
+function submit_form(action) {
+  $('#action').val(action);
+  document.msgform.submit();
+}
 </script>
 {% end %}
 
 {% block content%}
 <h2 style="text-decoration: underline;">System Messages</h2>
+<form method="POST" action="/user/messages/" name="msgform">
 <div class="row">
   <div class="col-sm-6"><a href="#" onclick="checkbox_action('check')">Select all</a> | <a href="#" onclick="checkbox_action('uncheck')">Select None</a> | <a href="#" onclick="checkbox_action('invert')">Select Inverse</a></div>
-  <div class="col-sm-6" style="text-align:right">Mark as Read | Mark as Unread | Delete</div>
+  <input type="hidden" name="action" id="action" value="">
+  <div class="col-sm-6" style="text-align:right"><a href="#" onclick="submit_form('read')">Mark as Read</a> | <a href="#" onclick="submit_form('unread')">Mark as Unread</a> | <a href="#" onclick="submit_form('delete')">Delete</a></div>
 </div>
   {% set user_messages = current_user.messages() %}
     {% if user_messages %}
     <table class="table">
       <thead>
-        <td></td><td>Message</td><td>Timestamp</td></tr>
+        <td class="col-sm-1"></td class="col-md-9"><td>Message</td><td class="col-md-2">Timestamp</td></tr>
       </thead>
       <tbody>
         {% for m_id, message, ts, read in user_messages %}
@@ -31,6 +38,7 @@
         {% end %}
       </tbody>
     </table>
+</form>
     {% else %}
       <h3>You have no messages</h3>
     {% end %}

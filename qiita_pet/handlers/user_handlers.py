@@ -1,4 +1,4 @@
-from tornado.web import authenticated
+from tornado.web import authenticated, HTTPError
 from future.utils import viewitems
 from wtforms import Form, StringField, validators
 
@@ -152,5 +152,20 @@ class ChangeForgotPasswordHandler(BaseHandler):
 class UserMessagesHander(BaseHandler):
     @authenticated
     def get(self):
+        self.render("user_messages.html",
+                    messages=self.current_user.messages())
+
+    def post(self):
+        action = self.get_argument("action")
+        messages = self.get_arguments("messages")
+        if action == "read":
+            self.current_user.mark_messages(messages, read=True)
+        elif action == "unread":
+            self.current_user.mark_messages(messages, read=False)
+        elif action == "delete":
+            self.current_user.delete_messages(messages)
+        else:
+            raise HTTPError(400, "Unknown action: %s" % action)
+
         self.render("user_messages.html",
                     messages=self.current_user.messages())
