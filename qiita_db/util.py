@@ -1115,9 +1115,9 @@ def add_message(message, users):
         sql = """INSERT INTO qiita.message (message) VALUES (%s)
                  RETURNING message_id"""
         TRN.add(sql, [message])
-        msg_id = TRN.execute_fetchflatten()[0]
+        msg_id = TRN.execute_fetchlast()
         sql = """INSERT INTO qiita.message_user (email, message_id)
                  VALUES (%s, %s)"""
-        for user in users:
-            TRN.add(sql, [user.id, msg_id])
+        sql_args = [[user.id, msg_id] for user in users]
+        TRN.add(sql, sql_args, many=True)
         TRN.execute()

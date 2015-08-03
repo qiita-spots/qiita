@@ -455,7 +455,7 @@ class User(QiitaObject):
                      WHERE email = %s AND read = FALSE
                      ORDER BY message_time DESC"""
             TRN.add(sql, [self._id])
-            return TRN.execute_fetchindex(-1)
+            return TRN.execute_fetchindex()
 
     # ------- methods ---------
     def change_password(self, oldpass, newpass):
@@ -549,7 +549,7 @@ class User(QiitaObject):
                 sql += " LIMIT %s"
                 sql_info.append(count)
             TRN.add(sql, sql_info)
-            return TRN.execute_fetchindex(-1)
+            return TRN.execute_fetchindex()
 
     def mark_messages(self, messages, read=True):
         """Mark given messages as read/unread
@@ -564,9 +564,9 @@ class User(QiitaObject):
         with TRN:
             sql = """UPDATE qiita.message_user
                      SET read = %s
-                     WHERE message_id in %s and email = %s"""
+                     WHERE message_id IN %s AND email = %s"""
             TRN.add(sql, [read, tuple(messages), self._id])
-            return TRN.execute_fetchindex(-1)
+            return TRN.execute_fetchindex()
 
     def delete_messages(self, messages):
         """Delete given messages for the user
@@ -579,7 +579,7 @@ class User(QiitaObject):
         with TRN:
             # remove message from user
             sql = """DELETE FROM qiita.message_user
-                     WHERE message_id in %s and email = %s"""
+                     WHERE message_id IN %s AND email = %s"""
             TRN.add(sql, [tuple(messages), self._id])
             # Remove any messages that no longer are attached to a user
             sql = """DELETE FROM qiita.message WHERE message_id NOT IN

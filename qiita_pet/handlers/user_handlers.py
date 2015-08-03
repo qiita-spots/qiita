@@ -158,6 +158,9 @@ class UserMessagesHander(BaseHandler):
     def post(self):
         action = self.get_argument("action")
         messages = self.get_arguments("messages")
+        if len(messages) == 0:
+            HTTPError(400, "No messages passed")
+
         if action == "read":
             self.current_user.mark_messages(messages, read=True)
         elif action == "unread":
