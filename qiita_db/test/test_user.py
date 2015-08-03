@@ -9,6 +9,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from datetime import datetime
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -353,6 +354,13 @@ class UserTest(TestCase):
         self.assertEqual(obsbool, False)
         self._check_pass("password")
 
+    def test_messages(self):
+        user = User('test@foo.bar')
+        obs = user.messages()
+        exp_msg = ['message 1', 'message 2', 'message 3']
+        self.assertEqual([x[0] for x in obs], exp_msg)
+        self.assertTrue(all(x[1] < datetime.now() for x in obs))
+        self.assertFalse(all(x[2] for x in obs))
 
 if __name__ == "__main__":
     main()

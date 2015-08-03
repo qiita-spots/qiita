@@ -29,10 +29,6 @@ TODO
 # -----------------------------------------------------------------------------
 from __future__ import division
 from re import sub
-from datetime import datetime
-from json import loads, dumps
-
-from moi import r_client
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -66,8 +62,9 @@ class User(QiitaObject):
     generate_reset_code
     change_forgot_password
     iter
-    add_message
     messages
+    messages_read
+    delete_messages
     """
 
     _table = "qiita_user"
@@ -515,41 +512,25 @@ class User(QiitaObject):
             TRN.add(sql, [hash_password(newpass), self._id])
             TRN.execute()
 
-    def add_message(self, message):
-        """Add a message to the user's message queue
-
-        Parameters
-        ----------
-        message : str
-            Message to add to queue
-        """
-        count = r_client.lpush("%s:qiita-sysmsgs" % self._id,
-                               dumps([message, datetime.now().strftime(
-                                     '%b %d, %Y %H:%M')]))
-        if count > 100:
-            # only store 100 messages, so pop oldest
-            r_client.rpop()
-
     def messages(self, count=100):
         """Return messages in user's queue
 
         Parameters
         ----------
         count : int, optional
-            Number of messages to return, starting with newest. Default 100.
-            Queue will never have more than 100 messages in it.
+            Number of messages to return, starting with newest. Default 100
 
         Returns
         -------
         list of tuples
-            Messages in the queue, in the form [(msg, timestamp), ...]
+            Messages in the queue, in the form [(msg, timestamp, read), ...]
         """
-        if count > 100:
-            raise IncompetentQiitaDeveloperError("Only 100 messages available")
-
-        # turn JSON messages back into tuple and return them
-        return [loads(m) for m in r_client.lrange("%s:qiita-sysmsgs" %
-                                                  self._id, 0, count-1)]
+        with TRN:
+            sql = """SELECT message, message_time, read FROM qiita.message_user
+                     JOIN qiita.message USING (message_id)
+                     WHERE email = %s ORDER BY message_time DESC LIMIT %s"""
+            TRN.add(sql, [self._id, count])
+            return TRN.execute_fetchindex(-1)
 
 
 def validate_email(email):
