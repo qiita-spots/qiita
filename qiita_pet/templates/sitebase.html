@@ -185,12 +185,13 @@
               <a href="/auth/logout/">Log Out</a>
             </li>
             <li class="dropdown">
-              <a href="/user/messages/"><span class="glyphicon glyphicon-envelope"></span></a>
-              <ul class="dropdown-menu info-menu" style="padding: 5px">
               {% set user_messages = current_user.messages(5) %}
+              {% set unread =  sum(1 for x in user_messages if x[3] == False)%}
+              <a href="/user/messages/"><span class="glyphicon glyphicon-envelope" {% if unread > 0 %} style="color:red"{% end %}> {{unread}}</span></a>
+              <ul class="dropdown-menu info-menu" style="padding: 5px">
               {% if user_messages %}
-                {% for um, ts in user_messages %}
-                  <li class="truncated">{%raw um %}<br /><span style="font-size:60%;color:gray;">{{ts}}</span></li>
+                {% for _, um, ts, read in user_messages %}
+                  <li class="truncated">{%raw um %}<br /><span style="font-size:60%;{% if read %}color:gray;{% end %}">{{ts}}</span></li>
                 {% end %}
               {% else %}
                 <li>You have no messages</li>
