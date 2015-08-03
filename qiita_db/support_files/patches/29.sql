@@ -4,6 +4,7 @@
 CREATE TABLE qiita.message (
     message_id           bigserial  NOT NULL,
     message              varchar  NOT NULL,
+    message_time         timestamp DEFAULT current_timestamp NOT NULL,
     CONSTRAINT pk_message PRIMARY KEY ( message_id )
  );
 
