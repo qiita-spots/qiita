@@ -8,7 +8,7 @@
 from __future__ import division
 
 from .base import QiitaObject
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 from .util import get_table_cols_w_type, get_table_cols
 from .exceptions import QiitaDBDuplicateError
 
@@ -33,38 +33,40 @@ class BaseParameters(QiitaObject):
     @classmethod
     def exists(cls, **kwargs):
         r"""Check if the parameter set already exists on the DB"""
-        cls._check_columns(**kwargs)
+        with TRN:
+            cls._check_columns(**kwargs)
 
-        conn_handler = SQLConnectionHandler()
+            cols = ["{} = %s".format(col) for col in kwargs]
+            sql = "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1})".format(
+                cls._table, ' AND '.join(cols))
 
-        cols = ["{} = %s".format(col) for col in kwargs]
-
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1})".format(
-                cls._table, ' AND '.join(cols)),
-            kwargs.values())[0]
+            TRN.add(sql, kwargs.values())
+            return TRN.execute_fetchlast()
 
     @classmethod
     def create(cls, param_set_name, **kwargs):
         r"""Adds a new parameter set to the DB"""
-        cls._check_columns(**kwargs)
+        with TRN:
+            cls._check_columns(**kwargs)
 
-        conn_handler = SQLConnectionHandler()
+            vals = kwargs.values()
+            vals.insert(0, param_set_name)
 
-        vals = kwargs.values()
-        vals.insert(0, param_set_name)
+            if cls.exists(**kwargs):
+                raise QiitaDBDuplicateError(
+                    cls.__name__, "Values: %s" % kwargs)
 
-        if cls.exists(**kwargs):
-            raise QiitaDBDuplicateError(cls.__name__, "Values: %s" % kwargs)
+            sql = """INSERT INTO qiita.{0} (param_set_name, {1})
+                     VALUES (%s, {2})
+                     RETURNING {3}""".format(
+                cls._table,
+                ', '.join(kwargs),
+                ', '.join(['%s'] * len(kwargs)),
+                cls._column_id)
 
-        id_ = conn_handler.execute_fetchone(
-            "INSERT INTO qiita.{0} (param_set_name, {1}) VALUES (%s, {2}) "
-            "RETURNING {3}".format(
-                cls._table, ', '.join(kwargs),
-                ', '.join(['%s'] * len(kwargs)), cls._column_id),
-            vals)[0]
+            TRN.add(sql, vals)
 
-        return cls(id_)
+            return cls(TRN.execute_fetchlast())
 
     @classmethod
     def iter(cls):
@@ -75,11 +77,12 @@ class BaseParameters(QiitaObject):
         generator
             Yields a parameter instance
         """
-        conn_handler = SQLConnectionHandler()
-        sql = "SELECT {0} FROM qiita.{1}".format(cls._column_id, cls._table)
-
-        for result in conn_handler.execute_fetchall(sql):
-            yield cls(result[0])
+        with TRN:
+            sql = "SELECT {0} FROM qiita.{1}".format(cls._column_id,
+                                                     cls._table)
+            TRN.add(sql)
+            for result in TRN.execute_fetchflatten():
+                yield cls(result)
 
     @property
     def name(self):
@@ -90,11 +93,11 @@ class BaseParameters(QiitaObject):
         str
             The name of the parameter set
         """
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchone(
-            "SELECT param_set_name FROM qiita.{0} WHERE {1} = %s".format(
-                self._table, self._column_id),
-            (self.id,))[0]
+        with TRN:
+            sql = "SELECT param_set_name FROM qiita.{0} WHERE {1} = %s".format(
+                self._table, self._column_id)
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
 
     @property
     def values(self):
@@ -105,16 +108,17 @@ class BaseParameters(QiitaObject):
         dict
             Dictionary with the parameter values keyed by parameter name
         """
-        conn_handler = SQLConnectionHandler()
-        result = dict(conn_handler.execute_fetchone(
-            "SELECT * FROM qiita.{0} WHERE {1} = %s".format(
-                self._table, self._column_id),
-            (self.id,)))
-        # Remove the parameter id and the parameter name as those are used
-        # internally, and they are not passed to the processing step
-        del result[self._column_id]
-        del result['param_set_name']
-        return result
+        with TRN:
+            sql = "SELECT * FROM qiita.{0} WHERE {1} = %s".format(
+                self._table, self._column_id)
+            TRN.add(sql, [self.id])
+            # There should be only one row
+            result = dict(TRN.execute_fetchindex()[0])
+            # Remove the parameter id and the parameter name as those are used
+            # internally, and they are not passed to the processing step
+            del result[self._column_id]
+            del result['param_set_name']
+            return result
 
     def _check_id(self, id_):
         r"""Check that the provided ID actually exists in the database
@@ -129,21 +133,20 @@ class BaseParameters(QiitaObject):
         This function overwrites the base function, as sql layout doesn't
         follow the same conventions done in the other classes.
         """
-        self._check_subclass()
-
-        conn_handler = SQLConnectionHandler()
-
-        return conn_handler.execute_fetchone(
-            "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1} = %s)".format(
-                self._table, self._column_id),
-            (id_, ))[0]
+        with TRN:
+            sql = """SELECT EXISTS(
+                        SELECT * FROM qiita.{0}
+                        WHERE {1} = %s)""".format(self._table, self._column_id)
+            TRN.add(sql, [id_])
+            return TRN.execute_fetchlast()
 
     def _get_values_as_dict(self):
         r""""""
-        conn_handler = SQLConnectionHandler()
-        return dict(conn_handler.execute_fetchone(
-                    "SELECT * FROM qiita.{0} WHERE {1}=%s".format(
-                        self._table, self._column_id), (self.id,)))
+        with TRN:
+            sql = "SELECT * FROM qiita.{0} WHERE {1}=%s".format(
+                self._table, self._column_id)
+            TRN.add(sql, [self.id])
+            return dict(TRN.execute_fetchindex()[0])
 
     def to_str(self):
         r"""Generates a string with the parameter values
@@ -153,22 +156,23 @@ class BaseParameters(QiitaObject):
         str
             The string with all the parameters
         """
-        table_cols = get_table_cols_w_type(self._table)
-        table_cols.remove([self._column_id, 'bigint'])
+        with TRN:
+            table_cols = get_table_cols_w_type(self._table)
+            table_cols.remove([self._column_id, 'bigint'])
 
-        values = self._get_values_as_dict()
+            values = self._get_values_as_dict()
 
-        result = []
-        for p_name, p_type in sorted(table_cols):
-            if p_name in self._ignore_cols:
-                continue
-            if p_type == 'boolean':
-                if values[p_name]:
-                    result.append("--%s" % p_name)
-            else:
-                result.append("--%s %s" % (p_name, values[p_name]))
+            result = []
+            for p_name, p_type in sorted(table_cols):
+                if p_name in self._ignore_cols:
+                    continue
+                if p_type == 'boolean':
+                    if values[p_name]:
+                        result.append("--%s" % p_name)
+                else:
+                    result.append("--%s %s" % (p_name, values[p_name]))
 
-        return " ".join(result)
+            return " ".join(result)
 
 
 class PreprocessedIlluminaParams(BaseParameters):
@@ -197,11 +201,11 @@ class ProcessedSortmernaParams(BaseParameters):
     @property
     def reference(self):
         """"Returns the reference id used on this parameter set"""
-        conn_handler = SQLConnectionHandler()
-
-        return conn_handler.execute_fetchone(
-            "SELECT reference_id FROM qiita.{0} WHERE {1}=%s".format(
-                self._table, self._column_id), (self.id,))[0]
+        with TRN:
+            sql = "SELECT reference_id FROM qiita.{0} WHERE {1}=%s".format(
+                self._table, self._column_id)
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
 
     def to_file(self, f):
         r"""Writes the parameters to a file in QIIME parameters file format

@@ -23,6 +23,9 @@ http://qiime.org/documentation/file_formats.html#mapping-file-overview.
  * `qiita webserver` has been moved to `qiita pet webserver`
 * Cluster names now use dashes instead of underscores (e.g., `qiita_general` is now `qiita-general`)
 * `qiita-general` is now used as a default argument to `qiita-env start_cluster` and `qiita-env stop_cluster` if no cluster name is specified
+* Qiita now now allows for processing of already demultiplexed data without any technical (barcode and primer) section of the read.
+* Qiita now includes full portal support, limiting study and analysis access at below the qiita_db level. This allows one database to act as if subsets of studies/analyses are their own specific interface. Commands added for portals creation and maintenance, under `qiita db portal ...` and `qiita-env`. Portal specific web user interface support has also been added; each portal is fully CSS customizable.
+* 403 errors are now not logged in the logging table
 
 Version 0.1.0 (2015-04-30)
 --------------------------

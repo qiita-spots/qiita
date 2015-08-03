@@ -12,7 +12,7 @@ Qitta analysis handlers for the Tornado webserver.
 from __future__ import division
 from future.utils import viewitems
 from collections import defaultdict
-from os.path import join, sep, commonprefix
+from os.path import join, sep, commonprefix, basename, dirname
 from json import dumps
 
 from tornado.web import authenticated, HTTPError, StaticFileHandler
@@ -32,6 +32,7 @@ from qiita_db.util import (get_db_files_base_dir,
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
 from qiita_db.logger import LogEntry
+from qiita_core.util import execute_as_transaction
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -59,6 +60,7 @@ def check_analysis_access(user, analysis):
 class SelectCommandsHandler(BaseHandler):
     """Select commands to be executed"""
     @authenticated
+    @execute_as_transaction
     def get(self):
         analysis_id = int(self.get_argument('aid'))
         analysis = Analysis(analysis_id)
@@ -71,6 +73,7 @@ class SelectCommandsHandler(BaseHandler):
                     commands=commands, data_types=data_types, aid=analysis.id)
 
     @authenticated
+    @execute_as_transaction
     def post(self):
         name = self.get_argument('name')
         desc = self.get_argument('description')
@@ -86,6 +89,7 @@ class SelectCommandsHandler(BaseHandler):
 
 class AnalysisWaitHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self, analysis_id):
         analysis_id = int(analysis_id)
         try:
@@ -100,6 +104,7 @@ class AnalysisWaitHandler(BaseHandler):
                     group_id=group_id, aname=analysis.name)
 
     @authenticated
+    @execute_as_transaction
     def post(self, analysis_id):
         analysis_id = int(analysis_id)
         rarefaction_depth = self.get_argument('rarefaction-depth')
@@ -117,7 +122,8 @@ class AnalysisWaitHandler(BaseHandler):
         moi_user_id = get_id_from_user(self.current_user.id)
         moi_group = create_info(analysis_id, 'group', url='/analysis/',
                                 parent=moi_user_id, store=True)
-        moi_name = 'Creating %s' % analysis.name
+        moi_name = ("Creating %s... When finished, please click the 'Success' "
+                    "link to the right" % analysis.name)
         moi_result_url = '/analysis/results/%d' % analysis_id
 
         submit(ctx_default, moi_group['id'], moi_name,
@@ -132,6 +138,7 @@ class AnalysisWaitHandler(BaseHandler):
 
 class AnalysisResultsHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self, analysis_id):
         analysis_id = int(analysis_id.split("/")[0])
         analysis = Analysis(analysis_id)
@@ -140,8 +147,14 @@ class AnalysisResultsHandler(BaseHandler):
         jobres = defaultdict(list)
         for job in analysis.jobs:
             jobject = Job(job)
+            results = []
+            for res in jobject.results:
+                name = basename(res)
+                if name.startswith('index'):
+                    name = basename(dirname(res)).replace('_', ' ')
+                results.append((res, name))
             jobres[jobject.datatype].append((jobject.command[0],
-                                             jobject.results))
+                                             results))
 
         dropped_samples = analysis.dropped_samples
         dropped = defaultdict(list)
@@ -159,6 +172,7 @@ class AnalysisResultsHandler(BaseHandler):
                     basefolder=get_db_files_base_dir())
 
     @authenticated
+    @execute_as_transaction
     def post(self, analysis_id):
         analysis_id = int(analysis_id.split("/")[0])
         analysis_id_sent = int(self.get_argument('analysis_id'))
@@ -192,6 +206,7 @@ class AnalysisResultsHandler(BaseHandler):
 class ShowAnalysesHandler(BaseHandler):
     """Shows the user's analyses"""
     @authenticated
+    @execute_as_transaction
     def get(self):
         message = self.get_argument('message', '')
         level = self.get_argument('level', '')
@@ -203,8 +218,33 @@ class ShowAnalysesHandler(BaseHandler):
         self.render("show_analyses.html", analyses=analyses, message=message,
                     level=level)
 
+    @authenticated
+    @execute_as_transaction
+    def post(self):
+        analysis_id = int(self.get_argument('analysis_id'))
+        analysis = Analysis(analysis_id)
+        analysis_name = analysis.name
+
+        check_analysis_access(self.current_user, analysis)
+
+        try:
+            Analysis.delete(analysis_id)
+            msg = ("Analysis <b><i>%s</i></b> has been deleted." % (
+                analysis_name))
+            level = "success"
+        except Exception as e:
+            e = str(e)
+            msg = ("Couldn't remove <b><i>%s</i></b> analysis: %s" % (
+                analysis_name, e))
+            level = "danger"
+            LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
+                            (analysis_id, e))
+
+        self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
+
 
 class ResultsHandler(StaticFileHandler, BaseHandler):
+    @execute_as_transaction
     def validate_absolute_path(self, root, absolute_path):
         """Overrides StaticFileHandler's method to include authentication
         """
@@ -243,6 +283,7 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
 
 class SelectedSamplesHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self):
         # Format sel_data to get study IDs for the processed data
         sel_data = defaultdict(dict)
@@ -260,6 +301,7 @@ class SelectedSamplesHandler(BaseHandler):
 
 class AnalysisSummaryAJAX(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self):
         info = Analysis(self.current_user.default_analysis).summary_data()
         self.write(dumps(info))

@@ -7,6 +7,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from __future__ import division, print_function
 
 import errno
 import socket
@@ -16,6 +17,7 @@ import tornado.httpserver
 import tornado.ioloop
 from psycopg2 import OperationalError
 from future.utils import viewitems
+from os.path import join, abspath, dirname
 
 from qiita_db.util import (get_filepath_types, get_filetypes,
                            get_data_types,
@@ -28,17 +30,17 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_prep_template_from_cmd,
                                load_parameters_from_cmd, SUPPORTED_PARAMS,
                                update_preprocessed_data_from_cmd)
+from qiita_db.portal import Portal
 from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.exceptions import QiitaDBConnectionError
+from qiita_db.exceptions import QiitaDBConnectionError, QiitaDBError
 from qiita_db.reference import Reference
 from qiita_db.logger import LogEntry
-from qiita_core.configuration_manager import ConfigurationManager
+from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from qiita_ware.processing_pipeline import generate_demux_file
+from qiita_ware.context import system_call, ComputeError
 from moi import r_client
 
-
-_CONFIG = ConfigurationManager()
 
 try:
     conn = SQLConnectionHandler()
@@ -59,9 +61,25 @@ def pet():
     pass
 
 
-@pet.group()
-def webserver():
-    pass
+@pet.group(invoke_without_command=True)
+@click.option('--build-docs/--no-build-docs', default=True, help="Controls "
+              "whether the docs are built and moved to the 'doc' folder under "
+              "the 'static' folder.")
+def webserver(build_docs):
+    if build_docs:
+        import qiita_pet
+
+        base = abspath(dirname(qiita_pet.__file__))
+        sphinx_fp = join(base, 'support_files/doc/')
+        cmd = 'make -C %s html' % sphinx_fp
+        print('Building documentation ...')
+        try:
+            system_call(cmd)
+        except ComputeError as e:
+            raise click.ClickException('Could not build documentation: %s' %
+                                       str(e))
+        else:
+            print('Documentation successfully built')
 
 
 @qiita.group()
@@ -83,6 +101,10 @@ def ware():
 def ebi():
     pass
 
+
+@db.group()
+def portal():
+    pass
 
 # #############################################################################
 # DB COMMANDS
@@ -270,6 +292,53 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
                                             preprocessed_data)
     click.echo("Preprocessed data %s successfully updated" % ppd.id)
 
+# #############################################################################
+# PORTAL COMMANDS
+# #############################################################################
+
+
+@portal.command(name="add-analyses")
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
+@click.argument('analyses', required=True, type=int, nargs=-1)
+def add_analysis(portal, analyses):
+    try:
+        Portal(portal).add_analyses(analyses)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("analyses", str(e))
+
+
+@portal.command(name="remove-analyses")
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
+@click.argument('analyses', required=True, type=int, nargs=-1)
+def remove_analysis(portal, analyses):
+    try:
+        Portal(portal).remove_analyses(analyses)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("analyses", str(e))
+
+
+@portal.command(name="add-studies")
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
+@click.argument('studies', required=True, type=int, nargs=-1)
+def add_study(portal, studies):
+    try:
+        Portal(portal).add_studies(studies)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("studies", str(e))
+
+
+@portal.command(name="remove-studies")
+@click.argument('portal', required=True,
+                type=click.Choice(Portal.list_portals()))
+@click.argument('studies', required=True, type=int, nargs=-1)
+def remove_study(portal, studies):
+    try:
+        Portal(portal).remove_studies(studies)
+    except QiitaDBError as e:
+        raise click.BadOptionUsage("studies", str(e))
 
 # #############################################################################
 # EBI COMMANDS
@@ -381,7 +450,12 @@ def start(port):
     # having to do that. The solution will (perhaps) be to move this subcommand
     # into an entirely different script.
     from qiita_pet.webserver import Application
+    from tornado.options import options, parse_command_line
 
+    if qiita_config.log_path:
+        options.log_file_prefix = qiita_config.log_path
+        options.logging = 'warning'
+        parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application())
 
     try:

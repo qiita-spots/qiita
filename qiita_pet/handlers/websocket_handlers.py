@@ -12,6 +12,7 @@ from future.utils import viewvalues
 from moi import r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.analysis import Analysis
+from qiita_core.util import execute_as_transaction
 
 
 class MessageHandler(WebSocketHandler):
@@ -79,6 +80,7 @@ class MessageHandler(WebSocketHandler):
 class SelectedSocketHandler(WebSocketHandler, BaseHandler):
     """Websocket for removing samples on default analysis display page"""
     @authenticated
+    @execute_as_transaction
     def on_message(self, msg):
         # When the websocket receives a message from the javascript client,
         # parse into JSON
@@ -100,6 +102,7 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
 class SelectSamplesHandler(WebSocketHandler, BaseHandler):
     """Websocket for selecting and deselecting samples on list studies page"""
     @authenticated
+    @execute_as_transaction
     def on_message(self, msg):
         """Selects samples on a message from the user
 

@@ -88,7 +88,7 @@ class SetupTest(TestCase):
 
     def test_preprocessed_sequence_illumina_params(self):
         self.assertEqual(
-            get_count("qiita.preprocessed_sequence_illumina_params"), 6)
+            get_count("qiita.preprocessed_sequence_illumina_params"), 7)
 
     def test_processed_data(self):
         self.assertEqual(get_count("qiita.processed_data"), 1)
@@ -109,7 +109,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.job"), 3)
 
     def test_analysis(self):
-        self.assertEqual(get_count("qiita.analysis"), 6)
+        self.assertEqual(get_count("qiita.analysis"), 10)
 
     def test_analysis_job(self):
         self.assertEqual(get_count("qiita.analysis_job"), 3)

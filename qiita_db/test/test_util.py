@@ -15,8 +15,8 @@ from shutil import rmtree
 import pandas as pd
 
 from qiita_core.util import qiita_test_checker
-from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import QiitaDBColumnError, QiitaDBError
+from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBError,
+                                 QiitaDBLookupError)
 from qiita_db.data import RawData
 from qiita_db.study import Study
 from qiita_db.reference import Reference
@@ -37,7 +37,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            filepath_id_to_rel_path, filepath_ids_to_rel_paths,
                            move_filepaths_to_upload_folder,
                            move_upload_files_to_trash,
-                           check_access_to_analysis_result, infer_status)
+                           check_access_to_analysis_result, infer_status,
+                           get_preprocessed_params_tables)
 
 
 @qiita_test_checker()
@@ -47,7 +48,7 @@ class DBUtilTests(TestCase):
         self.required = [
             'number_samples_promised', 'study_title', 'mixs_compliant',
             'metadata_complete', 'study_description', 'first_contact',
-            'reprocess', 'portal_type_id', 'timeseries_type_id', 'study_alias',
+            'reprocess', 'timeseries_type_id', 'study_alias',
             'study_abstract', 'principal_investigator_id', 'email',
             'number_samples_collected']
         self.files_to_remove = []
@@ -64,13 +65,12 @@ class DBUtilTests(TestCase):
 
     def test_check_required_columns(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
-        check_required_columns(self.conn_handler, self.required, self.table)
+        check_required_columns(self.required, self.table)
 
     def test_check_required_columns_fail(self):
         self.required.remove('study_title')
         with self.assertRaises(QiitaDBColumnError):
-            check_required_columns(self.conn_handler, self.required,
-                                   self.table)
+            check_required_columns(self.required, self.table)
 
     def test_get_lat_longs(self):
         exp = [
@@ -107,13 +107,12 @@ class DBUtilTests(TestCase):
 
     def test_check_table_cols(self):
         # Doesn't do anything if correct info passed, only errors if wrong info
-        check_table_cols(self.conn_handler, self.required, self.table)
+        check_table_cols(self.required, self.table)
 
     def test_check_table_cols_fail(self):
         self.required.append('BADTHINGNOINHERE')
         with self.assertRaises(QiitaDBColumnError):
-            check_table_cols(self.conn_handler, self.required,
-                             self.table)
+            check_table_cols(self.required, self.table)
 
     def test_get_table_cols(self):
         obs = get_table_cols("qiita_user")
@@ -140,58 +139,55 @@ class DBUtilTests(TestCase):
     def test_exists_table(self):
         """Correctly checks if a table exists"""
         # True cases
-        self.assertTrue(exists_table("filepath", self.conn_handler))
-        self.assertTrue(exists_table("qiita_user", self.conn_handler))
-        self.assertTrue(exists_table("analysis", self.conn_handler))
-        self.assertTrue(exists_table("prep_1", self.conn_handler))
-        self.assertTrue(exists_table("sample_1", self.conn_handler))
+        self.assertTrue(exists_table("filepath"))
+        self.assertTrue(exists_table("qiita_user"))
+        self.assertTrue(exists_table("analysis"))
+        self.assertTrue(exists_table("prep_1"))
+        self.assertTrue(exists_table("sample_1"))
         # False cases
-        self.assertFalse(exists_table("sample_2", self.conn_handler))
-        self.assertFalse(exists_table("prep_2", self.conn_handler))
-        self.assertFalse(exists_table("foo_table", self.conn_handler))
-        self.assertFalse(exists_table("bar_table", self.conn_handler))
+        self.assertFalse(exists_table("sample_2"))
+        self.assertFalse(exists_table("prep_2"))
+        self.assertFalse(exists_table("foo_table"))
+        self.assertFalse(exists_table("bar_table"))
 
     def test_exists_dynamic_table(self):
         """Correctly checks if a dynamic table exists"""
         # True cases
         self.assertTrue(exists_dynamic_table(
             "preprocessed_sequence_illumina_params", "preprocessed_",
-            "_params", self.conn_handler))
-        self.assertTrue(exists_dynamic_table("prep_1", "prep_", "",
-                                             self.conn_handler))
-        self.assertTrue(exists_dynamic_table("filepath", "", "",
-                                             self.conn_handler))
+            "_params"))
+        self.assertTrue(exists_dynamic_table("prep_1", "prep_", ""))
+        self.assertTrue(exists_dynamic_table("filepath", "", ""))
         # False cases
         self.assertFalse(exists_dynamic_table(
-            "preprocessed_foo_params", "preprocessed_", "_params",
-            self.conn_handler))
+            "preprocessed_foo_params", "preprocessed_", "_params"))
         self.assertFalse(exists_dynamic_table(
-            "preprocessed__params", "preprocessed_", "_params",
-            self.conn_handler))
+            "preprocessed__params", "preprocessed_", "_params"))
         self.assertFalse(exists_dynamic_table(
-            "foo_params", "preprocessed_", "_params",
-            self.conn_handler))
+            "foo_params", "preprocessed_", "_params"))
         self.assertFalse(exists_dynamic_table(
-            "preprocessed_foo", "preprocessed_", "_params",
-            self.conn_handler))
+            "preprocessed_foo", "preprocessed_", "_params"))
         self.assertFalse(exists_dynamic_table(
-            "foo", "preprocessed_", "_params",
-            self.conn_handler))
+            "foo", "preprocessed_", "_params"))
 
     def test_convert_to_id(self):
         """Tests that ids are returned correctly"""
         self.assertEqual(convert_to_id("directory", "filepath_type"), 8)
+        self.assertEqual(convert_to_id("running", "analysis_status",
+                                       "status"), 3)
+        self.assertEqual(convert_to_id("EMP", "portal_type", "portal"), 2)
 
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
-        with self.assertRaises(IncompetentQiitaDeveloperError):
+        with self.assertRaises(QiitaDBLookupError):
             convert_to_id("FAKE", "filepath_type")
 
     def test_get_filetypes(self):
         """Tests that get_filetypes works with valid arguments"""
 
         obs = get_filetypes()
-        exp = {'SFF': 1, 'FASTA-Sanger': 2, 'FASTQ': 3, 'FASTA': 4}
+        exp = {'SFF': 1, 'FASTA_Sanger': 2, 'FASTQ': 3, 'FASTA': 4,
+               'per_sample_FASTQ': 5}
         self.assertEqual(obs, exp)
 
         obs = get_filetypes(key='filetype_id')
@@ -246,6 +242,13 @@ class DBUtilTests(TestCase):
         self.assertTrue(check_count('qiita.study_person', 3))
         self.assertFalse(check_count('qiita.study_person', 2))
 
+    def test_get_preprocessed_params_tables(self):
+        obs = get_preprocessed_params_tables()
+        exp = ['preprocessed_sequence_454_params',
+               'preprocessed_sequence_illumina_params',
+               'preprocessed_spectra_params']
+        self.assertEqual(obs, exp)
+
     def test_get_processed_params_tables(self):
         obs = get_processed_params_tables()
         self.assertEqual(obs, ['processed_params_sortmerna',
@@ -260,8 +263,7 @@ class DBUtilTests(TestCase):
 
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
             "SELECT count(1) FROM qiita.filepath")[0]
-        obs = insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",
-                               self.conn_handler)
+        obs = insert_filepaths([(fp, 1)], 1, "raw_data", "filepath")
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
@@ -287,7 +289,7 @@ class DBUtilTests(TestCase):
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
             "SELECT count(1) FROM qiita.filepath")[0]
         obs = insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
-                               "filepath", self.conn_handler)
+                               "filepath")
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
@@ -301,54 +303,6 @@ class DBUtilTests(TestCase):
             "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
         exp_fp = "1_%s" % basename(fp)
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
-        self.assertEqual(obs, exp)
-
-    def test_insert_filepaths_queue(self):
-        fd, fp = mkstemp()
-        close(fd)
-        with open(fp, "w") as f:
-            f.write("\n")
-        self.files_to_remove.append(fp)
-
-        # create and populate queue
-        self.conn_handler.create_queue("toy_queue")
-        self.conn_handler.add_to_queue(
-            "toy_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
-            "phone) VALUES (%s, %s, %s, %s)",
-            ['insert@foo.bar', 'Toy', 'pass', '111-111-1111'])
-
-        exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.filepath")[0]
-        insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
-                         "filepath", self.conn_handler, queue='toy_queue')
-
-        self.conn_handler.add_to_queue(
-            "toy_queue", "INSERT INTO qiita.raw_filepath (raw_data_id, "
-            "filepath_id) VALUES (1, %s)", ['{0}'])
-        self.conn_handler.execute_queue("toy_queue")
-
-        # check that the user was added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * from qiita.qiita_user WHERE email = %s",
-            ['insert@foo.bar'])
-        exp = [['insert@foo.bar', 5, 'pass', 'Toy', None, None, '111-111-1111',
-                None, None, None]]
-        self.assertEqual(obs, exp)
-
-        # Check that the filepaths have been added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
-        exp_fp = "1_%s" % basename(fp)
-        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
-        self.assertEqual(obs, exp)
-
-        # check that raw_filpath data was added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            """SELECT *
-               FROM qiita.raw_filepath
-               WHERE filepath_id=%d""" % exp_new_id)
-        exp_fp = "1_%s" % basename(fp)
-        exp = [[1, exp_new_id]]
         self.assertEqual(obs, exp)
 
     def _common_purge_filpeaths_test(self):

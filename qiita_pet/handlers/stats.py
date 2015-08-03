@@ -5,6 +5,7 @@ from random import choice
 from moi import r_client
 from tornado.gen import coroutine, Task
 
+from qiita_core.util import execute_as_transaction
 from qiita_db.util import get_count
 from qiita_db.study import Study
 from qiita_db.util import get_lat_longs
@@ -12,6 +13,7 @@ from .base_handlers import BaseHandler
 
 
 class StatsHandler(BaseHandler):
+    @execute_as_transaction
     def _get_stats(self, callback):
         # check if the key exists in redis
         lats = r_client.lrange('stats:sample_lats', 0, -1)
@@ -53,6 +55,7 @@ class StatsHandler(BaseHandler):
         callback([num_studies, num_samples, num_users, lat_longs])
 
     @coroutine
+    @execute_as_transaction
     def get(self):
         num_studies, num_samples, num_users, lat_longs = \
             yield Task(self._get_stats)

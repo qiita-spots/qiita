@@ -136,7 +136,6 @@ class TestLoadSampleTemplateFromCmd(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 4,
             "number_samples_promised": 4,
-            "portal_type_id": 3,
             "study_alias": "TestStudy",
             "study_description": "Description of a test study",
             "study_abstract": "No abstract right now...",
@@ -501,7 +500,6 @@ class TestUpdatePreprocessedDataFromCmd(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
@@ -675,7 +673,6 @@ CONFIG_1 = """[required]
 timeseries_type_id = 1
 metadata_complete = True
 mixs_compliant = True
-portal_type_id = 3
 principal_investigator = SomeDude, somedude@foo.bar, some
 reprocess = False
 study_alias = 'test study'
@@ -693,7 +690,6 @@ vamps_id = vamps_id
 CONFIG_2 = """[required]
 timeseries_type_id = 1
 metadata_complete = True
-portal_type_id = 3
 principal_investigator = SomeDude, somedude@foo.bar, some
 reprocess = False
 study_alias = 'test study'
@@ -740,11 +736,13 @@ PREP_TEMPLATE = (
 
 PY_PATCH = """
 from qiita_db.study import Study
+from qiita_db.sql_connection import TRN
 study = Study(1)
-conn = SQLConnectionHandler()
-conn.executemany(
-    "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)",
-    [[study.id], [study.id*100]])
+
+with TRN:
+    sql = "INSERT INTO qiita.patchtest10 (testing) VALUES (%s)"
+    TRN.add(sql, [[study.id], [study.id*100]], many=True)
+    TRN.execute()
 """
 
 PARAMETERS = """max_bad_run_length\t3

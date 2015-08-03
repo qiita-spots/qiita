@@ -12,6 +12,7 @@ from tempfile import mkstemp
 from os import close, remove
 from os.path import join
 from collections import Iterable
+from copy import deepcopy
 
 import numpy.testing as npt
 import pandas as pd
@@ -26,7 +27,6 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
                                  QiitaDBColumnError,
                                  QiitaDBWarning,
                                  QiitaDBError)
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import exists_table, get_mountpoint, get_count
@@ -54,45 +54,6 @@ class BaseTestPrepSample(TestCase):
 
 
 class TestPrepSampleReadOnly(BaseTestPrepSample):
-    def test_add_setitem_queries_error(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
-
-        with self.assertRaises(QiitaDBColumnError):
-            self.tester.add_setitem_queries(
-                'COL_DOES_NOT_EXIST', 'Foo', conn_handler, queue)
-
-    def test_add_setitem_queries_required(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
-
-        self.tester.add_setitem_queries(
-            'center_name', 'FOO', conn_handler, queue)
-
-        obs = conn_handler.queues[queue]
-        sql = """UPDATE qiita.prep_1
-                 SET center_name=%s
-                 WHERE sample_id=%s"""
-        exp = [(sql, ('FOO', '1.SKB8.640193'))]
-        self.assertEqual(obs, exp)
-
-    def test_add_setitem_queries_dynamic(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
-
-        self.tester.add_setitem_queries(
-            'barcode', 'AAAAAAAAAAAA', conn_handler, queue)
-
-        obs = conn_handler.queues[queue]
-        sql = """UPDATE qiita.prep_1
-                 SET barcode=%s
-                 WHERE sample_id=%s"""
-        exp = [(sql, ('AAAAAAAAAAAA', '1.SKB8.640193'))]
-        self.assertEqual(obs, exp)
-
     def test_init_unknown_error(self):
         """Init errors if the PrepSample id is not found in the template"""
         with self.assertRaises(QiitaDBUnknownIDError):
@@ -138,8 +99,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
-        conn_handler = SQLConnectionHandler()
-        obs = self.tester._get_categories(conn_handler)
+        obs = self.tester._get_categories()
         self.assertEqual(obs, self.exp_categories)
 
     def test_len(self):
@@ -254,6 +214,19 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
     def test_get_none(self):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Category') is None)
+
+    def test_columns_restrictions(self):
+        """that it returns SAMPLE_TEMPLATE_COLUMNS"""
+        exp = deepcopy(PREP_TEMPLATE_COLUMNS)
+        exp.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+        self.assertEqual(self.prep_template.columns_restrictions, exp)
+
+    def test_can_be_updated(self):
+        """test if the template can be updated"""
+        # you can't update restricted colums in a pt with data
+        self.assertFalse(self.prep_template.can_be_updated({'barcode'}))
+        # but you can if not restricted
+        self.assertTrue(self.prep_template.can_be_updated({'center_name'}))
 
 
 @qiita_test_checker()
@@ -405,8 +378,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
 
     def test_get_sample_ids(self):
         """get_sample_ids returns the correct set of sample ids"""
-        conn_handler = SQLConnectionHandler()
-        obs = self.tester._get_sample_ids(conn_handler)
+        obs = self.tester._get_sample_ids()
         self.assertEqual(obs, self.exp_sample_ids)
 
     def test_len(self):
@@ -570,99 +542,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             u'experiment_design_description', u'experiment_title', u'platform',
             u'samp_size', u'sequencing_meth', u'illumina_technology',
             u'sample_center', u'pcr_primers', u'study_center'})
-
-    def test_add_common_creation_steps_to_queue(self):
-        """add_common_creation_steps_to_queue adds the correct sql statements
-        """
-        metadata_dict = {
-            '2.SKB8.640193': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'emp_status': 'EMP',
-                              'str_column': 'Value for sample 1',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'GTCCGCAAGTTA',
-                              'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
-                              'library_construction_protocol': 'AAAA',
-                              'experiment_design_description': 'BBBB'},
-            '2.SKD8.640184': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'emp_status': 'EMP',
-                              'str_column': 'Value for sample 2',
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'CGTAGAGCTCTC',
-                              'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
-                              'library_construction_protocol': 'AAAA',
-                              'experiment_design_description': 'BBBB'},
-            }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-
-        conn_handler = SQLConnectionHandler()
-        queue_name = "TEST_QUEUE"
-        conn_handler.create_queue(queue_name)
-        PrepTemplate._add_common_creation_steps_to_queue(
-            metadata, 2, conn_handler, queue_name)
-
-        sql_insert_common = (
-            'INSERT INTO qiita.prep_template_sample '
-            '(prep_template_id, sample_id) VALUES (%s, %s)')
-        sql_insert_common_params_1 = (2, '2.SKB8.640193')
-        sql_insert_common_params_2 = (2, '2.SKD8.640184')
-
-        sql_insert_prep_columns = (
-            'INSERT INTO qiita.prep_columns '
-            '(prep_template_id, column_name, column_type) '
-            'VALUES (%s, %s, %s)')
-
-        sql_create_table = (
-            'CREATE TABLE qiita.prep_2 '
-            '(sample_id varchar NOT NULL, barcodesequence varchar, '
-            'center_name varchar, center_project_name varchar, '
-            'emp_status varchar, experiment_design_description varchar, '
-            'library_construction_protocol varchar, '
-            'linkerprimersequence varchar, platform varchar, '
-            'run_prefix varchar, str_column varchar, '
-            'CONSTRAINT fk_prep_2 FOREIGN KEY (sample_id) REFERENCES '
-            'qiita.study_sample (sample_id) ON UPDATE CASCADE)')
-
-        sql_insert_dynamic = (
-            'INSERT INTO qiita.prep_2 '
-            '(sample_id, barcodesequence, center_name, center_project_name, '
-            'emp_status, experiment_design_description, '
-            'library_construction_protocol, linkerprimersequence, platform, '
-            'run_prefix, str_column) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
-
-        sql_insert_dynamic_params_1 = (
-            '2.SKB8.640193', 'GTCCGCAAGTTA', 'ANL', 'Test Project', 'EMP',
-            'BBBB', 'AAAA', 'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA',
-            's_G1_L001_sequences', 'Value for sample 1')
-        sql_insert_dynamic_params_2 = (
-            '2.SKD8.640184', 'CGTAGAGCTCTC', 'ANL', 'Test Project', 'EMP',
-            'BBBB', 'AAAA', 'GTGCCAGCMGCCGCGGTAA', 'ILLUMINA',
-            's_G1_L001_sequences', 'Value for sample 2')
-
-        exp = [
-            (sql_insert_common, sql_insert_common_params_1),
-            (sql_insert_common, sql_insert_common_params_2),
-            (sql_insert_prep_columns, (2, 'barcodesequence', 'varchar')),
-            (sql_insert_prep_columns, (2, 'center_name', 'varchar')),
-            (sql_insert_prep_columns, (2, 'center_project_name', 'varchar')),
-            (sql_insert_prep_columns, (2, 'emp_status', 'varchar')),
-            (sql_insert_prep_columns,
-                (2, 'experiment_design_description', 'varchar')),
-            (sql_insert_prep_columns,
-                (2, 'library_construction_protocol', 'varchar')),
-            (sql_insert_prep_columns, (2, 'linkerprimersequence', 'varchar')),
-            (sql_insert_prep_columns, (2, 'platform', 'varchar')),
-            (sql_insert_prep_columns, (2, 'run_prefix', 'varchar')),
-            (sql_insert_prep_columns, (2, 'str_column', 'varchar')),
-            (sql_create_table, None),
-            (sql_insert_dynamic, sql_insert_dynamic_params_1),
-            (sql_insert_dynamic, sql_insert_dynamic_params_2)]
-
-        self.assertEqual(conn_handler.queues[queue_name], exp)
 
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
@@ -853,7 +732,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         exp_id = get_count("qiita.prep_template") + 1
 
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(ValueError):
             PrepTemplate.create(metadata, self.test_study, self.data_type)
 
         sql = """SELECT EXISTS(
@@ -876,7 +755,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                     WHERE prep_template_id=%s)"""
         self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
 
-        self.assertFalse(exists_table("prep_%d" % exp_id, self.conn_handler))
+        self.assertFalse(exists_table("prep_%d" % exp_id))
 
     def _common_creation_checks(self, new_id, pt, fp_count):
         # The returned object has the correct id
@@ -925,7 +804,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertItemsEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("prep_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("prep_%s" % new_id))
 
         # The new table hosts the correct values
         obs = [dict(o) for o in self.conn_handler.execute_fetchall(
@@ -1079,7 +958,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertItemsEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("prep_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("prep_%s" % new_id))
 
         # The new table hosts the correct values
         obs = [dict(o) for o in self.conn_handler.execute_fetchall(
@@ -1179,7 +1058,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp = []
         self.assertEqual(obs, exp)
 
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(ValueError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.prep_%d" % pt.id)
 
@@ -1342,6 +1221,13 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(pt.raw_data, None)
         pt.raw_data = rd
         self.assertEqual(pt.raw_data, rd.id)
+
+    def test_can_be_updated_on_new(self):
+        """test if the template can be updated"""
+        # you can update a newly created pt
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
+        self.assertTrue(pt.can_be_updated({'barcode'}))
 
 
 EXP_PREP_TEMPLATE = (

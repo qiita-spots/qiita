@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.data import ProcessedData
 from qiita_pet.util import STATUS_STYLER
@@ -13,8 +14,10 @@ from .base_uimodule import BaseUIModule
 
 
 class ProcessedDataTab(BaseUIModule):
+    @execute_as_transaction
     def render(self, study, full_access, allow_approval, approval_deny_msg):
-        pd_gen = (ProcessedData(pd_id) for pd_id in study.processed_data())
+        pd_gen = (ProcessedData(pd_id) for pd_id in
+                  sorted(study.processed_data()))
         avail_pd = [(pd.id, pd, STATUS_STYLER[pd.status]) for pd in pd_gen
                     if full_access or pd.status == 'public']
 
@@ -27,6 +30,7 @@ class ProcessedDataTab(BaseUIModule):
 
 
 class ProcessedDataInfoTab(BaseUIModule):
+    @execute_as_transaction
     def render(self, study_id, processed_data, allow_approval,
                approval_deny_msg):
         user = self.current_user

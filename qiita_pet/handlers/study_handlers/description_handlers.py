@@ -17,6 +17,7 @@ from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 from pandas.parser import CParserError
 
+from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study
 from qiita_db.data import RawData, PreprocessedData, ProcessedData
@@ -82,7 +83,7 @@ def _to_int(value):
 
 
 class StudyDescriptionHandler(BaseHandler):
-
+    @execute_as_transaction
     def _get_study_and_check_access(self, study_id):
         """Checks if the current user has access to the study
 
@@ -119,6 +120,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         return study, user, full_access
 
+    @execute_as_transaction
     def _process_investigation_type(self, inv_type, user_def_type, new_type):
         """Return the investigation_type and add it to the ontology if needed
 
@@ -147,6 +149,7 @@ class StudyDescriptionHandler(BaseHandler):
             inv_type = user_def_type
         return inv_type
 
+    @execute_as_transaction
     def process_sample_template(self, study, user, callback):
         """Process a sample template from the POST method
 
@@ -212,6 +215,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, None, None, None))
 
+    @execute_as_transaction
     def update_sample_template(self, study, user, callback):
         """Update a sample template from the POST method
 
@@ -250,6 +254,7 @@ class StudyDescriptionHandler(BaseHandler):
                 # deleting previous uploads and inserting new one
                 st = SampleTemplate(study.id)
                 st.update(load_template_to_dataframe(fp_rsp))
+                remove(fp_rsp)
 
                 # join all the warning messages into one. Note that this info
                 # will be ignored if an exception is raised
@@ -267,6 +272,7 @@ class StudyDescriptionHandler(BaseHandler):
             msg_level = "danger"
         callback((msg, msg_level, None, None, None))
 
+    @execute_as_transaction
     def add_to_sample_template(self, study, user, callback):
         """Process a sample template from the POST method
 
@@ -324,6 +330,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, None, None, None))
 
+    @execute_as_transaction
     def add_raw_data(self, study, user, callback):
         """Adds an existing raw data to the study
 
@@ -355,6 +362,7 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, 'prep_template_tab', pt_id, None))
 
+    @execute_as_transaction
     def add_prep_template(self, study, user, callback):
         """Adds a prep template to the system
 
@@ -423,6 +431,67 @@ class StudyDescriptionHandler(BaseHandler):
 
         callback((msg, msg_level, 'prep_template_tab', pt_id, None))
 
+    @execute_as_transaction
+    def update_prep_template(self, study, user, callback):
+        """Update a prep template from the POST method
+
+        Parameters
+        ----------
+        study : Study
+            The current study object
+        user : User
+            The current user object
+        callback : function
+            The callback function to call with the results once the processing
+            is done
+
+        Raises
+        ------
+        HTTPError
+            If the prep template file does not exists
+        """
+        # If we are on this function, the arguments "prep_template_id",
+        # "update_prep_template_file" must defined. If not, let tornado
+        # raise its error
+        pt_id = int(self.get_argument('prep_template_id'))
+        prep_template = self.get_argument('update_prep_template_file')
+
+        # Define here the message and message level in case of success
+        msg = "The prep template '%s' has been updated" % prep_template
+        msg_level = "success"
+        # Get the uploads folder
+        _, base_fp = get_mountpoint("uploads")[0]
+        # Get the path of the prep template in the uploads folder
+        fp = join(base_fp, str(study.id), prep_template)
+
+        if not exists(fp):
+            # The file does not exist, fail nicely
+            # Using 400 because we want the user to get the error in the GUI
+            raise HTTPError(400, "This file doesn't exist: %s" % fp)
+        try:
+            with warnings.catch_warnings(record=True) as warns:
+                pt = PrepTemplate(pt_id)
+                pt.update(load_template_to_dataframe(fp))
+                remove(fp)
+
+                # join all the warning messages into one. Note that this info
+                # will be ignored if an exception is raised
+                if warns:
+                    msg = '; '.join([str(w.message) for w in warns])
+                    msg_level = 'warning'
+
+        except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
+                QiitaDBDuplicateError, IOError, ValueError, KeyError,
+                CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
+            # Some error occurred while processing the sample template
+            # Show the error to the user so they can fix the template
+            msg = html_error_message % ('updating the prep template:',
+                                        basename(fp), str(e))
+            msg_level = "danger"
+
+        callback((msg, msg_level, 'prep_template_tab', pt_id, None))
+
+    @execute_as_transaction
     def make_public(self, study, user, callback):
         """Makes the current study public
 
@@ -443,6 +512,7 @@ class StudyDescriptionHandler(BaseHandler):
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
+    @execute_as_transaction
     def approve_study(self, study, user, callback):
         """Approves the current study if and only if the current user is admin
 
@@ -468,6 +538,7 @@ class StudyDescriptionHandler(BaseHandler):
             msg_level = "danger"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
+    @execute_as_transaction
     def request_approval(self, study, user, callback):
         """Changes the status of the current study to "awaiting_approval"
 
@@ -488,6 +559,7 @@ class StudyDescriptionHandler(BaseHandler):
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
+    @execute_as_transaction
     def make_sandbox(self, study, user, callback):
         """Reverts the current study to the 'sandbox' status
 
@@ -508,6 +580,7 @@ class StudyDescriptionHandler(BaseHandler):
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
 
+    @execute_as_transaction
     def update_investigation_type(self, study, user, callback):
         """Updates the investigation type of a prep template
 
@@ -576,6 +649,7 @@ class StudyDescriptionHandler(BaseHandler):
         msg_level = 'danger'
         callback((msg, msg_level, 'study_information_tab', None, None))
 
+    @execute_as_transaction
     def remove_add_study_template(self, raw_data, study_id, fp_rsp, data_type,
                                   is_mapping_file):
         """Replace prep templates, raw data, and sample template with a new one
@@ -610,10 +684,12 @@ class StudyDescriptionHandler(BaseHandler):
         remove(fp_rpt)
         return pt_id
 
+    @execute_as_transaction
     def _extend_sample_template(self, st_id, fp_rpt):
         SampleTemplate(st_id).extend(load_template_to_dataframe(fp_rpt))
 
     @coroutine
+    @execute_as_transaction
     def display_template(self, study, user, msg, msg_level, full_access,
                          top_tab=None, sub_tab=None, prep_tab=None):
         """Simple function to avoid duplication of code"""
@@ -656,6 +732,7 @@ class StudyDescriptionHandler(BaseHandler):
                     sub_tab=sub_tab,
                     prep_tab=prep_tab)
 
+    @execute_as_transaction
     def delete_study(self, study, user, callback):
         """Delete study
 
@@ -824,6 +901,7 @@ class StudyDescriptionHandler(BaseHandler):
         callback((msg, msg_level, 'processed_data_tab', pd_id, None))
 
     @authenticated
+    @execute_as_transaction
     def get(self, study_id):
         study, user, full_access = self._get_study_and_check_access(study_id)
 
@@ -837,6 +915,7 @@ class StudyDescriptionHandler(BaseHandler):
 
     @authenticated
     @coroutine
+    @execute_as_transaction
     def post(self, study_id):
         study, user, full_access = self._get_study_and_check_access(study_id)
 
@@ -848,6 +927,7 @@ class StudyDescriptionHandler(BaseHandler):
             extend_sample_template=self.add_to_sample_template,
             add_raw_data=self.add_raw_data,
             add_prep_template=self.add_prep_template,
+            update_prep_template=self.update_prep_template,
             make_public=self.make_public,
             approve_study=self.approve_study,
             request_approval=self.request_approval,
@@ -873,6 +953,7 @@ class StudyDescriptionHandler(BaseHandler):
 
 
 class PreprocessingSummaryHandler(BaseHandler):
+    @execute_as_transaction
     def _get_template_variables(self, preprocessed_data_id, callback):
         """Generates all the variables needed to render the template
 
@@ -925,6 +1006,7 @@ class PreprocessingSummaryHandler(BaseHandler):
 
     @authenticated
     @coroutine
+    @execute_as_transaction
     def get(self, preprocessed_data_id):
         ppd_id = _to_int(preprocessed_data_id)
 

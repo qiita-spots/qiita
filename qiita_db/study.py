@@ -53,7 +53,6 @@ must be passed as StudyPerson objects and the owner as a User object.
 ...     "mixs_compliant": True,
 ...     "number_samples_collected": 25,
 ...     "number_samples_promised": 28,
-...     "portal_type_id": 3,
 ...     "study_alias": "TST",
 ...     "study_description": "Some description of the study goes here",
 ...     "study_abstract": "Some abstract goes here",
@@ -75,7 +74,6 @@ object while creating the study.
 ...     "mixs_compliant": True,
 ...     "number_samples_collected": 25,
 ...     "number_samples_promised": 28,
-...     "portal_type_id": 3,
 ...     "study_alias": "TST",
 ...     "study_description": "Some description of the study goes here",
 ...     "study_abstract": "Some abstract goes here",
@@ -102,11 +100,13 @@ from itertools import chain
 import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from .base import QiitaObject
-from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError)
+from .exceptions import (QiitaDBStatusError, QiitaDBColumnError, QiitaDBError,
+                         QiitaDBDuplicateError)
 from .util import (check_required_columns, check_table_cols, convert_to_id,
                    get_environmental_packages, get_table_cols, infer_status)
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 from .util import exists_table
 
 
@@ -144,15 +144,15 @@ class Study(QiitaObject):
     You should not be doing that.
     """
     _table = "study"
+    _portal_table = "study_portal"
     # The following columns are considered not part of the study info
     _non_info = frozenset(["email", "study_title"])
     # The following tables are considered part of info
     _info_cols = frozenset(chain(
         get_table_cols('study'), get_table_cols('study_status'),
-        get_table_cols('timeseries_type'), get_table_cols('portal_type'),
-        get_table_cols('study_pmid')))
+        get_table_cols('timeseries_type'), get_table_cols('study_pmid')))
 
-    def _lock_non_sandbox(self, conn_handler):
+    def _lock_non_sandbox(self):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
         if self.status != 'sandbox':
             raise QiitaDBStatusError("Illegal operation on non-sandbox study!")
@@ -160,18 +160,17 @@ class Study(QiitaObject):
     @property
     def status(self):
         r"""The status is inferred by the status of its processed data"""
-        conn_handler = SQLConnectionHandler()
-        # Get the status of all its processed data
-        sql = """SELECT processed_data_status
-                FROM qiita.processed_data_status pds
-                  JOIN qiita.processed_data pd
-                    USING (processed_data_status_id)
-                  JOIN qiita.study_processed_data spd
-                    USING (processed_data_id)
-                WHERE spd.study_id = %s"""
-        pd_statuses = conn_handler.execute_fetchall(sql, (self._id,))
-
-        return infer_status(pd_statuses)
+        with TRN:
+            # Get the status of all its processed data
+            sql = """SELECT processed_data_status
+                     FROM qiita.processed_data_status pds
+                        JOIN qiita.processed_data pd
+                            USING (processed_data_status_id)
+                        JOIN qiita.study_processed_data spd
+                            USING (processed_data_id)
+                     WHERE spd.study_id = %s"""
+            TRN.add(sql, [self._id])
+            return infer_status(TRN.execute_fetchindex())
 
     @classmethod
     def get_by_status(cls, status):
@@ -187,24 +186,32 @@ class Study(QiitaObject):
         set of int
             All study ids in the database that match the given status
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT study_id FROM qiita.study_processed_data spd
-                JOIN qiita.processed_data pd
-                    ON spd.processed_data_id=pd.processed_data_id
-                JOIN qiita.processed_data_status pds
-                    ON pds.processed_data_status_id=pd.processed_data_status_id
-                WHERE pds.processed_data_status=%s"""
-        studies = {x[0] for x in
-                   conn_handler.execute_fetchall(sql, (status, ))}
-        # If status is sandbox, all the studies that are not present in the
-        # study_processed_data are also sandbox
-        if status == 'sandbox':
-            sql = """SELECT study_id FROM qiita.study WHERE study_id NOT IN (
-                     SELECT study_id FROM qiita.study_processed_data)"""
-            extra_studies = {x[0] for x in conn_handler.execute_fetchall(sql)}
-            studies = studies.union(extra_studies)
+        with TRN:
+            sql = """SELECT study_id
+                     FROM qiita.study_processed_data
+                        JOIN qiita.processed_data USING (processed_data_id)
+                        JOIN qiita.processed_data_status
+                            USING (processed_data_status_id)
+                        JOIN qiita.study_portal USING (study_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                     WHERE processed_data_status=%s AND portal = %s"""
+            TRN.add(sql, [status, qiita_config.portal])
+            studies = set(TRN.execute_fetchflatten())
+            # If status is sandbox, all the studies that are not present in the
+            # study_processed_data are also sandbox
+            if status == 'sandbox':
+                sql = """SELECT study_id
+                         FROM qiita.study
+                            JOIN qiita.study_portal USING (study_id)
+                            JOIN qiita.portal_type USING (portal_type_id)
+                         WHERE portal = %s
+                            AND study_id NOT IN (
+                                SELECT study_id
+                                FROM qiita.study_processed_data)"""
+                TRN.add(sql, [qiita_config.portal])
+                studies = studies.union(TRN.execute_fetchflatten())
 
-        return studies
+            return studies
 
     @classmethod
     def get_info(cls, study_ids=None, info_cols=None):
@@ -231,19 +238,30 @@ class Study(QiitaObject):
 
         search_cols = ",".join(sorted(cls._info_cols.intersection(info_cols)))
 
-        sql = """SELECT {0} FROM (
-            qiita.study
-            JOIN qiita.timeseries_type  USING (timeseries_type_id)
-            JOIN qiita.portal_type USING (portal_type_id)
-            LEFT JOIN (SELECT study_id, array_agg(pmid ORDER BY pmid) as
-            pmid FROM qiita.study_pmid GROUP BY study_id) sp USING (study_id)
-            )""".format(search_cols)
-        if study_ids is not None:
-            sql = "{0} WHERE study_id in ({1})".format(
-                sql, ','.join(str(s) for s in study_ids))
+        with TRN:
+            sql = """SELECT {0}
+                     FROM (
+                        qiita.study
+                        JOIN qiita.timeseries_type  USING (timeseries_type_id)
+                        LEFT JOIN (
+                            SELECT study_id, array_agg(pmid ORDER BY pmid) AS
+                                pmid
+                            FROM qiita.study_pmid
+                            GROUP BY study_id) sp USING (study_id)
+                        JOIN qiita.study_portal USING (study_id)
+                        JOIN qiita.portal_type USING (portal_type_id))
+                    WHERE portal = %s""".format(search_cols)
 
-        conn_handler = SQLConnectionHandler()
-        return conn_handler.execute_fetchall(sql)
+            args = [qiita_config.portal]
+            if study_ids is not None:
+                sql = "{0} AND study_id IN %s".format(sql)
+                args.append(tuple(study_ids))
+
+            TRN.add(sql, args)
+            res = TRN.execute_fetchindex()
+            if study_ids is not None and len(res) != len(study_ids):
+                raise QiitaDBError('Non-portal-accessible studies asked for!')
+            return res
 
     @classmethod
     def exists(cls, study_title):
@@ -258,11 +276,13 @@ class Study(QiitaObject):
         -------
         bool
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT exists(select study_id from qiita.{} WHERE "
-               "study_title = %s)").format(cls._table)
-
-        return conn_handler.execute_fetchone(sql, [study_title])[0]
+        with TRN:
+            sql = """SELECT EXISTS(
+                        SELECT study_id
+                        FROM qiita.{}
+                        WHERE study_title = %s)""".format(cls._table)
+            TRN.add(sql, [study_title])
+            return TRN.execute_fetchlast()
 
     @classmethod
     def create(cls, owner, title, efo, info, investigation=None):
@@ -290,6 +310,8 @@ class Study(QiitaObject):
         IncompetentQiitaDeveloperError
             email, study_id, study_status_id, or study_title passed as a key
             empty efo list passed
+        QiitaDBDuplicateError
+            If a study with the given title already exists
 
         Notes
         -----
@@ -305,48 +327,72 @@ class Study(QiitaObject):
         if not efo:
             raise IncompetentQiitaDeveloperError("Need EFO information!")
 
-        # add default values to info
-        insertdict = deepcopy(info)
-        insertdict['email'] = owner.id
-        insertdict['study_title'] = title
-        if "reprocess" not in insertdict:
-            insertdict['reprocess'] = False
+        with TRN:
+            if cls.exists(title):
+                raise QiitaDBDuplicateError("Study", "title: %s" % title)
 
-        # No nuns allowed
-        insertdict = {k: v for k, v in viewitems(insertdict) if v is not None}
+            # add default values to info
+            insertdict = deepcopy(info)
+            insertdict['email'] = owner.id
+            insertdict['study_title'] = title
+            if "reprocess" not in insertdict:
+                insertdict['reprocess'] = False
 
-        conn_handler = SQLConnectionHandler()
-        # make sure dictionary only has keys for available columns in db
-        check_table_cols(conn_handler, insertdict, cls._table)
-        # make sure reqired columns in dictionary
-        check_required_columns(conn_handler, insertdict, cls._table)
+            # No nuns allowed
+            insertdict = {k: v for k, v in viewitems(insertdict)
+                          if v is not None}
 
-        # Insert study into database
-        sql = ("INSERT INTO qiita.{0} ({1}) VALUES ({2}) RETURNING "
-               "study_id".format(cls._table, ','.join(insertdict),
-                                 ','.join(['%s'] * len(insertdict))))
-        # make sure data in same order as sql column names, and ids are used
-        data = []
-        for col in insertdict:
-            if isinstance(insertdict[col], QiitaObject):
-                data.append(insertdict[col].id)
-            else:
-                data.append(insertdict[col])
+            # make sure dictionary only has keys for available columns in db
+            check_table_cols(insertdict, cls._table)
+            # make sure reqired columns in dictionary
+            check_required_columns(insertdict, cls._table)
 
-        study_id = conn_handler.execute_fetchone(sql, data)[0]
+            # Insert study into database
+            sql = """INSERT INTO qiita.{0} ({1})
+                     VALUES ({2}) RETURNING study_id""".format(
+                cls._table, ','.join(insertdict),
+                ','.join(['%s'] * len(insertdict)))
 
-        # insert efo information into database
-        sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
-               "efo_id) VALUES (%s, %s)".format(cls._table))
-        conn_handler.executemany(sql, [(study_id, e) for e in efo])
+            # make sure data in same order as sql column names,
+            # and ids are used
+            data = []
+            for col in insertdict:
+                if isinstance(insertdict[col], QiitaObject):
+                    data.append(insertdict[col].id)
+                else:
+                    data.append(insertdict[col])
 
-        # add study to investigation if necessary
-        if investigation:
-            sql = ("INSERT INTO qiita.investigation_study (investigation_id, "
-                   "study_id) VALUES (%s, %s)")
-            conn_handler.execute(sql, (investigation.id, study_id))
+            TRN.add(sql, data)
+            study_id = TRN.execute_fetchlast()
 
-        return cls(study_id)
+            # insert efo information into database
+            sql = """INSERT INTO qiita.{0}_experimental_factor
+                        (study_id, efo_id)
+                     VALUES (%s, %s)""".format(cls._table)
+            TRN.add(sql, [[study_id, e] for e in efo], many=True)
+
+            # Add to both QIITA and given portal (if not QIITA)
+            portal_id = convert_to_id(qiita_config.portal, 'portal_type',
+                                      'portal')
+            sql = """INSERT INTO qiita.study_portal (study_id, portal_type_id)
+                     VALUES (%s, %s)"""
+            args = [[study_id, portal_id]]
+            if qiita_config.portal != 'QIITA':
+                qp_id = convert_to_id('QIITA', 'portal_type', 'portal')
+                args.append([study_id, qp_id])
+            TRN.add(sql, args, many=True)
+            TRN.execute()
+
+            # add study to investigation if necessary
+            if investigation:
+                sql = """INSERT INTO qiita.investigation_study
+                            (investigation_id, study_id)
+                         VALUES (%s, %s)"""
+                TRN.add(sql, [investigation.id, study_id])
+
+            TRN.execute()
+
+            return cls(study_id)
 
     @classmethod
     def delete(cls, id_):
@@ -362,52 +408,43 @@ class Study(QiitaObject):
         QiitaDBError
             If the sample_(id_) table exists means a sample template exists
         """
-        cls._check_subclass()
+        with TRN:
+            # checking that the id_ exists
+            cls(id_)
 
-        # checking that the id_ exists
-        cls(id_)
+            if exists_table('sample_%d' % id_):
+                raise QiitaDBError(
+                    'Study "%s" cannot be erased because it has a '
+                    'sample template' % cls(id_).title)
 
-        conn_handler = SQLConnectionHandler()
-        if exists_table('sample_%d' % id_, conn_handler):
-            raise QiitaDBError('Study "%s" cannot be erased because it has a '
-                               'sample template' % cls(id_).title)
+            sql = "DELETE FROM qiita.study_sample_columns WHERE study_id = %s"
+            args = [id_]
+            TRN.add(sql, args)
 
-        queue = "delete_study_%d" % id_
-        conn_handler.create_queue(queue)
+            sql = "DELETE FROM qiita.study_portal WHERE study_id = %s"
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_sample_columns WHERE study_id = %s",
-            (id_, ))
+            sql = """DELETE FROM qiita.study_experimental_factor
+                     WHERE study_id = %s"""
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_experimental_factor WHERE study_id = %s",
-            (id_, ))
+            sql = "DELETE FROM qiita.study_pmid WHERE study_id = %s"
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_pmid WHERE study_id = %s", (id_, ))
+            sql = """DELETE FROM qiita.study_environmental_package
+                     WHERE study_id = %s"""
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_environmental_package WHERE study_id = "
-            "%s", (id_, ))
+            sql = "DELETE FROM qiita.study_users WHERE study_id = %s"
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study_users WHERE study_id = %s", (id_, ))
+            sql = "DELETE FROM qiita.investigation_study WHERE study_id = %s"
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.investigation_study WHERE study_id = "
-            "%s", (id_, ))
+            sql = "DELETE FROM qiita.study WHERE study_id = %s"
+            TRN.add(sql, args)
 
-        conn_handler.add_to_queue(
-            queue,
-            "DELETE FROM qiita.study WHERE study_id = %s", (id_, ))
-
-        conn_handler.execute_queue(queue)
+            TRN.execute()
 
 
 # --- Attributes ---
@@ -420,10 +457,11 @@ class Study(QiitaObject):
         str
             Title of study
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT study_title FROM qiita.{0} WHERE "
-               "study_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = """SELECT study_title FROM qiita.{0}
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @title.setter
     def title(self, title):
@@ -434,10 +472,11 @@ class Study(QiitaObject):
         title : str
             The new study title
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET study_title = %s WHERE "
-               "study_id = %s".format(self._table))
-        return conn_handler.execute(sql, (title, self._id))
+        with TRN:
+            sql = """UPDATE qiita.{0} SET study_title = %s
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [title, self._id])
+            return TRN.execute()
 
     @property
     def info(self):
@@ -448,16 +487,18 @@ class Study(QiitaObject):
         dict
             info of study keyed to column names
         """
-        conn_handler = SQLConnectionHandler()
-        sql = "SELECT * FROM qiita.{0} WHERE study_id = %s".format(self._table)
-        info = dict(conn_handler.execute_fetchone(sql, (self._id, )))
-        # remove non-info items from info
-        for item in self._non_info:
-            info.pop(item)
-        # This is an optional column, but should not be considered part of the
-        # info
-        info.pop('study_id')
-        return info
+        with TRN:
+            sql = "SELECT * FROM qiita.{0} WHERE study_id = %s".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            info = dict(TRN.execute_fetchindex()[0])
+            # remove non-info items from info
+            for item in self._non_info:
+                info.pop(item)
+            # This is an optional column, but should not be considered part
+            # of the info
+            info.pop('study_id')
+            return info
 
     @info.setter
     def info(self, info):
@@ -485,36 +526,37 @@ class Study(QiitaObject):
             raise QiitaDBColumnError("non info keys passed: %s" %
                                      self._non_info.intersection(info))
 
-        conn_handler = SQLConnectionHandler()
+        with TRN:
+            if 'timeseries_type_id' in info:
+                # We only lock if the timeseries type changes
+                self._lock_non_sandbox()
 
-        if 'timeseries_type_id' in info:
-            # We only lock if the timeseries type changes
-            self._lock_non_sandbox(conn_handler)
+            # make sure dictionary only has keys for available columns in db
+            check_table_cols(info, self._table)
 
-        # make sure dictionary only has keys for available columns in db
-        check_table_cols(conn_handler, info, self._table)
+            sql_vals = []
+            data = []
+            # build query with data values in correct order for SQL statement
+            for key, val in viewitems(info):
+                sql_vals.append("{0} = %s".format(key))
+                if isinstance(val, QiitaObject):
+                    data.append(val.id)
+                else:
+                    data.append(val)
+            data.append(self._id)
 
-        sql_vals = []
-        data = []
-        # build query with data values in correct order for SQL statement
-        for key, val in viewitems(info):
-            sql_vals.append("{0} = %s".format(key))
-            if isinstance(val, QiitaObject):
-                data.append(val.id)
-            else:
-                data.append(val)
-        data.append(self._id)
-
-        sql = ("UPDATE qiita.{0} SET {1} WHERE "
-               "study_id = %s".format(self._table, ','.join(sql_vals)))
-        conn_handler.execute(sql, data)
+            sql = "UPDATE qiita.{0} SET {1} WHERE study_id = %s".format(
+                self._table, ','.join(sql_vals))
+            TRN.add(sql, data)
+            TRN.execute()
 
     @property
     def efo(self):
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT efo_id FROM qiita.{0}_experimental_factor WHERE "
-               "study_id = %s".format(self._table))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
+        with TRN:
+            sql = """SELECT efo_id FROM qiita.{0}_experimental_factor
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @efo.setter
     def efo(self, efo_vals):
@@ -532,16 +574,18 @@ class Study(QiitaObject):
         """
         if not efo_vals:
             raise IncompetentQiitaDeveloperError("Need EFO information!")
-        conn_handler = SQLConnectionHandler()
-        self._lock_non_sandbox(conn_handler)
-        # wipe out any EFOs currently attached to study
-        sql = ("DELETE FROM qiita.{0}_experimental_factor WHERE "
-               "study_id = %s".format(self._table))
-        conn_handler.execute(sql, (self._id, ))
-        # insert new EFO information into database
-        sql = ("INSERT INTO qiita.{0}_experimental_factor (study_id, "
-               "efo_id) VALUES (%s, %s)".format(self._table))
-        conn_handler.executemany(sql, [(self._id, efo) for efo in efo_vals])
+        with TRN:
+            self._lock_non_sandbox()
+            # wipe out any EFOs currently attached to study
+            sql = """DELETE FROM qiita.{0}_experimental_factor
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            # insert new EFO information into database
+            sql = """INSERT INTO qiita.{0}_experimental_factor
+                        (study_id, efo_id)
+                     VALUES (%s, %s)""".format(self._table)
+            TRN.add(sql, [[self._id, efo] for efo in efo_vals], many=True)
+            TRN.execute()
 
     @property
     def shared_with(self):
@@ -552,10 +596,11 @@ class Study(QiitaObject):
         list of User ids
             Users the study is shared with
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT email FROM qiita.{0}_users WHERE "
-               "study_id = %s".format(self._table))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+        with TRN:
+            sql = """SELECT email FROM qiita.{0}_users
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @property
     def pmids(self):
@@ -566,10 +611,11 @@ class Study(QiitaObject):
         list of str
             list of all the PMIDs
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT pmid FROM qiita.{0}_pmid WHERE "
-               "study_id = %s".format(self._table))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id, ))]
+        with TRN:
+            sql = "SELECT pmid FROM qiita.{0}_pmid WHERE study_id = %s".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @pmids.setter
     def pmids(self, values):
@@ -589,25 +635,18 @@ class Study(QiitaObject):
         if not isinstance(values, list):
             raise TypeError('pmids should be a list')
 
-        # Get the connection to the database
-        conn_handler = SQLConnectionHandler()
+        with TRN:
+            # Delete the previous pmids associated with the study
+            sql = "DELETE FROM qiita.study_pmid WHERE study_id=%s"
+            TRN.add(sql, [self._id])
 
-        # Create a queue for the operations that we need to do
-        queue = "%d_pmid_setter" % self._id
-        conn_handler.create_queue(queue)
+            # Set the new ones
+            sql = """INSERT INTO qiita.study_pmid (study_id, pmid)
+                     VALUES (%s, %s)"""
+            sql_args = [[self._id, val] for val in values]
+            TRN.add(sql, sql_args, many=True)
 
-        # Delete the previous pmids associated with the study
-        sql = "DELETE FROM qiita.study_pmid WHERE study_id=%s"
-        sql_args = (self._id,)
-        conn_handler.add_to_queue(queue, sql, sql_args)
-
-        # Set the new ones
-        sql = "INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (%s, %s)"
-        sql_args = [(self._id, val) for val in values]
-        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
-
-        # Execute the queue
-        conn_handler.execute_queue(queue)
+            TRN.execute()
 
     @property
     def investigation(self):
@@ -617,11 +656,14 @@ class Study(QiitaObject):
         -------
         Investigation id
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT investigation_id FROM qiita.investigation_study WHERE "
-               "study_id = %s")
-        inv = conn_handler.execute_fetchone(sql, (self._id, ))
-        return inv[0] if inv is not None else inv
+        with TRN:
+            sql = """SELECT investigation_id FROM qiita.investigation_study
+                     WHERE study_id = %s"""
+            TRN.add(sql, [self._id])
+            inv = TRN.execute_fetchindex()
+            # If this study belongs to an investigation it will be in
+            # the first value of the first row [0][0]
+            return inv[0][0] if inv else None
 
     @property
     def sample_template(self):
@@ -641,13 +683,14 @@ class Study(QiitaObject):
         -------
         list of str
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT DISTINCT data_type
-                 FROM qiita.study_prep_template
-                    JOIN qiita.prep_template USING (prep_template_id)
-                    JOIN qiita.data_type USING (data_type_id)
-                 WHERE study_id = %s"""
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+        with TRN:
+            sql = """SELECT DISTINCT data_type
+                     FROM qiita.study_prep_template
+                        JOIN qiita.prep_template USING (prep_template_id)
+                        JOIN qiita.data_type USING (data_type_id)
+                     WHERE study_id = %s"""
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @property
     def owner(self):
@@ -658,11 +701,11 @@ class Study(QiitaObject):
         str
             The email (id) of the user that owns this study
         """
-        conn_handler = SQLConnectionHandler()
-        sql = """select email from qiita.{} where study_id = %s""".format(
-            self._table)
-
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
+        with TRN:
+            sql = """SELECT email FROM qiita.{} WHERE study_id = %s""".format(
+                self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def environmental_packages(self):
@@ -673,12 +716,12 @@ class Study(QiitaObject):
         list of str
             The environmental package names associated with the study
         """
-        conn_handler = SQLConnectionHandler()
-        env_pkgs = conn_handler.execute_fetchall(
-            "SELECT environmental_package_name FROM "
-            "qiita.study_environmental_package WHERE study_id = %s",
-            (self._id,))
-        return [pkg[0] for pkg in env_pkgs]
+        with TRN:
+            sql = """SELECT environmental_package_name
+                     FROM qiita.study_environmental_package
+                     WHERE study_id = %s"""
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     @environmental_packages.setter
     def environmental_packages(self, values):
@@ -696,43 +739,55 @@ class Study(QiitaObject):
         ValueError
             If any environmental packages listed on values is not recognized
         """
-        # Get the connection to the database
-        conn_handler = SQLConnectionHandler()
+        with TRN:
+            # The environmental packages can be changed only if the study is
+            # sandboxed
+            self._lock_non_sandbox()
 
-        # The environmental packages can be changed only if the study is
-        # sandboxed
-        self._lock_non_sandbox(conn_handler)
+            # Check that a list is actually passed
+            if not isinstance(values, list):
+                raise TypeError('Environmental packages should be a list')
 
-        # Check that a list is actually passed
-        if not isinstance(values, list):
-            raise TypeError('Environmental packages should be a list')
+            # Get all the environmental packages
+            env_pkgs = [pkg[0] for pkg in get_environmental_packages()]
 
-        # Get all the environmental packages
-        env_pkgs = [pkg[0] for pkg in get_environmental_packages()]
+            # Check that all the passed values are valid environmental packages
+            missing = set(values).difference(env_pkgs)
+            if missing:
+                raise ValueError('Environmetal package(s) not recognized: %s'
+                                 % ', '.join(missing))
 
-        # Check that all the passed values are valid environmental packages
-        missing = set(values).difference(env_pkgs)
-        if missing:
-            raise ValueError('Environmetal package(s) not recognized: %s'
-                             % ', '.join(missing))
+            # Delete the previous environmental packages associated with
+            # the study
+            sql = """DELETE FROM qiita.study_environmental_package
+                     WHERE study_id=%s"""
+            TRN.add(sql, [self._id])
 
-        # Create a queue for the operations that we need to do
-        queue = "%d_env_pkgs_setter" % self._id
-        conn_handler.create_queue(queue)
+            # Set the new ones
+            sql = """INSERT INTO qiita.study_environmental_package
+                        (study_id, environmental_package_name)
+                     VALUES (%s, %s)"""
+            sql_args = [[self._id, val] for val in values]
+            TRN.add(sql, sql_args, many=True)
 
-        # Delete the previous environmental packages associated with the study
-        sql = "DELETE FROM qiita.study_environmental_package WHERE study_id=%s"
-        sql_args = (self._id,)
-        conn_handler.add_to_queue(queue, sql, sql_args)
+            TRN.execute()
 
-        # Set the new ones
-        sql = ("INSERT INTO qiita.study_environmental_package "
-               "(study_id, environmental_package_name) VALUES (%s, %s)")
-        sql_args = [(self._id, val) for val in values]
-        conn_handler.add_to_queue(queue, sql, sql_args, many=True)
+    @property
+    def _portals(self):
+        """Portals this study is associated with
 
-        # Execute the queue
-        conn_handler.execute_queue(queue)
+        Returns
+        -------
+        list of str
+            Portal names study is associated with
+        """
+        with TRN:
+            sql = """SELECT portal
+                     FROM qiita.portal_type
+                        JOIN qiita.study_portal USING (portal_type_id)
+                     WHERE study_id = %s"""
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchflatten()
 
     # --- methods ---
     def raw_data(self, data_type=None):
@@ -747,18 +802,20 @@ class Study(QiitaObject):
         -------
         list of RawData ids
         """
-        spec_data = ""
-        if data_type:
-            spec_data = " AND data_type_id = %d" % convert_to_id(data_type,
-                                                                 "data_type")
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT raw_data_id
-                 FROM qiita.study_prep_template
-                    JOIN qiita.prep_template USING (prep_template_id)
-                    JOIN qiita.raw_data USING (raw_data_id)
-                 WHERE study_id = %s{0}""".format(spec_data)
+        with TRN:
+            spec_data = ""
+            args = [self._id]
+            if data_type:
+                spec_data = " AND data_type_id = %d"
+                args.append(convert_to_id(data_type, "data_type"))
 
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+            sql = """SELECT raw_data_id
+                     FROM qiita.study_prep_template
+                        JOIN qiita.prep_template USING (prep_template_id)
+                        JOIN qiita.raw_data USING (raw_data_id)
+                     WHERE study_id = %s{0}""".format(spec_data)
+            TRN.add(sql, args)
+            return TRN.execute_fetchflatten()
 
     def prep_templates(self, data_type=None):
         """Return list of prep template ids
@@ -773,17 +830,19 @@ class Study(QiitaObject):
         -------
         list of PrepTemplate ids
         """
-        spec_data = ""
-        if data_type:
-            spec_data = " AND data_type_id = %s" % convert_to_id(data_type,
-                                                                 "data_type")
+        with TRN:
+            spec_data = ""
+            args = [self._id]
+            if data_type:
+                spec_data = " AND data_type_id = %s"
+                args.append(convert_to_id(data_type, "data_type"))
 
-        conn_handler = SQLConnectionHandler()
-        sql = """SELECT prep_template_id
-                 FROM qiita.study_prep_template
-                    JOIN qiita.prep_template USING (prep_template_id)
-                 WHERE study_id = %s{0}""".format(spec_data)
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+            sql = """SELECT prep_template_id
+                     FROM qiita.study_prep_template
+                        JOIN qiita.prep_template USING (prep_template_id)
+                     WHERE study_id = %s{0}""".format(spec_data)
+            TRN.add(sql, args)
+            return TRN.execute_fetchflatten()
 
     def preprocessed_data(self, data_type=None):
         """ Returns list of data ids for preprocessed data info
@@ -797,14 +856,18 @@ class Study(QiitaObject):
         -------
         list of PreprocessedData ids
         """
-        spec_data = ""
-        if data_type:
-            spec_data = " AND data_type_id = %d" % convert_to_id(data_type,
-                                                                 "data_type")
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT preprocessed_data_id FROM qiita.study_preprocessed_data"
-               " WHERE study_id = %s{0}".format(spec_data))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+        with TRN:
+            spec_data = ""
+            args = [self._id]
+            if data_type:
+                spec_data = " AND data_type_id = %d"
+                args.append(convert_to_id(data_type, "data_type"))
+
+            sql = """SELECT preprocessed_data_id
+                     FROM qiita.study_preprocessed_data
+                     WHERE study_id = %s{0}""".format(spec_data)
+            TRN.add(sql, args)
+            return TRN.execute_fetchflatten()
 
     def processed_data(self, data_type=None):
         """ Returns list of data ids for processed data info
@@ -818,16 +881,20 @@ class Study(QiitaObject):
         -------
         list of ProcessedData ids
         """
-        spec_data = ""
-        if data_type:
-            spec_data = " AND p.data_type_id = %d" % convert_to_id(data_type,
-                                                                   "data_type")
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT p.processed_data_id FROM qiita.processed_data p JOIN "
-               "qiita.study_processed_data sp ON p.processed_data_id = "
-               "sp.processed_data_id WHERE "
-               "sp.study_id = %s{0}".format(spec_data))
-        return [x[0] for x in conn_handler.execute_fetchall(sql, (self._id,))]
+        with TRN:
+            spec_data = ""
+            args = [self._id]
+            if data_type:
+                spec_data = " AND p.data_type_id = %d"
+                args.append(convert_to_id(data_type, "data_type"))
+
+            sql = """SELECT p.processed_data_id
+                     FROM qiita.processed_data p
+                        JOIN qiita.study_processed_data sp
+                            ON p.processed_data_id = sp.processed_data_id
+                     WHERE sp.study_id = %s{0}""".format(spec_data)
+            TRN.add(sql, args)
+            return TRN.execute_fetchflatten()
 
     def add_pmid(self, pmid):
         """Adds PMID to study
@@ -837,10 +904,11 @@ class Study(QiitaObject):
         pmid : str
             pmid to associate with study
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("INSERT INTO qiita.{0}_pmid (study_id, pmid) "
-               "VALUES (%s, %s)".format(self._table))
-        conn_handler.execute(sql, (self._id, pmid))
+        with TRN:
+            sql = """INSERT INTO qiita.{0}_pmid (study_id, pmid)
+                     VALUES (%s, %s)""".format(self._table)
+            TRN.add(sql, [self._id, pmid])
+            TRN.execute()
 
     def has_access(self, user, no_public=False):
         """Returns whether the given user has access to the study
@@ -858,15 +926,16 @@ class Study(QiitaObject):
         bool
             Whether user has access to study or not
         """
-        # if admin or superuser, just return true
-        if user.level in {'superuser', 'admin'}:
-            return True
+        with TRN:
+            # if admin or superuser, just return true
+            if user.level in {'superuser', 'admin'}:
+                return True
 
-        if no_public:
-            return self._id in user.user_studies | user.shared_studies
-        else:
-            return self._id in user.user_studies | user.shared_studies \
-                | self.get_by_status('public')
+            if no_public:
+                return self._id in user.user_studies | user.shared_studies
+            else:
+                return self._id in user.user_studies | user.shared_studies \
+                    | self.get_by_status('public')
 
     def share(self, user):
         """Share the study with another user
@@ -876,19 +945,18 @@ class Study(QiitaObject):
         user: User object
             The user to share the study with
         """
-        conn_handler = SQLConnectionHandler()
+        with TRN:
+            # Make sure the study is not already shared with the given user
+            if user.id in self.shared_with:
+                return
+            # Do not allow the study to be shared with the owner
+            if user.id == self.owner:
+                return
 
-        # Make sure the study is not already shared with the given user
-        if user.id in self.shared_with:
-            return
-        # Do not allow the study to be shared with the owner
-        if user.id == self.owner:
-            return
-
-        sql = ("INSERT INTO qiita.study_users (study_id, email) VALUES "
-               "(%s, %s)")
-
-        conn_handler.execute(sql, (self._id, user.id))
+            sql = """INSERT INTO qiita.study_users (study_id, email)
+                     VALUES (%s, %s)"""
+            TRN.add(sql, [self._id, user.id])
+            TRN.execute()
 
     def unshare(self, user):
         """Unshare the study with another user
@@ -898,12 +966,11 @@ class Study(QiitaObject):
         user: User object
             The user to unshare the study with
         """
-        conn_handler = SQLConnectionHandler()
-
-        sql = ("DELETE FROM qiita.study_users WHERE study_id = %s AND "
-               "email = %s")
-
-        conn_handler.execute(sql, (self._id, user.id))
+        with TRN:
+            sql = """DELETE FROM qiita.study_users
+                     WHERE study_id = %s AND email = %s"""
+            TRN.add(sql, [self._id, user.id])
+            TRN.execute()
 
 
 class StudyPerson(QiitaObject):
@@ -934,13 +1001,13 @@ class StudyPerson(QiitaObject):
             Yields a `StudyPerson` object for each person in the database,
             in order of ascending study_person_id
         """
-        conn = SQLConnectionHandler()
-        sql = "select study_person_id from qiita.{} order by study_person_id"
-        results = conn.execute_fetchall(sql.format(cls._table))
+        with TRN:
+            sql = """SELECT study_person_id FROM qiita.{}
+                     ORDER BY study_person_id""".format(cls._table)
+            TRN.add(sql)
 
-        for result in results:
-            ID = result[0]
-            yield StudyPerson(ID)
+            for id_ in TRN.execute_fetchflatten():
+                yield StudyPerson(id_)
 
     @classmethod
     def exists(cls, name, affiliation):
@@ -958,10 +1025,13 @@ class StudyPerson(QiitaObject):
         bool
             True if person exists else false
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT exists(SELECT * FROM qiita.{0} WHERE "
-               "name = %s AND affiliation = %s)".format(cls._table))
-        return conn_handler.execute_fetchone(sql, (name, affiliation))[0]
+        with TRN:
+            sql = """SELECT EXISTS(
+                        SELECT * FROM qiita.{0}
+                        WHERE name = %s
+                            AND affiliation = %s)""".format(cls._table)
+            TRN.add(sql, [name, affiliation])
+            return TRN.execute_fetchlast()
 
     @classmethod
     def create(cls, name, email, affiliation, address=None, phone=None):
@@ -985,23 +1055,22 @@ class StudyPerson(QiitaObject):
         New StudyPerson object
 
         """
-        if cls.exists(name, affiliation):
-            sql = ("SELECT study_person_id from qiita.{0} WHERE name = %s and"
-                   " affiliation = %s".format(cls._table))
-            conn_handler = SQLConnectionHandler()
-            spid = conn_handler.execute_fetchone(sql, (name, affiliation))
+        with TRN:
+            if cls.exists(name, affiliation):
+                sql = """SELECT study_person_id
+                         FROM qiita.{0}
+                         WHERE name = %s
+                            AND affiliation = %s""".format(cls._table)
+                args = [name, affiliation]
+            else:
+                sql = """INSERT INTO qiita.{0} (name, email, affiliation,
+                                                address, phone)
+                         VALUES (%s, %s, %s, %s, %s)
+                         RETURNING study_person_id""".format(cls._table)
+                args = [name, email, affiliation, address, phone]
 
-        # Doesn't exist so insert new person
-        else:
-            sql = ("INSERT INTO qiita.{0} (name, email, affiliation, address, "
-                   "phone) VALUES"
-                   " (%s, %s, %s, %s, %s) RETURNING "
-                   "study_person_id".format(cls._table))
-            conn_handler = SQLConnectionHandler()
-            spid = conn_handler.execute_fetchone(sql, (name, email,
-                                                       affiliation, address,
-                                                       phone))
-        return cls(spid[0])
+            TRN.add(sql, args)
+            return cls(TRN.execute_fetchlast())
 
     # Properties
     @property
@@ -1013,10 +1082,11 @@ class StudyPerson(QiitaObject):
         str
             Name of person
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT name FROM qiita.{0} WHERE "
-               "study_person_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = """SELECT name FROM qiita.{0}
+                     WHERE study_person_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def email(self):
@@ -1027,10 +1097,11 @@ class StudyPerson(QiitaObject):
         str
             Email of person
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT email FROM qiita.{0} WHERE "
-               "study_person_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = """SELECT email FROM qiita.{0}
+                     WHERE study_person_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def affiliation(self):
@@ -1041,10 +1112,11 @@ class StudyPerson(QiitaObject):
         str
             Affiliation of person
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT affiliation FROM qiita.{0} WHERE "
-               "study_person_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, [self._id])[0]
+        with TRN:
+            sql = """SELECT affiliation FROM qiita.{0}
+                     WHERE study_person_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @property
     def address(self):
@@ -1055,10 +1127,11 @@ class StudyPerson(QiitaObject):
         str or None
             address or None if no address in database
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT address FROM qiita.{0} WHERE study_person_id ="
-               " %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = """SELECT address FROM qiita.{0}
+                     WHERE study_person_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @address.setter
     def address(self, value):
@@ -1069,10 +1142,11 @@ class StudyPerson(QiitaObject):
         value : str
             New address for person
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET address = %s WHERE "
-               "study_person_id = %s".format(self._table))
-        conn_handler.execute(sql, (value, self._id))
+        with TRN:
+            sql = """UPDATE qiita.{0} SET address = %s
+                     WHERE study_person_id = %s""".format(self._table)
+            TRN.add(sql, [value, self._id])
+            TRN.execute()
 
     @property
     def phone(self):
@@ -1083,10 +1157,11 @@ class StudyPerson(QiitaObject):
          str or None
             phone or None if no address in database
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("SELECT phone FROM qiita.{0} WHERE "
-               "study_person_id = %s".format(self._table))
-        return conn_handler.execute_fetchone(sql, (self._id, ))[0]
+        with TRN:
+            sql = """SELECT phone FROM qiita.{0}
+                     WHERE study_person_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
 
     @phone.setter
     def phone(self, value):
@@ -1097,7 +1172,8 @@ class StudyPerson(QiitaObject):
         value : str
             New phone number for person
         """
-        conn_handler = SQLConnectionHandler()
-        sql = ("UPDATE qiita.{0} SET phone = %s WHERE "
-               "study_person_id = %s".format(self._table))
-        conn_handler.execute(sql, (value, self._id))
+        with TRN:
+            sql = """UPDATE qiita.{0} SET phone = %s
+                     WHERE study_person_id = %s""".format(self._table)
+            TRN.add(sql, [value, self._id])
+            TRN.execute()

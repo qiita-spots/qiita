@@ -14,6 +14,7 @@ from qiita_db.study import Study
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_core.util import execute_as_transaction
 
 
 class MetadataSummaryHandler(BaseHandler):
@@ -48,6 +49,7 @@ class MetadataSummaryHandler(BaseHandler):
         return template
 
     @authenticated
+    @execute_as_transaction
     def get(self, arguments):
         study_id = int(self.get_argument('study_id'))
 

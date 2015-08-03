@@ -121,7 +121,6 @@ class TestHelpers(TestHandlerBase):
     def test_build_study_info_new_study(self):
         info = {
             'timeseries_type_id': 1,
-            'portal_type_id': 1,
             'lab_person_id': None,
             'principal_investigator_id': 3,
             'metadata_complete': False,
@@ -454,7 +453,7 @@ class TestDelete(TestHandlerBase):
 
         # checking that the action was sent
         self.assertIn("Sample template can not be erased because there are "
-                      "raw datas", response.body)
+                      "prep templates", response.body)
 
     def test_delete_raw_data(self):
         response = self.post('/study/description/1',
@@ -465,7 +464,7 @@ class TestDelete(TestHandlerBase):
 
         # checking that the action was sent
         self.assertIn("Couldn't remove raw data 1: Raw data (1) can't be "
-                      "remove because it has linked files", response.body)
+                      "removed because it has linked files", response.body)
 
     def test_delete_prep_template(self):
         response = self.post('/study/description/1',

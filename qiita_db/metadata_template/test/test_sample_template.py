@@ -22,10 +22,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
-                                 QiitaDBExecutionError,
                                  QiitaDBColumnError, QiitaDBError,
                                  QiitaDBWarning)
-from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import exists_table, get_count
@@ -54,45 +52,6 @@ class BaseTestSample(TestCase):
 
 
 class TestSampleReadOnly(BaseTestSample):
-    def test_add_setitem_queries_error(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
-
-        with self.assertRaises(QiitaDBColumnError):
-            self.tester.add_setitem_queries(
-                'COL_DOES_NOT_EXIST', 0.30, conn_handler, queue)
-
-    def test_add_setitem_queries_required(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
-
-        self.tester.add_setitem_queries(
-            'physical_specimen_remaining', True, conn_handler, queue)
-
-        obs = conn_handler.queues[queue]
-        sql = """UPDATE qiita.sample_1
-                 SET physical_specimen_remaining=%s
-                 WHERE sample_id=%s"""
-        exp = [(sql, (True, '1.SKB8.640193'))]
-        self.assertEqual(obs, exp)
-
-    def test_add_setitem_queries_dynamic(self):
-        conn_handler = SQLConnectionHandler()
-        queue = "test_queue"
-        conn_handler.create_queue(queue)
-
-        self.tester.add_setitem_queries(
-            'tot_nitro', '1234.5', conn_handler, queue)
-
-        obs = conn_handler.queues[queue]
-        sql = """UPDATE qiita.sample_1
-                 SET tot_nitro=%s
-                 WHERE sample_id=%s"""
-        exp = [(sql, ('1234.5', '1.SKB8.640193'))]
-        self.assertEqual(obs, exp)
-
     def test_init_unknown_error(self):
         """Init raises an error if the sample id is not found in the template
         """
@@ -139,8 +98,7 @@ class TestSampleReadOnly(BaseTestSample):
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
-        conn_handler = SQLConnectionHandler()
-        obs = self.tester._get_categories(conn_handler)
+        obs = self.tester._get_categories()
         self.assertEqual(obs, self.exp_categories)
 
     def test_len(self):
@@ -237,6 +195,15 @@ class TestSampleReadOnly(BaseTestSample):
     def test_get_none(self):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Category') is None)
+
+    def test_columns_restrictions(self):
+        """that it returns SAMPLE_TEMPLATE_COLUMNS"""
+        self.assertEqual(self.sample_template.columns_restrictions,
+                         SAMPLE_TEMPLATE_COLUMNS)
+
+    def test_can_be_updated(self):
+        """test if the template can be updated"""
+        self.assertTrue(self.sample_template.can_be_updated)
 
 
 @qiita_test_checker()
@@ -548,8 +515,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
 
     def test_get_sample_ids(self):
         """get_sample_ids returns the correct set of sample ids"""
-        conn_handler = SQLConnectionHandler()
-        obs = self.tester._get_sample_ids(conn_handler)
+        obs = self.tester._get_sample_ids()
         self.assertEqual(obs, self.exp_sample_ids)
 
     def test_len(self):
@@ -684,118 +650,6 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         """get returns none if the sample id is not present"""
         self.assertTrue(self.tester.get('Not_a_Sample') is None)
 
-    def test_add_common_creation_steps_to_queue(self):
-        """add_common_creation_steps_to_queue adds the correct sql statements
-        """
-        metadata_dict = {
-            '2.Sample1': {'physical_specimen_location': 'location1',
-                          'physical_specimen_remaining': True,
-                          'dna_extracted': True,
-                          'sample_type': 'type1',
-                          'collection_timestamp':
-                          datetime(2014, 5, 29, 12, 24, 51),
-                          'host_subject_id': 'NotIdentified',
-                          'description': 'Test Sample 1',
-                          'str_column': 'Value for sample 1',
-                          'int_column': 1,
-                          'latitude': 42.42,
-                          'longitude': 41.41},
-            '2.Sample2': {'physical_specimen_location': 'location1',
-                          'physical_specimen_remaining': True,
-                          'dna_extracted': True,
-                          'sample_type': 'type1',
-                          'int_column': 2,
-                          'collection_timestamp':
-                          datetime(2014, 5, 29, 12, 24, 51),
-                          'host_subject_id': 'NotIdentified',
-                          'description': 'Test Sample 2',
-                          'str_column': 'Value for sample 2',
-                          'latitude': 4.2,
-                          'longitude': 1.1},
-            '2.Sample3': {'physical_specimen_location': 'location1',
-                          'physical_specimen_remaining': True,
-                          'dna_extracted': True,
-                          'sample_type': 'type1',
-                          'collection_timestamp':
-                          datetime(2014, 5, 29, 12, 24, 51),
-                          'host_subject_id': 'NotIdentified',
-                          'description': 'Test Sample 3',
-                          'str_column': 'Value for sample 3',
-                          'int_column': 3,
-                          'latitude': 4.8,
-                          'longitude': 4.41},
-            }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-
-        conn_handler = SQLConnectionHandler()
-        queue_name = "TEST_QUEUE"
-        conn_handler.create_queue(queue_name)
-        SampleTemplate._add_common_creation_steps_to_queue(
-            metadata, 2, conn_handler, queue_name)
-
-        sql_insert_required = (
-            'INSERT INTO qiita.study_sample (study_id, sample_id) '
-            'VALUES (%s, %s)')
-
-        sql_insert_sample_cols = (
-            'INSERT INTO qiita.study_sample_columns '
-            '(study_id, column_name, column_type) '
-            'VALUES (%s, %s, %s)')
-
-        sql_crate_table = (
-            'CREATE TABLE qiita.sample_2 (sample_id varchar NOT NULL, '
-            'collection_timestamp timestamp, description varchar, '
-            'dna_extracted bool, host_subject_id varchar, int_column integer, '
-            'latitude float8, longitude float8, '
-            'physical_specimen_location varchar, '
-            'physical_specimen_remaining bool, sample_type varchar, '
-            'str_column varchar, '
-            'CONSTRAINT fk_sample_2 FOREIGN KEY (sample_id) REFERENCES '
-            'qiita.study_sample (sample_id) ON UPDATE CASCADE)')
-
-        sql_insert_dynamic = (
-            'INSERT INTO qiita.sample_2 '
-            '(sample_id, collection_timestamp, description, dna_extracted, '
-            'host_subject_id, int_column, latitude, longitude, '
-            'physical_specimen_location, physical_specimen_remaining, '
-            'sample_type, str_column) '
-            'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)')
-        sql_insert_dynamic_params_1 = (
-            '2.Sample1', datetime(2014, 5, 29, 12, 24, 51), 'Test Sample 1',
-            True, 'NotIdentified', 1, 42.42, 41.41, 'location1', True, 'type1',
-            'Value for sample 1')
-        sql_insert_dynamic_params_2 = (
-            '2.Sample2', datetime(2014, 5, 29, 12, 24, 51), 'Test Sample 2',
-            True, 'NotIdentified', 2, 4.2, 1.1, 'location1', True, 'type1',
-            'Value for sample 2')
-        sql_insert_dynamic_params_3 = (
-            '2.Sample3', datetime(2014, 5, 29, 12, 24, 51), 'Test Sample 3',
-            True, 'NotIdentified', 3, 4.8, 4.41, 'location1', True, 'type1',
-            'Value for sample 3')
-
-        exp = [
-            (sql_insert_required, (2, '2.Sample1')),
-            (sql_insert_required, (2, '2.Sample2')),
-            (sql_insert_required, (2, '2.Sample3')),
-            (sql_insert_sample_cols, (2, 'collection_timestamp', 'timestamp')),
-            (sql_insert_sample_cols, (2, 'description', 'varchar')),
-            (sql_insert_sample_cols, (2, 'dna_extracted', 'bool')),
-            (sql_insert_sample_cols, (2, 'host_subject_id', 'varchar')),
-            (sql_insert_sample_cols, (2, 'int_column', 'integer')),
-            (sql_insert_sample_cols, (2, 'latitude', 'float8')),
-            (sql_insert_sample_cols, (2, 'longitude', 'float8')),
-            (sql_insert_sample_cols,
-                (2, 'physical_specimen_location', 'varchar')),
-            (sql_insert_sample_cols,
-                (2, 'physical_specimen_remaining', 'bool')),
-            (sql_insert_sample_cols, (2, 'sample_type', 'varchar')),
-            (sql_insert_sample_cols, (2, 'str_column', 'varchar')),
-            (sql_crate_table, None),
-            (sql_insert_dynamic, sql_insert_dynamic_params_1),
-            (sql_insert_dynamic, sql_insert_dynamic_params_2),
-            (sql_insert_dynamic, sql_insert_dynamic_params_3)]
-        self.assertEqual(conn_handler.queues[queue_name], exp)
-
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
         """
@@ -913,7 +767,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
@@ -963,7 +816,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                         'scientific_name': 'homo sapiens'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(ValueError):
             SampleTemplate.create(metadata, self.new_study)
 
         sql = """SELECT EXISTS(
@@ -980,7 +833,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             self.conn_handler.execute_fetchone(sql, (self.new_study.id,))[0])
 
         self.assertFalse(
-            exists_table("sample_%d" % self.new_study.id, self.conn_handler))
+            exists_table("sample_%d" % self.new_study.id))
 
     def test_create(self):
         """Creates a new SampleTemplate"""
@@ -1021,7 +874,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("sample_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("sample_%s" % new_id))
 
         # The new table hosts the correct values
         sql = "SELECT * FROM qiita.sample_{0}".format(new_id)
@@ -1110,7 +963,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("sample_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("sample_%s" % new_id))
 
         # The new table hosts the correct values
         sql = "SELECT * FROM qiita.sample_{0}".format(new_id)
@@ -1199,7 +1052,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("sample_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("sample_%s" % new_id))
 
         # The new table hosts the correct values
         sql = "SELECT * FROM qiita.sample_{0}".format(new_id)
@@ -1289,7 +1142,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, exp)
 
         # The new table exists
-        self.assertTrue(exists_table("sample_%s" % new_id, self.conn_handler))
+        self.assertTrue(exists_table("sample_%s" % new_id))
 
         # The new table hosts the correct values
         sql = "SELECT * FROM qiita.sample_{0}".format(new_id)
@@ -1356,7 +1209,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         exp = []
         self.assertEqual(obs, exp)
 
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(ValueError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.sample_%s" % st_id)
 

@@ -1,47 +1,70 @@
 {% extends sitebase.html %}
-{%block content %}
-<table class="table">
-  <tr>
-    <th>Analysis Name</th>
-    <th>Analysis Description</th>
-    <th>Status</th>
-    <th>Timestamp</th>
-  </tr>
-  {% for analysis in analyses %}
-    {% set status = analysis.status %}
-    {% if status == "in_construction"%}
-      <tr>
-        <td>
-          <a href="/analysis/{{analysis.step}}?aid={{analysis.id}}">{{analysis.name}}</a>
-    {% elif status == "running" %}
-      <tr class="active">
-        <td>
-          <a href="/analysis/wait/{{analysis.id}}">{{analysis.name}}</a>
-    {% elif status == "completed" %}
-      <tr class="success">
-        <td>
-          <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
-    {% elif status == "error" %}
-      <tr class="danger">
-        <td>
-          <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
-    {% else %}
-      <tr class="active">
-        <td>
-          {{analysis.name}}
+
+{% block head %}
+<script type="text/javascript">
+  $(document).ready(function(){
+    {% if analyses %}
+      $('#no-analyses').hide()
     {% end %}
-      </td>
-      <td>
-       {{analysis.description}}
-     </td>
-      <td>
-       {{status}}
-     </td>
-      <td>
-       {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
-      </td>
+  });
+</script>
+{% end %}
+
+{%block content %}
+
+<div id='no-analyses' class='jumbotron'>
+  <h1>No Analyses available</h1>
+  <h3><a href="/study/list/">Create an analysis</a></h3>
+</div>
+
+{% if analyses %}
+  <table class="table">
+    <tr>
+      <th>Analysis Name</th>
+      <th>Analysis Description</th>
+      <th>Status</th>
+      <th>Timestamp</th>
+      <th>Delete?</th>
     </tr>
-  {% end %}
-</table>
+    {% for analysis in analyses %}
+      {% set status = analysis.status %}
+      {% if status == "in_construction"%}
+        <tr>
+          <td>
+            <a href="/analysis/{{analysis.step}}?aid={{analysis.id}}">{{analysis.name}}</a>
+      {% elif status == "running" %}
+        <tr class="active">
+          <td>
+            <a href="/analysis/wait/{{analysis.id}}">{{analysis.name}}</a>
+      {% elif status == "completed" %}
+        <tr class="success">
+          <td>
+            <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
+      {% elif status == "error" %}
+        <tr class="danger">
+          <td>
+            <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
+      {% else %}
+        <tr class="active">
+          <td>
+            {{analysis.name}}
+      {% end %}
+        </td>
+        <td>
+         {{analysis.description}}
+       </td>
+        <td>
+         {{status}}
+       </td>
+        <td>
+         {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
+        </td>
+        <td>
+         <a class="btn btn-danger glyphicon glyphicon-trash {% if status == 'running' %} disabled {% end %}" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>
+        </td>
+      </tr>
+    {% end %}
+  </table>
+{% end %}
 
 {% end %}

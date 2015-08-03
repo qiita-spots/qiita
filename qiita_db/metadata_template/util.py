@@ -25,6 +25,31 @@ else:
     from string import letters, digits
 
 
+def type_lookup(dtype):
+    """Lookup function to transform from python type to SQL type
+
+    Parameters
+    ----------
+    dtype : object
+        The python type
+
+    Returns
+    -------
+    str
+        The SQL type
+    """
+    if dtype in [np.int8, np.int16, np.int32, np.int64]:
+        return 'integer'
+    elif dtype in [np.float16, np.float32, np.float64]:
+        return 'float8'
+    elif np.issubdtype(dtype, np.datetime64):
+        return 'timestamp'
+    elif dtype == np.bool:
+        return 'bool'
+    else:
+        return 'varchar'
+
+
 def get_datatypes(metadata_map):
     r"""Returns the datatype of each metadata_map column
 
@@ -38,19 +63,7 @@ def get_datatypes(metadata_map):
     list of str
         The SQL datatypes for each column, in column order
     """
-    datatypes = []
-    for dtype in metadata_map.dtypes:
-        if dtype in [np.int8, np.int16, np.int32, np.int64]:
-            datatypes.append('integer')
-        elif dtype in [np.float16, np.float32, np.float64]:
-            datatypes.append('float8')
-        elif np.issubdtype(dtype, np.datetime64):
-            datatypes.append('timestamp')
-        elif dtype == np.bool:
-            datatypes.append('bool')
-        else:
-            datatypes.append('varchar')
-    return datatypes
+    return [type_lookup(dtype) for dtype in metadata_map.dtypes]
 
 
 def as_python_types(metadata_map, headers):

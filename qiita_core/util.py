@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 from smtplib import SMTP, SMTP_SSL, SMTPException
 from future import standard_library
+from functools import wraps
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -83,3 +84,13 @@ def qiita_test_checker():
 
         return DecoratedClass
     return class_modifier
+
+
+def execute_as_transaction(func):
+    """Decorator to make a method execute inside a transaction"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        from qiita_db.sql_connection import TRN
+        with TRN:
+            return func(*args, **kwargs)
+    return wrapper

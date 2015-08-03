@@ -6,7 +6,6 @@
 {%end%}
 
 {%block content%}
-{% from os.path import basename %}
 {% from future.utils import viewitems %}
 
 
@@ -16,7 +15,7 @@
         <td><h1>&nbsp;Analysis: <u>{{aname}}</u></h1></td>
         <td width="20px"></td>
         <td>
-          <h1><a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis();"></a></h1>
+          <h1><a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{aname}}', {{analysis_id}});"></a></h1>
         </td>
       </tr>
     </table>
@@ -69,8 +68,8 @@
                 {% if len(results) == 0 %}
                   <h3 style="color:red">ERROR</h3>
                 {% end %}
-                {%for result in results%}
-                  <a href='{{"/results/%s" % result}}' target="resframe">{{basename(result)}}</a><br />
+                {%for result, result_name in results%}
+                  <a href='{{"/results/%s" % result}}' target="resframe">{{result_name}}</a><br />
                 {% end %}
               </div>
             {% end %}
@@ -84,26 +83,4 @@
   </div>
 </div>
 
-
-<script>
-
-function delete_analysis() {
-  if (confirm('Are you sure you want to delete analysis: {{aname}}?')) {
-    var form = $("<form>")
-    .attr("action", window.location.href)
-    .attr("method", "post")
-    .append($("<input>")
-    .attr("type", "hidden")
-    .attr("name", "analysis_id")
-    .attr("value", {{analysis_id}}))
-    .append($("<input>")
-    .attr("type", "hidden")
-    .attr("name", "action")
-    .attr("value", "delete_analysis"));
-    $("body").append(form);
-    form.submit();
-  }
-}
-
-</script>
 {%end%}

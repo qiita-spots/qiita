@@ -4,6 +4,7 @@ from datetime import datetime
 from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
 from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
@@ -12,7 +13,7 @@ from qiita_db.user import User
 from qiita_db.util import convert_to_id
 from qiita_db.exceptions import (
     QiitaDBColumnError, QiitaDBStatusError, QiitaDBError,
-    QiitaDBUnknownIDError)
+    QiitaDBUnknownIDError, QiitaDBDuplicateError)
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -45,12 +46,17 @@ class TestStudyPerson(TestCase):
             ('empDude', 'emp_dude@foo.bar', 'broad', None, '444-222-3333'),
             ('PIDude', 'PI_dude@foo.bar', 'Wash U', '123 PI street', None)]
         for i, person in enumerate(StudyPerson.iter()):
-            self.assertTrue(person.id == i+1)
-            self.assertTrue(person.name == expected[i][0])
-            self.assertTrue(person.email == expected[i][1])
-            self.assertTrue(person.affiliation == expected[i][2])
-            self.assertTrue(person.address == expected[i][3])
-            self.assertTrue(person.phone == expected[i][4])
+            self.assertEqual(person.id, i+1)
+            self.assertEqual(person.name, expected[i][0])
+            self.assertEqual(person.email, expected[i][1])
+            self.assertEqual(person.affiliation, expected[i][2])
+            self.assertEqual(person.address, expected[i][3])
+            self.assertEqual(person.phone, expected[i][4])
+
+    def test_exists(self):
+        self.assertTrue(StudyPerson.exists('LabDude', 'knight lab'))
+        self.assertFalse(StudyPerson.exists('AnotherDude', 'knight lab'))
+        self.assertFalse(StudyPerson.exists('LabDude', 'Another lab'))
 
     def test_create_studyperson_already_exists(self):
         obs = StudyPerson.create('LabDude', 'lab_dude@foo.bar', 'knight lab')
@@ -105,6 +111,7 @@ class TestStudyPerson(TestCase):
 class TestStudy(TestCase):
     def setUp(self):
         self.study = Study(1)
+        self.portal = qiita_config.portal
 
         self.info = {
             "timeseries_type_id": 1,
@@ -112,7 +119,6 @@ class TestStudy(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
@@ -129,7 +135,6 @@ class TestStudy(TestCase):
             "mixs_compliant": True,
             "number_samples_collected": 25,
             "number_samples_promised": 28,
-            "portal_type_id": 3,
             "study_alias": "FCM",
             "study_description": "Microbiome of people who eat nothing but "
                                  "fried chicken",
@@ -164,12 +169,14 @@ class TestStudy(TestCase):
                 "lifecycle.",
             'spatial_series': False,
             'study_description': 'Analysis of the Cannabis Plant Microbiome',
-            'portal_type_id': 2,
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': '2014-05-19 16:11',
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person_id': StudyPerson(1),
             'number_samples_collected': 27}
+
+    def tearDown(self):
+        qiita_config.portal = self.portal
 
     def _change_processed_data_status(self, new_status):
         # Change the status of the studies by changing the status of their
@@ -181,13 +188,13 @@ class TestStudy(TestCase):
 
     def test_get_info(self):
         # Test get all info for single study
+        qiita_config.portal = 'QIITA'
         obs = Study.get_info([1])
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
         exp = {
             'mixs_compliant': True, 'metadata_complete': True,
             'reprocess': False, 'timeseries_type': 'None',
-            'portal_description': 'EMP portal',
             'number_samples_promised': 27, 'emp_person_id': 2,
             'funding': None, 'vamps_id': None,
             'first_contact': datetime(2014, 5, 19, 16, 10),
@@ -204,8 +211,6 @@ class TestStudy(TestCase):
             'analyze the soils and rhizospheres from the same location at '
             'different time points in the plant lifecycle.',
             'study_description': 'Analysis of the Cannabis Plant Microbiome',
-            'portal': 'EMP',
-            'portal_type_id': 2,
             'intervention_type': 'None', 'email': 'test@foo.bar',
             'study_id': 1,
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
@@ -216,14 +221,13 @@ class TestStudy(TestCase):
 
         # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
-                    'portal_description', 'pmid', 'study_title']
+                    'pmid', 'study_title']
         obs = Study.get_info([1], exp_keys)
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
         exp = {
             'metadata_complete': True, 'reprocess': False,
             'timeseries_type': 'None',
-            'portal_description': 'EMP portal',
             'pmid': ['123456', '7891011'],
             'study_title': 'Identification of the Microbiomes for Cannabis '
             'Soils'}
@@ -232,7 +236,6 @@ class TestStudy(TestCase):
         # Test get specific keys for all studies
         info = {
             'timeseries_type_id': 1,
-            'portal_type_id': 1,
             'lab_person_id': None,
             'principal_investigator_id': 3,
             'metadata_complete': False,
@@ -244,15 +247,25 @@ class TestStudy(TestCase):
 
         Study.create(user, 'test_study_1', efo=[1], info=info)
         obs = Study.get_info(info_cols=exp_keys)
-        exp = [[True, ['123456', '7891011'], 'EMP portal', False,
+        exp = [[True, ['123456', '7891011'], False,
                 'Identification of the Microbiomes for Cannabis Soils',
                 'None'],
-               [False, None, 'QIIME portal', False, 'test_study_1', 'None']]
+               [False, None, False, 'test_study_1', 'None']]
         self.assertEqual(obs, exp)
+
+        # test portal restriction working
+        qiita_config.portal = 'EMP'
+        with self.assertRaises(QiitaDBError):
+            Study.get_info([1])
 
     def test_has_access_public(self):
         self._change_processed_data_status('public')
+
+        qiita_config.portal = 'QIITA'
         self.assertTrue(self.study.has_access(User("demo@microbio.me")))
+        qiita_config.portal = 'EMP'
+        with self.assertRaises(QiitaDBError):
+            Study(1).has_access(User("demo@microbio.me"))
 
     def test_has_access_no_public(self):
         self._change_processed_data_status('public')
@@ -319,6 +332,13 @@ class TestStudy(TestCase):
                                      'Cannabis Soils'))
         self.assertFalse(Study.exists('Not Cannabis Soils'))
 
+    def test_create_duplicate(self):
+        with self.assertRaises(QiitaDBDuplicateError):
+            Study.create(
+                User('test@foo.bar'),
+                'Identification of the Microbiomes for Cannabis Soils',
+                [1], self.info)
+
     def test_create_study_min_data(self):
         """Insert a study into the database"""
         before = datetime.now()
@@ -337,7 +357,7 @@ class TestStudy(TestCase):
                'email': 'test@foo.bar', 'spatial_series': None,
                'study_description': 'Microbiome of people who eat nothing but'
                                     ' fried chicken',
-               'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 2,
+               'study_alias': 'FCM', 'study_id': 2,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
@@ -359,6 +379,16 @@ class TestStudy(TestCase):
             "SELECT efo_id FROM qiita.study_experimental_factor "
             "WHERE study_id = 2")
         self.assertEqual(efo, [[1]])
+
+    def test_create_nonqiita_portal(self):
+        qiita_config.portal = "EMP"
+        Study.create(User('test@foo.bar'), "NEW!",
+                     [1], self.info, Investigation(1))
+
+        # make sure portal is associated
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * from qiita.study_portal WHERE study_id = 2")
+        self.assertEqual(obs, [[2, 2], [2, 1]])
 
     def test_create_study_with_investigation(self):
         """Insert a study into the database with an investigation"""
@@ -395,7 +425,7 @@ class TestStudy(TestCase):
                'email': 'test@foo.bar', 'spatial_series': True,
                'study_description': 'Microbiome of people who eat nothing '
                                     'but fried chicken',
-               'portal_type_id': 3, 'study_alias': 'FCM', 'study_id': 3827,
+               'study_alias': 'FCM', 'study_id': 3827,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
@@ -485,6 +515,9 @@ class TestStudy(TestCase):
         """Set efo on a public study"""
         with self.assertRaises(QiitaDBStatusError):
             self.study.efo = 6
+
+    def test_portals(self):
+        self.assertEqual(self.study._portals, ['QIITA'])
 
     def test_retrieve_info(self):
         for key, val in viewitems(self.existingexp):

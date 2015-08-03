@@ -12,6 +12,11 @@ Adding source code to Qiita, can take place in three different modules:
 * `qiita_db`: Contains the bridge layer between the Python objects and the SQL database. In general this subpackage is mainly written in Python with a fair amount of inline PostgreSQL statements (see the section below on how to make database changes).
 * `qiita_ware`: Contains the logic of the system and functions that can generally be called from a Python script (see the scripts directory), and it is mostly written in Python. Several workflows that can be achieved using the GUI, can also be reproduced through the command line using this subpackage.
 
+Regardless of the module where you are adding new functionality, you should
+always take into consideration how these new features affect users and whether
+or not adding a new section or document to the documentation (found under the
+`doc` folder) would be useful.
+
 ###The Qiita development rules
 
 Since Qiita is a package that is continuously growing, we found ourselves in a position where development rules needed to be established so we can reduce both development and reviewer time. These rules are:
@@ -57,6 +62,12 @@ Unit tests in Qiita are located inside the tests/test folder of every sub-module
 During test creation make sure the test class is decorated with `@qiita_test_checker()` if database modifications are done during tests. This will automatically drop and rebuild the qiita schema before each test case is executed.
 
 Coverage testing is in effect, so run tests using `nosetests --with-coverage [test_file.py]` to check what lines of new code in your pull request are not tested.
+
+###Documentation
+
+The documentation for Qiita is maintained as part of this repository, under the
+`qiita_pet/support_files/doc` folder, for more information, see the README.md
+file in `qiita_pet/support_files/doc/README.md`.
 
 ###Scripts
 

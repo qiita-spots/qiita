@@ -1,7 +1,6 @@
 from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.exceptions import QiitaDBExecutionError
 
 
 @qiita_test_checker()
@@ -9,7 +8,7 @@ class TestSQL(TestCase):
     """Tests that the database triggers and procedures work properly"""
     def test_collection_job_trigger_bad_insert(self):
         # make sure an incorrect job raises an error
-        with self.assertRaises(QiitaDBExecutionError):
+        with self.assertRaises(ValueError):
             self.conn_handler.execute(
                 'INSERT INTO qiita.collection_job (collection_id, job_id) '
                 'VALUES (1, 3)')

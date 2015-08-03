@@ -24,6 +24,7 @@ from qiita_db.parameters import (Preprocessed454Params,
 from qiita_pet.util import STATUS_STYLER
 from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
+from qiita_core.util import execute_as_transaction
 
 
 filepath_types = [k.split('_', 1)[1].replace('_', ' ')
@@ -31,20 +32,27 @@ filepath_types = [k.split('_', 1)[1].replace('_', ' ')
                   if k.startswith('raw_')]
 fp_type_by_ft = defaultdict(
     lambda: filepath_types, SFF=['sff'], FASTA=['fasta', 'qual'],
-    FASTQ=['barcodes', 'forward seqs', 'reverse seqs'])
+    FASTQ=['barcodes', 'forward seqs', 'reverse seqs'],
+    FASTA_Sanger=['fasta'],
+    per_sample_FASTQ=['forward seqs', 'reverse seqs'])
 
 
+@execute_as_transaction
 def _get_accessible_raw_data(user):
-    """Retrieves a tuple of raw_data_id and the last study title for that
+    """Retrieves a tuple of raw_data_id and one study title for that
     raw_data
     """
     d = {}
-    for sid in user.user_studies:
-        for rdid in Study(sid).raw_data():
-            d[int(rdid)] = Study(RawData(rdid).studies[-1]).title
+    accessible_studies = user.user_studies.union(user.shared_studies)
+    for sid in accessible_studies:
+        study = Study(sid)
+        study_title = study.title
+        for rdid in study.raw_data():
+            d[int(rdid)] = study_title
     return d
 
 
+@execute_as_transaction
 def _template_generator(study, full_access):
     """Generates tuples of prep template information
 
@@ -63,15 +71,17 @@ def _template_generator(study, full_access):
         the prep template status icons
     """
 
-    for pt_id in study.prep_templates():
+    for pt_id in sorted(study.prep_templates()):
         pt = PrepTemplate(pt_id)
         if full_access or pt.status == 'public':
             yield (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status])
 
 
 class PrepTemplateTab(BaseUIModule):
+    @execute_as_transaction
     def render(self, study, full_access):
-        files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
+        files = [f for _, f in get_files_from_uploads_folders(str(study.id))
+                 if f.endswith(('txt', 'tsv'))]
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
         prep_templates_info = [
             res for res in _template_generator(study, full_access)]
@@ -99,6 +109,7 @@ class PrepTemplateTab(BaseUIModule):
 
 
 class PrepTemplateInfoTab(BaseUIModule):
+    @execute_as_transaction
     def render(self, study, prep_template, full_access, ena_terms,
                user_defined_terms):
         user = self.current_user
@@ -147,8 +158,8 @@ class PrepTemplateInfoTab(BaseUIModule):
         other_studies_rd = sorted(viewitems(
             _get_accessible_raw_data(user)))
 
-        # A prep template can be modified if its status is sanbdox
-        is_editable = prep_template.status == 'sanbdox'
+        # A prep template can be modified if its status is sandbox
+        is_editable = prep_template.status == 'sandbox'
 
         raw_data_id = prep_template.raw_data
         preprocess_options = []
@@ -158,12 +169,17 @@ class PrepTemplateInfoTab(BaseUIModule):
         if raw_data_id:
             rd = RawData(raw_data_id)
             rd_ft = rd.filetype
+
             # If the prep template has a raw data associated, it can be
             # preprocessed. Retrieve the pre-processing parameters
             if rd_ft in ('SFF', 'FASTA'):
                 param_iter = Preprocessed454Params.iter()
             elif rd_ft == 'FASTQ':
-                param_iter = PreprocessedIlluminaParams.iter()
+                param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
+                              if pip.values['barcode_type'] != 'not-barcoded']
+            elif rd_ft == 'per_sample_FASTQ':
+                param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
+                              if pip.values['barcode_type'] == 'not-barcoded']
             else:
                 raise NotImplementedError(
                     "Pre-processing of %s files currently not supported."
@@ -188,17 +204,23 @@ class PrepTemplateInfoTab(BaseUIModule):
                     "linked with the Raw Data")
             else:
                 if prep_template.data_type() in TARGET_GENE_DATA_TYPES:
-                    key = ('demultiplex_multiple' if len(raw_data_files) > 2
+                    raw_forward_fps = [fp for _, fp, ftype in raw_data_files
+                                       if ftype == 'raw_forward_seqs']
+                    key = ('demultiplex_multiple' if len(raw_forward_fps) > 1
                            else 'demultiplex')
                     missing_cols = prep_template.check_restrictions(
                         [PREP_TEMPLATE_COLUMNS_TARGET_GENE[key]])
-                    show_preprocess_btn = len(missing_cols) == 0
+
+                    if rd_ft == 'per_sample_FASTQ':
+                        show_preprocess_btn = 'run_prefix' not in missing_cols
+                    else:
+                        show_preprocess_btn = len(missing_cols) == 0
+
+                    no_preprocess_msg = None
                     if not show_preprocess_btn:
                         no_preprocess_msg = (
                             "Preprocessing disabled due to missing columns in "
                             "the prep template: %s" % ', '.join(missing_cols))
-                    else:
-                        no_preprocess_msg = None
 
         preprocessing_status = prep_template.preprocessing_status
 
@@ -230,6 +252,7 @@ class PrepTemplateInfoTab(BaseUIModule):
 
 
 class RawDataInfoDiv(BaseUIModule):
+    @execute_as_transaction
     def render(self, raw_data_id, prep_template, study, files):
         rd = RawData(raw_data_id)
         raw_data_files = [(basename(fp), fp_type[4:])
@@ -265,6 +288,7 @@ class RawDataInfoDiv(BaseUIModule):
 
 
 class EditInvestigationType(BaseUIModule):
+    @execute_as_transaction
     def render(self, ena_terms, user_defined_terms, prep_id, inv_type, ppd_id):
         return self.render_string(
             "study_description_templates/edit_investigation_type.html",

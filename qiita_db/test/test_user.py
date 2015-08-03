@@ -13,10 +13,11 @@ from unittest import TestCase, main
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import hash_password
 from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                                 QiitaDBUnknownIDError)
+                                 QiitaDBUnknownIDError, QiitaDBError)
 
 
 class SupportTests(TestCase):
@@ -63,6 +64,7 @@ class UserTest(TestCase):
 
     def setUp(self):
         self.user = User('admin@foo.bar')
+        self.portal = qiita_config.portal
 
         self.userinfo = {
             'name': 'Dude',
@@ -73,6 +75,9 @@ class UserTest(TestCase):
             'pass_reset_timestamp': None,
             'user_verify_code': None
         }
+
+    def tearDown(self):
+        qiita_config.portal = self.portal
 
     def test_instantiate_user(self):
         User('admin@foo.bar')
@@ -112,13 +117,6 @@ class UserTest(TestCase):
             'user_level_id': 5,
             'email': 'new@test.bar'}
         self._check_correct_info(obs, exp)
-
-        # make sure default analysis created
-        sql = ("SELECT email, name, description, dflt FROM qiita.analysis "
-               "WHERE email = 'new@test.bar'")
-        obs = self.conn_handler.execute_fetchall(sql)
-        exp = [['new@test.bar', 'new@test.bar-dflt', 'dflt', True]]
-        self.assertEqual(obs, exp)
 
     def test_create_user_info(self):
         user = User.create('new@test.bar', 'password', self.userinfo)
@@ -224,38 +222,85 @@ class UserTest(TestCase):
             self.user.info = self.userinfo
 
     def test_default_analysis(self):
+        qiita_config.portal = "QIITA"
         obs = self.user.default_analysis
         self.assertEqual(obs, 4)
 
+        qiita_config.portal = "EMP"
+        obs = self.user.default_analysis
+        self.assertEqual(obs, 8)
+
     def test_get_user_studies(self):
         user = User('test@foo.bar')
+        qiita_config.portal = "QIITA"
         self.assertEqual(user.user_studies, {1})
+
+        qiita_config.portal = "EMP"
+        self.assertEqual(user.user_studies, set())
 
     def test_get_shared_studies(self):
         user = User('shared@foo.bar')
+        qiita_config.portal = "QIITA"
         self.assertEqual(user.shared_studies, {1})
 
+        qiita_config.portal = "EMP"
+        self.assertEqual(user.shared_studies, set())
+
     def test_get_private_analyses(self):
-        self.assertEqual(self.user.private_analyses, set([]))
+        user = User('test@foo.bar')
+        qiita_config.portal = "QIITA"
+        self.assertEqual(user.private_analyses, set([1, 2]))
+
+        qiita_config.portal = "EMP"
+        self.assertEqual(user.private_analyses, set())
 
     def test_get_shared_analyses(self):
-        self.assertEqual(self.user.shared_analyses, set([]))
+        user = User('shared@foo.bar')
+        qiita_config.portal = "QIITA"
+        self.assertEqual(user.shared_analyses, set([1]))
+
+        qiita_config.portal = "EMP"
+        self.assertEqual(user.shared_analyses, set())
 
     def test_verify_code(self):
-        sql = ("insert into qiita.qiita_user values ('test@user.com', '1', "
+        sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
                "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
                ",null)")
         self.conn_handler.execute(sql)
-        self.assertTrue(User.verify_code('test@user.com', 'verifycode',
-                                         'create'))
-        self.assertTrue(User.verify_code('test@user.com', 'resetcode',
-                                         'reset'))
-        self.assertFalse(User.verify_code('test@user.com', 'wrongcode',
+        self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
                                           'create'))
-        self.assertFalse(User.verify_code('test@user.com', 'wrongcode',
+        self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
                                           'reset'))
+
+        self.assertTrue(User.verify_code('new@test.bar', 'verifycode',
+                                         'create'))
+        self.assertTrue(User.verify_code('new@test.bar', 'resetcode',
+                                         'reset'))
+
+        # make sure errors raised if code already used or wrong type
+        with self.assertRaises(QiitaDBError):
+            User.verify_code('new@test.bar', 'verifycode', 'create')
+        with self.assertRaises(QiitaDBError):
+            User.verify_code('new@test.bar', 'resetcode', 'reset')
+
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            User.verify_code('test@user.com', 'fakecode', 'badtype')
+            User.verify_code('new@test.bar', 'fakecode', 'badtype')
+
+        # make sure default analyses created
+        sql = ("SELECT email, name, description, dflt FROM qiita.analysis "
+               "WHERE email = 'new@test.bar'")
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [['new@test.bar', 'new@test.bar-dflt-2', 'dflt', True],
+               ['new@test.bar', 'new@test.bar-dflt-1', 'dflt', True]]
+        self.assertEqual(obs, exp)
+
+        # Make sure default analyses are linked with the portal
+        sql = """SELECT COUNT(1)
+                 FROM qiita.analysis
+                    JOIN qiita.analysis_portal USING (analysis_id)
+                    JOIN qiita.portal_type USING (portal_type_id)
+                 WHERE email = 'new@test.bar' AND dflt = true"""
+        self.assertEqual(self.conn_handler.execute_fetchone(sql)[0], 2)
 
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(

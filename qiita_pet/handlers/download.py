@@ -6,10 +6,12 @@ from .base_handlers import BaseHandler
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_db.util import filepath_id_to_rel_path
 from qiita_db.meta_util import get_accessible_filepath_ids
+from qiita_core.util import execute_as_transaction
 
 
 class DownloadHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def get(self, filepath_id):
         filepath_id = int(filepath_id)
         # Check access to file

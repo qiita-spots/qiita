@@ -7,10 +7,12 @@ from qiita_db.parameters import (PreprocessedIlluminaParams,
                                  Preprocessed454Params)
 from qiita_db.metadata_template import PrepTemplate
 from qiita_ware.context import submit
+from qiita_core.util import execute_as_transaction
 
 
 class PreprocessHandler(BaseHandler):
     @authenticated
+    @execute_as_transaction
     def post(self):
         study_id = int(self.get_argument('study_id'))
         prep_template_id = int(self.get_argument('prep_template_id'))
@@ -18,7 +20,7 @@ class PreprocessHandler(BaseHandler):
         param_id = int(self.get_argument('preprocessing_parameters_id'))
 
         # Get the preprocessing parameters
-        if raw_data.filetype == 'FASTQ':
+        if raw_data.filetype in ('FASTQ', 'per_sample_FASTQ'):
             param_constructor = PreprocessedIlluminaParams
         elif raw_data.filetype in ('FASTA', 'SFF'):
             param_constructor = Preprocessed454Params

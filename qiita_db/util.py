@@ -51,10 +51,11 @@ from os import walk, remove, listdir, makedirs, rename
 from shutil import move, rmtree
 from json import dumps
 from datetime import datetime
+from itertools import chain
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .exceptions import QiitaDBColumnError, QiitaDBError
-from .sql_connection import SQLConnectionHandler
+from .exceptions import QiitaDBColumnError, QiitaDBError, QiitaDBLookupError
+from .sql_connection import TRN
 
 
 def params_dict_to_json(options):
@@ -143,16 +144,17 @@ def get_filetypes(key='type'):
         If `key` is "type", dict is of the form {type: filetype_id}
         If `key` is "filetype_id", dict is of the form {filetype_id: type}
     """
-    con = SQLConnectionHandler()
-    if key == 'type':
-        cols = 'type, filetype_id'
-    elif key == 'filetype_id':
-        cols = 'filetype_id, type'
-    else:
-        raise QiitaDBColumnError("Unknown key. Pass either 'type' or "
-                                 "'filetype_id'.")
-    sql = 'select {} from qiita.filetype'.format(cols)
-    return dict(con.execute_fetchall(sql))
+    with TRN:
+        if key == 'type':
+            cols = 'type, filetype_id'
+        elif key == 'filetype_id':
+            cols = 'filetype_id, type'
+        else:
+            raise QiitaDBColumnError("Unknown key. Pass either 'type' or "
+                                     "'filetype_id'.")
+        sql = 'SELECT {} FROM qiita.filetype'.format(cols)
+        TRN.add(sql)
+        return dict(TRN.execute_fetchindex())
 
 
 def get_filepath_types(key='filepath_type'):
@@ -172,16 +174,17 @@ def get_filepath_types(key='filepath_type'):
         - If `key` is "filepath_type_id", dict is of the form
           {filepath_type_id: filepath_type}
     """
-    con = SQLConnectionHandler()
-    if key == 'filepath_type':
-        cols = 'filepath_type, filepath_type_id'
-    elif key == 'filepath_type_id':
-        cols = 'filepath_type_id, filepath_type'
-    else:
-        raise QiitaDBColumnError("Unknown key. Pass either 'filepath_type' or "
-                                 "'filepath_type_id'.")
-    sql = 'select {} from qiita.filepath_type'.format(cols)
-    return dict(con.execute_fetchall(sql))
+    with TRN:
+        if key == 'filepath_type':
+            cols = 'filepath_type, filepath_type_id'
+        elif key == 'filepath_type_id':
+            cols = 'filepath_type_id, filepath_type'
+        else:
+            raise QiitaDBColumnError("Unknown key. Pass either 'filepath_type'"
+                                     " or 'filepath_type_id'.")
+        sql = 'SELECT {} FROM qiita.filepath_type'.format(cols)
+        TRN.add(sql)
+        return dict(TRN.execute_fetchindex())
 
 
 def get_data_types(key='data_type'):
@@ -200,16 +203,17 @@ def get_data_types(key='data_type'):
         - If `key` is "data_type_id", dict is of the form
           {data_type_id: data_type}
     """
-    con = SQLConnectionHandler()
-    if key == 'data_type':
-        cols = 'data_type, data_type_id'
-    elif key == 'data_type_id':
-        cols = 'data_type_id, data_type'
-    else:
-        raise QiitaDBColumnError("Unknown key. Pass either 'data_type_id' or "
-                                 "'data_type'.")
-    sql = 'select {} from qiita.data_type'.format(cols)
-    return dict(con.execute_fetchall(sql))
+    with TRN:
+        if key == 'data_type':
+            cols = 'data_type, data_type_id'
+        elif key == 'data_type_id':
+            cols = 'data_type_id, data_type'
+        else:
+            raise QiitaDBColumnError("Unknown key. Pass either 'data_type_id' "
+                                     "or 'data_type'.")
+        sql = 'SELECT {} FROM qiita.data_type'.format(cols)
+        TRN.add(sql)
+        return dict(TRN.execute_fetchindex())
 
 
 def create_rand_string(length, punct=True):
@@ -262,13 +266,11 @@ def hash_password(password, hashedpw=None):
     return output
 
 
-def check_required_columns(conn_handler, keys, table):
+def check_required_columns(keys, table):
     """Makes sure all required columns in database table are in keys
 
     Parameters
     ----------
-    conn_handler: SQLConnectionHandler object
-        Previously opened connection to the database
     keys: iterable
         Holds the keys in the dictionary
     table: str
@@ -281,27 +283,27 @@ def check_required_columns(conn_handler, keys, table):
     RuntimeError
         Unable to get columns from database
     """
-    sql = ("SELECT is_nullable, column_name, column_default "
-           "FROM information_schema.columns "
-           "WHERE table_name = %s")
-    cols = conn_handler.execute_fetchall(sql, (table, ))
-    # Test needed because a user with certain permissions can query without
-    # error but be unable to get the column names
-    if len(cols) == 0:
-        raise RuntimeError("Unable to fetch column names for table %s" % table)
-    required = set(x[1] for x in cols if x[0] == 'NO' and x[2] is None)
-    if len(required.difference(keys)) > 0:
-        raise QiitaDBColumnError("Required keys missing: %s" %
-                                 required.difference(keys))
+    with TRN:
+        sql = """SELECT is_nullable, column_name, column_default
+                 FROM information_schema.columns WHERE table_name = %s"""
+        TRN.add(sql, [table])
+        cols = TRN.execute_fetchindex()
+        # Test needed because a user with certain permissions can query without
+        # error but be unable to get the column names
+        if len(cols) == 0:
+            raise RuntimeError("Unable to fetch column names for table %s"
+                               % table)
+        required = set(x[1] for x in cols if x[0] == 'NO' and x[2] is None)
+        if len(required.difference(keys)) > 0:
+            raise QiitaDBColumnError("Required keys missing: %s" %
+                                     required.difference(keys))
 
 
-def check_table_cols(conn_handler, keys, table):
+def check_table_cols(keys, table):
     """Makes sure all keys correspond to column headers in a table
 
     Parameters
     ----------
-    conn_handler: SQLConnectionHandler object
-        Previously opened connection to the database
     keys: iterable
         Holds the keys in the dictionary
     table: str
@@ -314,16 +316,19 @@ def check_table_cols(conn_handler, keys, table):
     RuntimeError
         Unable to get columns from database
     """
-    sql = ("SELECT column_name FROM information_schema.columns WHERE "
-           "table_name = %s")
-    cols = [x[0] for x in conn_handler.execute_fetchall(sql, (table, ))]
-    # Test needed because a user with certain permissions can query without
-    # error but be unable to get the column names
-    if len(cols) == 0:
-        raise RuntimeError("Unable to fetch column names for table %s" % table)
-    if len(set(keys).difference(cols)) > 0:
-        raise QiitaDBColumnError("Non-database keys found: %s" %
-                                 set(keys).difference(cols))
+    with TRN:
+        sql = """SELECT column_name FROM information_schema.columns
+                 WHERE table_name = %s"""
+        TRN.add(sql, [table])
+        cols = TRN.execute_fetchflatten()
+        # Test needed because a user with certain permissions can query without
+        # error but be unable to get the column names
+        if len(cols) == 0:
+            raise RuntimeError("Unable to fetch column names for table %s"
+                               % table)
+        if len(set(keys).difference(cols)) > 0:
+            raise QiitaDBColumnError("Non-database keys found: %s" %
+                                     set(keys).difference(cols))
 
 
 def get_table_cols(table):
@@ -339,11 +344,11 @@ def get_table_cols(table):
     list of str
         The column headers of `table`
     """
-    conn_handler = SQLConnectionHandler()
-    headers = conn_handler.execute_fetchall(
-        "SELECT column_name FROM information_schema.columns WHERE "
-        "table_name=%s AND table_schema='qiita'", (table, ))
-    return [h[0] for h in headers]
+    with TRN:
+        sql = """SELECT column_name FROM information_schema.columns
+                 WHERE table_name=%s AND table_schema='qiita'"""
+        TRN.add(sql, [table])
+        return TRN.execute_fetchflatten()
 
 
 def get_table_cols_w_type(table):
@@ -359,31 +364,37 @@ def get_table_cols_w_type(table):
     list of tuples of (str, str)
         The column headers and data type of `table`
     """
-    conn_handler = SQLConnectionHandler()
-    return conn_handler.execute_fetchall(
-        "SELECT column_name, data_type FROM information_schema.columns WHERE "
-        "table_name=%s", (table,))
+    with TRN:
+        sql = """SELECT column_name, data_type FROM information_schema.columns
+                 WHERE table_name=%s"""
+        TRN.add(sql, [table])
+        return TRN.execute_fetchindex()
 
 
-def exists_table(table, conn_handler):
-    r"""Checks if `table` exists on the database connected through
-    `conn_handler`
+def exists_table(table):
+    r"""Checks if `table` exists on the database
 
     Parameters
     ----------
     table : str
         The table name to check if exists
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
+
+    Returns
+    -------
+    bool
+        Whether `table` exists on the database or not
     """
-    return conn_handler.execute_fetchone(
-        "SELECT exists(SELECT * FROM information_schema.tables WHERE "
-        "table_name=%s)", (table,))[0]
+    with TRN:
+        sql = """SELECT exists(
+                    SELECT * FROM information_schema.tables
+                    WHERE table_name=%s)"""
+        TRN.add(sql, [table])
+        return TRN.execute_fetchlast()
 
 
-def exists_dynamic_table(table, prefix, suffix, conn_handler):
-    r"""Checks if the dynamic `table` exists on the database connected through
-    `conn_handler`, and its name starts with prefix and ends with suffix
+def exists_dynamic_table(table, prefix, suffix):
+    r"""Checks if the dynamic `table` exists on the database, and its name
+    starts with prefix and ends with suffix
 
     Parameters
     ----------
@@ -393,11 +404,15 @@ def exists_dynamic_table(table, prefix, suffix, conn_handler):
         The table name prefix
     suffix : str
         The table name suffix
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
+
+    Returns
+    -------
+    bool
+       Whether `table` exists on the database or not and its name
+        starts with prefix and ends with suffix
     """
     return (table.startswith(prefix) and table.endswith(suffix) and
-            exists_table(table, conn_handler))
+            exists_table(table))
 
 
 def get_db_files_base_dir():
@@ -408,10 +423,9 @@ def get_db_files_base_dir():
     str
         The path to the base directory of all db files
     """
-    conn_handler = SQLConnectionHandler()
-
-    return conn_handler.execute_fetchone(
-        "SELECT base_data_dir FROM settings")[0]
+    with TRN:
+        TRN.add("SELECT base_data_dir FROM settings")
+        return TRN.execute_fetchlast()
 
 
 def get_work_base_dir():
@@ -422,10 +436,9 @@ def get_work_base_dir():
     str
         The path to the base directory of all db files
     """
-    conn_handler = SQLConnectionHandler()
-
-    return conn_handler.execute_fetchone(
-        "SELECT base_work_dir FROM settings")[0]
+    with TRN:
+        TRN.add("SELECT base_work_dir FROM settings")
+        return TRN.execute_fetchlast()
 
 
 def compute_checksum(path):
@@ -549,20 +562,19 @@ def get_mountpoint(mount_type, retrieve_all=False):
     list
         List of tuple, where: [(id_mountpoint, filepath_of_mountpoint)]
     """
-    conn_handler = SQLConnectionHandler()
-
-    if retrieve_all:
-        result = conn_handler.execute_fetchall(
-            "SELECT data_directory_id, mountpoint, subdirectory FROM "
-            "qiita.data_directory WHERE data_type='%s' ORDER BY active DESC"
-            % mount_type)
-    else:
-        result = [conn_handler.execute_fetchone(
-            "SELECT data_directory_id, mountpoint, subdirectory FROM "
-            "qiita.data_directory WHERE data_type='%s' and active=true"
-            % mount_type)]
-    basedir = get_db_files_base_dir()
-    return [(d, join(basedir, m, s)) for d, m, s in result]
+    with TRN:
+        if retrieve_all:
+            sql = """SELECT data_directory_id, mountpoint, subdirectory
+                     FROM qiita.data_directory
+                     WHERE data_type=%s ORDER BY active DESC"""
+        else:
+            sql = """SELECT data_directory_id, mountpoint, subdirectory
+                     FROM qiita.data_directory
+                     WHERE data_type=%s AND active=true"""
+        TRN.add(sql, [mount_type])
+        result = TRN.execute_fetchindex()
+        basedir = get_db_files_base_dir()
+        return [(d, join(basedir, m, s)) for d, m, s in result]
 
 
 def get_mountpoint_path_by_id(mount_id):
@@ -578,18 +590,20 @@ def get_mountpoint_path_by_id(mount_id):
     str
         The mountpoint path
     """
-    conn_handler = SQLConnectionHandler()
-    mountpoint, subdirectory = conn_handler.execute_fetchone(
-        """SELECT mountpoint, subdirectory FROM qiita.data_directory
-           WHERE data_directory_id=%s""", (mount_id,))
-    return join(get_db_files_base_dir(), mountpoint, subdirectory)
+    with TRN:
+        sql = """SELECT mountpoint, subdirectory FROM qiita.data_directory
+                 WHERE data_directory_id=%s"""
+        TRN.add(sql, [mount_id])
+        mountpoint, subdirectory = TRN.execute_fetchindex()[0]
+        return join(get_db_files_base_dir(), mountpoint, subdirectory)
 
 
-def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
-                     move_files=True, queue=None):
-    r"""Inserts `filepaths` in the DB connected with `conn_handler`. Since
-    the files live outside the database, the directory in which the files
-    lives is controlled by the database, so it copies the filepaths from
+def insert_filepaths(filepaths, obj_id, table, filepath_table,
+                     move_files=True):
+    r"""Inserts `filepaths` in the database.
+
+    Since the files live outside the database, the directory in which the files
+    lives is controlled by the database, so it moves the filepaths from
     its original location to the controlled directory.
 
     Parameters
@@ -603,107 +617,107 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table, conn_handler,
         Table that holds the file data.
     filepath_table : str
         Table that holds the filepath information
-    conn_handler : SQLConnectionHandler
-        The connection handler object connected to the DB
     move_files : bool, optional
         Whether or not to copy from the given filepaths to the db filepaths
         default: True
-    queue : str, optional
-        The queue to add this transaction to. Default return list of ids
 
     Returns
     -------
-    list or None
-        List of the filepath_id in the database for each added filepath if
-        queue not specified, or no return value if queue specified
+    list of int
+        List of the filepath_id in the database for each added filepath
     """
-    new_filepaths = filepaths
+    with TRN:
+        new_filepaths = filepaths
 
-    dd_id, mp = get_mountpoint(table)[0]
-    base_fp = join(get_db_files_base_dir(), mp)
+        dd_id, mp = get_mountpoint(table)[0]
+        base_fp = join(get_db_files_base_dir(), mp)
 
-    if move_files:
-        # Generate the new fileapths. Format: DataId_OriginalName
-        # Keeping the original name is useful for checking if the RawData
-        # alrady exists on the DB
-        db_path = partial(join, base_fp)
-        new_filepaths = [
-            (db_path("%s_%s" % (obj_id, basename(path))), id)
-            for path, id in filepaths]
-        # Move the original files to the controlled DB directory
-        for old_fp, new_fp in zip(filepaths, new_filepaths):
-                move(old_fp[0], new_fp[0])
+        if move_files:
+            # Generate the new fileapths. Format: DataId_OriginalName
+            # Keeping the original name is useful for checking if the RawData
+            # alrady exists on the DB
+            db_path = partial(join, base_fp)
+            new_filepaths = [
+                (db_path("%s_%s" % (obj_id, basename(path))), id_)
+                for path, id_ in filepaths]
+            # Move the original files to the controlled DB directory
+            for old_fp, new_fp in zip(filepaths, new_filepaths):
+                    move(old_fp[0], new_fp[0])
+                    # In case the transaction executes a rollback, we need to
+                    # make sure the files have not been moved
+                    TRN.add_post_rollback_func(move, new_fp, old_fp)
 
-    def str_to_id(x):
-        return (x if isinstance(x, (int, long))
-                else convert_to_id(x, "filepath_type"))
-    paths_w_checksum = [(relpath(path, base_fp), str_to_id(id),
-                        compute_checksum(path))
-                        for path, id in new_filepaths]
-    # Create the list of SQL values to add
-    values = ["('%s', %s, '%s', %s, %s)" % (scrub_data(path), pid,
-              checksum, 1, dd_id) for path, pid, checksum in
-              paths_w_checksum]
-    # Insert all the filepaths at once and get the filepath_id back
-    sql = ("INSERT INTO qiita.{0} (filepath, filepath_type_id, checksum, "
-           "checksum_algorithm_id, data_directory_id) VALUES {1} RETURNING"
-           " filepath_id".format(filepath_table, ', '.join(values)))
-    if queue is not None:
-        # Drop the sql into the given queue
-        conn_handler.add_to_queue(queue, sql, None)
-    else:
-        ids = conn_handler.execute_fetchall(sql)
-
-        # we will receive a list of lists with a single element on it
-        # (the id), transform it to a list of ids
-        return [id[0] for id in ids]
+        def str_to_id(x):
+            return (x if isinstance(x, (int, long))
+                    else convert_to_id(x, "filepath_type"))
+        paths_w_checksum = [(relpath(path, base_fp), str_to_id(id_),
+                            compute_checksum(path))
+                            for path, id_ in new_filepaths]
+        # Create the list of SQL values to add
+        values = [[path, pid, checksum, 1, dd_id]
+                  for path, pid, checksum in paths_w_checksum]
+        # Insert all the filepaths at once and get the filepath_id back
+        sql = """INSERT INTO qiita.{0}
+                    (filepath, filepath_type_id, checksum,
+                     checksum_algorithm_id, data_directory_id)
+                 VALUES (%s, %s, %s, %s, %s)
+                 RETURNING filepath_id""".format(filepath_table)
+        idx = TRN.index
+        TRN.add(sql, values, many=True)
+        # Since we added the query with many=True, we've added len(values)
+        # queries to the transaction, so the ids are in the last idx queries
+        return list(chain.from_iterable(
+            chain.from_iterable(TRN.execute()[idx:])))
 
 
 def purge_filepaths():
     r"""Goes over the filepath table and remove all the filepaths that are not
-    used in any place"""
-    conn_handler = SQLConnectionHandler()
+    used in any place
+    """
+    with TRN:
+        # Get all the (table, column) pairs that reference to the filepath
+        # table. Adapted from http://stackoverflow.com/q/5347050/3746629
+        sql = """SELECT R.TABLE_NAME, R.column_name
+            FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE u
+            INNER JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS FK
+                ON U.CONSTRAINT_CATALOG = FK.UNIQUE_CONSTRAINT_CATALOG
+                AND U.CONSTRAINT_SCHEMA = FK.UNIQUE_CONSTRAINT_SCHEMA
+                AND U.CONSTRAINT_NAME = FK.UNIQUE_CONSTRAINT_NAME
+            INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE R
+                ON R.CONSTRAINT_CATALOG = FK.CONSTRAINT_CATALOG
+                AND R.CONSTRAINT_SCHEMA = FK.CONSTRAINT_SCHEMA
+                AND R.CONSTRAINT_NAME = FK.CONSTRAINT_NAME
+            WHERE U.COLUMN_NAME = 'filepath_id'
+                AND U.TABLE_SCHEMA = 'qiita'
+                AND U.TABLE_NAME = 'filepath'"""
+        TRN.add(sql)
 
-    # Get all the (table, column) pairs that reference to the filepath table
-    # Code adapted from http://stackoverflow.com/q/5347050/3746629
-    table_cols_pairs = conn_handler.execute_fetchall(
-        """SELECT R.TABLE_NAME, R.column_name
-        FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE u
-        INNER JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS FK
-            ON U.CONSTRAINT_CATALOG = FK.UNIQUE_CONSTRAINT_CATALOG
-            AND U.CONSTRAINT_SCHEMA = FK.UNIQUE_CONSTRAINT_SCHEMA
-            AND U.CONSTRAINT_NAME = FK.UNIQUE_CONSTRAINT_NAME
-        INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE R
-            ON R.CONSTRAINT_CATALOG = FK.CONSTRAINT_CATALOG
-            AND R.CONSTRAINT_SCHEMA = FK.CONSTRAINT_SCHEMA
-            AND R.CONSTRAINT_NAME = FK.CONSTRAINT_NAME
-        WHERE U.COLUMN_NAME = 'filepath_id'
-            AND U.TABLE_SCHEMA = 'qiita'
-            AND U.TABLE_NAME = 'filepath'""")
+        union_str = " UNION ".join(
+            ["SELECT %s FROM qiita.%s WHERE %s IS NOT NULL" % (col, table, col)
+             for table, col in TRN.execute_fetchindex()])
+        # Get all the filepaths from the filepath table that are not
+        # referenced from any place in the database
+        sql = """SELECT filepath_id, filepath, filepath_type, data_directory_id
+            FROM qiita.filepath FP JOIN qiita.filepath_type FPT
+                ON FP.filepath_type_id = FPT.filepath_type_id
+            WHERE filepath_id NOT IN (%s)""" % union_str
+        TRN.add(sql)
 
-    union_str = " UNION ".join(
-        ["SELECT %s FROM qiita.%s WHERE %s IS NOT NULL" % (col, table, col)
-         for table, col in table_cols_pairs])
-    # Get all the filepaths from the filepath table that are not
-    # referenced from any place in the database
-    fps = conn_handler.execute_fetchall(
-        """SELECT filepath_id, filepath, filepath_type, data_directory_id
-        FROM qiita.filepath FP JOIN qiita.filepath_type FPT
-            ON FP.filepath_type_id = FPT.filepath_type_id
-        WHERE filepath_id NOT IN (%s)""" % union_str)
+        # We can now go over and remove all the filepaths
+        sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
+        for fp_id, fp, fp_type, dd_id in TRN.execute_fetchindex():
+            TRN.add(sql, [fp_id])
 
-    # We can now go over and remove all the filepaths
-    for fp_id, fp, fp_type, dd_id in fps:
-        conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
-                             (fp_id,))
+            # Remove the data
+            fp = join(get_mountpoint_path_by_id(dd_id), fp)
+            if exists(fp):
+                if fp_type is 'directory':
+                    func = rmtree
+                else:
+                    func = remove
+                TRN.add_post_commit_func(func, fp)
 
-        # Remove the data
-        fp = join(get_mountpoint_path_by_id(dd_id), fp)
-        if exists(fp):
-            if fp_type is 'directory':
-                rmtree(fp)
-            else:
-                remove(fp)
+        TRN.execute()
 
 
 def move_filepaths_to_upload_folder(study_id, filepaths):
@@ -717,19 +731,23 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
     filepaths : list
         List of filepaths to move to the upload folder
     """
-    conn_handler = SQLConnectionHandler()
-    uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
+    with TRN:
+        uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
+        path_builder = partial(join, uploads_fp)
 
-    # We can now go over and remove all the filepaths
-    for fp_id, fp, _ in filepaths:
-        conn_handler.execute("DELETE FROM qiita.filepath WHERE filepath_id=%s",
-                             (fp_id,))
+        # We can now go over and remove all the filepaths
+        sql = """DELETE FROM qiita.filepath WHERE filepath_id=%s"""
+        for fp_id, fp, _ in filepaths:
+            TRN.add(sql, [fp_id])
 
-        # removing id from the raw data filename
-        filename = basename(fp).split('_', 1)[1]
-        destination = join(uploads_fp, filename)
+            # removing id from the raw data filename
+            filename = basename(fp).split('_', 1)[1]
+            destination = path_builder(filename)
 
-        move(fp, destination)
+            TRN.add_post_rollback_func(move, destination, fp)
+            move(fp, destination)
+
+        TRN.execute()
 
 
 def get_filepath_id(table, fp):
@@ -742,24 +760,31 @@ def get_filepath_id(table, fp):
     fp : str
         The filepath
 
+    Returns
+    -------
+    int
+        The filepath id forthe given filepath
+
     Raises
     ------
     QiitaDBError
         If fp is not stored in the DB.
     """
-    conn_handler = SQLConnectionHandler()
-    _, mp = get_mountpoint(table)[0]
-    base_fp = join(get_db_files_base_dir(), mp)
+    with TRN:
+        _, mp = get_mountpoint(table)[0]
+        base_fp = join(get_db_files_base_dir(), mp)
 
-    fp_id = conn_handler.execute_fetchone(
-        "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s",
-        (relpath(fp, base_fp),))
+        sql = "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s"
+        TRN.add(sql, [relpath(fp, base_fp)])
+        fp_id = TRN.execute_fetchindex()
 
-    # check if the query has actually returned something
-    if not fp_id:
-        raise QiitaDBError("Filepath not stored in the database")
+        # check if the query has actually returned something
+        if not fp_id:
+            raise QiitaDBError("Filepath not stored in the database")
 
-    return fp_id[0]
+        # If there was a result it was a single row and and single value,
+        # hence access to [0][0]
+        return fp_id[0][0]
 
 
 def filepath_id_to_rel_path(filepath_id):
@@ -768,16 +793,16 @@ def filepath_id_to_rel_path(filepath_id):
     Returns
     -------
     str
+        The relative path for the given filepath id
     """
-    conn = SQLConnectionHandler()
-
-    sql = """SELECT dd.mountpoint, dd.subdirectory, fp.filepath
-          FROM qiita.filepath fp JOIN qiita.data_directory dd
-          ON fp.data_directory_id = dd.data_directory_id
-          WHERE fp.filepath_id = %s"""
-
-    result = join(*conn.execute_fetchone(sql, [filepath_id]))
-    return result
+    with TRN:
+        sql = """SELECT mountpoint, subdirectory, filepath
+                 FROM qiita.filepath
+                 JOIN qiita.data_directory USING (data_directory_id)
+                 WHERE filepath_id = %s"""
+        TRN.add(sql, [filepath_id])
+        # It should be only one row
+        return join(*TRN.execute_fetchindex()[0])
 
 
 def filepath_ids_to_rel_paths(filepath_ids):
@@ -792,24 +817,19 @@ def filepath_ids_to_rel_paths(filepath_ids):
     dict where keys are ints and values are str
         {filepath_id: relative_path}
     """
-    conn = SQLConnectionHandler()
-
-    sql = """SELECT fp.filepath_id, dd.mountpoint, dd.subdirectory, fp.filepath
-          FROM qiita.filepath fp JOIN qiita.data_directory dd
-          ON fp.data_directory_id = dd.data_directory_id
-          WHERE fp.filepath_id in ({})""".format(
-          ', '.join([str(fpid) for fpid in filepath_ids]))
-
-    if filepath_ids:
-        result = {row[0]: join(*row[1:])
-                  for row in conn.execute_fetchall(sql)}
-
-        return result
-    else:
+    if not filepath_ids:
         return {}
 
+    with TRN:
+        sql = """SELECT filepath_id, mountpoint, subdirectory, filepath
+                 FROM qiita.filepath
+                 JOIN qiita.data_directory USING (data_directory_id)
+                 WHERE filepath_id IN %s"""
+        TRN.add(sql, [tuple(filepath_ids)])
+        return {row[0]: join(*row[1:]) for row in TRN.execute_fetchindex()}
 
-def convert_to_id(value, table):
+
+def convert_to_id(value, table, text_col=None):
     """Converts a string value to its corresponding table identifier
 
     Parameters
@@ -818,6 +838,8 @@ def convert_to_id(value, table):
         The string value to convert
     table : str
         The table that has the conversion
+    text_col : str, optional
+        Column holding the string value. Defaults to same as table name.
 
     Returns
     -------
@@ -826,16 +848,21 @@ def convert_to_id(value, table):
 
     Raises
     ------
-    IncompetentQiitaDeveloperError
+    QiitaDBLookupError
         The passed string has no associated id
     """
-    conn_handler = SQLConnectionHandler()
-    sql = "SELECT {0}_id FROM qiita.{0} WHERE {0} = %s".format(table)
-    _id = conn_handler.execute_fetchone(sql, (value, ))
-    if _id is None:
-        raise IncompetentQiitaDeveloperError("%s not valid for table %s"
-                                             % (value, table))
-    return _id[0]
+    text_col = table if text_col is None else text_col
+    with TRN:
+        sql = "SELECT {0}_id FROM qiita.{0} WHERE {1} = %s".format(
+            table, text_col)
+        TRN.add(sql, [value])
+        _id = TRN.execute_fetchindex()
+        if not _id:
+            raise QiitaDBLookupError("%s not valid for table %s"
+                                     % (value, table))
+        # If there was a result it was a single row and and single value,
+        # hence access to [0][0]
+        return _id[0][0]
 
 
 def convert_from_id(value, table):
@@ -855,16 +882,19 @@ def convert_from_id(value, table):
 
     Raises
     ------
-    ValueError
+    QiitaDBLookupError
         The passed id has no associated string
     """
-    conn_handler = SQLConnectionHandler()
-    string = conn_handler.execute_fetchone(
-        "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table),
-        (value, ))
-    if string is None:
-        raise ValueError("%s not valid for table %s" % (value, table))
-    return string[0]
+    with TRN:
+        sql = "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table)
+        TRN.add(sql, [value])
+        string = TRN.execute_fetchindex()
+        if not string:
+            raise QiitaDBLookupError("%s not valid for table %s"
+                                     % (value, table))
+        # If there was a result it was a single row and and single value,
+        # hence access to [0][0]
+        return string[0][0]
 
 
 def get_count(table):
@@ -879,9 +909,10 @@ def get_count(table):
     -------
     int
     """
-    conn = SQLConnectionHandler()
-    sql = "SELECT count(1) FROM %s" % table
-    return conn.execute_fetchone(sql)[0]
+    with TRN:
+        sql = "SELECT count(1) FROM %s" % table
+        TRN.add(sql)
+        return TRN.execute_fetchlast()
 
 
 def check_count(table, exp_count):
@@ -909,10 +940,16 @@ def get_preprocessed_params_tables():
     -------
     list or str
     """
-    sql = ("SELECT * FROM information_schema.tables WHERE table_schema = "
-           "'qiita' AND SUBSTR(table_name, 1, 13) = 'preprocessed_'")
-    conn = SQLConnectionHandler()
-    return [x[2] for x in conn.execute_fetchall(sql)]
+    with TRN:
+        sql = """SELECT table_name FROM information_schema.tables
+                 WHERE table_schema = 'qiita'
+                    AND SUBSTR(table_name, 1, 13) = 'preprocessed_'
+                    AND table_name NOT IN ('preprocessed_data',
+                                           'preprocessed_filepath',
+                                           'preprocessed_processed_data')
+                 ORDER BY table_name"""
+        TRN.add(sql)
+        return TRN.execute_fetchflatten()
 
 
 def get_processed_params_tables():
@@ -922,11 +959,13 @@ def get_processed_params_tables():
     -------
     list of str
     """
-    sql = ("SELECT * FROM information_schema.tables WHERE table_schema = "
-           "'qiita' AND SUBSTR(table_name, 1, 17) = 'processed_params_'")
-
-    conn = SQLConnectionHandler()
-    return sorted([x[2] for x in conn.execute_fetchall(sql)])
+    with TRN:
+        sql = """SELECT table_name FROM information_schema.tables
+                 WHERE table_schema = 'qiita'
+                    AND SUBSTR(table_name, 1, 17) = 'processed_params_'
+                 ORDER BY table_name"""
+        TRN.add(sql)
+        return TRN.execute_fetchflatten()
 
 
 def get_lat_longs():
@@ -937,20 +976,20 @@ def get_lat_longs():
     list of [float, float]
         The latitude and longitude for each sample in the database
     """
-    conn = SQLConnectionHandler()
-    sql = """SELECT DISTINCT table_name
-             FROM information_schema.columns
-             WHERE SUBSTR(table_name, 1, 7) = 'sample_'
-                AND table_schema = 'qiita'
-                AND column_name IN ('latitude', 'longitude');"""
-    tables_gen = (t[0] for t in conn.execute_fetchall(sql))
+    with TRN:
+        sql = """SELECT DISTINCT table_name
+                 FROM information_schema.columns
+                 WHERE SUBSTR(table_name, 1, 7) = 'sample_'
+                    AND table_schema = 'qiita'
+                    AND column_name IN ('latitude', 'longitude');"""
+        TRN.add(sql)
 
-    sql = "SELECT latitude, longitude FROM qiita.{0}"
-    result = []
-    for table in tables_gen:
-        result.extend(conn.execute_fetchall(sql.format(table)))
+        sql = "SELECT latitude, longitude FROM qiita.{0}"
+        idx = TRN.index
+        for table in TRN.execute_fetchflatten():
+            TRN.add(sql.format(table))
 
-    return result
+        return list(chain.from_iterable(TRN.execute()[idx:]))
 
 
 def get_environmental_packages():
@@ -963,9 +1002,9 @@ def get_environmental_packages():
         environmental package name and the second string is the table where
         the metadata for the environmental package is stored
     """
-    conn_handler = SQLConnectionHandler()
-    return conn_handler.execute_fetchall(
-        "SELECT * FROM qiita.environmental_package")
+    with TRN:
+        TRN.add("SELECT * FROM qiita.environmental_package")
+        return TRN.execute_fetchindex()
 
 
 def get_timeseries_types():
@@ -977,31 +1016,10 @@ def get_timeseries_types():
         The available timeseries types. Each timeseries type is defined by the
         tuple (timeseries_id, timeseries_type, intervention_type)
     """
-    conn_handler = SQLConnectionHandler()
-    return conn_handler.execute_fetchall(
-        "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id")
-
-
-def find_repeated(values):
-    """Find repeated elements in the inputed list
-
-    Parameters
-    ----------
-    values : list
-        List of elements to find duplicates in
-
-    Returns
-    -------
-    set
-        Repeated elements in ``values``
-    """
-    seen, repeated = set(), set()
-    for value in values:
-        if value in seen:
-            repeated.add(value)
-        else:
-            seen.add(value)
-    return repeated
+    with TRN:
+        sql = "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id"
+        TRN.add(sql)
+        return TRN.execute_fetchindex()
 
 
 def check_access_to_analysis_result(user_id, requested_path):
@@ -1021,31 +1039,30 @@ def check_access_to_analysis_result(user_id, requested_path):
     list of int
         The filepath IDs associated with the requested path
     """
-    conn = SQLConnectionHandler()
+    with TRN:
+        # Get all filepath ids associated with analyses that the user has
+        # access to where the filepath is the base_requested_fp from above.
+        # There should typically be only one matching filepath ID, but for
+        # safety we allow for the possibility of multiple.
+        sql = """SELECT fp.filepath_id
+                 FROM qiita.analysis_job aj JOIN (
+                    SELECT analysis_id FROM qiita.analysis A
+                    JOIN qiita.analysis_status stat
+                    ON A.analysis_status_id = stat.analysis_status_id
+                    WHERE stat.analysis_status_id = 6
+                    UNION
+                    SELECT analysis_id FROM qiita.analysis_users
+                    WHERE email = %s
+                    UNION
+                    SELECT analysis_id FROM qiita.analysis WHERE email = %s
+                 ) ids ON aj.analysis_id = ids.analysis_id
+                 JOIN qiita.job_results_filepath jrfp ON
+                    aj.job_id = jrfp.job_id
+                 JOIN qiita.filepath fp ON jrfp.filepath_id = fp.filepath_id
+                 WHERE fp.filepath = %s"""
+        TRN.add(sql, [user_id, user_id, requested_path])
 
-    # Get all filepath ids associated with analyses that the user has
-    # access to where the filepath is the base_requested_fp from above.
-    # There should typically be only one matching filepath ID, but for safety
-    # we allow for the possibility of multiple.
-    sql = """select fp.filepath_id
-             from qiita.analysis_job aj join (
-                select analysis_id from qiita.analysis A
-                join qiita.analysis_status stat
-                on A.analysis_status_id = stat.analysis_status_id
-                where stat.analysis_status_id = 6
-                UNION
-                select analysis_id from qiita.analysis_users
-                where email = %s
-                UNION
-                select analysis_id from qiita.analysis where email = %s
-             ) ids on aj.analysis_id = ids.analysis_id
-             join qiita.job_results_filepath jrfp on
-                aj.job_id = jrfp.job_id
-             join qiita.filepath fp on jrfp.filepath_id = fp.filepath_id
-             where fp.filepath = %s"""
-
-    return [row[0] for row in conn.execute_fetchall(
-            sql, [user_id, user_id, requested_path])]
+        return TRN.execute_fetchflatten()
 
 
 def infer_status(statuses):

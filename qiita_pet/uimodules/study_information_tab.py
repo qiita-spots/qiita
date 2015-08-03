@@ -11,6 +11,7 @@ from operator import itemgetter
 
 from future.utils import viewitems
 
+from qiita_core.util import execute_as_transaction
 from qiita_db.util import get_files_from_uploads_folders, get_data_types
 from qiita_db.study import StudyPerson
 from qiita_db.metadata_template import SampleTemplate
@@ -26,6 +27,7 @@ pubmed_linkifier = partial(
 
 
 class StudyInformationTab(BaseUIModule):
+    @execute_as_transaction
     def render(self, study):
         study_info = study.info
         id = study.id

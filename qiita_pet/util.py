@@ -23,6 +23,7 @@ Methods
 # -----------------------------------------------------------------------------
 from future.utils import viewitems
 
+from qiita_core.util import execute_as_transaction
 from qiita_db.reference import Reference
 
 
@@ -67,6 +68,7 @@ def clean_str(item):
     return str(item).replace(" ", "_").replace(":", "")
 
 
+@execute_as_transaction
 def generate_param_str(param):
     """Generate an html string with the parameter values
 

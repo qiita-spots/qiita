@@ -7,7 +7,7 @@ from moi import r_client
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.qiita_settings import qiita_config
-from qiita_core.util import send_email
+from qiita_core.util import send_email, execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
 from qiita_db.user import User
@@ -25,6 +25,7 @@ class AuthCreateHandler(BaseHandler):
             error_message = ""
         self.render("create_user.html", error=error_message)
 
+    @execute_as_transaction
     def post(self):
         username = self.get_argument("email", "").strip().lower()
         password = self.get_argument("newpass", "")
@@ -65,9 +66,12 @@ class AuthVerifyHandler(BaseHandler):
         email = self.get_argument("email").strip().lower()
         if User.verify_code(email, code, "create"):
             msg = "Successfully verified user! You are now free to log in."
+            color = "black"
         else:
             msg = "Code not valid!"
-        self.render("user_verified.html", msg=msg)
+            color = "red"
+        self.render("user_verified.html", msg=msg, color=color,
+                    email=self.get_argument("email").strip())
 
 
 class AuthLoginHandler(BaseHandler):
@@ -75,6 +79,7 @@ class AuthLoginHandler(BaseHandler):
     def get(self):
         self.redirect("/")
 
+    @execute_as_transaction
     def post(self):
         if r_client.get('maintenance') is not None:
             raise HTTPError(503, "Site is down for maintenance")
@@ -93,7 +98,11 @@ class AuthLoginHandler(BaseHandler):
         try:
             if User(username).level == "unverified":
                 # email not verified so dont log in
-                msg = "Email not verified"
+                msg = ("Email not verified. Please check your email and click "
+                       "the verify link. You may need to check your spam "
+                       "folder to find the email.<br/>If a verification email"
+                       " has not arrived in 15 minutes, please email <a href='"
+                       "mailto:qiita.help@gmail.com'>qiita.help@gmail.com</a>")
         except QiitaDBUnknownIDError:
             msg = "Unknown user"
         except RuntimeError:

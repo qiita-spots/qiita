@@ -27,7 +27,7 @@ from __future__ import division
 from .study import Study
 from .data import RawData, PreprocessedData, ProcessedData
 from .analysis import Analysis
-from .sql_connection import SQLConnectionHandler
+from .sql_connection import TRN
 from .metadata_template import PrepTemplate, SampleTemplate
 
 
@@ -45,8 +45,9 @@ def _get_data_fpids(constructor, object_id):
     -------
     set of int
     """
-    obj = constructor(object_id)
-    return {fpid for fpid, _, _ in obj.get_filepaths()}
+    with TRN:
+        obj = constructor(object_id)
+        return {fpid for fpid, _, _ in obj.get_filepaths()}
 
 
 def get_accessible_filepath_ids(user):
@@ -72,93 +73,93 @@ def get_accessible_filepath_ids(user):
     Admins have access to all files, so all filepath ids are returned for
     admins
     """
+    with TRN:
+        if user.level == "admin":
+            # admins have access all files
+            TRN.add("SELECT filepath_id FROM qiita.filepath")
+            return set(TRN.execute_fetchflatten())
 
-    if user.level == "admin":
-        # admins have access all files
-        conn_handler = SQLConnectionHandler()
-        fpids = conn_handler.execute_fetchall("SELECT filepath_id FROM "
-                                              "qiita.filepath")
-        return set(f[0] for f in fpids)
+        # First, the studies
+        # There are private and shared studies
+        study_ids = user.user_studies | user.shared_studies
 
-    # First, the studies
-    # There are private and shared studies
-    study_ids = user.user_studies | user.shared_studies
+        filepath_ids = set()
+        for study_id in study_ids:
+            study = Study(study_id)
 
-    filepath_ids = set()
-    for study_id in study_ids:
-        study = Study(study_id)
+            # For each study, there are raw, preprocessed, and
+            # processed filepaths
+            raw_data_ids = study.raw_data()
+            preprocessed_data_ids = study.preprocessed_data()
+            processed_data_ids = study.processed_data()
 
-        # For each study, there are raw, preprocessed, and processed filepaths
-        raw_data_ids = study.raw_data()
-        preprocessed_data_ids = study.preprocessed_data()
-        processed_data_ids = study.processed_data()
+            constructor_data_ids = ((RawData, raw_data_ids),
+                                    (PreprocessedData, preprocessed_data_ids),
+                                    (ProcessedData, processed_data_ids))
 
-        constructor_data_ids = ((RawData, raw_data_ids),
-                                (PreprocessedData, preprocessed_data_ids),
-                                (ProcessedData, processed_data_ids))
+            for constructor, data_ids in constructor_data_ids:
+                for data_id in data_ids:
+                    filepath_ids.update(_get_data_fpids(constructor, data_id))
 
-        for constructor, data_ids in constructor_data_ids:
-            for data_id in data_ids:
-                filepath_ids.update(_get_data_fpids(constructor, data_id))
+            # adding prep and sample templates
+            prep_fp_ids = []
+            for rdid in study.raw_data():
+                for pt_id in RawData(rdid).prep_templates:
+                    # related to https://github.com/biocore/qiita/issues/596
+                    if PrepTemplate.exists(pt_id):
+                        for _id, _ in PrepTemplate(pt_id).get_filepaths():
+                            prep_fp_ids.append(_id)
+            filepath_ids.update(prep_fp_ids)
 
-        # adding prep and sample templates
-        prep_fp_ids = []
-        for rdid in study.raw_data():
-            for pt_id in RawData(rdid).prep_templates:
-                # related to https://github.com/biocore/qiita/issues/596
-                if PrepTemplate.exists(pt_id):
-                    for _id, _ in PrepTemplate(pt_id).get_filepaths():
-                        prep_fp_ids.append(_id)
-        filepath_ids.update(prep_fp_ids)
+            if SampleTemplate.exists(study_id):
+                sample_fp_ids = [_id for _id, _
+                                 in SampleTemplate(study_id).get_filepaths()]
+                filepath_ids.update(sample_fp_ids)
 
-        if SampleTemplate.exists(study_id):
-            sample_fp_ids = [_id for _id, _
-                             in SampleTemplate(study_id).get_filepaths()]
-            filepath_ids.update(sample_fp_ids)
+        # Next, the public processed data
+        processed_data_ids = ProcessedData.get_by_status('public')
+        for pd_id in processed_data_ids:
+            processed_data = ProcessedData(pd_id)
 
-    # Next, the public processed data
-    processed_data_ids = ProcessedData.get_by_status('public')
-    for pd_id in processed_data_ids:
-        processed_data = ProcessedData(pd_id)
+            # Add the filepaths of the processed data
+            pd_fps = (fpid for fpid, _, _ in processed_data.get_filepaths())
+            filepath_ids.update(pd_fps)
 
-        # Add the filepaths of the processed data
-        pd_fps = (fpid for fpid, _, _ in processed_data.get_filepaths())
-        filepath_ids.update(pd_fps)
+            # Each processed data has a preprocessed data
+            ppd = PreprocessedData(processed_data.preprocessed_data)
+            ppd_fps = (fpid for fpid, _, _ in ppd.get_filepaths())
+            filepath_ids.update(ppd_fps)
 
-        # Each processed data has a preprocessed data
-        ppd = PreprocessedData(processed_data.preprocessed_data)
-        ppd_fps = (fpid for fpid, _, _ in ppd.get_filepaths())
-        filepath_ids.update(ppd_fps)
+            # Each preprocessed data has a prep template
+            pt_id = ppd.prep_template
+            # related to https://github.com/biocore/qiita/issues/596
+            if PrepTemplate.exists(pt_id):
+                pt = PrepTemplate(pt_id)
+                pt_fps = (fpid for fpid, _ in pt.get_filepaths())
+                filepath_ids.update(pt_fps)
 
-        # Each preprocessed data has a prep template
-        pt_id = ppd.prep_template
-        # related to https://github.com/biocore/qiita/issues/596
-        if PrepTemplate.exists(pt_id):
-            pt = PrepTemplate(pt_id)
-            pt_fps = (fpid for fpid, _ in pt.get_filepaths())
-            filepath_ids.update(pt_fps)
+                # Each prep template has a raw data
+                rd = RawData(pt.raw_data)
+                rd_fps = (fpid for fpid, _, _ in rd.get_filepaths())
+                filepath_ids.update(rd_fps)
 
-            # Each prep template has a raw data
-            rd = RawData(pt.raw_data)
-            rd_fps = (fpid for fpid, _, _ in rd.get_filepaths())
-            filepath_ids.update(rd_fps)
+            # And each processed data has a study, which has a sample template
+            st_id = processed_data.study
+            if SampleTemplate.exists(st_id):
+                sample_fp_ids = (_id for _id, _
+                                 in SampleTemplate(st_id).get_filepaths())
+                filepath_ids.update(sample_fp_ids)
 
-        # And each processed data has a study, which has a sample template
-        st_id = processed_data.study
-        if SampleTemplate.exists(st_id):
-            sample_fp_ids = (_id for _id, _
-                             in SampleTemplate(st_id).get_filepaths())
-            filepath_ids.update(sample_fp_ids)
+        # Next, analyses
+        # Same as before, there are public, private, and shared
+        analysis_ids = Analysis.get_by_status('public') | \
+            user.private_analyses | user.shared_analyses
 
-    # Next, analyses
-    # Same as before, there are public, private, and shared
-    analysis_ids = Analysis.get_by_status('public') | user.private_analyses | \
-        user.shared_analyses
+        for analysis_id in analysis_ids:
+            analysis = Analysis(analysis_id)
 
-    for analysis_id in analysis_ids:
-        analysis = Analysis(analysis_id)
+            # For each analysis, there are mapping, biom, and job result
+            # filepaths
+            filepath_ids.update(analysis.all_associated_filepath_ids)
 
-        # For each analysis, there are mapping, biom, and job result filepaths
-        filepath_ids.update(analysis.all_associated_filepath_ids)
-
-    return filepath_ids
+        return filepath_ids

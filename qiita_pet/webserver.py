@@ -3,9 +3,11 @@ import tornado.auth
 import tornado.escape
 import tornado.web
 import tornado.websocket
-from os.path import dirname, join
+from os.path import dirname, join, exists
+from shutil import copy
 from base64 import b64encode
 from uuid import uuid4
+from moi import moi_js, moi_list_js
 from moi.websocket import MOIMessageHandler
 
 from qiita_core.qiita_settings import qiita_config
@@ -36,6 +38,9 @@ from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
+if qiita_config.portal == "QIITA":
+    from qiita_pet.handlers.portal import (
+        StudyPortalHandler, StudyPortalAJAXHandler)
 
 
 DIRNAME = dirname(__file__)
@@ -44,6 +49,12 @@ TEMPLATE_PATH = join(DIRNAME, "templates")  # base folder for webpages
 _, RES_PATH = get_mountpoint('job')[0]
 COOKIE_SECRET = b64encode(uuid4().bytes + uuid4().bytes)
 DEBUG = qiita_config.test_environment
+
+
+_vendor_js = join(STATIC_PATH, 'vendor', 'js')
+if not exists(join(_vendor_js, 'moi.js')):
+    copy(moi_js(), _vendor_js)
+    copy(moi_list_js(), _vendor_js)
 
 
 class Application(tornado.web.Application):
@@ -95,9 +106,17 @@ class Application(tornado.web.Application):
             (r"/stats/", StatsHandler),
             (r"/download/(.*)", DownloadHandler),
             (r"/vamps/(.*)", VAMPSHandler),
-            # 404 PAGE MUST BE LAST IN THIS LIST!
-            (r".*", NoPageHandler)
         ]
+        if qiita_config.portal == "QIITA":
+            # Add portals editing pages only on main portal
+            portals = [
+                (r"/admin/portals/studies/", StudyPortalHandler),
+                (r"/admin/portals/studiesAJAX/", StudyPortalAJAXHandler)
+            ]
+            handlers.extend(portals)
+        # 404 PAGE MUST BE LAST IN THIS LIST!
+        handlers.append((r".*", NoPageHandler))
+
         settings = {
             "template_path": TEMPLATE_PATH,
             "debug": DEBUG,
