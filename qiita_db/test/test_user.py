@@ -362,5 +362,9 @@ class UserTest(TestCase):
         self.assertTrue(all(x[1] < datetime.now() for x in obs))
         self.assertFalse(all(x[2] for x in obs))
 
+        obs = user.messages(1)
+        exp_msg = ['message 1']
+        self.assertEqual([x[0] for x in obs], exp_msg)
+
 if __name__ == "__main__":
     main()
