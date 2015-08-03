@@ -63,7 +63,7 @@ class User(QiitaObject):
     change_forgot_password
     iter
     messages
-    mark_messages_read
+    mark_messages
     delete_messages
     """
 
@@ -534,8 +534,22 @@ class User(QiitaObject):
             TRN.add(sql, [self._id, count])
             return TRN.execute_fetchindex(-1)
 
-    def mark_messages_read(messages):
-        pass
+    def mark_messages(self, messages, read=True):
+        """Mark given messages as read/unread
+
+        Parameters
+        ----------
+        messages : list of ints
+            Message IDs to mark as read/unread
+        read : bool, optional
+            Marks as read if True, unread if False. Default True
+        """
+        with TRN:
+            sql = """UPDATE qiita.message_user
+                     SET read = %s
+                     WHERE message_id in %s and email = %s"""
+            TRN.add(sql, [read, tuple(messages), self._id])
+            return TRN.execute_fetchindex(-1)
 
     def delete_messages(messages):
         pass

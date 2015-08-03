@@ -366,5 +366,17 @@ class UserTest(TestCase):
         exp_msg = ['message 1']
         self.assertEqual([x[1] for x in obs], exp_msg)
 
+    def test_mark_messages(self):
+        user = User('test@foo.bar')
+        user.mark_messages([1, 2])
+        obs = user.messages()
+        exp = [True, True, False]
+        self.assertEqual([x[3] for x in obs], exp)
+
+        user.mark_messages([1], read=False)
+        obs = user.messages()
+        exp = [False, True, False]
+        self.assertEqual([x[3] for x in obs], exp)
+
 if __name__ == "__main__":
     main()
