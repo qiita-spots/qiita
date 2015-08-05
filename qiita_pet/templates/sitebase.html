@@ -187,7 +187,7 @@
             <li class="dropdown">
               {% set user_messages = current_user.messages(5) %}
               {% set unread =  len(current_user.unread_messages) %}
-              <a href="/user/messages/"><span class="glyphicon glyphicon-envelope" {% if unread > 0 %} style="color:red"{% end %}> ({{unread}})</span></a>
+              <a href="/user/messages/"><span class="glyphicon glyphicon-envelope"></span> {% if unread > 0 %}<span style="color:red">({{unread}})</span>{% end %}</a>
               <ul class="dropdown-menu info-menu" style="padding: 5px">
               {% if user_messages %}
                 {% for _, um, ts, read in user_messages %}

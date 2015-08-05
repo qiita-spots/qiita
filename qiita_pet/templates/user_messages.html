@@ -47,7 +47,7 @@
       </thead>
       <tbody>
         {% for m_id, message, ts, read in user_messages %}
-          <tr><td><input type="checkbox" class="msg-checkbox" name="messages" value="{{m_id}}" onchange="show_hide_actions()"></td><td {% if not read %}style="font-weight:bold"{% end %}>{{message}}</td><td>{{ts}}</td></tr>
+          <tr><td><input type="checkbox" class="msg-checkbox" name="messages" value="{{m_id}}" onchange="show_hide_actions()"></td><td {% if not read %}style="font-weight:bold"{% end %}>{% raw message %}</td><td>{{ts}}</td></tr>
         {% end %}
       </tbody>
     </table>
