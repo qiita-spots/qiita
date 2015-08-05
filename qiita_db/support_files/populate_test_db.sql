@@ -452,5 +452,5 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.prep_template_filepath VALUES (1, 15), (1, 16);
 
 -- Create some test messages
-INSERT INTO qiita.message (message) VALUES ('message 1'), ('message 2'), ('message 3');
+INSERT INTO qiita.message (message) VALUES ('message 1'), ('message 2'), ('message <a href="#">3</a>');
 INSERT INTO qiita.message_user (message_id, email) VALUES (1, 'test@foo.bar'),(1, 'shared@foo.bar'),(2, 'test@foo.bar'),(3, 'test@foo.bar');
