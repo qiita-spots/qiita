@@ -357,7 +357,20 @@ class UserTest(TestCase):
     def test_messages(self):
         user = User('test@foo.bar')
         obs = user.messages()
-        exp_msg = [(1, 'message 1'), (2, 'message 2'), (3, 'message 3')]
+        exp_msg = [
+            (1, 'message 1'),
+            (2, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
+                'Pellentesque sed auctor ex, non placerat sapien. Vestibulum '
+                'vestibulum massa ut sapien condimentum, cursus consequat diam'
+                ' sodales. Nulla aliquam arcu ut massa auctor, et vehicula '
+                'mauris tempor. In lacinia viverra ante quis pellentesque. '
+                'Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla'
+                ' ac nisi quis dui egestas malesuada vitae ut mauris. Morbi '
+                'blandit non nisl a finibus. In erat velit, congue at ipsum '
+                'sit amet, venenatis bibendum sem. Curabitur vel odio sed est '
+                'rutrum rutrum. Quisque efficitur ut purus in ultrices. '
+                'Pellentesque eu auctor justo.'),
+            (3, 'message <a href="#">3</a>')]
         self.assertEqual([(x[0], x[1]) for x in obs], exp_msg)
         self.assertTrue(all(x[2] < datetime.now() for x in obs))
         self.assertFalse(all(x[3] for x in obs))
@@ -382,7 +395,7 @@ class UserTest(TestCase):
         user = User('test@foo.bar')
         user.delete_messages([1, 2])
         obs = user.messages()
-        exp_msg = [(3, 'message 3')]
+        exp_msg = [(3, 'message <a href="#">3</a>')]
         self.assertEqual([(x[0], x[1]) for x in obs], exp_msg)
 
         sql = ("SELECT message_id FROM qiita.message")
