@@ -191,7 +191,7 @@
               <ul class="dropdown-menu info-menu" style="padding: 5px">
               {% if user_messages %}
                 {% for _, um, ts, read in user_messages %}
-                  <li class="truncated">{%raw um %}<br /><span style="font-size:60%;{% if read %}color:gray;{% end %}">{{ts}}</span></li>
+                  <li class="truncated" {% if read %}style="color:gray;"{% end %}>{%raw um %}<br /><span style="font-size:60%;{% if read %}color:gray;{% end %}">{{ts}}</span></li>
                 {% end %}
               {% else %}
                 <li>You have no messages</li>
