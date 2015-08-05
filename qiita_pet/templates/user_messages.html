@@ -8,6 +8,7 @@
     else if(action='invert') { boxes.each( function() {
       $(this).is(':checked') ? $(this).prop('checked',false) : $(this).prop('checked',true);
     });}
+    show_hide_actions();
     return false;
   }
 
