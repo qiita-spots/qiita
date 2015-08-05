@@ -11,13 +11,22 @@
     return false;
   }
 
-function submit_form(action) {
-  $('#action').val(action);
-  if($("input:checked").length == 0) {
-    return false;
+  function submit_form(action) {
+    $('#action').val(action);
+    if($("input:checked").length == 0) {
+      return false;
+    }
+    document.msgform.submit();
   }
-  document.msgform.submit();
-}
+
+  function show_hide_actions() {
+    if($('input:checked').length > 0) { $('#message-actions').show(); }
+    else { $('#message-actions').hide(); }
+  }
+
+  $(document).ready(function() {
+    $('#message-actions').hide();
+  });
 </script>
 {% end %}
 
@@ -27,7 +36,7 @@ function submit_form(action) {
 <div class="row">
   <div class="col-sm-6"><a href="#" onclick="checkbox_action('check')">Select all</a> | <a href="#" onclick="checkbox_action('uncheck')">Select None</a> | <a href="#" onclick="checkbox_action('invert')">Select Inverse</a></div>
   <input type="hidden" name="action" id="action" value="">
-  <div class="col-sm-6" style="text-align:right"><a href="#" onclick="return submit_form('read')">Mark as Read</a> | <a href="#" onclick="return submit_form('unread')">Mark as Unread</a> | <a href="#" onclick="return submit_form('delete')">Delete</a></div>
+  <div class="col-sm-6" style="text-align:right" id="message-actions"><a href="#" onclick="return submit_form('read')">Mark as Read</a> | <a href="#" onclick="return submit_form('unread')">Mark as Unread</a> | <a href="#" onclick="return submit_form('delete')">Delete</a></div>
 </div>
   {% set user_messages = current_user.messages() %}
     {% if user_messages %}
@@ -37,7 +46,7 @@ function submit_form(action) {
       </thead>
       <tbody>
         {% for m_id, message, ts, read in user_messages %}
-          <tr><td><input type="checkbox" class="msg-checkbox" name="messages" value="{{m_id}}"></td><td {% if not read %}style="font-weight:bold"{% end %}>{{message}}</td><td>{{ts}}</td></tr>
+          <tr><td><input type="checkbox" class="msg-checkbox" name="messages" value="{{m_id}}" onchange="show_hide_actions()"></td><td {% if not read %}style="font-weight:bold"{% end %}>{{message}}</td><td>{{ts}}</td></tr>
         {% end %}
       </tbody>
     </table>
