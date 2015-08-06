@@ -15,7 +15,7 @@ from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import hash_password
+from qiita_db.util import hash_password, add_system_message
 from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError, QiitaDBError)
@@ -264,10 +264,12 @@ class UserTest(TestCase):
         self.assertEqual(user.shared_analyses, set())
 
     def test_verify_code(self):
+        add_system_message("TESTMESSAGE", datetime.now())
         sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
                "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
                ",null)")
         self.conn_handler.execute(sql)
+
         self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
                                           'create'))
         self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
@@ -302,6 +304,11 @@ class UserTest(TestCase):
                     JOIN qiita.portal_type USING (portal_type_id)
                  WHERE email = 'new@test.bar' AND dflt = true"""
         self.assertEqual(self.conn_handler.execute_fetchone(sql)[0], 2)
+
+        # Make sure system messages are linked to user
+        sql = """SELECT message_id FROM qiita.message_user
+                 WHERE email = 'new@test.bar'"""
+        self.assertEqual(self.conn_handler.execute_fetchall(sql), [[4]])
 
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(

@@ -320,6 +320,11 @@ class User(QiitaObject):
                                 'dflt', True]
                         TRN.add(an_sql, args)
                         TRN.add(ap_sql, [placeholder, portal_id])
+                    # Add system messages to user
+                    sql = """INSERT INTO qiita.message_user (email, message_id)
+                             SELECT %s, message_id FROM qiita.message
+                             WHERE expiration IS NOT NULL"""
+                    TRN.add(sql, [email])
 
                     TRN.execute()
 
