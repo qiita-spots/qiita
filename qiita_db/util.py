@@ -1121,3 +1121,25 @@ def add_message(message, users):
         sql_args = [[user.id, msg_id] for user in users]
         TRN.add(sql, sql_args, many=True)
         TRN.execute()
+
+
+def add_system_message(message, expires):
+    """Adds a system message to the messages table, attaching it to asl users
+
+    Parameters
+    ----------
+    message : str
+        Message to add
+    expires : datetime object
+        Expiration for the message
+    """
+    with TRN:
+        sql = """INSERT INTO qiita.message (message, expiration)
+                 VALUES (%s, %s)
+                 RETURNING message_id"""
+        TRN.add(sql, [message, expires])
+        msg_id = TRN.execute_fetchlast()
+        sql = """INSERT INTO qiita.message_user (email, message_id)
+                 SELECT email, %s FROM qiita.qiita_user"""
+        TRN.add(sql, [msg_id])
+        TRN.execute()

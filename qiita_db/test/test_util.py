@@ -11,6 +11,7 @@ from tempfile import mkstemp
 from os import close, remove
 from os.path import join, exists, basename
 from shutil import rmtree
+from datetime import datetime
 
 import pandas as pd
 
@@ -39,7 +40,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            move_filepaths_to_upload_folder,
                            move_upload_files_to_trash,
                            check_access_to_analysis_result, infer_status,
-                           get_preprocessed_params_tables, add_message)
+                           get_preprocessed_params_tables, add_message,
+                           add_system_message)
 
 
 @qiita_test_checker()
@@ -626,6 +628,21 @@ class DBUtilTests(TestCase):
         self.assertEqual(obs, exp)
         obs = [[x[0], x[1]] for x in User('admin@foo.bar').messages()]
         exp = [[4, 'TEST MESSAGE']]
+        self.assertEqual(obs, exp)
+
+    def test_add_system_message(self):
+        add_system_message("SYS MESSAGE", datetime(2015, 8, 5, 19, 41))
+
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[4, 'SYS MESSAGE'], [1, 'message 1']]
+        self.assertEqual(obs, exp)
+        obs = [[x[0], x[1]] for x in User('admin@foo.bar').messages()]
+        exp = [[4, 'SYS MESSAGE']]
+        self.assertEqual(obs, exp)
+
+        sql = "SELECT expiration from qiita.message WHERE message_id = 4"
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [[datetime(2015, 8, 5, 19, 41)]]
         self.assertEqual(obs, exp)
 
 
