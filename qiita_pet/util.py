@@ -22,6 +22,7 @@ Methods
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from future.utils import viewitems
+from tornado.escape import linkify as tornado_linkify
 
 from qiita_core.util import execute_as_transaction
 from qiita_db.reference import Reference
@@ -66,6 +67,15 @@ def clean_str(item):
         cleaned string
     """
     return str(item).replace(" ", "_").replace(":", "")
+
+
+def make_text_html(message):
+    """Linkify URLs and turn newlines into <br/> for HTML"""
+    lines = message.split('\n')
+    new_text = []
+    for line in lines:
+        new_text.append(tornado_linkify(line))
+    return "<br/>".join(new_text)
 
 
 @execute_as_transaction
