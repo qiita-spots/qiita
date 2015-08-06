@@ -273,7 +273,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
                     cell.encode('utf-8')
                 except UnicodeError:
                     errors[headers[col]].append(row)
-        lines = ['%s: row(s) %s' % (header, ', '.join(rows))
+        lines = ['%s: row(s) %s' % (header, ', '.join(map(str, rows)))
                  for header, rows in viewitems(errors)]
         raise QiitaDBError('Non UTF-8 characters found:\n' +
                            '\n'.join(lines))
