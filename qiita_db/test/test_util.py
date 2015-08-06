@@ -620,28 +620,30 @@ class DBUtilTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_add_message(self):
+        count = get_count('qiita.message') + 1
         users = [User('shared@foo.bar'), User('admin@foo.bar')]
         add_message("TEST MESSAGE", users)
 
         obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
-        exp = [[4, 'TEST MESSAGE'], [1, 'message 1']]
+        exp = [[count, 'TEST MESSAGE'], [1, 'message 1']]
         self.assertEqual(obs, exp)
         obs = [[x[0], x[1]] for x in User('admin@foo.bar').messages()]
-        exp = [[4, 'TEST MESSAGE']]
+        exp = [[count, 'TEST MESSAGE']]
         self.assertEqual(obs, exp)
 
     def test_add_system_message(self):
+        count = get_count('qiita.message') + 1
         add_system_message("SYS MESSAGE", datetime(2015, 8, 5, 19, 41))
 
         obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
-        exp = [[4, 'SYS MESSAGE'], [1, 'message 1']]
+        exp = [[count, 'SYS MESSAGE'], [1, 'message 1']]
         self.assertEqual(obs, exp)
         obs = [[x[0], x[1]] for x in User('admin@foo.bar').messages()]
-        exp = [[4, 'SYS MESSAGE']]
+        exp = [[count, 'SYS MESSAGE']]
         self.assertEqual(obs, exp)
 
-        sql = "SELECT expiration from qiita.message WHERE message_id = 4"
-        obs = self.conn_handler.execute_fetchall(sql)
+        sql = "SELECT expiration from qiita.message WHERE message_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [count])
         exp = [[datetime(2015, 8, 5, 19, 41)]]
         self.assertEqual(obs, exp)
 
