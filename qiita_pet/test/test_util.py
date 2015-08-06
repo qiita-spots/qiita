@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
 from qiita_db.parameters import ProcessedSortmernaParams
-from qiita_pet.util import clean_str, generate_param_str, make_text_html
+from qiita_pet.util import clean_str, generate_param_str, convert_text_html
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -28,11 +28,11 @@ class TestUtil(TestCase):
                "<b>sortmerna_coverage:</b> 0.97")
         self.assertEqual(obs, exp)
 
-    def test_make_text_html(self):
+    def test_convert_text_html(self):
         test = 'This is line\nThis is another\nThis is a link: http://test.com'
         exp = ('This is line<br/>This is another<br/>'
                'This is a link: <a href="http://test.com">http://test.com</a>')
-        obs = make_text_html(test)
+        obs = convert_text_html(test)
         self.assertEqual(obs, exp)
 
 

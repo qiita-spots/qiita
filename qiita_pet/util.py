@@ -69,7 +69,7 @@ def clean_str(item):
     return str(item).replace(" ", "_").replace(":", "")
 
 
-def make_text_html(message):
+def convert_text_html(message):
     """Linkify URLs and turn newlines into <br/> for HTML"""
     lines = message.split('\n')
     new_text = []
