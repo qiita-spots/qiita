@@ -273,11 +273,10 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
                     cell.encode('utf-8')
                 except UnicodeError:
                     errors[headers[col]].append(row)
-                    errors.append('row %d, header %s' % (row, headers[col]))
-        lines = ['%s: %s' % (header, ', '.join(rows))
+        lines = ['%s: row(s) %s' % (header, ', '.join(rows))
                  for header, rows in viewitems(errors)]
-        raise QiitaDBError('Non UTF-8 characters found:<br/>' +
-                           '<br/>'.join(lines))
+        raise QiitaDBError('Non UTF-8 characters found:\n' +
+                           '\n'.join(lines))
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
