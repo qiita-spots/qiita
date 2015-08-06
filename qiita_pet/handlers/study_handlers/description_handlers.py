@@ -34,7 +34,8 @@ from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
 from qiita_ware.exceptions import QiitaWareError
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.handlers.util import check_access, convert_text_html
+from qiita_pet.util import convert_text_html
+from qiita_pet.handlers.util import check_access
 from qiita_pet.handlers.study_handlers.listing_handlers import (
     ListStudiesHandler)
 
