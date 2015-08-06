@@ -275,7 +275,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
                     errors[headers[col]].append(row)
         lines = ['%s: row(s) %s' % (header, ', '.join(map(str, rows)))
                  for header, rows in viewitems(errors)]
-        raise QiitaDBError('Non UTF-8 characters found:\n' +
+        raise QiitaDBError('Non UTF-8 characters found in columns:\n' +
                            '\n'.join(lines))
 
     # let pandas infer the dtypes of these columns, if the inference is
