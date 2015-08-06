@@ -641,6 +641,7 @@
 			<column name="message_time" type="timestamp" jt="93" mandatory="y" >
 				<defo>current_timestamp</defo>
 			</column>
+			<column name="expiration" type="timestamp" jt="93" />
 			<index name="pk_message" unique="PRIMARY_KEY" >
 				<column name="message_id" />
 			</index>

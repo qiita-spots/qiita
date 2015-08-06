@@ -208,7 +208,7 @@
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='40' y='328' width='340' height='2' />
 
 <!-- ============= Group 'Group_messages' ============= -->
-<rect class='grp' style='fill:#c4e0f9;' x='1064' y='1330' width='332' height='155' />
+<rect class='grp' style='fill:#c4e0f9;' x='1064' y='1330' width='332' height='170' />
 <text x='1075' y='1345'>Group_messages</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1075' y='1348' width='310' height='2' />
 
@@ -1034,10 +1034,9 @@ Holds all user information</title></a>
 Referred by analysis_users ( email ) 
 Referred by collection ( email ) 
 Referred by collection_users ( email ) 
-Referred by study ( email ) 
-Referred by study_users ( email ) 
 Referred by message_user ( email ) 
-Referred by message_user ( email ) </title></a>
+Referred by study ( email ) 
+Referred by study_users ( email ) </title></a>
   <use id='nn' x='332' y='132' xlink:href='#nn'/><a xlink:href='#user_level_id'><use id='idx' x='332' y='131' xlink:href='#idx'/><title>Index  ( user_level_id ) </title></a>
 <a xlink:href='#user_level_id'><text x='348' y='142'>user_level_id</text><title>user_level_id integer not null default 5
 user level</title></a>
@@ -1823,15 +1822,15 @@ Controls what analyses are visible on what portals</title></a>
 Whether the message has been read or not&#046;</title></a>
 
 <!-- ============= Table 'message' ============= -->
-<rect class='table' x='1275' y='1373' width='105' height='90' rx='7' ry='7' />
+<rect class='table' x='1275' y='1373' width='105' height='105' rx='7' ry='7' />
 <path d='M 1275.50 1399.50 L 1275.50 1380.50 Q 1275.50 1373.50 1282.50 1373.50 L 1372.50 1373.50 Q 1379.50 1373.50 1379.50 1380.50 L 1379.50 1399.50 L1275.50 1399.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
 <a xlink:href='#message'><text x='1304' y='1387' class='tableTitle'>message</text><title>Table qiita.message</title></a>
   <use id='nn' x='1277' y='1407' xlink:href='#nn'/><a xlink:href='#message_id'><use id='pk' x='1277' y='1406' xlink:href='#pk'/><title>Primary Key  ( message_id ) </title></a>
 <a xlink:href='#message_id'><text x='1293' y='1417'>message_id</text><title>message_id bigserial not null</title></a>
-<a xlink:href='#message_id'><use id='ref' x='1368' y='1406' xlink:href='#ref'/><title>Referred by message_user ( message_id ) 
-Referred by message_user ( message_id ) </title></a>
+<a xlink:href='#message_id'><use id='ref' x='1368' y='1406' xlink:href='#ref'/><title>Referred by message_user ( message_id ) </title></a>
   <use id='nn' x='1277' y='1422' xlink:href='#nn'/><a xlink:href='#message'><text x='1293' y='1432'>message</text><title>message varchar not null</title></a>
   <use id='nn' x='1277' y='1437' xlink:href='#nn'/><a xlink:href='#message_time'><text x='1293' y='1447'>message_time</text><title>message_time timestamp not null default current&#095;timestamp</title></a>
+  <a xlink:href='#expiration'><text x='1293' y='1462'>expiration</text><title>expiration timestamp</title></a>
 
 </g></svg>
 
@@ -5429,6 +5428,11 @@ Controlled Vocabulary </td>
 	<tr>
 		<td><a name='message_time'>message&#095;time</a></td>
 		<td width='40%'> timestamp  NOT NULL  DEFO current_timestamp </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='expiration'>expiration</a></td>
+		<td width='40%'> timestamp   </td>
 		<td width='99%'>  </td>
 	</tr>
 <tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
