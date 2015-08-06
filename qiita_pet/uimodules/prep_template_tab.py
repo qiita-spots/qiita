@@ -13,8 +13,8 @@ from collections import defaultdict
 from future.utils import viewitems
 
 from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
-                           get_data_types, convert_to_id, get_filepath_types,
-                           convert_text_html)
+                           get_data_types, convert_to_id, get_filepath_types)
+from qiita_pet.util import convert_text_html
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from qiita_db.ontology import Ontology

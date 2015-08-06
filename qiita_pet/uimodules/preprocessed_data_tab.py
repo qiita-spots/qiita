@@ -10,7 +10,8 @@ from qiita_core.util import execute_as_transaction
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.ontology import Ontology
-from qiita_db.util import convert_to_id, convert_text_html
+from qiita_db.util import convert_to_id
+from qiita_pet.util import convert_text_html
 from qiita_db.parameters import ProcessedSortmernaParams
 from .base_uimodule import BaseUIModule
 from qiita_pet.util import generate_param_str, STATUS_STYLER
