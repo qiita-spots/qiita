@@ -119,17 +119,17 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
   * Correct: `SELECT * FROM qiita.qiita_user`
 2. Triple quotes are preferred for the SQL statements, unless the statement fits in a single line:
   * Wrong:
-```python
+  ```python
 sql = "SELECT processed_data_status FROM qiita.processed_data_status pds JOIN "
       "qiita.processed_data pd USING (processed_data_status_id) JOIN "
       "qiita.study_processed_data spd USING (processed_data_id) "
       "WHERE spd.study_id = %s"
-```
+  ```
   * Correct:
-```python
+  ```python
 sql = """SELECT processed_data_status
          FROM qiita.processed_data_status pds
             JOIN qiita.processed_data pd USING (processed_data_status_id)
             JOIN qiita.study_processed_data spd USING (processed_data_id)
          WHERE spd.study_id = %s"""
-```
+  ```
