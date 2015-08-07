@@ -71,11 +71,8 @@ def clean_str(item):
 
 def convert_text_html(message):
     """Linkify URLs and turn newlines into <br/> for HTML"""
-    lines = message.split('\n')
-    new_text = []
-    for line in lines:
-        new_text.append(tornado_linkify(line))
-    return "<br/>".join(new_text)
+    html = tornado_linkify(message)
+    return html.replace('\n', '<br/>')
 
 
 @execute_as_transaction
