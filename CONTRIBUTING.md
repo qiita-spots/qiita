@@ -110,3 +110,26 @@ If you need to submit a patch that changes only data but does not alter the sche
 Occasionally, SQL alone cannot effect the desired changes, and a corresponding python script must be run after the SQL patch is applied. If this is the case, a python file should be created in the `patches/python_patches` directory, and it should have the same basename as the SQL file. For example, if there is a patch `4.sql` in the `patches` directory, and this patch requires a python script be run after the SQL is applied, then the python file should be placed at `patches/python_patches/4.py`. Note that not every SQL patch will have a corresponding python patch, but every python patch will have a corresponding SQL patch.
 
 If in the future we discover a use-case where a python patch must be applied for which there *is no corresponding SQL patch*, then a blank SQL patch file will still need to created.
+
+##SQL coding guidelines
+Since the `qiita_db` code contains a mixture of python code and SQL code, here are some coding guidelines to add the SQL code to Qiita:
+
+1. Any SQL keyword should be written uppercased:
+  * Wrong: `select * from qiita.qiita_user`
+  * Correct: `SELECT * FROM qiita.qiita_user`
+2. Triple quotes are preferred for the SQL statements, unless the statement fits in a single line:
+  * Wrong:
+```python
+sql = "SELECT processed_data_status FROM qiita.processed_data_status pds JOIN "
+      "qiita.processed_data pd USING (processed_data_status_id) JOIN "
+      "qiita.study_processed_data spd USING (processed_data_id) "
+      "WHERE spd.study_id = %s"
+```
+  * Correct:
+```python
+sql = """SELECT processed_data_status
+         FROM qiita.processed_data_status pds
+            JOIN qiita.processed_data pd USING (processed_data_status_id)
+            JOIN qiita.study_processed_data spd USING (processed_data_id)
+         WHERE spd.study_id = %s"""
+```
