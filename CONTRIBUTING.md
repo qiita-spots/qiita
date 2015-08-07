@@ -121,15 +121,15 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
   * Wrong:
   ```python
   sql = "SELECT processed_data_status FROM qiita.processed_data_status pds JOIN "
-          "qiita.processed_data pd USING (processed_data_status_id) JOIN "
-          "qiita.study_processed_data spd USING (processed_data_id) "
-          "WHERE spd.study_id = %s"
+        "qiita.processed_data pd USING (processed_data_status_id) JOIN "
+        "qiita.study_processed_data spd USING (processed_data_id) "
+        "WHERE spd.study_id = %s"
   ```
   * Correct:
   ```python
   sql = """SELECT processed_data_status
-             FROM qiita.processed_data_status pds
-                JOIN qiita.processed_data pd USING (processed_data_status_id)
-                JOIN qiita.study_processed_data spd USING (processed_data_id)
-             WHERE spd.study_id = %s"""
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s"""
   ```
