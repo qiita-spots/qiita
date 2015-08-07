@@ -186,3 +186,22 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
   table = "qiita_user"
   sql = "SELECT * FROM qiita.{0}".format(table)
   ```
+6. The SQL command should be set up in a variable and use this variable as parameter to the `TRN.add` method, rather than defining the SQL statement in the method itself, unless the statement is short and fits in a single line:
+  * Wrong:
+  ```python
+  TRN.add("""SELECT processed_data_status
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s""", [study.id])
+  ```
+  * Correct:
+  ```python
+  sql = """SELECT processed_data_status
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s"""
+  TRN.add(sql, [study.id])
+  TRN.add("SELECT * FROM qiita.qiita_user WHERE email=%s", [user.id])
+  ```
