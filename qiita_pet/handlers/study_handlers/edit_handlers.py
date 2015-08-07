@@ -78,11 +78,13 @@ class StudyEditorForm(Form):
         if study:
             study_info = study.info
 
-            self.study_title.data = study.title
-            self.study_alias.data = study_info['study_alias']
+            self.study_title.data = study.title.decode('utf-8')
+            self.study_alias.data = study_info['study_alias'].decode('utf-8')
             self.pubmed_id.data = ",".join(study.pmids)
-            self.study_abstract.data = study_info['study_abstract']
-            self.study_description.data = study_info['study_description']
+            self.study_abstract.data = study_info[
+                'study_abstract'].decode('utf-8')
+            self.study_description.data = study_info[
+                'study_description'].decode('utf-8')
             self.principal_investigator.data = study_info[
                 'principal_investigator_id']
             self.lab_person.data = study_info['lab_person_id']
