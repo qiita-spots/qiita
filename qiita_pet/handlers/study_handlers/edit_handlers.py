@@ -80,7 +80,7 @@ class StudyEditorForm(Form):
 
             self.study_title.data = study.title.decode('utf-8')
             self.study_alias.data = study_info['study_alias'].decode('utf-8')
-            self.pubmed_id.data = ",".join(study.pmids)
+            self.pubmed_id.data = ",".join(study.pmids).decode('utf-8')
             self.study_abstract.data = study_info[
                 'study_abstract'].decode('utf-8')
             self.study_description.data = study_info[
