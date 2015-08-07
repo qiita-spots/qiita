@@ -76,8 +76,8 @@ class QiitaDBDuplicateSamplesError(QiitaDBError):
     """Exception for error when a MetadataTemplate has duplicate columns"""
     def __init__(self, repeated_samples):
         super(QiitaDBDuplicateSamplesError, self).__init__()
-        self.args = ("Duplicate samples found in MetadataTemplate. Repeated "
-                     "sample(s): %s." % ', '.join(repeated_samples),)
+        self.args = ("Duplicate samples found in MetadataTemplate: %s."
+                     % ', '.join(repeated_samples),)
 
 
 class QiitaDBIncompatibleDatatypeError(QiitaDBError):
