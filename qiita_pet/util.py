@@ -22,7 +22,7 @@ Methods
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from future.utils import viewitems
-from tornado.escape import linkify as tornado_linkify
+from tornado.escape import linkify as tornado_linkify, xhtml_unescape
 
 from qiita_core.util import execute_as_transaction
 from qiita_db.reference import Reference
@@ -71,7 +71,7 @@ def clean_str(item):
 
 def convert_text_html(message):
     """Linkify URLs and turn newlines into <br/> for HTML"""
-    html = tornado_linkify(message)
+    html = xhtml_unescape(tornado_linkify(message))
     return html.replace('\n', '<br/>')
 
 

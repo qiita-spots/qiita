@@ -29,8 +29,9 @@ class TestUtil(TestCase):
         self.assertEqual(obs, exp)
 
     def test_convert_text_html(self):
-        test = 'This is line\nThis is another\nThis is a link: http://test.com'
-        exp = ('This is line<br/>This is another<br/>'
+        test = ('<b>This is line</b>\nThis is another\n'
+                'This is a link: http://test.com')
+        exp = ('<b>This is line</b><br/>This is another<br/>'
                'This is a link: <a href="http://test.com">http://test.com</a>')
         obs = convert_text_html(test)
         self.assertEqual(obs, exp)
