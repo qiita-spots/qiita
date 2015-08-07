@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from unittest import main
 from json import loads
 
@@ -212,6 +214,17 @@ class TestStudyEditHandler(TestHandlerBase):
 
     def test_get_edit(self):
         """Make sure the page loads when we want to edit a study"""
+        response = self.get('/study/edit/1')
+        self.assertEqual(response.code, 200)
+        self.assertNotEqual(str(response.body), "")
+
+    def test_get_edit_utf8(self):
+        """Make sure the page loads when utf8 characters are present"""
+        study = Study(1)
+        study.title = "TEST_ø"
+        study.alias = "TEST_ø"
+        study.description = "TEST_ø"
+        study.abstract = "TEST_ø"
         response = self.get('/study/edit/1')
         self.assertEqual(response.code, 200)
         self.assertNotEqual(str(response.body), "")
