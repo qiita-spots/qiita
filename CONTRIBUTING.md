@@ -115,9 +115,15 @@ If in the future we discover a use-case where a python patch must be applied for
 Since the `qiita_db` code contains a mixture of python code and SQL code, here are some coding guidelines to add the SQL code to Qiita:
 
 1. Any SQL keyword should be written uppercased:
-  * Wrong: `select * from qiita.qiita_user`
-  * Correct: `SELECT * FROM qiita.qiita_user`
-2. Triple quotes are preferred for the SQL statements, unless the statement fits in a single line:
+  * Wrong:
+  ```python
+  sql = "select * from qiita.qiita_user"
+  ```
+  * Correct:
+  ```python
+  sql = "SELECT * FROM qiita.qiita_user"
+  ```
+2. Triple quotes are preferred for the SQL statements, unless the statement fits in a single line, since most editors and GitHub will detect SQL statement and apply highlighting accordingly:
   * Wrong:
   ```python
   sql = ("SELECT processed_data_status FROM qiita.processed_data_status pds JOIN "
@@ -132,4 +138,51 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
               JOIN qiita.processed_data pd USING (processed_data_status_id)
               JOIN qiita.study_processed_data spd USING (processed_data_id)
            WHERE spd.study_id = %s"""
+  sql = "SELECT * FROM qiita.qiita_user"
+  ```
+3. Use PEP8-style indentation for the SQL queries, as it will improve readability. Common SQL best-practices recommend to have a new line for the `SELECT`, `FROM`, `WHERE` and similar clauses:
+  * Wrong:
+  ```python
+  sql = """SELECT udt_name FROM information_schema.columns WHERE 
+           column_name = %s AND table_schema = 'qiita' AND (table_name = %s
+           OR table_name = %s)"""
+  ```
+  * Correct:
+  ```python
+  sql = """SELECT udt_name
+           FROM information_schema.columns
+           WHERE column_name = %s AND table_schema = 'qiita'
+               AND (table_name = %s OR table_name = %s)"""
+  ```
+4. Never, NEVER, use python string formatting to complete the SQL query parameters. Use the `sql_args` parameter from the transaction object:
+  * Wrong:
+  ```python
+  sql = """SELECT processed_data_status
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s""" % study.id
+  with TRN:
+      TRN.add(sql)
+  ```
+  * Correct:
+  ```python
+  sql = """SELECT processed_data_status
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s"""
+  with TRN:
+      TRN.add(sql, [study.id])
+  ```
+5. However, python string formatting is allowed to provide table names or column names, although this should be done through the `str.format` function:
+  * Wrong:
+  ```python
+  table = "qiita_user"
+  sql = "SELECT * FROM qiita.%s" % table
+  ```
+  * Correct:
+  ```python
+  table = "qiita_user"
+  sql = "SELECT * FROM qiita.{0}".format(table)
   ```
