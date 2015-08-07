@@ -22,57 +22,101 @@ Classes
 
 Examples
 --------
-Transaction blocks are created by first creating a queue of SQL commands, then
-adding commands to it. Finally, the execute command is called to execute the
-entire queue of SQL commands. A single command is made up of SQL and sql_args.
-SQL is the sql string in psycopg2 format with \%s markup, and sql_args is the
-list or tuple of replacement items.
-An example of a basic queue with two SQL commands in a single transaction:
 
-from qiita_db.sql_connection import SQLConnectionHandler
-conn_handler = SQLConnectionHandler # doctest: +SKIP
-conn_handler.create_queue("example_queue") # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
-    "phone) VALUES (%s, %s, %s, %s)",
-    ['insert@foo.bar', 'Toy', 'pass', '111-111-11112']) # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
-    "phone = '222-222-2221' WHERE email = %s",
-    ['insert@foo.bar']) # doctest: +SKIP
-conn_handler.execute_queue("example_queue") # doctest: +SKIP
-conn_handler.execute_fetchall(
-    "SELECT * from qiita.qiita_user WHERE email = %s",
-    ['insert@foo.bar']) # doctest: +SKIP
-[['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221', None, None,
-  None]] # doctest: +SKIP
+>>> from qiita_db.sql_connection import TRN
 
-You can also use results from a previous command in the queue in a later
-command. If an item in the queue depends on a previous sql command's output,
-use {#} notation as a placeholder for the value. The \# must be the
-position of the result, e.g. if you return two things you can use \{0\}
-to reference the first and \{1\} to referece the second. The results list
-will continue to grow until one of the references is reached, then it
-will be cleaned out.
-Modifying the previous example to show this ability (Note the RETURNING added
-to the first SQL command):
+Transaction blocks are used through the variable TRN available in this module.
+TRN should be used as a context manager. You can add as many SQL commands as
+you want and execute all of them at once, and it will return the results of
+all the commands.
 
-from qiita_db.sql_connection import SQLConnectionHandler
-conn_handler = SQLConnectionHandler # doctest: +SKIP
-conn_handler.create_queue("example_queue") # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
-    "phone) VALUES (%s, %s, %s, %s) RETURNING email, password",
-    ['insert@foo.bar', 'Toy', 'pass', '111-111-11112']) # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
-    "phone = '222-222-2221' WHERE email = %s AND password = %s",
-    ['{0}', '{1}']) # doctest: +SKIP
-conn_handler.execute_queue("example_queue") # doctest: +SKIP
-conn_handler.execute_fetchall(
-    "SELECT * from qiita.qiita_user WHERE email = %s", ['insert@foo.bar'])
-[['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221', None, None,
-  None]] # doctest: +SKIP
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     TRN.add("SELECT 43")
+...     res = TRN.execute()  # The transaction is not committed here
+>>> # The transaction committed here
+>>> res
+[[[42]], [[43]]]
+
+You can have nested transactions and they will not commit until the first
+transaction (represented by entering to the context) is exited:
+
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     with TRN:
+...         TRN.add("SELECT 43")
+...         res = TRN.execute()
+...     # The transaction is still not committed
+...     TRN.add("SELECT 44")
+...     res = TRN.execute()
+>>> # The transactions committed here
+>>> res
+[[[42]], [[43]], [[44]]]
+
+You can also use results from a previous command in the transaction in a later
+command without partially executing the transaction by using placeholders. The
+placeholders are of the form {int:int:int}, where the first integer is the
+index of the query in the transaction, the second integer is the row in the
+query results where the value exists, and the last integer is the actual index
+of the desired value in the result row.
+
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     TRN.add("SELECT 42 + %s", ["{0:0:0}"])
+...     res = TRN.execute()
+>>> res
+[[[42]], [[84]]]
+
+If you don't know the index of the query because your current transaction can
+be embedded in a larger transaction, use the function `TRN.index` before adding
+the target query:
+
+>>> with TRN:
+...     idx = TRN.index
+...     TRN.add("SELECT 42")
+...     TRN.add("SELECT 42 + %s", ["{%d:0:0}" % idx])
+...     res = TRN.execute()
+>>> res
+[[[42]], [[84]]]
+
+Multiple auxiliary functions exist for easy SQL result retrieval:
+
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     # Returns the first value of the last SQL query
+...     res = TRN.execute_fetchlast()
+>>> res
+42
+
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     # Returns the results of the last SQL query
+...     res = TRN.execute_fetchindex()
+>>> res
+[[42]]
+
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     TRN.add("SELECT 43")
+...     # Returns the results of the specified SQL query
+...     res = TRN.execute_fetchindex(0)
+>>> res
+[[42]]
+
+>>> with TRN:
+...     TRN.add("SELECT 42, 43, 44")
+...     # Returns the results of the last SQL query flattened
+...     res = TRN.execute_fetchflatten()
+>>> res
+[42, 43, 44]
+
+>>> with TRN:
+...     TRN.add("SELECT 42, 43, 44")
+...     TRN.add("SELECT 42")
+...     # Returns the results of the specified SQL query flattened
+...     res = TRN.execute_fetchflatten(0)
+>>> res
+[42, 43, 44]
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
