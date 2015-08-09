@@ -11,6 +11,7 @@
 {% end %}
 
 {%block content %}
+{% from qiita_pet.handlers.util import download_link_or_path %}
 
 <div id='no-analyses' class='jumbotron'>
   <h1>No Analyses available</h1>
@@ -21,6 +22,8 @@
   <table class="table">
     <tr>
       <th>Analysis Name</th>
+      <th>Mapping File</th>
+      <th>Biom Files</th>
       <th>Analysis Description</th>
       <th>Status</th>
       <th>Timestamp</th>
@@ -28,6 +31,7 @@
     </tr>
     {% for analysis in analyses %}
       {% set status = analysis.status %}
+      {% set _id = analysis.id %}
       {% if status == "in_construction"%}
         <tr>
           <td>
@@ -49,6 +53,16 @@
           <td>
             {{analysis.name}}
       {% end %}
+        </td>
+        <td>
+          {% if mappings[_id] is not None %}
+            {% raw download_link_or_path(is_local_request, mappings[_id]['mapping'], mappings[_id]['id'], 'mapping file') %}
+          {% end %}
+        </td>
+        <td>
+          {% for b in bioms[_id] %}
+            {% raw download_link_or_path(is_local_request, b['biom'], b['id'], b['text']) %}
+          {% end %}
         </td>
         <td>
          {{analysis.description}}

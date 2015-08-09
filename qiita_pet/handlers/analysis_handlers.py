@@ -20,6 +20,7 @@ from moi import ctx_default, r_client
 from moi.job import submit
 from moi.group import get_id_from_user, create_info
 
+from qiita_pet.util import is_local_connection
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
@@ -28,7 +29,7 @@ from qiita_db.data import ProcessedData
 from qiita_db.job import Job, Command
 from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,
-                           filepath_ids_to_rel_paths)
+                           filepath_ids_to_rel_paths, get_filepath_id)
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
 from qiita_db.logger import LogEntry
@@ -215,8 +216,25 @@ class ShowAnalysesHandler(BaseHandler):
         analyses = [Analysis(a) for a in
                     user.shared_analyses | user.private_analyses]
 
+        # Check if the request came from a local source
+        is_local_request = is_local_connection(self.request.headers['host'])
+        mappings = {}
+        bioms = {}
+        for analysis in analyses:
+            _id = analysis.id
+            mapping = analysis.mapping_file
+            if mapping is not None:
+                mappings[_id] = {'id': get_filepath_id('analysis', mapping),
+                                'mapping': mapping}
+            else:
+                mappings[_id] = mapping
+            bioms[_id] = [{'id': get_filepath_id('analysis', f), 'biom': f,
+                           'text': l}
+                           for l, f in viewitems(analysis.biom_tables)]
+
         self.render("show_analyses.html", analyses=analyses, message=message,
-                    level=level)
+                    level=level, is_local_request=is_local_request,
+                    mappings=mappings, bioms=bioms)
 
     @authenticated
     @execute_as_transaction

@@ -758,7 +758,7 @@ def get_filepath_id(table, fp):
     table : str
         The table type so we can search on this one
     fp : str
-        The filepath
+        The full filepath
 
     Returns
     -------

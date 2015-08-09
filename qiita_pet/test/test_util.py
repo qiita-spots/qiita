@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
 from qiita_db.parameters import ProcessedSortmernaParams
-from qiita_pet.util import clean_str, generate_param_str
+from qiita_pet.util import clean_str, generate_param_str, is_local_connection
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -27,6 +27,14 @@ class TestUtil(TestCase):
                "<b>threads:</b> 1<br/>"
                "<b>sortmerna_coverage:</b> 0.97")
         self.assertEqual(obs, exp)
+
+    def test_is_local_connection(self):
+        self.assertTrue(is_local_connection('127.0.0.1'))
+        self.assertTrue(is_local_connection('localhost'))
+        self.assertTrue(is_local_connection('127.0.0.1:21174'))
+
+        self.assertFalse(is_local_connection('10.0.0.1'))
+        self.assertFalse(is_local_connection('10.0.0.1:21174'))
 
 
 if __name__ == "__main__":
