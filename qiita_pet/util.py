@@ -89,6 +89,7 @@ def generate_param_str(param):
                   if name != 'reference_id')
     return "<br/>".join(result)
 
+
 def is_local_connection(host):
     """Verifies if the connection is local
 

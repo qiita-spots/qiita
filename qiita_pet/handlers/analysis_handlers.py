@@ -225,12 +225,12 @@ class ShowAnalysesHandler(BaseHandler):
             mapping = analysis.mapping_file
             if mapping is not None:
                 mappings[_id] = {'id': get_filepath_id('analysis', mapping),
-                                'mapping': mapping}
+                                 'mapping': mapping}
             else:
                 mappings[_id] = mapping
             bioms[_id] = [{'id': get_filepath_id('analysis', f), 'biom': f,
                            'text': l}
-                           for l, f in viewitems(analysis.biom_tables)]
+                          for l, f in viewitems(analysis.biom_tables)]
 
         self.render("show_analyses.html", analyses=analyses, message=message,
                     level=level, is_local_request=is_local_request,
