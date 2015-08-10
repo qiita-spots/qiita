@@ -23,12 +23,73 @@ Classes
 Examples
 --------
 
+* Querying
+
+In order to perform any query in the database you first need to import the
+`TRN` variable available in this module:
+
 >>> from qiita_db.sql_connection import TRN
 
-Transaction blocks are used through the variable TRN available in this module.
-TRN should be used as a context manager. You can add as many SQL commands as
-you want and execute all of them at once, and it will return the results of
-all the commands.
+The `TRN` variable is an instance of the Transaction object. All queries should
+be executed through this transaction object to avoid committing anything to the
+database that is partially executed. To perform any query you first need to
+add the query to the transaction and then execute the transaction:
+
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     res = TRN.execute()
+>>> res
+[[[42]]]
+
+* Data retrieval
+
+Multiple auxiliary functions exist for easy SQL result retrieval:
+
+Getting the first value of the last SQL query
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     res = TRN.execute_fetchlast()
+>>> res
+42
+
+Getting the results of the last SQL query
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     res = TRN.execute_fetchindex()
+>>> res
+[[42]]
+
+Getting the results of the specified SQL query
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     TRN.add("SELECT 43")
+...     res = TRN.execute_fetchindex(0)
+>>> res
+[[42]]
+
+Getting the results of the last SQL query flattened
+>>> with TRN:
+...     TRN.add("SELECT 42, 43, 44")
+...     res = TRN.execute_fetchflatten()
+>>> res
+[42, 43, 44]
+
+Getting the results of the specified SQL query flattened
+>>> with TRN:
+...     TRN.add("SELECT 42, 43, 44")
+...     TRN.add("SELECT 42")
+...     res = TRN.execute_fetchflatten(0)
+>>> res
+[42, 43, 44]
+
+* Transactions
+
+Transaction blocks are created through the same `TRN` variable exported in this
+module. You can add as many SQL commands as you want and execute all of them at
+once, and it will return the results of all the SQL commands. `TRN` should be
+used as a context so manager, and it autocommits the transaction once the last
+context is exited, as long as no error was generated inside the context, in
+which case a rollback is executed.
 
 >>> with TRN:
 ...     TRN.add("SELECT 42")
@@ -67,6 +128,17 @@ of the desired value in the result row.
 >>> res
 [[[42]], [[84]]]
 
+>>> with TRN:
+...     sql = ("SELECT param_set_name, preprocessed_params_id "
+...            "FROM qiita.preprocessed_sequence_454_params"
+...            "WHERE barcode_type = %s ORDER_BY preprocessed_params_id")
+...     TRN.add(sql, ["not_barcoded"])
+...     sql = ("SELECT * FROM qiita.preprocessed_data "
+...            "WHERE preprocessed_params_table = %s "
+...            "AND preprocessed_params_id = %s")
+...     TRN.add(sql, ["preprocessed_sequence_454_params", "{0:0:1}"])
+>>>     res = TRN.execute()
+
 If you don't know the index of the query because your current transaction can
 be embedded in a larger transaction, use the function `TRN.index` before adding
 the target query:
@@ -78,45 +150,6 @@ the target query:
 ...     res = TRN.execute()
 >>> res
 [[[42]], [[84]]]
-
-Multiple auxiliary functions exist for easy SQL result retrieval:
-
->>> with TRN:
-...     TRN.add("SELECT 42")
-...     # Returns the first value of the last SQL query
-...     res = TRN.execute_fetchlast()
->>> res
-42
-
->>> with TRN:
-...     TRN.add("SELECT 42")
-...     # Returns the results of the last SQL query
-...     res = TRN.execute_fetchindex()
->>> res
-[[42]]
-
->>> with TRN:
-...     TRN.add("SELECT 42")
-...     TRN.add("SELECT 43")
-...     # Returns the results of the specified SQL query
-...     res = TRN.execute_fetchindex(0)
->>> res
-[[42]]
-
->>> with TRN:
-...     TRN.add("SELECT 42, 43, 44")
-...     # Returns the results of the last SQL query flattened
-...     res = TRN.execute_fetchflatten()
->>> res
-[42, 43, 44]
-
->>> with TRN:
-...     TRN.add("SELECT 42, 43, 44")
-...     TRN.add("SELECT 42")
-...     # Returns the results of the specified SQL query flattened
-...     res = TRN.execute_fetchflatten(0)
->>> res
-[42, 43, 44]
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
