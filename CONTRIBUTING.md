@@ -123,7 +123,7 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
   ```python
   sql = "SELECT * FROM qiita.qiita_user"
   ```
-2. Triple quotes are preferred for the SQL statements, unless the statement fits in a single line, since most editors and GitHub will detect SQL statement and apply highlighting accordingly:
+2. Triple quotes are preferred for the SQL statements, unless the statement fits in a single line, since most editors and GitHub will detect SQL statement and apply highlighting accordingly. See point 3 for logical grouping of the SQL statements and indentation:
   * Wrong:
   ```python
   sql = ("SELECT processed_data_status FROM qiita.processed_data_status pds JOIN "
@@ -154,7 +154,7 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
            WHERE column_name = %s AND table_schema = 'qiita'
                AND (table_name = %s OR table_name = %s)"""
   ```
-4. Never, NEVER, use python string formatting to complete the SQL query parameters. Use the `sql_args` parameter from the transaction object:
+4. Never, NEVER, use python string formatting to complete the SQL query parameters. Use the `sql_args` parameter from the transaction object. This is a strong recommendation from the psycopg2 developers to avoid SQL injection attacks (see [here](http://initd.org/psycopg/docs/usage.html#the-problem-with-the-query-parameters) for more information):
   * Wrong:
   ```python
   sql = """SELECT processed_data_status
@@ -175,11 +175,16 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
   with TRN:
       TRN.add(sql, [study.id])
   ```
-5. However, python string formatting is allowed to provide table names or column names, although this should be done through the `str.format` function:
+5. However, python string formatting is allowed to provide table names or column names, although this should be done through the `str.format` function. Table/column names as parameters are not supported by psycopg2. Using `str.format` is desirable because if you need to pass parameters to the SQL statement, the python string formatting will fail (see second example below):
   * Wrong:
   ```python
   table = "qiita_user"
   sql = "SELECT * FROM qiita.%s" % table
+
+  # This will fail during execution
+  table = "qiita_user"
+  sql = "SELECT * FROM qiita.%s WHERE email = %s" % table
+  TypeError: not enough arguments for format string
   ```
   * Correct:
   ```python
