@@ -7,7 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import PY3
+from collections import defaultdict
+from future.utils import PY3, viewitems
 from future.utils.six import StringIO
 
 import pandas as pd
@@ -265,15 +266,17 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     except UnicodeDecodeError:
         # Find row number and col number for utf-8 encoding errors
         headers = holdfile[0].strip().split('\t')
-        errors = []
+        errors = defaultdict(list)
         for row, line in enumerate(holdfile, 1):
             for col, cell in enumerate(line.split('\t')):
                 try:
                     cell.encode('utf-8')
                 except UnicodeError:
-                    errors.append('row %d, header %s' % (row, headers[col]))
-        raise QiitaDBError('Non UTF-8 characters found at ' +
-                           '; '.join(errors))
+                    errors[headers[col]].append(row)
+        lines = ['%s: row(s) %s' % (header, ', '.join(map(str, rows)))
+                 for header, rows in viewitems(errors)]
+        raise QiitaDBError('Non UTF-8 characters found in columns:\n' +
+                           '\n'.join(lines))
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error

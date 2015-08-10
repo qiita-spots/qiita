@@ -14,6 +14,7 @@ from future.utils import viewitems
 
 from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
+from qiita_pet.util import convert_text_html
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from qiita_db.ontology import Ontology
@@ -274,6 +275,7 @@ class RawDataInfoDiv(BaseUIModule):
             elif raw_data_link_status.startswith('failed'):
                 link_msg = "Error (un)linking files: %s" % raw_data_link_status
 
+        link_msg = convert_text_html(link_msg)
         return self.render_string(
             "study_description_templates/raw_data_info.html",
             rd_id=raw_data_id,
