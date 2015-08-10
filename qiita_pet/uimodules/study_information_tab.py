@@ -15,7 +15,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_db.util import get_files_from_uploads_folders, get_data_types
 from qiita_db.study import StudyPerson
 from qiita_db.metadata_template import SampleTemplate
-from qiita_pet.util import linkify, is_local_connection
+from qiita_pet.util import linkify, is_localhost
 from .base_uimodule import BaseUIModule
 
 
@@ -55,7 +55,7 @@ class StudyInformationTab(BaseUIModule):
             sample_templates = []
 
         # Check if the request came from a local source
-        is_local_request = is_local_connection(self.request.headers['host'])
+        is_local_request = is_localhost(self.request.headers['host'])
 
         # The user can choose the sample template only if the study is
         # sandboxed or the current user is an admin

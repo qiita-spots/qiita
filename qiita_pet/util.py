@@ -90,7 +90,7 @@ def generate_param_str(param):
     return "<br/>".join(result)
 
 
-def is_local_connection(host):
+def is_localhost(host):
     """Verifies if the connection is local
 
     Parameters

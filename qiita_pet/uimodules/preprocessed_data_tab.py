@@ -14,7 +14,7 @@ from qiita_db.util import convert_to_id
 from qiita_db.parameters import ProcessedSortmernaParams
 from .base_uimodule import BaseUIModule
 from qiita_pet.util import (generate_param_str, STATUS_STYLER,
-                            is_local_connection)
+                            is_localhost)
 
 
 class PreprocessedDataTab(BaseUIModule):
@@ -41,7 +41,7 @@ class PreprocessedDataInfoTab(BaseUIModule):
         ebi_submission_accession = preprocessed_data.ebi_submission_accession
         vamps_status = preprocessed_data.submitted_to_vamps_status()
         filepaths = preprocessed_data.get_filepaths()
-        is_local_request = is_local_connection(self.request.headers['host'])
+        is_local_request = is_localhost(self.request.headers['host'])
         show_ebi_btn = user.level == "admin"
         processing_status = preprocessed_data.processing_status
         processed_data = sorted(preprocessed_data.processed_data)

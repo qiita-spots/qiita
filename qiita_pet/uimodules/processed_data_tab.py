@@ -9,7 +9,7 @@
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.data import ProcessedData
-from qiita_pet.util import STATUS_STYLER, is_local_connection
+from qiita_pet.util import STATUS_STYLER, is_localhost
 from .base_uimodule import BaseUIModule
 
 
@@ -62,7 +62,7 @@ class ProcessedDataInfoTab(BaseUIModule):
         preprocessed_data_id = processed_data.preprocessed_data
         process_date = processed_data.processing_info['processed_date']
         filepaths = processed_data.get_filepaths()
-        is_local_request = is_local_connection(self.request.headers['host'])
+        is_local_request = is_localhost(self.request.headers['host'])
 
         return self.render_string(
             "study_description_templates/processed_data_info_tab.html",

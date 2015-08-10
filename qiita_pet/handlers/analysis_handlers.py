@@ -20,7 +20,7 @@ from moi import ctx_default, r_client
 from moi.job import submit
 from moi.group import get_id_from_user, create_info
 
-from qiita_pet.util import is_local_connection
+from qiita_pet.util import is_localhost
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
@@ -217,7 +217,7 @@ class ShowAnalysesHandler(BaseHandler):
                     user.shared_analyses | user.private_analyses]
 
         # Check if the request came from a local source
-        is_local_request = is_local_connection(self.request.headers['host'])
+        is_local_request = is_localhost(self.request.headers['host'])
         mappings = {}
         bioms = {}
         for analysis in analyses:
