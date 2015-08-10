@@ -1,6 +1,7 @@
 from tornado.web import RequestHandler
 from qiita_db.logger import LogEntry
 from qiita_db.user import User
+from qiita_pet.util import convert_text_html
 
 
 class BaseHandler(RequestHandler):
@@ -64,6 +65,7 @@ class MainHandler(BaseHandler):
     '''Index page'''
     def get(self):
         msg = self.get_argument('message', '')
+        msg = convert_text_html(msg)
         lvl = self.get_argument('level', '')
         self.render("index.html", message=msg, level=lvl)
 

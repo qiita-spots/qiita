@@ -11,6 +11,7 @@ from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
+from qiita_pet.util import convert_text_html
 from qiita_db.parameters import ProcessedSortmernaParams
 from .base_uimodule import BaseUIModule
 from qiita_pet.util import (generate_param_str, STATUS_STYLER,
@@ -43,7 +44,8 @@ class PreprocessedDataInfoTab(BaseUIModule):
         filepaths = preprocessed_data.get_filepaths()
         is_local_request = is_localhost(self.request.headers['host'])
         show_ebi_btn = user.level == "admin"
-        processing_status = preprocessed_data.processing_status
+        processing_status = convert_text_html(
+            preprocessed_data.processing_status)
         processed_data = sorted(preprocessed_data.processed_data)
 
         # Get all the ENA terms for the investigation type

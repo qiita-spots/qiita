@@ -1,7 +1,8 @@
 from unittest import TestCase, main
 
 from qiita_db.parameters import ProcessedSortmernaParams
-from qiita_pet.util import clean_str, generate_param_str, is_localhost
+from qiita_pet.util import (clean_str, generate_param_str, is_localhost,
+                            convert_text_html)
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -35,6 +36,14 @@ class TestUtil(TestCase):
 
         self.assertFalse(is_localhost('10.0.0.1'))
         self.assertFalse(is_localhost('10.0.0.1:21174'))
+
+    def test_convert_text_html(self):
+        test = ('<b>This is line</b>\nThis is another\n'
+                'This is a link: http://test.com')
+        exp = ('<b>This is line</b><br/>This is another<br/>'
+               'This is a link: <a href="http://test.com">http://test.com</a>')
+        obs = convert_text_html(test)
+        self.assertEqual(obs, exp)
 
 
 if __name__ == "__main__":
