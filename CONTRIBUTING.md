@@ -175,7 +175,7 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
   with TRN:
       TRN.add(sql, [study.id])
   ```
-5. However, python string formatting is allowed to provide table names or column names, although this should be done through the `str.format` function. Table/column names as parameters are not supported by psycopg2. Using `str.format` is desirable because if you need to pass parameters to the SQL statement, the python string formatting will fail (see second example below):
+5. However, python string formatting is allowed to provide table names or column names, although this should be done through the `str.format` function. Table or column names as parameters are not supported by psycopg2. Using `str.format` is desirable because if you need to pass parameters to the SQL statement, the python string formatting will fail (see second example below):
   * Wrong:
   ```python
   table = "qiita_user"
