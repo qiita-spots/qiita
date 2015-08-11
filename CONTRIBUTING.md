@@ -112,7 +112,7 @@ Occasionally, SQL alone cannot effect the desired changes, and a corresponding p
 If in the future we discover a use-case where a python patch must be applied for which there *is no corresponding SQL patch*, then a blank SQL patch file will still need to created.
 
 ##SQL coding guidelines
-Since the `qiita_db` code contains a mixture of python code and SQL code, here are some coding guidelines to add the SQL code to Qiita:
+Since the `qiita_db` code contains a mixture of python code and SQL code, here are some coding guidelines to add SQL code to Qiita:
 
 1. Any SQL keyword should be written uppercased:
   * Wrong:
@@ -154,7 +154,7 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
            WHERE column_name = %s AND table_schema = 'qiita'
                AND (table_name = %s OR table_name = %s)"""
   ```
-4. Never, NEVER, use python string formatting to complete the SQL query parameters. Use the `sql_args` parameter from the transaction object. This is a strong recommendation from the psycopg2 developers to avoid SQL injection attacks (see [here](http://initd.org/psycopg/docs/usage.html#the-problem-with-the-query-parameters) for more information):
+4. Never, NEVER, use python string formatting to complete the SQL query parameters. Use the `sql_args` parameter from the transaction object. This is a strong recommendation from the psycopg2 developers to avoid SQL injection attacks ([see](http://initd.org/psycopg/docs/usage.html#the-problem-with-the-query-parameters) for more information):
   * Wrong:
   ```python
   sql = """SELECT processed_data_status
@@ -175,7 +175,7 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
   with TRN:
       TRN.add(sql, [study.id])
   ```
-5. However, python string formatting is allowed to provide table names or column names, although this should be done through the `str.format` function. Table or column names as parameters are not supported by psycopg2. Using `str.format` is desirable because if you need to pass parameters to the SQL statement, the python string formatting will fail (see second example below):
+5. However, python string formatting is allowed to provide table or column names, although this should be done through the `str.format` function. Table or column names as parameters are not supported by psycopg2. Using `str.format` is desirable because if you need to pass parameters to the SQL statement, the python string formatting will fail (see second example below):
   * Wrong:
   ```python
   table = "qiita_user"
