@@ -22,6 +22,7 @@ from moi.group import get_id_from_user, create_info
 
 from qiita_pet.util import is_localhost
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.handlers.util import download_link_or_path
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
 from qiita_db.analysis import Analysis
@@ -224,13 +225,15 @@ class ShowAnalysesHandler(BaseHandler):
             _id = analysis.id
             mapping = analysis.mapping_file
             if mapping is not None:
-                mappings[_id] = {'id': get_filepath_id('analysis', mapping),
-                                 'mapping': mapping}
+                mappings[_id] = download_link_or_path(
+                    is_local_request, mapping,
+                    get_filepath_id('analysis', mapping), 'mapping file')
             else:
-                mappings[_id] = mapping
-            bioms[_id] = [{'id': get_filepath_id('analysis', f), 'biom': f,
-                           'text': l}
-                          for l, f in viewitems(analysis.biom_tables)]
+                mappings[_id] = ''
+            bioms[_id] = '\n'.join(
+                [download_link_or_path(is_local_request, f,
+                                       get_filepath_id('analysis', f), l)
+                 for l, f in viewitems(analysis.biom_tables)])
 
         self.render("show_analyses.html", analyses=analyses, message=message,
                     level=level, is_local_request=is_local_request,

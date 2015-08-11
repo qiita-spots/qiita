@@ -11,7 +11,6 @@
 {% end %}
 
 {%block content %}
-{% from qiita_pet.handlers.util import download_link_or_path %}
 
 <div id='no-analyses' class='jumbotron'>
   <h1>No Analyses available</h1>
@@ -22,11 +21,11 @@
   <table class="table">
     <tr>
       <th>Analysis Name</th>
-      <th>Mapping File</th>
-      <th>Biom Files</th>
       <th>Analysis Description</th>
       <th>Status</th>
       <th>Timestamp</th>
+      <th>Mapping File</th>
+      <th>Biom Files</th>
       <th>Delete?</th>
     </tr>
     {% for analysis in analyses %}
@@ -55,16 +54,6 @@
       {% end %}
         </td>
         <td>
-          {% if mappings[_id] is not None %}
-            {% raw download_link_or_path(is_local_request, mappings[_id]['mapping'], mappings[_id]['id'], 'mapping file') %}
-          {% end %}
-        </td>
-        <td>
-          {% for b in bioms[_id] %}
-            {% raw download_link_or_path(is_local_request, b['biom'], b['id'], b['text']) %}
-          {% end %}
-        </td>
-        <td>
          {{analysis.description}}
        </td>
         <td>
@@ -72,6 +61,12 @@
        </td>
         <td>
          {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
+        </td>
+        <td>
+          {% raw mappings[_id] %}
+        </td>
+        <td>
+          {% raw bioms[_id] %}
         </td>
         <td>
          <a class="btn btn-danger glyphicon glyphicon-trash {% if status == 'running' %} disabled {% end %}" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>
