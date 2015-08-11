@@ -23,7 +23,7 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBUnknownIDError,
                                  QiitaDBNotImplementedError,
                                  QiitaDBDuplicateHeaderError,
                                  QiitaDBColumnError, QiitaDBError,
-                                 QiitaDBWarning)
+                                 QiitaDBWarning, QiitaDBDuplicateSamplesError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import exists_table, get_count
@@ -664,6 +664,13 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                                                 index=self.metadata.index)
 
         with self.assertRaises(QiitaDBDuplicateHeaderError):
+            SampleTemplate._clean_validate_template(self.metadata, 2,
+                                                    SAMPLE_TEMPLATE_COLUMNS)
+
+    def test_clean_validate_template_error_duplicate_samples(self):
+        """Raises an error if there are duplicated samples in the template"""
+        self.metadata.index = ['sample.1', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBDuplicateSamplesError):
             SampleTemplate._clean_validate_template(self.metadata, 2,
                                                     SAMPLE_TEMPLATE_COLUMNS)
 
