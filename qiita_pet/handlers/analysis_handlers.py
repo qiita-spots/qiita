@@ -14,6 +14,7 @@ from future.utils import viewitems
 from collections import defaultdict
 from os.path import join, sep, commonprefix, basename, dirname
 from json import dumps
+from functools import partial
 
 from tornado.web import authenticated, HTTPError, StaticFileHandler
 from moi import ctx_default, r_client
@@ -217,23 +218,21 @@ class ShowAnalysesHandler(BaseHandler):
         analyses = [Analysis(a) for a in
                     user.shared_analyses | user.private_analyses]
 
-        # Check if the request came from a local source
         is_local_request = is_localhost(self.request.headers['host'])
+        gfi = partial(get_filepath_id, 'analysis')
+        dlop = partial(download_link_or_path, is_local_request)
         mappings = {}
         bioms = {}
         for analysis in analyses:
             _id = analysis.id
             mapping = analysis.mapping_file
             if mapping is not None:
-                mappings[_id] = download_link_or_path(
-                    is_local_request, mapping,
-                    get_filepath_id('analysis', mapping), 'mapping file')
+                mappings[_id] = dlop(mapping, gfi(mapping), 'mapping file')
             else:
                 mappings[_id] = ''
-            bioms[_id] = '\n'.join(
-                [download_link_or_path(is_local_request, f,
-                                       get_filepath_id('analysis', f), l)
-                 for l, f in viewitems(analysis.biom_tables)])
+            links = [dlop(f, gfi(f), l)
+                     for l, f in viewitems(analysis.biom_tables)]
+            bioms[_id] = '\n'.join(links)
 
         self.render("show_analyses.html", analyses=analyses, message=message,
                     level=level, is_local_request=is_local_request,
