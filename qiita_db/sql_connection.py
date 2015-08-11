@@ -23,6 +23,9 @@ Classes
 Examples
 --------
 
+>>> from qiita_db.environment_manager import drop_and_rebuild_tst_database
+>>> drop_and_rebuild_tst_database()
+
 * Querying
 
 In order to perform any query in the database you first need to import the
@@ -130,14 +133,16 @@ of the desired value in the result row.
 
 >>> with TRN:
 ...     sql = ("SELECT param_set_name, preprocessed_params_id "
-...            "FROM qiita.preprocessed_sequence_454_params"
-...            "WHERE barcode_type = %s ORDER_BY preprocessed_params_id")
-...     TRN.add(sql, ["not_barcoded"])
+...            "FROM qiita.preprocessed_sequence_454_params "
+...            "WHERE barcode_type = %s ORDER BY preprocessed_params_id")
+...     TRN.add(sql, ["golay_12"])
 ...     sql = ("SELECT * FROM qiita.preprocessed_data "
 ...            "WHERE preprocessed_params_table = %s "
 ...            "AND preprocessed_params_id = %s")
 ...     TRN.add(sql, ["preprocessed_sequence_454_params", "{0:0:1}"])
->>>     res = TRN.execute()
+...     res = TRN.execute()
+>>> res
+[[['Defaults with Golay 12 barcodes', 1L]], []]
 
 If you don't know the index of the query because your current transaction can
 be embedded in a larger transaction, use the function `TRN.index` before adding
