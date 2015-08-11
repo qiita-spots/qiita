@@ -24,7 +24,7 @@ Examples
 --------
 
 >>> from qiita_db.environment_manager import drop_and_rebuild_tst_database
->>> drop_and_rebuild_tst_database()
+>>> drop_and_rebuild_tst_database()  # doctest: +SKIP
 
 * Querying
 
