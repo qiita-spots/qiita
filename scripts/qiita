@@ -386,7 +386,8 @@ def unlock():
               help='The amount of time to show message, in seconds')
 @click.option('--message', required=True, type=str,
               help="Message to show users")
-@click.option('--banner', is_flag=True)
+@click.option('--banner', is_flag=True,
+              help="If set, show as site banner instead of a standard message")
 def sysmessage(message, time, banner):
     if banner:
         r_client.setex('sysmessage', message, time)
