@@ -403,15 +403,16 @@ class UserTest(TestCase):
         sql = """UPDATE qiita.message
                  SET expiration = '2015-08-05'
                  WHERE message_id = 1"""
+        self.conn_handler.execute(sql)
         user = User('test@foo.bar')
         user.delete_messages([1, 2])
         obs = user.messages()
         exp_msg = [(1, 'message 1'), (3, 'message <a href="#">3</a>')]
-        self.assertEqual([(x[0], x[1]) for x in obs], exp_msg)
+        self.assertItemsEqual([(x[0], x[1]) for x in obs], exp_msg)
 
         sql = "SELECT message_id FROM qiita.message"
         obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(obs, [[1], [3]])
+        self.assertItemsEqual(obs, [[1], [3]])
 
 if __name__ == "__main__":
     main()
