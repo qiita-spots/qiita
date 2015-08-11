@@ -551,7 +551,7 @@ class User(QiitaObject):
         with TRN:
             sql_info = [self._id]
             sql = """SELECT message_id, message, message_time, read,
-                     (expiration IS NOT NULL) as system_message
+                        (expiration IS NOT NULL) AS system_message
                      FROM qiita.message_user
                      JOIN qiita.message USING (message_id)
                      WHERE email = %s ORDER BY message_time DESC"""
@@ -590,18 +590,18 @@ class User(QiitaObject):
             # remove message from user
             sql = """DELETE FROM qiita.message_user
                      WHERE message_id IN %s AND email = %s
-                     AND message_id NOT IN
-                        (SELECT message_id FROM qiita.message
-                         WHERE expiration IS NOT NULL)"""
+                        AND message_id NOT IN
+                            (SELECT message_id FROM qiita.message
+                            WHERE expiration IS NOT NULL)"""
             TRN.add(sql, [tuple(messages), self._id])
             # Remove any messages that no longer are attached to a user
             # and are not system messages
             sql = """DELETE FROM qiita.message
                      WHERE message_id NOT IN
-                     (SELECT DISTINCT message_id FROM qiita.message_user
-                      UNION
-                      SELECT message_id FROM qiita.message
-                      WHERE expiration IS NOT NULL)"""
+                         (SELECT DISTINCT message_id FROM qiita.message_user
+                          UNION
+                          SELECT message_id FROM qiita.message
+                          WHERE expiration IS NOT NULL)"""
             TRN.add(sql)
             TRN.execute()
 
