@@ -33,16 +33,20 @@ In order to perform any query in the database you first need to import the
 
 >>> from qiita_db.sql_connection import TRN
 
-The `TRN` variable is an instance of the Transaction object. All queries should
-be executed through this transaction object to avoid committing anything to the
-database that is partially executed. To perform any query you first need to
-add the query to the transaction and then execute the transaction:
+The `TRN` variable is an instance of the `Transaction` object. All queries
+should be executed through this object to ensure atomicity. To perform any
+query you first need to add the query to the transaction and then execute the
+transaction:
 
 >>> with TRN:
 ...     TRN.add("SELECT 42")
 ...     res = TRN.execute()
 >>> res
 [[[42]]]
+
+The `execute` function returns the values of all the queries in the transaction
+object. This requires three layers of nesting: (1) the query (2) the result
+rows in a given query and (3) the result columns in a given row.
 
 * Data retrieval
 
@@ -66,6 +70,7 @@ Getting the results of the specified SQL query
 >>> with TRN:
 ...     TRN.add("SELECT 42")
 ...     TRN.add("SELECT 43")
+...     # The index 0 corresponds to the first query in the transaction
 ...     res = TRN.execute_fetchindex(0)
 >>> res
 [[42]]
