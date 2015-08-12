@@ -154,7 +154,7 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
            WHERE column_name = %s AND table_schema = 'qiita'
                AND (table_name = %s OR table_name = %s)"""
   ```
-4. Never, NEVER, use python string formatting to complete the SQL query parameters. Use the `sql_args` parameter from the transaction object. This is a strong recommendation from the psycopg2 developers to avoid SQL injection attacks ([see](http://initd.org/psycopg/docs/usage.html#the-problem-with-the-query-parameters) for more information):
+4. Never, NEVER, use python string formatting to complete the SQL query parameters. Use the `sql_args` parameter from the transaction object. This is a strong recommendation from the psycopg2 developers to avoid SQL injection attacks (detailed explanation [here](http://initd.org/psycopg/docs/usage.html#the-problem-with-the-query-parameters)):
   * Wrong:
   ```python
   sql = """SELECT processed_data_status
@@ -181,10 +181,10 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
   table = "qiita_user"
   sql = "SELECT * FROM qiita.%s" % table
 
-  # This will fail during execution
+  # This will fail during execution with the following error:
+  # TypeError: not enough arguments for format string
   table = "qiita_user"
   sql = "SELECT * FROM qiita.%s WHERE email = %s" % table
-  TypeError: not enough arguments for format string
   ```
   * Correct:
   ```python
