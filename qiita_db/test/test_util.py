@@ -648,17 +648,20 @@ class DBUtilTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_clear_system_messages(self):
+        message_id = get_count('qiita.message') + 1
         obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
         exp = [[1, 'message 1']]
         self.assertEqual(obs, exp)
 
         add_system_message("SYS MESSAGE", datetime(2015, 8, 5, 19, 41))
         obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
-        exp = [[1, 'message 1'], [4, 'SYS MESSAGE']]
+        exp = [[1, 'message 1'], [message_id, 'SYS MESSAGE']]
+        self.assertItemsEqual(obs, exp)
 
         clear_system_messages()
         obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
         exp = [[1, 'message 1']]
+        self.assertEqual(obs, exp)
 
 
 class UtilTests(TestCase):

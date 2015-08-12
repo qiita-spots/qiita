@@ -364,9 +364,11 @@ class UserTest(TestCase):
         self._check_pass("password")
 
     def test_messages(self):
+        add_system_message('SYS MESSAGE', datetime.now())
         user = User('test@foo.bar')
         obs = user.messages()
         exp_msg = [
+            (4, 'SYS MESSAGE'),
             (1, 'message 1'),
             (2, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
                 'Pellentesque sed auctor ex, non placerat sapien. Vestibulum '
@@ -383,9 +385,10 @@ class UserTest(TestCase):
         self.assertEqual([(x[0], x[1]) for x in obs], exp_msg)
         self.assertTrue(all(x[2] < datetime.now() for x in obs))
         self.assertFalse(all(x[3] for x in obs))
+        self.assertEqual([x[4] for x in obs], [True, False, False, False])
 
         obs = user.messages(1)
-        exp_msg = ['message 1']
+        exp_msg = ['SYS MESSAGE']
         self.assertEqual([x[1] for x in obs], exp_msg)
 
     def test_mark_messages(self):
