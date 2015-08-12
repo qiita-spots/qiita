@@ -29,6 +29,7 @@ TODO
 # -----------------------------------------------------------------------------
 from __future__ import division
 from re import sub
+from datetime import datetime
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -323,8 +324,8 @@ class User(QiitaObject):
                     # Add system messages to user
                     sql = """INSERT INTO qiita.message_user (email, message_id)
                              SELECT %s, message_id FROM qiita.message
-                             WHERE expiration IS NOT NULL"""
-                    TRN.add(sql, [email])
+                             WHERE expiration > %s"""
+                    TRN.add(sql, [email, datetime.now()])
 
                     TRN.execute()
 

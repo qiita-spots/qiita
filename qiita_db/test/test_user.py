@@ -9,7 +9,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -264,7 +264,9 @@ class UserTest(TestCase):
         self.assertEqual(user.shared_analyses, set())
 
     def test_verify_code(self):
-        add_system_message("TESTMESSAGE", datetime.now())
+        add_system_message("TESTMESSAGE_OLD", datetime.now())
+        add_system_message("TESTMESSAGE",
+                           datetime.now() + timedelta(seconds=59))
         sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
                "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
                ",null)")
@@ -305,10 +307,10 @@ class UserTest(TestCase):
                  WHERE email = 'new@test.bar' AND dflt = true"""
         self.assertEqual(self.conn_handler.execute_fetchone(sql)[0], 2)
 
-        # Make sure system messages are linked to user
+        # Make sure new system messages are linked to user
         sql = """SELECT message_id FROM qiita.message_user
                  WHERE email = 'new@test.bar'"""
-        self.assertEqual(self.conn_handler.execute_fetchall(sql), [[4]])
+        self.assertEqual(self.conn_handler.execute_fetchall(sql), [[5]])
 
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(
