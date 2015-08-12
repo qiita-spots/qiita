@@ -95,3 +95,20 @@ def generate_param_str(param):
                   for name, value in viewitems(param.values)
                   if name != 'reference_id')
     return "<br/>".join(result)
+
+
+def is_localhost(host):
+    """Verifies if the connection is local
+
+    Parameters
+    ----------
+    host : str
+        The requesting host, in general self.request.headers['host']
+
+    Returns
+    -------
+    bool
+        True if local request
+    """
+    localhost = ('localhost', '127.0.0.1')
+    return host.startswith(localhost)

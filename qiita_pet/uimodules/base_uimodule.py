@@ -11,7 +11,3 @@ from tornado.web import UIModule
 
 class BaseUIModule(UIModule):
     """Base class for all UiModule so we can centralize functionality"""
-
-    def _is_local(self):
-        return ('localhost' in self.request.headers['host'] or
-                '127.0.0.1' in self.request.headers['host'])

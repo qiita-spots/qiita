@@ -22,7 +22,7 @@ from qiita_db.metadata_template import (PrepTemplate, TARGET_GENE_DATA_TYPES,
                                         PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
-from qiita_pet.util import STATUS_STYLER
+from qiita_pet.util import STATUS_STYLER, is_localhost
 from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
 from qiita_core.util import execute_as_transaction
@@ -114,7 +114,7 @@ class PrepTemplateInfoTab(BaseUIModule):
     def render(self, study, prep_template, full_access, ena_terms,
                user_defined_terms):
         user = self.current_user
-        is_local_request = self._is_local()
+        is_local_request = is_localhost(self.request.headers['host'])
 
         template_fps = []
         qiime_fps = []
