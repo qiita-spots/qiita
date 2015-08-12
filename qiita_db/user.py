@@ -589,10 +589,7 @@ class User(QiitaObject):
         with TRN:
             # remove message from user
             sql = """DELETE FROM qiita.message_user
-                     WHERE message_id IN %s AND email = %s
-                        AND message_id NOT IN
-                            (SELECT message_id FROM qiita.message
-                            WHERE expiration IS NOT NULL)"""
+                     WHERE message_id IN %s AND email = %s"""
             TRN.add(sql, [tuple(messages), self._id])
             # Remove any messages that no longer are attached to a user
             # and are not system messages

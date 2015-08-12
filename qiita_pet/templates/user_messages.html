@@ -46,11 +46,9 @@
         <td class="col-sm-1"></td class="col-md-9"><td>Message</td><td class="col-md-2">Timestamp</td></tr>
       </thead>
       <tbody>
-        {% for m_id, message, ts, read, sys in user_messages %}
+        {% for m_id, message, ts, _ read in user_messages %}
           <tr><td>
-          {% if not sys %}
           <input type="checkbox" class="msg-checkbox" name="messages" value="{{m_id}}" onchange="show_hide_actions()">
-          {% end %}
           </td><td {% if not read %}style="font-weight:bold"{% end %}>{% raw message %}</td><td>{{ts}}</td></tr>
         {% end %}
       </tbody>

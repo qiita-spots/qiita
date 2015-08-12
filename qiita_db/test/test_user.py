@@ -407,7 +407,7 @@ class UserTest(TestCase):
         user = User('test@foo.bar')
         user.delete_messages([1, 2])
         obs = user.messages()
-        exp_msg = [(1, 'message 1'), (3, 'message <a href="#">3</a>')]
+        exp_msg = [(3, 'message <a href="#">3</a>')]
         self.assertItemsEqual([(x[0], x[1]) for x in obs], exp_msg)
 
         sql = "SELECT message_id FROM qiita.message"
