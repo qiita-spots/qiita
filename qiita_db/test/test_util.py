@@ -41,7 +41,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            move_upload_files_to_trash,
                            check_access_to_analysis_result, infer_status,
                            get_preprocessed_params_tables, add_message,
-                           add_system_message)
+                           add_system_message, clear_system_messages)
 
 
 @qiita_test_checker()
@@ -646,6 +646,19 @@ class DBUtilTests(TestCase):
         obs = self.conn_handler.execute_fetchall(sql, [count])
         exp = [[datetime(2015, 8, 5, 19, 41)]]
         self.assertEqual(obs, exp)
+
+    def test_clear_system_messages(self):
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[1, 'message 1']]
+        self.assertEqual(obs, exp)
+
+        add_system_message("SYS MESSAGE", datetime(2015, 8, 5, 19, 41))
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[1, 'message 1'], [4, 'SYS MESSAGE']]
+
+        clear_system_messages()
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[1, 'message 1']]
 
 
 class UtilTests(TestCase):

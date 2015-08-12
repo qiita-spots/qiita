@@ -36,7 +36,7 @@ from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError, QiitaDBError
 from qiita_db.reference import Reference
 from qiita_db.logger import LogEntry
-from qiita_db.util import add_system_message
+from qiita_db.util import add_system_message, clear_system_messages
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from qiita_ware.processing_pipeline import generate_demux_file
@@ -399,6 +399,7 @@ def sysmessage(message, time, banner):
 @maintenance.command()
 def clear_sysmessage():
     r_client.delete('sysmessage')
+    clear_system_messages()
 
 
 @maintenance.command()

@@ -1143,3 +1143,16 @@ def add_system_message(message, expires):
                  SELECT email, %s FROM qiita.qiita_user"""
         TRN.add(sql, [msg_id])
         TRN.execute()
+
+
+def clear_system_messages():
+    with TRN:
+        sql = """SELECT message_id FROM qiita.message WHERE expiration < %s"""
+        TRN.add(sql, [datetime.now()])
+        msg_ids = TRN.execute_fetchflatten()
+        msg_ids = tuple(msg_ids)
+        sql = """DELETE FROM qiita.message_user WHERE message_id in %s"""
+        TRN.add(sql, [msg_ids])
+        sql = """DELETE FROM qiita.message WHERE message_id in %s"""
+        TRN.add(sql, [msg_ids])
+        TRN.execute()
