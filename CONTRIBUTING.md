@@ -110,3 +110,103 @@ If you need to submit a patch that changes only data but does not alter the sche
 Occasionally, SQL alone cannot effect the desired changes, and a corresponding python script must be run after the SQL patch is applied. If this is the case, a python file should be created in the `patches/python_patches` directory, and it should have the same basename as the SQL file. For example, if there is a patch `4.sql` in the `patches` directory, and this patch requires a python script be run after the SQL is applied, then the python file should be placed at `patches/python_patches/4.py`. Note that not every SQL patch will have a corresponding python patch, but every python patch will have a corresponding SQL patch.
 
 If in the future we discover a use-case where a python patch must be applied for which there *is no corresponding SQL patch*, then a blank SQL patch file will still need to created.
+
+##SQL coding guidelines
+Since the `qiita_db` code contains a mixture of python code and SQL code, here are some coding guidelines to add SQL code to Qiita:
+
+1. Any SQL keyword should be written uppercased:
+  * Wrong:
+  ```python
+  sql = "select * from qiita.qiita_user"
+  ```
+  * Correct:
+  ```python
+  sql = "SELECT * FROM qiita.qiita_user"
+  ```
+2. Triple quotes are preferred for the SQL statements, unless the statement fits in a single line, since most editors and GitHub will detect SQL statement and apply highlighting accordingly. See point 3 for logical grouping of the SQL statements and indentation:
+  * Wrong:
+  ```python
+  sql = ("SELECT processed_data_status FROM qiita.processed_data_status pds JOIN "
+         "qiita.processed_data pd USING (processed_data_status_id) JOIN "
+         "qiita.study_processed_data spd USING (processed_data_id) "
+         "WHERE spd.study_id = %s")
+  ```
+  * Correct:
+  ```python
+  sql = """SELECT processed_data_status
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s"""
+  sql = "SELECT * FROM qiita.qiita_user"
+  ```
+3. Use PEP8-style indentation for the SQL queries, as it will improve readability. Common SQL best-practices recommend to have a new line for the `SELECT`, `FROM`, `WHERE` and similar clauses:
+  * Wrong:
+  ```python
+  sql = """SELECT udt_name FROM information_schema.columns WHERE 
+           column_name = %s AND table_schema = 'qiita' AND (table_name = %s
+           OR table_name = %s)"""
+  ```
+  * Correct:
+  ```python
+  sql = """SELECT udt_name
+           FROM information_schema.columns
+           WHERE column_name = %s AND table_schema = 'qiita'
+               AND (table_name = %s OR table_name = %s)"""
+  ```
+4. Never, NEVER, use python string formatting to complete the SQL query parameters. Use the `sql_args` parameter from the transaction object. This is a strong recommendation from the psycopg2 developers to avoid SQL injection attacks (detailed explanation [here](http://initd.org/psycopg/docs/usage.html#the-problem-with-the-query-parameters)):
+  * Wrong:
+  ```python
+  sql = """SELECT processed_data_status
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s""" % study.id
+  with TRN:
+      TRN.add(sql)
+  ```
+  * Correct:
+  ```python
+  sql = """SELECT processed_data_status
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s"""
+  with TRN:
+      TRN.add(sql, [study.id])
+  ```
+5. However, python string formatting is allowed to provide table or column names, although this should be done through the `str.format` function. Table or column names as parameters are not supported by psycopg2. Using `str.format` is desirable because if you need to pass parameters to the SQL statement, the python string formatting will fail (see second example below):
+  * Wrong:
+  ```python
+  table = "qiita_user"
+  sql = "SELECT * FROM qiita.%s" % table
+
+  # This will fail during execution with the following error:
+  # TypeError: not enough arguments for format string
+  table = "qiita_user"
+  sql = "SELECT * FROM qiita.%s WHERE email = %s" % table
+  ```
+  * Correct:
+  ```python
+  table = "qiita_user"
+  sql = "SELECT * FROM qiita.{0}".format(table)
+  ```
+6. The SQL command should be set up in a variable and use this variable as parameter to the `TRN.add` method, rather than defining the SQL statement in the method itself, unless the statement is short and fits in a single line:
+  * Wrong:
+  ```python
+  TRN.add("""SELECT processed_data_status
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s""", [study.id])
+  ```
+  * Correct:
+  ```python
+  sql = """SELECT processed_data_status
+           FROM qiita.processed_data_status pds
+              JOIN qiita.processed_data pd USING (processed_data_status_id)
+              JOIN qiita.study_processed_data spd USING (processed_data_id)
+           WHERE spd.study_id = %s"""
+  TRN.add(sql, [study.id])
+  TRN.add("SELECT * FROM qiita.qiita_user WHERE email=%s", [user.id])
+  ```
