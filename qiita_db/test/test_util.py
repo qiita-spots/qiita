@@ -663,6 +663,9 @@ class DBUtilTests(TestCase):
         exp = [[1, 'message 1']]
         self.assertEqual(obs, exp)
 
+        # Run again with no system messages to make sure no errors
+        clear_system_messages()
+
 
 class UtilTests(TestCase):
     """Tests for the util functions that do not need to access the DB"""
