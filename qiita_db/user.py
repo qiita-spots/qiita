@@ -29,6 +29,7 @@ TODO
 # -----------------------------------------------------------------------------
 from __future__ import division
 from re import sub
+from datetime import datetime
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
@@ -55,6 +56,7 @@ class User(QiitaObject):
     default_analysis
     private_analyses
     shared_analyses
+    unread_messages
 
     Methods
     -------
@@ -62,6 +64,9 @@ class User(QiitaObject):
     generate_reset_code
     change_forgot_password
     iter
+    messages
+    mark_messages
+    delete_messages
     """
 
     _table = "qiita_user"
@@ -316,6 +321,11 @@ class User(QiitaObject):
                         TRN.add(an_sql, args)
                         an_id = TRN.execute_fetchlast()
                         TRN.add(ap_sql, [an_id, portal_id])
+                    # Add system messages to user
+                    sql = """INSERT INTO qiita.message_user (email, message_id)
+                             SELECT %s, message_id FROM qiita.message
+                             WHERE expiration > %s"""
+                    TRN.add(sql, [email, datetime.now()])
 
                     TRN.execute()
 
@@ -441,6 +451,18 @@ class User(QiitaObject):
             TRN.add(sql, [self._id, qiita_config.portal])
             return set(TRN.execute_fetchflatten())
 
+    @property
+    def unread_messages(self):
+        """Returns all unread messages for a user"""
+        with TRN:
+            sql = """SELECT message_id, message, message_time, read
+                     FROM qiita.message_user
+                     JOIN qiita.message USING (message_id)
+                     WHERE email = %s AND read = FALSE
+                     ORDER BY message_time DESC"""
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchindex()
+
     # ------- methods ---------
     def change_password(self, oldpass, newpass):
         """Changes the password from oldpass to newpass
@@ -507,6 +529,78 @@ class User(QiitaObject):
                      SET password=%s, pass_reset_code = NULL
                      WHERE email = %s""".format(self._table)
             TRN.add(sql, [hash_password(newpass), self._id])
+            TRN.execute()
+
+    def messages(self, count=None):
+        """Return messages in user's queue
+
+        Parameters
+        ----------
+        count : int, optional
+            Number of messages to return, starting with newest. Default all
+
+        Returns
+        -------
+        list of tuples
+            Messages in the queue, in the form
+            [(msg_id, msg, timestamp, read, system_message), ...]
+
+        Notes
+        -----
+        system_message is a bool. When True, this is a systemwide message.
+        """
+        with TRN:
+            sql_info = [self._id]
+            sql = """SELECT message_id, message, message_time, read,
+                        (expiration IS NOT NULL) AS system_message
+                     FROM qiita.message_user
+                     JOIN qiita.message USING (message_id)
+                     WHERE email = %s ORDER BY message_time DESC"""
+            if count is not None:
+                sql += " LIMIT %s"
+                sql_info.append(count)
+            TRN.add(sql, sql_info)
+            return TRN.execute_fetchindex()
+
+    def mark_messages(self, messages, read=True):
+        """Mark given messages as read/unread
+
+        Parameters
+        ----------
+        messages : list of ints
+            Message IDs to mark as read/unread
+        read : bool, optional
+            Marks as read if True, unread if False. Default True
+        """
+        with TRN:
+            sql = """UPDATE qiita.message_user
+                     SET read = %s
+                     WHERE message_id IN %s AND email = %s"""
+            TRN.add(sql, [read, tuple(messages), self._id])
+            return TRN.execute_fetchindex()
+
+    def delete_messages(self, messages):
+        """Delete given messages for the user
+
+        Parameters
+        ----------
+        messages : list of ints
+            Message IDs to delete
+        """
+        with TRN:
+            # remove message from user
+            sql = """DELETE FROM qiita.message_user
+                     WHERE message_id IN %s AND email = %s"""
+            TRN.add(sql, [tuple(messages), self._id])
+            # Remove any messages that no longer are attached to a user
+            # and are not system messages
+            sql = """DELETE FROM qiita.message
+                     WHERE message_id NOT IN
+                         (SELECT DISTINCT message_id FROM qiita.message_user
+                          UNION
+                          SELECT message_id FROM qiita.message
+                          WHERE expiration IS NOT NULL)"""
+            TRN.add(sql)
             TRN.execute()
 
 

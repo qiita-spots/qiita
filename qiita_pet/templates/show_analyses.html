@@ -24,10 +24,13 @@
       <th>Analysis Description</th>
       <th>Status</th>
       <th>Timestamp</th>
+      <th>Mapping File</th>
+      <th>Biom Files</th>
       <th>Delete?</th>
     </tr>
     {% for analysis in analyses %}
       {% set status = analysis.status %}
+      {% set _id = analysis.id %}
       {% if status == "in_construction"%}
         <tr>
           <td>
@@ -58,6 +61,12 @@
        </td>
         <td>
          {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
+        </td>
+        <td>
+          {% raw mappings[_id] %}
+        </td>
+        <td>
+          {% raw bioms[_id] %}
         </td>
         <td>
          <a class="btn btn-danger glyphicon glyphicon-trash {% if status == 'running' %} disabled {% end %}" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>

@@ -50,7 +50,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBNotImplementedError, QiitaDBError,
-                                 QiitaDBWarning, QiitaDBDuplicateHeaderError)
+                                 QiitaDBWarning, QiitaDBDuplicateHeaderError,
+                                 QiitaDBDuplicateSamplesError)
 from qiita_db.base import QiitaObject
 from qiita_db.sql_connection import TRN
 from qiita_db.util import (exists_table, get_table_cols,
@@ -535,6 +536,10 @@ class MetadataTemplate(QiitaObject):
                                      "(only alphanumeric characters or periods"
                                      " are allowed): %s." %
                                      ", ".join(invalid_ids))
+
+        if len(set(md_template.index)) != len(md_template.index):
+            raise QiitaDBDuplicateSamplesError(
+                find_duplicates(md_template.index))
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one

@@ -22,6 +22,7 @@ Methods
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from future.utils import viewitems
+from tornado.escape import linkify as tornado_linkify, xhtml_unescape
 
 from qiita_core.util import execute_as_transaction
 from qiita_db.reference import Reference
@@ -68,6 +69,12 @@ def clean_str(item):
     return str(item).replace(" ", "_").replace(":", "")
 
 
+def convert_text_html(message):
+    """Linkify URLs and turn newlines into <br/> for HTML"""
+    html = xhtml_unescape(tornado_linkify(message))
+    return html.replace('\n', '<br/>')
+
+
 @execute_as_transaction
 def generate_param_str(param):
     """Generate an html string with the parameter values
@@ -88,3 +95,20 @@ def generate_param_str(param):
                   for name, value in viewitems(param.values)
                   if name != 'reference_id')
     return "<br/>".join(result)
+
+
+def is_localhost(host):
+    """Verifies if the connection is local
+
+    Parameters
+    ----------
+    host : str
+        The requesting host, in general self.request.headers['host']
+
+    Returns
+    -------
+    bool
+        True if local request
+    """
+    localhost = ('localhost', '127.0.0.1')
+    return host.startswith(localhost)

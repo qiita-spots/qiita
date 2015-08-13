@@ -9,12 +9,13 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from datetime import datetime, timedelta
 
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import hash_password
+from qiita_db.util import hash_password, add_system_message, get_count
 from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError, QiitaDBError)
@@ -263,10 +264,14 @@ class UserTest(TestCase):
         self.assertEqual(user.shared_analyses, set())
 
     def test_verify_code(self):
+        add_system_message("TESTMESSAGE_OLD", datetime.now())
+        add_system_message("TESTMESSAGE",
+                           datetime.now() + timedelta(seconds=59))
         sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
                "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
                ",null)")
         self.conn_handler.execute(sql)
+
         self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
                                           'create'))
         self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
@@ -301,6 +306,12 @@ class UserTest(TestCase):
                     JOIN qiita.portal_type USING (portal_type_id)
                  WHERE email = 'new@test.bar' AND dflt = true"""
         self.assertEqual(self.conn_handler.execute_fetchone(sql)[0], 2)
+
+        # Make sure new system messages are linked to user
+        sql = """SELECT message_id FROM qiita.message_user
+                 WHERE email = 'new@test.bar'"""
+        m_id = get_count('qiita.message')
+        self.assertEqual(self.conn_handler.execute_fetchall(sql), [[m_id]])
 
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(
@@ -353,6 +364,61 @@ class UserTest(TestCase):
         self.assertEqual(obsbool, False)
         self._check_pass("password")
 
+    def test_messages(self):
+        add_system_message('SYS MESSAGE', datetime.now())
+        user = User('test@foo.bar')
+        obs = user.messages()
+        exp_msg = [
+            (4, 'SYS MESSAGE'),
+            (1, 'message 1'),
+            (2, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
+                'Pellentesque sed auctor ex, non placerat sapien. Vestibulum '
+                'vestibulum massa ut sapien condimentum, cursus consequat diam'
+                ' sodales. Nulla aliquam arcu ut massa auctor, et vehicula '
+                'mauris tempor. In lacinia viverra ante quis pellentesque. '
+                'Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla'
+                ' ac nisi quis dui egestas malesuada vitae ut mauris. Morbi '
+                'blandit non nisl a finibus. In erat velit, congue at ipsum '
+                'sit amet, venenatis bibendum sem. Curabitur vel odio sed est '
+                'rutrum rutrum. Quisque efficitur ut purus in ultrices. '
+                'Pellentesque eu auctor justo.'),
+            (3, 'message <a href="#">3</a>')]
+        self.assertEqual([(x[0], x[1]) for x in obs], exp_msg)
+        self.assertTrue(all(x[2] < datetime.now() for x in obs))
+        self.assertFalse(all(x[3] for x in obs))
+        self.assertEqual([x[4] for x in obs], [True, False, False, False])
+
+        obs = user.messages(1)
+        exp_msg = ['SYS MESSAGE']
+        self.assertEqual([x[1] for x in obs], exp_msg)
+
+    def test_mark_messages(self):
+        user = User('test@foo.bar')
+        user.mark_messages([1, 2])
+        obs = user.messages()
+        exp = [True, True, False]
+        self.assertEqual([x[3] for x in obs], exp)
+
+        user.mark_messages([1], read=False)
+        obs = user.messages()
+        exp = [False, True, False]
+        self.assertEqual([x[3] for x in obs], exp)
+
+    def test_delete_messages(self):
+        # Make message 1 a system message
+        sql = """UPDATE qiita.message
+                 SET expiration = '2015-08-05'
+                 WHERE message_id = 1"""
+        self.conn_handler.execute(sql)
+        user = User('test@foo.bar')
+        user.delete_messages([1, 2])
+        obs = user.messages()
+        exp_msg = [(3, 'message <a href="#">3</a>')]
+        self.assertItemsEqual([(x[0], x[1]) for x in obs], exp_msg)
+
+        sql = "SELECT message_id FROM qiita.message"
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertItemsEqual(obs, [[1], [3]])
 
 if __name__ == "__main__":
     main()

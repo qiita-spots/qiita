@@ -30,6 +30,7 @@ Methods
     purge_filepaths
     move_filepaths_to_upload_folder
     move_upload_files_to_trash
+    add_message
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -758,7 +759,7 @@ def get_filepath_id(table, fp):
     table : str
         The table type so we can search on this one
     fp : str
-        The filepath
+        The full filepath
 
     Returns
     -------
@@ -1098,3 +1099,61 @@ def infer_status(statuses):
     # If there are no statuses, or any of the previous ones have been found
     # then the inferred status is 'sandbox'
     return 'sandbox'
+
+
+def add_message(message, users):
+    """Adds a message to the messages table, attaching it to given users
+
+    Parameters
+    ----------
+    message : str
+        Message to add
+    users : list of User objects
+        Users to connect the message to
+    """
+    with TRN:
+        sql = """INSERT INTO qiita.message (message) VALUES (%s)
+                 RETURNING message_id"""
+        TRN.add(sql, [message])
+        msg_id = TRN.execute_fetchlast()
+        sql = """INSERT INTO qiita.message_user (email, message_id)
+                 VALUES (%s, %s)"""
+        sql_args = [[user.id, msg_id] for user in users]
+        TRN.add(sql, sql_args, many=True)
+        TRN.execute()
+
+
+def add_system_message(message, expires):
+    """Adds a system message to the messages table, attaching it to asl users
+
+    Parameters
+    ----------
+    message : str
+        Message to add
+    expires : datetime object
+        Expiration for the message
+    """
+    with TRN:
+        sql = """INSERT INTO qiita.message (message, expiration)
+                 VALUES (%s, %s)
+                 RETURNING message_id"""
+        TRN.add(sql, [message, expires])
+        msg_id = TRN.execute_fetchlast()
+        sql = """INSERT INTO qiita.message_user (email, message_id)
+                 SELECT email, %s FROM qiita.qiita_user"""
+        TRN.add(sql, [msg_id])
+        TRN.execute()
+
+
+def clear_system_messages():
+    with TRN:
+        sql = "SELECT message_id FROM qiita.message WHERE expiration < %s"
+        TRN.add(sql, [datetime.now()])
+        msg_ids = TRN.execute_fetchflatten()
+        if msg_ids:
+            msg_ids = tuple(msg_ids)
+            sql = "DELETE FROM qiita.message_user WHERE message_id IN %s"
+            TRN.add(sql, [msg_ids])
+            sql = "DELETE FROM qiita.message WHERE message_id IN %s"
+            TRN.add(sql, [msg_ids])
+            TRN.execute()

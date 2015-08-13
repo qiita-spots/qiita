@@ -26,7 +26,8 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
                                  QiitaDBExecutionError,
                                  QiitaDBColumnError,
                                  QiitaDBWarning,
-                                 QiitaDBError)
+                                 QiitaDBError,
+                                 QiitaDBDuplicateSamplesError)
 from qiita_db.study import Study
 from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import exists_table, get_mountpoint, get_count
@@ -556,6 +557,13 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
         with self.assertRaises(QiitaDBDuplicateHeaderError):
+            PrepTemplate._clean_validate_template(self.metadata, 2,
+                                                  PREP_TEMPLATE_COLUMNS)
+
+    def test_clean_validate_template_error_duplicate_samples(self):
+        """Raises an error if there are duplicated samples in the templates"""
+        self.metadata.index = ['sample.1', 'sample.1', 'sample.3']
+        with self.assertRaises(QiitaDBDuplicateSamplesError):
             PrepTemplate._clean_validate_template(self.metadata, 2,
                                                   PREP_TEMPLATE_COLUMNS)
 

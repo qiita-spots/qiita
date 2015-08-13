@@ -34,6 +34,7 @@ from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
 from qiita_ware.exceptions import QiitaWareError
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.util import convert_text_html
 from qiita_pet.handlers.util import check_access
 from qiita_pet.handlers.study_handlers.listing_handlers import (
     ListStudiesHandler)
@@ -197,7 +198,8 @@ class StudyDescriptionHandler(BaseHandler):
                 # join all the warning messages into one. Note that this
                 # info will be ignored if an exception is raised
                 if warns:
-                    msg = '; '.join([str(w.message) for w in warns])
+                    msg = '; '.join([convert_text_html(str(w.message))
+                                     for w in warns])
                     msg_level = 'warning'
 
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
@@ -211,6 +213,7 @@ class StudyDescriptionHandler(BaseHandler):
                          else 'parsing the sample template')
             msg = html_error_message % (error_msg, basename(fp_rsp),
                                         str(e))
+            msg = convert_text_html(msg)
             msg_level = "danger"
 
         callback((msg, msg_level, None, None, None))
@@ -269,6 +272,7 @@ class StudyDescriptionHandler(BaseHandler):
             # Show the error to the user so they can fix the template
             msg = html_error_message % ('updating the sample template:',
                                         basename(fp_rsp), str(e))
+            msg = convert_text_html(msg)
             msg_level = "danger"
         callback((msg, msg_level, None, None, None))
 
@@ -326,6 +330,7 @@ class StudyDescriptionHandler(BaseHandler):
             # Show the error to the user so he can fix the template
             msg = html_error_message % ('extending the sample template:',
                                         basename(fp_rsp), str(e))
+            msg = convert_text_html(msg)
             msg_level = "danger"
 
         callback((msg, msg_level, None, None, None))
@@ -359,6 +364,7 @@ class StudyDescriptionHandler(BaseHandler):
         except QiitaDBError as e:
             msg = html_error_message % ("adding the raw data",
                                         str(raw_data_id), str(e))
+            msg = convert_text_html(msg)
 
         callback((msg, msg_level, 'prep_template_tab', pt_id, None))
 
@@ -427,6 +433,7 @@ class StudyDescriptionHandler(BaseHandler):
             # Show the error to the user so he can fix the template
             msg = html_error_message % ("parsing the prep template: ",
                                         basename(fp_rpt), str(e))
+            msg = convert_text_html(msg)
             msg_level = "danger"
 
         callback((msg, msg_level, 'prep_template_tab', pt_id, None))
@@ -487,6 +494,7 @@ class StudyDescriptionHandler(BaseHandler):
             # Show the error to the user so they can fix the template
             msg = html_error_message % ('updating the prep template:',
                                         basename(fp), str(e))
+            msg = convert_text_html(msg)
             msg_level = "danger"
 
         callback((msg, msg_level, 'prep_template_tab', pt_id, None))
@@ -618,6 +626,7 @@ class StudyDescriptionHandler(BaseHandler):
         except QiitaDBColumnError as e:
             msg = html_error_message % (", invalid investigation type: ",
                                         investigation_type, str(e))
+            msg = convert_text_html(msg)
             msg_level = "danger"
 
         if ppd_id == 0:

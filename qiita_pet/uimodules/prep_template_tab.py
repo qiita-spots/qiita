@@ -14,6 +14,7 @@ from future.utils import viewitems
 
 from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
+from qiita_pet.util import convert_text_html
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from qiita_db.ontology import Ontology
@@ -21,7 +22,7 @@ from qiita_db.metadata_template import (PrepTemplate, TARGET_GENE_DATA_TYPES,
                                         PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
-from qiita_pet.util import STATUS_STYLER
+from qiita_pet.util import STATUS_STYLER, is_localhost
 from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
 from qiita_core.util import execute_as_transaction
@@ -113,7 +114,7 @@ class PrepTemplateInfoTab(BaseUIModule):
     def render(self, study, prep_template, full_access, ena_terms,
                user_defined_terms):
         user = self.current_user
-        is_local_request = self._is_local()
+        is_local_request = is_localhost(self.request.headers['host'])
 
         template_fps = []
         qiime_fps = []
@@ -274,6 +275,7 @@ class RawDataInfoDiv(BaseUIModule):
             elif raw_data_link_status.startswith('failed'):
                 link_msg = "Error (un)linking files: %s" % raw_data_link_status
 
+        link_msg = convert_text_html(link_msg)
         return self.render_string(
             "study_description_templates/raw_data_info.html",
             rd_id=raw_data_id,
