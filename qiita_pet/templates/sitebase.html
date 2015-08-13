@@ -35,13 +35,13 @@
         // from http://stackoverflow.com/q/5916900/379593
         var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
         if(/trident/i.test(M[1])){
-            tem=/\brv[ :]+(\d+)/g.exec(ua) || [];
-            return 'IE '+(tem[1]||'');
-            }
+          tem=/\brv[ :]+(\d+)/g.exec(ua) || [];
+          return 'IE '+(tem[1]||'');
+        }
         if(M[1]==='Chrome'){
-            tem=ua.match(/\bOPR\/(\d+)/)
-            if(tem!=null)   {return 'Opera '+tem[1];}
-            }
+          tem=ua.match(/\bOPR\/(\d+)/)
+          if(tem!=null)   {return 'Opera '+tem[1];}
+        }
         M=M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
         if((tem=ua.match(/version\/(\d+)/i))!=null) {M.splice(1,1,tem[1]);}
         objbrowserName = M[0];
@@ -240,7 +240,7 @@
     </div>
 
     <div id="footer" style="font-size: 12px; text-align: center; z-index: 1000;">
-      Thank you for using Qiita. For citation point to <a href="http://qiita.microbio.me">http://qiita.microbio.me</a>.
+      Thank you for using Qiita. For citations point to <a href="http://qiita.microbio.me">http://qiita.microbio.me</a>.
     </div>
     <div id="overlay" class="navbar-brand" style="visibility: hidden; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; font-size: 13px; text-align: center; z-index: 1000; background-color: #333333; color: #FFFFFF;">
         <img src="{{portal_styling.logo}}" alt="Qiita logo" id="small-logo"/>
