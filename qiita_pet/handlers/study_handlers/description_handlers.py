@@ -172,7 +172,7 @@ class StudyDescriptionHandler(BaseHandler):
         # If we are on this function, the arguments "sample_template" and
         # "data_type" must be defined. If not, let tornado raise its error
         sample_template = self.get_argument('sample_template')
-        data_type = self.get_argument('data_type')
+        data_type = int(self.get_argument('data_type'))
 
         # Get the uploads folder
         _, base_fp = get_mountpoint("uploads")[0]
@@ -187,7 +187,6 @@ class StudyDescriptionHandler(BaseHandler):
         msg = "The sample template '%s' has been added" % sample_template
         msg_level = "success"
         is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
-        study_id = study.id
 
         if is_mapping_file and data_type == "":
             raise ValueError("Please, choose a data type if uploading a QIIME "
@@ -196,13 +195,12 @@ class StudyDescriptionHandler(BaseHandler):
         try:
             with warnings.catch_warnings(record=True) as warns:
                 if is_mapping_file:
-                    create_templates_from_qiime_mapping_file(fp_rsp,
-                                                             Study(study_id),
-                                                             int(data_type))
+                    create_templates_from_qiime_mapping_file(fp_rsp, study,
+                                                             data_type)
                 else:
                     SampleTemplate.create(load_template_to_dataframe(fp_rsp),
-                                          Study(study_id))
-                    remove(fp_rsp)
+                                          study)
+                remove(fp_rsp)
 
                 # join all the warning messages into one. Note that this
                 # info will be ignored if an exception is raised
