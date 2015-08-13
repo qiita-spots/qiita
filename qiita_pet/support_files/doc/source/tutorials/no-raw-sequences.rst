@@ -1,3 +1,10 @@
+.. _no-raw-sequences:
+
+.. index:: no-raw-sequences
+
+No raw sequences
+================
+
 In order to ensure a direct comparability between studies, Qiita
 enforces the usage of raw data files as the main input file, this is,
 sequence files as they come out of the sequencing instrument. However
@@ -6,13 +13,15 @@ created the following guides to help you overcome this limitation and be
 able to use Qiita to process your data files.
 
 .. note::
-   Please note that most of these guides assume you have a working
-   `QIIME <http://www.qiime.org>`__ installation and basic knowledge on the
-   usage of the command line.
+   * Please note that most of these guides assume you have a working
+     `QIIME <http://www.qiime.org>`__ installation and basic knowledge on the
+     usage of the command line.
+   * After reviewing this tutorial and if you are interested in working with
+     joined forward and reverse sequences, please refer to: :ref:`join_forward_and_reverse_reads_for_per_sample_fastq_files_without_barcodes_and_primers`.
 
 
 Per sample FASTQ files with barcode information
-===============================================
+-----------------------------------------------
 
 Due to the nature of Qiita this is the prefered way to add per sample files.
 
@@ -62,7 +71,7 @@ compression program to use is ``gzip``:
 .. _per_sample_fastq_files_without_barcode_or_primer_information:
 
 Per sample FASTQ files without barcode and primer information
-=============================================================
+-------------------------------------------------------------
 
 In this example we assume we are working with uncompressed per-sample FASTQ
 files and that they do not have any barcode or primer information. This file type
@@ -77,9 +86,9 @@ you will need to have sample1_L001_R1 as the run_prefix.
 
 
 Per sample FASTQ files without barcode but with primer information
-==================================================================
+------------------------------------------------------------------
 
-The current way to process this files is to remove the primer section of the
+The current way to process these files is to remove the primer section of the
 reads and follow the `Per sample FASTQ files without barcode and primer information`_
 instructions after they have been removed.
 
@@ -87,3 +96,6 @@ To remove the primer information we will use `extract_barcodes.py <http://qiime.
 and pass the size of the primer as the barcode and simply discard the barcode
 files created during this step. For this you could follow the
 `Per sample FASTQ files with barcode information`_ tutorial.
+
+Additionally, if your forward and reverse read overlap you might want to join them
+to generate longer reads. For this you could follow :ref:`per_sample_fastq_files_without_barcodes_but_with_primer_information_with_overlapping_regions`
