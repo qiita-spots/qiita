@@ -172,7 +172,7 @@ class StudyDescriptionHandler(BaseHandler):
         # If we are on this function, the arguments "sample_template" and
         # "data_type" must be defined. If not, let tornado raise its error
         sample_template = self.get_argument('sample_template')
-        data_type = int(self.get_argument('data_type'))
+        data_type = self.get_argument('data_type')
 
         # Get the uploads folder
         _, base_fp = get_mountpoint("uploads")[0]
@@ -196,7 +196,7 @@ class StudyDescriptionHandler(BaseHandler):
             with warnings.catch_warnings(record=True) as warns:
                 if is_mapping_file:
                     create_templates_from_qiime_mapping_file(fp_rsp, study,
-                                                             data_type)
+                                                             int(data_type))
                 else:
                     SampleTemplate.create(load_template_to_dataframe(fp_rsp),
                                           study)
