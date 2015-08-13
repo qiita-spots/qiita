@@ -33,6 +33,7 @@ from qiita_db.data import RawData, ProcessedData
 from qiita_db.util import exists_table, get_mountpoint, get_count
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
+from qiita_db.metadata_template.constants import META_FALSE, META_TRUE, NA_VALS
 from qiita_db.metadata_template import (PREP_TEMPLATE_COLUMNS,
                                         PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
@@ -900,7 +901,9 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=True,
                           parse_dates=True, index_col=False, comment='\t')
         exp = pd.read_csv(exp_fp, sep='\t', infer_datetime_format=True,
-                          parse_dates=True, index_col=False, comment='\t')
+                          parse_dates=True, index_col=False, comment='\t',
+                          na_values=NA_VALS, true_values=META_TRUE,
+                          false_values=META_FALSE)
 
         assert_frame_equal(obs, exp)
 
