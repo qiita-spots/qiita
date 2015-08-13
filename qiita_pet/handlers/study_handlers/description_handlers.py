@@ -188,11 +188,11 @@ class StudyDescriptionHandler(BaseHandler):
         msg_level = "success"
         is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
 
-        if is_mapping_file and not data_type:
-            raise ValueError("Please, choose a data type if uploading a QIIME "
-                             "mapping file")
-
         try:
+            if is_mapping_file and not data_type:
+                raise ValueError("Please, choose a data type if uploading a "
+                                 "QIIME mapping file")
+
             with warnings.catch_warnings(record=True) as warns:
                 if is_mapping_file:
                     create_templates_from_qiime_mapping_file(fp_rsp, study,
