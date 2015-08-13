@@ -74,10 +74,10 @@ ALL_RESTRICTIONS = [SAMPLE_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS,
 NA_VALS = ['', 'no_data', 'unknown', 'Unspecified']
 
 # These are what will be considered 'True' bool values on metadata import
-META_TRUE = ['Yes', 'yes', 'YES', 'Y', 'y', 'True', 'true', 't']
+META_TRUE = ['Yes', 'yes', 'YES', 'Y', 'y', 'True', 'true', 'TRUE', 't', 'T']
 
 # These are what will be considered 'False' bool values on metadata import
-META_FALSE = ['No', 'no', 'NO', 'N', 'n', 'False', 'false', 'f']
+META_FALSE = ['No', 'no', 'NO', 'N', 'n', 'False', 'false', 'FALSE', 'f', 'F']
 
 
 # A set holding all the controlled columns, useful to avoid recalculating it
