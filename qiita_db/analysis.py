@@ -140,45 +140,41 @@ class Analysis(QiitaStatusObject):
                 # insert analysis and move samples into that new analysis
                 dflt_id = owner.default_analysis
 
-                # Get the analysis id placeholder
-                a_id_idx = TRN.index
-                a_id_ph = "{%s:0:0}" % a_id_idx
                 sql = """INSERT INTO qiita.{0}
                             (email, name, description, analysis_status_id)
                         VALUES (%s, %s, %s, %s)
                         RETURNING analysis_id""".format(cls._table)
                 TRN.add(sql, [owner.id, name, description, status_id])
+                a_id = TRN.execute_fetchlast()
                 # MAGIC NUMBER 3: command selection step
                 # needed so we skip the sample selection step
                 sql = """INSERT INTO qiita.analysis_workflow
                             (analysis_id, step)
                         VALUES (%s, %s)"""
-                TRN.add(sql, [a_id_ph, 3])
+                TRN.add(sql, [a_id, 3])
 
                 sql = """UPDATE qiita.analysis_sample
                          SET analysis_id = %s
                          WHERE analysis_id = %s"""
-                TRN.add(sql, [a_id_ph, dflt_id])
+                TRN.add(sql, [a_id, dflt_id])
             else:
-                # Get the analysis id placeholder
-                a_id_idx = TRN.index
-                a_id_ph = "{%s:0:0}" % a_id_idx
                 # insert analysis information into table as "in construction"
                 sql = """INSERT INTO qiita.{0}
                             (email, name, description, analysis_status_id)
                          VALUES (%s, %s, %s, %s)
                          RETURNING analysis_id""".format(cls._table)
                 TRN.add(sql, [owner.id, name, description, status_id])
+                a_id = TRN.execute_fetchlast()
 
             # Add to both QIITA and given portal (if not QIITA)
             sql = """INSERT INTO qiita.analysis_portal
                         (analysis_id, portal_type_id)
                      VALUES (%s, %s)"""
-            args = [[a_id_ph, portal_id]]
+            args = [[a_id, portal_id]]
 
             if qiita_config.portal != 'QIITA':
                 qp_id = convert_to_id('QIITA', 'portal_type', 'portal')
-                args.append([a_id_ph, qp_id])
+                args.append([a_id, qp_id])
             TRN.add(sql, args, many=True)
 
             # add parent if necessary
@@ -186,10 +182,9 @@ class Analysis(QiitaStatusObject):
                 sql = """INSERT INTO qiita.analysis_chain
                             (parent_id, child_id)
                          VALUES (%s, %s)"""
-                TRN.add(sql, [parent.id, a_id_ph])
+                TRN.add(sql, [parent.id, a_id])
 
-            # The analysis id is in the `a_id_idx` query, first row, first elem
-            return cls(TRN.execute()[a_id_idx][0][0])
+            return cls(a_id)
 
     @classmethod
     def delete(cls, _id):
