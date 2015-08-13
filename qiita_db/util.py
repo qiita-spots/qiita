@@ -1150,9 +1150,10 @@ def clear_system_messages():
         sql = "SELECT message_id FROM qiita.message WHERE expiration < %s"
         TRN.add(sql, [datetime.now()])
         msg_ids = TRN.execute_fetchflatten()
-        msg_ids = tuple(msg_ids)
-        sql = "DELETE FROM qiita.message_user WHERE message_id IN %s"
-        TRN.add(sql, [msg_ids])
-        sql = "DELETE FROM qiita.message WHERE message_id IN %s"
-        TRN.add(sql, [msg_ids])
-        TRN.execute()
+        if msg_ids:
+            msg_ids = tuple(msg_ids)
+            sql = "DELETE FROM qiita.message_user WHERE message_id IN %s"
+            TRN.add(sql, [msg_ids])
+            sql = "DELETE FROM qiita.message WHERE message_id IN %s"
+            TRN.add(sql, [msg_ids])
+            TRN.execute()
