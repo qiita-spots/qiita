@@ -311,11 +311,11 @@ class User(QiitaObject):
                                 VALUES (%s, %s)"""
 
                     for portal_id in TRN.execute_fetchflatten():
-                        placeholder = "{%s:0:0}" % TRN.index
                         args = [email, '%s-dflt-%d' % (email, portal_id),
                                 'dflt', True]
                         TRN.add(an_sql, args)
-                        TRN.add(ap_sql, [placeholder, portal_id])
+                        an_id = TRN.execute_fetchlast()
+                        TRN.add(ap_sql, [an_id, portal_id])
 
                     TRN.execute()
 
