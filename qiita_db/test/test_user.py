@@ -15,7 +15,7 @@ from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import hash_password, add_system_message
+from qiita_db.util import hash_password, add_system_message, get_count
 from qiita_db.user import User, validate_password, validate_email
 from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
                                  QiitaDBUnknownIDError, QiitaDBError)
@@ -310,7 +310,8 @@ class UserTest(TestCase):
         # Make sure new system messages are linked to user
         sql = """SELECT message_id FROM qiita.message_user
                  WHERE email = 'new@test.bar'"""
-        self.assertEqual(self.conn_handler.execute_fetchall(sql), [[5]])
+        m_id = get_count('qiita.message')
+        self.assertEqual(self.conn_handler.execute_fetchall(sql), [[m_id]])
 
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(
