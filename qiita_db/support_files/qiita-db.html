@@ -193,9 +193,9 @@
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='775' y='1333' width='145' height='2' />
 
 <!-- ============= Group 'Group_logging' ============= -->
-<rect class='grp' style='fill:#c4e0f9;' x='1319' y='1255' width='257' height='170' />
-<text x='1330' y='1270'>Group_logging</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1330' y='1273' width='235' height='2' />
+<rect class='grp' style='fill:#c4e0f9;' x='1439' y='1330' width='257' height='170' />
+<text x='1450' y='1345'>Group_logging</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1450' y='1348' width='235' height='2' />
 
 <!-- ============= Group 'Group_filepaths' ============= -->
 <rect class='grp' style='fill:#c4e0f9;' x='569' y='550' width='422' height='425' />
@@ -206,6 +206,11 @@
 <rect class='grp' style='fill:#00cccc;' x='29' y='310' width='362' height='290' />
 <text x='40' y='325'>Group_collection</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='40' y='328' width='340' height='2' />
+
+<!-- ============= Group 'Group_messages' ============= -->
+<rect class='grp' style='fill:#c4e0f9;' x='1064' y='1330' width='332' height='170' />
+<text x='1075' y='1345'>Group_messages</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1075' y='1348' width='310' height='2' />
 
 <path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 60 1530 L 60,1410' >
 	<title>Foreign Key fk_controlled_vocab_values
@@ -302,11 +307,11 @@
 	processed_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='996' y='940' transform='rotate(0 996,940)' title='Foreign Key fk_processed_data_filepath_0
-	processed_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1440 1305 L 1455,1305' >
+	processed_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1560 1380 L 1575,1380' >
 	<title>Foreign Key fk_logging_severity
 	logging references severity ( severity_id )</title>
 </path>
-<text x='1447' y='1300' transform='rotate(0 1447,1300)' title='Foreign Key fk_logging_severity
+<text x='1567' y='1375' transform='rotate(0 1567,1375)' title='Foreign Key fk_logging_severity
 	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1650 960 L 1702,960 Q 1710,960 1710,952 L 1710,727 Q 1710,720 1717,720 L 2002,720 Q 2010,720 2010,712 L 2010,397 Q 2010,390 2002,390 L 1995,390' >
 	<title>Foreign Key fk_study_processed_data
 	study_processed_data references study ( study_id )</title>
@@ -397,7 +402,7 @@
 	job references data_type ( data_type_id )</title>
 </path>
 <text x='517' y='1045' transform='rotate(0 517,1045)' title='Foreign Key fk_job_data_type
-	job references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 1140 L 1342,1140 Q 1350,1140 1350,1147 L 1350,1275' >
+	job references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 1140 L 1462,1140 Q 1470,1140 1470,1147 L 1470,1350' >
 	<title>Foreign Key fk_job
 	job references logging ( log_id -> logging_id )</title>
 </path>
@@ -442,17 +447,17 @@
 	sample_template_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='981' y='820' transform='rotate(0 981,820)' title='Foreign Key fk_filepath_id
-	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1245 675 L 1027,675 Q 1020,675 1020,682 L 1020,1027 Q 1020,1035 1012,1035 L 795,1035' >
+	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1245 840 L 1222,840 Q 1215,840 1215,847 L 1215,1027 Q 1215,1035 1207,1035 L 795,1035' >
 	<title>Foreign Key fk_preprocessed_data
 	preprocessed_data references data_type ( data_type_id )</title>
 </path>
-<text x='1179' y='670' transform='rotate(0 1179,670)' title='Foreign Key fk_preprocessed_data
+<text x='1179' y='835' transform='rotate(0 1179,835)' title='Foreign Key fk_preprocessed_data
 	preprocessed_data references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2265 975 L 2182,975 Q 2175,975 2175,967 L 2175,787 Q 2175,780 2167,780 L 1732,780 Q 1725,780 1725,787 L 1725,907 Q 1725,915 1717,915 L 1477,915 Q 1470,915 1470,922 L 1470,1117 Q 1470,1125 1462,1125 L 952,1125 Q 945,1125 945,1117 L 945,772 Q 945,765 937,765 L 810,765' >
 	<title>Foreign Key fk_reference_sequence_filepath
 	reference references filepath ( sequence_filepath -> filepath_id )</title>
 </path>
 <text x='2170' y='970' transform='rotate(0 2170,970)' title='Foreign Key fk_reference_sequence_filepath
-	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2400 945 L 2400,772 Q 2400,765 2392,765 L 1747,765 Q 1740,765 1740,772 L 1740,802 Q 1740,810 1732,810 L 1477,810 Q 1470,810 1470,802 L 1470,652 Q 1470,645 1462,645 L 1012,645 Q 1005,645 1005,652 L 1005,727 Q 1005,735 997,735 L 810,735' >
+	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2400 945 L 2400,772 Q 2400,765 2392,765 L 1747,765 Q 1740,765 1740,772 L 1740,802 Q 1740,810 1732,810 L 1477,810 Q 1470,810 1470,802 L 1470,652 Q 1470,645 1462,645 L 1027,645 Q 1020,645 1020,652 L 1020,727 Q 1020,735 1012,735 L 810,735' >
 	<title>Foreign Key fk_reference_taxonomy_filepath
 	reference references filepath ( taxonomy_filepath -> filepath_id )</title>
 </path>
@@ -567,7 +572,7 @@
 	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='1303' y='630' transform='rotate(90 1303,630)' title='Foreign Key fk_prep_template_preprocessed_data
-	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 450 L 1222,450 Q 1215,450 1215,457 L 1215,1057 Q 1215,1065 1207,1065 L 795,1065' >
+	prep_template_preprocessed_data references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 450 L 1222,450 Q 1215,450 1215,457 L 1215,817 Q 1215,825 1222,825 L 1222,825 Q 1230,825 1230,832 L 1230,1057 Q 1230,1065 1222,1065 L 795,1065' >
 	<title>Foreign Key fk_prep_template_data_type
 	prep_template references data_type ( data_type_id )</title>
 </path>
@@ -672,7 +677,17 @@
 	analysis_portal references portal_type ( portal_type_id )</title>
 </path>
 <text x='227' y='625' transform='rotate(270 227,625)' title='Foreign Key fk_analysis_portal_0
-	analysis_portal references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	analysis_portal references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 1380 L 1260,1380' >
+	<title>Foreign Key fk_message_user
+	message_user references message ( message_id )</title>
+</path>
+<text x='1192' y='1375' transform='rotate(0 1192,1375)' title='Foreign Key fk_message_user
+	message_user references message ( message_id )' style='fill:#a1a0a0;'>message_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1065 1365 L 1012,1365 Q 1005,1365 1005,1357 L 1005,472 Q 1005,465 997,465 L 472,465 Q 465,465 465,457 L 465,285' >
+	<title>Foreign Key fk_message_user_0
+	message_user references qiita_user ( email )</title>
+</path>
+<text x='1039' y='1360' transform='rotate(0 1039,1360)' title='Foreign Key fk_message_user_0
+	message_user references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1538' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1564.50 L 45.50 1545.50 Q 45.50 1538.50 52.50 1538.50 L 187.50 1538.50 Q 194.50 1538.50 194.50 1545.50 L 194.50 1564.50 L45.50 1564.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1552' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -840,20 +855,20 @@ JSON of optional options for command</title></a>
 JSON of output options for the command</title></a>
 
 <!-- ============= Table 'logging' ============= -->
-<rect class='table' x='1335' y='1283' width='105' height='120' rx='7' ry='7' />
-<path d='M 1335.50 1309.50 L 1335.50 1290.50 Q 1335.50 1283.50 1342.50 1283.50 L 1432.50 1283.50 Q 1439.50 1283.50 1439.50 1290.50 L 1439.50 1309.50 L1335.50 1309.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#logging'><text x='1367' y='1297' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
-  <use id='nn' x='1337' y='1317' xlink:href='#nn'/><a xlink:href='#logging_id'><use id='pk' x='1337' y='1316' xlink:href='#pk'/><title>Primary Key  ( logging_id ) </title></a>
-<a xlink:href='#logging_id'><text x='1353' y='1327'>logging_id</text><title>logging_id bigserial not null</title></a>
-<a xlink:href='#logging_id'><use id='ref' x='1428' y='1316' xlink:href='#ref'/><title>Referred by job ( log_id -> logging_id ) </title></a>
-  <use id='nn' x='1337' y='1332' xlink:href='#nn'/><a xlink:href='#time'><text x='1353' y='1342'>time</text><title>time timestamp not null
+<rect class='table' x='1455' y='1358' width='105' height='120' rx='7' ry='7' />
+<path d='M 1455.50 1384.50 L 1455.50 1365.50 Q 1455.50 1358.50 1462.50 1358.50 L 1552.50 1358.50 Q 1559.50 1358.50 1559.50 1365.50 L 1559.50 1384.50 L1455.50 1384.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#logging'><text x='1487' y='1372' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
+  <use id='nn' x='1457' y='1392' xlink:href='#nn'/><a xlink:href='#logging_id'><use id='pk' x='1457' y='1391' xlink:href='#pk'/><title>Primary Key  ( logging_id ) </title></a>
+<a xlink:href='#logging_id'><text x='1473' y='1402'>logging_id</text><title>logging_id bigserial not null</title></a>
+<a xlink:href='#logging_id'><use id='ref' x='1548' y='1391' xlink:href='#ref'/><title>Referred by job ( log_id -> logging_id ) </title></a>
+  <use id='nn' x='1457' y='1407' xlink:href='#nn'/><a xlink:href='#time'><text x='1473' y='1417'>time</text><title>time timestamp not null
 Time the error was thrown</title></a>
-  <use id='nn' x='1337' y='1347' xlink:href='#nn'/><a xlink:href='#severity_id'><use id='idx' x='1337' y='1346' xlink:href='#idx'/><title>Index  ( severity_id ) </title></a>
-<a xlink:href='#severity_id'><text x='1353' y='1357'>severity_id</text><title>severity_id integer not null</title></a>
-<a xlink:href='#severity_id'><use id='fk' x='1428' y='1346' xlink:href='#fk'/><title>References severity ( severity_id ) </title></a>
-  <use id='nn' x='1337' y='1362' xlink:href='#nn'/><a xlink:href='#msg'><text x='1353' y='1372'>msg</text><title>msg varchar not null
+  <use id='nn' x='1457' y='1422' xlink:href='#nn'/><a xlink:href='#severity_id'><use id='idx' x='1457' y='1421' xlink:href='#idx'/><title>Index  ( severity_id ) </title></a>
+<a xlink:href='#severity_id'><text x='1473' y='1432'>severity_id</text><title>severity_id integer not null</title></a>
+<a xlink:href='#severity_id'><use id='fk' x='1548' y='1421' xlink:href='#fk'/><title>References severity ( severity_id ) </title></a>
+  <use id='nn' x='1457' y='1437' xlink:href='#nn'/><a xlink:href='#msg'><text x='1473' y='1447'>msg</text><title>msg varchar not null
 Error message thrown</title></a>
-  <a xlink:href='#information'><text x='1353' y='1387'>information</text><title>information varchar
+  <a xlink:href='#information'><text x='1473' y='1462'>information</text><title>information varchar
 Other applicable information &#040;depending on error&#041;</title></a>
 
 <!-- ============= Table 'study_processed_data' ============= -->
@@ -1019,6 +1034,7 @@ Holds all user information</title></a>
 Referred by analysis_users ( email ) 
 Referred by collection ( email ) 
 Referred by collection_users ( email ) 
+Referred by message_user ( email ) 
 Referred by study ( email ) 
 Referred by study_users ( email ) </title></a>
   <use id='nn' x='332' y='132' xlink:href='#nn'/><a xlink:href='#user_level_id'><use id='idx' x='332' y='131' xlink:href='#idx'/><title>Index  ( user_level_id ) </title></a>
@@ -1107,14 +1123,14 @@ One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041;</title
 <a xlink:href='#status'><text x='228' y='1087'>status</text><title>status varchar not null</title></a>
 
 <!-- ============= Table 'severity' ============= -->
-<rect class='table' x='1470' y='1283' width='90' height='75' rx='7' ry='7' />
-<path d='M 1470.50 1309.50 L 1470.50 1290.50 Q 1470.50 1283.50 1477.50 1283.50 L 1552.50 1283.50 Q 1559.50 1283.50 1559.50 1290.50 L 1559.50 1309.50 L1470.50 1309.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#severity'><text x='1494' y='1297' class='tableTitle'>severity</text><title>Table qiita.severity</title></a>
-  <use id='nn' x='1472' y='1317' xlink:href='#nn'/><a xlink:href='#severity_id'><use id='pk' x='1472' y='1316' xlink:href='#pk'/><title>Primary Key  ( severity_id ) </title></a>
-<a xlink:href='#severity_id'><text x='1488' y='1327'>severity_id</text><title>severity_id serial not null</title></a>
-<a xlink:href='#severity_id'><use id='ref' x='1548' y='1316' xlink:href='#ref'/><title>Referred by logging ( severity_id ) </title></a>
-  <use id='nn' x='1472' y='1332' xlink:href='#nn'/><a xlink:href='#severity'><use id='unq' x='1472' y='1331' xlink:href='#unq'/><title>Unique Index  ( severity ) </title></a>
-<a xlink:href='#severity'><text x='1488' y='1342'>severity</text><title>severity varchar not null</title></a>
+<rect class='table' x='1590' y='1358' width='90' height='75' rx='7' ry='7' />
+<path d='M 1590.50 1384.50 L 1590.50 1365.50 Q 1590.50 1358.50 1597.50 1358.50 L 1672.50 1358.50 Q 1679.50 1358.50 1679.50 1365.50 L 1679.50 1384.50 L1590.50 1384.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#severity'><text x='1614' y='1372' class='tableTitle'>severity</text><title>Table qiita.severity</title></a>
+  <use id='nn' x='1592' y='1392' xlink:href='#nn'/><a xlink:href='#severity_id'><use id='pk' x='1592' y='1391' xlink:href='#pk'/><title>Primary Key  ( severity_id ) </title></a>
+<a xlink:href='#severity_id'><text x='1608' y='1402'>severity_id</text><title>severity_id serial not null</title></a>
+<a xlink:href='#severity_id'><use id='ref' x='1668' y='1391' xlink:href='#ref'/><title>Referred by logging ( severity_id ) </title></a>
+  <use id='nn' x='1592' y='1407' xlink:href='#nn'/><a xlink:href='#severity'><use id='unq' x='1592' y='1406' xlink:href='#unq'/><title>Unique Index  ( severity ) </title></a>
+<a xlink:href='#severity'><text x='1608' y='1417'>severity</text><title>severity varchar not null</title></a>
 
 <!-- ============= Table 'job' ============= -->
 <rect class='table' x='405' y='1013' width='105' height='135' rx='7' ry='7' />
@@ -1668,12 +1684,11 @@ Unique identifier for analysis</title></a>
 Referred by analysis_chain ( child_id -> analysis_id ) 
 Referred by analysis_filepath ( analysis_id ) 
 Referred by analysis_job ( analysis_id ) 
+Referred by analysis_portal ( analysis_id ) 
 Referred by analysis_sample ( analysis_id ) 
 Referred by analysis_users ( analysis_id ) 
 Referred by analysis_workflow ( analysis_id ) 
-Referred by collection_analysis ( analysis_id ) 
-Referred by analysis_portal ( analysis_id ) 
-Referred by analysis_portal ( analysis_id ) </title></a>
+Referred by collection_analysis ( analysis_id ) </title></a>
   <use id='nn' x='227' y='777' xlink:href='#nn'/><a xlink:href='#email'><use id='idx' x='227' y='776' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#email'><text x='243' y='787'>email</text><title>email varchar not null
 Email for user who owns the analysis</title></a>
@@ -1700,9 +1715,8 @@ What portals are available to show a study in</title></a>
   <use id='nn' x='722' y='387' xlink:href='#nn'/><a xlink:href='#portal_type_id'><use id='pk' x='722' y='386' xlink:href='#pk'/><title>Primary Key  ( portal_type_id ) </title></a>
 <a xlink:href='#portal_type_id'><text x='738' y='397'>portal_type_id</text><title>portal_type_id bigserial not null</title></a>
 <a xlink:href='#portal_type_id'><use id='ref' x='843' y='386' xlink:href='#ref'/><title>Referred by analysis ( portal_type_id ) 
-Referred by study_portal ( portal_type_id ) 
 Referred by analysis_portal ( portal_type_id ) 
-Referred by analysis_portal ( portal_type_id ) </title></a>
+Referred by study_portal ( portal_type_id ) </title></a>
   <use id='nn' x='722' y='402' xlink:href='#nn'/><a xlink:href='#portal'><text x='738' y='412'>portal</text><title>portal varchar not null</title></a>
   <use id='nn' x='722' y='417' xlink:href='#nn'/><a xlink:href='#portal_description'><text x='738' y='427'>portal_description</text><title>portal_description varchar not null</title></a>
 
@@ -1793,6 +1807,30 @@ Controls what analyses are visible on what portals</title></a>
   <use id='nn' x='182' y='687' xlink:href='#nn'/><a xlink:href='#portal_type_id'><use id='idx' x='182' y='686' xlink:href='#idx'/><title>Index  ( portal_type_id ) </title></a>
 <a xlink:href='#portal_type_id'><text x='198' y='697'>portal_type_id</text><title>portal_type_id bigint not null</title></a>
 <a xlink:href='#portal_type_id'><use id='fk' x='288' y='686' xlink:href='#fk'/><title>References portal_type ( portal_type_id ) </title></a>
+
+<!-- ============= Table 'message_user' ============= -->
+<rect class='table' x='1080' y='1358' width='105' height='90' rx='7' ry='7' />
+<path d='M 1080.50 1384.50 L 1080.50 1365.50 Q 1080.50 1358.50 1087.50 1358.50 L 1177.50 1358.50 Q 1184.50 1358.50 1184.50 1365.50 L 1184.50 1384.50 L1080.50 1384.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#message_user'><text x='1094' y='1372' class='tableTitle'>message_user</text><title>Table qiita.message_user</title></a>
+  <use id='nn' x='1082' y='1392' xlink:href='#nn'/><a xlink:href='#email'><use id='pk' x='1082' y='1391' xlink:href='#pk'/><title>Primary Key  ( email, message_id ) Index  ( email ) </title></a>
+<a xlink:href='#email'><text x='1098' y='1402'>email</text><title>email varchar not null</title></a>
+<a xlink:href='#email'><use id='fk' x='1173' y='1391' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+  <use id='nn' x='1082' y='1407' xlink:href='#nn'/><a xlink:href='#message_id'><use id='pk' x='1082' y='1406' xlink:href='#pk'/><title>Primary Key  ( email, message_id ) Index  ( message_id ) </title></a>
+<a xlink:href='#message_id'><text x='1098' y='1417'>message_id</text><title>message_id bigint not null</title></a>
+<a xlink:href='#message_id'><use id='fk' x='1173' y='1406' xlink:href='#fk'/><title>References message ( message_id ) </title></a>
+  <use id='nn' x='1082' y='1422' xlink:href='#nn'/><a xlink:href='#read'><text x='1098' y='1432'>read</text><title>read bool not null default &#039;false&#039;
+Whether the message has been read or not&#046;</title></a>
+
+<!-- ============= Table 'message' ============= -->
+<rect class='table' x='1275' y='1373' width='105' height='105' rx='7' ry='7' />
+<path d='M 1275.50 1399.50 L 1275.50 1380.50 Q 1275.50 1373.50 1282.50 1373.50 L 1372.50 1373.50 Q 1379.50 1373.50 1379.50 1380.50 L 1379.50 1399.50 L1275.50 1399.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#message'><text x='1304' y='1387' class='tableTitle'>message</text><title>Table qiita.message</title></a>
+  <use id='nn' x='1277' y='1407' xlink:href='#nn'/><a xlink:href='#message_id'><use id='pk' x='1277' y='1406' xlink:href='#pk'/><title>Primary Key  ( message_id ) </title></a>
+<a xlink:href='#message_id'><text x='1293' y='1417'>message_id</text><title>message_id bigserial not null</title></a>
+<a xlink:href='#message_id'><use id='ref' x='1368' y='1406' xlink:href='#ref'/><title>Referred by message_user ( message_id ) </title></a>
+  <use id='nn' x='1277' y='1422' xlink:href='#nn'/><a xlink:href='#message'><text x='1293' y='1432'>message</text><title>message varchar not null</title></a>
+  <use id='nn' x='1277' y='1437' xlink:href='#nn'/><a xlink:href='#message_time'><text x='1293' y='1447'>message_time</text><title>message_time timestamp not null default current&#095;timestamp</title></a>
+  <a xlink:href='#expiration'><text x='1293' y='1462'>expiration</text><title>expiration timestamp</title></a>
 
 </g></svg>
 
@@ -5318,6 +5356,88 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_analysis_portal_0</td>
 		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='message_user'>message_user</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='email'>email</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='message_id'>message&#095;id</a></td>
+		<td width='40%'> bigint  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='read'>read</a></td>
+		<td width='40%'> bool  NOT NULL  DEFO 'false' </td>
+		<td width='99%'> Whether the message has been read or not&#046; </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>idx&#095;message&#095;user primary key</td>
+		<td> ON email&#044; message&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;message&#095;user&#095;0 </td>
+		<td> ON message&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;message&#095;user&#095;1 </td>
+		<td> ON email</td>
+		<td>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Foreign Keys</b></td></tr>
+	<tr>
+		<td>fk_message_user</td>
+		<td > ( message&#095;id ) ref <a href='#message'>message</a> (message&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_message_user_0</td>
+		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table id='dbs' >
+<thead>
+<tr><th colspan='3'><a name='message'>message</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='message_id'>message&#095;id</a></td>
+		<td width='40%'> bigserial  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='message'>message</a></td>
+		<td width='40%'> varchar  NOT NULL  </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='message_time'>message&#095;time</a></td>
+		<td width='40%'> timestamp  NOT NULL  DEFO current_timestamp </td>
+		<td width='99%'>  </td>
+	</tr>
+	<tr>
+		<td><a name='expiration'>expiration</a></td>
+		<td width='40%'> timestamp   </td>
+		<td width='99%'>  </td>
+	</tr>
+<tr><td colspan='3' class='subpart'><b>Indexes</b></td></tr>
+	<tr>		<td>pk&#095;message primary key</td>
+		<td> ON message&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>

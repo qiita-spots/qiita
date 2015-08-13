@@ -185,7 +185,21 @@
               <a href="/auth/logout/">Log Out</a>
             </li>
             <li class="dropdown">
-              <a href="/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span> Selected</a>
+              {% set user_messages = current_user.messages(5) %}
+              {% set unread =  len(current_user.unread_messages) %}
+              <a href="/user/messages/"><span class="glyphicon glyphicon-envelope"></span> {% if unread > 0 %}<span style="color:red">({{unread}})</span>{% end %}</a>
+              <ul class="dropdown-menu info-menu" style="padding: 5px">
+              {% if user_messages %}
+                {% for _, um, ts, read, _ in user_messages %}
+                  <li class="truncated" {% if read %}style="color:gray;"{% end %}>{%raw um %}<br /><span style="font-size:60%;{% if read %}color:gray;{% end %}">{{ts}}</span></li>
+                {% end %}
+              {% else %}
+                <li>You have no messages</li>
+              {% end %}
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a href="/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span></a>
               <ul class="dropdown-menu" style="padding: 5px">
                 <li> <span id="dflt-study-count"></span> Studies</li>
                 <li><span id="dflt-pd-count"></span> Processed Data</li>

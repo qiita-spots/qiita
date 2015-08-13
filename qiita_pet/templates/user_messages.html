@@ -1,0 +1,60 @@
+{% extends sitebase.html %}
+{% block head %}
+<script type="text/javascript">
+  function checkbox_action(action) {
+    var boxes = $('.msg-checkbox');
+    if(action == 'check') { boxes.prop('checked',true); }
+    else if(action == 'uncheck') { boxes.prop('checked',false); }
+    else if(action='invert') { boxes.each( function() {
+      $(this).is(':checked') ? $(this).prop('checked',false) : $(this).prop('checked',true);
+    });}
+    show_hide_actions();
+    return false;
+  }
+
+  function submit_form(action) {
+    $('#action').val(action);
+    if($("input:checked").length == 0) {
+      return false;
+    }
+    document.msgform.submit();
+  }
+
+  function show_hide_actions() {
+    if($('input:checked').length > 0) { $('#message-actions').show(); }
+    else { $('#message-actions').hide(); }
+  }
+
+  $(document).ready(function() {
+    $('#message-actions').hide();
+  });
+</script>
+{% end %}
+
+{% block content%}
+<h2 style="text-decoration: underline;">System Messages</h2>
+<form method="POST" action="/user/messages/" name="msgform">
+<div class="row">
+  <div class="col-sm-6"><a href="#" onclick="checkbox_action('check')">Select all</a> | <a href="#" onclick="checkbox_action('uncheck')">Select None</a> | <a href="#" onclick="checkbox_action('invert')">Select Inverse</a></div>
+  <input type="hidden" name="action" id="action" value="">
+  <div class="col-sm-6" style="text-align:right" id="message-actions"><a href="#" onclick="return submit_form('read')">Mark as Read</a> | <a href="#" onclick="return submit_form('unread')">Mark as Unread</a> | <a href="#" onclick="return submit_form('delete')">Delete</a></div>
+</div>
+  {% set user_messages = current_user.messages() %}
+    {% if user_messages %}
+    <table class="table">
+      <thead>
+        <td class="col-sm-1"></td class="col-md-9"><td>Message</td><td class="col-md-2">Timestamp</td></tr>
+      </thead>
+      <tbody>
+        {% for m_id, message, ts, read, _ in user_messages %}
+          <tr><td>
+          <input type="checkbox" class="msg-checkbox" name="messages" value="{{m_id}}" onchange="show_hide_actions()">
+          </td><td {% if not read %}style="font-weight:bold"{% end %}>{% raw message %}</td><td>{{ts}}</td></tr>
+        {% end %}
+      </tbody>
+    </table>
+</form>
+    {% else %}
+      <h3>You have no messages</h3>
+    {% end %}
+{% end %}
