@@ -18,7 +18,7 @@ from skbio.io.util import open_file
 
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
                                  QiitaDBError)
-from .constants import CONTROLLED_COLS
+from .constants import CONTROLLED_COLS, NA_VALUES, TRUE_VALUES, FALSE_VALUES
 
 if PY3:
     from string import ascii_letters as letters, digits
@@ -238,8 +238,11 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     #   is set as False, to avoid inferring empty/NA values with the defaults
     #   that Pandas has.
     # na_values:
-    #   the values that should be considered as empty, in this case only empty
-    #   strings.
+    #   the values that should be considered as empty
+    # true_values:
+    #   the values that should be considered "True" for boolean columns
+    # false_values:
+    #   the values that should be considered "False" for boolean columns
     # converters:
     #   ensure that sample names are not converted into any other types but
     #   strings and remove any trailing spaces. Don't let pandas try to guess
@@ -250,7 +253,9 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     try:
         template = pd.read_csv(StringIO(''.join(holdfile)), sep='\t',
                                encoding='utf-8', infer_datetime_format=True,
-                               keep_default_na=False, na_values=[''],
+                               keep_default_na=False, na_values=NA_VALUES,
+                               true_values=TRUE_VALUES,
+                               false_values=FALSE_VALUES,
                                parse_dates=True, index_col=False, comment='\t',
                                mangle_dupe_cols=False, converters={
                                    index: lambda x: str(x).strip(),

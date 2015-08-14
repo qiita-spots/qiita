@@ -70,6 +70,16 @@ PREP_TEMPLATE_COLUMNS_TARGET_GENE = {
 ALL_RESTRICTIONS = [SAMPLE_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS,
                     PREP_TEMPLATE_COLUMNS_TARGET_GENE]
 
+# This is what we consider as "NaN" cell values on metadata import
+NA_VALUES = ['', 'no_data', 'unknown', 'Unspecified', 'unspecified']
+
+# These are what will be considered 'True' bool values on metadata import
+TRUE_VALUES = ['Yes', 'yes', 'YES', 'Y', 'y', 'True', 'true', 'TRUE', 't', 'T']
+
+# These are what will be considered 'False' bool values on metadata import
+FALSE_VALUES = ['No', 'no', 'NO', 'N', 'n', 'False', 'false', 'FALSE',
+                'f', 'F']
+
 
 # A set holding all the controlled columns, useful to avoid recalculating it
 def _col_iterator():
