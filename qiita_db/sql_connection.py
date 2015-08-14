@@ -22,57 +22,102 @@ Classes
 
 Examples
 --------
-Transaction blocks are created by first creating a queue of SQL commands, then
-adding commands to it. Finally, the execute command is called to execute the
-entire queue of SQL commands. A single command is made up of SQL and sql_args.
-SQL is the sql string in psycopg2 format with \%s markup, and sql_args is the
-list or tuple of replacement items.
-An example of a basic queue with two SQL commands in a single transaction:
 
-from qiita_db.sql_connection import SQLConnectionHandler
-conn_handler = SQLConnectionHandler # doctest: +SKIP
-conn_handler.create_queue("example_queue") # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
-    "phone) VALUES (%s, %s, %s, %s)",
-    ['insert@foo.bar', 'Toy', 'pass', '111-111-11112']) # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
-    "phone = '222-222-2221' WHERE email = %s",
-    ['insert@foo.bar']) # doctest: +SKIP
-conn_handler.execute_queue("example_queue") # doctest: +SKIP
-conn_handler.execute_fetchall(
-    "SELECT * from qiita.qiita_user WHERE email = %s",
-    ['insert@foo.bar']) # doctest: +SKIP
-[['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221', None, None,
-  None]] # doctest: +SKIP
+* Querying
 
-You can also use results from a previous command in the queue in a later
-command. If an item in the queue depends on a previous sql command's output,
-use {#} notation as a placeholder for the value. The \# must be the
-position of the result, e.g. if you return two things you can use \{0\}
-to reference the first and \{1\} to referece the second. The results list
-will continue to grow until one of the references is reached, then it
-will be cleaned out.
-Modifying the previous example to show this ability (Note the RETURNING added
-to the first SQL command):
+In order to perform any query in the database you first need to import the
+`TRN` variable available in this module:
 
-from qiita_db.sql_connection import SQLConnectionHandler
-conn_handler = SQLConnectionHandler # doctest: +SKIP
-conn_handler.create_queue("example_queue") # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "INSERT INTO qiita.qiita_user (email, name, password,"
-    "phone) VALUES (%s, %s, %s, %s) RETURNING email, password",
-    ['insert@foo.bar', 'Toy', 'pass', '111-111-11112']) # doctest: +SKIP
-conn_handler.add_to_queue(
-    "example_queue", "UPDATE qiita.qiita_user SET user_level_id = 1, "
-    "phone = '222-222-2221' WHERE email = %s AND password = %s",
-    ['{0}', '{1}']) # doctest: +SKIP
-conn_handler.execute_queue("example_queue") # doctest: +SKIP
-conn_handler.execute_fetchall(
-    "SELECT * from qiita.qiita_user WHERE email = %s", ['insert@foo.bar'])
-[['insert@foo.bar', 1, 'pass', 'Toy', None, None, '222-222-2221', None, None,
-  None]] # doctest: +SKIP
+>>> from qiita_db.sql_connection import TRN
+
+The `TRN` variable is an instance of the `Transaction` object. All queries
+should be executed through this object to ensure atomicity. To perform any
+query you first need to add the query to the transaction and then execute the
+transaction:
+
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     res = TRN.execute()
+>>> res
+[[[42]]]
+
+The `execute` function returns the values of all the queries in the transaction
+object. This requires three layers of nesting: (1) the query (2) the result
+rows in a given query and (3) the result columns in a given row.
+
+* Data retrieval
+
+Multiple auxiliary functions exist for easy SQL result retrieval:
+
+Getting the first value of the last SQL query
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     res = TRN.execute_fetchlast()
+>>> res
+42
+
+Getting the results of the last SQL query
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     res = TRN.execute_fetchindex()
+>>> res
+[[42]]
+
+Getting the results of the specified SQL query
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     TRN.add("SELECT 43")
+...     # The index 0 corresponds to the first query in the transaction
+...     res = TRN.execute_fetchindex(0)
+>>> res
+[[42]]
+
+Getting the results of the last SQL query flattened
+>>> with TRN:
+...     TRN.add("SELECT 42, 43, 44")
+...     res = TRN.execute_fetchflatten()
+>>> res
+[42, 43, 44]
+
+Getting the results of the specified SQL query flattened
+>>> with TRN:
+...     TRN.add("SELECT 42, 43, 44")
+...     TRN.add("SELECT 42")
+...     res = TRN.execute_fetchflatten(0)
+>>> res
+[42, 43, 44]
+
+* Transactions
+
+Transaction blocks are created through the same `TRN` variable exported in this
+module. You can add as many SQL commands as you want and execute all of them at
+once, and it will return the results of all the SQL commands. `TRN` should be
+used as a context manager, and it autocommits the transaction once the last
+context is exited, as long as no error was generated inside the context, in
+which case a rollback is executed.
+
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     TRN.add("SELECT 43")
+...     res = TRN.execute()  # The transaction is not committed here
+>>> # The transaction committed here
+>>> res
+[[[42]], [[43]]]
+
+You can have nested transactions and they will not commit until the first
+transaction (represented by entering to the context) is exited:
+
+>>> with TRN:
+...     TRN.add("SELECT 42")
+...     with TRN:
+...         TRN.add("SELECT 43")
+...         res = TRN.execute()
+...     # The transaction is still not committed
+...     TRN.add("SELECT 44")
+...     res = TRN.execute()
+>>> # The transactions committed here
+>>> res
+[[[42]], [[43]], [[44]]]
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -86,7 +131,6 @@ from contextlib import contextmanager
 from itertools import chain
 from functools import partial, wraps
 from datetime import date, time, datetime
-import re
 
 from psycopg2 import (connect, ProgrammingError, Error as PostgresError,
                       OperationalError)
@@ -96,12 +140,6 @@ from psycopg2.extensions import (
     TRANSACTION_STATUS_IDLE)
 
 from qiita_core.qiita_settings import qiita_config
-
-
-def flatten(listOfLists):
-    # https://docs.python.org/2/library/itertools.html
-    # TODO: Issue #551  Use skbio.util.flatten instead of this
-    return chain.from_iterable(listOfLists)
 
 
 class SQLConnectionHandler(object):
@@ -172,8 +210,6 @@ class SQLConnectionHandler(object):
     _args_map = {'no_admin': '_user_args',
                  'admin_with_database': '_admin_args',
                  'admin_without_database': '_admin_nodb_args'}
-
-    _regex = re.compile("{(\d+)}")
 
     def __init__(self, admin='no_admin'):
         if admin not in ('no_admin', 'admin_with_database',
@@ -491,9 +527,6 @@ class Transaction(object):
     When the execution leaves the context manager, any remaining queries in
     the transaction will be executed and committed.
     """
-
-    _regex = re.compile("^{(\d+):(\d+):(\d+)}$")
-
     def __init__(self):
         self._queries = []
         self._results = []
@@ -514,7 +547,7 @@ class Transaction(object):
                                        host=qiita_config.host,
                                        port=qiita_config.port)
         except OperationalError as e:
-            # catch threee known common exceptions and raise runtime errors
+            # catch three known common exceptions and raise runtime errors
             try:
                 etype = e.message.split(':')[1].split()[0]
             except IndexError:
@@ -617,83 +650,15 @@ class Transaction(object):
             "Query: %s\nArguments: %s\nError: %s\n"
             % (sql, str(sql_args), str(error)))
 
-    def _replace_placeholders(self, sql, sql_args):
-        """Replaces the placeholder in `sql_args` with the actual value
-
-        Parameters
-        ----------
-        sql : str
-            The SQL query
-        sql_args : list
-            The arguments of the SQL query
-
-        Returns
-        -------
-        tuple of (str, list of objects)
-            The input SQL query (unmodified) and the SQL arguments with the
-            placeholder (if any) substituted with the actual value of the
-            previous query
-
-        Raises
-        ------
-        ValueError
-            If a placeholder does not match any previous result
-            If a placeholder points to a query that do not produce any result
-        """
-        for pos, arg in enumerate(sql_args):
-            # Check if we have a placeholder
-            if isinstance(arg, str):
-                placeholder = self._regex.search(arg)
-                if placeholder:
-                    # We do have a placeholder, get the indexes
-                    # Query index
-                    q_idx = int(placeholder.group(1))
-                    # Row index
-                    r_idx = int(placeholder.group(2))
-                    # Value index
-                    v_idx = int(placeholder.group(3))
-                    try:
-                        sql_args[pos] = self._results[q_idx][r_idx][v_idx]
-                    except IndexError:
-                        # A previous query that was expected to retrieve
-                        # some data from the DB did not return as many
-                        # values as expected
-                        self._raise_execution_error(
-                            sql, sql_args,
-                            "The placeholder {%d:%d:%d} does not match to "
-                            "any previous result"
-                            % (q_idx, r_idx, v_idx))
-                    except TypeError:
-                        # The query that the placeholder is pointing to
-                        # is not expected to retrieve any value
-                        # (e.g. an INSERT w/o RETURNING clause)
-                        self._raise_execution_error(
-                            sql, sql_args,
-                            "The placeholder {%d:%d:%d} is referring to "
-                            "a SQL query that does not retrieve data"
-                            % (q_idx, r_idx, v_idx))
-
-        # If sql_args is an empty list, psycopg2 doesn't work correctly if we
-        # are passing '%' characters to the SQL query in a LIKE statement
-        sql_args = sql_args if sql_args else None
-        return sql, sql_args
-
     @_checker
     def add(self, sql, sql_args=None, many=False):
         """Add an sql query to the transaction
-
-        If the current query needs a result of a previous query in the
-        transaction, a placeholder of the form '{#:#:#}' can be used. The first
-        number is the index of the previous SQL query in the transaction, the
-        second number is the row from that query result and the third number is
-        the index of the value within the query result row.
-        The placeholder will be replaced by the actual value at execution time.
 
         Parameters
         ----------
         sql : str
             The sql query
-        sql_args : list of objects, optional
+        sql_args : list, tuple or dict of objects, optional
             The arguments to the sql query
         many : bool, optional
             Whether or not we should add the query multiple times to the
@@ -702,28 +667,26 @@ class Transaction(object):
         Raises
         ------
         TypeError
-            If `sql_args` is provided and is not a list
+            If `sql_args` is provided and is not a list, tuple or dict
         RuntimeError
             If invoked outside a context
 
         Notes
         -----
-        If `many` is true, `sql_args` should be a list of lists, in which each
-        list of the list contains the parameters for one SQL query of the many.
-        Each element on the list is all the parameters for a single one of the
-        many queries added. The amount of SQL queries added to the list is
-        len(sql_args).
+        If `many` is true, `sql_args` should be a list of lists, tuples or
+        dicts, in which each element of the list contains the parameters for
+        one SQL query of the many. Each element on the list is all the
+        parameters for a single one of the many queries added. The amount of
+        SQL queries added to the list is len(sql_args).
         """
         if not many:
             sql_args = [sql_args]
 
         for args in sql_args:
             if args:
-                if not isinstance(args, list):
-                    raise TypeError("sql_args should be a list. Found %s"
-                                    % type(args))
-            else:
-                args = []
+                if not isinstance(args, (list, tuple, dict)):
+                    raise TypeError("sql_args should be a list, tuple or dict."
+                                    " Found %s" % type(args))
             self._queries.append((sql, args))
 
     def _execute(self):
@@ -734,8 +697,6 @@ class Transaction(object):
         """
         with self._get_cursor() as cur:
             for sql, sql_args in self._queries:
-                sql, sql_args = self._replace_placeholders(sql, sql_args)
-
                 # Execute the current SQL command
                 try:
                     cur.execute(sql, sql_args)
@@ -851,7 +812,7 @@ class Transaction(object):
         """Executes the transaction and returns the flattened results of the
         `idx` query
 
-        This is a convenient function that is equivalen to
+        This is a convenient function that is equivalent to
         `chain.from_iterable(self.execute()[idx])`
 
         Parameters
