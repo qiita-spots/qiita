@@ -1,8 +1,7 @@
 from qiita_db.sql_connection import TRN
 from qiita_db.metadata_template.constants import (NA_VALUES, TRUE_VALUES,
                                                   FALSE_VALUES)
-from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.study import Study
 from qiita_db.data import RawData
 
