@@ -69,11 +69,11 @@ with TRN:
                     pr_update.add(table_id)
                     TRN.add(pc_update_sql, [table_id, col])
 
-        TRN.execute()
-        for stid in st_update:
-            SampleTemplate(int(stid)).generate_files()
-            for rd_id in Study(int(stid)).raw_data():
-                for pt_id in RawData(rd_id).prep_templates:
-                    pr_update.discard(pt_id)
-        for prid in pr_update:
-            PrepTemplate(int(prid)).generate_files()
+    TRN.execute()
+    for stid in st_update:
+        SampleTemplate(int(stid)).generate_files()
+        for rd_id in Study(int(stid)).raw_data():
+            for pt_id in RawData(rd_id).prep_templates:
+                pr_update.discard(pt_id)
+    for prid in pr_update:
+        PrepTemplate(int(prid)).generate_files()
