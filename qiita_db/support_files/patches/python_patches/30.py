@@ -4,6 +4,8 @@ from qiita_db.metadata_template.constants import (NA_VALUES, TRUE_VALUES,
 
 with TRN:
     bool_vals = set(TRUE_VALUES + FALSE_VALUES + [None])
+    na_vals = set(NA_VALUES)
+
     nans = tuple(NA_VALUES)
     false_vals = tuple(FALSE_VALUES)
     true_vals = tuple(TRUE_VALUES)
@@ -40,6 +42,9 @@ with TRN:
         col_vals = zip(*TRN.execute_fetchindex())
         cols = [x[0] for x in colinfo]
         for col, vals in zip(cols, col_vals):
+            if set(vals) == {None}:
+                # Ignore columns that are all NULL
+                continue
             if all(v in bool_vals for v in vals):
                 # Every value in the column should be bool, so do it
                 TRN.add(alter_sql.format(table, col),
