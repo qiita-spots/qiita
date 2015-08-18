@@ -1,6 +1,8 @@
 from qiita_db.sql_connection import TRN
 from qiita_db.metadata_template.constants import (NA_VALUES, TRUE_VALUES,
                                                   FALSE_VALUES)
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
 
 bool_vals = set(TRUE_VALUES + FALSE_VALUES + [None])
 na_vals = set(NA_VALUES)
@@ -8,6 +10,9 @@ na_vals = set(NA_VALUES)
 nans = tuple(NA_VALUES)
 false_vals = tuple(FALSE_VALUES)
 true_vals = tuple(TRUE_VALUES)
+
+st_update = set()
+pr_update = set()
 
 with TRN:
     sql = """SELECT table_name
@@ -58,6 +63,13 @@ with TRN:
                 TRN.add(alter_sql.format(table, col),
                         [false_vals, true_vals])
                 if "sample" in table:
+                    st_update.add(table_id)
                     TRN.add(ssc_update_sql, [table_id, col])
                 else:
+                    pr_update.add(table_id)
                     TRN.add(pc_update_sql, [table_id, col])
+
+for stid in st_update:
+    SampleTemplate(stid).generate_files()
+for prid in pr_update:
+    PrepTemplate(prid).generate_files()
