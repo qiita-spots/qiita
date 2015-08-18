@@ -68,7 +68,8 @@ with TRN:
                     pr_update.add(table_id)
                     TRN.add(pc_update_sql, [table_id, col])
 
-for stid in st_update:
-    SampleTemplate(int(stid)).generate_files()
-for prid in pr_update:
-    PrepTemplate(int(prid)).generate_files()
+        TRN.execute()
+        for stid in st_update:
+            SampleTemplate(int(stid)).generate_files()
+        for prid in pr_update:
+            PrepTemplate(int(prid)).generate_files()
