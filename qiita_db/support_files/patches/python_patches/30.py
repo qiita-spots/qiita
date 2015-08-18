@@ -23,9 +23,10 @@ with TRN:
     TRN.add(sql)
     tables = TRN.execute_fetchflatten()
 
-    cols_sql = """SELECT column_name, data_type
+    cols_sql = """SELECT column_name
                   FROM information_schema.columns
-                  WHERE table_name = %s"""
+                  WHERE table_name = %s
+                  AND data_type = 'character varying'"""
     alter_sql = """ALTER TABLE qiita.{0}
                    ALTER COLUMN {1} TYPE bool
                    USING CASE
@@ -44,14 +45,12 @@ with TRN:
         table_id = table.split("_")[1]
         # Change NaN values to NULL in database
         TRN.add(cols_sql, [table])
-        colinfo = TRN.execute_fetchindex()
-        for col, ctype in colinfo:
-            if ctype == 'character varying':
+        cols = TRN.execute_fetchflatten()
+        for col in cols:
                 TRN.add(null_sql.format(table, col), [nans])
         TRN.execute()
 
         # Update now boolean columns to bool in database
-        cols = [x[0] for x in colinfo]
         TRN.add("SELECT {0} FROM qiita.{1}".format(','.join(cols), table))
         col_vals = zip(*TRN.execute_fetchindex())
         for col, vals in zip(cols, col_vals):
@@ -70,6 +69,6 @@ with TRN:
                     TRN.add(pc_update_sql, [table_id, col])
 
 for stid in st_update:
-    SampleTemplate(stid).generate_files()
+    SampleTemplate(int(stid)).generate_files()
 for prid in pr_update:
-    PrepTemplate(prid).generate_files()
+    PrepTemplate(int(prid)).generate_files()
