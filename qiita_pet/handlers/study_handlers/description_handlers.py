@@ -189,11 +189,18 @@ class StudyDescriptionHandler(BaseHandler):
         is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
 
         try:
+            if is_mapping_file and not data_type:
+                raise ValueError("Please, choose a data type if uploading a "
+                                 "QIIME mapping file")
+
             with warnings.catch_warnings(record=True) as warns:
-                # deleting previous uploads and inserting new one
-                self.remove_add_study_template(study.raw_data, study.id,
-                                               fp_rsp, data_type,
-                                               is_mapping_file)
+                if is_mapping_file:
+                    create_templates_from_qiime_mapping_file(fp_rsp, study,
+                                                             int(data_type))
+                else:
+                    SampleTemplate.create(load_template_to_dataframe(fp_rsp),
+                                          study)
+                remove(fp_rsp)
 
                 # join all the warning messages into one. Note that this
                 # info will be ignored if an exception is raised
@@ -657,32 +664,6 @@ class StudyDescriptionHandler(BaseHandler):
                "the correct parameters?")
         msg_level = 'danger'
         callback((msg, msg_level, 'study_information_tab', None, None))
-
-    @execute_as_transaction
-    def remove_add_study_template(self, raw_data, study_id, fp_rsp, data_type,
-                                  is_mapping_file):
-        """Replace prep templates, raw data, and sample template with a new one
-        """
-        if is_mapping_file and data_type == "":
-            raise ValueError("Please, choose a data type if uploading a QIIME "
-                             "mapping file")
-
-        for rd in raw_data():
-            rd = RawData(rd)
-            for pt in rd.prep_templates:
-                if PrepTemplate.exists(pt):
-                    PrepTemplate.delete(pt)
-        if SampleTemplate.exists(study_id):
-            SampleTemplate.delete(study_id)
-
-        if is_mapping_file:
-            create_templates_from_qiime_mapping_file(fp_rsp, Study(study_id),
-                                                     int(data_type))
-        else:
-            SampleTemplate.create(load_template_to_dataframe(fp_rsp),
-                                  Study(study_id))
-
-        remove(fp_rsp)
 
     def remove_add_prep_template(self, fp_rpt, study, data_type_id,
                                  investigation_type):

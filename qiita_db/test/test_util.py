@@ -11,6 +11,7 @@ from tempfile import mkstemp
 from os import close, remove
 from os.path import join, exists, basename
 from shutil import rmtree
+from datetime import datetime
 
 import pandas as pd
 
@@ -21,6 +22,7 @@ from qiita_db.data import RawData
 from qiita_db.study import Study
 from qiita_db.reference import Reference
 from qiita_db.metadata_template import PrepTemplate
+from qiita_db.user import User
 from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            compute_checksum, check_table_cols,
                            check_required_columns, convert_to_id,
@@ -38,7 +40,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            move_filepaths_to_upload_folder,
                            move_upload_files_to_trash,
                            check_access_to_analysis_result, infer_status,
-                           get_preprocessed_params_tables)
+                           get_preprocessed_params_tables, add_message,
+                           add_system_message, clear_system_messages)
 
 
 @qiita_test_checker()
@@ -615,6 +618,53 @@ class DBUtilTests(TestCase):
         exp = [10]
 
         self.assertEqual(obs, exp)
+
+    def test_add_message(self):
+        count = get_count('qiita.message') + 1
+        users = [User('shared@foo.bar'), User('admin@foo.bar')]
+        add_message("TEST MESSAGE", users)
+
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[count, 'TEST MESSAGE'], [1, 'message 1']]
+        self.assertEqual(obs, exp)
+        obs = [[x[0], x[1]] for x in User('admin@foo.bar').messages()]
+        exp = [[count, 'TEST MESSAGE']]
+        self.assertEqual(obs, exp)
+
+    def test_add_system_message(self):
+        count = get_count('qiita.message') + 1
+        add_system_message("SYS MESSAGE", datetime(2015, 8, 5, 19, 41))
+
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[count, 'SYS MESSAGE'], [1, 'message 1']]
+        self.assertEqual(obs, exp)
+        obs = [[x[0], x[1]] for x in User('admin@foo.bar').messages()]
+        exp = [[count, 'SYS MESSAGE']]
+        self.assertEqual(obs, exp)
+
+        sql = "SELECT expiration from qiita.message WHERE message_id = %s"
+        obs = self.conn_handler.execute_fetchall(sql, [count])
+        exp = [[datetime(2015, 8, 5, 19, 41)]]
+        self.assertEqual(obs, exp)
+
+    def test_clear_system_messages(self):
+        message_id = get_count('qiita.message') + 1
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[1, 'message 1']]
+        self.assertEqual(obs, exp)
+
+        add_system_message("SYS MESSAGE", datetime(2015, 8, 5, 19, 41))
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[1, 'message 1'], [message_id, 'SYS MESSAGE']]
+        self.assertItemsEqual(obs, exp)
+
+        clear_system_messages()
+        obs = [[x[0], x[1]] for x in User('shared@foo.bar').messages()]
+        exp = [[1, 'message 1']]
+        self.assertEqual(obs, exp)
+
+        # Run again with no system messages to make sure no errors
+        clear_system_messages()
 
 
 class UtilTests(TestCase):

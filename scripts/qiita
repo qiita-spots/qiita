@@ -11,6 +11,7 @@ from __future__ import division, print_function
 
 import errno
 import socket
+from datetime import datetime, timedelta
 
 import click
 import tornado.httpserver
@@ -35,6 +36,7 @@ from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.exceptions import QiitaDBConnectionError, QiitaDBError
 from qiita_db.reference import Reference
 from qiita_db.logger import LogEntry
+from qiita_db.util import add_system_message, clear_system_messages
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
 from qiita_ware.processing_pipeline import generate_demux_file
@@ -384,13 +386,20 @@ def unlock():
               help='The amount of time to show message, in seconds')
 @click.option('--message', required=True, type=str,
               help="Message to show users")
-def sysmessage(message, time):
-    r_client.setex('sysmessage', message, time)
+@click.option('--banner', is_flag=True,
+              help="If set, show as site banner instead of a standard message")
+def sysmessage(message, time, banner):
+    if banner:
+        r_client.setex('sysmessage', message, time)
+    else:
+        expires = datetime.now() + timedelta(seconds=time)
+        add_system_message(message, expires)
 
 
 @maintenance.command()
 def clear_sysmessage():
     r_client.delete('sysmessage')
+    clear_system_messages()
 
 
 @maintenance.command()

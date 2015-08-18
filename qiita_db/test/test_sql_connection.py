@@ -211,72 +211,11 @@ class TestTransaction(TestBase):
         obs = Transaction()
         self.assertEqual(obs._queries, [])
         self.assertEqual(obs._results, [])
-        self.assertEqual(obs.index, 0)
         self.assertEqual(obs._connection, None)
         self.assertEqual(obs._contexts_entered, 0)
         with obs:
             pass
         self.assertTrue(isinstance(obs._connection, connection))
-
-    def test_replace_placeholders(self):
-        with TRN:
-            TRN._results = [
-                [["res1", 1]], [["res2a", 2], ["res2b", 3]], None, None,
-                [["res5", 5]]]
-            sql = "SELECT 42"
-            obs_sql, obs_args = TRN._replace_placeholders(
-                sql, ["{0:0:0}"])
-            self.assertEqual(obs_sql, sql)
-            self.assertEqual(obs_args, ["res1"])
-
-            obs_sql, obs_args = TRN._replace_placeholders(
-                sql, ["{1:0:0}"])
-            self.assertEqual(obs_sql, sql)
-            self.assertEqual(obs_args, ["res2a"])
-
-            obs_sql, obs_args = TRN._replace_placeholders(
-                sql, ["{1:1:1}"])
-            self.assertEqual(obs_sql, sql)
-            self.assertEqual(obs_args, [3])
-
-            obs_sql, obs_args = TRN._replace_placeholders(
-                sql, ["{4:0:0}"])
-            self.assertEqual(obs_sql, sql)
-            self.assertEqual(obs_args, ["res5"])
-
-            obs_sql, obs_args = TRN._replace_placeholders(
-                sql, ["foo", "{0:0:1}", "bar", "{1:0:1}"])
-            self.assertEqual(obs_sql, sql)
-            self.assertEqual(obs_args, ["foo", 1, "bar", 2])
-
-    def test_replace_placeholders_index_error(self):
-        with TRN:
-            TRN._results = [
-                [["res1", 1]], [["res2a", 2], ["res2b", 2]]]
-
-            error_regex = ('The placeholder {0:0:3} does not match to any '
-                           'previous result')
-            with self.assertRaisesRegexp(ValueError, error_regex):
-                TRN._replace_placeholders("SELECT 42", ["{0:0:3}"])
-
-            error_regex = ('The placeholder {0:2:0} does not match to any '
-                           'previous result')
-            with self.assertRaisesRegexp(ValueError, error_regex):
-                TRN._replace_placeholders("SELECT 42", ["{0:2:0}"])
-
-            error_regex = ('The placeholder {2:0:0} does not match to any '
-                           'previous result')
-            with self.assertRaisesRegexp(ValueError, error_regex):
-                TRN._replace_placeholders("SELECT 42", ["{2:0:0}"])
-
-    def test_replace_placeholders_type_error(self):
-        with TRN:
-            TRN._results = [None]
-
-            error_regex = ("The placeholder {0:0:0} is referring to a SQL "
-                           "query that does not retrieve data")
-            with self.assertRaisesRegexp(ValueError, error_regex):
-                TRN._replace_placeholders("SELECT 42", ["{0:0:0}"])
 
     def test_add(self):
         with TRN:
@@ -287,8 +226,13 @@ class TestTransaction(TestBase):
             TRN.add(sql1, args1)
             sql2 = "INSERT INTO qiita.test_table (int_column) VALUES (1)"
             TRN.add(sql2)
+            args3 = (False,)
+            TRN.add(sql1, args3)
+            sql3 = "INSERT INTO qiita.test_table (int_column) VALEUS (%(foo)s)"
+            args4 = {'foo': 1}
+            TRN.add(sql3, args4)
 
-            exp = [(sql1, args1), (sql2, [])]
+            exp = [(sql1, args1), (sql2, None), (sql1, args3), (sql3, args4)]
             self.assertEqual(TRN._queries, exp)
 
             # Remove queries so __exit__ doesn't try to execute it
@@ -307,15 +251,14 @@ class TestTransaction(TestBase):
 
     def test_add_error(self):
         with TRN:
+            with self.assertRaises(TypeError):
+                TRN.add("SELECT 42", 1)
 
             with self.assertRaises(TypeError):
-                TRN.add("SELECT 42", (1,))
+                TRN.add("SELECT 42", {'foo': 'bar'}, many=True)
 
             with self.assertRaises(TypeError):
-                TRN.add("SELECT 42", {'foo': 'bar'})
-
-            with self.assertRaises(TypeError):
-                TRN.add("SELECT 42", [(1,), (1,)], many=True)
+                TRN.add("SELECT 42", [1, 1], many=True)
 
     def test_execute(self):
         with TRN:
@@ -382,51 +325,6 @@ class TestTransaction(TestBase):
                     ['insert3', True, 3],  # Second result select
                     ['insert2', False, 2]]]  # Third result select
             self.assertEqual(obs, exp)
-
-    def test_execute_placeholders(self):
-        with TRN:
-            sql = """INSERT INTO qiita.test_table (int_column) VALUES (%s)
-                     RETURNING str_column"""
-            TRN.add(sql, [2])
-            sql = """UPDATE qiita.test_table SET str_column = %s
-                     WHERE str_column = %s"""
-            TRN.add(sql, ["", "{0:0:0}"])
-            obs = TRN.execute()
-            self.assertEqual(obs, [[['foo']], None])
-            self._assert_sql_equal([])
-
-        self._assert_sql_equal([('', True, 2)])
-
-    def test_execute_error_bad_placeholder(self):
-        with TRN:
-            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
-            TRN.add(sql, [2])
-            sql = """UPDATE qiita.test_table SET bool_column = %s
-                     WHERE str_column = %s"""
-            TRN.add(sql, [False, "{0:0:0}"])
-
-            with self.assertRaises(ValueError):
-                TRN.execute()
-
-            # make sure rollback correctly
-            self._assert_sql_equal([])
-
-    def test_execute_error_no_result_placeholder(self):
-        with TRN:
-            sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
-            TRN.add(sql, [[1], [2], [3]], many=True)
-            sql = """SELECT str_column FROM qiita.test_table
-                     WHERE int_column = %s"""
-            TRN.add(sql, [4])
-            sql = """UPDATE qiita.test_table SET bool_column = %s
-                     WHERE str_column = %s"""
-            TRN.add(sql, [False, "{3:0:0}"])
-
-            with self.assertRaises(ValueError):
-                TRN.execute()
-
-            # make sure rollback correctly
-            self._assert_sql_equal([])
 
     def test_execute_huge_transaction(self):
         with TRN:
