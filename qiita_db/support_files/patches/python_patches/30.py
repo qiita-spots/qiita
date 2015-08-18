@@ -3,6 +3,8 @@ from qiita_db.metadata_template.constants import (NA_VALUES, TRUE_VALUES,
                                                   FALSE_VALUES)
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.study import Study
+from qiita_db.data import RawData
 
 bool_vals = set(TRUE_VALUES + FALSE_VALUES + [None])
 na_vals = set(NA_VALUES)
@@ -71,5 +73,8 @@ with TRN:
         TRN.execute()
         for stid in st_update:
             SampleTemplate(int(stid)).generate_files()
+            for rd_id in Study(int(stid)).raw_data():
+                for pt_id in RawData(rd_id).prep_templates:
+                    pr_update.discard(pt_id)
         for prid in pr_update:
             PrepTemplate(int(prid)).generate_files()
