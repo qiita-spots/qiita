@@ -2,14 +2,14 @@ from qiita_db.sql_connection import TRN
 from qiita_db.metadata_template.constants import (NA_VALUES, TRUE_VALUES,
                                                   FALSE_VALUES)
 
+bool_vals = set(TRUE_VALUES + FALSE_VALUES + [None])
+na_vals = set(NA_VALUES)
+
+nans = tuple(NA_VALUES)
+false_vals = tuple(FALSE_VALUES)
+true_vals = tuple(TRUE_VALUES)
+
 with TRN:
-    bool_vals = set(TRUE_VALUES + FALSE_VALUES + [None])
-    na_vals = set(NA_VALUES)
-
-    nans = tuple(NA_VALUES)
-    false_vals = tuple(FALSE_VALUES)
-    true_vals = tuple(TRUE_VALUES)
-
     sql = """SELECT table_name
              FROM information_schema.tables
              WHERE table_schema='qiita'
@@ -53,7 +53,6 @@ with TRN:
             if set(vals) == {None}:
                 # Ignore columns that are all NULL
                 continue
-            global bool_vals
             if all(v in bool_vals for v in vals):
                 # Every value in the column should be bool, so do it
                 TRN.add(alter_sql.format(table, col),
