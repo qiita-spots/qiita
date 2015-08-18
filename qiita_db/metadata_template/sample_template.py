@@ -16,7 +16,6 @@ from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
 from qiita_db.sql_connection import TRN
 from qiita_db.util import get_mountpoint, convert_to_id
 from qiita_db.study import Study
-from qiita_db.data import RawData
 from .base_metadata_template import BaseSample, MetadataTemplate
 from .prep_template import PrepTemplate
 from .constants import SAMPLE_TEMPLATE_COLUMNS
@@ -224,9 +223,8 @@ class SampleTemplate(MetadataTemplate):
             self.add_filepath(fp)
 
             # generating all new QIIME mapping files
-            for rd_id in Study(self.id).raw_data():
-                for pt_id in RawData(rd_id).prep_templates:
-                    PrepTemplate(pt_id).generate_files()
+            for pt_id in Study(self._id).prep_templates():
+                PrepTemplate(pt_id).generate_files()
 
     def extend(self, md_template):
         """Adds the given sample template to the current one

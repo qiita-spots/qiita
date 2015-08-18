@@ -3,7 +3,6 @@ from qiita_db.metadata_template.constants import (NA_VALUES, TRUE_VALUES,
                                                   FALSE_VALUES)
 from qiita_db.metadata_template import SampleTemplate, PrepTemplate
 from qiita_db.study import Study
-from qiita_db.data import RawData
 
 bool_vals = set(TRUE_VALUES + FALSE_VALUES + [None])
 na_vals = set(NA_VALUES)
@@ -48,7 +47,7 @@ with TRN:
         TRN.add(cols_sql, [table])
         cols = TRN.execute_fetchflatten()
         for col in cols:
-                TRN.add(null_sql.format(table, col), [nans])
+            TRN.add(null_sql.format(table, col), [nans])
         TRN.execute()
 
         # Update now boolean columns to bool in database
@@ -71,9 +70,9 @@ with TRN:
 
     TRN.execute()
     for stid in st_update:
-        SampleTemplate(int(stid)).generate_files()
-        for rd_id in Study(int(stid)).raw_data():
-            for pt_id in RawData(rd_id).prep_templates:
-                pr_update.discard(pt_id)
+        stid = int(stid)
+        SampleTemplate(stid).generate_files()
+        for pt_id in Study(stid).prep_templates():
+            pr_update.discard(pt_id)
     for prid in pr_update:
         PrepTemplate(int(prid)).generate_files()
