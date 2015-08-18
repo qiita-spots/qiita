@@ -53,6 +53,7 @@ with TRN:
             if set(vals) == {None}:
                 # Ignore columns that are all NULL
                 continue
+            global bool_vals
             if all(v in bool_vals for v in vals):
                 # Every value in the column should be bool, so do it
                 TRN.add(alter_sql.format(table, col),
