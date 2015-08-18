@@ -14,9 +14,9 @@ with TRN:
              FROM information_schema.tables
              WHERE table_schema='qiita'
                 AND (table_name SIMILAR TO 'sample\_[0-9]+'
-                OR table_name SIMILAR TO 'prep\_[0-9]+')"""
+                     OR table_name SIMILAR TO 'prep\_[0-9]+')"""
     TRN.add(sql)
-    tables = [x[0] for x in TRN.execute_fetchindex()]
+    tables = TRN.execute_fetchflatten()
 
     cols_sql = """SELECT column_name, data_type
                   FROM information_schema.columns
@@ -46,9 +46,9 @@ with TRN:
         TRN.execute()
 
         # Update now boolean columns to bool in database
-        TRN.add("SELECT * FROM qiita.{}".format(table))
-        col_vals = zip(*TRN.execute_fetchindex())
         cols = [x[0] for x in colinfo]
+        TRN.add("SELECT {0} FROM qiita.{1}".format(','.join(cols), table))
+        col_vals = zip(*TRN.execute_fetchindex())
         for col, vals in zip(cols, col_vals):
             if set(vals) == {None}:
                 # Ignore columns that are all NULL
@@ -60,4 +60,4 @@ with TRN:
                 if "sample" in table:
                     TRN.add(ssc_update_sql, [table_id, col])
                 else:
-                    TRN.add(pc_update_sql.format(), [table_id, col])
+                    TRN.add(pc_update_sql, [table_id, col])
