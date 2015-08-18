@@ -13,7 +13,8 @@ with TRN:
     sql = """SELECT table_name
              FROM information_schema.tables
              WHERE table_schema='qiita'
-                AND table_name SIMILAR TO 'sample\_[0-9]+'"""
+                AND (table_name SIMILAR TO 'sample\_[0-9]+'
+                OR table_name SIMILAR TO 'prep\_[0-9]+')"""
     TRN.add(sql)
     tables = [x[0] for x in TRN.execute_fetchindex()]
 
@@ -27,8 +28,15 @@ with TRN:
                        WHEN {1} IN %s THEN TRUE
                    END"""
     null_sql = "UPDATE qiita.{0} SET {1} = NULL WHERE {1} IN %s"
+    ssc_update_sql = """UPDATE qiita.study_sample_columns
+                        SET column_type = 'bool'
+                        WHERE study_id = %s AND column_name = %s"""
+    pc_update_sql = """UPDATE qiita.prep_columns
+                        SET column_type = 'bool'
+                        WHERE prep_template_id = %s AND column_name = %s"""
 
     for table in tables:
+        table_id = table.split("_")[1]
         # Change NaN values to NULL in database
         TRN.add(cols_sql, [table])
         colinfo = TRN.execute_fetchindex()
@@ -49,3 +57,7 @@ with TRN:
                 # Every value in the column should be bool, so do it
                 TRN.add(alter_sql.format(table, col),
                         [false_vals, true_vals])
+                if "sample" in table:
+                    TRN.add(ssc_update_sql, [table_id, col])
+                else:
+                    TRN.add(pc_update_sql.format(), [table_id, col])
