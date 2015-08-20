@@ -43,6 +43,7 @@ from functools import partial
 from copy import deepcopy
 
 import pandas as pd
+import numpy as np
 from skbio.util import find_duplicates
 import warnings
 
@@ -1156,6 +1157,8 @@ class MetadataTemplate(QiitaObject):
 
             for k, v in viewitems(samples_and_values):
                 sample = self[k]
+                if isinstance(v, np.generic):
+                    v = np.asscalar(v)
                 sample.setitem(category, v)
 
             try:
