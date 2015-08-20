@@ -14,7 +14,7 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
-                                 QiitaDBError)
+                                 QiitaDBError, QiitaDBDuplicateHeaderError)
 from qiita_db.metadata_template.util import (
     get_datatypes, as_python_types, prefix_sample_names_with_id,
     load_template_to_dataframe, get_invalid_sample_names,
@@ -86,14 +86,9 @@ class TestUtil(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_duplicate_cols(self):
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
-        obs = list(obs.columns)
-        exp = ['collection_timestamp', 'description', 'has_extracted_data',
-               'has_physical_specimen', 'host_subject_id', 'latitude',
-               'longitude', 'physical_location', 'required_sample_info_status',
-               'sample_type', 'str_column', 'str_column']
-        self.assertEqual(obs, exp)
+        with self.assertRaises(QiitaDBDuplicateHeaderError):
+            obs = load_template_to_dataframe(
+                StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
 
     def test_load_template_to_dataframe_scrubbing(self):
         obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_SPACES))

@@ -15,9 +15,10 @@ import pandas as pd
 import numpy as np
 import warnings
 from skbio.io.util import open_file
+from skbio.util import find_duplicates
 
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
-                                 QiitaDBError)
+                                 QiitaDBError, QiitaDBDuplicateHeaderError)
 from .constants import CONTROLLED_COLS, NA_VALUES, TRUE_VALUES, FALSE_VALUES
 
 if PY3:
@@ -166,6 +167,8 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
         When columns are dropped because they have no content for any sample.
     QiitaDBError
         When non UTF-8 characters are found in the file.
+    QiitaDBDuplicateHeaderError
+        If duplicate columns are present in the template
 
     Notes
     -----
@@ -282,6 +285,10 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
                  for header, rows in viewitems(errors)]
         raise QiitaDBError('Non UTF-8 characters found in columns:\n' +
                            '\n'.join(lines))
+
+    # Check that we don't have duplicate columns
+    if len(set(template.columns)) != len(template.columns):
+        raise QiitaDBDuplicateHeaderError(find_duplicates(template.columns))
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
