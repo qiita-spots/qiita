@@ -190,6 +190,12 @@ class TestUtil(TestCase):
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
+    def test_load_template_to_dataframe_with_nulls(self):
+        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_NULLS))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_NULLS_DICT)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
     def test_get_invalid_sample_names(self):
         all_valid = ['2.sample.1', 'foo.bar.baz', 'roses', 'are', 'red',
                      'v10l3t5', '4r3', '81u3']
@@ -520,6 +526,30 @@ SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS = (
     "True\1\t4.8\t4.XXXXX41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
+EXP_SAMPLE_TEMPLATE_NULLS = (
+    "sample_name\tmy_bool_col\tmy_bool_col_w_nulls\n"
+    "sample.1\tTrue\tFalse\n"
+    "sample.2\tFalse\tUnknown\n"
+    "sample.3\tTrue\tTrue\n"
+    "sample.4\tFalse\t\n"
+    "sample.5\tTrue\tTrue\n"
+    "sample.6\tFalse\tTrue\n")
+
+
+SAMPLE_TEMPLATE_NULLS_DICT = {
+    'my_bool_col': {"sample.1": True,
+                    "sample.2": False,
+                    "sample.3": True,
+                    "sample.4": False,
+                    "sample.5": True,
+                    "sample.6": False},
+    'my_bool_col_w_nulls': {"sample.1": False,
+                            "sample.2": None,
+                            "sample.3": True,
+                            "sample.4": None,
+                            "sample.5": True,
+                            "sample.6": True}
+}
 
 SAMPLE_TEMPLATE_DICT_FORM = {
     'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
