@@ -321,6 +321,9 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
                       'because all their values are empty: '
                       '%s' % ', '.join(dropped_cols), QiitaDBWarning)
 
+    # Pandas represents data with np.nan rather than Nones, change it
+    template = template.where((pd.notnull(template)), None)
+
     return template
 
 
