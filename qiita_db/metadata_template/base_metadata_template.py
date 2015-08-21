@@ -40,7 +40,6 @@ from future.utils import viewitems, viewvalues
 from future.builtins import zip
 from os.path import join
 from functools import partial
-from copy import deepcopy
 
 import pandas as pd
 import numpy as np
@@ -544,7 +543,7 @@ class MetadataTemplate(QiitaObject):
 
         # We are going to modify the md_template. We create a copy so
         # we don't modify the user one
-        md_template = deepcopy(md_template)
+        md_template = md_template.copy(deep=True)
 
         # Prefix the sample names with the study_id
         prefix_sample_names_with_id(md_template, study_id)

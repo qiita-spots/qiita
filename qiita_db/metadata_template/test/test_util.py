@@ -14,7 +14,7 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
-                                 QiitaDBError)
+                                 QiitaDBError, QiitaDBDuplicateHeaderError)
 from qiita_db.metadata_template.util import (
     get_datatypes, as_python_types, prefix_sample_names_with_id,
     load_template_to_dataframe, get_invalid_sample_names,
@@ -86,14 +86,8 @@ class TestUtil(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_duplicate_cols(self):
-        obs = load_template_to_dataframe(
-            StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
-        obs = list(obs.columns)
-        exp = ['collection_timestamp', 'description', 'has_extracted_data',
-               'has_physical_specimen', 'host_subject_id', 'latitude',
-               'longitude', 'physical_location', 'required_sample_info_status',
-               'sample_type', 'str_column', 'str_column']
-        self.assertEqual(obs, exp)
+        with self.assertRaises(QiitaDBDuplicateHeaderError):
+            load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
 
     def test_load_template_to_dataframe_scrubbing(self):
         obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
@@ -192,6 +186,12 @@ class TestUtil(TestCase):
             StringIO(EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT))
 
         exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT)
+        exp.index.name = 'sample_name'
+        assert_frame_equal(obs, exp)
+
+    def test_load_template_to_dataframe_with_nulls(self):
+        obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_NULLS))
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_NULLS_DICT)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -525,6 +525,30 @@ SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS = (
     "True\1\t4.8\t4.XXXXX41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
+EXP_SAMPLE_TEMPLATE_NULLS = (
+    "sample_name\tmy_bool_col\tmy_bool_col_w_nulls\n"
+    "sample.1\tTrue\tFalse\n"
+    "sample.2\tFalse\tUnknown\n"
+    "sample.3\tTrue\tTrue\n"
+    "sample.4\tFalse\t\n"
+    "sample.5\tTrue\tTrue\n"
+    "sample.6\tFalse\tTrue\n")
+
+
+SAMPLE_TEMPLATE_NULLS_DICT = {
+    'my_bool_col': {"sample.1": True,
+                    "sample.2": False,
+                    "sample.3": True,
+                    "sample.4": False,
+                    "sample.5": True,
+                    "sample.6": False},
+    'my_bool_col_w_nulls': {"sample.1": False,
+                            "sample.2": None,
+                            "sample.3": True,
+                            "sample.4": None,
+                            "sample.5": True,
+                            "sample.6": True}
+}
 
 SAMPLE_TEMPLATE_DICT_FORM = {
     'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
