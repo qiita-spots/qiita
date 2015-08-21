@@ -105,7 +105,27 @@ class DBUtilTests(TestCase):
             [78.3634273709, 74.423907894],
             [38.2627021402, 3.48274264219]]
 
-        obs = get_lat_longs()
+        obs = get_lat_longs('QIITA')
+        self.assertItemsEqual(obs, exp)
+
+    def test_get_lat_longs_EMP_portal(self):
+        info = {
+            'timeseries_type_id': 1,
+            'lab_person_id': None,
+            'principal_investigator_id': 3,
+            'metadata_complete': False,
+            'mixs_compliant': True,
+            'study_description': 'desc',
+            'study_alias': 'alias',
+            'study_abstract': 'abstract'}
+
+        study = Study.create(User('test@foo.bar'), 'test_study_1', efo=[1],
+                             info=info)
+        Portal('EMP').add_studies([study.id])
+
+        obs = get_lat_longs('EMP')
+        exp = [[40.0274, 105.2519]]
+
         self.assertItemsEqual(obs, exp)
 
     def test_check_table_cols(self):

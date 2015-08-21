@@ -6,9 +6,11 @@ from moi import r_client
 from tornado.gen import coroutine, Task
 
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import get_count
 from qiita_db.study import Study
 from qiita_db.util import get_lat_longs
+from qiita_db.portal import Portal
 from .base_handlers import BaseHandler
 
 
@@ -21,7 +23,7 @@ class StatsHandler(BaseHandler):
         if not (lats or longs):
             # if we don't have them, then fetch from disk and add to the
             # redis server with a 24-hour expiration
-            lat_longs = get_lat_longs()
+            lat_longs = get_lat_longs(Portal(qiita_config.portal))
             with r_client.pipeline() as pipe:
                 for latitude, longitude in lat_longs:
                     # storing as a simple data structure, hopefully this

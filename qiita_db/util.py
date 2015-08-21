@@ -969,14 +969,21 @@ def get_processed_params_tables():
         return TRN.execute_fetchflatten()
 
 
-def get_lat_longs():
+def get_lat_longs(portal):
     """Retrieve the latitude and longitude of all the samples in the DB
+
+    Parameters
+    ----------
+    portal : qiita_db.portal.Portal object
+        The portal for which to get the lat_longs
 
     Returns
     -------
     list of [float, float]
         The latitude and longitude for each sample in the database
     """
+    portal_table_ids = portal.get_studies()
+
     with TRN:
         sql = """SELECT DISTINCT table_name
                  FROM information_schema.columns
@@ -987,7 +994,12 @@ def get_lat_longs():
 
         sql = "SELECT latitude, longitude FROM qiita.{0}"
         idx = TRN.index
-        for table in TRN.execute_fetchflatten():
+
+        portal_tables = TRN.execute_fetchflatten()
+        portal_tables = [x for x in TRN.execute_fetchflatten()
+                         if int(x[7:]) in portal_table_ids]
+
+        for table in portal_tables:
             TRN.add(sql.format(table))
 
         return list(chain.from_iterable(TRN.execute()[idx:]))
