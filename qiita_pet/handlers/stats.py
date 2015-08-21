@@ -20,10 +20,12 @@ class StatsHandler(BaseHandler):
         # check if the key exists in redis
         lats = r_client.lrange('stats:sample_lats', 0, -1)
         longs = r_client.lrange('stats:sample_longs', 0, -1)
-        if not (lats or longs):
+        if not (lats and longs):
             # if we don't have them, then fetch from disk and add to the
             # redis server with a 24-hour expiration
             lat_longs = get_lat_longs(Portal(qiita_config.portal))
+            lats = [float(x[0]) for x in lat_longs]
+            longs = [float(x[1]) for x in lat_longs]
             with r_client.pipeline() as pipe:
                 for latitude, longitude in lat_longs:
                     # storing as a simple data structure, hopefully this
