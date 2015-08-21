@@ -1092,38 +1092,81 @@ class MetadataTemplate(QiitaObject):
 
             # simple validations of sample ids and column names
             samples_diff = set(new_map.index).difference(current_map.index)
+            # Fail if we don't have the same samples
             if samples_diff:
                 raise QiitaDBError(
                     'The new template differs from what is stored '
                     'in database by these samples names: %s'
                     % ', '.join(samples_diff))
-            columns_diff = set(new_map.columns).difference(current_map.columns)
-            if columns_diff:
+
+            # Fail if we have new columns in the templates
+            # (only updates are allowed, not extensions)
+            if not set(current_map.columns).issuperset(new_map.columns):
+                columns_diff = set(new_map.columns).difference(
+                    current_map.columns)
                 raise QiitaDBError(
                     'The new template differs from what is stored '
                     'in database by these columns names: %s'
                     % ', '.join(columns_diff))
 
-            # here we are comparing two dataframes following:
-            # http://stackoverflow.com/a/17095620/4228285
-            current_map.sort(axis=0, inplace=True)
-            current_map.sort(axis=1, inplace=True)
-            new_map.sort(axis=0, inplace=True)
-            new_map.sort(axis=1, inplace=True)
-            map_diff = (current_map != new_map).stack()
-            map_diff = map_diff[map_diff]
-            map_diff.index.names = ['id', 'column']
-            changed_cols = map_diff.index.get_level_values('column').unique()
+            # In order to speed up some computation, let's compare only the
+            # common columns. current_map.columns is a superset of
+            # new_map.columns, so this will not fail
+            current_map = current_map[new_map.columns]
 
-            if not self.can_be_updated(columns=set(changed_cols)):
+            # Get the values that we need to change
+            diff_map = current_map != new_map
+            ne_stacked = diff_map.stack()
+            changed = ne_stacked[ne_stacked]
+            changed.index.names = ['sample_name', 'column']
+            difference_locations = np.where(diff_map)
+            changed_to = new_map.values[difference_locations]
+
+            # To update is a MultiIndexed DataFrame, in which the index 0 is
+            # the samples and the index 1 is the columns, we define these
+            # variables here so we don't put magic number across the code
+            sample_idx = 0
+            col_idx = 1
+            to_update = pd.DataFrame({'to': changed_to}, index=changed.index)
+
+            # Get the columns that we need to change
+            indices = list(set(to_update.index.labels[col_idx]))
+            cols_to_update = to_update.index.levels[col_idx][indices]
+
+            if not self.can_be_updated(columns=set(cols_to_update)):
                 raise QiitaDBError(
                     'The new template is modifying fields that cannot be '
-                    'modified. Try removing the target gene fields or '
+                    'modified. Try removing the restricted fields or '
                     'deleting the processed data. You are trying to modify: %s'
-                    % ', '.join(changed_cols))
+                    % ', '.join(cols_to_update))
 
-            for col in changed_cols:
-                self.update_category(col, new_map[col].to_dict())
+            # Get the samples that we need to change
+            indices = list(set(to_update.index.labels[sample_idx]))
+            samples_to_update = to_update.index.levels[sample_idx][indices]
+
+            sql_eq_cols = ', '.join(
+                ["{0} = c.{0}".format(col) for col in cols_to_update])
+            # We add 1 because we need to add the sample name
+            single_value = "(%s)" % ', '.join(
+                ["%s"] * (len(cols_to_update) + 1))
+            sql_values = ', '.join([single_value] * len(samples_to_update))
+            sql_cols = ', '.join(cols_to_update)
+
+            sql = """UPDATE qiita.{0} AS t SET
+                        {1}
+                     FROM (VALUES {2})
+                        AS c(sample_id, {3})
+                     WHERE c.sample_id = t.sample_id
+                    """.format(self._table_name(self._id), sql_eq_cols,
+                               sql_values, sql_cols)
+            sql_args = []
+            for sample in samples_to_update:
+                sample_vals = [new_map[col][sample] for col in cols_to_update]
+                sample_vals.insert(0, sample)
+                sql_args.extend(sample_vals)
+
+            TRN.add(sql, sql_args)
+            TRN.execute()
 
             self.generate_files()
 
