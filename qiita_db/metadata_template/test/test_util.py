@@ -87,8 +87,7 @@ class TestUtil(TestCase):
 
     def test_load_template_to_dataframe_duplicate_cols(self):
         with self.assertRaises(QiitaDBDuplicateHeaderError):
-            obs = load_template_to_dataframe(
-                StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
+            load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_DUPE_COLS))
 
     def test_load_template_to_dataframe_scrubbing(self):
         obs = load_template_to_dataframe(StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
