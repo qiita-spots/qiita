@@ -18,8 +18,10 @@ class StatsHandler(BaseHandler):
     @execute_as_transaction
     def _get_stats(self, callback):
         # check if the key exists in redis
-        lats = r_client.lrange('stats:sample_lats', 0, -1)
-        longs = r_client.lrange('stats:sample_longs', 0, -1)
+        redis_lats_key = '%s:stats:sample_lats' % qiita_config.portal
+        redis_longs_key = '%s:stats:sample_longs' % qiita_config.portal
+        lats = r_client.lrange(redis_lats_key, 0, -1)
+        longs = r_client.lrange(redis_longs_key, 0, -1)
         if not (lats and longs):
             # if we don't have them, then fetch from disk and add to the
             # redis server with a 24-hour expiration
@@ -30,14 +32,14 @@ class StatsHandler(BaseHandler):
                 for latitude, longitude in lat_longs:
                     # storing as a simple data structure, hopefully this
                     # doesn't burn us later
-                    pipe.rpush('stats:sample_lats', latitude)
-                    pipe.rpush('stats:sample_longs', longitude)
+                    pipe.rpush(redis_lats_key, latitude)
+                    pipe.rpush(redis_longs_key, longitude)
 
                 # set the key to expire in 24 hours, so that we limit the
                 # number of times we have to go to the database to a reasonable
                 # amount
-                r_client.expire('stats:sample_lats', 86400)
-                r_client.expire('stats:sample_longs', 86400)
+                r_client.expire(redis_lats_key, 86400)
+                r_client.expire(redis_longs_key, 86400)
 
                 pipe.execute()
         else:
