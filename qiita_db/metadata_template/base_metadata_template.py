@@ -1092,21 +1092,19 @@ class MetadataTemplate(QiitaObject):
 
             # simple validations of sample ids and column names
             samples_diff = set(new_map.index).difference(current_map.index)
-            # Fail if we don't have the same samples
             if samples_diff:
                 raise QiitaDBError(
                     'The new template differs from what is stored '
                     'in database by these samples names: %s'
                     % ', '.join(samples_diff))
 
-            # Fail if we have new columns in the templates
-            # (only updates are allowed, not extensions)
             if not set(current_map.columns).issuperset(new_map.columns):
                 columns_diff = set(new_map.columns).difference(
                     current_map.columns)
                 raise QiitaDBError(
-                    'The new template differs from what is stored '
-                    'in database by these columns names: %s'
+                    'Some of the columns in your template are not present in '
+                    'the system. Use "extend" if you want to add more columns '
+                    'to the template. Missing columns: %s'
                     % ', '.join(columns_diff))
 
             # In order to speed up some computation, let's compare only the
@@ -1115,16 +1113,27 @@ class MetadataTemplate(QiitaObject):
             current_map = current_map[new_map.columns]
 
             # Get the values that we need to change
+            # diff_map is a DataFrame that hold boolean values. If a cell is
+            # True, means that the new_map is different from the current_map
+            # while False means that the cell has the same value
             diff_map = current_map != new_map
+            # ne_stacked holds a MultiIndexed DataFrame in which the first
+            # level of indexing is the sample_name and the second one is the
+            # columns. We only have 1 column, which holds if that
+            # (sample, column) pair has been modified or not (i.e. cell)
             ne_stacked = diff_map.stack()
+            # by using ne_stacked to index himself, we get only the columns
+            # that did change (see boolean indexing in pandas docs)
             changed = ne_stacked[ne_stacked]
             changed.index.names = ['sample_name', 'column']
-            difference_locations = np.where(diff_map)
-            changed_to = new_map.values[difference_locations]
+            # the combination of np.where and boolean indexing produces
+            # a numpy array with only the values that actually changed
+            # between the current_map and new_map
+            changed_to = new_map.values[np.where(diff_map)]
 
-            # To update is a MultiIndexed DataFrame, in which the index 0 is
+            # to_update is a MultiIndexed DataFrame, in which the index 0 is
             # the samples and the index 1 is the columns, we define these
-            # variables here so we don't put magic number across the code
+            # variables here so we don't put magic numbers across the code
             sample_idx = 0
             col_idx = 1
             to_update = pd.DataFrame({'to': changed_to}, index=changed.index)
