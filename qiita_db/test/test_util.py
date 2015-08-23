@@ -32,8 +32,7 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            params_dict_to_json, insert_filepaths,
                            get_db_files_base_dir, get_data_types,
                            purge_filepaths, get_filepath_id,
-                           get_lat_longs, get_mountpoint,
-                           get_mountpoint_path_by_id,
+                           get_mountpoint, get_mountpoint_path_by_id,
                            get_files_from_uploads_folders,
                            get_environmental_packages, get_timeseries_types,
                            filepath_id_to_rel_path, filepath_ids_to_rel_paths,
@@ -74,59 +73,6 @@ class DBUtilTests(TestCase):
         self.required.remove('study_title')
         with self.assertRaises(QiitaDBColumnError):
             check_required_columns(self.required, self.table)
-
-    def test_get_lat_longs(self):
-        exp = [
-            [74.0894932572, 65.3283470202],
-            [57.571893782, 32.5563076447],
-            [13.089194595, 92.5274472082],
-            [12.7065957714, 84.9722975792],
-            [31.7167821863, 95.5088566087],
-            [44.9725384282, 66.1920014699],
-            [10.6655599093, 70.784770579],
-            [29.1499460692, 82.1270418227],
-            [35.2374368957, 68.5041623253],
-            [53.5050692395, 31.6056761814],
-            [60.1102854322, 74.7123248382],
-            [4.59216095574, 63.5115213108],
-            [68.0991287718, 34.8360987059],
-            [84.0030227585, 66.8954849864],
-            [3.21190859967, 26.8138925876],
-            [82.8302905615, 86.3615778099],
-            [12.6245524972, 96.0693176066],
-            [85.4121476399, 15.6526750776],
-            [63.6505562766, 31.2003474585],
-            [23.1218032799, 42.838497795],
-            [43.9614715197, 82.8516734159],
-            [68.51099627, 2.35063674718],
-            [0.291867635913, 68.5945325743],
-            [40.8623799474, 6.66444220187],
-            [95.2060749748, 27.3592668624],
-            [78.3634273709, 74.423907894],
-            [38.2627021402, 3.48274264219]]
-
-        obs = get_lat_longs('QIITA')
-        self.assertItemsEqual(obs, exp)
-
-    def test_get_lat_longs_EMP_portal(self):
-        info = {
-            'timeseries_type_id': 1,
-            'lab_person_id': None,
-            'principal_investigator_id': 3,
-            'metadata_complete': False,
-            'mixs_compliant': True,
-            'study_description': 'desc',
-            'study_alias': 'alias',
-            'study_abstract': 'abstract'}
-
-        study = Study.create(User('test@foo.bar'), 'test_study_1', efo=[1],
-                             info=info)
-        Portal('EMP').add_studies([study.id])
-
-        obs = get_lat_longs('EMP')
-        exp = [[40.0274, 105.2519]]
-
-        self.assertItemsEqual(obs, exp)
 
     def test_check_table_cols(self):
         # Doesn't do anything if correct info passed, only errors if wrong info

@@ -9,8 +9,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import get_count
 from qiita_db.study import Study
-from qiita_db.util import get_lat_longs
-from qiita_db.portal import Portal
+from qiita_db.meta_util import get_lat_longs
 from .base_handlers import BaseHandler
 
 
@@ -25,7 +24,7 @@ class StatsHandler(BaseHandler):
         if not (lats and longs):
             # if we don't have them, then fetch from disk and add to the
             # redis server with a 24-hour expiration
-            lat_longs = get_lat_longs(Portal(qiita_config.portal))
+            lat_longs = get_lat_longs()
             lats = [float(x[0]) for x in lat_longs]
             longs = [float(x[1]) for x in lat_longs]
             with r_client.pipeline() as pipe:
