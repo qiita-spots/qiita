@@ -39,7 +39,7 @@ class QiitaObject(object):
 
     Parameters
     ----------
-    id_: object
+    id_: int, long, str, or unicode
         The object id on the storage system
 
     Attributes
@@ -166,13 +166,30 @@ class QiitaObject(object):
 
         Parameters
         ----------
-        id_: the object identifier
+        id_: int, long, str, or unicode
+            the object identifier
 
         Raises
         ------
         QiitaDBUnknownIDError
             If `id_` does not correspond to any object
         """
+        # Most IDs in the database are numerical, but some (e.g., IDs used for
+        # the User object) are strings. Moreover, some integer IDs are passed
+        # as strings (e.g., '5'). Therefore, explicit type-checking is needed
+        # here to accommodate these possibilities.
+        if not isinstance(id_, (int, long, str, unicode)):
+            raise TypeError("id_ must be a numerical or text type (not %s) "
+                            "when instantiating "
+                            "%s" % (id_.__class__.__name__,
+                                    self.__class__.__name__))
+
+        if isinstance(id_, (str, unicode)):
+            if id_.isdigit():
+                id_ = int(id_)
+        elif isinstance(id_, long):
+            id_ = int(id_)
+
         with TRN:
             self._check_subclass()
             if not self._check_id(id_):
