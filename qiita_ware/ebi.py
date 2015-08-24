@@ -18,6 +18,9 @@ from qiita_ware.exceptions import EBISumbissionError
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
+from qiita_db.study import Study
+from qiita_db.data import PreprocessedData
+from qiita_db.metadata_template import PrepTemplate
 
 
 class InvalidMetadataError(Exception):
@@ -77,56 +80,74 @@ def iter_file_via_list_of_dicts(input_file):
 
 
 class EBISubmission(object):
-    """Define an EBI submission and facilitate generation of required XML files
+    """Define an EBI submission, generate submission files and submit
+
+    Submit a preprocessed data to EBI
+
+    The steps for EBI submission are:
+    1. Validate that the submission status is different than
+    self.valid_ebi_actions and that there is a valid investigation_type
+    2. Generate per sample demultiplexed files
+    3. Generate XML files for submission
+    4. Submit sequences files
+    5. Submit XML files. The answer has the EBI submission numbers.
+
+    Parameters
+    ----------
+    preprocessed_data_id : int
+        The preprocesssed data id
+    action : str
+        The action to perfom, it has to be one of the self.valid_ebi_actions
 
     Parameters
     ----------
     preprocessed_data_id : str
-    study_title : str
-    study_abstract : str
-    investigation_type : str
-        Any of the options provided by ebi, see:
-        https://www.ebi.ac.uk/ega/sites/ebi.ac.uk.ega/files/documents/Study.xml
-        If `'Other'` is passed, then you must provide a value in the
-        new_investigation_type argument.
-    empty_value : str, optional
-        Defaults to "no_data". This is the value that will be used when data
-        for a particular metadata field is missing
-    new_investigation_type: str, optional
-        'metagenome', and 'mimarks-survey' are specially recognized and used to
-        set other attributes in the submission, but any string is valid. This
-        value is required only if `'Other'` is passed in `investigation_type`.
     """
-    def __init__(self, preprocessed_data_id, study_title, study_abstract,
-                 investigation_type, empty_value='no_data',
-                 new_investigation_type=None, pmids=None, **kwargs):
-        self.preprocessed_data_id = preprocessed_data_id
-        self.study_title = study_title
-        self.study_abstract = study_abstract
-        self.investigation_type = investigation_type
-        self.empty_value = empty_value
-        self.new_investigation_type = new_investigation_type
-        self.sequence_files = []
+    def __init__(self, preprocessed_data_id, action, **kwargs):
+        self.valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
+        self.valid_ebi_submission_states = ('submitting', 'success')
 
+        # Step 1: variable setup and validations
+        if action not in self.valid_ebi_actions:
+            raise ValueError("Not a valid action (%s): %s" % (
+                ', '.join(self.valid_ebi_actions), action))
+
+        ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        ppd = PreprocessedData(preprocessed_data_id)
+        s = Study(ppd.study)
+        pt = PrepTemplate(ppd.prep_template)
+
+        status = ppd.submitted_to_insdc_status()
+        if status in self.valid_ebi_submission_states:
+            raise ValueError("Cannot resubmit! Current status is: %s" % status)
+
+        self.preprocessed_data_id = preprocessed_data_id
+        self.study_title = s.title
+        self.study_abstract = s.info['study_abstract']
+
+        it = pt.investigation_type
+        key = it
+        if it in ena_ontology.terms:
+            self.investigation_type = it
+            self.new_investigation_type = None
+        elif it in ena_ontology.user_defined_terms:
+            self.investigation_type = 'Other'
+            self.new_investigation_type = it
+        else:
+            # This should never happen
+            raise ValueError("Unrecognized investigation type: '%s'. This "
+                             "term is neither one of the official terms nor "
+                             "one of the user-defined terms in the ENA "
+                             "ontology")
+        ts = datetime.now().strftime('%Y_%m_%d_%H:%M:%S')
+        self.ebi_dir = '%s_%s' % (preprocessed_data_id, ts)
+        self.sequence_files = []
         self.study_xml_fp = None
         self.sample_xml_fp = None
         self.experiment_xml_fp = None
         self.run_xml_fp = None
         self.submission_xml_fp = None
-        self.pmids = pmids if pmids is not None else []
-
-        self.ebi_dir = self._get_ebi_dir()
-
-        if self.investigation_type == 'Other' and \
-                self.new_investigation_type is None:
-            raise ValueError("If the investigation_type is 'Other' you have "
-                             " to specify a value for new_investigation_type.")
-
-        ontology = Ontology(convert_to_id('ENA', 'ontology'))
-        if ontology.term_type(self.investigation_type) == 'not_ontology':
-            raise ValueError("The investigation type must be part of ENA's "
-                             "ontology, '%s' is not valid" %
-                             self.investigation_type)
+        self.pmids = s.pmids
 
         # dicts that map investigation_type to library attributes
         lib_strategies = {'metagenome': 'POOLCLONE',
@@ -134,26 +155,12 @@ class EBISubmission(object):
         lib_selections = {'mimarks-survey': 'PCR'}
         lib_sources = {}
 
-        # if the investigation_type is 'Other' we should use the value in
-        # the new_investigation_type attribute to retrieve this information
-        if self.investigation_type == 'Other':
-            key = self.new_investigation_type
-        else:
-            key = self.investigation_type
-
         self.library_strategy = lib_strategies.get(key, "OTHER")
         self.library_source = lib_sources.get(key, "METAGENOMIC")
         self.library_selection = lib_selections.get(key, "unspecified")
 
-        # This allows addition of other arbitrary study metadata
-        self.additional_metadata = self._stringify_kwargs(kwargs)
-
         # This will hold the submission's samples, keyed by the sample name
         self.samples = {}
-
-    def _get_ebi_dir(self):
-        timestamp = datetime.now().strftime('%Y_%m_%d_%H:%M:%S')
-        return '%s_%s' % (self.preprocessed_data_id, timestamp)
 
     def _stringify_kwargs(self, kwargs_dict):
         """Turns values in a dictionay into strings, None, or self.empty_value
@@ -271,12 +278,6 @@ class EBISubmission(object):
             study_links = ET.SubElement(study, 'STUDY_LINKS')
             for pmid in self.pmids:
                 self._get_pmid_element(study_links, pmid)
-
-        if self.additional_metadata:
-            study_attributes = ET.SubElement(study, 'STUDY_ATTRIBUTES')
-            self._add_dict_as_tags_and_values(study_attributes,
-                                              'STUDY_ATTRIBUTE',
-                                              self.additional_metadata)
 
         return study_set
 
@@ -841,52 +842,6 @@ class EBISubmission(object):
         to_remove = set(self.samples).difference(prep_template_samples)
         for sample in to_remove:
             del self.samples[sample]
-
-    @classmethod
-    def from_templates_and_per_sample_fastqs(cls, preprocessed_data_id,
-                                             study_title,
-                                             study_abstract,
-                                             investigation_type,
-                                             sample_template, prep_template,
-                                             per_sample_fastq_dir,
-                                             new_investigation_type=None,
-                                             pmids=None,
-                                             **kwargs):
-        """Generate an ``EBISubmission`` from templates and FASTQ files
-
-        Parameters
-        ----------
-        preprocessed_data_id : str
-        study_title : str
-        study_abstract : str
-        investigation_type : str
-        sample_template : file
-        prep_template : file
-        per_sample_fastq_dir : str
-            Path to the direcotry containing per-sample FASTQ files containing
-            The sequence labels should be:
-            ``SampleID_SequenceNumber And Additional Notes if Applicable``
-        new_investigation_type : str, optional
-        pmids : list, optional
-            The pubmed IDs that are associated with this submission
-
-        Notes
-        -----
-        - kwargs will be passed directly to the ``EBISubmission`` constructor,
-          which will add them as key-value pairs to the study attributes
-          section of the submission
-        """
-        # initialize the EBISubmission object
-        submission = cls(preprocessed_data_id, study_title, study_abstract,
-                         investigation_type,
-                         new_investigation_type=new_investigation_type,
-                         pmids=pmids, **kwargs)
-
-        submission.add_samples_from_templates(sample_template,
-                                              prep_template,
-                                              per_sample_fastq_dir)
-
-        return submission
 
     def generate_curl_command(
             self,
