@@ -242,7 +242,8 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             sql = """INSERT INTO qiita.analysis (email, name, description,
                                                  dflt, analysis_status_id)
                      VALUES ('demo@microbio.me', 'demo@microbio.me-dflt',
-                             'dflt', 't', 1)"""
+                             'dflt', 't', 1)
+                     RETURNING analysis_id"""
             TRN.add(sql)
             analysis_id = TRN.execute_fetchlast()
 
