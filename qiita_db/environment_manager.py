@@ -120,7 +120,7 @@ def _insert_processed_params(ref):
         TRN.execute()
 
 
-def _download_reference_files(conn):
+def _download_reference_files():
     print('Downloading reference files')
     if not exists(reference_base_dir):
         mkdir(reference_base_dir)
