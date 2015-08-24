@@ -90,8 +90,7 @@ setup(name='qiita-spots',
                         'support_files/doc/source/_static/*.png'
                         ]},
       scripts=glob('scripts/*'),
-      extras_require={'test': ["nose >= 0.10.1", "pep8", 'mock'],
-                      'doc': ["Sphinx >= 1.2.2"]},
+      extras_require={'test': ["nose >= 0.10.1", "pep8", 'mock']},
       install_requires=['psycopg2', 'click >= 3.3', 'future==0.13.0',
                         'bcrypt', 'pandas >= 0.15', 'numpy >= 1.7',
                         'tornado==3.1.1', 'toredis', 'redis',
@@ -99,6 +98,6 @@ setup(name='qiita-spots',
                         'h5py >= 2.3.1', 'biom-format', 'natsort', 'networkx',
                         'scikit-bio >= 0.2.3, < 0.3.0', 'wtforms == 2.0.1',
                         'qiime >= 1.9.0, < 1.10.0', 'moi >= 0.2.0, < 0.3.0',
-                        'sphinx-bootstrap-theme'],
+                        'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2'],
       classifiers=classifiers
       )
