@@ -144,8 +144,8 @@ class ConfigurationManager(object):
     def _get_main(self, config):
         """Get the configuration of the main section"""
         self.test_environment = config.getboolean('main', 'TEST_ENVIRONMENT')
-        default_base_data_dir = join(dirname(abspath(__file__)),
-                                     '..', 'qiita_db', 'support_files',
+        install_dir = dirname(dirname(abspath(__file__)))
+        default_base_data_dir = join(install_dir, 'qiita_db', 'support_files',
                                      'test_data')
         self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
             default_base_data_dir
