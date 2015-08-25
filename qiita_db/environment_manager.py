@@ -120,7 +120,7 @@ def _insert_processed_params(ref):
         TRN.execute()
 
 
-def _download_reference_files(conn):
+def _download_reference_files():
     print('Downloading reference files')
     if not exists(reference_base_dir):
         mkdir(reference_base_dir)
@@ -242,7 +242,8 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             sql = """INSERT INTO qiita.analysis (email, name, description,
                                                  dflt, analysis_status_id)
                      VALUES ('demo@microbio.me', 'demo@microbio.me-dflt',
-                             'dflt', 't', 1)"""
+                             'dflt', 't', 1)
+                     RETURNING analysis_id"""
             TRN.add(sql)
             analysis_id = TRN.execute_fetchlast()
 
