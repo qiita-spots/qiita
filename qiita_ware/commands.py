@@ -23,11 +23,6 @@ from qiita_ware.ebi import EBISubmission
 from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.exceptions import ComputeError
 from qiita_ware.util import open_file
-from qiita_db.util import convert_to_id
-from qiita_db.ontology import Ontology
-
-
-ebi_actions = ['ADD', 'VALIDATE', 'MODIFY']
 
 
 def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
@@ -49,6 +44,7 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
     If fastq_dir_fp is passed, it must not contain any empty files, or
     gzipped empty files
     """
+
     preprocessed_data = PreprocessedData(preprocessed_data_id)
     preprocessed_data_id_str = str(preprocessed_data_id)
     study = Study(preprocessed_data.study)
@@ -58,29 +54,10 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
     investigation_type = None
     new_investigation_type = None
 
-    status = preprocessed_data.submitted_to_insdc_status()
-    if status in ('submitting', 'success'):
-        raise ValueError("Cannot resubmit! Current status is: %s" % status)
-
     if send:
         # If we intend actually to send the files, then change the status in
         # the database
         preprocessed_data.update_insdc_status('submitting')
-
-    # we need to figure out whether the investigation type is a known one
-    # or if we have to submit a "new_investigation_type" to EBI
-    current_type = prep_template.investigation_type
-    ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
-    if current_type in ena_ontology.terms:
-        investigation_type = current_type
-    elif current_type in ena_ontology.user_defined_terms:
-        investigation_type = 'Other'
-        new_investigation_type = current_type
-    else:
-        # This should never happen
-        raise ValueError("Unrecognized investigation type: '%s'. This term "
-                         "is neither one of the official terms nor one of the "
-                         "user-defined terms in the ENA ontology")
 
     if fastq_dir_fp is not None:
         # If the user specifies a FASTQ directory, use it
@@ -160,9 +137,6 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         study_accession, submission_accession = None, None
 
     return study_accession, submission_accession
-
-
-submit_EBI.__doc__ %= ebi_actions
 
 
 def submit_VAMPS(preprocessed_data_id):

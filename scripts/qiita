@@ -38,7 +38,8 @@ from qiita_db.reference import Reference
 from qiita_db.logger import LogEntry
 from qiita_db.util import add_system_message, clear_system_messages
 from qiita_core.qiita_settings import qiita_config
-from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
+from qiita_ware.ebi import EBISubmission
+from qiita_ware.commands import submit_EBI as _submit_EBI
 from qiita_ware.processing_pipeline import generate_demux_file
 from qiita_ware.context import system_call, ComputeError
 from moi import r_client
@@ -349,7 +350,7 @@ def remove_study(portal, studies):
 
 @ebi.command()
 @click.option('--preprocessed_data_id', required=True, type=int)
-@click.option('--action', type=click.Choice(ebi_actions),
+@click.option('--action', type=click.Choice(EBISubmission.valid_ebi_actions),
               default='submit', help='The generated XML files will specify '
               'this "action", which controls how the EBI servers handle the '
               'metadata')
