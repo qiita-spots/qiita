@@ -85,8 +85,7 @@ class EBISubmission(object):
     Submit a preprocessed data to EBI
 
     The steps for EBI submission are:
-    1. Validate that the submission status is different than
-    self.valid_ebi_actions and that there is a valid investigation_type
+    1. Validate that we have all required info to submit
     2. Generate per sample demultiplexed files
     3. Generate XML files for submission
     4. Submit sequences files
@@ -97,20 +96,25 @@ class EBISubmission(object):
     preprocessed_data_id : int
         The preprocesssed data id
     action : str
-        The action to perfom, it has to be one of the self.valid_ebi_actions
+        The action to perfom, it has to be one of the
+        EBISubmission.valid_ebi_actions
 
     Parameters
     ----------
     preprocessed_data_id : str
     """
-    def __init__(self, preprocessed_data_id, action, **kwargs):
-        self.valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
-        self.valid_ebi_submission_states = ('submitting', 'success')
+
+    valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
+    valid_ebi_submission_states = ('submitting', 'success')
+
+    def __init__(self, preprocessed_data_id, action):
+        valid_ebi_actions = EBISubmission.valid_ebi_actions
+        valid_ebi_submission_states = EBISubmission.valid_ebi_submission_states
 
         # Step 1: variable setup and validations
-        if action not in self.valid_ebi_actions:
+        if action not in valid_ebi_actions:
             raise ValueError("Not a valid action (%s): %s" % (
-                ', '.join(self.valid_ebi_actions), action))
+                ', '.join(valid_ebi_actions), action))
 
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
         ppd = PreprocessedData(preprocessed_data_id)
@@ -118,7 +122,7 @@ class EBISubmission(object):
         pt = PrepTemplate(ppd.prep_template)
 
         status = ppd.submitted_to_insdc_status()
-        if status in self.valid_ebi_submission_states:
+        if status in valid_ebi_submission_states:
             raise ValueError("Cannot resubmit! Current status is: %s" % status)
 
         self.preprocessed_data_id = preprocessed_data_id
@@ -140,7 +144,7 @@ class EBISubmission(object):
                              "one of the user-defined terms in the ENA "
                              "ontology")
         ts = datetime.now().strftime('%Y_%m_%d_%H:%M:%S')
-        self.ebi_dir = '%s_%s' % (preprocessed_data_id, ts)
+        self.ebi_dir = 'ebi_submission_%s_%s' % (preprocessed_data_id, ts)
         self.sequence_files = []
         self.study_xml_fp = None
         self.sample_xml_fp = None
