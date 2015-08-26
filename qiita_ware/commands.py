@@ -49,9 +49,12 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
     ebi_submission.preprocessed_data.update_insdc_status('demuxing samples')
     try:
         demux_samples = ebi_submission.generate_demultiplexed_fastq()
-    except:
+    except Exception as e:
         if isdir(ebi_submission.ebi_dir):
             rmtree(ebi_submission.ebi_dir)
+        ebi_submission.preprocessed_data.update_insdc_status(
+            'failed: %s' % str(e))
+        raise
 
     # other steps
     output_dir = fastq_dir_fp + '_submission'

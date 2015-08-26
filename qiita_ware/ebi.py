@@ -958,6 +958,13 @@ class EBISubmission(object):
         -------
         demux_samples
             List of successful demultiplexed samples
+
+        Notes
+        -----
+        - As a performace feature, this method will check if self.ebi_dir
+        already exist and, if it does, the script will assume that in a
+        previous execution this step was performed correctly and will simply
+        read the file names from self.ebi_dir
         """
         ppd = self.preprocessed_data
 

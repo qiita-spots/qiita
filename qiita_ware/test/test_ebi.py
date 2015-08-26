@@ -13,6 +13,7 @@ from __future__ import division
 from StringIO import StringIO
 from os import close, remove, path, makedirs
 from os.path import join, isdir
+from shutil import rmtree
 from tempfile import mkstemp, gettempdir
 from unittest import TestCase, main
 from xml.dom import minidom
@@ -42,6 +43,18 @@ class TestEBISubmission(TestCase):
         self.sample3_fp = ebi_test_file('sample3.fastq.gz')
 
         self.temp_dir = gettempdir()
+        self.files_to_remove = []
+        self.ppd_to_remove = []
+
+    def tearDown(self):
+        for f in self.files_to_remove:
+            if isdir(f):
+                rmtree(f)
+            else:
+                remove(f)
+
+        for _id in self.ppd_to_remove:
+            PreprocessedData.delete(_id)
 
     def test_init(self):
         e = EBISubmission(2, 'ADD')
@@ -416,6 +429,9 @@ class TestEBISubmission(TestCase):
             makedirs(self.temp_dir)
 
         fna_fp = join(self.temp_dir, 'seqs.fna')
+        self.files_to_remove.append(fna_fp)
+        # demux_fp doesn't need to be removed cause is being moved to be
+        # the ppd being created and will be removed there
         demux_fp = join(self.temp_dir, 'demux.seqs')
         with open(fna_fp, 'w') as f:
             f.write(FASTA_EXAMPLE)
@@ -433,13 +449,16 @@ class TestEBISubmission(TestCase):
                                       "preprocessed_sequence_illumina_params",
                                       1, [(demux_fp, 6)],
                                       prep_template=PrepTemplate(1))
+        self.ppd_to_remove.append(ppd.id)
+        [self.files_to_remove.append(fps) for _, fps, _ in ppd.get_filepaths()]
 
         # This is testing that only the samples with sequences are going to
         # be created
         ebi_submission = EBISubmission(ppd.id, 'ADD')
+
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
-
+        self.files_to_remove.append(ebi_submission.ebi_dir)
         temp_fp = join(ebi_submission.ebi_dir, 'seqs.fna')
         with open(temp_fp, 'w') as f:
             f.write(FASTA_EXAMPLE)
