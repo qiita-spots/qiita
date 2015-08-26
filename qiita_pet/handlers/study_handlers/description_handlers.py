@@ -428,13 +428,15 @@ class StudyDescriptionHandler(BaseHandler):
         try:
             with warnings.catch_warnings(record=True) as warns:
                 pt = PrepTemplate(pt_id)
-                pt.update(load_template_to_dataframe(fp))
+                df = load_template_to_dataframe(fp)
+                pt.extend(df)
+                pt.update(df)
                 remove(fp)
 
                 # join all the warning messages into one. Note that this info
                 # will be ignored if an exception is raised
                 if warns:
-                    msg = '; '.join([str(w.message) for w in warns])
+                    msg = '\n'.join(set(str(w.message) for w in warns))
                     msg_level = 'warning'
 
         except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
