@@ -1133,6 +1133,8 @@ class MetadataTemplate(QiitaObject):
             # by using ne_stacked to index himself, we get only the columns
             # that did change (see boolean indexing in pandas docs)
             changed = ne_stacked[ne_stacked]
+            if changed.empty:
+                return
             changed.index.names = ['sample_name', 'column']
             # the combination of np.where and boolean indexing produces
             # a numpy array with only the values that actually changed
