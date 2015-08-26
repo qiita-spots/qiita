@@ -1,8 +1,10 @@
 # Qiita changelog
 
+Version 0.2.0-dev (Changes since version 0.2.0 go here)
+-------------------------------------------------------
 
-Qiita 0.1.0-dev (changes since Qiita 0.1.0 go here)
----------------------------------------------------
+Version 0.2.0 (2015-08-25)
+--------------------------
 
 * Creating an empty RawData is no longer needed in order to add a PrepTemplate.
 Now, the PrepTemplate is required in order to add a RawData to a study. This is
