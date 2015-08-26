@@ -1241,6 +1241,72 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                                  self.data_type)
         self.assertTrue(pt.can_be_updated({'barcode'}))
 
+    def test_extend_add_samples(self):
+        """extend correctly works adding new samples"""
+        md_2_samples = self.metadata.loc[('SKB8.640193', 'SKD8.640184'), :]
+        pt = PrepTemplate.create(md_2_samples, self.test_study, self.data_type)
+
+        npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
+
+        # Test samples were appended successfully to the prep template sample
+        sql = """SELECT *
+                 FROM qiita.prep_template_sample
+                 WHERE prep_template_id = %s"""
+        obs = [dict(o)
+               for o in self.conn_handler.execute_fetchall(sql, (pt.id,))]
+        exp = [{'prep_template_id': 2, 'sample_id': '1.SKB8.640193'},
+               {'prep_template_id': 2, 'sample_id': '1.SKD8.640184'},
+               {'prep_template_id': 2, 'sample_id': '1.SKB7.640196'}]
+        self.assertItemsEqual(obs, exp)
+
+    def test_extend_add_cols(self):
+        """extend correctly adds a new columns"""
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
+        self.metadata['new_col'] = pd.Series(['val1', 'val2', 'val3'],
+                                             index=self.metadata.index)
+
+        npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
+
+        sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+        exp = [{'sample_id': '1.SKB7.640196',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L002_sequences',
+                'str_column': 'Value for sample 3',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val1'},
+               {'sample_id': '1.SKB8.640193',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 1',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val2'},
+               {'sample_id': '1.SKD8.640184',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 2',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val3'}]
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'

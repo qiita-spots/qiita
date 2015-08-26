@@ -1057,6 +1057,20 @@ class MetadataTemplate(QiitaObject):
 
         return cols
 
+    def extend(self, md_template):
+        """Adds the given template to the current one
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template contents indexed by sample Ids
+        """
+        with TRN:
+            md_template = self._clean_validate_template(
+                md_template, self.study_id, self.columns_restrictions)
+            self._common_extend_steps(md_template)
+            self.generate_files()
+
     def update(self, md_template):
         r"""Update values in the template
 
