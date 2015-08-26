@@ -3,7 +3,9 @@
 Version 0.2.0-dev (Changes since version 0.2.0 go here)
 -------------------------------------------------------
 
-* Users can now update and extend the templates at once using the "Update" button, rather than in two steps.
+* Users can now update and extend sample templates by using the "Update sample templates" button, rather than having to do 2 steps with the previous design.
+* Users can now update and extend prep templates, using the "Update prep template" button in the prep template tab.
+* The 'extend' functionality has been moved from the sample template to the base metadata template object, so now both sample and prep templates can be extended.
 
 Version 0.2.0 (2015-08-25)
 --------------------------
