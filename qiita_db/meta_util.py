@@ -183,17 +183,16 @@ def get_lat_longs():
     with TRN:
         sql = """SELECT DISTINCT table_name
                  FROM information_schema.columns
-                 WHERE SUBSTR(table_name, 1, 7) = 'sample_'
+                 WHERE table_name SIMILAR TO 'sample_[0-9]+'
                     AND table_schema = 'qiita'
-                    AND column_name IN ('latitude', 'longitude');"""
-        TRN.add(sql)
+                    AND column_name IN ('latitude', 'longitude')
+                    AND SPLIT_PART(table_name, '_', 2)::int IN %s;"""
+        TRN.add(sql, [tuple(portal_table_ids)])
 
         sql = "SELECT latitude, longitude FROM qiita.{0}"
         idx = TRN.index
 
         portal_tables = TRN.execute_fetchflatten()
-        portal_tables = [x for x in TRN.execute_fetchflatten()
-                         if int(x[7:]) in portal_table_ids]
 
         for table in portal_tables:
             TRN.add(sql.format(table))
