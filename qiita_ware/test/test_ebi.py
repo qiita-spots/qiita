@@ -39,108 +39,76 @@ class TestEBISubmission(TestCase):
         self.temp_dir = gettempdir()
 
     def test_init(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
 
-        self.assertEqual(e.preprocessed_data_id, '2')
-        self.assertEqual(e.study_title, 'Study Title')
-        self.assertEqual(e.study_abstract, 'Study Abstract')
-        self.assertEqual(e.investigation_type, 'Other')
-        self.assertEqual(e.new_investigation_type, 'metagenome')
-
-        self.assertEqual(e.empty_value, 'no_data')
+        self.assertEqual(e.preprocessed_data_id, 2)
+        self.assertEqual(e.study_title, 'Identification of the Microbiomes '
+                                        'for Cannabis Soils')
+        self.assertEqual(e.study_abstract,
+                         ('This is a preliminary study to examine the '
+                          'microbiota associated with the Cannabis plant. '
+                          'Soils samples from the bulk soil, soil associated '
+                          'with the roots, and the rhizosphere were extracted '
+                          'and the DNA sequenced. Roots from three '
+                          'independent plants of different strains were '
+                          'examined. These roots were obtained November 11, '
+                          '2011 from plants that had been harvested in the '
+                          'summer. Future studies will attempt to analyze the '
+                          'soils and rhizospheres from the same location at '
+                          'different time points in the plant lifecycle.'))
+        self.assertEqual(e.investigation_type, 'Metagenomics')
+        self.assertIsNone(e.new_investigation_type)
 
         self.assertEqual(e.study_xml_fp, None)
         self.assertEqual(e.sample_xml_fp, None)
         self.assertEqual(e.experiment_xml_fp, None)
         self.assertEqual(e.run_xml_fp, None)
 
-        self.assertEqual(e.library_strategy, 'POOLCLONE')
+        self.assertEqual(e.library_strategy, 'OTHER')
         self.assertEqual(e.library_source, 'METAGENOMIC')
         self.assertEqual(e.library_selection, 'unspecified')
-
-        self.assertEqual(e.additional_metadata, {})
 
     def test_init_exceptions(self):
+        ppd_id = 1
+        # not a valid action
         with self.assertRaises(ValueError):
-            EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type=None)
+            EBISubmission(ppd_id, 'This is not a valid action')
 
+        # already submitting so can't continue
         with self.assertRaises(ValueError):
-            EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='SASQUATCH SEQUENCING',
-                          new_investigation_type='metagenome')
-
-    def test_stringify_kwargs(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome',
-                          impossible_field=1, maybe_possible_field='BOOM')
-
-        self.assertEqual(e.preprocessed_data_id, '2')
-        self.assertEqual(e.study_title, 'Study Title')
-        self.assertEqual(e.study_abstract, 'Study Abstract')
-        self.assertEqual(e.investigation_type, 'Other')
-
-        self.assertEqual(e.empty_value, 'no_data')
-
-        self.assertEqual(e.study_xml_fp, None)
-        self.assertEqual(e.sample_xml_fp, None)
-        self.assertEqual(e.experiment_xml_fp, None)
-        self.assertEqual(e.run_xml_fp, None)
-
-        self.assertEqual(e.library_strategy, 'POOLCLONE')
-        self.assertEqual(e.library_source, 'METAGENOMIC')
-        self.assertEqual(e.library_selection, 'unspecified')
-
-        self.assertEqual(e.additional_metadata, {
-            "impossible_field": "1", "maybe_possible_field": "BOOM"})
+            EBISubmission(ppd_id, 'ADD')
 
     def test_get_study_alias(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
         exp = '%s_ppdid_2' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_study_alias(), exp)
 
     def test_get_sample_alias(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
         e.add_sample('foo', '9606', 'homo sapiens', 'desc1')
         exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_sample_alias('foo'), exp)
 
     def test_get_experiment_alias(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
         e.add_sample('foo', '9606', 'homo sapiens', 'desc1')
         exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_experiment_alias('foo'), exp)
 
     def test_get_submission_alias(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
         obs = e._get_submission_alias()
         exp = '%s_submission_2' % qiita_config.ebi_organization_prefix
         self.assertEqual(obs, exp)
 
     def test_get_library_name(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
         obs = e._get_library_name("nasty<business>")
         exp = "nasty&lt;business&gt;"
         self.assertEqual(obs, exp)
 
     def test_add_dict_as_tags_and_values(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
         elm = ET.Element('TESTING', {'foo': 'bar'})
 
         e._add_dict_as_tags_and_values(elm, 'foo', {'x': 'y', '>x': '<y'})
@@ -149,9 +117,7 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs, exp)
 
     def test_generate_study_xml(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         xmlelement = submission.generate_study_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
@@ -160,9 +126,7 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs_stripped, exp_stripped)
 
         submission_pmids = \
-            EBISubmission('001', 'teststudy', 'test asbstract', 'Other',
-                          new_investigation_type='Amplicon Sequencing',
-                          pmids=[12, 15])
+            EBISubmission(2, 'ADD')
         xmlelement = submission_pmids.generate_study_xml()
         xml = minidom.parseString(ET.tostring(xmlelement))
         xmlstring = xml.toprettyxml(indent='  ', encoding='UTF-8')
@@ -172,9 +136,7 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs_stripped, exp_stripped)
 
     def test_add_sample(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample('test2', '9606', 'homo sapiens', 'desc2')
         samples = submission.samples
@@ -183,9 +145,7 @@ class TestEBISubmission(TestCase):
             submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
 
     def test_generate_sample_xml(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample('test2', '9606', 'homo sapiens', 'desc2')
         xmlelement = submission.generate_sample_xml()
@@ -196,9 +156,7 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs_stripped, exp_stripped)
 
     def test_add_sample_prep(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample('test2', '9606', 'homo sapiens', 'desc1')
 
@@ -216,9 +174,7 @@ class TestEBISubmission(TestCase):
                                        'library protocol')
 
     def test_add_sample_prep_exception(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample('test2', '9606', 'homo sapiens', 'desc1')
         with self.assertRaises(ValueError):
@@ -233,9 +189,7 @@ class TestEBISubmission(TestCase):
                                        'library protocol')
 
     def test_generate_library_descriptor(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
         elm = ET.Element('design', {'foo': 'bar'})
 
         e._generate_library_descriptor(elm, 'sample', 'libconsprot')
@@ -244,9 +198,7 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs, exp)
 
     def test_generate_spot_descriptor(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
         elm = ET.Element('design', {'foo': 'bar'})
 
         e._generate_spot_descriptor(elm, 'LS454')
@@ -255,9 +207,7 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs, exp)
 
     def test_generate_experiment_xml(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    self.sample1_fp,
@@ -274,9 +224,7 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs_stripped, exp_stripped)
 
     def test_generate_run_xml(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    self.sample1_fp,
@@ -297,9 +245,7 @@ class TestEBISubmission(TestCase):
         self.assertEqual(obs_stripped, exp_stripped)
 
     def test_generate_submission_xml(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    '__init__.py', 'experiment description',
@@ -309,9 +255,7 @@ class TestEBISubmission(TestCase):
         # add more tests
 
     def test__write_xml_file(self):
-        e = EBISubmission('2', 'Study Title', 'Study Abstract',
-                          investigation_type='Other',
-                          new_investigation_type='metagenome')
+        e = EBISubmission(2, 'ADD')
         elm = ET.Element('TESTING', {'foo': 'bar'})
         e._write_xml_file(lambda: elm, 'thing', 'testfile')
         self.assertEqual(e.thing, 'testfile')
@@ -321,9 +265,7 @@ class TestEBISubmission(TestCase):
         remove('testfile')
 
     def test_write_study_xml(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         fh, output = mkstemp()
         submission.write_study_xml(output)
         close(fh)
@@ -334,9 +276,7 @@ class TestEBISubmission(TestCase):
         remove(output)
 
     def test_write_sample_xml(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample('test2', '9606', 'homo sapiens', 'desc2')
         fh, output = mkstemp()
@@ -349,9 +289,7 @@ class TestEBISubmission(TestCase):
         remove(output)
 
     def test_write_experiment_xml(self):
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_sample('test1', '9606', 'homo sapiens', 'desc1')
         submission.add_sample_prep('test1', 'ILLUMINA', 'fastq',
                                    self.sample1_fp, 'experiment description',
@@ -370,9 +308,7 @@ class TestEBISubmission(TestCase):
     def test_add_samples_from_templates(self):
         sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
         prep_template = StringIO(EXP_PREP_TEMPLATE)
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_samples_from_templates(sample_template, prep_template,
                                               self.path)
         self.assertTrue('sample1' in submission.samples)
@@ -389,9 +325,7 @@ class TestEBISubmission(TestCase):
     def test_add_samples_from_templates_filter_samples(self):
         sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
         prep_template = StringIO(EXP_PREP_TEMPLATE_FILTERED)
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         submission.add_samples_from_templates(sample_template, prep_template,
                                               self.path)
         self.assertTrue('sample1' in submission.samples)
@@ -408,9 +342,7 @@ class TestEBISubmission(TestCase):
     def test_add_samples_from_templates_error(self):
         sample_template = StringIO(SAMPLE_TEMPLATE_ERROR)
         prep_template = StringIO(EXP_PREP_TEMPLATE)
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         self.assertRaises(
             EBISumbissionError, submission.add_samples_from_templates,
             sample_template, prep_template, self.path)
@@ -418,34 +350,14 @@ class TestEBISubmission(TestCase):
     def test_add_samples_from_templates_bad_directory(self):
         sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
         prep_template = StringIO(EXP_PREP_TEMPLATE)
-        submission = EBISubmission('001', 'teststudy', 'test asbstract',
-                                   investigation_type='Other',
-                                   new_investigation_type='metagenome')
+        submission = EBISubmission(2, 'ADD')
         with self.assertRaises(IOError):
             submission.add_samples_from_templates(
                 sample_template, [prep_template],
                 self.path+'WILL-NOT-EXIST-BOOM')
 
-    def test_from_templates_and_per_sample_fastqs(self):
-        sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
-        prep_template = StringIO(EXP_PREP_TEMPLATE)
-        submission = EBISubmission.from_templates_and_per_sample_fastqs(
-            '001', 'test study', 'abstract',
-            'Metagenomics', sample_template, prep_template, self.path)
-        self.assertEqual(submission.samples['sample2']['prep']['platform'],
-                         'ILLUMINA')
-        self.assertEqual(
-            submission.samples['sample2']['prep']['file_path'],
-            self.sample2_fp)
-        with self.assertRaises(KeyError):
-            submission.samples['nothere']
-
     def test_generate_curl_command(self):
-        sample_template = StringIO(EXP_SAMPLE_TEMPLATE)
-        prep_template = StringIO(EXP_PREP_TEMPLATE)
-        submission = EBISubmission.from_templates_and_per_sample_fastqs(
-            '001', 'test study', 'abstract',
-            'Metagenomics',  sample_template, prep_template, self.path)
+        submission = EBISubmission(2, 'ADD')
 
         # Set these artificially since the function depends only on these fps
         submission.submission_xml_fp = 'submission.xml'
@@ -497,7 +409,7 @@ class TestEBISubmission(TestCase):
 SAMPLEXML = """<?xml version="1.0" encoding="UTF-8"?>
 <SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.sample.xsd">
-  <SAMPLE alias="%(organization_prefix)s_ppdid_001:test1" center_name="CCME-\
+  <SAMPLE alias="%(organization_prefix)s_ppdid_2:test1" center_name="CCME-\
 COLORADO">
     <TITLE>test1</TITLE>
     <SAMPLE_NAME>
@@ -506,7 +418,7 @@ COLORADO">
     </SAMPLE_NAME>
     <DESCRIPTION>desc1</DESCRIPTION>
   </SAMPLE>
-  <SAMPLE alias="%(organization_prefix)s_ppdid_001:test2" center_name="CCME-\
+  <SAMPLE alias="%(organization_prefix)s_ppdid_2:test2" center_name="CCME-\
 COLORADO">
     <TITLE>test2</TITLE>
     <SAMPLE_NAME>
@@ -521,16 +433,34 @@ COLORADO">
 STUDYXML = """<?xml version="1.0" encoding="UTF-8"?>
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
-  <STUDY alias="%(organization_prefix)s_ppdid_001" center_name="CCME-COLORADO">
+  <STUDY alias="%(organization_prefix)s_ppdid_2" center_name="CCME-COLORADO">
     <DESCRIPTOR>
       <STUDY_TITLE>
-        teststudy
+        Identification of the Microbiomes for Cannabis Soils
       </STUDY_TITLE>
-      <STUDY_TYPE existing_study_type="Other" new_study_type="metagenome"/>
+      <STUDY_TYPE existing_study_type="Metagenomics"/>
       <STUDY_ABSTRACT>
-        test asbstract
+        This is a preliminary study to examine the microbiota associated with \
+the Cannabis plant. Soils samples from the bulk soil, soil associated with \
+the roots, and the rhizosphere were extracted and the DNA sequenced. Roots \
+from three independent plants of different strains were examined. These roots \
+were obtained November 11, 2011 from plants that had been harvested in the \
+summer. Future studies will attempt to analyze the soils and rhizospheres \
+from the same location at different time points in the plant lifecycle.
       </STUDY_ABSTRACT>
     </DESCRIPTOR>
+    <STUDY_LINKS>
+      <STUDY_LINK>
+        <XREF_LINK>
+          <DB>PUBMED</DB><ID>123456</ID>
+        </XREF_LINK>
+      </STUDY_LINK>
+      <STUDY_LINK>
+        <XREF_LINK>
+          <DB>PUBMED</DB><ID>7891011</ID>
+        </XREF_LINK>
+      </STUDY_LINK>
+    </STUDY_LINKS>
   </STUDY>
 </STUDY_SET>
 """ % {'organization_prefix': qiita_config.ebi_organization_prefix}
@@ -538,29 +468,34 @@ spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
 STUDYXML_PMIDS = """<?xml version="1.0" encoding="UTF-8"?>
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
-  <STUDY alias="%(organization_prefix)s_ppdid_001" center_name="CCME-\
+  <STUDY alias="%(organization_prefix)s_ppdid_2" center_name="CCME-\
 COLORADO">
     <DESCRIPTOR>
       <STUDY_TITLE>
-        teststudy
+        Identification of the Microbiomes for Cannabis Soils
       </STUDY_TITLE>
-      <STUDY_TYPE existing_study_type="Other" new_study_type="Amplicon Sequenc\
-ing"/>
+      <STUDY_TYPE existing_study_type="Metagenomics"/>
       <STUDY_ABSTRACT>
-        test asbstract
+        This is a preliminary study to examine the microbiota associated with \
+the Cannabis plant. Soils samples from the bulk soil, soil associated with \
+the roots, and the rhizosphere were extracted and the DNA sequenced. Roots \
+from three independent plants of different strains were examined. These roots \
+were obtained November 11, 2011 from plants that had been harvested in the \
+summer. Future studies will attempt to analyze the soils and rhizospheres \
+from the same location at different time points in the plant lifecycle.
       </STUDY_ABSTRACT>
     </DESCRIPTOR>
     <STUDY_LINKS>
       <STUDY_LINK>
         <XREF_LINK>
           <DB>PUBMED</DB>
-          <ID>12</ID>
+          <ID>123456</ID>
         </XREF_LINK>
       </STUDY_LINK>
       <STUDY_LINK>
         <XREF_LINK>
           <DB>PUBMED</DB>
-          <ID>15</ID>
+          <ID>7891011</ID>
         </XREF_LINK>
       </STUDY_LINK>
     </STUDY_LINKS>
@@ -572,16 +507,16 @@ EXPERIMENTXML = """<?xml version="1.0" encoding="UTF-8"?>
 <EXPERIMENT_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.\
 experiment.xsd">
-  <EXPERIMENT alias="%(organization_prefix)s_ppdid_001:test1" center_name=\
+  <EXPERIMENT alias="%(organization_prefix)s_ppdid_2:test1" center_name=\
 "CCME-COLORADO">
-    <TITLE>%(organization_prefix)s_ppdid_001:test1</TITLE>
-    <STUDY_REF refname="%(organization_prefix)s_ppdid_001"/>
+    <TITLE>%(organization_prefix)s_ppdid_2:test1</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_ppdid_2"/>
     <DESIGN>
       <DESIGN_DESCRIPTION>experiment description</DESIGN_DESCRIPTION>
-      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_ppdid_001:test1"/>
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_ppdid_2:test1"/>
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>test1</LIBRARY_NAME>
-        <LIBRARY_STRATEGY>POOLCLONE</LIBRARY_STRATEGY>
+        <LIBRARY_STRATEGY>OTHER</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>unspecified</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT>
@@ -628,7 +563,7 @@ RUNXML = """
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
   <RUN alias="%(study_alias)s_sample1.fastq.gz_run" \
 center_name="CCME-COLORADO">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_001:test1"/>
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_2:test1"/>
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="506d31c82999a2cbcda138a369955e7d" checksum_method=\
@@ -655,7 +590,7 @@ ADDDICTTEST = """<TESTING foo="bar">
 GENLIBDESC = """<design foo="bar">
     <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>sample</LIBRARY_NAME>
-        <LIBRARY_STRATEGY>POOLCLONE</LIBRARY_STRATEGY>
+        <LIBRARY_STRATEGY>OTHER</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>unspecified</LIBRARY_SELECTION>
         <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
