@@ -1271,6 +1271,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
         obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
         exp = [{'sample_id': '1.SKB7.640196',
+                'barcode': 'CCTCTGAGAGCT',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
@@ -1283,6 +1284,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'emp_status': 'EMP',
                 'new_col': 'val1'},
                {'sample_id': '1.SKB8.640193',
+                'barcode': 'GTCCGCAAGTTA',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
@@ -1295,6 +1297,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'emp_status': 'EMP',
                 'new_col': 'val2'},
                {'sample_id': '1.SKD8.640184',
+                'barcode': 'CGTAGAGCTCTC',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
@@ -1306,6 +1309,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP',
                 'new_col': 'val3'}]
+
+        self.assertItemsEqual(obs, exp)
 
 
 EXP_PREP_TEMPLATE = (
