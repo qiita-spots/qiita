@@ -3,6 +3,8 @@
 Version 0.2.0-dev (Changes since version 0.2.0 go here)
 -------------------------------------------------------
 
+* Users can now update and extend the templates at once using the "Update" button, rather than in two steps.
+
 Version 0.2.0 (2015-08-25)
 --------------------------
 
