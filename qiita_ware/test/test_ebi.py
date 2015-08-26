@@ -11,18 +11,23 @@ from __future__ import division
 # -----------------------------------------------------------------------------
 
 from StringIO import StringIO
-from os import close, remove, path
-from os.path import join
+from os import close, remove, path, makedirs
+from os.path import join, isdir
 from tempfile import mkstemp, gettempdir
 from unittest import TestCase, main
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
 from functools import partial
+from h5py import File
 
 from qiita_ware.ebi import (SampleAlreadyExistsError, NoXMLError,
                             EBISubmission)
 from qiita_ware.exceptions import EBISumbissionError
+from qiita_ware.demux import to_hdf5
 from qiita_core.qiita_settings import qiita_config
+from qiita_db.data import PreprocessedData
+from qiita_db.study import Study
+from qiita_db.metadata_template import PrepTemplate
 
 
 class TestEBISubmission(TestCase):
@@ -405,6 +410,72 @@ class TestEBISubmission(TestCase):
                          '%20ebi_access_key%3D"')
         self.assertEqual(obs, exp_with_cert)
 
+    def test_generate_demultiplexed_fastq(self):
+        # generating demux file for testing
+        if not isdir(self.temp_dir):
+            makedirs(self.temp_dir)
+
+        fna_fp = join(self.temp_dir, 'seqs.fna')
+        demux_fp = join(self.temp_dir, 'demux.seqs')
+        with open(fna_fp, 'w') as f:
+            f.write(FASTA_EXAMPLE)
+        with File(demux_fp, "w") as f:
+            to_hdf5(fna_fp, f)
+
+        # Adding a new PreprocessedData to study 1
+        # The 3rd parameter 1 is the PreprocessedIlluminaParams id, which is
+        # not relevant for this test
+        exp_demux_samples = set(
+            ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
+             '1.SKB2.640194', '1.SKM8.640201', '1.SKM4.640180',
+             '1.SKM2.640199', '1.SKB3.640195', '1.SKB6.640176'])
+        ppd = PreprocessedData.create(Study(1),
+                                      "preprocessed_sequence_illumina_params",
+                                      1, [(demux_fp, 6)],
+                                      prep_template=PrepTemplate(1))
+
+        # This is testing that only the samples with sequences are going to
+        # be created
+        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
+
+        temp_fp = join(ebi_submission.ebi_dir, 'seqs.fna')
+        with open(temp_fp, 'w') as f:
+            f.write(FASTA_EXAMPLE)
+
+        # If the last test passed then we can test that the folder already
+        # exists and that we have the same files and ignore not fastq.gz files
+        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
+
+
+FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKB2.640194_2 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKB2.640194_3 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKM4.640180_4 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKM4.640180_5 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKB3.640195_6 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKB6.640176_7 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKD6.640190_8 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKM6.640187_9 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKD9.640182_10 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKM8.640201_11 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>1.SKM2.640199_12 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+"""
 
 SAMPLEXML = """<?xml version="1.0" encoding="UTF-8"?>
 <SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\

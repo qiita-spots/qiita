@@ -3,24 +3,27 @@ from tempfile import mkstemp
 from subprocess import call
 from shlex import split as shsplit
 from glob import glob
-from os.path import basename, exists, join, split
-from os import environ, close
-from datetime import date, timedelta, datetime
+from os.path import basename, exists, join, split, isdir, isfile
+from os import environ, close, makedirs, remove, listdir
+from datetime import date, timedelta
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
 from xml.sax.saxutils import escape
+from gzip import open as gzopen
 
 from future.utils import viewitems
 from skbio.util import safe_md5
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.exceptions import EBISumbissionError
+from qiita_ware.demux import to_per_sample_ascii
+from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
-from qiita_db.metadata_template import PrepTemplate
+from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 
 
 class InvalidMetadataError(Exception):
@@ -117,11 +120,12 @@ class EBISubmission(object):
                 ', '.join(valid_ebi_actions), action))
 
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
-        ppd = PreprocessedData(preprocessed_data_id)
-        s = Study(ppd.study)
-        pt = PrepTemplate(ppd.prep_template)
+        self.preprocessed_data = PreprocessedData(preprocessed_data_id)
+        s = Study(self.preprocessed_data.study)
+        self.sample_template = SampleTemplate(s.sample_template)
+        self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
 
-        status = ppd.submitted_to_insdc_status()
+        status = self.preprocessed_data.submitted_to_insdc_status()
         if status in valid_ebi_submission_states:
             raise ValueError("Cannot resubmit! Current status is: %s" % status)
 
@@ -129,7 +133,7 @@ class EBISubmission(object):
         self.study_title = s.title
         self.study_abstract = s.info['study_abstract']
 
-        it = pt.investigation_type
+        it = self.prep_template.investigation_type
         key = it
         if it in ena_ontology.terms:
             self.investigation_type = it
@@ -143,8 +147,9 @@ class EBISubmission(object):
                              "term is neither one of the official terms nor "
                              "one of the user-defined terms in the ENA "
                              "ontology")
-        ts = datetime.now().strftime('%Y_%m_%d_%H:%M:%S')
-        self.ebi_dir = 'ebi_submission_%s_%s' % (preprocessed_data_id, ts)
+
+        self.ebi_dir = '%s/ebi_submission_%s' % (qiita_config.working_dir,
+                                                 preprocessed_data_id)
         self.sequence_files = []
         self.study_xml_fp = None
         self.sample_xml_fp = None
@@ -165,20 +170,6 @@ class EBISubmission(object):
 
         # This will hold the submission's samples, keyed by the sample name
         self.samples = {}
-
-    def _stringify_kwargs(self, kwargs_dict):
-        """Turns values in a dictionay into strings, None, or self.empty_value
-        """
-        try:
-            result = {
-                str(k): str(v) if v is not None else self.empty_value
-                for k, v in viewitems(kwargs_dict)}
-            return result
-        except ValueError:
-            raise InvalidMetadataError("All additional metadata passed via "
-                                       "kwargs to the EBISubmission "
-                                       "constructor must be representatable "
-                                       "as strings.")
 
     def _get_study_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
@@ -286,7 +277,7 @@ class EBISubmission(object):
         return study_set
 
     def add_sample(self, sample_name, taxon_id, scientific_name,
-                   description, **kwargs):
+                   description):
         """Adds sample information to the current submission
 
         Parameters
@@ -298,7 +289,6 @@ class EBISubmission(object):
         scientific_name : str
             NCBI's scientific name for the `taxon_id`
         description : str
-
             Defaults to ``None``. If not provided, the `empty_value` will be
             used for the description
 
@@ -323,11 +313,6 @@ class EBISubmission(object):
 
         self.samples[sample_name]['description'] = escape(
             clean_whitespace(description))
-
-        self.samples[sample_name]['attributes'] = self._stringify_kwargs(
-            kwargs)
-
-        self.samples[sample_name]['prep'] = None
 
     def generate_sample_xml(self):
         """Generates the sample XML file
@@ -363,18 +348,11 @@ class EBISubmission(object):
             description.text = escape(clean_whitespace(
                 sample_info['description']))
 
-            if sample_info['attributes']:
-                sample_attributes = ET.SubElement(sample, 'SAMPLE_ATTRIBUTES')
-                self._add_dict_as_tags_and_values(sample_attributes,
-                                                  'SAMPLE_ATTRIBUTE',
-                                                  sample_info['attributes'])
-
         return sample_set
 
     def add_sample_prep(self, sample_name, platform, file_type, file_path,
                         experiment_design_description,
-                        library_construction_protocol,
-                        **kwargs):
+                        library_construction_protocol):
         """Add prep info for an existing sample
 
         Parameters
@@ -395,18 +373,12 @@ class EBISubmission(object):
         KeyError
             If `sample_name` is not in the list of samples in the
             ``EBISubmission`` object
-        KeyError
-            If there is already prep info associated with the specified sample
         ValueError
             If the platform is not one of the recognized platforms
         """
         if sample_name not in self.samples:
             raise KeyError("Sample %s: sample has not yet been associated "
                            "with the submission.")
-
-        if self.samples[sample_name]['prep']:
-            raise KeyError("Sample %s: multiple rows in prep with this sample "
-                           "id!" % sample_name)
 
         platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
         if platform.upper() not in platforms:
@@ -415,9 +387,7 @@ class EBISubmission(object):
                                                         ', '.join(platforms)))
 
         self.sequence_files.append(file_path)
-        prep_info = self._stringify_kwargs(kwargs)
-        if prep_info is None:
-            prep_info = {}
+        prep_info = {}
         prep_info['platform'] = platform
         prep_info['file_type'] = file_type
         prep_info['file_path'] = file_path
@@ -825,7 +795,7 @@ class EBISubmission(object):
                                          scientific_name, description))
 
             self.add_sample(sample_name, taxon_id, scientific_name,
-                            description, **sample)
+                            description)
 
         prep_template_samples = []
         for prep in iter_file_via_list_of_dicts(prep_template):
@@ -840,8 +810,7 @@ class EBISubmission(object):
             file_path = join(per_sample_fastq_dir, sample_name+'.fastq.gz')
             self.add_sample_prep(sample_name, platform, 'fastq',
                                  file_path, experiment_design_description,
-                                 library_construction_protocol,
-                                 **prep)
+                                 library_construction_protocol)
 
         to_remove = set(self.samples).difference(prep_template_samples)
         for sample in to_remove:
@@ -981,3 +950,45 @@ class EBISubmission(object):
             print "FAILED"
 
         return (study_accession, submission_accession)
+
+    def generate_demultiplexed_fastq(self):
+        """Generates demultiplexed fastq
+
+        Returns
+        -------
+        demux_samples
+            List of successful demultiplexed samples
+        """
+        ppd = self.preprocessed_data
+
+        if not isdir(self.ebi_dir):
+            makedirs(self.ebi_dir)
+
+            demux = [path for _, path, ftype in ppd.get_filepaths()
+                     if ftype == 'preprocessed_demux'][0]
+
+            demux_samples = set()
+            with open_file(demux) as demux_fh:
+                for s, i in to_per_sample_ascii(demux_fh,
+                                                self.sample_template.keys()):
+                    sample_fp = join(self.ebi_dir, "%s.fastq.gz" % s)
+                    wrote_sequences = False
+                    with gzopen(sample_fp, 'w') as fh:
+                        for record in i:
+                            fh.write(record)
+                            wrote_sequences = True
+
+                    if wrote_sequences:
+                        demux_samples.add(s)
+                    else:
+                        remove(sample_fp)
+
+        else:
+            demux_samples = set()
+            extension = '.fastq.gz'
+            extension_len = len(extension)
+            for f in listdir(self.ebi_dir):
+                if isfile(join(self.ebi_dir, f)) and f.endswith(extension):
+                    demux_samples.add(f[:-extension_len])
+
+        return demux_samples

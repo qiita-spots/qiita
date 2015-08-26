@@ -6,12 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from os import makedirs
 from os.path import join, isdir
-from os import makedirs, remove
+from shutil import rmtree
 from functools import partial
-from tempfile import mkdtemp
-from gzip import open as gzopen
 from tarfile import open as taropen
+from tempfile import mkdtemp
 from moi.job import system_call
 
 from qiita_db.study import Study
@@ -20,9 +20,7 @@ from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 from qiita_core.qiita_settings import qiita_config
 
 from qiita_ware.ebi import EBISubmission
-from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.exceptions import ComputeError
-from qiita_ware.util import open_file
 
 
 def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
@@ -44,53 +42,22 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
     If fastq_dir_fp is passed, it must not contain any empty files, or
     gzipped empty files
     """
+    # step 1
+    ebi_submission = EBISubmission(preprocessed_data_id, action)
 
-    preprocessed_data = PreprocessedData(preprocessed_data_id)
-    preprocessed_data_id_str = str(preprocessed_data_id)
-    study = Study(preprocessed_data.study)
-    sample_template = SampleTemplate(study.sample_template)
-    prep_template = PrepTemplate(preprocessed_data.prep_template)
+    # step 2
+    ebi_submission.preprocessed_data.update_insdc_status('demuxing samples')
+    try:
+        demux_samples = ebi_submission.generate_demultiplexed_fastq()
+    except:
+        if isdir(ebi_submission.ebi_dir):
+            rmtree(ebi_submission.ebi_dir)
 
-    investigation_type = None
-    new_investigation_type = None
-
-    if send:
-        # If we intend actually to send the files, then change the status in
-        # the database
-        preprocessed_data.update_insdc_status('submitting')
-
-    if fastq_dir_fp is not None:
-        # If the user specifies a FASTQ directory, use it
-
-        # Set demux_samples to None so that MetadataTemplate.to_file will put
-        # all samples in the template files
-        demux_samples = None
-    else:
-        # If the user does not specify a FASTQ directory, create one and
-        # re-serialize the per-sample FASTQs from the demux file
-        fastq_dir_fp = mkdtemp(prefix=qiita_config.working_dir)
-        demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
-                 if ftype == 'preprocessed_demux'][0]
-
-        # Keep track of which files were actually in the demux file so that we
-        # can write those rows to the prep and samples templates
-        demux_samples = set()
-
-        with open_file(demux) as demux_fh:
-            for samp, iterator in to_per_sample_ascii(demux_fh,
-                                                      list(sample_template)):
-                demux_samples.add(samp)
-                sample_fp = join(fastq_dir_fp, "%s.fastq.gz" % samp)
-                wrote_sequences = False
-                with gzopen(sample_fp, 'w') as fh:
-                    for record in iterator:
-                        fh.write(record)
-                        wrote_sequences = True
-
-                if not wrote_sequences:
-                    remove(sample_fp)
-
+    # other steps
     output_dir = fastq_dir_fp + '_submission'
+    sample_template = ebi_submission.sample_template
+    prep_template = ebi_submission.prep_template
+    preprocessed_data = ebi_submission.preprocessed_data
 
     samp_fp = join(fastq_dir_fp, 'sample_metadata.txt')
     prep_fp = join(fastq_dir_fp, 'prep_metadata.txt')
@@ -112,19 +79,12 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         raise IOError('The output folder already exists: %s' %
                       output_dir)
 
-    with open(samp_fp, 'U') as st, open(prep_fp, 'U') as pt:
-        submission = EBISubmission.from_templates_and_per_sample_fastqs(
-            preprocessed_data_id_str, study.title,
-            study.info['study_abstract'], investigation_type, st, pt,
-            fastq_dir_fp, new_investigation_type=new_investigation_type,
-            pmids=study.pmids)
-
-    submission.write_all_xml_files(study_fp, sample_fp, experiment_fp, run_fp,
-                                   submission_fp, action)
+    ebi_submission.write_all_xml_files(study_fp, sample_fp, experiment_fp,
+                                       run_fp, submission_fp, action)
 
     if send:
-        submission.send_sequences()
-        study_accession, submission_accession = submission.send_xml()
+        ebi_submission.send_sequences()
+        study_accession, submission_accession = ebi_submission.send_xml()
 
         if study_accession is None or submission_accession is None:
             preprocessed_data.update_insdc_status('failed')
