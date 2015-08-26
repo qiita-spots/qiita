@@ -1338,12 +1338,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         st = SampleTemplate.create(self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
-    def test_extend_error(self):
-        """extend raises an error if no new columns/samples are added"""
-        st = SampleTemplate.create(self.metadata, self.new_study)
-        with self.assertRaises(QiitaDBError):
-            st.extend(self.metadata)
-
     def test_extend_add_samples(self):
         """extend correctly works adding new samples"""
         st = SampleTemplate.create(self.metadata, self.new_study)

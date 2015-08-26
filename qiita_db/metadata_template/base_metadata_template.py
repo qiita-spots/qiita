@@ -642,11 +642,6 @@ class MetadataTemplate(QiitaObject):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by sample ids
-
-        Raises
-        ------
-        QiitaDBError
-            If no new samples or new columns are present in `md_template`
         """
         with TRN:
             # Check if we are adding new samples
@@ -660,10 +655,7 @@ class MetadataTemplate(QiitaObject):
             new_cols = set(headers).difference(self.categories())
 
             if not new_cols and not new_samples:
-                raise QiitaDBError(
-                    "No new samples or new columns found in the template. "
-                    "If you want to update existing values, you should use "
-                    "the 'update' functionality.")
+                return
 
             table_name = self._table_name(self._id)
             if new_cols:
@@ -1085,10 +1077,7 @@ class MetadataTemplate(QiitaObject):
             new_map = self._clean_validate_template(md_template, self.study_id,
                                                     self.columns_restrictions)
             # Retrieving current metadata
-            sql = "SELECT * FROM qiita.{0}".format(self._table_name(self.id))
-            TRN.add(sql)
-            current_map = self._transform_to_dict(TRN.execute_fetchindex())
-            current_map = pd.DataFrame.from_dict(current_map, orient='index')
+            current_map = self.to_dataframe()
 
             # simple validations of sample ids and column names
             samples_diff = set(new_map.index).difference(current_map.index)
@@ -1116,6 +1105,11 @@ class MetadataTemplate(QiitaObject):
             # diff_map is a DataFrame that hold boolean values. If a cell is
             # True, means that the new_map is different from the current_map
             # while False means that the cell has the same value
+            # In order to compare them, they've to be identically labeled, so
+            # we need to sort the 'index' axis to be identically labeled. The
+            # 'column' axis is already the same given the previous line of code
+            current_map.sort_index(axis='index', inplace=True)
+            new_map.sort_index(axis='index', inplace=True)
             diff_map = current_map != new_map
             # ne_stacked holds a MultiIndexed DataFrame in which the first
             # level of indexing is the sample_name and the second one is the
