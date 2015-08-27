@@ -12,13 +12,13 @@ from shutil import rmtree
 from functools import partial
 from tarfile import open as taropen
 from tempfile import mkdtemp
-from moi.job import system_call
 
+from moi.job import system_call
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
+from qiita_db.logger import LogEntry
 from qiita_core.qiita_settings import qiita_config
-
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import ComputeError
 
@@ -54,6 +54,8 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
             rmtree(ebi_submission.ebi_dir)
         ebi_submission.preprocessed_data.update_insdc_status(
             'failed: %s' % str(e))
+        LogEntry.create('Runtime', str(e),
+                        info={'ebi_submission': preprocessed_data_id})
         raise
 
     # other steps

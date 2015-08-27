@@ -19,6 +19,7 @@ from unittest import TestCase, main
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
 from functools import partial
+
 from h5py import File
 
 from qiita_ware.ebi import (SampleAlreadyExistsError, NoXMLError,

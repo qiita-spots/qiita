@@ -148,8 +148,8 @@ class EBISubmission(object):
                              "one of the user-defined terms in the ENA "
                              "ontology")
 
-        self.ebi_dir = '%s/ebi_submission_%s' % (qiita_config.working_dir,
-                                                 preprocessed_data_id)
+        self.ebi_dir = join(qiita_config.working_dir, 'ebi_submission_',
+                            str(preprocessed_data_id))
         self.sequence_files = []
         self.study_xml_fp = None
         self.sample_xml_fp = None
@@ -951,7 +951,7 @@ class EBISubmission(object):
 
         return (study_accession, submission_accession)
 
-    def generate_demultiplexed_fastq(self):
+    def generate_demultiplexed_fastq(self, rewrite_fastq=False):
         """Generates demultiplexed fastq
 
         Returns
@@ -962,13 +962,13 @@ class EBISubmission(object):
         Notes
         -----
         - As a performace feature, this method will check if self.ebi_dir
-        already exist and, if it does, the script will assume that in a
+        already exists and, if it does, the script will assume that in a
         previous execution this step was performed correctly and will simply
         read the file names from self.ebi_dir
         """
         ppd = self.preprocessed_data
 
-        if not isdir(self.ebi_dir):
+        if not isdir(self.ebi_dir) or rewrite_fastq:
             makedirs(self.ebi_dir)
 
             demux = [path for _, path, ftype in ppd.get_filepaths()
