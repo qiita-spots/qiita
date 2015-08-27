@@ -1373,7 +1373,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                         'scientific_name': 'homo sapiens'}}
         md_ext = pd.DataFrame.from_dict(md_dict, orient='index')
 
-        st.extend(md_ext)
+        npt.assert_warns(QiitaDBWarning, st.extend, md_ext)
 
         # Test samples were appended successfully to the required sample info
         # table

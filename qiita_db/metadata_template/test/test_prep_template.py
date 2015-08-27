@@ -1312,6 +1312,60 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         self.assertItemsEqual(obs, exp)
 
+    def test_extend_update(self):
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
+        self.metadata['new_col'] = pd.Series(['val1', 'val2', 'val3'],
+                                             index=self.metadata.index)
+        self.metadata['str_column']['SKB7.640196'] = 'NEW VAL'
+
+        npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
+        pt.update(self.metadata)
+
+        sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+        exp = [{'sample_id': '1.SKB7.640196',
+                'barcode': 'CCTCTGAGAGCT',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L002_sequences',
+                'str_column': 'NEW VAL',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val1'},
+               {'sample_id': '1.SKB8.640193',
+                'barcode': 'GTCCGCAAGTTA',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 1',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val2'},
+               {'sample_id': '1.SKD8.640184',
+                'barcode': 'CGTAGAGCTCTC',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 2',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val3'}]
+
+        self.assertItemsEqual(obs, exp)
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'

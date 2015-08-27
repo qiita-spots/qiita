@@ -659,6 +659,10 @@ class MetadataTemplate(QiitaObject):
 
             table_name = self._table_name(self._id)
             if new_cols:
+                warnings.warn(
+                    "The following columns have been added to the existing"
+                    " template: %s" % ", ".join(new_cols),
+                    QiitaDBWarning)
                 # If we are adding new columns, add them first (simplifies
                 # code). Sorting the new columns to enforce an order
                 new_cols = sorted(new_cols)
@@ -673,12 +677,6 @@ class MetadataTemplate(QiitaObject):
                     TRN.add(sql_alter.format(table_name, category, dtype))
 
                 if existing_samples:
-                    warnings.warn(
-                        "No values have been modified for existing samples "
-                        "(%s). However, the following columns have been added "
-                        "to them: '%s'"
-                        % (len(existing_samples), ", ".join(new_cols)),
-                        QiitaDBWarning)
                     # The values for the new columns are the only ones that get
                     # added to the database. None of the existing values will
                     # be modified (see update for that functionality)
@@ -698,13 +696,12 @@ class MetadataTemplate(QiitaObject):
                              WHERE sample_id=%s""".format(table_name,
                                                           ",".join(set_str))
                     TRN.add(sql, values, many=True)
-            elif existing_samples:
-                warnings.warn(
-                    "%d samples already exist in the template and "
-                    "their values won't be modified" % len(existing_samples),
-                    QiitaDBWarning)
 
             if new_samples:
+                warnings.warn(
+                    "The following samples have been added to the existing"
+                    " template: %s" % ", ".join(new_samples),
+                    QiitaDBWarning)
                 new_samples = sorted(new_samples)
                 # At this point we only want the information
                 # from the new samples
@@ -1063,7 +1060,7 @@ class MetadataTemplate(QiitaObject):
         Parameters
         ----------
         md_template : DataFrame
-            The metadata template contents indexed by sample Ids
+            The metadata template contents indexed by sample ids
         """
         with TRN:
             md_template = self._clean_validate_template(
@@ -1077,7 +1074,7 @@ class MetadataTemplate(QiitaObject):
         Parameters
         ----------
         md_template : DataFrame
-            The metadata template file contents indexed by samples Ids
+            The metadata template file contents indexed by samples ids
 
         Raises
         ------
@@ -1085,6 +1082,9 @@ class MetadataTemplate(QiitaObject):
             If md_template and db do not have the same sample ids
             If md_template and db do not have the same column headers
             If self.can_be_updated is not True
+        QiitaDBWarning
+            If there are no differences between the contents of the DB and the
+            passed md_template
         """
         with TRN:
             # Clean and validate the metadata template given
@@ -1134,7 +1134,10 @@ class MetadataTemplate(QiitaObject):
             # that did change (see boolean indexing in pandas docs)
             changed = ne_stacked[ne_stacked]
             if changed.empty:
-                return
+                warnings.warn(
+                    "There are no differences between the data stored in the "
+                    "DB and the new data provided",
+                    QiitaDBWarning)
             changed.index.names = ['sample_name', 'column']
             # the combination of np.where and boolean indexing produces
             # a numpy array with only the values that actually changed
