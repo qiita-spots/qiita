@@ -225,19 +225,3 @@ class SampleTemplate(MetadataTemplate):
             # generating all new QIIME mapping files
             for pt_id in Study(self._id).prep_templates():
                 PrepTemplate(pt_id).generate_files()
-
-    def extend(self, md_template):
-        """Adds the given sample template to the current one
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by samples Ids
-        """
-        with TRN:
-            md_template = self._clean_validate_template(
-                md_template, self.study_id, SAMPLE_TEMPLATE_COLUMNS)
-
-            self._common_extend_steps(md_template)
-
-            self.generate_files()
