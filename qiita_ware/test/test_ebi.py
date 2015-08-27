@@ -29,6 +29,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_db.data import PreprocessedData
 from qiita_db.study import Study
 from qiita_db.metadata_template import PrepTemplate
+from qiita_core.util import qiita_test_checker
 
 
 class TestEBISubmission(TestCase):
@@ -44,7 +45,6 @@ class TestEBISubmission(TestCase):
 
         self.temp_dir = gettempdir()
         self.files_to_remove = []
-        self.ppd_to_remove = []
 
     def tearDown(self):
         for f in self.files_to_remove:
@@ -53,9 +53,8 @@ class TestEBISubmission(TestCase):
             else:
                 remove(f)
 
-        for _id in self.ppd_to_remove:
-            PreprocessedData.delete(_id)
 
+class TestEBISubmissionReadOnly(TestEBISubmission):
     def test_init(self):
         e = EBISubmission(2, 'ADD')
 
@@ -423,6 +422,9 @@ class TestEBISubmission(TestCase):
                          '%20ebi_access_key%3D"')
         self.assertEqual(obs, exp_with_cert)
 
+
+@qiita_test_checker()
+class TestEBISubmissionWriteRead(TestEBISubmission):
     def test_generate_demultiplexed_fastq(self):
         # generating demux file for testing
         if not isdir(self.temp_dir):
@@ -449,8 +451,7 @@ class TestEBISubmission(TestCase):
                                       "preprocessed_sequence_illumina_params",
                                       1, [(demux_fp, 6)],
                                       prep_template=PrepTemplate(1))
-        self.ppd_to_remove.append(ppd.id)
-        [self.files_to_remove.append(fps) for _, fps, _ in ppd.get_filepaths()]
+        self.files_to_remove.extend([fps for _, fps, _ in ppd.get_filepaths()])
 
         # This is testing that only the samples with sequences are going to
         # be created
