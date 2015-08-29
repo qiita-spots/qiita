@@ -186,7 +186,7 @@ class SampleTemplate(MetadataTemplate):
         return SAMPLE_TEMPLATE_COLUMNS
 
     def can_be_updated(self, **kwargs):
-        """Gets if the template can be updated
+        """Whether the template can be updated or not
 
         Parameters
         ----------
@@ -210,7 +210,7 @@ class SampleTemplate(MetadataTemplate):
         return True
 
     def can_be_extended(self, new_samples, new_columns):
-        """Gets if the template can be can_be_extended
+        """Whether the template can be updated or not
 
         Parameters
         ----------
@@ -221,9 +221,10 @@ class SampleTemplate(MetadataTemplate):
 
         Returns
         -------
-        (bool, str)
-            Whether the template can be extended or not, and the error message
-            in case that it can't be extended.
+        bool
+            Whether the template can be extended or not
+        str
+            The error message in case that it can't be extended
 
         Notes
         -----

@@ -635,6 +635,49 @@ class MetadataTemplate(QiitaObject):
             # Execute all the steps
             TRN.execute()
 
+    def can_be_extended(self, new_samples, new_cols):
+        """Whether the template can be updated or not
+
+        Parameters
+        ----------
+        new_samples : list of str
+            The new samples to be added
+        new_cols : list of str
+            The new columns to be added
+
+        Returns
+        -------
+        bool
+            Whether the template can be extended or not
+        str
+            The error message in case that it can't be extended
+
+        Raises
+        ------
+        QiitaDBNotImplementedError
+            This method should be implemented in the subclasses
+        """
+        raise QiitaDBNotImplementedError(
+            "The method 'can_be_extended' should be implemented in "
+            "the subclasses")
+
+    def can_be_updated(self, **kwargs):
+        """Whether the template can be updated or not
+
+        Returns
+        -------
+        bool
+            Whether the template can be updated or not
+
+        Raises
+        ------
+        QiitaDBNotImplementedError
+            This method should be implemented in the subclasses
+        """
+        raise QiitaDBNotImplementedError(
+            "The method 'can_be_updated' should be implemented in "
+            "the subclasses")
+
     def _common_extend_steps(self, md_template):
         r"""executes the common extend steps
 

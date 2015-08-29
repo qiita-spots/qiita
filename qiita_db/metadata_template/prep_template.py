@@ -303,7 +303,7 @@ class PrepTemplate(MetadataTemplate):
         return pt_cols
 
     def can_be_updated(self, columns):
-        """Gets if the template can be updated
+        """Whether the template can be updated or not
 
         Parameters
         ----------
@@ -338,7 +338,7 @@ class PrepTemplate(MetadataTemplate):
             return False
 
     def can_be_extended(self, new_samples, new_columns):
-        """Gets if the template can be can_be_extended
+        """Whether the template can be extended or not
 
         Parameters
         ----------
@@ -349,9 +349,10 @@ class PrepTemplate(MetadataTemplate):
 
         Returns
         -------
-        (bool, str)
-            Whether the template can be extended or not, and the error message
-            in case that it can't be extended.
+        bool
+            Whether the template can be extended or not
+        str
+            The error message in case that it can't be extended
 
         Notes
         -----
@@ -360,7 +361,7 @@ class PrepTemplate(MetadataTemplate):
         """
         ppd_data = self.preprocessed_data
         if new_samples and ppd_data:
-            return False, ("Preprocessed data have been already generated "
+            return False, ("Preprocessed data have already been generated "
                            "(%s). No new samples can be added to the prep "
                            "template." % ', '.join(map(str, ppd_data)))
         return True, ""

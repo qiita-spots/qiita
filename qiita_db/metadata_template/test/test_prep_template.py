@@ -238,12 +238,11 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         self.assertTrue(obs_bool)
         self.assertEqual(obs_msg, "")
         # You can't add samples if there are preprocessed data generated
-
         obs_bool, obs_msg = self.prep_template.can_be_extended(
             ["NEW_SAMPLE"], [])
         self.assertFalse(obs_bool)
         self.assertEqual(obs_msg,
-                         "Preprocessed data have been already generated (%s). "
+                         "Preprocessed data have already been generated (%s). "
                          "No new samples can be added to the prep template."
                          % ', '.join(
                              map(str, self.prep_template.preprocessed_data)))
