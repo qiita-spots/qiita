@@ -203,7 +203,13 @@ class TestSampleReadOnly(BaseTestSample):
 
     def test_can_be_updated(self):
         """test if the template can be updated"""
-        self.assertTrue(self.sample_template.can_be_updated)
+        self.assertTrue(self.sample_template.can_be_updated())
+
+    def test_can_be_extended(self):
+        """test if the template can be extended"""
+        obs_bool, obs_msg = self.sample_template.can_be_extended([], [])
+        self.assertTrue(obs_bool)
+        self.assertEqual(obs_msg, "")
 
 
 @qiita_test_checker()

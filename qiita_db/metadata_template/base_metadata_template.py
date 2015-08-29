@@ -657,6 +657,12 @@ class MetadataTemplate(QiitaObject):
             if not new_cols and not new_samples:
                 return
 
+            is_extendable, error_msg = self.can_be_extended(new_samples,
+                                                            new_cols)
+
+            if not is_extendable:
+                raise QiitaDBError(error_msg)
+
             table_name = self._table_name(self._id)
             if new_cols:
                 warnings.warn(

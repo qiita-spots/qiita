@@ -337,6 +337,34 @@ class PrepTemplate(MetadataTemplate):
 
             return False
 
+    def can_be_extended(self, new_samples, new_columns):
+        """Gets if the template can be can_be_extended
+
+        Parameters
+        ----------
+        new_samples : list of str
+            The new samples to be added to the template
+        new_columns : list of str
+            The new columns to be added to the template
+
+        Returns
+        -------
+        (bool, str)
+            Whether the template can be extended or not, and the error message
+            in case that it can't be extended.
+
+        Notes
+        -----
+        New samples can't be added to the prep template if a preprocessed
+        data has been already generated.
+        """
+        ppd_data = self.preprocessed_data
+        if new_samples and ppd_data:
+            return False, ("Preprocessed data have been already generated "
+                           "(%s). No new samples can be added to the prep "
+                           "template." % ', '.join(map(str, ppd_data)))
+        return True, ""
+
     @property
     def raw_data(self):
         with TRN:

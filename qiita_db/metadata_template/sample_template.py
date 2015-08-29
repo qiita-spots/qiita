@@ -201,13 +201,39 @@ class SampleTemplate(MetadataTemplate):
 
         Notes
         -----
-            The prep template can't be updated in certain situations, see the
-            its documentation for more info. However, the sample template
-            doesn't have those restrictions. Thus, to be able to use the same
-            update code in the base class, we need to have this method and it
-            should always return True.
+        The prep template can't be updated in certain situations, see the
+        its documentation for more info. However, the sample template
+        doesn't have those restrictions. Thus, to be able to use the same
+        update code in the base class, we need to have this method and it
+        should always return True.
         """
         return True
+
+    def can_be_extended(self, new_samples, new_columns):
+        """Gets if the template can be can_be_extended
+
+        Parameters
+        ----------
+        new_samples : list of str
+            The new samples to be added to the template
+        new_columns : list of str
+            The new columns to be added to the template
+
+        Returns
+        -------
+        (bool, str)
+            Whether the template can be extended or not, and the error message
+            in case that it can't be extended.
+
+        Notes
+        -----
+        The prep template can't be extended in certain situations, see the
+        its documentation for more info. However, the sample template
+        doesn't have those restrictions. Thus, to be able to use the same
+        extend code in the base class, we need to have this method and it
+        should always return True.
+        """
+        return True, ""
 
     def generate_files(self):
         r"""Generates all the files that contain data from this template
