@@ -231,6 +231,22 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         # but you can if not restricted
         self.assertTrue(self.prep_template.can_be_updated({'center_name'}))
 
+    def test_can_be_extended(self):
+        """test if the template can be extended"""
+        # You can always add columns
+        obs_bool, obs_msg = self.prep_template.can_be_extended([], ["NEW_COL"])
+        self.assertTrue(obs_bool)
+        self.assertEqual(obs_msg, "")
+        # You can't add samples if there are preprocessed data generated
+        obs_bool, obs_msg = self.prep_template.can_be_extended(
+            ["NEW_SAMPLE"], [])
+        self.assertFalse(obs_bool)
+        self.assertEqual(obs_msg,
+                         "Preprocessed data have already been generated (%s). "
+                         "No new samples can be added to the prep template."
+                         % ', '.join(
+                             map(str, self.prep_template.preprocessed_data)))
+
 
 @qiita_test_checker()
 class TestPrepSampleReadWrite(BaseTestPrepSample):
@@ -1258,6 +1274,14 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                {'prep_template_id': 2, 'sample_id': '1.SKD8.640184'},
                {'prep_template_id': 2, 'sample_id': '1.SKB7.640196'}]
         self.assertItemsEqual(obs, exp)
+
+    def test_extend_add_samples_error(self):
+        """extend fails adding samples to an already preprocessed template"""
+        df = pd.DataFrame.from_dict(
+            {'new_sample': {'barcode': 'CCTCTGAGAGCT'}},
+            orient='index')
+        with self.assertRaises(QiitaDBError):
+            PrepTemplate(1).extend(df)
 
     def test_extend_add_cols(self):
         """extend correctly adds a new columns"""
