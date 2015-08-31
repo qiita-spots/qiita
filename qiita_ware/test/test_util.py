@@ -419,7 +419,8 @@ SUMMARY_STATS = {
                 ('66 sand, 16.3 silt, 17.7 clay', 9)],
     'tot_nitro': [('1.3', 9), ('1.41', 9), ('1.51', 9)],
     'tot_org_carb': [('3.31', 9), ('4.32', 9), ('5.0', 9)],
-    'water_content_soil': [('0.101', 9), ('0.164', 9), ('0.178', 9)]}
+    'water_content_soil': [('0.101', 9), ('0.164', 9), ('0.178', 9)],
+    'scientific_name': [('scientific name', 27)]}
 
 
 if __name__ == '__main__':

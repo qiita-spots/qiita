@@ -48,7 +48,8 @@ class BaseTestSample(TestCase):
                                'tot_nitro', 'samp_salinity', 'altitude',
                                'env_biome', 'country', 'ph', 'anonymized_name',
                                'tot_org_carb', 'description_duplicate',
-                               'env_feature', 'latitude', 'longitude'}
+                               'env_feature', 'latitude', 'longitude',
+                               'scientific_name'}
 
 
 class TestSampleReadOnly(BaseTestSample):
@@ -103,7 +104,7 @@ class TestSampleReadOnly(BaseTestSample):
 
     def test_len(self):
         """Len returns the correct number of categories"""
-        self.assertEqual(len(self.tester), 29)
+        self.assertEqual(len(self.tester), 30)
 
     def test_getitem_required(self):
         """Get item returns the correct metadata value from the required table
@@ -157,8 +158,8 @@ class TestSampleReadOnly(BaseTestSample):
                'ENVO:Temperate grasslands, savannas, and shrubland biome',
                'GAZ:United States of America', 6.94, 'SKB8', 5,
                'Burmese root', 'ENVO:plant-associated habitat', 74.0894932572,
-               65.3283470202}
-        self.assertEqual(set(obs), exp)
+               65.3283470202, 'scientific name'}
+        self.assertItemsEqual(set(obs), exp)
 
     def test_items(self):
         """items returns an iterator over the (key, value) tuples"""
@@ -184,7 +185,8 @@ class TestSampleReadOnly(BaseTestSample):
                ('description_duplicate', 'Burmese root'),
                ('env_feature', 'ENVO:plant-associated habitat'),
                ('latitude', 74.0894932572),
-               ('longitude', 65.3283470202)}
+               ('longitude', 65.3283470202),
+               ('scientific_name', 'scientific name')}
         self.assertEqual(set(obs), exp)
 
     def test_get(self):
@@ -479,7 +481,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
 
     def test_metadata_headers(self):
         obs = SampleTemplate.metadata_headers()
-        exp = {'physical_specimen_location', 'physical_specimen_remaining',
+        exp = ['physical_specimen_location', 'physical_specimen_remaining',
                'dna_extracted', 'sample_type', 'collection_timestamp',
                'host_subject_id', 'description', 'season_environment',
                'assigned_from_geo', 'texture', 'taxon_id', 'depth',
@@ -487,8 +489,8 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                'temp', 'tot_nitro', 'samp_salinity', 'altitude', 'env_biome',
                'country', 'ph', 'anonymized_name', 'tot_org_carb',
                'description_duplicate', 'env_feature', 'latitude', 'longitude',
-               'sample_id'}
-        self.assertEqual(set(obs), exp)
+               'sample_id', 'scientific_name']
+        self.assertItemsEqual(obs, exp)
 
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
@@ -543,7 +545,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                'physical_specimen_location',
                'physical_specimen_remaining', 'dna_extracted',
                'sample_type', 'collection_timestamp', 'host_subject_id',
-               'description', 'latitude', 'longitude'}
+               'description', 'latitude', 'longitude', 'scientific_name'}
         obs = set(self.tester.categories())
         self.assertItemsEqual(obs, exp)
 
@@ -1862,12 +1864,9 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             'water_content_soil', 'elevation', 'temp', 'tot_nitro',
             'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
             'anonymized_name', 'tot_org_carb', 'description_duplicate',
-            'env_feature'})
+            'env_feature', 'scientific_name'})
 
     def test_check_restrictions(self):
-        obs = self.tester.check_restrictions([SAMPLE_TEMPLATE_COLUMNS['EBI']])
-        self.assertEqual(obs, {'scientific_name'})
-
         del self.metadata['collection_timestamp']
         st = npt.assert_warns(QiitaDBWarning, SampleTemplate.create,
                               self.metadata, self.new_study)
