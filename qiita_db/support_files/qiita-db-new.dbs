@@ -1,0 +1,1757 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="qiita" id="Project669804" database="PostgreSQL" >
+	<comment>Qiita-DB layout</comment>
+	<schema name="qiita" schemaname="qiita" defo="y" >
+		<table name="analysis" >
+			<comment>hHolds analysis information</comment>
+			<column name="analysis_id" type="bigserial" jt="-5" mandatory="y" >
+				<comment><![CDATA[Unique identifier for analysis]]></comment>
+			</column>
+			<column name="email" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Email for user who owns the analysis]]></comment>
+			</column>
+			<column name="name" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Name of the analysis]]></comment>
+			</column>
+			<column name="description" type="varchar" jt="12" mandatory="y" />
+			<column name="analysis_status_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="pmid" type="varchar" jt="12" >
+				<comment><![CDATA[PMID of paper from the analysis]]></comment>
+			</column>
+			<column name="timestamp" type="timestamptz" jt="93" >
+				<defo>current_timestamp</defo>
+			</column>
+			<column name="dflt" type="bool" jt="-7" mandatory="y" >
+				<defo>false</defo>
+			</column>
+			<column name="portal_type_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="pk_analysis" unique="PRIMARY_KEY" >
+				<column name="analysis_id" />
+			</index>
+			<index name="idx_analysis_email" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<index name="idx_analysis_status_id" unique="NORMAL" >
+				<column name="analysis_status_id" />
+			</index>
+			<index name="idx_analysis" unique="NORMAL" >
+				<column name="portal_type_id" />
+			</index>
+			<fk name="fk_analysis_user" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
+			</fk>
+			<fk name="fk_analysis_analysis_status" to_schema="qiita" to_table="analysis_status" >
+				<fk_column name="analysis_status_id" pk="analysis_status_id" />
+			</fk>
+			<fk name="fk_analysis" to_schema="qiita" to_table="portal_type" >
+				<fk_column name="portal_type_id" pk="portal_type_id" />
+			</fk>
+		</table>
+		<table name="analysis_chain" >
+			<comment>Keeps track of the chain of analysis edits. Tracks what previous analysis a given analysis came from.If a given analysis is not in child_id, it is the root of the chain. </comment>
+			<column name="parent_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="child_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_analysis_chain" unique="NORMAL" >
+				<column name="parent_id" />
+			</index>
+			<index name="idx_analysis_chain_0" unique="NORMAL" >
+				<column name="child_id" />
+			</index>
+			<index name="idx_analysis_chain_1" unique="PRIMARY_KEY" >
+				<column name="parent_id" />
+				<column name="child_id" />
+			</index>
+			<fk name="fk_analysis_chain" to_schema="qiita" to_table="analysis" >
+				<fk_column name="parent_id" pk="analysis_id" />
+			</fk>
+			<fk name="fk_analysis_chain_0" to_schema="qiita" to_table="analysis" >
+				<fk_column name="child_id" pk="analysis_id" />
+			</fk>
+		</table>
+		<table name="analysis_filepath" >
+			<comment>Stores link between analysis and the data file used for the analysis.</comment>
+			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="data_type_id" type="bigint" jt="-5" />
+			<index name="idx_analysis_filepath" unique="NORMAL" >
+				<column name="analysis_id" />
+			</index>
+			<index name="idx_analysis_filepath_0" unique="NORMAL" >
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_analysis_filepath_1" unique="PRIMARY_KEY" >
+				<column name="analysis_id" />
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_analysis_filepath_2" unique="NORMAL" >
+				<column name="data_type_id" />
+			</index>
+			<fk name="fk_analysis_filepath" to_schema="qiita" to_table="analysis" >
+				<fk_column name="analysis_id" pk="analysis_id" />
+			</fk>
+			<fk name="fk_analysis_filepath_0" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+			<fk name="fk_analysis_filepath_1" to_schema="qiita" to_table="data_type" >
+				<fk_column name="data_type_id" pk="data_type_id" />
+			</fk>
+		</table>
+		<table name="analysis_job" >
+			<comment>Holds information for a one-to-many relation of analysis to the jobs in it</comment>
+			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[Id of the analysis]]></comment>
+			</column>
+			<column name="job_id" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[Id for a job that is part of the analysis]]></comment>
+			</column>
+			<index name="idx_analysis_jobs" unique="PRIMARY_KEY" >
+				<column name="analysis_id" />
+				<column name="job_id" />
+			</index>
+			<index name="idx_analysis_job" unique="NORMAL" >
+				<column name="analysis_id" />
+			</index>
+			<index name="idx_analysis_job_0" unique="NORMAL" >
+				<column name="job_id" />
+			</index>
+			<fk name="fk_analysis_job_analysis" to_schema="qiita" to_table="analysis" delete_action="cascade" update_action="cascade" >
+				<fk_column name="analysis_id" pk="analysis_id" />
+			</fk>
+			<fk name="fk_analysis_job_job" to_schema="qiita" to_table="job" >
+				<fk_column name="job_id" pk="job_id" />
+			</fk>
+		</table>
+		<table name="analysis_portal" >
+			<comment>Controls what analyses are visible on what portals</comment>
+			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="portal_type_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_analysis_portal" unique="NORMAL" >
+				<column name="analysis_id" />
+			</index>
+			<index name="idx_analysis_portal_0" unique="NORMAL" >
+				<column name="portal_type_id" />
+			</index>
+			<fk name="fk_analysis_portal" to_schema="qiita" to_table="analysis" >
+				<fk_column name="analysis_id" pk="analysis_id" />
+			</fk>
+			<fk name="fk_analysis_portal_0" to_schema="qiita" to_table="portal_type" >
+				<fk_column name="portal_type_id" pk="portal_type_id" />
+			</fk>
+		</table>
+		<table name="analysis_sample" >
+			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="processed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_analysis_sample" unique="NORMAL" >
+				<column name="analysis_id" />
+			</index>
+			<index name="idx_analysis_sample_0" unique="NORMAL" >
+				<column name="processed_data_id" />
+			</index>
+			<index name="idx_analysis_sample_1" unique="NORMAL" >
+				<column name="sample_id" />
+			</index>
+			<index name="pk_analysis_sample" unique="PRIMARY_KEY" >
+				<column name="analysis_id" />
+				<column name="processed_data_id" />
+				<column name="sample_id" />
+			</index>
+			<fk name="fk_analysis_sample_analysis" to_schema="qiita" to_table="analysis" >
+				<fk_column name="analysis_id" pk="analysis_id" />
+			</fk>
+			<fk name="fk_analysis_processed_data" to_schema="qiita" to_table="processed_data" >
+				<fk_column name="processed_data_id" pk="processed_data_id" />
+			</fk>
+			<fk name="fk_analysis_sample" to_schema="qiita" to_table="study_sample" >
+				<fk_column name="sample_id" pk="sample_id" />
+			</fk>
+		</table>
+		<table name="analysis_status" >
+			<column name="analysis_status_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="status" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_analysis_status" unique="PRIMARY_KEY" >
+				<column name="analysis_status_id" />
+			</index>
+			<index name="idx_analysis_status" unique="UNIQUE" >
+				<column name="status" />
+			</index>
+		</table>
+		<table name="analysis_users" >
+			<comment>Links analyses to the users they are shared with</comment>
+			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_analysis_users" unique="PRIMARY_KEY" >
+				<column name="analysis_id" />
+				<column name="email" />
+			</index>
+			<index name="idx_analysis_users_analysis" unique="NORMAL" >
+				<column name="analysis_id" />
+			</index>
+			<index name="idx_analysis_users_email" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<fk name="fk_analysis_users_analysis" to_schema="qiita" to_table="analysis" delete_action="cascade" update_action="cascade" >
+				<fk_column name="analysis_id" pk="analysis_id" />
+			</fk>
+			<fk name="fk_analysis_users_user" to_schema="qiita" to_table="qiita_user" delete_action="cascade" update_action="cascade" >
+				<fk_column name="email" pk="email" />
+			</fk>
+		</table>
+		<table name="analysis_workflow" >
+			<comment>Stores what step in_production analyses are on.</comment>
+			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="step" type="integer" jt="4" mandatory="y" />
+			<index name="pk_analysis_workflow" unique="PRIMARY_KEY" >
+				<column name="analysis_id" />
+			</index>
+			<fk name="fk_analysis_workflow" to_schema="qiita" to_table="analysis" >
+				<fk_column name="analysis_id" pk="analysis_id" />
+			</fk>
+		</table>
+		<table name="checksum_algorithm" >
+			<column name="checksum_algorithm_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_checksum_algorithm" unique="PRIMARY_KEY" >
+				<column name="checksum_algorithm_id" />
+			</index>
+			<index name="idx_checksum_algorithm" unique="UNIQUE" >
+				<column name="name" />
+			</index>
+		</table>
+		<table name="collection" >
+			<comment>Tracks a group of analyses and important jobs for an overarching goal.</comment>
+			<column name="collection_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<column name="name" type="varchar" length="100" jt="12" mandatory="y" />
+			<column name="description" type="varchar" jt="12" />
+			<column name="collection_status_id" type="bigint" jt="-5" mandatory="y" >
+				<defo>1</defo>
+			</column>
+			<index name="pk_collection" unique="PRIMARY_KEY" >
+				<column name="collection_id" />
+			</index>
+			<index name="idx_collection" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<index name="idx_collection_0" unique="NORMAL" >
+				<column name="collection_status_id" />
+			</index>
+			<fk name="fk_collection" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
+			</fk>
+			<fk name="fk_collection_0" to_schema="qiita" to_table="collection_status" >
+				<fk_column name="collection_status_id" pk="collection_status_id" />
+			</fk>
+		</table>
+		<table name="collection_analysis" >
+			<comment>Matches collection to analyses as one to many.</comment>
+			<column name="collection_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_collection_analysis" unique="PRIMARY_KEY" >
+				<column name="collection_id" />
+				<column name="analysis_id" />
+			</index>
+			<index name="idx_collection_analysis_0" unique="NORMAL" >
+				<column name="collection_id" />
+			</index>
+			<index name="idx_collection_analysis_1" unique="NORMAL" >
+				<column name="analysis_id" />
+			</index>
+			<fk name="fk_collection_analysis" to_schema="qiita" to_table="collection" >
+				<fk_column name="collection_id" pk="collection_id" />
+			</fk>
+			<fk name="fk_collection_analysis_0" to_schema="qiita" to_table="analysis" >
+				<fk_column name="analysis_id" pk="analysis_id" />
+			</fk>
+		</table>
+		<table name="collection_job" >
+			<comment>Matches collection important jobs as one to many.</comment>
+			<column name="collection_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="job_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_collection_job" unique="NORMAL" >
+				<column name="collection_id" />
+			</index>
+			<index name="idx_collection_job_0" unique="NORMAL" >
+				<column name="job_id" />
+			</index>
+			<index name="idx_collection_job_1" unique="PRIMARY_KEY" >
+				<column name="collection_id" />
+				<column name="job_id" />
+			</index>
+			<fk name="fk_collection_job" to_schema="qiita" to_table="collection" >
+				<fk_column name="collection_id" pk="collection_id" />
+			</fk>
+			<fk name="fk_collection_job_0" to_schema="qiita" to_table="job" >
+				<fk_column name="job_id" pk="job_id" />
+			</fk>
+		</table>
+		<table name="collection_status" >
+			<column name="collection_status_id" type="bigserial" length="1" jt="-5" mandatory="y" />
+			<column name="status" type="varchar" length="1" jt="12" mandatory="y" />
+			<index name="pk_collection_status" unique="PRIMARY_KEY" >
+				<column name="collection_status_id" />
+			</index>
+		</table>
+		<table name="collection_users" >
+			<comment>Allows sharing of a collection</comment>
+			<column name="collection_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_collection_user" unique="PRIMARY_KEY" >
+				<column name="collection_id" />
+				<column name="email" />
+			</index>
+			<index name="idx_collection_user_0" unique="NORMAL" >
+				<column name="collection_id" />
+			</index>
+			<index name="idx_collection_user_1" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<fk name="fk_collection_user" to_schema="qiita" to_table="collection" >
+				<fk_column name="collection_id" pk="collection_id" />
+			</fk>
+			<fk name="fk_collection_user_email" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
+			</fk>
+		</table>
+		<table name="column_controlled_vocabularies" >
+			<comment>Table relates a column with a controlled vocabulary.</comment>
+			<column name="controlled_vocab_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="column_name" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_column_controlled_vocabularies" unique="PRIMARY_KEY" >
+				<column name="controlled_vocab_id" />
+				<column name="column_name" />
+			</index>
+			<index name="idx_column_controlled_vocabularies_0" unique="NORMAL" >
+				<column name="column_name" />
+			</index>
+			<index name="idx_column_controlled_vocabularies_1" unique="NORMAL" >
+				<column name="controlled_vocab_id" />
+			</index>
+			<fk name="fk_column_controlled_vocabularies" to_schema="qiita" to_table="mixs_field_description" >
+				<fk_column name="column_name" pk="column_name" />
+			</fk>
+			<fk name="fk_column_controlled_vocab2" to_schema="qiita" to_table="controlled_vocab" >
+				<fk_column name="controlled_vocab_id" pk="controlled_vocab_id" />
+			</fk>
+		</table>
+		<table name="column_ontology" >
+			<comment>This table relates a column with an ontology.</comment>
+			<column name="column_name" type="varchar" jt="12" mandatory="y" />
+			<column name="ontology_short_name" type="varchar" jt="12" mandatory="y" />
+			<column name="bioportal_id" type="integer" jt="4" mandatory="y" />
+			<column name="ontology_branch_id" type="varchar" jt="12" />
+			<index name="idx_column_ontology" unique="PRIMARY_KEY" >
+				<column name="column_name" />
+				<column name="ontology_short_name" />
+			</index>
+			<index name="idx_column_ontology_0" unique="NORMAL" >
+				<column name="column_name" />
+			</index>
+			<fk name="fk_column_ontology" to_schema="qiita" to_table="mixs_field_description" >
+				<fk_column name="column_name" pk="column_name" />
+			</fk>
+		</table>
+		<table name="command" >
+			<comment>Available commands for jobs</comment>
+			<column name="command_id" type="bigserial" jt="-5" mandatory="y" >
+				<comment><![CDATA[Unique identifier for function]]></comment>
+			</column>
+			<column name="name" type="varchar" jt="12" mandatory="y" />
+			<column name="command" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[What command to call to run this function]]></comment>
+			</column>
+			<column name="input" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[JSON of input options for the command]]></comment>
+			</column>
+			<column name="required" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[JSON of required options for the command]]></comment>
+			</column>
+			<column name="optional" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[JSON of optional options for command]]></comment>
+			</column>
+			<column name="output" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[JSON of output options for the command]]></comment>
+			</column>
+			<index name="pk_command" unique="PRIMARY_KEY" >
+				<column name="command_id" />
+			</index>
+		</table>
+		<table name="command_data_type" >
+			<column name="command_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_command_data_type" unique="PRIMARY_KEY" >
+				<column name="command_id" />
+				<column name="data_type_id" />
+			</index>
+			<index name="idx_command_data_type_0" unique="NORMAL" >
+				<column name="command_id" />
+			</index>
+			<index name="idx_command_data_type_1" unique="NORMAL" >
+				<column name="data_type_id" />
+			</index>
+			<fk name="fk_command_data_type" to_schema="qiita" to_table="command" >
+				<fk_column name="command_id" pk="command_id" />
+			</fk>
+			<fk name="fk_command_data_type_0" to_schema="qiita" to_table="data_type" >
+				<fk_column name="data_type_id" pk="data_type_id" />
+			</fk>
+		</table>
+		<table name="controlled_vocab" >
+			<column name="controlled_vocab_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="controlled_vocab" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_controlled_vocabularies" unique="PRIMARY_KEY" >
+				<column name="controlled_vocab_id" />
+			</index>
+		</table>
+		<table name="controlled_vocab_values" >
+			<column name="vocab_value_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="controlled_vocab_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="term" type="varchar" jt="12" mandatory="y" />
+			<column name="order_by" type="varchar" jt="12" mandatory="y" />
+			<column name="default_item" type="varchar" jt="12" />
+			<index name="pk_controlled_vocab_values" unique="PRIMARY_KEY" >
+				<column name="vocab_value_id" />
+			</index>
+			<index name="idx_controlled_vocab_values" unique="NORMAL" >
+				<column name="controlled_vocab_id" />
+			</index>
+			<fk name="fk_controlled_vocab_values" to_schema="qiita" to_table="controlled_vocab" delete_action="cascade" update_action="cascade" >
+				<fk_column name="controlled_vocab_id" pk="controlled_vocab_id" />
+			</fk>
+		</table>
+		<table name="data_directory" >
+			<column name="data_directory_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="data_type" type="varchar" jt="12" mandatory="y" />
+			<column name="mountpoint" type="varchar" jt="12" mandatory="y" />
+			<column name="subdirectory" type="varchar" jt="12" mandatory="y" />
+			<column name="active" type="bool" jt="-7" mandatory="y" />
+			<index name="pk_data_directory" unique="PRIMARY_KEY" >
+				<column name="data_directory_id" />
+			</index>
+		</table>
+		<table name="data_type" >
+			<column name="data_type_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="data_type" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Data type (16S, metabolome, etc) the job will use]]></comment>
+			</column>
+			<index name="pk_data_type" unique="PRIMARY_KEY" >
+				<column name="data_type_id" />
+			</index>
+			<index name="idx_data_type" unique="UNIQUE" >
+				<column name="data_type" />
+			</index>
+		</table>
+		<table name="environmental_package" >
+			<column name="environmental_package_name" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[The name of the environmental package]]></comment>
+			</column>
+			<column name="metadata_table" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Contains the name of the table that contains the pre-defined metadata columns for the environmental package]]></comment>
+			</column>
+			<index name="pk_environmental_package" unique="PRIMARY_KEY" >
+				<column name="environmental_package_name" />
+			</index>
+		</table>
+		<table name="filepath" >
+			<column name="filepath_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="filepath" type="varchar" jt="12" mandatory="y" />
+			<column name="filepath_type_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="checksum" type="varchar" jt="12" mandatory="y" />
+			<column name="checksum_algorithm_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="data_directory_id" type="bigserial" jt="-5" />
+			<index name="pk_filepath" unique="PRIMARY_KEY" >
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_filepath" unique="NORMAL" >
+				<column name="filepath_type_id" />
+			</index>
+			<index name="idx_filepath_0" unique="NORMAL" >
+				<column name="data_directory_id" />
+			</index>
+			<fk name="fk_filepath" to_schema="qiita" to_table="filepath_type" >
+				<fk_column name="filepath_type_id" pk="filepath_type_id" />
+			</fk>
+			<fk name="fk_filepath_0" to_schema="qiita" to_table="checksum_algorithm" >
+				<fk_column name="checksum_algorithm_id" pk="checksum_algorithm_id" />
+			</fk>
+			<fk name="fk_filepath_data_directory" to_schema="qiita" to_table="data_directory" delete_action="restrict" update_action="restrict" >
+				<fk_column name="data_directory_id" pk="data_directory_id" />
+			</fk>
+		</table>
+		<table name="filepath_type" >
+			<column name="filepath_type_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="filepath_type" type="varchar" jt="12" />
+			<index name="pk_filepath_type" unique="PRIMARY_KEY" >
+				<column name="filepath_type_id" />
+			</index>
+			<index name="idx_filepath_type" unique="UNIQUE" >
+				<column name="filepath_type" />
+			</index>
+		</table>
+		<table name="filetype" >
+			<comment>Type of file (FASTA, FASTQ, SPECTRA, etc)</comment>
+			<column name="filetype_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="type" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_filetype" unique="PRIMARY_KEY" >
+				<column name="filetype_id" />
+			</index>
+			<index name="idx_filetype" unique="UNIQUE" >
+				<column name="type" />
+			</index>
+		</table>
+		<table name="investigation" >
+			<comment>Overarching investigation information.An investigation comprises one or more individual studies.</comment>
+			<column name="investigation_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="investigation_name" type="varchar" jt="12" mandatory="y" />
+			<column name="investigation_description" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Describes the overarching goal of the investigation]]></comment>
+			</column>
+			<column name="contact_person_id" type="bigint" jt="-5" />
+			<index name="pk_investigation" unique="PRIMARY_KEY" >
+				<column name="investigation_id" />
+			</index>
+			<index name="idx_investigation" unique="NORMAL" >
+				<column name="contact_person_id" />
+			</index>
+			<fk name="fk_investigation_study_person" to_schema="qiita" to_table="study_person" >
+				<fk_column name="contact_person_id" pk="study_person_id" />
+			</fk>
+		</table>
+		<table name="investigation_study" >
+			<column name="investigation_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_investigation_study" unique="PRIMARY_KEY" >
+				<column name="investigation_id" />
+				<column name="study_id" />
+			</index>
+			<index name="idx_investigation_study_investigation" unique="NORMAL" >
+				<column name="investigation_id" />
+			</index>
+			<index name="idx_investigation_study_study" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<fk name="fk_investigation_study" to_schema="qiita" to_table="investigation" >
+				<fk_column name="investigation_id" pk="investigation_id" />
+			</fk>
+			<fk name="fk_investigation_study_study" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+		</table>
+		<table name="job" >
+			<column name="job_id" type="bigserial" jt="-5" mandatory="y" >
+				<comment><![CDATA[Unique identifier for job]]></comment>
+			</column>
+			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[What datatype (16s, metabolome, etc) job is run on.]]></comment>
+			</column>
+			<column name="job_status_id" type="bigint" length="10" jt="-5" mandatory="y" />
+			<column name="command_id" type="bigint" length="100" jt="-5" mandatory="y" >
+				<comment><![CDATA[The Qiime or other function being run (alpha diversity, etc)]]></comment>
+			</column>
+			<column name="options" type="varchar" jt="12" >
+				<comment><![CDATA[Holds all options set for the job as a json string]]></comment>
+			</column>
+			<column name="log_id" type="bigint" jt="-5" >
+				<comment><![CDATA[Reference to error if status is error]]></comment>
+			</column>
+			<index name="pk_job" unique="PRIMARY_KEY" >
+				<column name="job_id" />
+			</index>
+			<index name="idx_job_command" unique="NORMAL" >
+				<column name="command_id" />
+			</index>
+			<index name="idx_job_status" unique="NORMAL" >
+				<column name="job_status_id" />
+			</index>
+			<index name="idx_job_type" unique="NORMAL" >
+				<column name="data_type_id" />
+			</index>
+			<index name="idx_job" unique="NORMAL" >
+				<column name="log_id" />
+			</index>
+			<fk name="fk_job_function" to_schema="qiita" to_table="command" >
+				<fk_column name="command_id" pk="command_id" />
+			</fk>
+			<fk name="fk_job_job_status_id" to_schema="qiita" to_table="job_status" >
+				<fk_column name="job_status_id" pk="job_status_id" />
+			</fk>
+			<fk name="fk_job_data_type" to_schema="qiita" to_table="data_type" >
+				<fk_column name="data_type_id" pk="data_type_id" />
+			</fk>
+			<fk name="fk_job" to_schema="qiita" to_table="logging" >
+				<fk_column name="log_id" pk="logging_id" />
+			</fk>
+		</table>
+		<table name="job_results_filepath" >
+			<comment>Holds connection between jobs and the result filepaths</comment>
+			<column name="job_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_job_results_filepath" unique="PRIMARY_KEY" >
+				<column name="job_id" />
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_job_results_filepath_0" unique="NORMAL" >
+				<column name="job_id" />
+			</index>
+			<index name="idx_job_results_filepath_1" unique="NORMAL" >
+				<column name="filepath_id" />
+			</index>
+			<fk name="fk_job_results_filepath" to_schema="qiita" to_table="job" >
+				<fk_column name="job_id" pk="job_id" />
+			</fk>
+			<fk name="fk_job_results_filepath_0" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+		</table>
+		<table name="job_status" >
+			<column name="job_status_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="status" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_job_status" unique="PRIMARY_KEY" >
+				<column name="job_status_id" />
+			</index>
+			<index name="idx_job_status_0" unique="UNIQUE" >
+				<column name="status" />
+			</index>
+		</table>
+		<table name="logging" >
+			<column name="logging_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="time" type="timestamp" jt="93" mandatory="y" >
+				<comment><![CDATA[Time the error was thrown]]></comment>
+			</column>
+			<column name="severity_id" type="integer" jt="4" mandatory="y" />
+			<column name="msg" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Error message thrown]]></comment>
+			</column>
+			<column name="information" type="varchar" jt="12" >
+				<comment><![CDATA[Other applicable information (depending on error)]]></comment>
+			</column>
+			<index name="idx_logging_0" unique="NORMAL" >
+				<column name="severity_id" />
+			</index>
+			<index name="pk_logging" unique="PRIMARY_KEY" >
+				<column name="logging_id" />
+			</index>
+			<fk name="fk_logging_severity" to_schema="qiita" to_table="severity" >
+				<fk_column name="severity_id" pk="severity_id" />
+			</fk>
+		</table>
+		<table name="message" >
+			<column name="message_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="message" type="varchar" jt="12" mandatory="y" />
+			<column name="message_time" type="timestamp" jt="93" mandatory="y" >
+				<defo>current_timestamp</defo>
+			</column>
+			<column name="expiration" type="timestamp" jt="93" />
+			<index name="pk_message" unique="PRIMARY_KEY" >
+				<column name="message_id" />
+			</index>
+		</table>
+		<table name="message_user" >
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<column name="message_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="read" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;false&#039;</defo>
+				<comment><![CDATA[Whether the message has been read or not.]]></comment>
+			</column>
+			<index name="idx_message_user" unique="PRIMARY_KEY" >
+				<column name="email" />
+				<column name="message_id" />
+			</index>
+			<index name="idx_message_user_0" unique="NORMAL" >
+				<column name="message_id" />
+			</index>
+			<index name="idx_message_user_1" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<fk name="fk_message_user" to_schema="qiita" to_table="message" >
+				<fk_column name="message_id" pk="message_id" />
+			</fk>
+			<fk name="fk_message_user_0" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
+			</fk>
+		</table>
+		<table name="mixs_field_description" >
+			<column name="column_name" type="varchar" jt="12" mandatory="y" />
+			<column name="data_type" type="varchar" jt="12" mandatory="y" />
+			<column name="desc_or_value" type="varchar" jt="12" mandatory="y" />
+			<column name="definition" type="varchar" jt="12" mandatory="y" />
+			<column name="min_length" type="integer" length="100" jt="4" />
+			<column name="active" type="integer" jt="4" mandatory="y" />
+			<index name="pk_mixs_field_description" unique="PRIMARY_KEY" >
+				<column name="column_name" />
+			</index>
+		</table>
+		<table name="ontology" >
+			<column name="ontology_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="ontology" type="varchar" jt="12" mandatory="y" />
+			<column name="fully_loaded" type="bool" jt="-7" mandatory="y" />
+			<column name="fullname" type="varchar" jt="12" />
+			<column name="query_url" type="varchar" jt="12" />
+			<column name="source_url" type="varchar" jt="12" />
+			<column name="definition" type="text" jt="12" />
+			<column name="load_date" type="date" jt="91" mandatory="y" />
+			<index name="pk_ontology" unique="PRIMARY_KEY" >
+				<column name="ontology_id" />
+			</index>
+			<index name="idx_ontology" unique="UNIQUE" >
+				<column name="ontology" />
+			</index>
+		</table>
+		<table name="portal_type" >
+			<comment>What portals are available to show a study in</comment>
+			<column name="portal_type_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="portal" type="varchar" jt="12" mandatory="y" />
+			<column name="portal_description" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_portal_type" unique="PRIMARY_KEY" >
+				<column name="portal_type_id" />
+			</index>
+		</table>
+		<table name="prep_columns" >
+			<column name="prep_template_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="column_name" type="varchar" jt="12" mandatory="y" />
+			<column name="column_type" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_prep_columns_0" unique="PRIMARY_KEY" >
+				<column name="prep_template_id" />
+				<column name="column_name" />
+				<column name="column_type" />
+			</index>
+			<index name="idx_prep_columns_1" unique="NORMAL" >
+				<column name="prep_template_id" />
+			</index>
+			<fk name="fk_prep_columns_prep_template" to_schema="qiita" to_table="prep_template" >
+				<fk_column name="prep_template_id" pk="prep_template_id" />
+			</fk>
+		</table>
+		<table name="prep_template" >
+			<column name="prep_template_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="raw_data_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="preprocessing_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;not_preprocessed&#039;</defo>
+			</column>
+			<column name="investigation_type" type="varchar" jt="12" >
+				<comment><![CDATA[The investigation type (e.g., one of the values from EBI's set of known types)]]></comment>
+			</column>
+			<index name="pk_prep_template" unique="PRIMARY_KEY" >
+				<column name="prep_template_id" />
+			</index>
+			<index name="idx_prep_template" unique="NORMAL" >
+				<column name="data_type_id" />
+			</index>
+			<index name="idx_prep_template_0" unique="NORMAL" >
+				<column name="raw_data_id" />
+			</index>
+			<fk name="fk_prep_template_data_type" to_schema="qiita" to_table="data_type" >
+				<fk_column name="data_type_id" pk="data_type_id" />
+			</fk>
+			<fk name="fk_prep_template_raw_data" to_schema="qiita" to_table="raw_data" >
+				<fk_column name="raw_data_id" pk="raw_data_id" />
+			</fk>
+		</table>
+		<table name="prep_template_filepath" >
+			<column name="prep_template_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_prep_template_filepath" unique="PRIMARY_KEY" >
+				<column name="prep_template_id" />
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_prep_template_filepath" unique="NORMAL" >
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_prep_template_filepath" unique="NORMAL" >
+				<column name="prep_template_id" />
+			</index>
+			<fk name="fk_filepath_id" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+			<fk name="fk_prep_template_id" to_schema="qiita" to_table="prep_template" >
+				<fk_column name="prep_template_id" pk="prep_template_id" />
+			</fk>
+		</table>
+		<table name="prep_template_preprocessed_data" >
+			<column name="prep_template_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="preprocessed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_prep_template_preprocessed_data" unique="PRIMARY_KEY" >
+				<column name="prep_template_id" />
+				<column name="preprocessed_data_id" />
+			</index>
+			<index name="idx_prep_template_preprocessed_data_0" unique="NORMAL" >
+				<column name="prep_template_id" />
+			</index>
+			<index name="idx_prep_template_preprocessed_data_1" unique="NORMAL" >
+				<column name="preprocessed_data_id" />
+			</index>
+			<fk name="fk_prep_template_id" to_schema="qiita" to_table="prep_template" >
+				<fk_column name="prep_template_id" pk="prep_template_id" />
+			</fk>
+			<fk name="fk_prep_template_preprocessed_data" to_schema="qiita" to_table="preprocessed_data" >
+				<fk_column name="preprocessed_data_id" pk="preprocessed_data_id" />
+			</fk>
+		</table>
+		<table name="prep_template_sample" >
+			<column name="prep_template_id" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[The prep template identifier]]></comment>
+			</column>
+			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_required_prep_info_2" unique="NORMAL" >
+				<column name="sample_id" />
+			</index>
+			<index name="idx_common_prep_info_0" unique="NORMAL" >
+				<column name="sample_id" />
+			</index>
+			<index name="idx_common_prep_info" unique="PRIMARY_KEY" >
+				<column name="prep_template_id" />
+				<column name="sample_id" />
+			</index>
+			<index name="idx_common_prep_info_1" unique="NORMAL" >
+				<column name="prep_template_id" />
+			</index>
+			<fk name="fk_prep_template" to_schema="qiita" to_table="prep_template" >
+				<fk_column name="prep_template_id" pk="prep_template_id" />
+			</fk>
+		</table>
+		<table name="prep_y" >
+			<comment>Information on how raw data y was prepared (prep template)Linked by y being raw_data_id from raw data table.</comment>
+			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<column name="data" type="bigint" jt="-5" >
+				<comment><![CDATA[STUFFFFF]]></comment>
+			</column>
+			<index name="pk_prep_y" unique="PRIMARY_KEY" >
+				<column name="sample_id" />
+			</index>
+		</table>
+		<table name="preprocessed_data" >
+			<column name="preprocessed_data_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="preprocessed_params_table" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Name of table holding the params]]></comment>
+			</column>
+			<column name="preprocessed_params_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="submitted_to_insdc_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;not submitted&#039;</defo>
+			</column>
+			<column name="ebi_submission_accession" type="varchar" jt="12" />
+			<column name="ebi_study_accession" type="varchar" jt="12" />
+			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="link_filepaths_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;idle&#039;</defo>
+			</column>
+			<column name="submitted_to_vamps_status" type="varchar" jt="12" >
+				<defo>&#039;not submitted&#039;</defo>
+			</column>
+			<column name="processing_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;not_processed&#039;</defo>
+			</column>
+			<index name="pk_preprocessed_data" unique="PRIMARY_KEY" >
+				<column name="preprocessed_data_id" />
+			</index>
+			<index name="idx_preprocessed_data" unique="NORMAL" >
+				<column name="data_type_id" />
+			</index>
+			<fk name="fk_preprocessed_data" to_schema="qiita" to_table="data_type" >
+				<fk_column name="data_type_id" pk="data_type_id" />
+			</fk>
+		</table>
+		<table name="preprocessed_filepath" >
+			<column name="preprocessed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_preprocessed_filepath" unique="PRIMARY_KEY" >
+				<column name="preprocessed_data_id" />
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_preprocessed_filepath_0" unique="NORMAL" >
+				<column name="preprocessed_data_id" />
+			</index>
+			<index name="idx_preprocessed_filepath_1" unique="NORMAL" >
+				<column name="filepath_id" />
+			</index>
+			<fk name="fk_preprocessed_filepath" to_schema="qiita" to_table="preprocessed_data" >
+				<fk_column name="preprocessed_data_id" pk="preprocessed_data_id" />
+			</fk>
+			<fk name="fk_preprocessed_filepath_0" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+		</table>
+		<table name="preprocessed_processed_data" >
+			<column name="preprocessed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="processed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_preprocessed_processed_data" unique="PRIMARY_KEY" >
+				<column name="preprocessed_data_id" />
+				<column name="processed_data_id" />
+			</index>
+			<index name="idx_preprocessed_processed_data_0" unique="NORMAL" >
+				<column name="preprocessed_data_id" />
+			</index>
+			<index name="idx_preprocessed_processed_data_1" unique="NORMAL" >
+				<column name="processed_data_id" />
+			</index>
+			<fk name="fk_preprocessed_processed_data" to_schema="qiita" to_table="preprocessed_data" >
+				<fk_column name="preprocessed_data_id" pk="preprocessed_data_id" />
+			</fk>
+			<fk name="fk_preprocessed_processed_data_0" to_schema="qiita" to_table="processed_data" >
+				<fk_column name="processed_data_id" pk="processed_data_id" />
+			</fk>
+		</table>
+		<table name="preprocessed_sequence_454_params" >
+			<comment>Parameters used for processing sequence data.</comment>
+			<column name="preprocessed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="param_set_name" type="varchar" length="100" jt="12" mandatory="y" >
+				<comment><![CDATA[The name of the parameter set]]></comment>
+			</column>
+			<column name="min_seq_len" type="integer" jt="4" mandatory="y" >
+				<defo>200</defo>
+				<comment><![CDATA[The minimum sequence length]]></comment>
+			</column>
+			<column name="max_seq_len" type="integer" jt="4" mandatory="y" >
+				<defo>1000</defo>
+				<comment><![CDATA[The maximum sequence length]]></comment>
+			</column>
+			<column name="trim_seq_length" type="bool" jt="-7" mandatory="y" >
+				<defo>f</defo>
+				<comment><![CDATA[Whether to trim the sequence length or not]]></comment>
+			</column>
+			<column name="min_qual_score" type="integer" jt="4" mandatory="y" >
+				<defo>25</defo>
+				<comment><![CDATA[The minimum phred quality score]]></comment>
+			</column>
+			<column name="max_ambig" type="integer" jt="4" mandatory="y" >
+				<defo>6</defo>
+				<comment><![CDATA[The maximum number of ambiguous characters]]></comment>
+			</column>
+			<column name="max_homopolymer" type="integer" jt="4" mandatory="y" >
+				<defo>6</defo>
+				<comment><![CDATA[The maximum homopolymer run]]></comment>
+			</column>
+			<column name="max_primer_mismatch" type="integer" jt="4" mandatory="y" >
+				<defo>0</defo>
+				<comment><![CDATA[Maximum number of mismatches to the primer allowed]]></comment>
+			</column>
+			<column name="barcode_type" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;golay_12&#039;</defo>
+				<comment><![CDATA[The barcode type used]]></comment>
+			</column>
+			<column name="max_barcode_errors" type="real" jt="7" mandatory="y" >
+				<defo>1.5</defo>
+				<comment><![CDATA[The maximum number of allowed barcode errors]]></comment>
+			</column>
+			<column name="disable_bc_correction" type="bool" jt="-7" mandatory="y" >
+				<defo>f</defo>
+				<comment><![CDATA[Disable barcode correction]]></comment>
+			</column>
+			<column name="qual_score_window" type="integer" jt="4" mandatory="y" >
+				<defo>0</defo>
+				<comment><![CDATA[Enable a sliding window quality score threshold, this is the size of the window]]></comment>
+			</column>
+			<column name="disable_primers" type="bool" jt="-7" mandatory="y" >
+				<defo>f</defo>
+				<comment><![CDATA[Disable primer checking]]></comment>
+			</column>
+			<column name="reverse_primers" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;disable&#039;</defo>
+				<comment><![CDATA[Check for reverse primers]]></comment>
+			</column>
+			<column name="reverse_primer_mismatches" type="integer" jt="4" mandatory="y" >
+				<defo>0</defo>
+				<comment><![CDATA[The number of allowed mismatches in the reverse primer]]></comment>
+			</column>
+			<column name="truncate_ambig_bases_bool" type="bool" jt="-7" mandatory="y" >
+				<defo>f</defo>
+				<comment><![CDATA[Truncate at the first ambiguous base]]></comment>
+			</column>
+			<index name="pk_preprocessed_sequence_454_params" unique="PRIMARY_KEY" >
+				<column name="preprocessed_params_id" />
+			</index>
+		</table>
+		<table name="preprocessed_sequence_illumina_params" >
+			<comment>Parameters used for processing illumina sequence data.</comment>
+			<column name="preprocessed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="max_bad_run_length" type="integer" jt="4" mandatory="y" >
+				<defo>3</defo>
+			</column>
+			<column name="min_per_read_length_fraction" type="real" jt="7" mandatory="y" >
+				<defo>0.75</defo>
+			</column>
+			<column name="sequence_max_n" type="integer" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="rev_comp_barcode" type="bool" jt="-7" mandatory="y" >
+				<defo>FALSE</defo>
+			</column>
+			<column name="rev_comp_mapping_barcodes" type="bool" jt="-7" mandatory="y" >
+				<defo>FALSE</defo>
+			</column>
+			<column name="rev_comp" type="bool" jt="-7" mandatory="y" >
+				<defo>FALSE</defo>
+			</column>
+			<column name="phred_quality_threshold" type="integer" jt="4" mandatory="y" >
+				<defo>3</defo>
+			</column>
+			<column name="barcode_type" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;golay_12&#039;</defo>
+			</column>
+			<column name="max_barcode_errors" type="real" jt="7" mandatory="y" >
+				<defo>1.5</defo>
+			</column>
+			<column name="param_set_name" type="varchar" length="100" jt="12" mandatory="y" >
+				<comment><![CDATA[The name of the parameter set]]></comment>
+			</column>
+			<index name="pk_preprocessed_sequence_illumina_params" unique="PRIMARY_KEY" >
+				<column name="preprocessed_params_id" />
+			</index>
+		</table>
+		<table name="preprocessed_spectra_params" >
+			<comment>Parameters used for processing spectra data.</comment>
+			<column name="preprocessed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="col" type="varchar" jt="12" />
+			<index name="pk_preprocessed_spectra_params" unique="PRIMARY_KEY" >
+				<column name="preprocessed_params_id" />
+			</index>
+		</table>
+		<table name="processed_data" >
+			<column name="processed_data_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="processed_params_table" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Name of table holding processing params]]></comment>
+			</column>
+			<column name="processed_params_id" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[Link to a table with the parameters used to generate processed data]]></comment>
+			</column>
+			<column name="processed_date" type="timestamp" jt="93" mandatory="y" />
+			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="link_filepaths_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;idle&#039;</defo>
+			</column>
+			<column name="processed_data_status_id" type="bigint" length="1" jt="-5" mandatory="y" >
+				<defo>4</defo>
+			</column>
+			<index name="pk_processed_data" unique="PRIMARY_KEY" >
+				<column name="processed_data_id" />
+			</index>
+			<index name="idx_processed_data" unique="NORMAL" >
+				<column name="data_type_id" />
+			</index>
+			<index name="idx_processed_data_0" unique="NORMAL" >
+				<column name="processed_data_status_id" />
+			</index>
+			<fk name="fk_processed_data" to_schema="qiita" to_table="data_type" >
+				<fk_column name="data_type_id" pk="data_type_id" />
+			</fk>
+			<fk name="fk_processed_data_status" to_schema="qiita" to_table="processed_data_status" >
+				<fk_column name="processed_data_status_id" pk="processed_data_status_id" />
+			</fk>
+		</table>
+		<table name="processed_data_status" >
+			<column name="processed_data_status_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="processed_data_status" type="varchar" jt="12" mandatory="y" />
+			<column name="processed_data_status_description" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_study_status" unique="PRIMARY_KEY" >
+				<column name="processed_data_status_id" />
+			</index>
+			<index name="idx_study_status" unique="UNIQUE" >
+				<column name="processed_data_status" />
+			</index>
+		</table>
+		<table name="processed_filepath" >
+			<column name="processed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_processed_filepath" unique="PRIMARY_KEY" >
+				<column name="processed_data_id" />
+				<column name="filepath_id" />
+			</index>
+			<fk name="fk_processed_data_filepath" to_schema="qiita" to_table="processed_data" >
+				<fk_column name="processed_data_id" pk="processed_data_id" />
+			</fk>
+			<fk name="fk_processed_data_filepath_0" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+		</table>
+		<table name="processed_params_sortmerna" >
+			<comment>Parameters used for processing data using method sortmerna</comment>
+			<column name="processed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="reference_id" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[What version of reference or type of reference used]]></comment>
+			</column>
+			<column name="sortmerna_e_value" type="float8" jt="6" mandatory="y" />
+			<column name="sortmerna_max_pos" type="integer" jt="4" mandatory="y" />
+			<column name="similarity" type="float8" jt="6" mandatory="y" />
+			<column name="sortmerna_coverage" type="float8" jt="6" mandatory="y" />
+			<column name="threads" type="integer" jt="4" mandatory="y" />
+			<column name="param_set_name" type="varchar" length="100" jt="12" mandatory="y" >
+				<defo>&#039;Default&#039;</defo>
+				<comment><![CDATA[The name of the parameter set]]></comment>
+			</column>
+			<index name="pk_processed_params_sortmerna" unique="PRIMARY_KEY" >
+				<column name="processed_params_id" />
+			</index>
+			<index name="idx_processed_params_sortmerna" unique="NORMAL" >
+				<column name="reference_id" />
+			</index>
+			<fk name="fk_processed_params_sortmerna" to_schema="qiita" to_table="reference" >
+				<fk_column name="reference_id" pk="reference_id" />
+			</fk>
+		</table>
+		<table name="processed_params_uclust" >
+			<comment>Parameters used for processing data using method uclust</comment>
+			<column name="processed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="reference_id" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[What version of reference or type of reference used]]></comment>
+			</column>
+			<column name="similarity" type="float8" jt="6" mandatory="y" >
+				<defo>0.97</defo>
+			</column>
+			<column name="enable_rev_strand_match" type="bool" jt="-7" mandatory="y" >
+				<defo>TRUE</defo>
+			</column>
+			<column name="suppress_new_clusters" type="bool" jt="-7" mandatory="y" >
+				<defo>TRUE</defo>
+			</column>
+			<index name="pk_processed_params_uclust" unique="PRIMARY_KEY" >
+				<column name="processed_params_id" />
+			</index>
+			<index name="idx_processed_params_uclust" unique="NORMAL" >
+				<column name="reference_id" />
+			</index>
+			<fk name="fk_processed_params_uclust" to_schema="qiita" to_table="reference" >
+				<fk_column name="reference_id" pk="reference_id" />
+			</fk>
+		</table>
+		<table name="qiita_user" >
+			<comment>Holds all user information</comment>
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<column name="user_level_id" type="integer" jt="4" mandatory="y" >
+				<defo>5</defo>
+				<comment><![CDATA[user level]]></comment>
+			</column>
+			<column name="password" type="varchar" jt="12" mandatory="y" />
+			<column name="name" type="varchar" jt="12" />
+			<column name="affiliation" type="varchar" jt="12" />
+			<column name="address" type="varchar" jt="12" />
+			<column name="phone" type="varchar" jt="12" />
+			<column name="user_verify_code" type="varchar" jt="12" >
+				<comment><![CDATA[Code for initial user email verification]]></comment>
+			</column>
+			<column name="pass_reset_code" type="varchar" jt="12" >
+				<comment><![CDATA[Randomly generated code for password reset]]></comment>
+			</column>
+			<column name="pass_reset_timestamp" type="timestamp" jt="93" >
+				<comment><![CDATA[Time the reset code was generated]]></comment>
+			</column>
+			<index name="pk_user" unique="PRIMARY_KEY" >
+				<column name="email" />
+			</index>
+			<index name="idx_user" unique="NORMAL" >
+				<column name="user_level_id" />
+			</index>
+			<fk name="fk_user_user_level" to_schema="qiita" to_table="user_level" update_action="restrict" >
+				<fk_column name="user_level_id" pk="user_level_id" />
+			</fk>
+		</table>
+		<table name="raw_data" >
+			<column name="raw_data_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="filetype_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="link_filepaths_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;idle&#039;</defo>
+			</column>
+			<index name="pk_raw_data" unique="UNIQUE" >
+				<column name="raw_data_id" />
+			</index>
+			<index name="idx_raw_data" unique="NORMAL" >
+				<column name="filetype_id" />
+			</index>
+			<index name="pk_raw_data_0" unique="PRIMARY_KEY" >
+				<column name="raw_data_id" />
+			</index>
+			<fk name="fk_raw_data_filetype" to_schema="qiita" to_table="filetype" >
+				<fk_column name="filetype_id" pk="filetype_id" />
+			</fk>
+		</table>
+		<table name="raw_filepath" >
+			<column name="raw_data_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_raw_filepath" unique="PRIMARY_KEY" >
+				<column name="raw_data_id" />
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_raw_filepath_0" unique="NORMAL" >
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_raw_filepath_1" unique="NORMAL" >
+				<column name="raw_data_id" />
+			</index>
+			<fk name="fk_raw_filepath" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+			<fk name="fk_raw_filepath_0" to_schema="qiita" to_table="raw_data" >
+				<fk_column name="raw_data_id" pk="raw_data_id" />
+			</fk>
+		</table>
+		<table name="reference" >
+			<column name="reference_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="reference_name" type="varchar" jt="12" mandatory="y" />
+			<column name="reference_version" type="varchar" jt="12" />
+			<column name="sequence_filepath" type="bigint" jt="-5" mandatory="y" />
+			<column name="taxonomy_filepath" type="bigint" jt="-5" />
+			<column name="tree_filepath" type="bigint" jt="-5" />
+			<index name="pk_reference" unique="PRIMARY_KEY" >
+				<column name="reference_id" />
+			</index>
+			<index name="idx_reference" unique="NORMAL" >
+				<column name="sequence_filepath" />
+			</index>
+			<index name="idx_reference_0" unique="NORMAL" >
+				<column name="taxonomy_filepath" />
+			</index>
+			<index name="idx_reference_1" unique="NORMAL" >
+				<column name="tree_filepath" />
+			</index>
+			<fk name="fk_reference_sequence_filepath" to_schema="qiita" to_table="filepath" >
+				<fk_column name="sequence_filepath" pk="filepath_id" />
+			</fk>
+			<fk name="fk_reference_taxonomy_filepath" to_schema="qiita" to_table="filepath" >
+				<fk_column name="taxonomy_filepath" pk="filepath_id" />
+			</fk>
+			<fk name="fk_reference_tree_filepath" to_schema="qiita" to_table="filepath" >
+				<fk_column name="tree_filepath" pk="filepath_id" />
+			</fk>
+		</table>
+		<table name="sample_template_filepath" >
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_sample_template_filepath" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="filepath_id" />
+			</index>
+			<index name="idx_sample_template_filepath_0" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<index name="idx_sample_template_filepath_1" unique="NORMAL" >
+				<column name="filepath_id" />
+			</index>
+			<fk name="fk_study_id" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+			<fk name="fk_filepath_id" to_schema="qiita" to_table="filepath" >
+				<fk_column name="filepath_id" pk="filepath_id" />
+			</fk>
+		</table>
+		<table name="sample_x" >
+			<comment>data for samples in study x (sample template)x is the study_id from study tableMAKE SURE sample_id IS FK TO sample_id IN required_sample_info TABLE</comment>
+			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<column name="description" type="varchar" jt="12" mandatory="y" />
+			<column name="other_mapping_columns" type="varchar" jt="12" >
+				<comment><![CDATA[Represents whatever other columns go with this study]]></comment>
+			</column>
+			<index name="pk_study_x_y" unique="PRIMARY_KEY" >
+				<column name="sample_id" />
+			</index>
+		</table>
+		<table name="severity" >
+			<column name="severity_id" type="serial" jt="4" mandatory="y" />
+			<column name="severity" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_severity" unique="PRIMARY_KEY" >
+				<column name="severity_id" />
+			</index>
+			<index name="idx_severity" unique="UNIQUE" >
+				<column name="severity" />
+			</index>
+		</table>
+		<table name="study" >
+			<column name="study_id" type="bigserial" jt="-5" mandatory="y" >
+				<comment><![CDATA[Unique name for study]]></comment>
+			</column>
+			<column name="email" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[Email of study owner]]></comment>
+			</column>
+			<column name="emp_person_id" type="bigint" jt="-5" />
+			<column name="first_contact" type="timestamp" jt="93" mandatory="y" >
+				<defo>current_timestamp</defo>
+			</column>
+			<column name="funding" type="varchar" jt="12" />
+			<column name="timeseries_type_id" type="bigint" jt="-5" mandatory="y" >
+				<comment><![CDATA[What type of timeseries this study is (or is not)
+Controlled Vocabulary]]></comment>
+			</column>
+			<column name="lab_person_id" type="bigint" jt="-5" />
+			<column name="metadata_complete" type="bool" jt="-7" mandatory="y" />
+			<column name="mixs_compliant" type="bool" jt="-7" mandatory="y" />
+			<column name="most_recent_contact" type="timestamp" jt="93" />
+			<column name="number_samples_collected" type="integer" jt="4" />
+			<column name="number_samples_promised" type="integer" jt="4" />
+			<column name="principal_investigator_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="reprocess" type="bool" jt="-7" mandatory="y" />
+			<column name="spatial_series" type="bool" jt="-7" />
+			<column name="study_title" type="varchar" jt="12" mandatory="y" />
+			<column name="study_alias" type="varchar" jt="12" mandatory="y" />
+			<column name="study_description" type="text" jt="12" mandatory="y" />
+			<column name="study_abstract" type="text" jt="12" mandatory="y" />
+			<column name="vamps_id" type="varchar" jt="12" />
+			<index name="pk_study" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+			</index>
+			<index name="idx_study" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<index name="idx_study_1" unique="NORMAL" >
+				<column name="emp_person_id" />
+			</index>
+			<index name="idx_study_2" unique="NORMAL" >
+				<column name="lab_person_id" />
+			</index>
+			<index name="idx_study_3" unique="NORMAL" >
+				<column name="principal_investigator_id" />
+			</index>
+			<index name="idx_study_4" unique="NORMAL" >
+				<column name="timeseries_type_id" />
+			</index>
+			<index name="unique_study_title" unique="UNIQUE" >
+				<column name="study_title" />
+			</index>
+			<fk name="fk_study_user" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
+			</fk>
+			<fk name="fk_study_study_emp_person" to_schema="qiita" to_table="study_person" >
+				<fk_column name="emp_person_id" pk="study_person_id" />
+			</fk>
+			<fk name="fk_study_study_lab_person" to_schema="qiita" to_table="study_person" >
+				<fk_column name="lab_person_id" pk="study_person_id" />
+			</fk>
+			<fk name="fk_study_study_pi_person" to_schema="qiita" to_table="study_person" >
+				<fk_column name="principal_investigator_id" pk="study_person_id" />
+			</fk>
+			<fk name="fk_study_timeseries_type" to_schema="qiita" to_table="timeseries_type" >
+				<fk_column name="timeseries_type_id" pk="timeseries_type_id" />
+			</fk>
+		</table>
+		<table name="study_environmental_package" >
+			<comment>Holds the 1 to many relationship between the study and the environmental_package</comment>
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="environmental_package_name" type="varchar" jt="12" mandatory="y" />
+			<index name="pk_study_environmental_package" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="environmental_package_name" />
+			</index>
+			<index name="idx_study_environmental_package" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<index name="idx_study_environmental_package_0" unique="NORMAL" >
+				<column name="environmental_package_name" />
+			</index>
+			<fk name="fk_study_environmental_package" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+			<fk name="fk_study_environmental_package_0" to_schema="qiita" to_table="environmental_package" >
+				<fk_column name="environmental_package_name" pk="environmental_package_name" />
+			</fk>
+		</table>
+		<table name="study_experimental_factor" >
+			<comment>EFO ontological link of experimental factors to studies</comment>
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="efo_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_study_experimental_factor" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="efo_id" />
+			</index>
+			<index name="idx_study_experimental_factor_0" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<fk name="fk_study_experimental_factor" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+		</table>
+		<table name="study_person" >
+			<comment>Contact information for the various people involved in a study</comment>
+			<column name="study_person_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" />
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<column name="affiliation" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[The institution with which this person is affiliated]]></comment>
+			</column>
+			<column name="address" type="varchar" length="100" jt="12" />
+			<column name="phone" type="varchar" jt="12" />
+			<index name="pk_study_person" unique="PRIMARY_KEY" >
+				<column name="study_person_id" />
+			</index>
+			<index name="idx_study_person" unique="UNIQUE" >
+				<column name="name" />
+				<column name="affiliation" />
+			</index>
+		</table>
+		<table name="study_pmid" >
+			<comment>Links a study to all PMIDs for papers created from study</comment>
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="pmid" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_study_pmid" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="pmid" />
+			</index>
+			<index name="idx_study_pmid_0" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<fk name="fk_study_pmid_study" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+		</table>
+		<table name="study_portal" >
+			<comment>Controls what studies are visible on what portals</comment>
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="portal_type_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="pk_study_portal" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="portal_type_id" />
+			</index>
+			<index name="idx_study_portal" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<index name="idx_study_portal_0" unique="NORMAL" >
+				<column name="portal_type_id" />
+			</index>
+			<fk name="fk_study_portal" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+			<fk name="fk_study_portal_0" to_schema="qiita" to_table="portal_type" >
+				<fk_column name="portal_type_id" pk="portal_type_id" />
+			</fk>
+		</table>
+		<table name="study_prep_template" >
+			<comment>links study to its prep templates</comment>
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="prep_template_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_study_raw_data" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="prep_template_id" />
+			</index>
+			<index name="idx_study_raw_data_0" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<index name="idx_study_raw_data_1" unique="NORMAL" >
+				<column name="prep_template_id" />
+			</index>
+			<fk name="fk_study_prep_template_study" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+			<fk name="fk_study_prep_template_pt" to_schema="qiita" to_table="prep_template" >
+				<fk_column name="prep_template_id" pk="prep_template_id" />
+			</fk>
+		</table>
+		<table name="study_preprocessed_data" >
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="preprocessed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_study_preprocessed_data" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="preprocessed_data_id" />
+			</index>
+			<index name="idx_study_preprocessed_data_0" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<index name="idx_study_preprocessed_data_1" unique="NORMAL" >
+				<column name="preprocessed_data_id" />
+			</index>
+			<fk name="fk_study_preprocessed_data" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+			<fk name="fk_study_preprocessed_data_0" to_schema="qiita" to_table="preprocessed_data" >
+				<fk_column name="preprocessed_data_id" pk="preprocessed_data_id" />
+			</fk>
+		</table>
+		<table name="study_processed_data" >
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="processed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_study_processed_data" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="processed_data_id" />
+			</index>
+			<index name="idx_study_processed_data_0" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<index name="pk_study_processed_data" unique="UNIQUE" >
+				<column name="processed_data_id" />
+			</index>
+			<fk name="fk_study_processed_data" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+			<fk name="fk_study_processed_data_0" to_schema="qiita" to_table="processed_data" >
+				<fk_column name="processed_data_id" pk="processed_data_id" />
+			</fk>
+		</table>
+		<table name="study_sample" >
+			<comment>Required info for each sample. One row is one sample.</comment>
+			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_required_sample_info" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<index name="idx_required_sample_info_1" unique="PRIMARY_KEY" >
+				<column name="sample_id" />
+			</index>
+			<fk name="fk_required_sample_info_study" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+		</table>
+		<table name="study_sample_columns" >
+			<comment>Holds information on which metadata columns are available for the study sample template</comment>
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="column_name" type="varchar" jt="12" mandatory="y" />
+			<column name="column_type" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_study_mapping_columns" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="column_name" />
+				<column name="column_type" />
+			</index>
+			<index name="idx_study_mapping_columns_study_id" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<fk name="fk_study_mapping_columns_study" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+		</table>
+		<table name="study_users" >
+			<comment>Links shared studies to users they are shared with</comment>
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_study_users" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="email" />
+			</index>
+			<index name="idx_study_users_0" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<index name="idx_study_users_1" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<fk name="fk_study_users_study" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+			<fk name="fk_study_users_user" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
+			</fk>
+		</table>
+		<table name="term" >
+			<column name="term_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="ontology_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="old_term_id" type="bigint" jt="-5" >
+				<defo>NULL</defo>
+				<comment><![CDATA[Identifier used in the old system, we are keeping this for consistency]]></comment>
+			</column>
+			<column name="term" type="varchar" jt="12" mandatory="y" />
+			<column name="identifier" type="varchar" jt="12" />
+			<column name="definition" type="varchar" jt="12" />
+			<column name="namespace" type="varchar" jt="12" />
+			<column name="is_obsolete" type="bool" jt="-7" >
+				<defo>&#039;false&#039;</defo>
+			</column>
+			<column name="is_root_term" type="bool" jt="-7" />
+			<column name="is_leaf" type="bool" jt="-7" />
+			<column name="user_defined" type="bool" jt="-7" mandatory="y" >
+				<defo>False</defo>
+				<comment><![CDATA[Whether or not this term was defined by a user]]></comment>
+			</column>
+			<index name="pk_term" unique="PRIMARY_KEY" >
+				<column name="term_id" />
+			</index>
+			<index name="idx_term" unique="NORMAL" >
+				<column name="ontology_id" />
+			</index>
+			<fk name="fk_term_ontology" to_schema="qiita" to_table="ontology" >
+				<fk_column name="ontology_id" pk="ontology_id" />
+			</fk>
+		</table>
+		<table name="timeseries_type" >
+			<column name="timeseries_type_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="timeseries_type" type="varchar" jt="12" mandatory="y" />
+			<column name="intervention_type" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;None&#039;</defo>
+			</column>
+			<index name="pk_timeseries_type" unique="PRIMARY_KEY" >
+				<column name="timeseries_type_id" />
+			</index>
+			<index name="idx_timeseries_type" unique="UNIQUE" >
+				<column name="timeseries_type" />
+				<column name="intervention_type" />
+			</index>
+		</table>
+		<table name="user_level" >
+			<comment>Holds available user levels</comment>
+			<column name="user_level_id" type="serial" jt="4" mandatory="y" />
+			<column name="name" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[One of the user levels (admin, user, guest, etc)]]></comment>
+			</column>
+			<column name="description" type="text" jt="12" mandatory="y" />
+			<index name="pk_user_level" unique="PRIMARY_KEY" >
+				<column name="user_level_id" />
+			</index>
+			<index name="idx_user_level" unique="UNIQUE" >
+				<column name="name" />
+			</index>
+		</table>
+	</schema>
+	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-9.2-1003.jdbc3.jar" host="localhost" port="5432" instance="qiita_test" user="mcdonadt" schema_mapping="" />
+	<layout id="Layout669806" name="qiita" show_relation_columns="y" >
+		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="45" y="1545" />
+		<entity schema="qiita" name="job_results_filepath" color="c0d4f3" x="405" y="870" />
+		<entity schema="qiita" name="analysis_job" color="d0def5" x="285" y="945" />
+		<entity schema="qiita" name="analysis_chain" color="c0d4f3" x="60" y="945" />
+		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="270" y="1335" />
+		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="300" y="1500" />
+		<entity schema="qiita" name="analysis_users" color="d0def5" x="60" y="750" />
+		<entity schema="qiita" name="study_preprocessed_data" color="c0d4f3" x="1545" y="720" />
+		<entity schema="qiita" name="study_users" color="d0def5" x="1065" y="60" />
+		<entity schema="qiita" name="sample_x" color="d0def5" x="1635" y="165" />
+		<entity schema="qiita" name="processed_filepath" color="c0d4f3" x="1065" y="945" />
+		<entity schema="qiita" name="command" color="d0def5" x="210" y="1125" />
+		<entity schema="qiita" name="logging" color="c0d4f3" x="1455" y="1365" />
+		<entity schema="qiita" name="study_processed_data" color="b2cdf7" x="1515" y="945" />
+		<entity schema="qiita" name="command_data_type" color="c0d4f3" x="390" y="1185" />
+		<entity schema="qiita" name="preprocessed_filepath" color="c0d4f3" x="1050" y="705" />
+		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="405" y="750" />
+		<entity schema="qiita" name="analysis_workflow" color="c0d4f3" x="390" y="660" />
+		<entity schema="qiita" name="column_ontology" color="d0def5" x="285" y="1725" />
+		<entity schema="qiita" name="study_person" color="c0d4f3" x="2100" y="105" />
+		<entity schema="qiita" name="controlled_vocab" color="d0def5" x="45" y="1335" />
+		<entity schema="qiita" name="ontology" color="d0def5" x="780" y="1350" />
+		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="1770" y="855" />
+		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="2205" y="810" />
+		<entity schema="qiita" name="preprocessed_processed_data" color="b2cdf7" x="1275" y="870" />
+		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="90" />
+		<entity schema="qiita" name="prep_y" color="d0def5" x="1230" y="195" />
+		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="585" y="885" />
+		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="735" y="885" />
+		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1020" />
+		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="75" />
+		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="1035" />
+		<entity schema="qiita" name="severity" color="c0d4f3" x="1590" y="1365" />
+		<entity schema="qiita" name="job" color="d0def5" x="405" y="1020" />
+		<entity schema="qiita" name="filepath" color="c0d4f3" x="645" y="675" />
+		<entity schema="qiita" name="data_directory" color="b2cdf7" x="840" y="585" />
+		<entity schema="qiita" name="term" color="d0def5" x="810" y="1650" />
+		<entity schema="qiita" name="environmental_package" color="b2cdf7" x="2250" y="150" />
+		<entity schema="qiita" name="study_environmental_package" color="b2cdf7" x="2250" y="45" />
+		<entity schema="qiita" name="sample_template_filepath" color="b2cdf7" x="1050" y="795" />
+		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1260" y="675" />
+		<entity schema="qiita" name="reference" color="c0d4f3" x="2280" y="960" />
+		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="1740" y="960" />
+		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="2025" y="1050" />
+		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1980" y="810" />
+		<entity schema="qiita" name="analysis_status" color="d0def5" x="45" y="840" />
+		<entity schema="qiita" name="collection_job" color="a8c4ef" x="255" y="510" />
+		<entity schema="qiita" name="collection_analysis" color="a8c4ef" x="255" y="435" />
+		<entity schema="qiita" name="collection_status" color="a8c4ef" x="45" y="510" />
+		<entity schema="qiita" name="collection" color="a8c4ef" x="45" y="360" />
+		<entity schema="qiita" name="collection_users" color="a8c4ef" x="255" y="345" />
+		<entity schema="qiita" name="study_sample_columns" color="d0def5" x="1635" y="285" />
+		<entity schema="qiita" name="study_experimental_factor" color="c0d4f3" x="2100" y="495" />
+		<entity schema="qiita" name="study_pmid" color="c0d4f3" x="2145" y="600" />
+		<entity schema="qiita" name="processed_data" color="d0def5" x="1275" y="960" />
+		<entity schema="qiita" name="investigation" color="c0d4f3" x="2100" y="255" />
+		<entity schema="qiita" name="processed_data_status" color="c0d4f3" x="1500" y="1050" />
+		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1185" />
+		<entity schema="qiita" name="study_sample" color="d0def5" x="1515" y="105" />
+		<entity schema="qiita" name="raw_data" color="d0def5" x="1020" y="300" />
+		<entity schema="qiita" name="filetype" color="d0def5" x="1035" y="180" />
+		<entity schema="qiita" name="prep_template_preprocessed_data" color="b2cdf7" x="1275" y="555" />
+		<entity schema="qiita" name="prep_template" color="b2cdf7" x="1305" y="375" />
+		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="1035" y="435" />
+		<entity schema="qiita" name="prep_template_filepath" color="b2cdf7" x="1035" y="525" />
+		<entity schema="qiita" name="study_prep_template" color="d0def5" x="1590" y="420" />
+		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1470" y="285" />
+		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1335" y="195" />
+		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="735" />
+		<entity schema="qiita" name="portal_type" color="c0d4f3" x="720" y="360" />
+		<entity schema="qiita" name="study" color="d0def5" x="1815" y="60" />
+		<entity schema="qiita" name="study_portal" color="a8c4ef" x="1800" y="525" />
+		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="1680" y="615" />
+		<entity schema="qiita" name="analysis_portal" color="a8c4ef" x="180" y="645" />
+		<entity schema="qiita" name="message_user" color="a8c4ef" x="1080" y="1365" />
+		<entity schema="qiita" name="message" color="a8c4ef" x="1275" y="1380" />
+		<entity schema="qiita" name="investigation_study" color="c0d4f3" x="2100" y="405" />
+		<group name="Group_analyses" color="c4e0f9" >
+			<comment>analysis tables</comment>
+			<entity schema="qiita" name="analysis" />
+			<entity schema="qiita" name="analysis_job" />
+			<entity schema="qiita" name="job" />
+			<entity schema="qiita" name="command" />
+			<entity schema="qiita" name="analysis_users" />
+			<entity schema="qiita" name="analysis_status" />
+			<entity schema="qiita" name="job_status" />
+			<entity schema="qiita" name="analysis_sample" />
+			<entity schema="qiita" name="analysis_chain" />
+			<entity schema="qiita" name="analysis_filepath" />
+			<entity schema="qiita" name="job_results_filepath" />
+			<entity schema="qiita" name="command_data_type" />
+			<entity schema="qiita" name="analysis_workflow" />
+			<entity schema="qiita" name="analysis_portal" />
+		</group>
+		<group name="Group_users" color="ffff99" >
+			<entity schema="qiita" name="user_level" />
+			<entity schema="qiita" name="qiita_user" />
+		</group>
+		<group name="Group_study" color="99ff99" >
+			<entity schema="qiita" name="study" />
+			<entity schema="qiita" name="study_users" />
+			<entity schema="qiita" name="study_sample_columns" />
+			<entity schema="qiita" name="raw_data" />
+			<entity schema="qiita" name="filetype" />
+			<entity schema="qiita" name="study_prep_template" />
+			<entity schema="qiita" name="sample_x" />
+			<entity schema="qiita" name="preprocessed_spectra_params" />
+			<entity schema="qiita" name="preprocessed_sequence_illumina_params" />
+			<entity schema="qiita" name="study_sample" />
+			<entity schema="qiita" name="prep_y" />
+			<entity schema="qiita" name="processed_data" />
+			<entity schema="qiita" name="processed_params_uclust" />
+			<entity schema="qiita" name="prep_template_sample" />
+			<entity schema="qiita" name="study_experimental_factor" />
+			<entity schema="qiita" name="study_pmid" />
+			<entity schema="qiita" name="investigation_study" />
+			<entity schema="qiita" name="investigation" />
+			<entity schema="qiita" name="preprocessed_sequence_454_params" />
+			<entity schema="qiita" name="preprocessed_data" />
+			<entity schema="qiita" name="processed_data_status" />
+			<entity schema="qiita" name="study_person" />
+			<entity schema="qiita" name="timeseries_type" />
+			<entity schema="qiita" name="preprocessed_filepath" />
+			<entity schema="qiita" name="raw_filepath" />
+			<entity schema="qiita" name="processed_filepath" />
+			<entity schema="qiita" name="study_preprocessed_data" />
+			<entity schema="qiita" name="reference" />
+			<entity schema="qiita" name="preprocessed_processed_data" />
+			<entity schema="qiita" name="study_processed_data" />
+			<entity schema="qiita" name="prep_template" />
+			<entity schema="qiita" name="prep_columns" />
+			<entity schema="qiita" name="environmental_package" />
+			<entity schema="qiita" name="study_environmental_package" />
+			<entity schema="qiita" name="prep_template_filepath" />
+			<entity schema="qiita" name="sample_template_filepath" />
+			<entity schema="qiita" name="study_portal" />
+		</group>
+		<group name="Group_vocabularies" color="00ffcc" >
+			<entity schema="qiita" name="controlled_vocab" />
+			<entity schema="qiita" name="controlled_vocab_values" />
+			<entity schema="qiita" name="column_controlled_vocabularies" />
+			<entity schema="qiita" name="mixs_field_description" />
+			<entity schema="qiita" name="column_ontology" />
+		</group>
+		<group name="Group_ontology" color="ff99ff" >
+			<entity schema="qiita" name="ontology" />
+			<entity schema="qiita" name="term" />
+		</group>
+		<group name="Group_logging" color="c4e0f9" >
+			<entity schema="qiita" name="logging" />
+			<entity schema="qiita" name="severity" />
+		</group>
+		<group name="Group_filepaths" color="c4e0f9" >
+			<entity schema="qiita" name="filepath" />
+			<entity schema="qiita" name="filepath_type" />
+			<entity schema="qiita" name="checksum_algorithm" />
+			<entity schema="qiita" name="data_directory" />
+		</group>
+		<group name="Group_collection" color="00cccc" >
+			<entity schema="qiita" name="collection" />
+			<entity schema="qiita" name="collection_status" />
+			<entity schema="qiita" name="collection_users" />
+			<entity schema="qiita" name="collection_analysis" />
+			<entity schema="qiita" name="collection_job" />
+		</group>
+		<group name="Group_messages" color="c4e0f9" >
+			<entity schema="qiita" name="message_user" />
+			<entity schema="qiita" name="message" />
+		</group>
+	</layout>
+</project>
