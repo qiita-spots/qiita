@@ -68,6 +68,24 @@ def get_datatypes(metadata_map):
     return [type_lookup(dtype) for dtype in metadata_map.dtypes]
 
 
+def cast_to_python(value):
+    """Casts the value form numpy types to python types
+
+    Parameters
+    ----------
+    value : object
+        The value to cast
+
+    Returns
+    -------
+    object
+        The input value casted to a python type
+    """
+    if isinstance(value, np.generic):
+        value = np.asscalar(value)
+    return value
+
+
 def as_python_types(metadata_map, headers):
     r"""Converts the values of metadata_map pointed by headers from numpy types
     to python types.
