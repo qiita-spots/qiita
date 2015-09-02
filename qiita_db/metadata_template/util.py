@@ -69,7 +69,7 @@ def get_datatypes(metadata_map):
 
 
 def cast_to_python(value):
-    """Casts the value form numpy types to python types
+    """Casts the value from numpy types to python types
 
     Parameters
     ----------

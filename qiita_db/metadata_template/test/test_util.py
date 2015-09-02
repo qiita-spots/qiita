@@ -57,6 +57,7 @@ class TestUtil(TestCase):
         obs = cast_to_python(b)
         self.assertTrue(obs)
         self.assertFalse(isinstance(obs, np.bool_))
+        self.assertTrue(isinstance(obs, bool))
 
         exp = datetime(2015, 9, 1, 10, 00)
         dt = np.datetime64(exp)
