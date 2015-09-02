@@ -58,7 +58,7 @@ from qiita_db.util import (exists_table, get_table_cols,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
 from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
-                   prefix_sample_names_with_id, type_lookup)
+                   prefix_sample_names_with_id, type_lookup, cast_to_python)
 
 
 class BaseSample(QiitaObject):
@@ -1232,7 +1232,8 @@ class MetadataTemplate(QiitaObject):
                                sql_values, sql_cols)
             sql_args = []
             for sample in samples_to_update:
-                sample_vals = [new_map[col][sample] for col in cols_to_update]
+                sample_vals = [cast_to_python(new_map[col][sample])
+                               for col in cols_to_update]
                 sample_vals.insert(0, sample)
                 sql_args.extend(sample_vals)
 

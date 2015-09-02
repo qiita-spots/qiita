@@ -13,6 +13,7 @@ from tempfile import mkstemp
 from os import close, remove
 from collections import Iterable
 
+import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
@@ -1299,6 +1300,29 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             st.update(self.metadata_dict_updated_sample_error)
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
+
+    def test_update_numpy(self):
+        """Update values in existing mapping file with numpy values"""
+        metadata_dict = {
+            'Sample1': {'bool_col': np.bool_(True),
+                        'date_col': np.datetime64(datetime(2015, 9, 1))},
+            'Sample2': {'bool_col': np.bool_(False),
+                        'date_col': np.datetime64(datetime(2015, 8, 1))}
+        }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        st = npt.assert_warns(QiitaDBWarning, SampleTemplate.create,
+                              metadata, self.new_study)
+        metadata_dict['Sample2']['date_col'] = np.datetime64(
+            datetime(2015, 9, 1))
+        metadata_dict['Sample1']['bool_col'] = np.bool_(False)
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        npt.assert_warns(QiitaDBWarning, st.update, metadata)
+
+        sql = "SELECT * FROM qiita.sample_{0}".format(st.id)
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [['2.Sample1', False, datetime(2015, 9, 1)],
+               ['2.Sample2', False, datetime(2015, 9, 1)]]
+        self.assertEqual(sorted(obs), sorted(exp))
 
     def test_generate_files(self):
         fp_count = get_count("qiita.filepath")
