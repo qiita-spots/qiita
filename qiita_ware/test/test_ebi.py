@@ -35,12 +35,11 @@ from qiita_core.util import qiita_test_checker
 class TestEBISubmission(TestCase):
     def setUp(self):
         self.temp_dir = gettempdir()
+        self.files_to_remove = []
 
         if not isdir(self.temp_dir):
             makedirs(self.temp_dir)
         self.files_to_remove.append(self.temp_dir)
-
-        self.files_to_remove = []
 
     def tearDown(self):
         for f in self.files_to_remove:

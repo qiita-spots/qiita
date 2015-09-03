@@ -134,7 +134,7 @@ class EBISubmission(object):
         self.ebi_dir = join(qiita_config.working_dir,
                             'ebi_submission_%d' % preprocessed_data_id)
         get_output_fp = partial(join, self.ebi_dir, 'xml_dir')
-        self.xml_dir = get_output_fp('')
+        self.xml_dir = get_output_fp()
         self.study_xml_fp = get_output_fp('study.xml')
         self.sample_xml_fp = get_output_fp('sample.xml')
         self.experiment_xml_fp = get_output_fp('experiment.xml')

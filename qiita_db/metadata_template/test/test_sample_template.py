@@ -1867,6 +1867,9 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             'env_feature', 'scientific_name'})
 
     def test_check_restrictions(self):
+        obs = self.tester.check_restrictions([SAMPLE_TEMPLATE_COLUMNS['EBI']])
+        self.assertEqual(obs, set([]))
+
         del self.metadata['collection_timestamp']
         st = npt.assert_warns(QiitaDBWarning, SampleTemplate.create,
                               self.metadata, self.new_study)
