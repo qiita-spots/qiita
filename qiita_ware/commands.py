@@ -6,10 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os import makedirs
 from os.path import join, isdir
 from shutil import rmtree
-from functools import partial
 from tarfile import open as taropen
 from tempfile import mkdtemp
 
@@ -42,13 +40,13 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
     If fastq_dir_fp is passed, it must not contain any empty files, or
     gzipped empty files
     """
-    # step 1
+    # step 1: init and validate
     ebi_submission = EBISubmission(preprocessed_data_id, action)
 
-    # step 2
+    # step 2: generate demux fastq files
     ebi_submission.preprocessed_data.update_insdc_status('demuxing samples')
     try:
-        demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        ebi_submission.generate_demultiplexed_fastq()
     except Exception as e:
         if isdir(ebi_submission.ebi_dir):
             rmtree(ebi_submission.ebi_dir)
@@ -58,46 +56,35 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
                         info={'ebi_submission': preprocessed_data_id})
         raise
 
+    # step 3: generate and write xml files
+    ebi_submission.write_xml_file(ebi_submission.generate_study_xml(),
+                                  'study_xml_fp',
+                                  ebi_submission.study_xml_fp)
+    ebi_submission.write_xml_file(ebi_submission.generate_sample_xml(),
+                                  'sample_xml_fp',
+                                  ebi_submission.sample_xml_fp)
+    ebi_submission.write_xml_file(ebi_submission.generate_experiment_xml(),
+                                  'experiment_xml_fp',
+                                  ebi_submission.experiment_xml_fp)
+    ebi_submission.write_xml_file(ebi_submission.generate_run_xml(),
+                                  'run_xml_fp',
+                                  ebi_submission.run_xml_fp)
+    ebi_submission.write_xml_file(ebi_submission.generate_submission_xml(),
+                                  'submission_xml_fp',
+                                  ebi_submission.submission_xml_fp)
+
     # other steps
-    output_dir = fastq_dir_fp + '_submission'
-    sample_template = ebi_submission.sample_template
-    prep_template = ebi_submission.prep_template
-    preprocessed_data = ebi_submission.preprocessed_data
-
-    samp_fp = join(fastq_dir_fp, 'sample_metadata.txt')
-    prep_fp = join(fastq_dir_fp, 'prep_metadata.txt')
-
-    sample_template.to_file(samp_fp, demux_samples)
-    prep_template.to_file(prep_fp, demux_samples)
-
-    # Get specific output directory and set filepaths
-    get_output_fp = partial(join, output_dir)
-    study_fp = get_output_fp('study.xml')
-    sample_fp = get_output_fp('sample.xml')
-    experiment_fp = get_output_fp('experiment.xml')
-    run_fp = get_output_fp('run.xml')
-    submission_fp = get_output_fp('submission.xml')
-
-    if not isdir(output_dir):
-        makedirs(output_dir)
-    else:
-        raise IOError('The output folder already exists: %s' %
-                      output_dir)
-
-    ebi_submission.write_all_xml_files(study_fp, sample_fp, experiment_fp,
-                                       run_fp, submission_fp, action)
-
     if send:
         ebi_submission.send_sequences()
         study_accession, submission_accession = ebi_submission.send_xml()
 
         if study_accession is None or submission_accession is None:
-            preprocessed_data.update_insdc_status('failed')
+            ebi_submission.preprocessed_data.update_insdc_status('failed')
 
             raise ComputeError("EBI Submission failed!")
         else:
-            preprocessed_data.update_insdc_status('success', study_accession,
-                                                  submission_accession)
+            ebi_submission.preprocessed_data.update_insdc_status(
+                'success', study_accession, submission_accession)
     else:
         study_accession, submission_accession = None, None
 
