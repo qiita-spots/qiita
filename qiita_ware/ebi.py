@@ -954,6 +954,11 @@ class EBISubmission(object):
     def generate_demultiplexed_fastq(self, rewrite_fastq=False):
         """Generates demultiplexed fastq
 
+        Parameters
+        ----------
+        rewrite_fastq : bool, optional
+            If true, it forces the rewrite of the fastq files
+
         Returns
         -------
         demux_samples
