@@ -35,10 +35,16 @@ from qiita_core.util import qiita_test_checker
 class TestEBISubmission(TestCase):
     def setUp(self):
         self.temp_dir = gettempdir()
+
+        if not isdir(self.temp_dir):
+            makedirs(self.temp_dir)
+        self.files_to_remove.append(self.temp_dir)
+
         self.files_to_remove = []
 
     def tearDown(self):
         for f in self.files_to_remove:
+            print f
             if isdir(f):
                 rmtree(f)
             else:
@@ -236,11 +242,6 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 class TestEBISubmissionWriteRead(TestEBISubmission):
     def write_demux_files(self, prep_template):
         """Writes a demux test file to avoid duplication of code"""
-
-        if not isdir(self.temp_dir):
-            makedirs(self.temp_dir)
-        self.files_to_remove.append(self.temp_dir)
-
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')
         with open(fna_fp, 'w') as f:
@@ -323,9 +324,6 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
     def test_generate_demultiplexed_fastq(self):
         # generating demux file for testing
-        if not isdir(self.temp_dir):
-            makedirs(self.temp_dir)
-
         exp_demux_samples = set(
             ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
              '1.SKB2.640194', '1.SKM8.640201', '1.SKM4.640180',
