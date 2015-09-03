@@ -702,6 +702,14 @@ class EBISubmission(object):
     def generate_demultiplexed_fastq(self, rewrite_fastq=False, mtime=None):
         """Generates demultiplexed fastq
 
+        Parameters
+        ----------
+        rewrite_fastq : bool, optional
+            If true, it forces the rewrite of the fastq files
+        mtime : float, optional
+            The time to use when creating the gz files. If None, the current
+            time will be used by gzip.GzipFile. This is useful for testing.
+
         Returns
         -------
         demux_samples

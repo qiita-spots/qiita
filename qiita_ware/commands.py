@@ -19,6 +19,7 @@ from qiita_db.logger import LogEntry
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import ComputeError
+from traceback import format_exc
 
 
 def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
@@ -47,12 +48,13 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
     ebi_submission.preprocessed_data.update_insdc_status('demuxing samples')
     try:
         ebi_submission.generate_demultiplexed_fastq()
-    except Exception as e:
+    except:
+        error_msg = format_exc()
         if isdir(ebi_submission.ebi_dir):
             rmtree(ebi_submission.ebi_dir)
         ebi_submission.preprocessed_data.update_insdc_status(
-            'failed: %s' % str(e))
-        LogEntry.create('Runtime', str(e),
+            'failed: %s' % str(error_msg))
+        LogEntry.create('Runtime', str(error_msg),
                         info={'ebi_submission': preprocessed_data_id})
         raise
 
