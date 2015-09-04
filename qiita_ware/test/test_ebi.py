@@ -11,7 +11,7 @@ from __future__ import division
 # -----------------------------------------------------------------------------
 
 from warnings import simplefilter
-from os import remove, makedirs
+from os import remove
 from os.path import join, isdir
 from shutil import rmtree
 from tempfile import mkdtemp
