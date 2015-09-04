@@ -14,11 +14,12 @@ from warnings import simplefilter
 from os import remove, makedirs
 from os.path import join, isdir
 from shutil import rmtree
-from tempfile import gettempdir
+from tempfile import mkdtemp
 from unittest import TestCase, main
 from xml.etree import ElementTree as ET
 from functools import partial
 import pandas as pd
+from datetime import date
 
 from h5py import File
 
@@ -34,16 +35,12 @@ from qiita_core.util import qiita_test_checker
 
 class TestEBISubmission(TestCase):
     def setUp(self):
-        self.temp_dir = gettempdir()
         self.files_to_remove = []
-
-        if not isdir(self.temp_dir):
-            makedirs(self.temp_dir)
+        self.temp_dir = mkdtemp()
         self.files_to_remove.append(self.temp_dir)
 
     def tearDown(self):
         for f in self.files_to_remove:
-            print f
             if isdir(f):
                 rmtree(f)
             else:
@@ -52,11 +49,12 @@ class TestEBISubmission(TestCase):
 
 class TestEBISubmissionReadOnly(TestEBISubmission):
     def test_init(self):
+        ppd_id = 2
         action = 'ADD'
 
-        e = EBISubmission(2, action)
+        e = EBISubmission(ppd_id, action)
 
-        self.assertEqual(e.preprocessed_data_id, 2)
+        self.assertEqual(e.preprocessed_data_id, ppd_id)
         self.assertEqual(e.study_title, 'Identification of the Microbiomes '
                                         'for Cannabis Soils')
         self.assertEqual(e.study_abstract,
@@ -73,19 +71,25 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                           'different time points in the plant lifecycle.'))
         self.assertEqual(e.investigation_type, 'Metagenomics')
         self.assertIsNone(e.new_investigation_type)
-
+        self.assertItemsEqual(e.sample_template, e.samples)
+        self.assertItemsEqual(e.pmids, ['123456', '7891011'])
         self.assertEqual(e.action, action)
+
         get_output_fp = partial(join, e.ebi_dir, 'xml_dir')
+        self.assertEqual(e.xml_dir, get_output_fp())
         self.assertEqual(e.study_xml_fp, get_output_fp('study.xml'))
         self.assertEqual(e.sample_xml_fp, get_output_fp('sample.xml'))
         self.assertEqual(e.experiment_xml_fp,  get_output_fp('experiment.xml'))
         self.assertEqual(e.run_xml_fp, get_output_fp('run.xml'))
         self.assertEqual(e.submission_xml_fp, get_output_fp('submission.xml'))
 
-        self.assertItemsEqual(e.sample_template, e.samples)
+        get_output_fp = partial(join, e.ebi_dir)
+        self.assertEqual(e.ebi_dir, get_output_fp())
         for sample in e.sample_template:
             self.assertEqual(e.sample_template[sample], e.samples[sample])
             self.assertEqual(e.prep_template[sample], e.samples_prep[sample])
+            self.assertEqual(e.sample_demux_fps[sample],
+                             get_output_fp('%s.fastq.gz' % sample))
 
     def test_get_study_alias(self):
         e = EBISubmission(2, 'ADD')
@@ -181,7 +185,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_generate_submission_xml(self):
         submission = EBISubmission(2, 'ADD')
-        obs = submission.generate_submission_xml()
+        obs = submission.generate_submission_xml(date_to_hold=date(2015, 9, 3))
         exp = SUBMISSIONXML % {
             'submission_alias': submission._get_submission_alias()}
         exp = ''.join([l.strip() for l in exp.splitlines()])
@@ -211,11 +215,11 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                                                test_ebi_skip_curl_cert,
                                                test_ebi_dropbox_url)
         exp = ('curl -k '
-               '-F "SUBMISSION=@%(xml_dir)ssubmission.xml" '
-               '-F "STUDY=@%(xml_dir)sstudy.xml" '
-               '-F "SAMPLE=@%(xml_dir)ssample.xml" '
-               '-F "RUN=@%(xml_dir)srun.xml" '
-               '-F "EXPERIMENT=@%(xml_dir)sexperiment.xml" '
+               '-F "SUBMISSION=@%(xml_dir)s/submission.xml" '
+               '-F "STUDY=@%(xml_dir)s/study.xml" '
+               '-F "SAMPLE=@%(xml_dir)s/sample.xml" '
+               '-F "RUN=@%(xml_dir)s/run.xml" '
+               '-F "EXPERIMENT=@%(xml_dir)s/experiment.xml" '
                '"ebi_dropbox_url/?auth=ERA%%20ebi_seq_xfer_user'
                '%%20ebi_access_key%%3D"') % {'xml_dir': submission.xml_dir}
         self.assertEqual(obs, exp)
@@ -227,11 +231,11 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                                                test_ebi_skip_curl_cert,
                                                test_ebi_dropbox_url)
         exp = ('curl '
-               '-F "SUBMISSION=@%(xml_dir)ssubmission.xml" '
-               '-F "STUDY=@%(xml_dir)sstudy.xml" '
-               '-F "SAMPLE=@%(xml_dir)ssample.xml" '
-               '-F "RUN=@%(xml_dir)srun.xml" '
-               '-F "EXPERIMENT=@%(xml_dir)sexperiment.xml" '
+               '-F "SUBMISSION=@%(xml_dir)s/submission.xml" '
+               '-F "STUDY=@%(xml_dir)s/study.xml" '
+               '-F "SAMPLE=@%(xml_dir)s/sample.xml" '
+               '-F "RUN=@%(xml_dir)s/run.xml" '
+               '-F "EXPERIMENT=@%(xml_dir)s/experiment.xml" '
                '"ebi_dropbox_url/?auth=ERA%%20ebi_seq_xfer_user'
                '%%20ebi_access_key%%3D"') % {'xml_dir': submission.xml_dir}
         self.assertEqual(obs, exp)
@@ -255,8 +259,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         return ppd
 
     def generate_new_prep_template_and_write_demux_files(self):
-        """Creates a new prep template and writes demux test file to avoid
-        duplication of code"""
+        """Creates new prep-template/demux-file to avoid duplication of code"""
 
         # ignoring warnings generated when adding templates
         simplefilter("ignore")
@@ -289,12 +292,12 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         exp_text = ("Unrecognized investigation type: 'None'. This term is "
                     "neither one of the official terms nor one of the "
                     "user-defined terms in the ENA ontology.\nYou are missing "
-                    "some columns in study #1 to have a valid submission #3: "
-                    "barcode, run_prefix, platform, "
-                    "library_construction_protocol, "
-                    "experiment_design_description, primer.\nThese samples "
-                    "from study #1 and preprocessed data #3 do not have a "
-                    "valid platform: 1.SKD6.640190, 1.SKM6.640187, "
+                    "some columns in your prep template for study #1 to have "
+                    "a valid submission #3: platform, primer, "
+                    "experiment_design_description, "
+                    "library_construction_protocol.\nThese samples from study "
+                    "#1, preprocessed data #3 and prep template #2 do not "
+                    "have a valid platform: 1.SKD6.640190, 1.SKM6.640187, "
                     "1.SKD9.640182")
         with self.assertRaisesRegexp(EBISumbissionError, exp_text):
             EBISubmission(ppd.id, 'ADD')
@@ -632,7 +635,7 @@ sequencer adapter regions.
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
-      <ILLUMINA><INSTRUMENT_MODEL>unspecified</INSTRUMENT_MODEL></ILLUMINA>
+      <ILLUMINA />
     </PLATFORM>
     <EXPERIMENT_ATTRIBUTES>
       <EXPERIMENT_ATTRIBUTE>
@@ -718,7 +721,7 @@ sequencer adapter regions.
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
-      <ILLUMINA><INSTRUMENT_MODEL>unspecified</INSTRUMENT_MODEL></ILLUMINA>
+      <ILLUMINA />
     </PLATFORM>
     <EXPERIMENT_ATTRIBUTES>
       <EXPERIMENT_ATTRIBUTE>

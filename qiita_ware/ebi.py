@@ -13,7 +13,7 @@ from gzip import GzipFile
 from functools import partial
 
 from future.utils import viewitems
-from skbio.util import safe_md5, flatten
+from skbio.util import safe_md5
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.exceptions import EBISumbissionError
@@ -25,9 +25,6 @@ from qiita_db.util import convert_to_id
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
-from qiita_db.metadata_template.constants import(
-    SAMPLE_TEMPLATE_COLUMNS, TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS,
-    PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
 
 class InvalidMetadataError(Exception):
@@ -88,6 +85,11 @@ class EBISubmission(object):
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
     valid_ebi_submission_states = ('submitting', 'success')
     valid_platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
+    xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
+    xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
+    experiment_library_fields = [
+        'library_strategy', 'library_source', 'library_selection',
+        'library_layout']
 
     def __init__(self, preprocessed_data_id, action):
         valid_ebi_actions = EBISubmission.valid_ebi_actions
@@ -142,36 +144,30 @@ class EBISubmission(object):
         self.submission_xml_fp = get_output_fp('submission.xml')
         self.pmids = s.pmids
 
-        # ignore data type for the restrictions as we assume that this was
-        # validated in the prep template, here we only going to validate that
-        # they exists
         # getting the restrictions
-        restrictions = [v.columns.keys()
-                        for _, v in viewitems(SAMPLE_TEMPLATE_COLUMNS)]
-        restrictions.extend([v.columns.keys()
-                             for _, v in viewitems(PREP_TEMPLATE_COLUMNS)])
-        if self.prep_template.data_type() in TARGET_GENE_DATA_TYPES:
-            restrictions.extend([v.columns.keys() for _, v in
-                                 viewitems(PREP_TEMPLATE_COLUMNS_TARGET_GENE)])
-        restrictions = set(flatten(restrictions))
-        # getting the existing columns
-        templates_categories = self.sample_template.categories()
-        templates_categories.extend(self.prep_template.categories())
-        existing_columms = set(templates_categories)
-        missing_columns = restrictions.difference(existing_columms)
+        st_missing = self.sample_template.check_restrictions(
+            [self.sample_template.columns_restrictions['EBI']])
+        pt_missing = self.prep_template.check_restrictions(
+            [self.prep_template.columns_restrictions['EBI']])
         # testing if there are any missing columns
-        if missing_columns:
+        if st_missing:
             error_msgs.append(
-                "You are missing some columns in study #%d to have a valid "
-                "submission #%d: %s." % (s.id, preprocessed_data_id,
-                                         ', '.join(list(missing_columns))))
+                "You are missing some columns in your sample template for "
+                "study #%d to have a valid submission #%d: %s." % (
+                    s.id, preprocessed_data_id, ', '.join(list(st_missing))))
+        if pt_missing:
+            error_msgs.append(
+                "You are missing some columns in your prep template for "
+                "study #%d to have a valid submission #%d: %s." % (
+                    s.id, preprocessed_data_id, ', '.join(list(pt_missing))))
 
         # generating all samples from sample template
-        # self.samples = dict(self.sample_template.items())
         self.samples = {}
         self.samples_prep = {}
+        self.sample_demux_fps = {}
+        get_output_fp = partial(join, self.ebi_dir)
         nvp = []
-        for k, v in self.sample_template.items():
+        for k, v in viewitems(self.sample_template):
             if k not in self.prep_template:
                 continue
             sample_prep = self.prep_template[k]
@@ -185,13 +181,15 @@ class EBISubmission(object):
                     nvp.append(k)
 
             self.samples[k] = v
-            self.samples_prep[k] = self.prep_template[k]
+            self.samples_prep[k] = sample_prep
+            self.sample_demux_fps[k] = get_output_fp("%s.fastq.gz" % k)
 
         if nvp:
             error_msgs.append(
-                "These samples from study #%d and preprocessed data #%d do "
-                "not have a valid platform: %s" % (s.id, preprocessed_data_id,
-                                                   ', '.join(nvp)))
+                "These samples from study #%d, preprocessed data #%d and prep "
+                "template #%d do not have a valid platform: %s" % (
+                    s.id, preprocessed_data_id, self.prep_template.id,
+                    ', '.join(nvp)))
         if error_msgs:
             error_msgs = '\n'.join(error_msgs)
             LogEntry.create('Runtime', error_msgs)
@@ -266,9 +264,8 @@ class EBISubmission(object):
             string with study XML values
         """
         study_set = ET.Element('STUDY_SET', {
-            'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance",
-            'xsi:noNamespaceSchemaLocation': "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.study.xsd"})
+            'xmlns:xsi': self.xmlns_xsi,
+            'xsi:noNamespaceSchemaLocation': self.xsi_noNSL % "study"})
 
         study = ET.SubElement(study_set, 'STUDY', {
             'alias': self._get_study_alias(),
@@ -311,9 +308,8 @@ class EBISubmission(object):
             string with sample XML values
         """
         sample_set = ET.Element('SAMPLE_SET', {
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.sample.xsd"})
+            'xmlns:xsi': self.xmlns_xsi,
+            "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "sample"})
 
         for sample_name, sample_info in sorted(viewitems(self.samples)):
             sample_info = dict(sample_info)
@@ -381,9 +377,8 @@ class EBISubmission(object):
         """
         study_alias = self._get_study_alias()
         experiment_set = ET.Element('EXPERIMENT_SET', {
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.experiment.xsd"})
+            'xmlns:xsi': self.xmlns_xsi,
+            "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "experiment"})
         for sample_name, sample_prep in sorted(self.samples_prep.items()):
             sample_alias = self._get_sample_alias(sample_name)
             experiment_alias = self._get_experiment_alias(sample_name)
@@ -422,32 +417,22 @@ class EBISubmission(object):
 
             # these are not requiered field but present add them in the right
             # format
-            if 'library_strategy' in sample_prep:
-                library_strategy = ET.SubElement(library_descriptor,
-                                                 "LIBRARY_STRATEGY")
-                library_strategy.text = sample_prep.pop('library_strategy')
-            if 'library_source' in sample_prep:
-                library_source = ET.SubElement(library_descriptor,
-                                               "LIBRARY_SOURCE")
-                library_source.text = sample_prep.pop('library_source')
-            if 'library_selection' in sample_prep:
-                library_selection = ET.SubElement(library_descriptor,
-                                                  "LIBRARY_SELECTION")
-                library_selection.text = sample_prep.pop('library_selection')
-            if 'library_layout' in sample_prep:
-                library_layout = ET.SubElement(library_descriptor,
-                                               "LIBRARY_LAYOUT")
-                library_layout.text = sample_prep.pop('library_layout')
-                # no idea what SINGLE means
-                ET.SubElement(library_layout, "SINGLE")
+            for field in self.experiment_library_fields:
+                if field in sample_prep:
+                    element = ET.SubElement(library_descriptor, field.upper())
+                    element.text = sample_prep.pop(field)
+                    if field == 'library_layout':
+                        # no idea what SINGLE means
+                        ET.SubElement(element, "SINGLE")
 
             self._generate_spot_descriptor(design, platform)
 
             platform_element = ET.SubElement(experiment, 'PLATFORM')
             platform_info = ET.SubElement(platform_element,
                                           platform.upper())
-            instrument_model = ET.SubElement(platform_info, 'INSTRUMENT_MODEL')
-            instrument_model.text = 'unspecified'
+            if 'instrument_model' in sample_prep:
+                element = ET.SubElement(platform_info, 'INSTRUMENT_MODEL')
+                element.text = sample_prep.pop('instrument_model')
 
             if sample_prep:
                 experiment_attributes = ET.SubElement(
@@ -467,9 +452,8 @@ class EBISubmission(object):
             string with run XML values
         """
         run_set = ET.Element('RUN_SET', {
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.run.xsd"})
+            'xmlns:xsi': self.xmlns_xsi,
+            "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "run"})
         for sample_name, sample_prep in viewitems(self.samples_prep):
             sample_prep = dict(sample_prep)
 
@@ -477,7 +461,7 @@ class EBISubmission(object):
 
             # We only submit fastq
             file_type = 'fastq'
-            file_path = join(self.ebi_dir, "%s.fastq.gz" % sample_name)
+            file_path = self.sample_demux_fps[sample_name]
 
             with open(file_path) as fp:
                 md5 = safe_md5(fp).hexdigest()
@@ -501,8 +485,13 @@ class EBISubmission(object):
 
         return ET.tostring(run_set)
 
-    def generate_submission_xml(self):
+    def generate_submission_xml(self, date_to_hold=date.today()):
         """Generates the submission XML file
+
+        Parameters
+        ----------
+        date_to_hold : date, optional
+            Date to be added to submission. Useful for testing.
 
         Returns
         -------
@@ -510,9 +499,8 @@ class EBISubmission(object):
             string with run XML values
         """
         submission_set = ET.Element('SUBMISSION_SET', {
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.submission.xsd"})
+            'xmlns:xsi': self.xmlns_xsi,
+            "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "submission"})
         submission = ET.SubElement(submission_set, 'SUBMISSION', {
             'alias': self._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
@@ -546,7 +534,7 @@ class EBISubmission(object):
         if self.action == 'ADD':
             hold_action = ET.SubElement(actions, 'ACTION')
             ET.SubElement(hold_action, 'HOLD', {
-                'HoldUntilDate': str(date.today() + timedelta(365))}
+                'HoldUntilDate': str(date_to_hold + timedelta(365))}
             )
 
         return ET.tostring(submission_set)
@@ -721,6 +709,12 @@ class EBISubmission(object):
         already exists and, if it does, the script will assume that in a
         previous execution this step was performed correctly and will simply
         read the file names from self.ebi_dir
+        - When the object is created (init), samples, samples_prep and
+        sample_demux_fps hold values for all available samples in the database.
+        Here some of those values will be deleted (del's, within the loops) for
+        those cases where the fastq.gz files weren't written or exist. This is
+        an indication that they had no sequences and this kind of files are not
+        accepted in EBI
         """
         ppd = self.preprocessed_data
 
@@ -734,7 +728,7 @@ class EBISubmission(object):
             with open_file(demux) as demux_fh:
                 for s, i in to_per_sample_ascii(demux_fh,
                                                 self.sample_template.keys()):
-                    sample_fp = join(self.ebi_dir, "%s.fastq.gz" % s)
+                    sample_fp = self.sample_demux_fps[s]
                     wrote_sequences = False
                     with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
                         for record in i:
@@ -746,6 +740,7 @@ class EBISubmission(object):
                     else:
                         del(self.samples[s])
                         del(self.samples_prep[s])
+                        del(self.sample_demux_fps[s])
                         remove(sample_fp)
 
         else:
@@ -761,5 +756,6 @@ class EBISubmission(object):
             for ms in missing_samples:
                 del(self.samples[ms])
                 del(self.samples_prep[ms])
+                del(self.sample_demux_fps[ms])
 
         return demux_samples
