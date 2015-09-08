@@ -45,22 +45,20 @@ class NoXMLError(Exception):
     pass
 
 
-def clean_whitespace(s):
-    """Standardizes whitespace so that there is only ever one space separating
-    tokens
+def clean_whitespace(text):
+    """Standardizes whitespaces so there is only one space separating tokens
 
     Parameters
     ----------
     text : str
         The fixed text
 
-
     Returns
     -------
     str
         fixed text
     """
-    return ' '.join(str(s).split())
+    return ' '.join(str(text).split())
 
 
 class EBISubmission(object):
@@ -111,14 +109,12 @@ class EBISubmission(object):
         'library_layout']
 
     def __init__(self, preprocessed_data_id, action):
-        valid_ebi_actions = EBISubmission.valid_ebi_actions
-        valid_ebi_submission_states = EBISubmission.valid_ebi_submission_states
         error_msgs = []
 
-        if action not in valid_ebi_actions:
+        if action not in self.valid_ebi_actions:
             error_msg = ("%s is not a valid EBI submission action, valid "
-                         "actions are: %s" % (action,
-                                              ', '.join(valid_ebi_actions)))
+                         "actions are: %s" %
+                         (action, ', '.join(self.valid_ebi_actions)))
             LogEntry.create('Runtime', error_msg)
             raise EBISumbissionError(error_msg)
 
@@ -130,7 +126,7 @@ class EBISubmission(object):
         self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
 
         status = self.preprocessed_data.submitted_to_insdc_status()
-        if status in valid_ebi_submission_states:
+        if status in self.valid_ebi_submission_states:
             error_msg = "Cannot resubmit! Current status is: %s" % status
             LogEntry.create('Runtime', error_msg)
             raise EBISumbissionError(error_msg)
@@ -171,15 +167,11 @@ class EBISubmission(object):
             [self.prep_template.columns_restrictions['EBI']])
         # testing if there are any missing columns
         if st_missing:
-            error_msgs.append(
-                "You are missing some columns in your sample template for "
-                "study #%d, preprocessed data #%d. The missing columns: %s."
-                % (s.id, preprocessed_data_id, ', '.join(list(st_missing))))
+            error_msgs.append("Missing column in the sample template: %s" %
+                              ', '.join(list(st_missing)))
         if pt_missing:
-            error_msgs.append(
-                "You are missing some columns in your prep template for "
-                "study #%d, preprocessed data #%d. The missing columns: %s."
-                % (s.id, preprocessed_data_id, ', '.join(list(pt_missing))))
+            error_msgs.append("Missing column in the prep template: %s" %
+                              ', '.join(list(pt_missing)))
 
         # generating all samples from sample template
         self.samples = {}
@@ -205,13 +197,13 @@ class EBISubmission(object):
             self.sample_demux_fps[k] = get_output_fp("%s.fastq.gz" % k)
 
         if nvp:
-            error_msgs.append(
-                "These samples from study #%d, preprocessed data #%d and prep "
-                "template #%d do not have a valid platform: %s" % (
-                    s.id, preprocessed_data_id, self.prep_template.id,
-                    ', '.join(nvp)))
+            error_msgs.append("These samples do not have a valid platform: "
+                              "%s" % (', '.join(nvp)))
         if error_msgs:
-            error_msgs = '\n'.join(error_msgs)
+            error_msgs = ("Errors found during EBI submission for study #%d, "
+                          "preprocessed data #%d and prep template #%d:\n%s"
+                          % (s.id, preprocessed_data_id, self.prep_template.id,
+                             '\n'.join(error_msgs)))
             LogEntry.create('Runtime', error_msgs)
             raise EBISumbissionError(error_msgs)
 

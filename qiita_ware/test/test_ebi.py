@@ -289,19 +289,18 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         ppd = self.generate_new_prep_template_and_write_demux_files()
         # raise error as we are missing columns
-        exp_text = ("Unrecognized investigation type: 'None'. This term is "
-                    "neither one of the official terms nor one of the "
-                    "user-defined terms in the ENA ontology.\nYou are missing "
-                    "some columns in your prep template for study #1, "
-                    "preprocessed data #3. The missing columns: platform, "
-                    "primer, experiment_design_description, "
-                    "library_construction_protocol.\nThese samples from study "
-                    "#1, preprocessed data #3 and prep template #2 do not "
-                    "have a valid platform: 1.SKD6.640190, 1.SKM6.640187, "
+        exp_text = ("Errors found during EBI submission for study #1, "
+                    "preprocessed data #3 and prep template #2:\nUnrecognized "
+                    "investigation type: 'None'. This term is neither one of "
+                    "the official terms nor one of the user-defined terms in "
+                    "the ENA ontology.\nMissing column in the prep template: "
+                    "platform, primer, experiment_design_description, "
+                    "library_construction_protocol\nThese samples do not have "
+                    "a valid platform: 1.SKD6.640190, 1.SKM6.640187, "
                     "1.SKD9.640182")
         with self.assertRaises(EBISumbissionError) as e:
             EBISubmission(ppd.id, 'ADD')
-            self.assertEqual(exp_text, str(e.exception))
+        self.assertEqual(exp_text, str(e.exception))
 
     def test_generate_run_xml(self):
         ppd = self.write_demux_files(PrepTemplate(1))
