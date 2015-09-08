@@ -45,10 +45,22 @@ class NoXMLError(Exception):
     pass
 
 
-def clean_whitespace(s):
+def clean_whitespace(text):
     """Standardizes whitespace so that there is only ever one space separating
-    tokens"""
-    return ' '.join(str(s).split())
+    tokens
+
+    Parameters
+    ----------
+    text : str
+        The fixed text
+
+
+    Returns
+    -------
+    str
+        fixed text
+    """
+    return ' '.join(str(text).split())
 
 
 class EBISubmission(object):
@@ -78,32 +90,52 @@ class EBISubmission(object):
     Raises
     ------
     EBISumbissionError
-        If either the required columns for EBI and Qiita deploy are not
-        present in the sample and prep templates
     """
 
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
     valid_ebi_submission_states = ('submitting', 'success')
     valid_platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
+    valid_submit_methods = ['aspera', 'ftp']
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
     experiment_library_fields = [
         'library_strategy', 'library_source', 'library_selection',
         'library_layout']
 
-    def __init__(self, preprocessed_data_id, action):
+    def __init__(self, preprocessed_data_id, action, submit_method='aspera'):
+        """Generates and validates an EBI submission
+
+        Parameters
+        ----------
+        preprocessed_data_id : int
+            The id of the preprocessed data to submit
+        action : int
+            The action to perform. Valid options see
+            EBISubmission.valid_ebi_actions
+        submit_method : str, optional
+            The submit method. We suggest always using aspera expect for
+            testing. Valid options see EBISubmission.valid_submit_methods
+        """
         valid_ebi_actions = EBISubmission.valid_ebi_actions
         valid_ebi_submission_states = EBISubmission.valid_ebi_submission_states
+        valid_submit_methods = EBISubmission.valid_submit_methods
         error_msgs = []
 
         if action not in valid_ebi_actions:
             error_msg = "Not a valid action (%s): %s" % (
-                ', '.join(valid_ebi_actions), action)
+                ', '.join(self.valid_ebi_actions), action)
+            LogEntry.create('Runtime', error_msg)
+            raise EBISumbissionError(error_msg)
+
+        if submit_method not in valid_submit_methods:
+            error_msg = "Not a valid submit method (%s): %s" % (
+                ', '.join(valid_submit_methods), submit_method)
             LogEntry.create('Runtime', error_msg)
             raise EBISumbissionError(error_msg)
 
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
         self.action = action
+        self.submit_method = submit_method
         self.preprocessed_data = PreprocessedData(preprocessed_data_id)
         s = Study(self.preprocessed_data.study)
         self.sample_template = SampleTemplate(s.sample_template)
@@ -610,35 +642,47 @@ class EBISubmission(object):
         return curl_command
 
     def send_sequences(self):
-        # Send the sequence files by directory
-        unique_dirs = set()
-        for f in self.sequence_files:
-            basedir, filename = split(f)
-            unique_dirs.add(basedir)
+        """Send sequences
 
+        Returns
+        -------
+        curl_command
+            The curl string to be executed
+
+        Notes
+        -----
+        - All 5 XML files (study, sample, experiment, run, and submission) must
+          be generated before executing this function
+        """
         # Set the ASCP password to the one in the Qiita config, but remember
         # the old pass so that we can politely reset it
         old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
         environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
 
-        for unique_dir in unique_dirs:
-            # Get the list of FASTQ files to submit
-            fastqs = glob(join(unique_dir, '*.fastq.gz'))
+        fastqs = [sfp for _, sfp in viewitems(self.sample_demux_fps)]
 
-            ascp_command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
+        if self.submit_method:
+            command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
+                ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
+                qiita_config.ebi_seq_xfer_url, self.ebi_dir)
+        else:
+            command = 'ftp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
                 ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
                 qiita_config.ebi_seq_xfer_url, self.ebi_dir)
 
-            # Generate the command using shlex.split so that we don't have to
-            # pass shell=True to subprocess.call
-            ascp_command_parts = shsplit(ascp_command)
+        # Generate the command using shlex.split so that we don't have to
+        # pass shell=True to subprocess.call
+        command_parts = shsplit(command)
 
-            # Don't leave the password lingering in the environment if there
-            # is any error
-            try:
-                call(ascp_command_parts)
-            finally:
-                environ['ASPERA_SCP_PASS'] = old_ascp_pass
+        # Don't leave the password lingering in the environment if there
+        # is any error
+        try:
+            call(command)
+        except Exception as e:
+            print command
+            print e
+        finally:
+            environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
     def send_xml(self):
         # Send the XML files

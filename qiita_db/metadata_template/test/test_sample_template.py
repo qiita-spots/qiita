@@ -158,7 +158,7 @@ class TestSampleReadOnly(BaseTestSample):
                'ENVO:Temperate grasslands, savannas, and shrubland biome',
                'GAZ:United States of America', 6.94, 'SKB8', 5,
                'Burmese root', 'ENVO:plant-associated habitat', 74.0894932572,
-               65.3283470202, 'scientific name'}
+               65.3283470202, '1118232'}
         self.assertItemsEqual(set(obs), exp)
 
     def test_items(self):
@@ -186,7 +186,7 @@ class TestSampleReadOnly(BaseTestSample):
                ('env_feature', 'ENVO:plant-associated habitat'),
                ('latitude', 74.0894932572),
                ('longitude', 65.3283470202),
-               ('scientific_name', 'scientific name')}
+               ('scientific_name', '1118232')}
         self.assertEqual(set(obs), exp)
 
     def test_get(self):

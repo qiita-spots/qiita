@@ -74,6 +74,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertItemsEqual(e.sample_template, e.samples)
         self.assertItemsEqual(e.pmids, ['123456', '7891011'])
         self.assertEqual(e.action, action)
+        self.assertEqual(e.submit_method, 'aspera')
 
         get_output_fp = partial(join, e.ebi_dir, 'xml_dir')
         self.assertEqual(e.xml_dir, get_output_fp())
@@ -287,6 +288,10 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         with self.assertRaises(EBISumbissionError):
             EBISubmission(1, 'ADD')
 
+        # this is not a valid submission method
+        with self.assertRaises(EBISumbissionError):
+            EBISubmission(1, 'ADD', 'snail-mail')
+
         ppd = self.generate_new_prep_template_and_write_demux_files()
         # raise error as we are missing columns
         exp_text = ("Unrecognized investigation type: 'None'. This term is "
@@ -353,6 +358,23 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertItemsEqual(obs_demux_samples,
                               ebi_submission.samples_prep.keys())
 
+    def test_send_sequences(self):
+        ppd = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(ppd.id, 'ADD', 'ftp')
+        e.generate_demultiplexed_fastq()
+        self.files_to_remove.append(e.ebi_dir)
+        e.write_xml_file(e.generate_study_xml(), 'study_xml_fp',
+                         e.study_xml_fp)
+        e.write_xml_file(e.generate_sample_xml(), 'sample_xml_fp',
+                         e.sample_xml_fp)
+        e.write_xml_file(e.generate_experiment_xml(), 'experiment_xml_fp',
+                         e.experiment_xml_fp)
+        e.write_xml_file(e.generate_run_xml(), 'run_xml_fp',
+                         e.run_xml_fp)
+        e.write_xml_file(e.generate_submission_xml(), 'submission_xml_fp',
+                         e.submission_xml_fp)
+        e.send_sequences()
+
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
 CCACCCAGTAAC
@@ -388,7 +410,7 @@ center_name="CCME-COLORADO">
       <TITLE>1.SKB2.640194</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>410658</TAXON_ID>
-      <SCIENTIFIC_NAME>scientific name</SCIENTIFIC_NAME>
+      <SCIENTIFIC_NAME>1118232</SCIENTIFIC_NAME>
     </SAMPLE_NAME>
     <DESCRIPTION>Cannabis Soil Microbiome</DESCRIPTION>
     <SAMPLE_ATTRIBUTES>
@@ -479,7 +501,7 @@ center_name="CCME-COLORADO">
     <TITLE>1.SKB3.640195</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>410658</TAXON_ID>
-      <SCIENTIFIC_NAME>scientific name</SCIENTIFIC_NAME>
+      <SCIENTIFIC_NAME>1118232</SCIENTIFIC_NAME>
     </SAMPLE_NAME>
     <DESCRIPTION>Cannabis Soil Microbiome</DESCRIPTION>
       <SAMPLE_ATTRIBUTES>

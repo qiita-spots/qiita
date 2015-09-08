@@ -38,7 +38,7 @@ These are the columns required for successfully submit your data to EBI:
 +----------------------------------+----------------------+----------------------------------------------------------------------------------------------------------+
 | ``taxon_id``                     | integer              | NCBI's taxon id for the sample                                                                           |
 +----------------------------------+----------------------+----------------------------------------------------------------------------------------------------------+
-| ``scientific_name``              | free text            | NCBI's scientific name for the provided taxon ID                                                         |
+| ``scientific_name``              | free text            | NCBI's 1118232 for the provided taxon ID                                                         |
 +----------------------------------+----------------------+----------------------------------------------------------------------------------------------------------+
 
 Required fields for centralized Qiita
