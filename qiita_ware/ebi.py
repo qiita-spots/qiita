@@ -509,7 +509,7 @@ class EBISubmission(object):
             string with run XML values
 
         Notes
-        _____
+        -----
             EBI requieres a date when the submission will be automatically made
             public. This date is generated from the submission date + 365 days.
         """
