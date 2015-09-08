@@ -292,15 +292,16 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         exp_text = ("Unrecognized investigation type: 'None'. This term is "
                     "neither one of the official terms nor one of the "
                     "user-defined terms in the ENA ontology.\nYou are missing "
-                    "some columns in your prep template for study #1 to have "
-                    "a valid submission #3: platform, primer, "
-                    "experiment_design_description, "
+                    "some columns in your prep template for study #1, "
+                    "preprocessed data #3. The missing columns: platform, "
+                    "primer, experiment_design_description, "
                     "library_construction_protocol.\nThese samples from study "
                     "#1, preprocessed data #3 and prep template #2 do not "
                     "have a valid platform: 1.SKD6.640190, 1.SKM6.640187, "
                     "1.SKD9.640182")
-        with self.assertRaisesRegexp(EBISumbissionError, exp_text):
+        with self.assertRaises(EBISumbissionError) as e:
             EBISubmission(ppd.id, 'ADD')
+            self.assertEqual(exp_text, str(e.exception))
 
     def test_generate_run_xml(self):
         ppd = self.write_demux_files(PrepTemplate(1))
@@ -388,7 +389,7 @@ center_name="CCME-COLORADO">
       <TITLE>1.SKB2.640194</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>410658</TAXON_ID>
-      <SCIENTIFIC_NAME>scientific name</SCIENTIFIC_NAME>
+      <SCIENTIFIC_NAME>1118232</SCIENTIFIC_NAME>
     </SAMPLE_NAME>
     <DESCRIPTION>Cannabis Soil Microbiome</DESCRIPTION>
     <SAMPLE_ATTRIBUTES>
@@ -479,7 +480,7 @@ center_name="CCME-COLORADO">
     <TITLE>1.SKB3.640195</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>410658</TAXON_ID>
-      <SCIENTIFIC_NAME>scientific name</SCIENTIFIC_NAME>
+      <SCIENTIFIC_NAME>1118232</SCIENTIFIC_NAME>
     </SAMPLE_NAME>
     <DESCRIPTION>Cannabis Soil Microbiome</DESCRIPTION>
       <SAMPLE_ATTRIBUTES>
@@ -868,7 +869,6 @@ GENLIBDESC = """<design foo="bar">
         <LIBRARY_STRATEGY>OTHER</LIBRARY_STRATEGY>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
         <LIBRARY_SELECTION>unspecified</LIBRARY_SELECTION>
-        <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
         <LIBRARY_CONSTRUCTION_PROTOCOL>libconsprot
         </LIBRARY_CONSTRUCTION_PROTOCOL>
     </LIBRARY_DESCRIPTOR>
