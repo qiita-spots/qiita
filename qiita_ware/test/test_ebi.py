@@ -185,9 +185,11 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_generate_submission_xml(self):
         submission = EBISubmission(2, 'ADD')
-        obs = submission.generate_submission_xml(date_to_hold=date(2015, 9, 3))
+        obs = submission.generate_submission_xml(
+            submission_date=date(2015, 9, 3))
         exp = SUBMISSIONXML % {
-            'submission_alias': submission._get_submission_alias()}
+            'submission_alias': submission._get_submission_alias(),
+            'center_name': qiita_config.ebi_center_name}
         exp = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs, exp)
 
@@ -320,7 +322,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         exp = RUNXML % {
             'study_alias': submission._get_study_alias(),
             'ebi_dir': submission.ebi_dir,
-            'organization_prefix': qiita_config.ebi_organization_prefix}
+            'organization_prefix': qiita_config.ebi_organization_prefix,
+            'center_name': qiita_config.ebi_center_name}
         exp = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs, exp)
 
@@ -384,7 +387,7 @@ SAMPLEXML = """
 <SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.sample.xsd">
   <SAMPLE alias="%(organization_prefix)s_ppdid_2:1.SKB2.640194" \
-center_name="CCME-COLORADO">
+center_name="%(center_name)s">
       <TITLE>1.SKB2.640194</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>410658</TAXON_ID>
@@ -475,7 +478,7 @@ shrubland biome</VALUE>
     </SAMPLE_ATTRIBUTES>
   </SAMPLE>
   <SAMPLE alias="%(organization_prefix)s_ppdid_2:1.SKB3.640195" \
-center_name="CCME-COLORADO">
+center_name="%(center_name)s">
     <TITLE>1.SKB3.640195</TITLE>
     <SAMPLE_NAME>
       <TAXON_ID>410658</TAXON_ID>
@@ -568,12 +571,13 @@ shrubland biome</VALUE>
     </SAMPLE_ATTRIBUTES>
   </SAMPLE>
  </SAMPLE_SET>
- """ % {'organization_prefix': qiita_config.ebi_organization_prefix}
+ """ % {'organization_prefix': qiita_config.ebi_organization_prefix,
+        'center_name': qiita_config.ebi_center_name}
 
 STUDYXML = """
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
-  <STUDY alias="%(organization_prefix)s_ppdid_2" center_name="CCME-COLORADO">
+  <STUDY alias="%(organization_prefix)s_ppdid_2" center_name="%(center_name)s">
     <DESCRIPTOR>
       <STUDY_TITLE>
         Identification of the Microbiomes for Cannabis Soils
@@ -603,14 +607,15 @@ from the same location at different time points in the plant lifecycle.
     </STUDY_LINKS>
   </STUDY>
 </STUDY_SET>
-""" % {'organization_prefix': qiita_config.ebi_organization_prefix}
+""" % {'organization_prefix': qiita_config.ebi_organization_prefix,
+       'center_name': qiita_config.ebi_center_name}
 
 EXPERIMENTXML = """
 <EXPERIMENT_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.\
 experiment.xsd">
   <EXPERIMENT alias="%(organization_prefix)s_ppdid_2:1.SKB2.640194" \
-center_name="CCME-COLORADO">
+center_name="%(center_name)s">
     <TITLE>%(organization_prefix)s_ppdid_2:1.SKB2.640194</TITLE>
     <STUDY_REF refname="%(organization_prefix)s_ppdid_2" />
     <DESIGN>
@@ -696,7 +701,7 @@ REV:GGACTACHVGGGTWTCTAAT</VALUE>
     </EXPERIMENT_ATTRIBUTES>
   </EXPERIMENT>
   <EXPERIMENT alias="%(organization_prefix)s_ppdid_2:1.SKB3.640195" \
-center_name="CCME-COLORADO">
+center_name="%(center_name)s">
     <TITLE>%(organization_prefix)s_ppdid_2:1.SKB3.640195</TITLE>
     <STUDY_REF refname="%(organization_prefix)s_ppdid_2" />
     <DESIGN>
@@ -782,13 +787,14 @@ REV:GGACTACHVGGGTWTCTAAT</VALUE>
     </EXPERIMENT_ATTRIBUTES>
   </EXPERIMENT>
 </EXPERIMENT_SET>
-""" % {'organization_prefix': qiita_config.ebi_organization_prefix}
+""" % {'organization_prefix': qiita_config.ebi_organization_prefix,
+       'center_name': qiita_config.ebi_center_name}
 
 RUNXML = """
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespace\
 SchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
   <RUN alias="%(study_alias)s_1.SKB2.640194.fastq.gz_run" \
-center_name="CCME-COLORADO">
+center_name="%(center_name)s">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKB2.640194" />
     <DATA_BLOCK>
       <FILES>
@@ -799,7 +805,7 @@ filetype="fastq" quality_scoring_system="phred" />
     </DATA_BLOCK>
   </RUN>
   <RUN alias="%(study_alias)s_1.SKM4.640180.fastq.gz_run" \
-center_name="CCME-COLORADO">
+center_name="%(center_name)s">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKM4.640180" />
     <DATA_BLOCK>
       <FILES>
@@ -810,7 +816,7 @@ filetype="fastq" quality_scoring_system="phred" />
     </DATA_BLOCK>
   </RUN>
   <RUN alias="%(study_alias)s_1.SKB3.640195.fastq.gz_run" \
-center_name="CCME-COLORADO">
+center_name="%(center_name)s">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKB3.640195" />
     <DATA_BLOCK>
       <FILES>
@@ -821,7 +827,7 @@ filetype="fastq" quality_scoring_system="phred" />
     </DATA_BLOCK>
   </RUN>
   <RUN alias="%(study_alias)s_1.SKB6.640176.fastq.gz_run" \
-center_name="CCME-COLORADO">
+center_name="%(center_name)s">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKB6.640176" />
     <DATA_BLOCK>
       <FILES>
@@ -838,7 +844,7 @@ SUBMISSIONXML = """
 <SUBMISSION_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/\
 SRA.submission.xsd">
-  <SUBMISSION alias="%(submission_alias)s" center_name="CCME-COLORADO">
+  <SUBMISSION alias="%(submission_alias)s" center_name="%(center_name)s">
     <ACTIONS>
       <ACTION><ADD schema="study" source="study.xml" /></ACTION>
       <ACTION><ADD schema="sample" source="sample.xml" /></ACTION>

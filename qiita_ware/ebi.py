@@ -494,20 +494,24 @@ class EBISubmission(object):
 
         return ET.tostring(run_set)
 
-    def generate_submission_xml(self, date_to_hold=date.today()):
+    def generate_submission_xml(self, submission_date=None):
         """Generates the submission XML file
 
         Parameters
         ----------
-        date_to_hold : date, optional
-            Date when the submission will become public automatically in the
-            EBI's repository. Defalult 365 days after submission. Also useful
-            for testing.
+        submission_date : date, optional
+            Date when the submission was created, when None date.today() will
+            be used.
 
         Returns
         -------
         str
             string with run XML values
+
+        Notes
+        _____
+            EBI requieres a date when the submission will be automatically made
+            public. This date is generated from the submission date + 365 days.
         """
         submission_set = ET.Element('SUBMISSION_SET', {
             'xmlns:xsi': self.xmlns_xsi,
@@ -542,10 +546,12 @@ class EBISubmission(object):
             'schema': 'run', 'source': basename(self.run_xml_fp)}
         )
 
+        if submission_date is None:
+            submission_date = date.today()
         if self.action == 'ADD':
             hold_action = ET.SubElement(actions, 'ACTION')
             ET.SubElement(hold_action, 'HOLD', {
-                'HoldUntilDate': str(date_to_hold + timedelta(365))}
+                'HoldUntilDate': str(submission_date + timedelta(365))}
             )
 
         return ET.tostring(submission_set)
