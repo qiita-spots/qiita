@@ -13,7 +13,7 @@ from gzip import GzipFile
 from functools import partial
 
 from future.utils import viewitems
-from skbio.util import safe_md5
+from skbio.util import safe_md5, create_dir
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.exceptions import EBISumbissionError
@@ -90,6 +90,16 @@ class EBISubmission(object):
     Raises
     ------
     EBISumbissionError
+        - If the action is not in EBISubmission.valid_ebi_actions
+        - If the submit method is not in EBISubmission.valid_submit_methods
+        - If the preprocesssed submitted_to_insdc_status is in
+        EBISubmission.valid_ebi_submission_states
+        - If the prep template investigation type is not in the
+        ena_ontology.terms or not in the ena_ontology.user_defined_terms
+        - If the submission is missing required EBI fields either in the sample
+        or prep template
+        - If the sample preparation metadata doesn't have a platform field or
+        it isn't a EB.Submission.valid_platforms
     """
 
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
@@ -122,14 +132,16 @@ class EBISubmission(object):
         error_msgs = []
 
         if action not in valid_ebi_actions:
-            error_msg = "Not a valid action (%s): %s" % (
-                ', '.join(self.valid_ebi_actions), action)
+            error_msg = ("%s is not a valid EBI submission action, valid "
+                         "actions are: %s" % (action,
+                                              ', '.join(valid_ebi_actions)))
             LogEntry.create('Runtime', error_msg)
             raise EBISumbissionError(error_msg)
 
         if submit_method not in valid_submit_methods:
-            error_msg = "Not a valid submit method (%s): %s" % (
-                ', '.join(valid_submit_methods), submit_method)
+            error_msg = ("%s is not a valid EBI submission method, valid "
+                         "methods are: %s" % (submit_method,
+                                              ', '.join(valid_submit_methods)))
             LogEntry.create('Runtime', error_msg)
             raise EBISumbissionError(error_msg)
 
@@ -185,13 +197,13 @@ class EBISubmission(object):
         if st_missing:
             error_msgs.append(
                 "You are missing some columns in your sample template for "
-                "study #%d to have a valid submission #%d: %s." % (
-                    s.id, preprocessed_data_id, ', '.join(list(st_missing))))
+                "study #%d, preprocessed data #%d. The missing columns: %s."
+                % (s.id, preprocessed_data_id, ', '.join(list(st_missing))))
         if pt_missing:
             error_msgs.append(
                 "You are missing some columns in your prep template for "
-                "study #%d to have a valid submission #%d: %s." % (
-                    s.id, preprocessed_data_id, ', '.join(list(pt_missing))))
+                "study #%d, preprocessed data #%d. The missing columns: %s."
+                % (s.id, preprocessed_data_id, ', '.join(list(pt_missing))))
 
         # generating all samples from sample template
         self.samples = {}
@@ -453,9 +465,6 @@ class EBISubmission(object):
                 if field in sample_prep:
                     element = ET.SubElement(library_descriptor, field.upper())
                     element.text = sample_prep.pop(field)
-                    if field == 'library_layout':
-                        # no idea what SINGLE means
-                        ET.SubElement(element, "SINGLE")
 
             self._generate_spot_descriptor(design, platform)
 
@@ -523,7 +532,9 @@ class EBISubmission(object):
         Parameters
         ----------
         date_to_hold : date, optional
-            Date to be added to submission. Useful for testing.
+            Date when the submission will become public automatically in the
+            EBI's repository. Defalult 365 days after submission. Also useful
+            for testing.
 
         Returns
         -------
@@ -584,9 +595,7 @@ class EBISubmission(object):
         fp : str
             The filepath to which the XML will be written
         """
-        if not isdir(self.xml_dir):
-            makedirs(self.xml_dir)
-
+        create_dir(self.xml_dir)
         xml = minidom.parseString(text)
 
         with open(fp, 'w') as outfile:
