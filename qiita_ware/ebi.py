@@ -96,7 +96,7 @@ class EBISubmission(object):
         - If the submission is missing required EBI fields either in the sample
         or prep template
         - If the sample preparation metadata doesn't have a platform field or
-        it isn't a EB.Submission.valid_platforms
+        it isn't a EBISubmission.valid_platforms
     """
 
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
