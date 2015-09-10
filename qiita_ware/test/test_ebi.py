@@ -129,7 +129,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_generate_study_xml(self):
         submission = EBISubmission(2, 'ADD')
-        obs = submission.generate_study_xml()
+        obs = ET.tostring(submission.generate_study_xml())
         exp = ''.join([l.strip() for l in STUDYXML.splitlines()])
         self.assertEqual(obs, exp)
 
@@ -148,7 +148,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         for k in keys_to_del:
             del(submission.samples[k])
             del(submission.samples_prep[k])
-        obs = submission.generate_sample_xml()
+        obs = ET.tostring(submission.generate_sample_xml())
         exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
         self.assertEqual(obs, exp)
 
@@ -168,7 +168,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
             del(submission.samples[k])
             del(submission.samples_prep[k])
 
-        obs = submission.generate_experiment_xml()
+        obs = ET.tostring(submission.generate_experiment_xml())
         exp = EXPERIMENTXML % {
             'organization_prefix': qiita_config.ebi_organization_prefix}
         exp = ''.join([l.strip() for l in exp.splitlines()])
@@ -185,8 +185,9 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_generate_submission_xml(self):
         submission = EBISubmission(2, 'ADD')
-        obs = submission.generate_submission_xml(
-            submission_date=date(2015, 9, 3))
+        obs = ET.tostring(
+            submission.generate_submission_xml(
+                submission_date=date(2015, 9, 3)))
         exp = SUBMISSIONXML % {
             'submission_alias': submission._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
@@ -194,13 +195,13 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertEqual(obs, exp)
 
     def test_write_xml_file(self):
-        test_text = '<TESTING foo="bar"/>'
+        element = ET.Element('TESTING', {'foo': 'bar'})
         e = EBISubmission(2, 'ADD')
-        e.write_xml_file(test_text, 'thing', 'testfile')
+        e.write_xml_file(element, 'testfile')
         self.files_to_remove.append('testfile')
 
         obs = open('testfile').read()
-        exp = '<?xml version="1.0" encoding="UTF-8"?>%s' % test_text
+        exp = "<?xml version='1.0' encoding='UTF-8'?>\n<TESTING foo=\"bar\" />"
         self.assertEqual(obs, exp)
 
     def test_generate_curl_command(self):
@@ -260,22 +261,54 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         return ppd
 
-    def generate_new_prep_template_and_write_demux_files(self):
+    def generate_new_prep_template_and_write_demux_files(self,
+                                                         valid_metadata=False):
         """Creates new prep-template/demux-file to avoid duplication of code"""
 
         # ignoring warnings generated when adding templates
         simplefilter("ignore")
         # creating prep template without required EBI submission columns
-        metadata_dict = {
-            'SKD6.640190': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project'},
-            'SKM6.640187': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project'},
-            'SKD9.640182': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project'}
-        }
+        if not valid_metadata:
+            metadata_dict = {
+                'SKD6.640190': {'center_name': 'ANL',
+                                'center_project_name': 'Test Project'},
+                'SKM6.640187': {'center_name': 'ANL',
+                                'center_project_name': 'Test Project'},
+                'SKD9.640182': {'center_name': 'ANL',
+                                'center_project_name': 'Test Project'}
+            }
+            investigation_type = None
+        else:
+            metadata_dict = {
+                'SKD6.640190': {'center_name': 'ANL',
+                                'center_project_name': 'Test Project',
+                                'platform': 'ILLUMINA',
+                                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                                'experiment_design_description':
+                                    'microbiome of soil and rhizosphere',
+                                'library_construction_protocol':
+                                    'PMID: 22402401'},
+                'SKM6.640187': {'center_name': 'ANL',
+                                'center_project_name': 'Test Project',
+                                'platform': 'ILLUMINA',
+                                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                                'experiment_design_description':
+                                    'microbiome of soil and rhizosphere',
+                                'library_construction_protocol':
+                                    'PMID: 22402401'},
+                'SKD9.640182': {'center_name': 'ANL',
+                                'center_project_name': 'Test Project',
+                                'platform': 'ILLUMINA',
+                                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                                'experiment_design_description':
+                                    'microbiome of soil and rhizosphere',
+                                'library_construction_protocol':
+                                    'PMID: 22402401'}
+            }
+            investigation_type = "Metagenomics"
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        pt = PrepTemplate.create(metadata, Study(1), "18S")
+        pt = PrepTemplate.create(metadata, Study(1), "18S",
+                                 investigation_type=investigation_type)
         ppd = self.write_demux_files(pt)
 
         return ppd
@@ -304,6 +337,15 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             EBISubmission(ppd.id, 'ADD')
         self.assertEqual(exp_text, str(e.exception))
 
+    def test_prep_with_less_samples_than_sample_template(self):
+        # the next line generates a valid prep template with less samples than
+        # the sample template and basically we want to test that
+        # the EBISubmission can be generated
+        ppd = self.generate_new_prep_template_and_write_demux_files(True)
+        e = EBISubmission(ppd.id, 'ADD')
+        exp = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182']
+        self.assertItemsEqual(exp, e.samples)
+
     def test_generate_run_xml(self):
         ppd = self.write_demux_files(PrepTemplate(1))
         submission = EBISubmission(ppd.id, 'ADD')
@@ -317,7 +359,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         submission.generate_demultiplexed_fastq(mtime=1)
         self.files_to_remove.append(submission.ebi_dir)
-        obs = submission.generate_run_xml()
+        obs = ET.tostring(submission.generate_run_xml())
 
         exp = RUNXML % {
             'study_alias': submission._get_study_alias(),
