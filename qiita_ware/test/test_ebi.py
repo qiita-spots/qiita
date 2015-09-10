@@ -342,7 +342,9 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         # the sample template and basically we want to test that
         # the EBISubmission can be generated
         ppd = self.generate_new_prep_template_and_write_demux_files(True)
-        EBISubmission(ppd.id, 'ADD')
+        e = EBISubmission(ppd.id, 'ADD')
+        exp = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182']
+        self.assertItemsEqual(exp, e.samples)
 
     def test_generate_run_xml(self):
         ppd = self.write_demux_files(PrepTemplate(1))

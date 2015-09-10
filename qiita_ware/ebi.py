@@ -271,7 +271,7 @@ class EBISubmission(object):
 
         Returns
         -------
-        Element
+        ET.Element
             Object with study XML values
         """
         study_set = ET.Element('STUDY_SET', {
@@ -315,7 +315,7 @@ class EBISubmission(object):
 
         Returns
         -------
-        Element
+        ET.Element
             Object with sample XML values
         """
         sample_set = ET.Element('SAMPLE_SET', {
@@ -383,7 +383,7 @@ class EBISubmission(object):
 
         Returns
         -------
-        Element
+        ET.Element
             Object with experiment XML values
         """
         study_alias = self._get_study_alias()
@@ -456,7 +456,7 @@ class EBISubmission(object):
 
         Returns
         -------
-        Element
+        ET.Element
             Object with run XML values
         """
         run_set = ET.Element('RUN_SET', {
@@ -504,7 +504,7 @@ class EBISubmission(object):
 
         Returns
         -------
-        Element
+        ET.Element
             Object with submission XML values
 
         Notes
@@ -561,7 +561,7 @@ class EBISubmission(object):
 
         Parameters
         ----------
-        element : Element
+        element : ET.Element
             The Element to be written
         fp : str
             The filepath to which the XML will be written
