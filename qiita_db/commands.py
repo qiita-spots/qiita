@@ -104,7 +104,7 @@ def load_study_from_cmd(owner, title, info):
 def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
                                     filepathtype, params_id,
                                     submitted_to_insdc_status,
-                                    prep_template_id, data_type):
+                                    prep_template_id):
     r"""Adds preprocessed data to the database
 
     Parameters
@@ -125,20 +125,16 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
         INSDC submission status
     prep_template_id : int
         Prep template id associated with data
-    data_type : str
-        The data type of the template
     """
     with TRN:
         fp_types_dict = get_filepath_types()
         fp_type = fp_types_dict[filepathtype]
         filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
-        pt = (None if prep_template_id is None
-              else PrepTemplate(prep_template_id))
+        pt = PrepTemplate(prep_template_id)
         return PreprocessedData.create(
             Study(study_id), params_table, params_id, filepaths,
             prep_template=pt,
-            submitted_to_insdc_status=submitted_to_insdc_status,
-            data_type=data_type)
+            submitted_to_insdc_status=submitted_to_insdc_status)
 
 
 def load_sample_template_from_cmd(sample_temp_path, study_id):

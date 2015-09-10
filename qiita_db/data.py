@@ -46,10 +46,11 @@ obtained to files: a fasta file 'seqs.fna' and a qual file 'seqs.qual'.
 
 Inserting the preprocessed data into the database
 
->>> from qiita_db.data import PreprocessedData
+>>> from qiita_db.data import PreprocessedData, PrepTemplate
 >>> filepaths = [('seqs.fna', 4), ('seqs.qual', 5)]
+>>> pt = PrepTemplate(1)
 >>> ppd = PreprocessedData.create(rd, "preprocessed_sequence_illumina_params",
-...                               1, filepaths) # doctest: +SKIP
+...                               1, filepaths, pt) # doctest: +SKIP
 >>> print ppd.id # doctest: +SKIP
 2
 
@@ -659,7 +660,7 @@ class PreprocessedData(BaseData):
 
     @classmethod
     def create(cls, study, preprocessed_params_table, preprocessed_params_id,
-               filepaths, prep_template=None, data_type=None,
+               filepaths, prep_template,
                submitted_to_insdc_status='not submitted',
                ebi_submission_accession=None,
                ebi_study_accession=None):
@@ -682,8 +683,6 @@ class PreprocessedData(BaseData):
             Submission status of the raw data files
         prep_template : PrepTemplate, optional
             The PrepTemplate object used to generate this preprocessed data
-        data_type : str, optional
-            The data_type of the preprocessed_data
         ebi_submission_accession : str, optional
             The ebi_submission_accession of the preprocessed_data
         ebi_study_accession : str, optional
@@ -693,25 +692,9 @@ class PreprocessedData(BaseData):
         ------
         IncompetentQiitaDeveloperError
             If the table `preprocessed_params_table` does not exists
-        IncompetentQiitaDeveloperError
-            If data_type does not match that of prep_template passed
         """
         with TRN:
-            # Sanity checks for the preprocesses_data data_type
-            if ((data_type and prep_template) and
-                    data_type != prep_template.data_type):
-                raise IncompetentQiitaDeveloperError(
-                    "data_type passed does not match prep_template data_type!")
-            elif data_type is None and prep_template is None:
-                raise IncompetentQiitaDeveloperError(
-                    "Neither data_type nor prep_template passed!")
-            elif prep_template:
-                # prep_template passed but no data_type,
-                # so set to prep_template data_type
-                data_type = prep_template.data_type(ret_id=True)
-            else:
-                # only data_type, so need id from the text
-                data_type = convert_to_id(data_type, "data_type")
+            data_type = prep_template.data_type(ret_id=True)
 
             # Check that the preprocessed_params_table exists
             if not exists_dynamic_table(preprocessed_params_table,
@@ -739,19 +722,17 @@ class PreprocessedData(BaseData):
                      VALUES (%s, %s)""".format(ppd._study_preprocessed_table)
             TRN.add(sql, [study.id, ppd.id])
 
-            # If the prep template was provided, connect the preprocessed data
-            # with the prep_template
-            if prep_template is not None:
-                sql = """INSERT INTO qiita.{0}
-                            (prep_template_id, preprocessed_data_id)
-                         VALUES (%s, %s)""".format(
-                    cls._template_preprocessed_table)
-                TRN.add(sql, [prep_template.id, ppd_id])
+            # connect the preprocessed data with the prep_template
+            sql = """INSERT INTO qiita.{0}
+                        (prep_template_id, preprocessed_data_id)
+                     VALUES (%s, %s)""".format(
+                cls._template_preprocessed_table)
+            TRN.add(sql, [prep_template.id, ppd_id])
 
-                sql = """UPDATE qiita.prep_template
-                         SET preprocessing_status = 'success'
-                         WHERE prep_template_id = %s"""
-                TRN.add(sql, [prep_template.id])
+            sql = """UPDATE qiita.prep_template
+                     SET preprocessing_status = 'success'
+                     WHERE prep_template_id = %s"""
+            TRN.add(sql, [prep_template.id])
 
             TRN.execute()
             # Add the filepaths to the database and connect them

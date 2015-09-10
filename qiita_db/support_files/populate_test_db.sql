@@ -323,8 +323,8 @@ UPDATE qiita.prep_template SET raw_data_id = 1 WHERE prep_template_id = 1;
 -- UPDATE qiita.prep_template SET raw_data_id = 2 WHERE prep_template_id = 2;
 
 -- Insert preprocessed information for prep template 1
-INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc_status, ebi_submission_accession, ebi_study_accession, data_type_id)
-    VALUES ('preprocessed_sequence_illumina_params', 1, 'submitting', 'EBI123456-AA', 'EBI123456-BB', 2),
+INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc_status, ebi_submission_accession, ebi_study_accession, data_type_id, processing_status)
+    VALUES ('preprocessed_sequence_illumina_params', 1, 'submitting', 'EBI123456-AA', 'EBI123456-BB', 2, 'processed'),
            ('preprocessed_sequence_illumina_params', 2, 'not submitted', NULL, NULL, 2);
 
 -- Link the new preprocessed data with the prep template

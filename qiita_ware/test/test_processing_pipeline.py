@@ -658,8 +658,8 @@ class ProcessingPipelineTests(TestCase):
             (qual_fp, convert_to_id('preprocessed_fastq', 'filepath_type'))]
 
         preprocessed_data = PreprocessedData.create(
-            Study(1), "preprocessed_sequence_illumina_params", 1,
-            filepaths, data_type="18S")
+            Study(1), "preprocessed_sequence_454_params", 1,
+            filepaths, self.sff_prep_template)
 
         params = ProcessedSortmernaParams(1)
         pick_dir = mkdtemp()
