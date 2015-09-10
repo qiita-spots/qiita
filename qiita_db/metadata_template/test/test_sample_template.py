@@ -13,6 +13,7 @@ from tempfile import mkstemp
 from os import close, remove
 from collections import Iterable
 
+import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
@@ -203,7 +204,13 @@ class TestSampleReadOnly(BaseTestSample):
 
     def test_can_be_updated(self):
         """test if the template can be updated"""
-        self.assertTrue(self.sample_template.can_be_updated)
+        self.assertTrue(self.sample_template.can_be_updated())
+
+    def test_can_be_extended(self):
+        """test if the template can be extended"""
+        obs_bool, obs_msg = self.sample_template.can_be_extended([], [])
+        self.assertTrue(obs_bool)
+        self.assertEqual(obs_msg, "")
 
 
 @qiita_test_checker()
@@ -1294,6 +1301,29 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
 
+    def test_update_numpy(self):
+        """Update values in existing mapping file with numpy values"""
+        metadata_dict = {
+            'Sample1': {'bool_col': np.bool_(True),
+                        'date_col': np.datetime64(datetime(2015, 9, 1))},
+            'Sample2': {'bool_col': np.bool_(False),
+                        'date_col': np.datetime64(datetime(2015, 8, 1))}
+        }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        st = npt.assert_warns(QiitaDBWarning, SampleTemplate.create,
+                              metadata, self.new_study)
+        metadata_dict['Sample2']['date_col'] = np.datetime64(
+            datetime(2015, 9, 1))
+        metadata_dict['Sample1']['bool_col'] = np.bool_(False)
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        npt.assert_warns(QiitaDBWarning, st.update, metadata)
+
+        sql = "SELECT * FROM qiita.sample_{0}".format(st.id)
+        obs = self.conn_handler.execute_fetchall(sql)
+        exp = [['2.Sample1', False, datetime(2015, 9, 1)],
+               ['2.Sample2', False, datetime(2015, 9, 1)]]
+        self.assertEqual(sorted(obs), sorted(exp))
+
     def test_generate_files(self):
         fp_count = get_count("qiita.filepath")
         self.tester.generate_files()
@@ -1338,12 +1368,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         st = SampleTemplate.create(self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
-    def test_extend_error(self):
-        """extend raises an error if no new columns/samples are added"""
-        st = SampleTemplate.create(self.metadata, self.new_study)
-        with self.assertRaises(QiitaDBError):
-            st.extend(self.metadata)
-
     def test_extend_add_samples(self):
         """extend correctly works adding new samples"""
         st = SampleTemplate.create(self.metadata, self.new_study)
@@ -1379,7 +1403,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                         'scientific_name': 'homo sapiens'}}
         md_ext = pd.DataFrame.from_dict(md_dict, orient='index')
 
-        st.extend(md_ext)
+        npt.assert_warns(QiitaDBWarning, st.extend, md_ext)
 
         # Test samples were appended successfully to the required sample info
         # table
@@ -1736,6 +1760,118 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                {'sample_id': '%s.Sample2' % study_id,
                 'int_column': 2,
                 'str_column': 'Value for sample 2',
+                'newcol': 'val2',
+                'physical_specimen_location': 'location1',
+                'physical_specimen_remaining': True,
+                'dna_extracted': True,
+                'sample_type': 'type1',
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 2',
+                'latitude': 4.2,
+                'longitude': 1.1,
+                'taxon_id': 9606,
+                'scientific_name': 'homo sapiens'},
+               {'sample_id': '%s.Sample3' % study_id,
+                'int_column': 3,
+                'str_column': 'Value for sample 3',
+                'newcol': 'val3',
+                'physical_specimen_location': 'location1',
+                'physical_specimen_remaining': True,
+                'dna_extracted': True,
+                'sample_type': 'type1',
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 3',
+                'latitude': 4.8,
+                'longitude': 4.41,
+                'taxon_id': 9606,
+                'scientific_name': 'homo sapiens'},
+               {'sample_id': '%s.Sample4' % study_id,
+                'int_column': 4,
+                'str_column': 'Value for sample 4',
+                'newcol': 'val4',
+                'physical_specimen_location': 'location1',
+                'physical_specimen_remaining': True,
+                'dna_extracted': True,
+                'sample_type': 'type1',
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Test Sample 4',
+                'latitude': 42.42,
+                'longitude': 41.41,
+                'taxon_id': 9606,
+                'scientific_name': 'homo sapiens'}]
+        self.assertItemsEqual(obs, exp)
+
+    def test_extend_update(self):
+        """extend correctly adds new samples and columns at the same time"""
+        st = SampleTemplate.create(self.metadata, self.new_study)
+
+        self.metadata_dict['Sample4'] = {
+            'physical_specimen_location': 'location1',
+            'physical_specimen_remaining': True,
+            'dna_extracted': True,
+            'sample_type': 'type1',
+            'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+            'host_subject_id': 'NotIdentified',
+            'Description': 'Test Sample 4',
+            'str_column': 'Value for sample 4',
+            'int_column': 4,
+            'latitude': 42.42,
+            'longitude': 41.41,
+            'taxon_id': 9606,
+            'scientific_name': 'homo sapiens'}
+
+        self.metadata_dict['Sample1']['Description'] = 'Changed'
+        self.metadata_dict['Sample2']['str_column'] = 'Changed dynamic'
+
+        md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
+
+        md_ext['NEWCOL'] = pd.Series(['val1', 'val2', 'val3', 'val4'],
+                                     index=md_ext.index)
+
+        npt.assert_warns(QiitaDBWarning, st.extend, md_ext)
+        st.update(md_ext)
+
+        # Make sure the new sample and column have been added and the values
+        # for the existent samples did not change
+        study_id = self.new_study.id
+        sql = """SELECT *
+                 FROM qiita.study_sample
+                 WHERE study_id=%s"""
+        obs = [dict(o)
+               for o in self.conn_handler.execute_fetchall(sql, (study_id,))]
+        exp = [{'sample_id': '%s.Sample1' % study_id,
+                'study_id': 2},
+               {'sample_id': '%s.Sample2' % study_id,
+                'study_id': 2},
+               {'sample_id': '%s.Sample3' % study_id,
+                'study_id': 2},
+               {'sample_id': '%s.Sample4' % study_id,
+                'study_id': 2}]
+        self.assertItemsEqual(obs, exp)
+
+        sql = "SELECT * FROM qiita.sample_{0}".format(study_id)
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+        exp = [{'sample_id': '%s.Sample1' % study_id,
+                'int_column': 1,
+                'str_column': 'Value for sample 1',
+                'newcol': 'val1',
+                'physical_specimen_location': 'location1',
+                'physical_specimen_remaining': True,
+                'dna_extracted': True,
+                'sample_type': 'type1',
+                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'host_subject_id': 'NotIdentified',
+                'description': 'Changed',
+                'latitude': 42.42,
+                'longitude': 41.41,
+                'taxon_id': 9606,
+                'scientific_name': 'homo sapiens'},
+               {'sample_id': '%s.Sample2' % study_id,
+                'int_column': 2,
+                'str_column': 'Changed dynamic',
                 'newcol': 'val2',
                 'physical_specimen_location': 'location1',
                 'physical_specimen_remaining': True,

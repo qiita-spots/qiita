@@ -231,6 +231,22 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         # but you can if not restricted
         self.assertTrue(self.prep_template.can_be_updated({'center_name'}))
 
+    def test_can_be_extended(self):
+        """test if the template can be extended"""
+        # You can always add columns
+        obs_bool, obs_msg = self.prep_template.can_be_extended([], ["NEW_COL"])
+        self.assertTrue(obs_bool)
+        self.assertEqual(obs_msg, "")
+        # You can't add samples if there are preprocessed data generated
+        obs_bool, obs_msg = self.prep_template.can_be_extended(
+            ["NEW_SAMPLE"], [])
+        self.assertFalse(obs_bool)
+        self.assertEqual(obs_msg,
+                         "Preprocessed data have already been generated (%s). "
+                         "No new samples can be added to the prep template."
+                         % ', '.join(
+                             map(str, self.prep_template.preprocessed_data)))
+
 
 @qiita_test_checker()
 class TestPrepSampleReadWrite(BaseTestPrepSample):
@@ -1240,6 +1256,139 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         pt = PrepTemplate.create(self.metadata, self.test_study,
                                  self.data_type)
         self.assertTrue(pt.can_be_updated({'barcode'}))
+
+    def test_extend_add_samples(self):
+        """extend correctly works adding new samples"""
+        md_2_samples = self.metadata.loc[('SKB8.640193', 'SKD8.640184'), :]
+        pt = PrepTemplate.create(md_2_samples, self.test_study, self.data_type)
+
+        npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
+
+        # Test samples were appended successfully to the prep template sample
+        sql = """SELECT *
+                 FROM qiita.prep_template_sample
+                 WHERE prep_template_id = %s"""
+        obs = [dict(o)
+               for o in self.conn_handler.execute_fetchall(sql, (pt.id,))]
+        exp = [{'prep_template_id': 2, 'sample_id': '1.SKB8.640193'},
+               {'prep_template_id': 2, 'sample_id': '1.SKD8.640184'},
+               {'prep_template_id': 2, 'sample_id': '1.SKB7.640196'}]
+        self.assertItemsEqual(obs, exp)
+
+    def test_extend_add_samples_error(self):
+        """extend fails adding samples to an already preprocessed template"""
+        df = pd.DataFrame.from_dict(
+            {'new_sample': {'barcode': 'CCTCTGAGAGCT'}},
+            orient='index')
+        with self.assertRaises(QiitaDBError):
+            PrepTemplate(1).extend(df)
+
+    def test_extend_add_cols(self):
+        """extend correctly adds a new columns"""
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
+        self.metadata['new_col'] = pd.Series(['val1', 'val2', 'val3'],
+                                             index=self.metadata.index)
+
+        npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
+
+        sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+        exp = [{'sample_id': '1.SKB7.640196',
+                'barcode': 'CCTCTGAGAGCT',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L002_sequences',
+                'str_column': 'Value for sample 3',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val1'},
+               {'sample_id': '1.SKB8.640193',
+                'barcode': 'GTCCGCAAGTTA',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 1',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val2'},
+               {'sample_id': '1.SKD8.640184',
+                'barcode': 'CGTAGAGCTCTC',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 2',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val3'}]
+
+        self.assertItemsEqual(obs, exp)
+
+    def test_extend_update(self):
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
+        self.metadata['new_col'] = pd.Series(['val1', 'val2', 'val3'],
+                                             index=self.metadata.index)
+        self.metadata['str_column']['SKB7.640196'] = 'NEW VAL'
+
+        npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
+        pt.update(self.metadata)
+
+        sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
+        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
+        exp = [{'sample_id': '1.SKB7.640196',
+                'barcode': 'CCTCTGAGAGCT',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L002_sequences',
+                'str_column': 'NEW VAL',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val1'},
+               {'sample_id': '1.SKB8.640193',
+                'barcode': 'GTCCGCAAGTTA',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 1',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val2'},
+               {'sample_id': '1.SKD8.640184',
+                'barcode': 'CGTAGAGCTCTC',
+                'ebi_submission_accession': None,
+                'experiment_design_description': 'BBBB',
+                'library_construction_protocol': 'AAAA',
+                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                'platform': 'ILLUMINA',
+                'run_prefix': 's_G1_L001_sequences',
+                'str_column': 'Value for sample 2',
+                'center_name': 'ANL',
+                'center_project_name': 'Test Project',
+                'emp_status': 'EMP',
+                'new_col': 'val3'}]
+
+        self.assertItemsEqual(obs, exp)
 
 
 EXP_PREP_TEMPLATE = (
