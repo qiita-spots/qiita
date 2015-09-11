@@ -403,16 +403,11 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         e = EBISubmission(ppd.id, 'ADD')
         e.generate_demultiplexed_fastq()
         self.files_to_remove.append(e.ebi_dir)
-        e.write_xml_file(e.generate_study_xml(), 'study_xml_fp',
-                         e.study_xml_fp)
-        e.write_xml_file(e.generate_sample_xml(), 'sample_xml_fp',
-                         e.sample_xml_fp)
-        e.write_xml_file(e.generate_experiment_xml(), 'experiment_xml_fp',
-                         e.experiment_xml_fp)
-        e.write_xml_file(e.generate_run_xml(), 'run_xml_fp',
-                         e.run_xml_fp)
-        e.write_xml_file(e.generate_submission_xml(), 'submission_xml_fp',
-                         e.submission_xml_fp)
+        e.write_xml_file(e.generate_study_xml(), e.study_xml_fp)
+        e.write_xml_file(e.generate_sample_xml(), e.sample_xml_fp)
+        e.write_xml_file(e.generate_experiment_xml(), e.experiment_xml_fp)
+        e.write_xml_file(e.generate_run_xml(), e.run_xml_fp)
+        e.write_xml_file(e.generate_submission_xml(), e.submission_xml_fp)
         # e.send_sequences()
 
 

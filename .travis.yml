@@ -21,6 +21,8 @@ install:
   - source activate env_name
   - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
   - travis_retry pip install .
+  - curl -s -O http://demo.asperasoft.com/ascp-install-3.5.4.102989-linux-64.sh
+  - ./ascp-install-3.5.4.102989-linux-64.sh
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - ipython profile create qiita-general --parallel
