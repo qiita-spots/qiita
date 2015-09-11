@@ -408,7 +408,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         e.write_xml_file(e.generate_experiment_xml(), e.experiment_xml_fp)
         e.write_xml_file(e.generate_run_xml(), e.run_xml_fp)
         e.write_xml_file(e.generate_submission_xml(), e.submission_xml_fp)
-        # e.send_sequences()
+        e.send_sequences()
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0

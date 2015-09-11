@@ -74,8 +74,8 @@ class EBISubmission(object):
     Parameters
     ----------
     preprocessed_data_id : int
-        The id of the preprocessed data to submit
-    action : int
+        The preprocesssed data id to submit
+    action : str
         The action to perform. Valid options see
         EBISubmission.valid_ebi_actions
 
@@ -613,11 +613,6 @@ class EBISubmission(object):
 
     def send_sequences(self):
         """Send sequences
-
-        Returns
-        -------
-        curl_command
-            The curl string to be executed
 
         Notes
         -----
