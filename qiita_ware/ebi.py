@@ -2,8 +2,7 @@ from re import search
 from tempfile import mkstemp
 from subprocess import call
 from shlex import split as shsplit
-from glob import glob
-from os.path import basename, join, split, isdir, isfile
+from os.path import basename, join, isdir, isfile
 from os import environ, close, makedirs, remove, listdir
 from datetime import date, timedelta
 from xml.etree import ElementTree as ET
@@ -46,14 +45,12 @@ class NoXMLError(Exception):
 
 
 def clean_whitespace(text):
-    """Standardizes whitespace so that there is only ever one space separating
-    tokens
+    """Standardizes whitespaces so there is only one space separating tokens
 
     Parameters
     ----------
     text : str
         The fixed text
-
 
     Returns
     -------
@@ -78,20 +75,15 @@ class EBISubmission(object):
     Parameters
     ----------
     preprocessed_data_id : int
-        The preprocesssed data id
-    action : str
-        The action to perfom, it has to be one of the
+        The id of the preprocessed data to submit
+    action : int
+        The action to perform. Valid options see
         EBISubmission.valid_ebi_actions
-
-    Parameters
-    ----------
-    preprocessed_data_id : str
 
     Raises
     ------
     EBISumbissionError
         - If the action is not in EBISubmission.valid_ebi_actions
-        - If the submit method is not in EBISubmission.valid_submit_methods
         - If the preprocesssed submitted_to_insdc_status is in
         EBISubmission.valid_ebi_submission_states
         - If the prep template investigation type is not in the
@@ -99,62 +91,37 @@ class EBISubmission(object):
         - If the submission is missing required EBI fields either in the sample
         or prep template
         - If the sample preparation metadata doesn't have a platform field or
-        it isn't a EB.Submission.valid_platforms
+        it isn't a EBISubmission.valid_platforms
     """
 
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
     valid_ebi_submission_states = ('submitting', 'success')
     valid_platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
-    valid_submit_methods = ['aspera', 'ftp']
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
     experiment_library_fields = [
         'library_strategy', 'library_source', 'library_selection',
         'library_layout']
 
-    def __init__(self, preprocessed_data_id, action, submit_method='aspera'):
-        """Generates and validates an EBI submission
-
-        Parameters
-        ----------
-        preprocessed_data_id : int
-            The id of the preprocessed data to submit
-        action : int
-            The action to perform. Valid options see
-            EBISubmission.valid_ebi_actions
-        submit_method : str, optional
-            The submit method. We suggest always using aspera expect for
-            testing. Valid options see EBISubmission.valid_submit_methods
-        """
-        valid_ebi_actions = EBISubmission.valid_ebi_actions
-        valid_ebi_submission_states = EBISubmission.valid_ebi_submission_states
-        valid_submit_methods = EBISubmission.valid_submit_methods
+    def __init__(self, preprocessed_data_id, action):
         error_msgs = []
 
-        if action not in valid_ebi_actions:
+        if action not in self.valid_ebi_actions:
             error_msg = ("%s is not a valid EBI submission action, valid "
-                         "actions are: %s" % (action,
-                                              ', '.join(valid_ebi_actions)))
-            LogEntry.create('Runtime', error_msg)
-            raise EBISumbissionError(error_msg)
-
-        if submit_method not in valid_submit_methods:
-            error_msg = ("%s is not a valid EBI submission method, valid "
-                         "methods are: %s" % (submit_method,
-                                              ', '.join(valid_submit_methods)))
+                         "actions are: %s" %
+                         (action, ', '.join(self.valid_ebi_actions)))
             LogEntry.create('Runtime', error_msg)
             raise EBISumbissionError(error_msg)
 
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
         self.action = action
-        self.submit_method = submit_method
         self.preprocessed_data = PreprocessedData(preprocessed_data_id)
         s = Study(self.preprocessed_data.study)
         self.sample_template = SampleTemplate(s.sample_template)
         self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
 
         status = self.preprocessed_data.submitted_to_insdc_status()
-        if status in valid_ebi_submission_states:
+        if status in self.valid_ebi_submission_states:
             error_msg = "Cannot resubmit! Current status is: %s" % status
             LogEntry.create('Runtime', error_msg)
             raise EBISumbissionError(error_msg)
@@ -195,15 +162,11 @@ class EBISubmission(object):
             [self.prep_template.columns_restrictions['EBI']])
         # testing if there are any missing columns
         if st_missing:
-            error_msgs.append(
-                "You are missing some columns in your sample template for "
-                "study #%d, preprocessed data #%d. The missing columns: %s."
-                % (s.id, preprocessed_data_id, ', '.join(list(st_missing))))
+            error_msgs.append("Missing column in the sample template: %s" %
+                              ', '.join(list(st_missing)))
         if pt_missing:
-            error_msgs.append(
-                "You are missing some columns in your prep template for "
-                "study #%d, preprocessed data #%d. The missing columns: %s."
-                % (s.id, preprocessed_data_id, ', '.join(list(pt_missing))))
+            error_msgs.append("Missing column in the prep template: %s" %
+                              ', '.join(list(pt_missing)))
 
         # generating all samples from sample template
         self.samples = {}
@@ -229,13 +192,13 @@ class EBISubmission(object):
             self.sample_demux_fps[k] = get_output_fp("%s.fastq.gz" % k)
 
         if nvp:
-            error_msgs.append(
-                "These samples from study #%d, preprocessed data #%d and prep "
-                "template #%d do not have a valid platform: %s" % (
-                    s.id, preprocessed_data_id, self.prep_template.id,
-                    ', '.join(nvp)))
+            error_msgs.append("These samples do not have a valid platform: "
+                              "%s" % (', '.join(nvp)))
         if error_msgs:
-            error_msgs = '\n'.join(error_msgs)
+            error_msgs = ("Errors found during EBI submission for study #%d, "
+                          "preprocessed data #%d and prep template #%d:\n%s"
+                          % (s.id, preprocessed_data_id, self.prep_template.id,
+                             '\n'.join(error_msgs)))
             LogEntry.create('Runtime', error_msgs)
             raise EBISumbissionError(error_msgs)
 
@@ -526,20 +489,24 @@ class EBISubmission(object):
 
         return ET.tostring(run_set)
 
-    def generate_submission_xml(self, date_to_hold=date.today()):
+    def generate_submission_xml(self, submission_date=None):
         """Generates the submission XML file
 
         Parameters
         ----------
-        date_to_hold : date, optional
-            Date when the submission will become public automatically in the
-            EBI's repository. Defalult 365 days after submission. Also useful
-            for testing.
+        submission_date : date, optional
+            Date when the submission was created, when None date.today() will
+            be used.
 
         Returns
         -------
         str
             string with run XML values
+
+        Notes
+        -----
+            EBI requieres a date when the submission will be automatically made
+            public. This date is generated from the submission date + 365 days.
         """
         submission_set = ET.Element('SUBMISSION_SET', {
             'xmlns:xsi': self.xmlns_xsi,
@@ -574,10 +541,12 @@ class EBISubmission(object):
             'schema': 'run', 'source': basename(self.run_xml_fp)}
         )
 
+        if submission_date is None:
+            submission_date = date.today()
         if self.action == 'ADD':
             hold_action = ET.SubElement(actions, 'ACTION')
             ET.SubElement(hold_action, 'HOLD', {
-                'HoldUntilDate': str(date_to_hold + timedelta(365))}
+                'HoldUntilDate': str(submission_date + timedelta(365))}
             )
 
         return ET.tostring(submission_set)
@@ -670,14 +639,9 @@ class EBISubmission(object):
 
         fastqs = [sfp for _, sfp in viewitems(self.sample_demux_fps)]
 
-        if self.submit_method:
-            command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
-                ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
-                qiita_config.ebi_seq_xfer_url, self.ebi_dir)
-        else:
-            command = 'ftp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
-                ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
-                qiita_config.ebi_seq_xfer_url, self.ebi_dir)
+        command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
+            ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
+            qiita_config.ebi_seq_xfer_url, self.ebi_dir)
 
         # Generate the command using shlex.split so that we don't have to
         # pass shell=True to subprocess.call
@@ -686,10 +650,7 @@ class EBISubmission(object):
         # Don't leave the password lingering in the environment if there
         # is any error
         try:
-            call(command)
-        except Exception as e:
-            print command
-            print e
+            call(command_parts)
         finally:
             environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
