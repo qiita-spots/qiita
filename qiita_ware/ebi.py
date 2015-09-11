@@ -6,7 +6,6 @@ from os.path import basename, join, isdir, isfile
 from os import environ, close, makedirs, remove, listdir
 from datetime import date, timedelta
 from xml.etree import ElementTree as ET
-from xml.dom import minidom
 from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
@@ -267,8 +266,8 @@ class EBISubmission(object):
 
         Returns
         -------
-        str
-            string with study XML values
+        ET.Element
+            Object with study XML values
         """
         study_set = ET.Element('STUDY_SET', {
             'xmlns:xsi': self.xmlns_xsi,
@@ -304,15 +303,15 @@ class EBISubmission(object):
             for pmid in self.pmids:
                 self._get_pmid_element(study_links, pmid)
 
-        return ET.tostring(study_set)
+        return study_set
 
     def generate_sample_xml(self):
         """Generates the sample XML file
 
         Returns
         -------
-        str
-            string with sample XML values
+        ET.Element
+            Object with sample XML values
         """
         sample_set = ET.Element('SAMPLE_SET', {
             'xmlns:xsi': self.xmlns_xsi,
@@ -348,7 +347,7 @@ class EBISubmission(object):
                                                   'SAMPLE_ATTRIBUTE',
                                                   sample_info)
 
-        return ET.tostring(sample_set)
+        return sample_set
 
     def _generate_spot_descriptor(self, design, platform):
         """This XML element (and its subelements) must be written for every
@@ -379,8 +378,8 @@ class EBISubmission(object):
 
         Returns
         -------
-        str
-            string with experiment XML values
+        ET.Element
+            Object with experiment XML values
         """
         study_alias = self._get_study_alias()
         experiment_set = ET.Element('EXPERIMENT_SET', {
@@ -445,15 +444,15 @@ class EBISubmission(object):
                                                   'EXPERIMENT_ATTRIBUTE',
                                                   sample_prep)
 
-        return ET.tostring(experiment_set)
+        return experiment_set
 
     def generate_run_xml(self):
         """Generates the run XML file
 
         Returns
         -------
-        str
-            string with run XML values
+        ET.Element
+            Object with run XML values
         """
         run_set = ET.Element('RUN_SET', {
             'xmlns:xsi': self.xmlns_xsi,
@@ -487,7 +486,7 @@ class EBISubmission(object):
                 'checksum': md5}
             )
 
-        return ET.tostring(run_set)
+        return run_set
 
     def generate_submission_xml(self, submission_date=None):
         """Generates the submission XML file
@@ -500,8 +499,8 @@ class EBISubmission(object):
 
         Returns
         -------
-        str
-            string with run XML values
+        ET.Element
+            Object with submission XML values
 
         Notes
         -----
@@ -549,28 +548,21 @@ class EBISubmission(object):
                 'HoldUntilDate': str(submission_date + timedelta(365))}
             )
 
-        return ET.tostring(submission_set)
+        return submission_set
 
-    def write_xml_file(self, text, attribute_name, fp):
+    def write_xml_file(self, element, fp):
         """Writes an XML file after calling one of the XML generation
         functions
 
         Parameters
         ----------
-        text : str
-            The XML text that will be written
-        attribute_name : str
-            The name of the attribute in which to store the output filepath
+        element : ET.Element
+            The Element to be written
         fp : str
             The filepath to which the XML will be written
         """
         create_dir(self.xml_dir)
-        xml = minidom.parseString(text)
-
-        with open(fp, 'w') as outfile:
-            outfile.write(xml.toxml(encoding='UTF-8'))
-
-        setattr(self, attribute_name, fp)
+        ET.ElementTree(element).write(fp, encoding='UTF-8')
 
     def generate_curl_command(
             self,

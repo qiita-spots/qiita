@@ -53,26 +53,21 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         if isdir(ebi_submission.ebi_dir):
             rmtree(ebi_submission.ebi_dir)
         ebi_submission.preprocessed_data.update_insdc_status(
-            'failed: %s' % str(error_msg))
-        LogEntry.create('Runtime', str(error_msg),
+            'failed: %s' % error_msg)
+        LogEntry.create('Runtime', error_msg,
                         info={'ebi_submission': preprocessed_data_id})
         raise
 
     # step 3: generate and write xml files
     ebi_submission.write_xml_file(ebi_submission.generate_study_xml(),
-                                  'study_xml_fp',
                                   ebi_submission.study_xml_fp)
     ebi_submission.write_xml_file(ebi_submission.generate_sample_xml(),
-                                  'sample_xml_fp',
                                   ebi_submission.sample_xml_fp)
     ebi_submission.write_xml_file(ebi_submission.generate_experiment_xml(),
-                                  'experiment_xml_fp',
                                   ebi_submission.experiment_xml_fp)
     ebi_submission.write_xml_file(ebi_submission.generate_run_xml(),
-                                  'run_xml_fp',
                                   ebi_submission.run_xml_fp)
     ebi_submission.write_xml_file(ebi_submission.generate_submission_xml(),
-                                  'submission_xml_fp',
                                   ebi_submission.submission_xml_fp)
     if send:
         # step 4: sending sequences
