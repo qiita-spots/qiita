@@ -186,7 +186,7 @@ class SampleTemplate(MetadataTemplate):
         return SAMPLE_TEMPLATE_COLUMNS
 
     def can_be_updated(self, **kwargs):
-        """Gets if the template can be updated
+        """Whether the template can be updated or not
 
         Parameters
         ----------
@@ -201,13 +201,40 @@ class SampleTemplate(MetadataTemplate):
 
         Notes
         -----
-            The prep template can't be updated in certain situations, see the
-            its documentation for more info. However, the sample template
-            doesn't have those restrictions. Thus, to be able to use the same
-            update code in the base class, we need to have this method and it
-            should always return True.
+        The prep template can't be updated in certain situations, see the
+        its documentation for more info. However, the sample template
+        doesn't have those restrictions. Thus, to be able to use the same
+        update code in the base class, we need to have this method and it
+        should always return True.
         """
         return True
+
+    def can_be_extended(self, new_samples, new_columns):
+        """Whether the template can be updated or not
+
+        Parameters
+        ----------
+        new_samples : list of str
+            The new samples to be added to the template
+        new_columns : list of str
+            The new columns to be added to the template
+
+        Returns
+        -------
+        bool
+            Whether the template can be extended or not
+        str
+            The error message in case that it can't be extended
+
+        Notes
+        -----
+        The prep template can't be extended in certain situations, see the
+        its documentation for more info. However, the sample template
+        doesn't have those restrictions. Thus, to be able to use the same
+        extend code in the base class, we need to have this method and it
+        should always return True.
+        """
+        return True, ""
 
     def generate_files(self):
         r"""Generates all the files that contain data from this template
@@ -225,19 +252,3 @@ class SampleTemplate(MetadataTemplate):
             # generating all new QIIME mapping files
             for pt_id in Study(self._id).prep_templates():
                 PrepTemplate(pt_id).generate_files()
-
-    def extend(self, md_template):
-        """Adds the given sample template to the current one
-
-        Parameters
-        ----------
-        md_template : DataFrame
-            The metadata template file contents indexed by samples Ids
-        """
-        with TRN:
-            md_template = self._clean_validate_template(
-                md_template, self.study_id, SAMPLE_TEMPLATE_COLUMNS)
-
-            self._common_extend_steps(md_template)
-
-            self.generate_files()

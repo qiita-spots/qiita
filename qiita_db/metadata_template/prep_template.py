@@ -303,7 +303,7 @@ class PrepTemplate(MetadataTemplate):
         return pt_cols
 
     def can_be_updated(self, columns):
-        """Gets if the template can be updated
+        """Whether the template can be updated or not
 
         Parameters
         ----------
@@ -336,6 +336,35 @@ class PrepTemplate(MetadataTemplate):
                 return True
 
             return False
+
+    def can_be_extended(self, new_samples, new_columns):
+        """Whether the template can be extended or not
+
+        Parameters
+        ----------
+        new_samples : list of str
+            The new samples to be added to the template
+        new_columns : list of str
+            The new columns to be added to the template
+
+        Returns
+        -------
+        bool
+            Whether the template can be extended or not
+        str
+            The error message in case that it can't be extended
+
+        Notes
+        -----
+        New samples can't be added to the prep template if a preprocessed
+        data has been already generated.
+        """
+        ppd_data = self.preprocessed_data
+        if new_samples and ppd_data:
+            return False, ("Preprocessed data have already been generated "
+                           "(%s). No new samples can be added to the prep "
+                           "template." % ', '.join(map(str, ppd_data)))
+        return True, ""
 
     @property
     def raw_data(self):

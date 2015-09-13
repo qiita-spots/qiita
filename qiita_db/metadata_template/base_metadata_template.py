@@ -58,7 +58,7 @@ from qiita_db.util import (exists_table, get_table_cols,
                            get_mountpoint, insert_filepaths)
 from qiita_db.logger import LogEntry
 from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
-                   prefix_sample_names_with_id, type_lookup)
+                   prefix_sample_names_with_id, type_lookup, cast_to_python)
 
 
 class BaseSample(QiitaObject):
@@ -635,6 +635,49 @@ class MetadataTemplate(QiitaObject):
             # Execute all the steps
             TRN.execute()
 
+    def can_be_extended(self, new_samples, new_cols):
+        """Whether the template can be updated or not
+
+        Parameters
+        ----------
+        new_samples : list of str
+            The new samples to be added
+        new_cols : list of str
+            The new columns to be added
+
+        Returns
+        -------
+        bool
+            Whether the template can be extended or not
+        str
+            The error message in case that it can't be extended
+
+        Raises
+        ------
+        QiitaDBNotImplementedError
+            This method should be implemented in the subclasses
+        """
+        raise QiitaDBNotImplementedError(
+            "The method 'can_be_extended' should be implemented in "
+            "the subclasses")
+
+    def can_be_updated(self, **kwargs):
+        """Whether the template can be updated or not
+
+        Returns
+        -------
+        bool
+            Whether the template can be updated or not
+
+        Raises
+        ------
+        QiitaDBNotImplementedError
+            This method should be implemented in the subclasses
+        """
+        raise QiitaDBNotImplementedError(
+            "The method 'can_be_updated' should be implemented in "
+            "the subclasses")
+
     def _common_extend_steps(self, md_template):
         r"""executes the common extend steps
 
@@ -642,11 +685,6 @@ class MetadataTemplate(QiitaObject):
         ----------
         md_template : DataFrame
             The metadata template file contents indexed by sample ids
-
-        Raises
-        ------
-        QiitaDBError
-            If no new samples or new columns are present in `md_template`
         """
         with TRN:
             # Check if we are adding new samples
@@ -660,13 +698,20 @@ class MetadataTemplate(QiitaObject):
             new_cols = set(headers).difference(self.categories())
 
             if not new_cols and not new_samples:
-                raise QiitaDBError(
-                    "No new samples or new columns found in the template. "
-                    "If you want to update existing values, you should use "
-                    "the 'update' functionality.")
+                return
+
+            is_extendable, error_msg = self.can_be_extended(new_samples,
+                                                            new_cols)
+
+            if not is_extendable:
+                raise QiitaDBError(error_msg)
 
             table_name = self._table_name(self._id)
             if new_cols:
+                warnings.warn(
+                    "The following columns have been added to the existing"
+                    " template: %s" % ", ".join(new_cols),
+                    QiitaDBWarning)
                 # If we are adding new columns, add them first (simplifies
                 # code). Sorting the new columns to enforce an order
                 new_cols = sorted(new_cols)
@@ -681,12 +726,6 @@ class MetadataTemplate(QiitaObject):
                     TRN.add(sql_alter.format(table_name, category, dtype))
 
                 if existing_samples:
-                    warnings.warn(
-                        "No values have been modified for existing samples "
-                        "(%s). However, the following columns have been added "
-                        "to them: '%s'"
-                        % (len(existing_samples), ", ".join(new_cols)),
-                        QiitaDBWarning)
                     # The values for the new columns are the only ones that get
                     # added to the database. None of the existing values will
                     # be modified (see update for that functionality)
@@ -706,13 +745,12 @@ class MetadataTemplate(QiitaObject):
                              WHERE sample_id=%s""".format(table_name,
                                                           ",".join(set_str))
                     TRN.add(sql, values, many=True)
-            elif existing_samples:
-                warnings.warn(
-                    "%d samples already exist in the template and "
-                    "their values won't be modified" % len(existing_samples),
-                    QiitaDBWarning)
 
             if new_samples:
+                warnings.warn(
+                    "The following samples have been added to the existing"
+                    " template: %s" % ", ".join(new_samples),
+                    QiitaDBWarning)
                 new_samples = sorted(new_samples)
                 # At this point we only want the information
                 # from the new samples
@@ -1065,13 +1103,27 @@ class MetadataTemplate(QiitaObject):
 
         return cols
 
+    def extend(self, md_template):
+        """Adds the given template to the current one
+
+        Parameters
+        ----------
+        md_template : DataFrame
+            The metadata template contents indexed by sample ids
+        """
+        with TRN:
+            md_template = self._clean_validate_template(
+                md_template, self.study_id, self.columns_restrictions)
+            self._common_extend_steps(md_template)
+            self.generate_files()
+
     def update(self, md_template):
         r"""Update values in the template
 
         Parameters
         ----------
         md_template : DataFrame
-            The metadata template file contents indexed by samples Ids
+            The metadata template file contents indexed by samples ids
 
         Raises
         ------
@@ -1079,16 +1131,16 @@ class MetadataTemplate(QiitaObject):
             If md_template and db do not have the same sample ids
             If md_template and db do not have the same column headers
             If self.can_be_updated is not True
+        QiitaDBWarning
+            If there are no differences between the contents of the DB and the
+            passed md_template
         """
         with TRN:
             # Clean and validate the metadata template given
             new_map = self._clean_validate_template(md_template, self.study_id,
                                                     self.columns_restrictions)
             # Retrieving current metadata
-            sql = "SELECT * FROM qiita.{0}".format(self._table_name(self.id))
-            TRN.add(sql)
-            current_map = self._transform_to_dict(TRN.execute_fetchindex())
-            current_map = pd.DataFrame.from_dict(current_map, orient='index')
+            current_map = self.to_dataframe()
 
             # simple validations of sample ids and column names
             samples_diff = set(new_map.index).difference(current_map.index)
@@ -1116,6 +1168,11 @@ class MetadataTemplate(QiitaObject):
             # diff_map is a DataFrame that hold boolean values. If a cell is
             # True, means that the new_map is different from the current_map
             # while False means that the cell has the same value
+            # In order to compare them, they've to be identically labeled, so
+            # we need to sort the 'index' axis to be identically labeled. The
+            # 'column' axis is already the same given the previous line of code
+            current_map.sort_index(axis='index', inplace=True)
+            new_map.sort_index(axis='index', inplace=True)
             diff_map = current_map != new_map
             # ne_stacked holds a MultiIndexed DataFrame in which the first
             # level of indexing is the sample_name and the second one is the
@@ -1125,6 +1182,11 @@ class MetadataTemplate(QiitaObject):
             # by using ne_stacked to index himself, we get only the columns
             # that did change (see boolean indexing in pandas docs)
             changed = ne_stacked[ne_stacked]
+            if changed.empty:
+                warnings.warn(
+                    "There are no differences between the data stored in the "
+                    "DB and the new data provided",
+                    QiitaDBWarning)
             changed.index.names = ['sample_name', 'column']
             # the combination of np.where and boolean indexing produces
             # a numpy array with only the values that actually changed
@@ -1170,7 +1232,8 @@ class MetadataTemplate(QiitaObject):
                                sql_values, sql_cols)
             sql_args = []
             for sample in samples_to_update:
-                sample_vals = [new_map[col][sample] for col in cols_to_update]
+                sample_vals = [cast_to_python(new_map[col][sample])
+                               for col in cols_to_update]
                 sample_vals.insert(0, sample)
                 sql_args.extend(sample_vals)
 

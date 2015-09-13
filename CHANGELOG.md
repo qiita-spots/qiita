@@ -3,6 +3,8 @@
 Version 0.2.0-dev (Changes since version 0.2.0 go here)
 -------------------------------------------------------
 
+* Users can now change values and add samples and/or columns to sample and prep templates using the <kbd>Update</kbd> button (see the prep template and sample template tabs).
+
 Version 0.2.0 (2015-08-25)
 --------------------------
 
