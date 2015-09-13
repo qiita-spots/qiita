@@ -8,7 +8,7 @@ env:
   - TEST_ADD_STUDIES=True
 before_install:
 - openssl aes-256-cbc -K $encrypted_e698cf0e691c_key -iv $encrypted_e698cf0e691c_iv
-  -in config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg
+  -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg
   -d
 - redis-server --version
 - wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
