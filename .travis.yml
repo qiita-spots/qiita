@@ -7,7 +7,7 @@ env:
   - TEST_ADD_STUDIES=False
   - TEST_ADD_STUDIES=True
 before_install:
-- openssl aes-256-cbc -K $encrypted_e698cf0e691c_key -iv $encrypted_e698cf0e691c_iv
+- openssl aes-256-cbc -k $encrypted_e698cf0e691c_key -iv $encrypted_e698cf0e691c_iv
   -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg
   -d
 - redis-server --version
