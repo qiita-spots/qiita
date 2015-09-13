@@ -2,37 +2,41 @@ language: python
 sudo: false
 env:
   global:
-    - PYTHON_VERSION=2.7
+  - PYTHON_VERSION=2.7
   matrix:
-    - TEST_ADD_STUDIES=False
-    - TEST_ADD_STUDIES=True
+  - TEST_ADD_STUDIES=False
+  - TEST_ADD_STUDIES=True
 before_install:
-  - redis-server --version
-  - wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-  - export PATH=/home/travis/miniconda3/bin:$PATH
-  # Update conda itself
-  - conda update --yes conda
+- openssl aes-256-cbc -k $encrypted_e698cf0e691c_key -iv $encrypted_e698cf0e691c_iv
+  -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg
+  -d
+- redis-server --version
+- wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
+- chmod +x miniconda.sh
+- ./miniconda.sh -b
+- export PATH=/home/travis/miniconda3/bin:$PATH
+- conda update --yes conda
 install:
-  # install a few of the dependencies that pip would otherwise try to install
-  # when intalling scikit-bio
-  - travis_retry conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8 pyzmq networkx pyparsing natsort mock 'pandas>=0.15' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>= 1.7' 'h5py>=2.3.1' 'future==0.13.0'
-  - source activate env_name
-  - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
-  - travis_retry pip install .
+- travis_retry conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8
+  pyzmq networkx pyparsing natsort mock 'pandas>=0.15' 'matplotlib>=1.1.0' 'scipy>0.13.0'
+  'numpy>= 1.7' 'h5py>=2.3.1' 'future==0.13.0'
+- source activate env_name
+- pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
+- travis_retry pip install .
 script:
-  - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
-  - ipython profile create qiita-general --parallel
-  - qiita-env start_cluster qiita-general
-  - qiita-env make --no-load-ontologies
-  - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita-test-install ; fi
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage ; fi
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then flake8 qiita_* setup.py scripts/qiita scripts/qiita-env scripts/qiita-test-install ; fi
-  - ls -R /home/travis/miniconda3/envs/env_name/lib/python2.7/site-packages/qiita_pet/support_files/doc/
-  - qiita pet webserver
+- export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
+- ipython profile create qiita-general --parallel
+- qiita-env start_cluster qiita-general
+- qiita-env make --no-load-ontologies
+- if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
+- if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita-test-install ; fi
+- if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage
+  ; fi
+- if [ ${TEST_ADD_STUDIES} == "False" ]; then flake8 qiita_* setup.py scripts/qiita
+  scripts/qiita-env scripts/qiita-test-install ; fi
+- ls -R /home/travis/miniconda3/envs/env_name/lib/python2.7/site-packages/qiita_pet/support_files/doc/
+- qiita pet webserver
 services:
-  - redis-server
+- redis-server
 after_success:
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then coveralls ; fi
+- if [ ${TEST_ADD_STUDIES} == "False" ]; then coveralls ; fi
