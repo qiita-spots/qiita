@@ -8,7 +8,9 @@
 
 from six import StringIO
 from unittest import TestCase, main
+from datetime import datetime
 
+import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
@@ -18,7 +20,8 @@ from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
 from qiita_db.metadata_template.util import (
     get_datatypes, as_python_types, prefix_sample_names_with_id,
     load_template_to_dataframe, get_invalid_sample_names,
-    looks_like_qiime_mapping_file, _parse_mapping_file, type_lookup)
+    looks_like_qiime_mapping_file, _parse_mapping_file, type_lookup,
+    cast_to_python)
 
 
 class TestUtil(TestCase):
@@ -47,6 +50,21 @@ class TestUtil(TestCase):
         obs = get_datatypes(self.metadata_map.ix[:, self.headers])
         exp = ['float8', 'varchar', 'integer']
         self.assertEqual(obs, exp)
+
+    def test_cast_to_python(self):
+        """Correctly returns the value casted"""
+        b = np.bool_(True)
+        obs = cast_to_python(b)
+        self.assertTrue(obs)
+        self.assertFalse(isinstance(obs, np.bool_))
+        self.assertTrue(isinstance(obs, bool))
+
+        exp = datetime(2015, 9, 1, 10, 00)
+        dt = np.datetime64(exp)
+        obs = cast_to_python(dt)
+        self.assertEqual(obs, exp)
+        self.assertFalse(isinstance(obs, np.datetime64))
+        self.assertTrue(isinstance(obs, datetime))
 
     def test_as_python_types(self):
         """Correctly returns the columns as python types"""

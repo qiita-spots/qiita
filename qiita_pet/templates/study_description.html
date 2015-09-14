@@ -99,22 +99,6 @@ function update_sample_template() {
   }
 }
 
-function extend_sample_template() {
-  var form = $("<form>")
-    .attr("action", window.location.href)
-    .attr("method", "post")
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "sample_template")
-      .attr("value", $("#sample_template").val()))
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "action")
-      .attr("value", "extend_sample_template"));
-  $("body").append(form);
-  form.submit();
-}
-
 function get_and_check_raw_data_files(prep_id, filetype){
   var barcodes = [];
   var forward = [];
