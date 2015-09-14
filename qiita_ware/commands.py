@@ -69,10 +69,11 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
                                   ebi_submission.run_xml_fp)
     ebi_submission.write_xml_file(ebi_submission.generate_submission_xml(),
                                   ebi_submission.submission_xml_fp)
-
-    # other steps
     if send:
+        # step 4: sending sequences
         ebi_submission.send_sequences()
+
+        # step 5: sending xml and retrieving answer
         study_accession, submission_accession = ebi_submission.send_xml()
 
         if study_accession is None or submission_accession is None:

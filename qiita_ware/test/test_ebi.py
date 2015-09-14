@@ -398,6 +398,18 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertItemsEqual(obs_demux_samples,
                               ebi_submission.samples_prep.keys())
 
+    def test_send_sequences(self):
+        ppd = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(ppd.id, 'ADD')
+        e.generate_demultiplexed_fastq()
+        self.files_to_remove.append(e.ebi_dir)
+        e.write_xml_file(e.generate_study_xml(), e.study_xml_fp)
+        e.write_xml_file(e.generate_sample_xml(), e.sample_xml_fp)
+        e.write_xml_file(e.generate_experiment_xml(), e.experiment_xml_fp)
+        e.write_xml_file(e.generate_run_xml(), e.run_xml_fp)
+        e.write_xml_file(e.generate_submission_xml(), e.submission_xml_fp)
+        e.send_sequences()
+
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
 CCACCCAGTAAC

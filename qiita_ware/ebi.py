@@ -2,8 +2,7 @@ from re import search
 from tempfile import mkstemp
 from subprocess import call
 from shlex import split as shsplit
-from glob import glob
-from os.path import basename, join, split, isdir, isfile
+from os.path import basename, join, isdir, isfile
 from os import environ, close, makedirs, remove, listdir
 from datetime import date, timedelta
 from xml.etree import ElementTree as ET
@@ -75,14 +74,10 @@ class EBISubmission(object):
     Parameters
     ----------
     preprocessed_data_id : int
-        The preprocesssed data id
+        The preprocesssed data id to submit
     action : str
-        The action to perfom, it has to be one of the
+        The action to perform. Valid options see
         EBISubmission.valid_ebi_actions
-
-    Parameters
-    ----------
-    preprocessed_data_id : str
 
     Raises
     ------
@@ -617,35 +612,34 @@ class EBISubmission(object):
         return curl_command
 
     def send_sequences(self):
-        # Send the sequence files by directory
-        unique_dirs = set()
-        for f in self.sequence_files:
-            basedir, filename = split(f)
-            unique_dirs.add(basedir)
+        """Send sequences
 
+        Notes
+        -----
+        - All 5 XML files (study, sample, experiment, run, and submission) must
+          be generated before executing this function
+        """
         # Set the ASCP password to the one in the Qiita config, but remember
         # the old pass so that we can politely reset it
         old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
         environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
 
-        for unique_dir in unique_dirs:
-            # Get the list of FASTQ files to submit
-            fastqs = glob(join(unique_dir, '*.fastq.gz'))
+        fastqs = [sfp for _, sfp in viewitems(self.sample_demux_fps)]
 
-            ascp_command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
-                ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
-                qiita_config.ebi_seq_xfer_url, self.ebi_dir)
+        command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
+            ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
+            qiita_config.ebi_seq_xfer_url, self.ebi_dir)
 
-            # Generate the command using shlex.split so that we don't have to
-            # pass shell=True to subprocess.call
-            ascp_command_parts = shsplit(ascp_command)
+        # Generate the command using shlex.split so that we don't have to
+        # pass shell=True to subprocess.call
+        command_parts = shsplit(command)
 
-            # Don't leave the password lingering in the environment if there
-            # is any error
-            try:
-                call(ascp_command_parts)
-            finally:
-                environ['ASPERA_SCP_PASS'] = old_ascp_pass
+        # Don't leave the password lingering in the environment if there
+        # is any error
+        try:
+            call(command_parts)
+        finally:
+            environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
     def send_xml(self):
         # Send the XML files
