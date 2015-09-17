@@ -17,6 +17,10 @@ before_install:
   - export PATH=/home/travis/miniconda3/bin:$PATH
   # Update conda itself
   - conda update --yes conda
+  # Downloading and setting up ascp for EBI testing
+  - curl -s -O ftp://ftp.microbio.me/pub/qiita/ascp-install-3.5.4.102989-linux-64-qiita.sh
+  - chmod +x ascp-install-3.5.4.102989-linux-64-qiita.sh
+  - ./ascp-install-3.5.4.102989-linux-64-qiita.sh
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio

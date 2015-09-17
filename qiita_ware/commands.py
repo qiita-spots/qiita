@@ -20,6 +20,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import ComputeError
 from traceback import format_exc
+from os import environ
 
 
 def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
@@ -70,22 +71,41 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
     ebi_submission.write_xml_file(ebi_submission.generate_submission_xml(),
                                   ebi_submission.submission_xml_fp)
 
-    # other steps
     if send:
-        ebi_submission.send_sequences()
-        study_accession, submission_accession = ebi_submission.send_xml()
+        # step 4: sending sequences
 
-        if study_accession is None or submission_accession is None:
+        # Set the ASCP password to the one in the Qiita config, but remember
+        # the old pass so that we can politely reset it
+        old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
+        environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
+        try:
+            # seqs_cmds = ebi_submission.generate_send_sequences_cmd()
+            # run commands in moi
+            ebi_submission.generate_send_sequences_cmd()
+        finally:
+            environ['ASPERA_SCP_PASS'] = old_ascp_pass
+
+        # step 5: sending xml and parsing answer
+        # execute in moi and parse result
+        # xmls_cmds = ebi_submission.generate_curl_command()
+        ebi_submission.generate_curl_command()
+        result = ''
+        LogEntry.create('Runtime', result,
+                        info={'ebi_submission': preprocessed_data_id})
+        study_acc, submission_acc = ebi_submission.parse_EBI_reply()
+
+        if study_acc is None or submission_acc is None:
+            LogEntry.create('Fatal', result,
+                            info={'ebi_submission': preprocessed_data_id})
             ebi_submission.preprocessed_data.update_insdc_status('failed')
-
             raise ComputeError("EBI Submission failed!")
         else:
             ebi_submission.preprocessed_data.update_insdc_status(
-                'success', study_accession, submission_accession)
+                'success', study_acc, submission_acc)
     else:
-        study_accession, submission_accession = None, None
+        study_acc, submission_acc = None, None
 
-    return study_accession, submission_accession
+    return study_acc, submission_acc
 
 
 def submit_VAMPS(preprocessed_data_id):

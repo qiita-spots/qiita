@@ -1,10 +1,6 @@
 from re import search
-from tempfile import mkstemp
-from subprocess import call
-from shlex import split as shsplit
-from glob import glob
-from os.path import basename, join, split, isdir, isfile
-from os import environ, close, makedirs, remove, listdir
+from os.path import basename, join, isdir, isfile
+from os import makedirs, remove, listdir
 from datetime import date, timedelta
 from xml.etree import ElementTree as ET
 from xml.sax.saxutils import escape
@@ -75,14 +71,10 @@ class EBISubmission(object):
     Parameters
     ----------
     preprocessed_data_id : int
-        The preprocesssed data id
+        The preprocesssed data id to submit
     action : str
-        The action to perfom, it has to be one of the
+        The action to perform. Valid options see
         EBISubmission.valid_ebi_actions
-
-    Parameters
-    ----------
-    preprocessed_data_id : str
 
     Raises
     ------
@@ -616,57 +608,35 @@ class EBISubmission(object):
 
         return curl_command
 
-    def send_sequences(self):
-        # Send the sequence files by directory
-        unique_dirs = set()
-        for f in self.sequence_files:
-            basedir, filename = split(f)
-            unique_dirs.add(basedir)
+    def generate_send_sequences_cmd(self):
+        """Generate the sequences to EBI via ascp command
 
-        # Set the ASCP password to the one in the Qiita config, but remember
-        # the old pass so that we can politely reset it
-        old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
-        environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
+        Notes
+        -----
+        - All 5 XML files (study, sample, experiment, run, and submission) must
+          be generated before executing this function
+        """
+        fastqs = [sfp for _, sfp in viewitems(self.sample_demux_fps)]
 
-        for unique_dir in unique_dirs:
-            # Get the list of FASTQ files to submit
-            fastqs = glob(join(unique_dir, '*.fastq.gz'))
+        ascp_command = ('ascp --ignore-host-key -L- -d -QT -k2 '
+                        '{0} {1}@{2}:./{3}/'.format(
+                            ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
+                            qiita_config.ebi_seq_xfer_url, self.ebi_dir))
 
-            ascp_command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
-                ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
-                qiita_config.ebi_seq_xfer_url, self.ebi_dir)
+        return ascp_command
 
-            # Generate the command using shlex.split so that we don't have to
-            # pass shell=True to subprocess.call
-            ascp_command_parts = shsplit(ascp_command)
+    def parse_EBI_reply(self, curl_result):
+        """Parse and verify reply from EBI after sending XML files
 
-            # Don't leave the password lingering in the environment if there
-            # is any error
-            try:
-                call(ascp_command_parts)
-            finally:
-                environ['ASPERA_SCP_PASS'] = old_ascp_pass
-
-    def send_xml(self):
-        # Send the XML files
-        curl_command = self.generate_curl_command()
-        curl_command_parts = shsplit(curl_command)
-        temp_fd, temp_fp = mkstemp()
-        call(curl_command_parts, stdout=temp_fd)
-        close(temp_fd)
-
-        with open(temp_fp, 'U') as curl_output_f:
-            curl_result = curl_output_f.read()
-
+        Parameters
+        ----------
+        curl_result : str
+            The reply sent by EBI after sending XML files
+        """
         study_accession = None
         submission_accession = None
 
         if 'success="true"' in curl_result:
-            LogEntry.create('Runtime', curl_result)
-
-            print curl_result
-            print "SUCCESS"
-
             accessions = search('<STUDY accession="(?P<study>.+?)".*?'
                                 '<SUBMISSION accession="(?P<submission>.+?)"',
                                 curl_result)
@@ -674,25 +644,7 @@ class EBISubmission(object):
                 study_accession = accessions.group('study')
                 submission_accession = accessions.group('submission')
 
-                LogEntry.create('Runtime', "Study accession:\t%s" %
-                                study_accession)
-                LogEntry.create('Runtime', "Submission accession:\t%s" %
-                                submission_accession)
-
-                print "Study accession:\t", study_accession
-                print "Submission accession:\t", submission_accession
-            else:
-                LogEntry.create('Runtime', ("However, the accession numbers "
-                                            "could not be found in the output "
-                                            "above."))
-                print ("However, the accession numbers could not be found in "
-                       "the output above.")
-        else:
-            LogEntry.create('Fatal', curl_result)
-            print curl_result
-            print "FAILED"
-
-        return (study_accession, submission_accession)
+        return study_accession, submission_accession
 
     def generate_demultiplexed_fastq(self, rewrite_fastq=False, mtime=None):
         """Generates demultiplexed fastq

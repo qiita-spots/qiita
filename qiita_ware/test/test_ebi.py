@@ -22,6 +22,7 @@ import pandas as pd
 from datetime import date
 
 from h5py import File
+from future.utils import viewitems
 
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import EBISumbissionError
@@ -243,6 +244,27 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                '%%20ebi_access_key%%3D"') % {'xml_dir': submission.xml_dir}
         self.assertEqual(obs, exp)
 
+    def test_parse_EBI_reply(self):
+        e = EBISubmission(2, 'ADD')
+        curl_result = ""
+        stacc, sbacc = e.parse_EBI_reply(curl_result)
+        self.assertIsNone(stacc)
+        self.assertIsNone(sbacc)
+
+        curl_result = 'success="true"'
+        stacc, sbacc = e.parse_EBI_reply(curl_result)
+        self.assertIsNone(stacc)
+        self.assertIsNone(sbacc)
+
+        curl_result = ('some general text success="true" more text'
+                       '<STUDY accession="staccession" some text> '
+                       'some othe text'
+                       '<SUBMISSION accession="sbaccession" some text>'
+                       'some final text')
+        stacc, sbacc = e.parse_EBI_reply(curl_result)
+        self.assertEqual(stacc, "staccession")
+        self.assertEqual(sbacc, "sbaccession")
+
 
 @qiita_test_checker()
 class TestEBISubmissionWriteRead(TestEBISubmission):
@@ -397,6 +419,26 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
         self.assertItemsEqual(obs_demux_samples,
                               ebi_submission.samples_prep.keys())
+
+    def test_generate_send_sequences_cmd(self):
+        ppd = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(ppd.id, 'ADD')
+        e.generate_demultiplexed_fastq()
+        self.files_to_remove.append(e.ebi_dir)
+        e.write_xml_file(e.generate_study_xml(), e.study_xml_fp)
+        e.write_xml_file(e.generate_sample_xml(), e.sample_xml_fp)
+        e.write_xml_file(e.generate_experiment_xml(), e.experiment_xml_fp)
+        e.write_xml_file(e.generate_run_xml(), e.run_xml_fp)
+        e.write_xml_file(e.generate_submission_xml(), e.submission_xml_fp)
+        obs = e.generate_send_sequences_cmd()
+
+        exp = ('ascp --ignore-host-key -L- -d -QT -k2 '
+               '{0} {1}@{2}:./{3}/'.format(
+                   ' '.join([f for _, f in viewitems(e.sample_demux_fps)]),
+                   qiita_config.ebi_seq_xfer_user,
+                   qiita_config.ebi_seq_xfer_url, e.ebi_dir))
+
+        self.assertEqual(obs, exp)
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
