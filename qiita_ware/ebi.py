@@ -611,6 +611,11 @@ class EBISubmission(object):
     def generate_send_sequences_cmd(self):
         """Generate the sequences to EBI via ascp command
 
+        Returns
+        -------
+        ascp_command
+            The ascp command to be executed
+
         Notes
         -----
         - All 5 XML files (study, sample, experiment, run, and submission) must
@@ -627,6 +632,13 @@ class EBISubmission(object):
 
     def parse_EBI_reply(self, curl_result):
         """Parse and verify reply from EBI after sending XML files
+
+        Returns
+        -------
+        study_accession
+            The study accession number, in case of failure it returns None
+        submission_accession
+            The submission accession number, in case of failure it returns None
 
         Parameters
         ----------
