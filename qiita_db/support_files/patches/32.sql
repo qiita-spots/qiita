@@ -189,6 +189,13 @@ CREATE FUNCTION infer_rd_status(rd_id bigint) RETURNS bigint AS $$
     END;
 $$ LANGUAGE plpgsql;
 
+-- We need to modify the prep template table to point to the artifact table
+-- rather than to the raw data table
+ALTER TABLE qiita.prep_template ADD artifact_id bigint;
+CREATE INDEX idx_prep_template_artifact_id ON qiita.prep_template (artifact_id);
+ALTER TABLE qiita.prep_template ADD CONSTRAINT fk_prep_template_artifact
+	FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact(artifact_id);
+
 DO $do$
 DECLARE
 	rd_vals	RECORD;
@@ -217,17 +224,31 @@ LOOP
 	END LOOP;
 	-- Relate the artifact with their filepaths
 	FOR filepath IN
-		SELECT 
+		SELECT filepath_id
+		FROM qiita.raw_filepath
+		WHERE raw_data_id = rd_vals.raw_data_id
+	LOOP
+		INSERT INTO qiita.artifact_filepaths (filepath_id, artifact_id) VALUES (filepath.filepath_id, a_id);
+	END LOOP;
+
+	-- Update the prep tempalte rows to point to the correct artifact id
+	-- instead that pointing to the raw data table
+	WITH pt_vals AS (SELECT prep_template_id FROM qiita.prep_template WHERE raw_data_id = rd_vals.raw_data_id)
+		UPDATE qiita.prep_template as pt
+			SET artifact_id = a_id
+			FROM pt_vals
+			WHERE pt.prep_template_id = pt_vals.prep_template_id;
+
 END LOOP;
 END $do$;
 
 -- Drop the function that we use to infer the status of the artifacts
 DROP FUNCTION infer_rd_status(bigint);
-
--- Prep table
-ALTER TABLE qiita.prep_template ADD artifact_id bigint  ;
-CREATE INDEX idx_prep_template_0 ON qiita.prep_template ( artifact_id ) ;
-ALTER TABLE qiita.prep_template ADD CONSTRAINT fk_prep_template_artifact FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact( artifact_id )    ;
+-- Drop the raw_data_id column from the prep_template table, and the related
+-- constraints and indices
+ALTER TABLE qiita.prep_template DROP COLUMN raw_data_id;
+ALTER TABLE qiita.prep_template DROP CONSTRAINT fk_prep_template_raw_data;
+DROP INDEX qiita.idx_prep_template_0;
 
 
 
@@ -255,9 +276,6 @@ ALTER TABLE qiita.analysis_sample DROP COLUMN processed_data_id;
 DROP INDEX qiita.idx_analysis_sample_0;
 ALTER TABLE qiita.analysis_sample DROP CONSTRAINT pk_analysis_sample;
 ALTER TABLE qiita.analysis_sample DROP CONSTRAINT fk_analysis_processed_data;
-ALTER TABLE qiita.prep_template DROP COLUMN raw_data_id;
-DROP INDEX qiita.idx_prep_template_0;
-ALTER TABLE qiita.prep_template DROP CONSTRAINT fk_prep_template_raw_data;
 DROP TABLE qiita.preprocessed_data;
 DROP TABLE qiita.preprocessed_filepath;
 DROP TABLE qiita.processed_data_status;
