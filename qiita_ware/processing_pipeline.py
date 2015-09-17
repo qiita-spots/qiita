@@ -30,7 +30,7 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
 
     Parameters
     ----------
-    prep_template : PrepTemplate
+    prep_template : qiita_db.metadata_template.PrepTemplate
         The prep template from which we need to generate the minimal mapping
     out_dir : str
         Path to the output directory
