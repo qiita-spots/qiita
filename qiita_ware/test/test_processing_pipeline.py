@@ -14,6 +14,7 @@ from os import remove, close, mkdir
 from functools import partial
 from shutil import rmtree
 
+import numpy.testing as npt
 import pandas as pd
 import gzip
 
@@ -23,12 +24,13 @@ from qiita_db.util import (get_db_files_base_dir, get_mountpoint,
 
 from qiita_db.sql_connection import SQLConnectionHandler
 from qiita_db.data import RawData, PreprocessedData
-from qiita_db.study import Study
+from qiita_db.study import Study, StudyPerson
+from qiita_db.user import User
 from qiita_db.parameters import (PreprocessedIlluminaParams,
                                  ProcessedSortmernaParams,
                                  Preprocessed454Params)
-
-from qiita_db.metadata_template import PrepTemplate
+from qiita_db.exceptions import QiitaDBWarning
+from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 from qiita_ware.processing_pipeline import (_get_preprocess_fastq_cmd,
                                             _get_preprocess_fasta_cmd,
                                             _insert_preprocessed_data,
@@ -191,6 +193,45 @@ class ProcessingPipelineTests(TestCase):
         # Check the contents of the file
         with open(exp_fps[0], "U") as f:
             self.assertEqual(f.read(), EXP_PREP_RLP)
+
+    def test_get_qiime_minimal_mapping_numeric_sample_ids(self):
+        # Get minimal mapping file works correctly with numeric sample ids. A
+        # bug was found that samples of the type <study_id>.[0-9]*0 where
+        # truncated to <study_id>.[0-9]*
+        info = {"timeseries_type_id": 1,
+                "metadata_complete": True,
+                "mixs_compliant": True,
+                "number_samples_collected": 25,
+                "number_samples_promised": 28,
+                "study_alias": "testing",
+                "study_description": "Test description",
+                "study_abstract": "Test abstract",
+                "emp_person_id": StudyPerson(2),
+                "principal_investigator_id": StudyPerson(3),
+                "lab_person_id": StudyPerson(1)
+                }
+        new_study = Study.create(User('test@foo.bar'), "Test study", [1], info)
+        metadata_dict = {'1': {'host_subject_id': 'NotIdentified'},
+                         '10': {'host_subject_id': 'NotIdentified'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        npt.assert_warns(QiitaDBWarning, SampleTemplate.create, metadata,
+                         new_study)
+        metadata_dict = {'1': {'str_column': 'Value for sample 1',
+                               'primer': 'GTGCCAGCMGCCGCGGTAA',
+                               'barcode': 'GTCCGCAAGTTA'},
+                         '10': {'str_column': 'Value for sample 1',
+                                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                                'barcode': 'CGTAGAGCTCTC'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create, metadata,
+                              new_study, 2)
+        out_dir = mkdtemp()
+        obs_fps = _get_qiime_minimal_mapping(pt, out_dir)
+        exp_fps = [join(out_dir, 'prep_%s_MMF.txt' % pt.id)]
+        self.assertEqual(obs_fps, exp_fps)
+        self.assertTrue(exists(exp_fps[0]))
+        with open(exp_fps[0], 'U') as f:
+            self.assertEqual(f.read(), EXP_PREP_NUM.format(new_study.id))
 
     def test_get_qiime_minimal_mapping_multiple(self):
         # We need to create a prep template in which we have different run
@@ -770,6 +811,12 @@ EXP_PREP_RLP = (
     "1.SKM7.640188\tCGCCGGTAATCT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
     "1.SKM8.640201\tCCGATGCCTTGA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n"
     "1.SKM9.640192\tAGCAGGCACGAA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCM\tQiita MMF\n")
+
+EXP_PREP_NUM = (
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tDescription\n"
+    "{0}.1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+    "{0}.10\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tQiita MMF\n"
+)
 
 EXP_PREP_1 = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tDescription\n"
