@@ -747,7 +747,22 @@ table {
 	study_artifact references artifact ( artifact_id )</title>
 </path>
 <text x='1538' y='700' transform='rotate(0 1538,700)' title='Foreign Key fk_study_artifact_artifact
-	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 870 L 1177,870 Q 1170,870 1170,877 L 1170,930' >
+	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1890 855 L 1860,855' >
+	<title>Foreign Key fk_software_publication
+	software_publication references software ( software_id )</title>
+</path>
+<text x='1830' y='850' transform='rotate(0 1830,850)' title='Foreign Key fk_software_publication
+	software_publication references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2040 855 L 2085,855' >
+	<title>Foreign Key fk_software_publication_0
+	software_publication references publication ( publication_doi -> doi )</title>
+</path>
+<text x='2047' y='850' transform='rotate(0 2047,850)' title='Foreign Key fk_software_publication_0
+	software_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1710 855 L 1740,855' >
+	<title>Foreign Key fk_soft_command_software
+	soft_command references software ( software_id )</title>
+</path>
+<text x='1717' y='850' transform='rotate(0 1717,850)' title='Foreign Key fk_soft_command_software
+	soft_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 870 L 1177,870 Q 1170,870 1170,877 L 1170,930' >
 	<title>Foreign Key fk_artifact_visibility
 	artifact references visibility ( visibility_id )</title>
 </path>
@@ -762,22 +777,7 @@ table {
 	artifact references soft_command ( command_id )</title>
 </path>
 <text x='1372' y='835' transform='rotate(0 1372,835)' title='Foreign Key fk_artifact_soft_command
-	artifact references soft_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1710 855 L 1740,855' >
-	<title>Foreign Key fk_soft_command_software
-	soft_command references software ( software_id )</title>
-</path>
-<text x='1717' y='850' transform='rotate(0 1717,850)' title='Foreign Key fk_soft_command_software
-	soft_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1890 855 L 1860,855' >
-	<title>Foreign Key fk_software_publication
-	software_publication references software ( software_id )</title>
-</path>
-<text x='1830' y='850' transform='rotate(0 1830,850)' title='Foreign Key fk_software_publication
-	software_publication references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2040 855 L 2085,855' >
-	<title>Foreign Key fk_software_publication_0
-	software_publication references publication ( publication_doi -> doi )</title>
-</path>
-<text x='2047' y='850' transform='rotate(0 2047,850)' title='Foreign Key fk_software_publication_0
-	software_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	artifact references soft_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1444,17 +1444,6 @@ The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#03
 <a xlink:href='#analysis_sample.sample_id'><text x='63' y='1402'>sample_id</text><title>sample_id varchar not null</title></a>
 <a xlink:href='#analysis_sample.sample_id'><use id='fk' x='138' y='1391' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
 
-<!-- ============= Table 'visibility' ============= -->
-<rect class='table' x='1050' y='938' width='150' height='90' rx='7' ry='7' />
-<path d='M 1050.50 964.50 L 1050.50 945.50 Q 1050.50 938.50 1057.50 938.50 L 1192.50 938.50 Q 1199.50 938.50 1199.50 945.50 L 1199.50 964.50 L1050.50 964.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#visibility'><text x='1103' y='952' class='tableTitle'>visibility</text><title>Table qiita.visibility</title></a>
-  <use id='nn' x='1052' y='972' xlink:href='#nn'/><a xlink:href='#visibility.visibility_id'><use id='pk' x='1052' y='971' xlink:href='#pk'/><title>Primary Key  ( visibility_id ) </title></a>
-<a xlink:href='#visibility.visibility_id'><text x='1068' y='982'>visibility_id</text><title>visibility_id bigserial not null</title></a>
-<a xlink:href='#visibility.visibility_id'><use id='ref' x='1188' y='971' xlink:href='#ref'/><title>Referred by artifact ( visibility_id ) 
-Referred by artifact ( visibility_id ) </title></a>
-  <use id='nn' x='1052' y='987' xlink:href='#nn'/><a xlink:href='#visibility.visibility'><text x='1068' y='997'>visibility</text><title>visibility varchar not null</title></a>
-  <use id='nn' x='1052' y='1002' xlink:href='#nn'/><a xlink:href='#visibility.visibility_description'><text x='1068' y='1012'>visibility_description</text><title>visibility_description varchar not null</title></a>
-
 <!-- ============= Table 'parent_artifact' ============= -->
 <rect class='table' x='1065' y='743' width='90' height='75' rx='7' ry='7' />
 <path d='M 1065.50 769.50 L 1065.50 750.50 Q 1065.50 743.50 1072.50 743.50 L 1147.50 743.50 Q 1154.50 743.50 1154.50 750.50 L 1154.50 769.50 L1065.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -1840,55 +1829,6 @@ Parameters used for processing spectra data&#046;</title></a>
 <a xlink:href='#preprocessed_spectra_params.preprocessed_params_id'><text x='2238' y='1462'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
   <a xlink:href='#preprocessed_spectra_params.col'><text x='2238' y='1477'>col</text><title>col varchar</title></a>
 
-<!-- ============= Table 'artifact' ============= -->
-<rect class='table' x='1200' y='743' width='165' height='150' rx='7' ry='7' />
-<path d='M 1200.50 769.50 L 1200.50 750.50 Q 1200.50 743.50 1207.50 743.50 L 1357.50 743.50 Q 1364.50 743.50 1364.50 750.50 L 1364.50 769.50 L1200.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#artifact'><text x='1263' y='757' class='tableTitle'>artifact</text><title>Table qiita.artifact
-Represents data in the system</title></a>
-  <use id='nn' x='1202' y='777' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1202' y='776' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
-<a xlink:href='#artifact.artifact_id'><text x='1218' y='787'>artifact_id</text><title>artifact_id bigserial not null</title></a>
-<a xlink:href='#artifact.artifact_id'><use id='ref' x='1353' y='776' xlink:href='#ref'/><title>Referred by artifact ( artifact_id ) 
-Referred by artifact ( parent_id -> artifact_id ) 
-Referred by study_artifact ( artifact_id ) 
-Referred by prep_template ( artifact_id ) 
-Referred by prep_template ( artifact_id ) 
-Referred by artifact_filepath ( artifact_id ) 
-Referred by analysis_sample ( artifact_id ) 
-Referred by analysis_sample ( artifact_id ) 
-Referred by parent_artifact ( artifact_id ) 
-Referred by parent_artifact ( parent_id -> artifact_id ) 
-Referred by ebi_submission ( artifact_id ) 
-Referred by ebi_submission ( artifact_id ) </title></a>
-  <use id='nn' x='1202' y='792' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='802'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
-  <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='806' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
-<a xlink:href='#artifact.command_id'><text x='1218' y='817'>command_id</text><title>command_id bigint</title></a>
-<a xlink:href='#artifact.command_id'><use id='fk' x='1353' y='806' xlink:href='#fk'/><title>References soft_command ( command_id ) </title></a>
-  <a xlink:href='#artifact.command_parameters_id'><text x='1218' y='832'>command_parameters_id</text><title>command_parameters_id bigint</title></a>
-  <use id='nn' x='1202' y='837' xlink:href='#nn'/><a xlink:href='#artifact.visibility_id'><use id='idx' x='1202' y='836' xlink:href='#idx'/><title>Index  ( visibility_id ) </title></a>
-<a xlink:href='#artifact.visibility_id'><text x='1218' y='847'>visibility_id</text><title>visibility_id bigint not null
-If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public</title></a>
-<a xlink:href='#artifact.visibility_id'><use id='fk' x='1353' y='836' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
-  <use id='nn' x='1202' y='852' xlink:href='#nn'/><a xlink:href='#artifact.file_status'><text x='1218' y='862'>file_status</text><title>file_status bigint not null
-If it is linking&#044; unlinking or idle</title></a>
-  <a xlink:href='#artifact.filetype_id'><use id='idx' x='1202' y='866' xlink:href='#idx'/><title>Index  ( filetype_id ) </title></a>
-<a xlink:href='#artifact.filetype_id'><text x='1218' y='877'>filetype_id</text><title>filetype_id integer</title></a>
-<a xlink:href='#artifact.filetype_id'><use id='fk' x='1353' y='866' xlink:href='#fk'/><title>References filetype ( filetype_id ) </title></a>
-
-<!-- ============= Table 'soft_command' ============= -->
-<rect class='table' x='1575' y='833' width='135' height='120' rx='7' ry='7' />
-<path d='M 1575.50 859.50 L 1575.50 840.50 Q 1575.50 833.50 1582.50 833.50 L 1702.50 833.50 Q 1709.50 833.50 1709.50 840.50 L 1709.50 859.50 L1575.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#soft_command'><text x='1602' y='847' class='tableTitle'>soft_command</text><title>Table qiita.soft_command</title></a>
-  <use id='nn' x='1577' y='867' xlink:href='#nn'/><a xlink:href='#soft_command.command_id'><use id='pk' x='1577' y='866' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
-<a xlink:href='#soft_command.command_id'><text x='1593' y='877'>command_id</text><title>command_id bigserial not null</title></a>
-<a xlink:href='#soft_command.command_id'><use id='ref' x='1698' y='866' xlink:href='#ref'/><title>Referred by artifact ( command_id ) 
-Referred by artifact ( command_id ) </title></a>
-  <use id='nn' x='1577' y='882' xlink:href='#nn'/><a xlink:href='#soft_command.software_id'><use id='idx' x='1577' y='881' xlink:href='#idx'/><title>Index  ( software_id ) </title></a>
-<a xlink:href='#soft_command.software_id'><text x='1593' y='892'>software_id</text><title>software_id bigint not null</title></a>
-<a xlink:href='#soft_command.software_id'><use id='fk' x='1698' y='881' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
-  <use id='nn' x='1577' y='897' xlink:href='#nn'/><a xlink:href='#soft_command.description'><text x='1593' y='907'>description</text><title>description varchar not null</title></a>
-  <a xlink:href='#soft_command.cli_cmd'><text x='1593' y='922'>cli_cmd</text><title>cli_cmd varchar</title></a>
-  <use id='nn' x='1577' y='927' xlink:href='#nn'/><a xlink:href='#soft_command.parameters_table'><text x='1593' y='937'>parameters_table</text><title>parameters_table varchar not null</title></a>
-
 <!-- ============= Table 'software' ============= -->
 <rect class='table' x='1755' y='833' width='105' height='105' rx='7' ry='7' />
 <path d='M 1755.50 859.50 L 1755.50 840.50 Q 1755.50 833.50 1762.50 833.50 L 1852.50 833.50 Q 1859.50 833.50 1859.50 840.50 L 1859.50 859.50 L1755.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -1923,6 +1863,68 @@ Referred by software_publication ( publication_doi -> doi ) </title></a>
   <use id='nn' x='1907' y='882' xlink:href='#nn'/><a xlink:href='#software_publication.publication_doi'><use id='pk' x='1907' y='881' xlink:href='#pk'/><title>Index  ( publication_doi ) Primary Key  ( software_id, publication_doi ) </title></a>
 <a xlink:href='#software_publication.publication_doi'><text x='1923' y='892'>publication_doi</text><title>publication_doi varchar not null</title></a>
 <a xlink:href='#software_publication.publication_doi'><use id='fk' x='2028' y='881' xlink:href='#fk'/><title>References publication ( publication_doi -> doi ) </title></a>
+
+<!-- ============= Table 'soft_command' ============= -->
+<rect class='table' x='1575' y='833' width='135' height='135' rx='7' ry='7' />
+<path d='M 1575.50 859.50 L 1575.50 840.50 Q 1575.50 833.50 1582.50 833.50 L 1702.50 833.50 Q 1709.50 833.50 1709.50 840.50 L 1709.50 859.50 L1575.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#soft_command'><text x='1602' y='847' class='tableTitle'>soft_command</text><title>Table qiita.soft_command</title></a>
+  <use id='nn' x='1577' y='867' xlink:href='#nn'/><a xlink:href='#soft_command.command_id'><use id='pk' x='1577' y='866' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
+<a xlink:href='#soft_command.command_id'><text x='1593' y='877'>command_id</text><title>command_id bigserial not null</title></a>
+<a xlink:href='#soft_command.command_id'><use id='ref' x='1698' y='866' xlink:href='#ref'/><title>Referred by artifact ( command_id ) 
+Referred by artifact ( command_id ) </title></a>
+  <use id='nn' x='1577' y='882' xlink:href='#nn'/><a xlink:href='#soft_command.name'><text x='1593' y='892'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='1577' y='897' xlink:href='#nn'/><a xlink:href='#soft_command.software_id'><use id='idx' x='1577' y='896' xlink:href='#idx'/><title>Index  ( software_id ) </title></a>
+<a xlink:href='#soft_command.software_id'><text x='1593' y='907'>software_id</text><title>software_id bigint not null</title></a>
+<a xlink:href='#soft_command.software_id'><use id='fk' x='1698' y='896' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
+  <use id='nn' x='1577' y='912' xlink:href='#nn'/><a xlink:href='#soft_command.description'><text x='1593' y='922'>description</text><title>description varchar not null</title></a>
+  <a xlink:href='#soft_command.cli_cmd'><text x='1593' y='937'>cli_cmd</text><title>cli_cmd varchar</title></a>
+  <use id='nn' x='1577' y='942' xlink:href='#nn'/><a xlink:href='#soft_command.parameters_table'><text x='1593' y='952'>parameters_table</text><title>parameters_table varchar not null</title></a>
+
+<!-- ============= Table 'visibility' ============= -->
+<rect class='table' x='1050' y='938' width='150' height='90' rx='7' ry='7' />
+<path d='M 1050.50 964.50 L 1050.50 945.50 Q 1050.50 938.50 1057.50 938.50 L 1192.50 938.50 Q 1199.50 938.50 1199.50 945.50 L 1199.50 964.50 L1050.50 964.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#visibility'><text x='1103' y='952' class='tableTitle'>visibility</text><title>Table qiita.visibility</title></a>
+  <use id='nn' x='1052' y='972' xlink:href='#nn'/><a xlink:href='#visibility.visibility_id'><use id='pk' x='1052' y='971' xlink:href='#pk'/><title>Primary Key  ( visibility_id ) </title></a>
+<a xlink:href='#visibility.visibility_id'><text x='1068' y='982'>visibility_id</text><title>visibility_id bigserial not null</title></a>
+<a xlink:href='#visibility.visibility_id'><use id='ref' x='1188' y='971' xlink:href='#ref'/><title>Referred by artifact ( visibility_id ) 
+Referred by artifact ( visibility_id ) </title></a>
+  <use id='nn' x='1052' y='987' xlink:href='#nn'/><a xlink:href='#visibility.visibility'><use id='unq' x='1052' y='986' xlink:href='#unq'/><title>Unique Index  ( visibility ) </title></a>
+<a xlink:href='#visibility.visibility'><text x='1068' y='997'>visibility</text><title>visibility varchar not null</title></a>
+  <use id='nn' x='1052' y='1002' xlink:href='#nn'/><a xlink:href='#visibility.visibility_description'><text x='1068' y='1012'>visibility_description</text><title>visibility_description varchar not null</title></a>
+
+<!-- ============= Table 'artifact' ============= -->
+<rect class='table' x='1200' y='743' width='165' height='150' rx='7' ry='7' />
+<path d='M 1200.50 769.50 L 1200.50 750.50 Q 1200.50 743.50 1207.50 743.50 L 1357.50 743.50 Q 1364.50 743.50 1364.50 750.50 L 1364.50 769.50 L1200.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#artifact'><text x='1263' y='757' class='tableTitle'>artifact</text><title>Table qiita.artifact
+Represents data in the system</title></a>
+  <use id='nn' x='1202' y='777' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1202' y='776' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
+<a xlink:href='#artifact.artifact_id'><text x='1218' y='787'>artifact_id</text><title>artifact_id bigserial not null</title></a>
+<a xlink:href='#artifact.artifact_id'><use id='ref' x='1353' y='776' xlink:href='#ref'/><title>Referred by artifact ( artifact_id ) 
+Referred by artifact ( parent_id -> artifact_id ) 
+Referred by study_artifact ( artifact_id ) 
+Referred by prep_template ( artifact_id ) 
+Referred by prep_template ( artifact_id ) 
+Referred by artifact_filepath ( artifact_id ) 
+Referred by analysis_sample ( artifact_id ) 
+Referred by analysis_sample ( artifact_id ) 
+Referred by parent_artifact ( artifact_id ) 
+Referred by parent_artifact ( parent_id -> artifact_id ) 
+Referred by ebi_submission ( artifact_id ) 
+Referred by ebi_submission ( artifact_id ) </title></a>
+  <use id='nn' x='1202' y='792' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='802'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
+  <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='806' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
+<a xlink:href='#artifact.command_id'><text x='1218' y='817'>command_id</text><title>command_id bigint</title></a>
+<a xlink:href='#artifact.command_id'><use id='fk' x='1353' y='806' xlink:href='#fk'/><title>References soft_command ( command_id ) </title></a>
+  <a xlink:href='#artifact.command_parameters_id'><text x='1218' y='832'>command_parameters_id</text><title>command_parameters_id bigint</title></a>
+  <use id='nn' x='1202' y='837' xlink:href='#nn'/><a xlink:href='#artifact.visibility_id'><use id='idx' x='1202' y='836' xlink:href='#idx'/><title>Index  ( visibility_id ) </title></a>
+<a xlink:href='#artifact.visibility_id'><text x='1218' y='847'>visibility_id</text><title>visibility_id bigint not null
+If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public</title></a>
+<a xlink:href='#artifact.visibility_id'><use id='fk' x='1353' y='836' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
+  <use id='nn' x='1202' y='852' xlink:href='#nn'/><a xlink:href='#artifact.file_status'><text x='1218' y='862'>file_status</text><title>file_status bigint not null
+If it is linking&#044; unlinking or idle</title></a>
+  <a xlink:href='#artifact.filetype_id'><use id='idx' x='1202' y='866' xlink:href='#idx'/><title>Index  ( filetype_id ) </title></a>
+<a xlink:href='#artifact.filetype_id'><text x='1218' y='877'>filetype_id</text><title>filetype_id integer</title></a>
+<a xlink:href='#artifact.filetype_id'><use id='fk' x='1353' y='866' xlink:href='#fk'/><title>References filetype ( filetype_id ) </title></a>
 
 </g></svg>
 
@@ -4027,35 +4029,6 @@ Referred by software_publication ( publication_doi -> doi ) </title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='visibility'>Table visibility</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='visibility.visibility_id'>visibility&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='visibility.visibility'>visibility</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='visibility.visibility_description'>visibility&#095;description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;visibility primary key</td>
-		<td> ON visibility&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='parent_artifact'>Table parent_artifact</a></th></tr>
 </thead>
 <tbody>
@@ -5263,133 +5236,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='artifact'>Table artifact</a></th></tr>
-<tr><td colspan='3'>Represents data in the system </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='artifact.artifact_id'>artifact&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.generated_timestamp'>generated&#095;timestamp</a></td>
-		<td> timestamp  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.command_parameters_id'>command&#095;parameters&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.visibility_id'>visibility&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.file_status'>file&#095;status</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> If it is linking&#044; unlinking or idle </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.filetype_id'>filetype&#095;id</a></td>
-		<td> integer   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;artifact primary key</td>
-		<td> ON artifact&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact&#095;0 </td>
-		<td> ON visibility&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact&#095;1 </td>
-		<td> ON filetype&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact </td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_artifact_visibility</td>
-		<td > ( visibility&#095;id ) ref <a href='#visibility'>visibility</a> (visibility&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_artifact_filetype</td>
-		<td > ( filetype&#095;id ) ref <a href='#filetype'>filetype</a> (filetype&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_artifact_soft_command</td>
-		<td > ( command&#095;id ) ref <a href='#soft&#095;command'>soft&#095;command</a> (command&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='soft_command'>Table soft_command</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='soft_command.command_id'>command&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='soft_command.software_id'>software&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='soft_command.description'>description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='soft_command.cli_cmd'>cli&#095;cmd</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='soft_command.parameters_table'>parameters&#095;table</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;soft&#095;command primary key</td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;soft&#095;command </td>
-		<td> ON software&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_soft_command_software</td>
-		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='software'>Table software</a></th></tr>
 </thead>
 <tbody>
@@ -5483,6 +5329,171 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_software_publication_0</td>
 		<td > ( publication&#095;doi ) ref <a href='#publication'>publication</a> (doi) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='soft_command'>Table soft_command</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='soft_command.command_id'>command&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='soft_command.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='soft_command.software_id'>software&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='soft_command.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='soft_command.cli_cmd'>cli&#095;cmd</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='soft_command.parameters_table'>parameters&#095;table</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;soft&#095;command primary key</td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;soft&#095;command </td>
+		<td> ON software&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_soft_command_software</td>
+		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='visibility'>Table visibility</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='visibility.visibility_id'>visibility&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='visibility.visibility'>visibility</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='visibility.visibility_description'>visibility&#095;description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;visibility primary key</td>
+		<td> ON visibility&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;visibility unique</td>
+		<td> ON visibility</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='artifact'>Table artifact</a></th></tr>
+<tr><td colspan='3'>Represents data in the system </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='artifact.artifact_id'>artifact&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.generated_timestamp'>generated&#095;timestamp</a></td>
+		<td> timestamp  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.command_id'>command&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.command_parameters_id'>command&#095;parameters&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.visibility_id'>visibility&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.file_status'>file&#095;status</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> If it is linking&#044; unlinking or idle </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.filetype_id'>filetype&#095;id</a></td>
+		<td> integer   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;artifact primary key</td>
+		<td> ON artifact&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;0 </td>
+		<td> ON visibility&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;1 </td>
+		<td> ON filetype&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact </td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_artifact_visibility</td>
+		<td > ( visibility&#095;id ) ref <a href='#visibility'>visibility</a> (visibility&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_artifact_filetype</td>
+		<td > ( filetype&#095;id ) ref <a href='#filetype'>filetype</a> (filetype&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_artifact_soft_command</td>
+		<td > ( command&#095;id ) ref <a href='#soft&#095;command'>soft&#095;command</a> (command&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
