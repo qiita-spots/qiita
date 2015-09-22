@@ -104,15 +104,16 @@ CREATE TABLE qiita.software (
 -- this table should be renamed to command once the command table in the
 -- analysis table is merged with this one
 CREATE TABLE qiita.soft_command (
-    command_id           bigserial  NOT NULL,
-    software_id          bigint  NOT NULL,
-    description          varchar  NOT NULL,
-    cli_cmd              varchar  ,
-    parameters_table     varchar  NOT NULL,
-    CONSTRAINT pk_soft_command PRIMARY KEY ( command_id )
+	command_id           bigserial  NOT NULL,
+	name                 varchar  NOT NULL,
+	software_id          bigint  NOT NULL,
+	description          varchar  NOT NULL,
+	cli_cmd              varchar  ,
+	parameters_table     varchar  NOT NULL,
+	CONSTRAINT pk_soft_command PRIMARY KEY ( command_id )
  ) ;
 CREATE INDEX idx_soft_command ON qiita.soft_command ( software_id ) ;
-ALTER TABLE qiita.soft_command ADD CONSTRAINT fk_soft_command_software FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id )    ;
+ALTER TABLE qiita.soft_command ADD CONSTRAINT fk_soft_command_software FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id );
 
 -- Publication table - holds the minimum information for a given publication
 -- It is useful to keep track of the publication of the studies and the software
@@ -163,29 +164,29 @@ CREATE TEMP TABLE raw_data_artifact (
 	raw_data_id		bigint NOT NULL,
 	artifact_id		bigint NOT NULL,
 	CONSTRAINT idx_raw_data_artifact PRIMARY KEY (raw_data_id, artifact_id)
-) ON COMMIT drop;
+) ON COMMIT DROP;
 
 -- We also need to infer the visibility of the artifact, since the raw data
 -- object does not have a status attribute. We will use a function to do so:
 CREATE FUNCTION infer_rd_status(rd_id bigint) RETURNS bigint AS $$
     BEGIN
         CREATE TEMP TABLE irds_temp
-            ON COMMIT drop AS
+            ON COMMIT DROP AS
                 SELECT DISTINCT processed_data_status_id
                     FROM qiita.processed_data
                         JOIN qiita.preprocessed_processed_data USING (processed_data_id)
                         JOIN qiita.prep_template_preprocessed_data USING (preprocessed_data_id)
                         JOIN qiita.prep_template USING (prep_template_id)
                     WHERE raw_data_id = rd_id;
-            IF EXISTS(SELECT * FROM irds_temp WHERE processed_data_status_id = 2) THEN
-                RETURN 2;
-            ELSIF EXISTS(SELECT * FROM irds_temp WHERE processed_data_status_id = 3) THEN
-                RETURN 3;
-            ELSIF EXISTS(SELECT * FROM irds_temp WHERE processed_data_status_id = 1) THEN
-                RETURN 1;
-            ELSE
-                RETURN 4;
-            END IF;
+        IF EXISTS(SELECT * FROM irds_temp WHERE processed_data_status_id = 2) THEN
+            RETURN 2;
+        ELSIF EXISTS(SELECT * FROM irds_temp WHERE processed_data_status_id = 3) THEN
+            RETURN 3;
+        ELSIF EXISTS(SELECT * FROM irds_temp WHERE processed_data_status_id = 1) THEN
+            RETURN 1;
+        ELSE
+            RETURN 4;
+        END IF;
     END;
 $$ LANGUAGE plpgsql;
 
@@ -198,10 +199,11 @@ ALTER TABLE qiita.prep_template ADD CONSTRAINT fk_prep_template_artifact
 
 DO $do$
 DECLARE
-	rd_vals	RECORD;
-	study	RECORD;
-	a_id 	bigint;
-	vis_id	bigint;
+	rd_vals		RECORD;
+	study		RECORD;
+	filepath	RECORD;
+	a_id 		bigint;
+	vis_id		bigint;
 BEGIN
 FOR rd_vals IN
 	SELECT raw_data_id, filetype_id, link_filepath_status
@@ -228,7 +230,7 @@ LOOP
 		FROM qiita.raw_filepath
 		WHERE raw_data_id = rd_vals.raw_data_id
 	LOOP
-		INSERT INTO qiita.artifact_filepaths (filepath_id, artifact_id) VALUES (filepath.filepath_id, a_id);
+		INSERT INTO qiita.artifact_filepath (filepath_id, artifact_id) VALUES (filepath.filepath_id, a_id);
 	END LOOP;
 
 	-- Update the prep tempalte rows to point to the correct artifact id
@@ -239,6 +241,8 @@ LOOP
 			FROM pt_vals
 			WHERE pt.prep_template_id = pt_vals.prep_template_id;
 
+	-- Keep track of the old raw_data_id <-> artifact_id relationship
+	INSERT INTO raw_data_artifact (raw_data_id, artifact_id) VALUES (rd_vals.raw_data_id, a_id);
 END LOOP;
 END $do$;
 
@@ -250,6 +254,110 @@ ALTER TABLE qiita.prep_template DROP COLUMN raw_data_id;
 ALTER TABLE qiita.prep_template DROP CONSTRAINT fk_prep_template_raw_data;
 DROP INDEX qiita.idx_prep_template_0;
 
+-- Moving PreprocessedData
+
+-- Start by populating the software table
+INSERT INTO qiita.software (name, version, description) VALUES
+	('QIIME', '1.9.1', 'Quantitative Insigts Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data');
+INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1038/nmeth.f.303', '20383131');
+INSERT INTO qiita.software_publication (software_id) VALUES (1, '10.1038/nmeth.f.303');
+INSERT INTO qiita.soft_command (software_id, name, description, cli_cmd, parameters_table) VALUES
+	(1, 'Split libraries FASTQ', 'Demultiplexes and applies quality control to FASTQ data', 'split_libraries_fastq.py', 'preprocessed_sequence_illumina_params'),
+	(1, 'Split libraries', 'Demultiplexes and applies quality control to FASTA data', 'split_libraries.py', 'preprocessed_sequence_454_params');
+
+-- We need a temp table to store the relations between the old preprocessed data
+-- id and the new artifact id, so we can keep track of the parent relationships
+CREATE TEMP TABLE preprocessed_data_artifact (
+	preprocessed_data_id	bigint NOT NULL,
+	artifact_id				bigint NOT NULL,
+	CONSTRAINT idx_preprocessed_data_artifact PRIMARY KEY (preprocessed_data_id, artifact_id)
+) ON COMMIT DROP;
+
+-- Create a function to infer the visibility of the artifact from the
+-- preprocessed data
+CREATE FUNCTION infer_ppd_status(ppd_id bigint) RETURNS bigint AS $$
+	BEGIN
+		CREATE TEMP TABLE ippds_temp
+			ON COMMIT DROP AS
+				SELECT DISTINCT processed_data_status_id
+					FROM qiita.processed_data
+						JOIN qiita.preprocessed_processed_data USING (processed_data_id)
+					WHERE preprocessed_data_id = ppd_id;
+		IF EXISTS(SELECT * FROM ippds_temp WHERE processed_data_status_id = 2) THEN
+			RETURN 2;
+		ELSIF EXISTS(SELECT * FROM ippds_temp WHERE processed_data_status_id = 3) THEN
+			RETURN 3;
+		ELSEIF EXISTS(SELECT * FROM ippds_temp WHERE processed_data_status_id = 3) THEN
+			RETURN 1;
+		ELSE
+			RETURN 4;
+		END IF;
+	END;
+$$ LANGUAGE plpgsql;
+
+DO $do$
+DECLARE
+	ppd_vals	RECORD;
+	study		RECORD;
+	filepath	RECORD;
+	a_id		bigint;
+	vis_id		bigint;
+BEGIN
+FOR ppd_vals IN
+	SELECT preprocessed_data_id, preprocessed_params_table, preprocessed_params_id
+		   submitted_to_insdc_status, ebi_submission_accession, ebi_study_accession,
+		   data_type_id, link_filepaths_status, submitted_to_vamps_status,
+		   processing_status
+	FROM qiita.preprocessed_data
+LOOP
+	-- Get the visibility of the current preprocessed data
+	SELECT infer_ppd_status(ppd_vals.preprocessed_data_id) INTO vis_id;
+
+	-- Insert the PreprocessedData in the artifact table
+	INSERT INTO qiita.artifact (generated_timestamp, visibility_id, file_status, filetype_id)
+		VALUES (now(), vis_id, ppd_vals.link_filepaths_status, TODO)
+		RETURNING artifact_id in a_id;
+
+	-- Relate the artifact with their studies
+	FOR study IN
+		SELECT study_id
+		FROM qiita.study_preprocessed_data
+		WHERE preprocessed_data_id = ppd_vals.preprocessed_data_id
+	LOOP
+		INSERT INTO qiita.study_artifact (study_id, artifact_id) VALUES (study.study_id, a_id);
+	END LOOP;
+
+	-- Relate the artifact with their filepaths
+	FOR filepath IN
+		SELECT filepath_id
+		FROM qiita.preprocessed_filepath
+		WHERE preprocessed_data_id = ppd_vals.preprocessed_data_id
+	LOOP
+		INSERT INTO qiita.artifact_filepath (filepath_id, artifact_id) VALUES (filepath.filetype_id, a_id);
+	END LOOP;
+
+	-- TODO parents
+	-- Relate the artifact with its parent
+	WITH rd_art AS (SELECT artifact_id
+					FROM qiita.prep_template_preprocessed_data
+						JOIN prep_template USING (prep_template_id)
+						JOIN raw_data_artifact USING (raw_data_id)
+					WHERE preprocessed_data_id = ppd_vals.preprocessed_data_id)
+		INSERT INTO qiita.parent_artifact (artifact_id, parent_id)
+			VALUES (a_id, rd_art.artifact_id);
+
+	-- TODO EBI submissions
+	-- TODO VAMPS
+	-- TODO filetype
+
+	-- Keep track of the old preprocessed_data_id <-> artifact id relationship
+	INSERT INTO preprocessed_data_artifact (preprocessed_data_id, artifact_id)
+		VALUES (ppd_vals.preprocessed_data_id, a_id);
+END LOOP;
+END $do$;
+
+-- Drop the function that we use to infer the status of the artifacts
+DROP FUNCTION infer_ppd_status(bigint);
 
 
 
