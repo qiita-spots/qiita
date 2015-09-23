@@ -32,12 +32,12 @@ INSERT INTO qiita.study (email, emp_person_id, first_contact,
     mixs_compliant, most_recent_contact, number_samples_collected,
     number_samples_promised, principal_investigator_id, reprocess,
     spatial_series, study_title, study_alias, study_description,
-    study_abstract, vamps_id) VALUES
+    study_abstract, vamps_id, ebi_study_accession, ebi_submission_status) VALUES
     ('test@foo.bar', 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
     '2014-05-19 16:11', 27, 27, 3, FALSE, FALSE,
     'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
     'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
-    NULL);
+    NULL, 'EBI123456-BB', 'submitted');
 
 -- Add portal to the study
 INSERT INTO qiita.study_portal (study_id, portal_type_id) VALUES (1, 1);
@@ -325,9 +325,9 @@ UPDATE qiita.prep_template SET raw_data_id = 1 WHERE prep_template_id = 1;
 -- UPDATE qiita.prep_template SET raw_data_id = 2 WHERE prep_template_id = 2;
 
 -- Insert preprocessed information for prep template 1
-INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc_status, ebi_submission_accession, ebi_study_accession, data_type_id)
-    VALUES ('preprocessed_sequence_illumina_params', 1, 'submitting', 'EBI123456-AA', 'EBI123456-BB', 2),
-           ('preprocessed_sequence_illumina_params', 2, 'not submitted', NULL, NULL, 2);
+INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, data_type_id)
+    VALUES ('preprocessed_sequence_illumina_params', 1, 2),
+           ('preprocessed_sequence_illumina_params', 2, 2);
 
 -- Link the new preprocessed data with the prep template
 INSERT INTO qiita.prep_template_preprocessed_data (prep_template_id, preprocessed_data_id) VALUES (1, 1), (1, 2);
