@@ -4,7 +4,7 @@
 
 ALTER TABLE qiita.prep_template_sample ADD ebi_experiment_accession varchar  ;
 ALTER TABLE qiita.study ADD ebi_study_accession varchar  ;
-ALTER TABLE qiita.study ADD ebi_submission_status varchar  NOT NULL DEFAULT 'not_submitted';
+ALTER TABLE qiita.study ADD ebi_submission_status varchar  NOT NULL DEFAULT 'not submitted';
 ALTER TABLE qiita.study_sample ADD ebi_sample_accession varchar  ;
 
 CREATE TABLE qiita.ebi_run_accession (
@@ -29,7 +29,7 @@ WITH ebi_data AS (SELECT study_id, string_agg(ebi_study_accession, ', ') AS ebi_
 				  GROUP BY study_id)
 	UPDATE qiita.study AS st
 		SET ebi_study_accession = ebi_data.ebi_study_accessions,
-			ebi_submission_status = 'submitted'
+			ebi_submission_status = 'success'
 		FROM ebi_data
 		WHERE st.study_id = ebi_data.study_id;
 
