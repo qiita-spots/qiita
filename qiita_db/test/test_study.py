@@ -216,7 +216,9 @@ class TestStudy(TestCase):
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person_id': 1,
             'study_title': 'Identification of the Microbiomes for Cannabis '
-            'Soils', 'number_samples_collected': 27}
+            'Soils', 'number_samples_collected': 27,
+            'ebi_submission_status': 'submitted',
+            'ebi_study_accession': 'EBI123456-BB'}
         self.assertItemsEqual(obs, exp)
 
         # Test get specific keys for single study
@@ -409,7 +411,9 @@ class TestStudy(TestCase):
             'metadata_complete': False,
             'reprocess': True,
             'first_contact': "10/24/2014 12:47PM",
-            'study_id': 3827
+            'study_id': 3827,
+            'ebi_study_accession': 'ERP654321-BB',
+            'ebi_submission_status': 'submitted',
             })
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
                            [1], self.info)
@@ -428,7 +432,9 @@ class TestStudy(TestCase):
                'study_alias': 'FCM', 'study_id': 3827,
                'most_recent_contact': None, 'lab_person_id': 1,
                'study_title': 'Fried chicken microbiome',
-               'number_samples_collected': 25}
+               'number_samples_collected': 25,
+               'ebi_study_accession': 'ERP654321-BB',
+               'ebi_submission_status': 'submitted'}
         obsins = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.study WHERE study_id = 3827")
         self.assertEqual(len(obsins), 1)

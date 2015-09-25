@@ -146,7 +146,8 @@ class Study(QiitaObject):
     _table = "study"
     _portal_table = "study_portal"
     # The following columns are considered not part of the study info
-    _non_info = frozenset(["email", "study_title"])
+    _non_info = frozenset(["email", "study_title", "ebi_submission_status"
+                           "ebi_study_accession"])
     # The following tables are considered part of info
     _info_cols = frozenset(chain(
         get_table_cols('study'), get_table_cols('study_status'),
