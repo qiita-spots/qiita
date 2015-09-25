@@ -10,7 +10,7 @@ from qiita_db.base import QiitaObject
 from qiita_db.study import Study, StudyPerson
 from qiita_db.investigation import Investigation
 from qiita_db.user import User
-from qiita_db.util import convert_to_id
+from qiita_db.util import convert_to_id, get_count
 from qiita_db.exceptions import (
     QiitaDBColumnError, QiitaDBStatusError, QiitaDBError,
     QiitaDBUnknownIDError, QiitaDBDuplicateError)
@@ -344,10 +344,15 @@ class TestStudy(TestCase):
     def test_create_study_min_data(self):
         """Insert a study into the database"""
         before = datetime.now()
+        new_id = get_count('qiita.study') + 1
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
                            [1], self.info)
         after = datetime.now()
-        self.assertEqual(obs.id, 2)
+        self.assertEqual(obs.id, new_id)
+        self.assertEqual(obs.status, 'sandbox')
+        self.assertEqual(obs.title, "Fried chicken microbiome")
+        obs_info = obs.info
+        insertion_timestamp = obs_info.pop('first_contact')
         exp = {'mixs_compliant': True, 'metadata_complete': True,
                'reprocess': False,
                'number_samples_promised': 28, 'emp_person_id': 2,
@@ -356,31 +361,27 @@ class TestStudy(TestCase):
                'timeseries_type_id': 1,
                'study_abstract': 'Exploring how a high fat diet changes the '
                                  'gut microbiome',
-               'email': 'test@foo.bar', 'spatial_series': None,
+               'spatial_series': None,
                'study_description': 'Microbiome of people who eat nothing but'
                                     ' fried chicken',
-               'study_alias': 'FCM', 'study_id': 2,
+               'study_alias': 'FCM',
                'most_recent_contact': None, 'lab_person_id': 1,
-               'study_title': 'Fried chicken microbiome',
                'number_samples_collected': 25}
-
-        obsins = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study WHERE study_id = 2")
-        self.assertEqual(len(obsins), 1)
-        obsins = dict(obsins[0])
-
+        self.assertEqual(obs_info, exp)
         # Check the timestamp separately, since it is set by the database
         # to the microsecond, and we can't predict it a priori
-        ins_timestamp = obsins.pop('first_contact')
-        self.assertTrue(before < ins_timestamp < after)
-
-        self.assertEqual(obsins, exp)
-
-        # make sure EFO went in to table correctly
-        efo = self.conn_handler.execute_fetchall(
-            "SELECT efo_id FROM qiita.study_experimental_factor "
-            "WHERE study_id = 2")
-        self.assertEqual(efo, [[1]])
+        self.assertTrue(before < insertion_timestamp < after)
+        self.assertEqual(obs.efo, [1])
+        self.assertEqual(obs.shared_with, [])
+        self.assertEqual(obs.pmids, [])
+        self.assertEqual(obs.investigation, None)
+        self.assertEqual(obs.sample_template, None)
+        self.assertEqual(obs.data_types, [])
+        self.assertEqual(obs.owner, 'test@foo.bar')
+        self.assertEqual(obs.environmental_packages, [])
+        self.assertEqual(obs._portals, ['QIITA'])
+        self.assertEqual(obs.ebi_study_accession, None)
+        self.assertEqual(obs.ebi_submission_status, "not submitted")
 
     def test_create_nonqiita_portal(self):
         qiita_config.portal = "EMP"
@@ -411,13 +412,13 @@ class TestStudy(TestCase):
             'metadata_complete': False,
             'reprocess': True,
             'first_contact': "10/24/2014 12:47PM",
-            'study_id': 3827,
-            'ebi_study_accession': 'ERP654321-BB',
-            'ebi_submission_status': 'submitted',
+            'study_id': 3827
             })
         obs = Study.create(User('test@foo.bar'), "Fried chicken microbiome",
                            [1], self.info)
         self.assertEqual(obs.id, 3827)
+        self.assertEqual(obs.status, 'sandbox')
+        self.assertEqual(obs.title, "Fried chicken microbiome")
         exp = {'mixs_compliant': True, 'metadata_complete': False,
                'reprocess': True,
                'number_samples_promised': 28, 'emp_person_id': 2,
@@ -426,26 +427,24 @@ class TestStudy(TestCase):
                'principal_investigator_id': 3, 'timeseries_type_id': 1,
                'study_abstract': 'Exploring how a high fat diet changes the '
                                  'gut microbiome',
-               'email': 'test@foo.bar', 'spatial_series': True,
+               'spatial_series': True,
                'study_description': 'Microbiome of people who eat nothing '
                                     'but fried chicken',
-               'study_alias': 'FCM', 'study_id': 3827,
+               'study_alias': 'FCM',
                'most_recent_contact': None, 'lab_person_id': 1,
-               'study_title': 'Fried chicken microbiome',
-               'number_samples_collected': 25,
-               'ebi_study_accession': 'ERP654321-BB',
-               'ebi_submission_status': 'submitted'}
-        obsins = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study WHERE study_id = 3827")
-        self.assertEqual(len(obsins), 1)
-        obsins = dict(obsins[0])
-        self.assertEqual(obsins, exp)
-
-        # make sure EFO went in to table correctly
-        obsefo = self.conn_handler.execute_fetchall(
-            "SELECT efo_id FROM qiita.study_experimental_factor "
-            "WHERE study_id = 3827")
-        self.assertEqual(obsefo, [[1]])
+               'number_samples_collected': 25}
+        self.assertEqual(obs.info, exp)
+        self.assertEqual(obs.efo, [1])
+        self.assertEqual(obs.shared_with, [])
+        self.assertEqual(obs.pmids, [])
+        self.assertEqual(obs.investigation, None)
+        self.assertEqual(obs.sample_template, None)
+        self.assertEqual(obs.data_types, [])
+        self.assertEqual(obs.owner, 'test@foo.bar')
+        self.assertEqual(obs.environmental_packages, [])
+        self.assertEqual(obs._portals, ['QIITA'])
+        self.assertEqual(obs.ebi_study_accession, None)
+        self.assertEqual(obs.ebi_submission_status, "not submitted")
 
     def test_create_missing_required(self):
         """ Insert a study that is missing a required info key"""
@@ -524,6 +523,18 @@ class TestStudy(TestCase):
 
     def test_portals(self):
         self.assertEqual(self.study._portals, ['QIITA'])
+
+    def test_ebi_study_accession(self):
+        self.assertEqual(self.study.ebi_study_accession, 'EBI123456-BB')
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        self.assertEqual(new.ebi_study_accession, None)
+
+    def test_ebi_submission_status(self):
+        self.assertEqual(self.study.ebi_submission_status, 'submitted')
+        new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
+                           'Microbiomes for Cannabis Soils', [1], self.info)
+        self.assertEqual(new.ebi_submission_status, 'not submitted')
 
     def test_retrieve_info(self):
         for key, val in viewitems(self.existingexp):

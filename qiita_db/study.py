@@ -146,7 +146,7 @@ class Study(QiitaObject):
     _table = "study"
     _portal_table = "study_portal"
     # The following columns are considered not part of the study info
-    _non_info = frozenset(["email", "study_title", "ebi_submission_status"
+    _non_info = frozenset(["email", "study_title", "ebi_submission_status",
                            "ebi_study_accession"])
     # The following tables are considered part of info
     _info_cols = frozenset(chain(
@@ -674,7 +674,13 @@ class Study(QiitaObject):
         -------
         SampleTemplate id
         """
-        return self._id
+        with TRN:
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.study_sample
+                                   WHERE study_id = %s)"""
+            TRN.add(sql, [self.id])
+            exists = TRN.execute_fetchlast()
+        return self._id if exists else None
 
     @property
     def data_types(self):
@@ -789,6 +795,38 @@ class Study(QiitaObject):
                      WHERE study_id = %s"""
             TRN.add(sql, [self._id])
             return TRN.execute_fetchflatten()
+
+    @property
+    def ebi_study_accession(self):
+        """The EBI study accession for this study
+
+        Returns
+        -------
+        str
+            The study EBI accession
+        """
+        with TRN:
+            sql = """SELECT ebi_study_accession
+                     FROM qiita.{0}
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
+
+    @property
+    def ebi_submission_status(self):
+        """The EBI submission status of this study
+
+        Returns
+        -------
+        str
+            The study EBI submission status
+        """
+        with TRN:
+            sql = """SELECT ebi_submission_status
+                     FROM qiita.{0}
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
 
     # --- methods ---
     def raw_data(self, data_type=None):
