@@ -530,11 +530,35 @@ class TestStudy(TestCase):
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.ebi_study_accession, None)
 
+    def test_ebi_study_accession_setter(self):
+        new = Study.create(User('test@foo.bar'), 'Test', [1], self.info)
+        self.assertEqual(new.ebi_study_accession, None)
+        new.ebi_study_accession = 'EBI654321-BB'
+        self.assertEqual(new.ebi_study_accession, 'EBI654321-BB')
+
+        # Raises an error if the study already has an EBI study accession
+        with self.assertRaises(QiitaDBError):
+            self.study.ebi_study_accession = 'EBI654321-BB'
+
     def test_ebi_submission_status(self):
         self.assertEqual(self.study.ebi_submission_status, 'submitted')
         new = Study.create(User('test@foo.bar'), 'NOT Identification of the '
                            'Microbiomes for Cannabis Soils', [1], self.info)
         self.assertEqual(new.ebi_submission_status, 'not submitted')
+
+    def test_ebi_submission_status_setter(self):
+        new = Study.create(User('test@foo.bar'), 'Test', [1], self.info)
+        self.assertEqual(new.ebi_submission_status, "not submitted")
+        new.ebi_submission_status = 'submitting'
+        self.assertEqual(new.ebi_submission_status, 'submitting')
+        new.ebi_submission_status = 'failed: something horrible happened'
+        self.assertEqual(new.ebi_submission_status,
+                         'failed: something horrible happened')
+        new.ebi_submission_status = 'submitted'
+        self.assertEqual(new.ebi_submission_status, 'submitted')
+
+        with self.assertRaises(ValueError):
+            new.ebi_submission_status = "unknown"
 
     def test_retrieve_info(self):
         for key, val in viewitems(self.existingexp):

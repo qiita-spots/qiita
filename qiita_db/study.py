@@ -812,6 +812,31 @@ class Study(QiitaObject):
             TRN.add(sql, [self._id])
             return TRN.execute_fetchlast()
 
+    @ebi_study_accession.setter
+    def ebi_study_accession(self, value):
+        """Sets the study's EBI study accession
+
+        Parameters
+        ----------
+        value : str
+            The new EBI study accession
+
+        Raises
+        ------
+        QiitDBError
+            If the study already has an EBI study accession
+        """
+        with TRN:
+            if self.ebi_study_accession is not None:
+                raise QiitaDBError(
+                    "Study %s already has an EBI study accession"
+                    % self.id)
+            sql = """UPDATE qiita.{}
+                     SET ebi_study_accession = %s
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [value, self.id])
+            TRN.execute()
+
     @property
     def ebi_submission_status(self):
         """The EBI submission status of this study
@@ -827,6 +852,30 @@ class Study(QiitaObject):
                      WHERE study_id = %s""".format(self._table)
             TRN.add(sql, [self.id])
             return TRN.execute_fetchlast()
+
+    @ebi_submission_status.setter
+    def ebi_submission_status(self, value):
+        """Sets the study's EBI submission status
+
+        Parameters
+        ----------
+        value = str
+            The new EBI submission status
+
+        Raises
+        ------
+        ValueError
+            If the status is not known
+        """
+        if not (value in ('not submitted', 'submitting', 'submitted')
+                or value.startswith('failed')):
+            raise ValueError("Unknown status: %s" % value)
+        with TRN:
+            sql = """UPDATE qiita.{}
+                     SET ebi_submission_status = %s
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [value, self.id])
+            TRN.execute()
 
     # --- methods ---
     def raw_data(self, data_type=None):
