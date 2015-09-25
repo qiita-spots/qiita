@@ -1405,7 +1405,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'longitude': 41.41,
                 'taxon_id': 9606,
                 'scientific_name': 'homo sapiens'},
-            '%s.Sample5' %st.id: {
+            '%s.Sample5' % st.id: {
                 'int_column': 5,
                 'str_column': 'Value for sample 5',
                 'physical_specimen_location': 'location1',

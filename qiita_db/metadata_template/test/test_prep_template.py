@@ -786,57 +786,27 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
     def _common_creation_checks(self, new_id, pt, fp_count):
         # The returned object has the correct id
         self.assertEqual(pt.id, new_id)
-
-        # The row in the prep template table has been created
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template WHERE prep_template_id=%s",
-            (new_id,))
-        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
-        # investigation_type
-        self.assertEqual(obs, [[new_id, 2, None, 'not_preprocessed', None]])
-
-        # The prep template has been linked to the study
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_prep_template "
-            "WHERE prep_template_id=%s", (new_id,))
-        self.assertEqual(obs, [[self.test_study.id, new_id]])
-
-        # The relevant rows to prep_template_sample have been added.
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template_sample "
-            "WHERE prep_template_id=%s", (new_id,))
-        # prep_template_id, sample_id, center_name,
-        # center_project_name, emp_status_id
-        exp = [[new_id, '1.SKB8.640193'],
-               [new_id, '1.SKD8.640184'],
-               [new_id, '1.SKB7.640196']]
-        self.assertItemsEqual(obs, exp)
-
-        # The relevant rows have been added to the prep_columns table
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
-        # prep_template_id, column_name, column_type
-        exp = [[new_id, 'str_column', 'varchar'],
-               [new_id, 'ebi_submission_accession', 'varchar'],
-               [new_id, 'run_prefix', 'varchar'],
-               [new_id, 'barcode', 'varchar'],
-               [new_id, 'primer', 'varchar'],
-               [new_id, 'platform', 'varchar'],
-               [new_id, 'experiment_design_description', 'varchar'],
-               [new_id, 'library_construction_protocol', 'varchar'],
-               [new_id, 'center_name', 'varchar'],
-               [new_id, 'center_project_name', 'varchar'],
-               [new_id, 'emp_status', 'varchar']]
-        self.assertItemsEqual(obs, exp)
-
-        # The new table exists
-        self.assertTrue(exists_table("prep_%s" % new_id))
-
-        # The new table hosts the correct values
-        obs = [dict(o) for o in self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_%s" % new_id)]
-
-        exp = [{'sample_id': '1.SKB7.640196',
+        self.assertEqual(pt.data_type(), self.data_type)
+        self.assertEqual(pt.data_type(ret_id=True), self.data_type_id)
+        self.assertEqual(pt.raw_data, None)
+        self.assertEqual(pt.preprocessed_data, [])
+        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+        self.assertEqual(pt.investigation_type, None)
+        self.assertEqual(pt.study_id, self.test_study.id)
+        self.assertEqual(pt.status, "sandbox")
+        exp_sample_ids = {'%s.SKB8.640193' % self.test_study.id,
+                          '%s.SKD8.640184' % self.test_study.id,
+                          '%s.SKB7.640196' % self.test_study.id}
+        self.assertEqual(pt._get_sample_ids(), exp_sample_ids)
+        self.assertEqual(len(pt), 3)
+        exp_categories = {'str_column', 'ebi_submission_accession',
+                          'run_prefix', 'barcode', 'primer', 'platform',
+                          'experiment_design_description',
+                          'library_construction_protocol', 'center_name',
+                          'center_project_name', 'emp_status'}
+        self.assertEqual(set(pt.categories()), exp_categories)
+        exp_dict = {
+            '%s.SKB7.640196' % self.test_study.id: {
                 'barcode': 'CCTCTGAGAGCT',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
@@ -848,7 +818,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP'},
-               {'sample_id': '1.SKB8.640193',
+            '%s.SKB8.640193' % self.test_study.id: {
                 'barcode': 'GTCCGCAAGTTA',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
@@ -860,7 +830,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP'},
-               {'sample_id': '1.SKD8.640184',
+            '%s.SKD8.640184' % self.test_study.id: {
                 'barcode': 'CGTAGAGCTCTC',
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
@@ -871,9 +841,10 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'str_column': 'Value for sample 2',
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
-                'emp_status': 'EMP'}]
-
-        self.assertItemsEqual(obs, exp)
+                'emp_status': 'EMP'}
+        }
+        for s_id in exp_sample_ids:
+            self.assertEqual(pt[s_id]._to_dict(), exp_dict[s_id])
 
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
@@ -941,58 +912,28 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
                               self.metadata, self.test_study, self.data_type)
 
-        # The returned object has the correct id
         self.assertEqual(pt.id, new_id)
-
-        # The row in the prep template table has been created
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template WHERE prep_template_id=%s",
-            (new_id,))
-        # prep_template_id, data_type_id, raw_data_id, preprocessing_status,
-        # investigation_type
-        self.assertEqual(obs, [[new_id, 2, None, 'not_preprocessed', None]])
-
-        # The prep template has been linked to the study
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_prep_template "
-            "WHERE prep_template_id=%s", (new_id,))
-        self.assertEqual(obs, [[self.test_study.id, new_id]])
-
-        # The relevant rows to prep_template_sample have been added.
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_template_sample "
-            "WHERE prep_template_id=%s", (new_id,))
-        # prep_template_id, sample_id, center_name,
-        # center_project_name, emp_status_id
-        exp = [[new_id, '1.SKB8.640193'],
-               [new_id, '1.SKD8.640184'],
-               [new_id, '1.SKB7.640196']]
-        self.assertItemsEqual(obs, exp)
-
-        # The relevant rows have been added to the prep_columns table
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=2")
-        # prep_template_id, column_name, column_type
-        exp = [[new_id, 'str_column', 'varchar'],
-               [new_id, 'ebi_submission_accession', 'varchar'],
-               [new_id, 'run_prefix', 'varchar'],
-               [new_id, 'primer', 'varchar'],
-               [new_id, 'platform', 'varchar'],
-               [new_id, 'experiment_design_description', 'varchar'],
-               [new_id, 'library_construction_protocol', 'varchar'],
-               [new_id, 'center_name', 'varchar'],
-               [new_id, 'center_project_name', 'varchar'],
-               [new_id, 'emp_status', 'varchar']]
-        self.assertItemsEqual(obs, exp)
-
-        # The new table exists
-        self.assertTrue(exists_table("prep_%s" % new_id))
-
-        # The new table hosts the correct values
-        obs = [dict(o) for o in self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_%s" % new_id)]
-
-        exp = [{'sample_id': '1.SKB7.640196',
+        self.assertEqual(pt.data_type(), self.data_type)
+        self.assertEqual(pt.data_type(ret_id=True), self.data_type_id)
+        self.assertEqual(pt.raw_data, None)
+        self.assertEqual(pt.preprocessed_data, [])
+        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+        self.assertEqual(pt.investigation_type, None)
+        self.assertEqual(pt.study_id, self.test_study.id)
+        self.assertEqual(pt.status, 'sandbox')
+        exp_sample_ids = {'%s.SKB8.640193' % self.test_study.id,
+                          '%s.SKD8.640184' % self.test_study.id,
+                          '%s.SKB7.640196' % self.test_study.id}
+        self.assertEqual(pt._get_sample_ids(), exp_sample_ids)
+        self.assertEqual(len(pt), 3)
+        exp_categories = {'str_column', 'ebi_submission_accession',
+                          'run_prefix', 'primer', 'platform',
+                          'experiment_design_description',
+                          'library_construction_protocol', 'center_name',
+                          'center_project_name', 'emp_status'}
+        self.assertEqual(set(pt.categories()), exp_categories)
+        exp_dict = {
+            '%s.SKB7.640196' % self.test_study.id: {
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
@@ -1003,7 +944,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP'},
-               {'sample_id': '1.SKB8.640193',
+            '%s.SKB8.640193' % self.test_study.id: {
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
@@ -1014,7 +955,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
                 'emp_status': 'EMP'},
-               {'sample_id': '1.SKD8.640184',
+            '%s.SKD8.640184' % self.test_study.id: {
                 'ebi_submission_accession': None,
                 'experiment_design_description': 'BBBB',
                 'library_construction_protocol': 'AAAA',
@@ -1024,9 +965,10 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'str_column': 'Value for sample 2',
                 'center_name': 'ANL',
                 'center_project_name': 'Test Project',
-                'emp_status': 'EMP'}]
-
-        self.assertItemsEqual(obs, exp)
+                'emp_status': 'EMP'}
+        }
+        for s_id in exp_sample_ids:
+            self.assertEqual(pt[s_id]._to_dict(), exp_dict[s_id])
 
         # prep and qiime files have been created
         filepaths = pt.get_filepaths()
@@ -1264,16 +1206,10 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
 
-        # Test samples were appended successfully to the prep template sample
-        sql = """SELECT *
-                 FROM qiita.prep_template_sample
-                 WHERE prep_template_id = %s"""
-        obs = [dict(o)
-               for o in self.conn_handler.execute_fetchall(sql, (pt.id,))]
-        exp = [{'prep_template_id': 2, 'sample_id': '1.SKB8.640193'},
-               {'prep_template_id': 2, 'sample_id': '1.SKD8.640184'},
-               {'prep_template_id': 2, 'sample_id': '1.SKB7.640196'}]
-        self.assertItemsEqual(obs, exp)
+        exp_sample_ids = {'%s.SKB8.640193' % self.test_study.id,
+                          '%s.SKD8.640184' % self.test_study.id,
+                          '%s.SKB7.640196' % self.test_study.id}
+        self.assertEqual(pt._get_sample_ids(), exp_sample_ids)
 
     def test_extend_add_samples_error(self):
         """extend fails adding samples to an already preprocessed template"""
