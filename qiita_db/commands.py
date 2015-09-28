@@ -307,6 +307,60 @@ def load_parameters_from_cmd(name, fp, table):
     return constructor.create(name, **params)
 
 
+def update_raw_data_from_cmd(filepaths, filepath_types, study_id, rd_id=None):
+    """Updates the raw data of the study 'study_id'
+
+    Parameters
+    ----------
+    filepaths : iterable of str
+        Paths to the raw data files
+    filepath_types : iterable of str
+        Describes the contents of the files
+    study_id : int
+        The study_id of the study to be updated
+    rd_id : int, optional
+        The id of the raw data to be updated. If not provided, the raw data
+        with lowest id in the study will be updated
+
+    Returns
+    -------
+    qiita_db.data.RawData
+
+    Raises
+    ------
+    ValueError
+        If 'filepaths' and 'filepath_types' do not have the same length
+        If the study does not have any raw data
+        If rd_id is provided and it does not belong to the given study
+    """
+    if len(filepaths) != len(filepath_types):
+        raise ValueError("Please provide exactly one filepath_type for each"
+                         "and every filepath")
+    with TRN:
+        study = Study(study_id)
+        raw_data_ids = study.raw_data()
+        if not raw_data_ids:
+            raise ValueError("Study %s does not have any raw data" % study_id)
+
+        if rd_id:
+            if rd_id not in raw_data_ids:
+                raise ValueError(
+                    "The raw data %d does not exist in the study %d. Available"
+                    " raw data: %s"
+                    % (rd_id, study_id, ', '.join(map(str, raw_data_ids))))
+            raw_data = RawData(rd_id)
+        else:
+            raw_data = RawData(sorted(raw_data_ids)[0])
+
+        filepath_types_dict = get_filepath_types()
+        filepath_types = [filepath_types_dict[x] for x in filepath_types]
+
+        raw_data.clear_filepaths()
+        raw_data.add_filepaths(list(zip(filepaths, filepath_types)))
+
+    return raw_data
+
+
 def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
     """Updates the preprocessed data of the study 'study_id'
 
@@ -351,7 +405,8 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
         study = Study(study_id)
         ppds = study.preprocessed_data()
         if not ppds:
-            raise ValueError("Study %s does not have any preprocessed data")
+            raise ValueError("Study %s does not have any preprocessed data",
+                             study_id)
 
         if ppd_id:
             if ppd_id not in ppds:

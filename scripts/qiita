@@ -294,6 +294,13 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
                                             preprocessed_data)
     click.echo("Preprocessed data %s successfully updated" % ppd.id)
 
+
+@db.command()
+def update_raw_data():
+    """"""
+    rd = update_raw_data_from_cmd()
+    click.echo("Raw data %s successfully updated" % rd.id)
+
 # #############################################################################
 # PORTAL COMMANDS
 # #############################################################################
