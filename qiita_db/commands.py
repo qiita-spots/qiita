@@ -353,7 +353,15 @@ def update_raw_data_from_cmd(filepaths, filepath_types, study_id, rd_id=None):
             raw_data = RawData(sorted(raw_data_ids)[0])
 
         filepath_types_dict = get_filepath_types()
-        filepath_types = [filepath_types_dict[x] for x in filepath_types]
+        try:
+            filepath_types = [filepath_types_dict[x] for x in filepath_types]
+        except KeyError:
+            supported_types = filepath_types_dict.keys()
+            unsupported_types = set(filepath_types).difference(supported_types)
+            raise ValueError(
+                "Some filepath types provided are not recognized (%s). "
+                "Please choose from: %s"
+                % (', '.join(unsupported_types), ', '.join(supported_types)))
 
         fps = raw_data.get_filepaths()
         sql = "DELETE FROM qiita.raw_filepath WHERE raw_data_id = %s"
