@@ -31,7 +31,8 @@ from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.data import PreprocessedData, RawData
 from qiita_db.util import (get_count, check_count, get_db_files_base_dir,
-                           get_mountpoint, compute_checksum)
+                           get_mountpoint, compute_checksum,
+                           get_files_from_uploads_folders)
 from qiita_db.metadata_template import PrepTemplate
 from qiita_core.util import qiita_test_checker
 from qiita_ware.processing_pipeline import generate_demux_file
@@ -496,7 +497,15 @@ class TestUpdateRawDataFromCmd(TestCase):
                 f.write('\n')
             self._clean_up_files.append(fp)
 
+        self.uploaded_files = get_files_from_uploads_folders(
+            str(self.study.id))
+
     def tearDown(self):
+        new_uploaded_files = get_files_from_uploads_folders(str(self.study.id))
+        new_files = set(new_uploaded_files).difference(self.uploaded_files)
+        path_builder = partial(join, get_mountpoint("uploads")[0][1], '1')
+        for _, fp in new_files:
+            self._clean_up_files.append(path_builder(fp))
         for f in self._clean_up_files:
             if exists(f):
                 remove(f)
