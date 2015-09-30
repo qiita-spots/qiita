@@ -18,7 +18,7 @@ from shutil import move
 from .study import Study, StudyPerson
 from .user import User
 from .util import (get_filetypes, get_filepath_types, compute_checksum,
-                   convert_to_id)
+                   convert_to_id, move_filepaths_to_upload_folder)
 from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import (SampleTemplate, PrepTemplate,
                                 load_template_to_dataframe)
@@ -355,7 +355,12 @@ def update_raw_data_from_cmd(filepaths, filepath_types, study_id, rd_id=None):
         filepath_types_dict = get_filepath_types()
         filepath_types = [filepath_types_dict[x] for x in filepath_types]
 
-        raw_data.clear_filepaths()
+        fps = raw_data.get_filepaths()
+        sql = "DELETE FROM qiita.raw_filepath WHERE raw_data_id = %s"
+        TRN.add(sql, [raw_data.id])
+        TRN.execute()
+        move_filepaths_to_upload_folder(study_id, fps)
+
         raw_data.add_filepaths(list(zip(filepaths, filepath_types)))
 
     return raw_data
