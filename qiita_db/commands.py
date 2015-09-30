@@ -334,13 +334,13 @@ def update_raw_data_from_cmd(filepaths, filepath_types, study_id, rd_id=None):
         If rd_id is provided and it does not belong to the given study
     """
     if len(filepaths) != len(filepath_types):
-        raise ValueError("Please provide exactly one filepath_type for each"
+        raise ValueError("Please provide exactly one filepath_type for each "
                          "and every filepath")
     with TRN:
         study = Study(study_id)
         raw_data_ids = study.raw_data()
         if not raw_data_ids:
-            raise ValueError("Study %s does not have any raw data" % study_id)
+            raise ValueError("Study %d does not have any raw data" % study_id)
 
         if rd_id:
             if rd_id not in raw_data_ids:
