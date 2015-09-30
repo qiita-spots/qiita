@@ -30,6 +30,7 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_preprocessed_data_from_cmd,
                                load_prep_template_from_cmd,
                                load_parameters_from_cmd, SUPPORTED_PARAMS,
+                               update_raw_data_from_cmd,
                                update_preprocessed_data_from_cmd)
 from qiita_db.portal import Portal
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -279,6 +280,25 @@ def load_parameters(fp, table, name):
 
 
 @db.command()
+@click.option('--fp', required=True, type=click.Path(resolve_path=True,
+              readable=True, exists=True), multiple=True,
+              help='Path to the raw data file. This option can be used '
+              'multiple times if there are multiple raw data files.')
+@click.option('--fp_type', required=True, multiple=True, help='Describes the '
+              'contents of the file. Pass one fp_type per fp.',
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--study', required=True, type=int,
+              help='Study whose raw data will be updated')
+@click.option('--raw_data', required=False, type=int,
+              help='Raw data to be updated. If not passed, the raw data with '
+                   'lowest id in the study will be updated.')
+def update_raw_data(fp, fp_type, study, raw_data):
+    """Updates the raw data with the provided raw data files"""
+    rd = update_raw_data_from_cmd(fp, fp_type, study, rd_id=raw_data)
+    click.echo("Raw data %s successfully updated" % rd.id)
+
+
+@db.command()
 @click.argument('sl_out_dir', required=True,
                 type=click.Path(resolve_path=True, readable=True, exists=True,
                                 file_okay=False))
@@ -293,13 +313,6 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
     ppd = update_preprocessed_data_from_cmd(sl_out_dir, study,
                                             preprocessed_data)
     click.echo("Preprocessed data %s successfully updated" % ppd.id)
-
-
-@db.command()
-def update_raw_data():
-    """"""
-    rd = update_raw_data_from_cmd()
-    click.echo("Raw data %s successfully updated" % rd.id)
 
 # #############################################################################
 # PORTAL COMMANDS
