@@ -77,27 +77,38 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
         seqs_cmds = ebi_submission.generate_send_sequences_cmd()
         LogEntry.create('Runtime',
-                        'ASPERA_SCP_PASS changed. Going to try to submit seqs',
-                        info={'ebi_submission': preprocessed_data_id})
+                        ("Submitting sequences for pre_processed_id: "
+                         "%d" % preprocessed_data_id))
         try:
-            # place holder for moi submission, see PR notes in #1477
+            # place holder for moi call see #1477
             pass
         except:
             LogEntry.create('Fatal', seqs_cmds,
                             info={'ebi_submission': preprocessed_data_id})
+        else:
+            LogEntry.create('Runtime',
+                            ('Submission of sequences of pre_processed_id: '
+                             '%d completed successfully' %
+                             preprocessed_data_id))
         environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
         # step 5: sending xml and parsing answer
         xmls_cmds = ebi_submission.generate_curl_command()
-        LogEntry.create('Runtime', 'Submitting xml files',
-                        info={'ebi_submission': preprocessed_data_id})
+        LogEntry.create('Runtime',
+                        ("Submitting XMLs for pre_processed_id: "
+                         "%d" % preprocessed_data_id))
         try:
-            # place holder for moi submission, see PR notes in #1477
+            # place holder for moi call see #1477
             xmls_cmds_moi = xmls_cmds
-            pass
         except:
+            # handle exception
             LogEntry.create('Fatal', seqs_cmds,
                             info={'ebi_submission': preprocessed_data_id})
+        else:
+            LogEntry.create('Runtime',
+                            ('Submission of sequences of pre_processed_id: '
+                             '%d completed successfully' %
+                             preprocessed_data_id))
 
         study_acc, submission_acc = ebi_submission.parse_EBI_reply(
             xmls_cmds_moi)
