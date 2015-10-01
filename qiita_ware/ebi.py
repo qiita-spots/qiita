@@ -6,6 +6,7 @@ from xml.etree import ElementTree as ET
 from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
+from numpy import asarray, array_split
 
 from future.utils import viewitems
 from skbio.util import safe_md5, create_dir
@@ -53,7 +54,7 @@ def clean_whitespace(text):
     str
         fixed text
     """
-    return ' '.join(str(text).split())
+    return ' '.join(unicode(str(text), 'utf8').split())
 
 
 class EBISubmission(object):
@@ -430,6 +431,10 @@ class EBISubmission(object):
             platform_element = ET.SubElement(experiment, 'PLATFORM')
             platform_info = ET.SubElement(platform_element,
                                           platform.upper())
+
+                                        ############################
+                                        ########################
+                                        #   fix this!
             if 'instrument_model' in sample_prep:
                 element = ET.SubElement(platform_info, 'INSTRUMENT_MODEL')
                 element.text = sample_prep.pop('instrument_model')
@@ -591,7 +596,7 @@ class EBISubmission(object):
           be generated before executing this function
         """
         # make sure that the XML files have been generated
-        url = '?auth=ERA%20{0}%20{1}%3D'.format(ebi_seq_xfer_user,
+        url = '?auth=ENA%20{0}%20{1}'.format(ebi_seq_xfer_user,
                                                 ebi_access_key)
         curl_command = (
             'curl {0}-F "SUBMISSION=@{1}" -F "STUDY=@{2}" -F "SAMPLE=@{3}" '
@@ -622,16 +627,24 @@ class EBISubmission(object):
           be generated before executing this function
         """
         fastqs = [sfp for _, sfp in viewitems(self.sample_demux_fps)]
+        # divide all the fastqs in groups of 10
+        fastqs_div = [fastqs[i::10] for i in range(10) if fastqs[i::10]]
+        ascp_commands = []
+        for f in fastqs_div:
+            ascp_commands.append('ascp --ignore-host-key -L- -d -QT -k2 '
+                                 '{0} {1}@{2}:./{3}/'.format(
+                                 ' '.join(f), qiita_config.ebi_seq_xfer_user,
+                                 qiita_config.ebi_seq_xfer_url, self.ebi_dir))
 
-        ascp_command = ('ascp --ignore-host-key -L- -d -QT -k2 '
-                        '{0} {1}@{2}:./{3}/'.format(
-                            ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
-                            qiita_config.ebi_seq_xfer_url, self.ebi_dir))
-
-        return ascp_command
+        return ascp_commands
 
     def parse_EBI_reply(self, curl_result):
         """Parse and verify reply from EBI after sending XML files
+
+        Parameters
+        ----------
+        curl_result : str
+            The reply sent by EBI after sending XML files
 
         Returns
         -------
@@ -639,11 +652,6 @@ class EBISubmission(object):
             The study accession number, in case of failure it returns None
         submission_accession
             The submission accession number, in case of failure it returns None
-
-        Parameters
-        ----------
-        curl_result : str
-            The reply sent by EBI after sending XML files
         """
         study_accession = None
         submission_accession = None
@@ -698,7 +706,7 @@ class EBISubmission(object):
             demux_samples = set()
             with open_file(demux) as demux_fh:
                 for s, i in to_per_sample_ascii(demux_fh,
-                                                self.sample_template.keys()):
+                                                self.prep_template.keys()):
                     sample_fp = self.sample_demux_fps[s]
                     wrote_sequences = False
                     with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:

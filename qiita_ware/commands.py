@@ -79,23 +79,29 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
         environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
         try:
-            # seqs_cmds = ebi_submission.generate_send_sequences_cmd()
-            # run commands in moi
-            ebi_submission.generate_send_sequences_cmd()
+            seqs_cmds = ebi_submission.generate_send_sequences_cmd()
+            # send seqs_cmds to moi and get the reply
+            # temporarly setting to seqs_cmds
+            seqs_cmds_moi = seqs_cmds
+        except:
+            LogEntry.create('Fatal', seqs_cmds_moi,
+                            info={'ebi_submission': preprocessed_data_id})
+            ebi_submission.preprocessed_data.update_insdc_status('failed')
         finally:
             environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
         # step 5: sending xml and parsing answer
-        # execute in moi and parse result
-        # xmls_cmds = ebi_submission.generate_curl_command()
-        ebi_submission.generate_curl_command()
-        result = ''
-        LogEntry.create('Runtime', result,
+        xmls_cmds = ebi_submission.generate_curl_command()
+        # send xmls_cmds to moi and get the reply
+        # temporarly setting to xmls_cmds
+        xmls_cmds_moi = xmls_cmds
+        LogEntry.create('Runtime', xmls_cmds_moi,
                         info={'ebi_submission': preprocessed_data_id})
-        study_acc, submission_acc = ebi_submission.parse_EBI_reply()
+        study_acc, submission_acc = ebi_submission.parse_EBI_reply(
+            xmls_cmds_moi)
 
         if study_acc is None or submission_acc is None:
-            LogEntry.create('Fatal', result,
+            LogEntry.create('Fatal', xmls_cmds_moi,
                             info={'ebi_submission': preprocessed_data_id})
             ebi_submission.preprocessed_data.update_insdc_status('failed')
             raise ComputeError("EBI Submission failed!")

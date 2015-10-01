@@ -7,9 +7,6 @@ env:
     - TEST_ADD_STUDIES=False
     - TEST_ADD_STUDIES=True
 before_install:
-  - openssl aes-256-cbc -K $encrypted_e698cf0e691c_key -iv $encrypted_e698cf0e691c_iv
-    -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg
-    -d
   - redis-server --version
   - wget http://repo.continuum.io/miniconda/Miniconda3-3.7.3-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
@@ -18,9 +15,7 @@ before_install:
   # Update conda itself
   - conda update --yes conda
   # Downloading and setting up ascp for EBI testing
-  - curl -s -O ftp://ftp.microbio.me/pub/qiita/ascp-install-3.5.4.102989-linux-64-qiita.sh
-  - chmod +x ascp-install-3.5.4.102989-linux-64-qiita.sh
-  - ./ascp-install-3.5.4.102989-linux-64-qiita.sh
+  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then sh setup_acsp.sh; fi
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
@@ -31,8 +26,9 @@ install:
   - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
   - travis_retry pip install .
 script:
-  - export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg
-  - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg
+  - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
+  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg; fi
+  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg; fi
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
