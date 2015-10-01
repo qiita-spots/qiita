@@ -20,6 +20,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import ComputeError
 from traceback import format_exc
+from os import environ
 
 
 def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
@@ -70,22 +71,60 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
     ebi_submission.write_xml_file(ebi_submission.generate_submission_xml(),
                                   ebi_submission.submission_xml_fp)
 
-    # other steps
     if send:
-        ebi_submission.send_sequences()
-        study_accession, submission_accession = ebi_submission.send_xml()
+        # step 4: sending sequences
+        old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
+        environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
+        seqs_cmds = ebi_submission.generate_send_sequences_cmd()
+        LogEntry.create('Runtime',
+                        ("Submitting sequences for pre_processed_id: "
+                         "%d" % preprocessed_data_id))
+        try:
+            # place holder for moi call see #1477
+            pass
+        except:
+            LogEntry.create('Fatal', seqs_cmds,
+                            info={'ebi_submission': preprocessed_data_id})
+        else:
+            LogEntry.create('Runtime',
+                            ('Submission of sequences of pre_processed_id: '
+                             '%d completed successfully' %
+                             preprocessed_data_id))
+        environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
-        if study_accession is None or submission_accession is None:
+        # step 5: sending xml and parsing answer
+        xmls_cmds = ebi_submission.generate_curl_command()
+        LogEntry.create('Runtime',
+                        ("Submitting XMLs for pre_processed_id: "
+                         "%d" % preprocessed_data_id))
+        try:
+            # place holder for moi call see #1477
+            xmls_cmds_moi = xmls_cmds
+        except:
+            # handle exception
+            LogEntry.create('Fatal', seqs_cmds,
+                            info={'ebi_submission': preprocessed_data_id})
+        else:
+            LogEntry.create('Runtime',
+                            ('Submission of sequences of pre_processed_id: '
+                             '%d completed successfully' %
+                             preprocessed_data_id))
+
+        study_acc, submission_acc = ebi_submission.parse_EBI_reply(
+            xmls_cmds_moi)
+
+        if study_acc is None or submission_acc is None:
+            LogEntry.create('Fatal', xmls_cmds_moi,
+                            info={'ebi_submission': preprocessed_data_id})
             ebi_submission.preprocessed_data.update_insdc_status('failed')
-
             raise ComputeError("EBI Submission failed!")
         else:
             ebi_submission.preprocessed_data.update_insdc_status(
-                'success', study_accession, submission_accession)
+                'success', study_acc, submission_acc)
     else:
-        study_accession, submission_accession = None, None
+        study_acc, submission_acc = None, None
 
-    return study_accession, submission_accession
+    return study_acc, submission_acc
 
 
 def submit_VAMPS(preprocessed_data_id):

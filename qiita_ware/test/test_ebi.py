@@ -223,8 +223,8 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                '-F "SAMPLE=@%(xml_dir)s/sample.xml" '
                '-F "RUN=@%(xml_dir)s/run.xml" '
                '-F "EXPERIMENT=@%(xml_dir)s/experiment.xml" '
-               '"ebi_dropbox_url/?auth=ERA%%20ebi_seq_xfer_user'
-               '%%20ebi_access_key%%3D"') % {'xml_dir': submission.xml_dir}
+               '"ebi_dropbox_url/?auth=ENA%%20ebi_seq_xfer_user'
+               '%%20ebi_access_key"') % {'xml_dir': submission.xml_dir}
         self.assertEqual(obs, exp)
 
         # With curl certificate authentication
@@ -239,9 +239,30 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                '-F "SAMPLE=@%(xml_dir)s/sample.xml" '
                '-F "RUN=@%(xml_dir)s/run.xml" '
                '-F "EXPERIMENT=@%(xml_dir)s/experiment.xml" '
-               '"ebi_dropbox_url/?auth=ERA%%20ebi_seq_xfer_user'
-               '%%20ebi_access_key%%3D"') % {'xml_dir': submission.xml_dir}
+               '"ebi_dropbox_url/?auth=ENA%%20ebi_seq_xfer_user'
+               '%%20ebi_access_key"') % {'xml_dir': submission.xml_dir}
         self.assertEqual(obs, exp)
+
+    def test_parse_EBI_reply(self):
+        e = EBISubmission(2, 'ADD')
+        curl_result = ""
+        stacc, sbacc = e.parse_EBI_reply(curl_result)
+        self.assertIsNone(stacc)
+        self.assertIsNone(sbacc)
+
+        curl_result = 'success="true"'
+        stacc, sbacc = e.parse_EBI_reply(curl_result)
+        self.assertIsNone(stacc)
+        self.assertIsNone(sbacc)
+
+        curl_result = ('some general text success="true" more text'
+                       '<STUDY accession="staccession" some text> '
+                       'some othe text'
+                       '<SUBMISSION accession="sbaccession" some text>'
+                       'some final text')
+        stacc, sbacc = e.parse_EBI_reply(curl_result)
+        self.assertEqual(stacc, "staccession")
+        self.assertEqual(sbacc, "sbaccession")
 
 
 @qiita_test_checker()
@@ -397,6 +418,46 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
         self.assertItemsEqual(obs_demux_samples,
                               ebi_submission.samples_prep.keys())
+
+    def test_generate_send_sequences_cmd(self):
+        ppd = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(ppd.id, 'ADD')
+        e.generate_demultiplexed_fastq()
+        self.files_to_remove.append(e.ebi_dir)
+        e.write_xml_file(e.generate_study_xml(), e.study_xml_fp)
+        e.write_xml_file(e.generate_sample_xml(), e.sample_xml_fp)
+        e.write_xml_file(e.generate_experiment_xml(), e.experiment_xml_fp)
+        e.write_xml_file(e.generate_run_xml(), e.run_xml_fp)
+        e.write_xml_file(e.generate_submission_xml(), e.submission_xml_fp)
+        obs = e.generate_send_sequences_cmd()
+        exp = ['ascp --ignore-host-key -L- -d -QT -k2 '
+               '/tmp/ebi_submission_3/1.SKB2.640194.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               'ascp --ignore-host-key -L- -d -QT -k2 '
+               '/tmp/ebi_submission_3/1.SKM4.640180.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               'ascp --ignore-host-key -L- -d -QT -k2 '
+               '/tmp/ebi_submission_3/1.SKB3.640195.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               'ascp --ignore-host-key -L- -d -QT -k2 '
+               '/tmp/ebi_submission_3/1.SKB6.640176.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               'ascp --ignore-host-key -L- -d -QT -k2 '
+               '/tmp/ebi_submission_3/1.SKD6.640190.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               'ascp --ignore-host-key -L- -d -QT -k2 '
+               '/tmp/ebi_submission_3/1.SKM6.640187.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               'ascp --ignore-host-key -L- -d -QT -k2 '
+               '/tmp/ebi_submission_3/1.SKD9.640182.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               'ascp --ignore-host-key -L- -d -QT -k2 '
+               '/tmp/ebi_submission_3/1.SKM8.640201.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               'ascp --ignore-host-key -L- -d -QT -k2 '
+               '/tmp/ebi_submission_3/1.SKM2.640199.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/']
+        self.assertEqual(obs, exp)
 
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
