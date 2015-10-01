@@ -6,7 +6,6 @@ from xml.etree import ElementTree as ET
 from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
-from numpy import asarray, array_split
 
 from future.utils import viewitems
 from skbio.util import safe_md5, create_dir
@@ -432,9 +431,6 @@ class EBISubmission(object):
             platform_info = ET.SubElement(platform_element,
                                           platform.upper())
 
-                                        ############################
-                                        ########################
-                                        #   fix this!
             if 'instrument_model' in sample_prep:
                 element = ET.SubElement(platform_info, 'INSTRUMENT_MODEL')
                 element.text = sample_prep.pop('instrument_model')
@@ -597,7 +593,7 @@ class EBISubmission(object):
         """
         # make sure that the XML files have been generated
         url = '?auth=ENA%20{0}%20{1}'.format(ebi_seq_xfer_user,
-                                                ebi_access_key)
+                                             ebi_access_key)
         curl_command = (
             'curl {0}-F "SUBMISSION=@{1}" -F "STUDY=@{2}" -F "SAMPLE=@{3}" '
             '-F "RUN=@{4}" -F "EXPERIMENT=@{5}" "{6}"'
@@ -633,8 +629,10 @@ class EBISubmission(object):
         for f in fastqs_div:
             ascp_commands.append('ascp --ignore-host-key -L- -d -QT -k2 '
                                  '{0} {1}@{2}:./{3}/'.format(
-                                 ' '.join(f), qiita_config.ebi_seq_xfer_user,
-                                 qiita_config.ebi_seq_xfer_url, self.ebi_dir))
+                                    ' '.join(f),
+                                    qiita_config.ebi_seq_xfer_user,
+                                    qiita_config.ebi_seq_xfer_url,
+                                    self.ebi_dir))
 
         return ascp_commands
 

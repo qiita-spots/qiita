@@ -22,7 +22,6 @@ import pandas as pd
 from datetime import date
 
 from h5py import File
-from future.utils import viewitems
 
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import EBISumbissionError
