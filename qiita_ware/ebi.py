@@ -3,6 +3,7 @@ from os.path import basename, join, isdir, isfile
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
 from xml.etree import ElementTree as ET
+from xml.etree.ElementTree import ParseError
 from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
@@ -208,10 +209,10 @@ class EBISubmission(object):
 
     def _get_study_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
-        study_alias_format = '%s_ppdid_%s'
+        study_alias_format = '%s_sid_%s'
         return study_alias_format % (
             qiita_config.ebi_organization_prefix,
-            escape(clean_whitespace(str(self.preprocessed_data_id))))
+            escape(clean_whitespace(str(self.study.id))))
 
     def _get_sample_alias(self, sample_name):
         """Format alias using ``self.preprocessed_data_id``, `sample_name`"""
@@ -224,7 +225,11 @@ class EBISubmission(object):
         Currently, this is identical to _get_sample_alias above, since we are
         only going to allow submission of one prep for each sample
         """
-        return self._get_sample_alias(sample_name)
+        exp_alias_format = '%s_ptid_%s:%s'
+        return exp_alias_format % (
+            qiita_config.ebi_organization_prefix,
+            escape(clean_whitespace(str(self.prep_template.id))),
+            escape(clean_whitespace(str(sample_name))))
 
     def _get_submission_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
@@ -237,8 +242,10 @@ class EBISubmission(object):
     def _get_run_alias(self, file_base_name):
         """Format alias using `file_base_name`
         """
-        return '%s_%s_run' % (self._get_study_alias(),
-                              basename(file_base_name))
+        return '%s_ppdid_%s:%s' % (
+            qiita_config.ebi_organization_prefix,
+            escape(clean_whitespace(str(self.preprocessed_data_id))),
+            basename(file_base_name))
 
     def _get_library_name(self, sample_name):
         """Format alias using `sample_name`
@@ -654,23 +661,50 @@ class EBISubmission(object):
 
         Returns
         -------
-        study_accession
-            The study accession number, in case of failure it returns None
-        submission_accession
-            The submission accession number, in case of failure it returns None
+        bool
+            If the submission was successful or not
+        study_accession : str
+            The study accession number. None in case of failure
+        sample_accessions : dict of {str: str}
+            The sample accession numbers, keyed by sample id. None in case of
+            failure
+        experiment_accessions : dict of {str: str}
+            The experiment accession numbers, keyed by sample id. None in case
+            of failure
+        run_accessions : dict of {str: str}
+            The run accession numbers, keyed by sample id. None in case of
+            failure
         """
-        study_accession = None
-        submission_accession = None
+        try:
+            root = ET.fromstring(curl_result)
+        except ParseError:
+            return False, None, None, None, None
 
-        if 'success="true"' in curl_result:
-            accessions = search('<STUDY accession="(?P<study>.+?)".*?'
-                                '<SUBMISSION accession="(?P<submission>.+?)"',
-                                curl_result)
-            if accessions is not None:
-                study_accession = accessions.group('study')
-                submission_accession = accessions.group('submission')
+        success = root.get('success') == 'true'
+        if not success:
+            return success, None, None, None, None
 
-        return study_accession, submission_accession
+        study_elem = root.findall("STUDY")
+        if len(study_elem) > 1:
+            raise EBISumbissionError(
+                "Multiple study tags found in EBI reply: %d" % len(study_elem))
+        study_elem = study_elem[0]
+        study_accession = study_elem.get('accession')
+
+        def data_retriever(key, trans_dict):
+            res = {}
+            for elem in root.iter(key):
+                alias = elem.get('alias')
+                res[trans_dict[alias]] = elem.get('accession')
+            return res
+
+        sample_accessions = data_retriever("SAMPLE", self.sample_aliases)
+        experiment_accessions = data_retriever("EXPERIMENT",
+                                               self.experiment_aliases)
+        run_accessions = data_retriever("RUN", self.run_aliases)
+
+        return (success, study_accession, sample_accessions,
+                experiment_accessions, run_accessions)
 
     def generate_demultiplexed_fastq(self, rewrite_fastq=False, mtime=None):
         """Generates demultiplexed fastq

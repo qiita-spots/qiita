@@ -93,23 +93,29 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_get_study_alias(self):
         e = EBISubmission(2, 'ADD')
-        exp = '%s_ppdid_2' % qiita_config.ebi_organization_prefix
+        exp = '%s_sid_1' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_study_alias(), exp)
 
     def test_get_sample_alias(self):
         e = EBISubmission(2, 'ADD')
-        exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
+        exp = '%s_sid_1:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_sample_alias('foo'), exp)
 
     def test_get_experiment_alias(self):
         e = EBISubmission(2, 'ADD')
-        exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
+        exp = '%s_ptid_1:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_experiment_alias('foo'), exp)
 
     def test_get_submission_alias(self):
         e = EBISubmission(2, 'ADD')
         obs = e._get_submission_alias()
         exp = '%s_submission_2' % qiita_config.ebi_organization_prefix
+        self.assertEqual(obs, exp)
+
+    def test_get_run_alias(self):
+        e = EBISubmission(2, 'ADD')
+        obs = e._get_run_alias('/some/path/seqs.fastq.gz')
+        exp = '%s_ppdid_2:seqs.fastq.gz' % qiita_config.ebi_organization_prefix
         self.assertEqual(obs, exp)
 
     def test_get_library_name(self):
@@ -489,7 +495,7 @@ CCACCCAGTAAC
 SAMPLEXML = """
 <SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.sample.xsd">
-  <SAMPLE alias="%(organization_prefix)s_ppdid_2:1.SKB2.640194" \
+  <SAMPLE alias="%(organization_prefix)s_sid_1:1.SKB2.640194" \
 center_name="%(center_name)s">
       <TITLE>1.SKB2.640194</TITLE>
     <SAMPLE_NAME>
@@ -580,7 +586,7 @@ shrubland biome</VALUE>
       </SAMPLE_ATTRIBUTE>
     </SAMPLE_ATTRIBUTES>
   </SAMPLE>
-  <SAMPLE alias="%(organization_prefix)s_ppdid_2:1.SKB3.640195" \
+  <SAMPLE alias="%(organization_prefix)s_sid_1:1.SKB3.640195" \
 center_name="%(center_name)s">
     <TITLE>1.SKB3.640195</TITLE>
     <SAMPLE_NAME>
@@ -680,7 +686,7 @@ shrubland biome</VALUE>
 STUDYXML = """
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
-  <STUDY alias="%(organization_prefix)s_ppdid_2" center_name="%(center_name)s">
+  <STUDY alias="%(organization_prefix)s_sid_1" center_name="%(center_name)s">
     <DESCRIPTOR>
       <STUDY_TITLE>
         Identification of the Microbiomes for Cannabis Soils
@@ -717,15 +723,15 @@ EXPERIMENTXML = """
 <EXPERIMENT_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.\
 experiment.xsd">
-  <EXPERIMENT alias="%(organization_prefix)s_ppdid_2:1.SKB2.640194" \
+  <EXPERIMENT alias="%(organization_prefix)s_ptid_1:1.SKB2.640194" \
 center_name="%(center_name)s">
-    <TITLE>%(organization_prefix)s_ppdid_2:1.SKB2.640194</TITLE>
-    <STUDY_REF refname="%(organization_prefix)s_ppdid_2" />
+    <TITLE>%(organization_prefix)s_ptid_1:1.SKB2.640194</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_sid_1" />
     <DESIGN>
       <DESIGN_DESCRIPTION>
         micro biome of soil and rhizosphere of cannabis plants from CA
       </DESIGN_DESCRIPTION>
-      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_ppdid_2:1.SKB2.\
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_sid_1:1.SKB2.\
 640194" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB2.640194</LIBRARY_NAME>
@@ -803,15 +809,15 @@ REV:GGACTACHVGGGTWTCTAAT</VALUE>
       </EXPERIMENT_ATTRIBUTE>
     </EXPERIMENT_ATTRIBUTES>
   </EXPERIMENT>
-  <EXPERIMENT alias="%(organization_prefix)s_ppdid_2:1.SKB3.640195" \
+  <EXPERIMENT alias="%(organization_prefix)s_ptid_1:1.SKB3.640195" \
 center_name="%(center_name)s">
-    <TITLE>%(organization_prefix)s_ppdid_2:1.SKB3.640195</TITLE>
-    <STUDY_REF refname="%(organization_prefix)s_ppdid_2" />
+    <TITLE>%(organization_prefix)s_ptid_1:1.SKB3.640195</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_sid_1" />
     <DESIGN>
       <DESIGN_DESCRIPTION>
         micro biome of soil and rhizosphere of cannabis plants from CA
       </DESIGN_DESCRIPTION>
-      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_ppdid_2:1.SKB3.\
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_sid_1:1.SKB3.\
 640195" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB3.640195</LIBRARY_NAME>
@@ -896,9 +902,9 @@ REV:GGACTACHVGGGTWTCTAAT</VALUE>
 RUNXML = """
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespace\
 SchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="%(study_alias)s_1.SKB2.640194.fastq.gz_run" \
+  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKB2.640194.fastq.gz" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKB2.640194" />
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKB2.640194" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="938c29679790b9c17e4dab060fa4c8c5" \
@@ -907,9 +913,9 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(study_alias)s_1.SKM4.640180.fastq.gz_run" \
+  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKM4.640180.fastq.gz" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKM4.640180" />
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKM4.640180" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="2f8f469a8075b42e401ff0a2c85dc0e5" \
@@ -918,9 +924,9 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(study_alias)s_1.SKB3.640195.fastq.gz_run" \
+  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKB3.640195.fastq.gz" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKB3.640195" />
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKB3.640195" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="550794cf00ec86b9d3e2feb08cb7a97b" \
@@ -929,9 +935,9 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(study_alias)s_1.SKB6.640176.fastq.gz_run" \
+  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKB6.640176.fastq.gz" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKB6.640176" />
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKB6.640176" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="adcc754811b86a240f0cc3d59c188cd0" \
@@ -1041,6 +1047,46 @@ EXP_PREP_TEMPLATE_FILTERED = (
     "sample2\tANL\tTest Project\t2\t1\tValue for sample 1"
     "\tILLUMINA\texp design\tlib protocol\n")
 
+CURL_RESULT = """<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+<RECEIPT receiptDate="2015-09-20T23:27:01.924+01:00" submissionFile="submission.xml" success="true">
+  <EXPERIMENT accession="ERX0000000" alias="qiime_ppdid_570:2010.1" status="PRIVATE"/>
+  <EXPERIMENT accession="ERX0000001" alias="qiime_ppdid_570:2010.1217" status="PRIVATE"/>
+  <EXPERIMENT accession="ERX0000002" alias="qiime_ppdid_570:2010.1218" status="PRIVATE"/>
+  <EXPERIMENT accession="ERX0000003" alias="qiime_ppdid_570:2010.1219" status="PRIVATE"/>
+  <EXPERIMENT accession="ERX0000004" alias="qiime_ppdid_570:2010.1220" status="PRIVATE"/>
+  <RUN accession="ERR0000000" alias="qiime_ppdid_570_2010.1.fastq.gz_run" status="PRIVATE"/>
+  <RUN accession="ERR0000001" alias="qiime_ppdid_570_2010.1217.fastq.gz_run" status="PRIVATE"/>
+  <RUN accession="ERR0000002" alias="qiime_ppdid_570_2010.1218.fastq.gz_run" status="PRIVATE"/>
+  <RUN accession="ERR0000003" alias="qiime_ppdid_570_2010.1219.fastq.gz_run" status="PRIVATE"/>
+  <RUN accession="ERR0000004" alias="qiime_ppdid_570_2010.1220.fastq.gz_run" status="PRIVATE"/>
+  <SAMPLE accession="ERS000000" alias="qiime_ppdid_570:2010.1" status="PRIVATE">
+    <EXT_ID accession="SAMEA3544177" type="biosample"/>
+  </SAMPLE>
+  <SAMPLE accession="ERS000001" alias="qiime_ppdid_570:2010.1217" status="PRIVATE">
+    <EXT_ID accession="SAMEA3544178" type="biosample"/>
+  </SAMPLE>
+  <SAMPLE accession="ERS000002" alias="qiime_ppdid_570:2010.1218" status="PRIVATE">
+    <EXT_ID accession="SAMEA3544179" type="biosample"/>
+  </SAMPLE>
+  <SAMPLE accession="ERS000003" alias="qiime_ppdid_570:2010.1219" status="PRIVATE">
+    <EXT_ID accession="SAMEA3544180" type="biosample"/>
+  </SAMPLE>
+  <SAMPLE accession="ERS000004" alias="qiime_ppdid_570:2010.1220" status="PRIVATE">
+    <EXT_ID accession="SAMEA3544181" type="biosample"/>
+  </SAMPLE>
+  <STUDY accession="ERP000000" alias="qiime_ppdid_570" status="PRIVATE" holdUntilDate="2016-09-19+01:00"/>
+  <SUBMISSION accession="ERA000000" alias="qiime_submission_570"/>
+  <MESSAGES>
+    <INFO> ADD action for the following XML: study.xml sample.xml experiment.xml run.xml       </INFO>
+  </MESSAGES>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>HOLD</ACTIONS>
+</RECEIPT>
+"""
 
 if __name__ == "__main__":
     main()
