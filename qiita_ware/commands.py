@@ -110,21 +110,25 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
                              '%d completed successfully' %
                              preprocessed_data_id))
 
-        study_acc, submission_acc = ebi_submission.parse_EBI_reply(
-            xmls_cmds_moi)
+        success, st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
+            ebi_submission.parse_EBI_reply(xmls_cmds_moi)
 
-        if study_acc is None or submission_acc is None:
-            LogEntry.create('Fatal', xmls_cmds_moi,
-                            info={'ebi_submission': preprocessed_data_id})
+        if not success:
+            le = LogEntry.create('Fatal', xmls_cmds_moi,
+                                 info={'ebi_submission': preprocessed_data_id})
             ebi_submission.preprocessed_data.update_insdc_status('failed')
-            raise ComputeError("EBI Submission failed!")
+            raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
         else:
-            ebi_submission.preprocessed_data.update_insdc_status(
-                'success', study_acc, submission_acc)
+            ebi_submission.study.ebi_submission_status = 'submitted'
+            ebi_submission.study.ebi_study_accession = st_acc
+            ebi_submission.sample_template.ebi_sample_accessions = sa_acc
+            ebi_submission.sample_template.biosample_accessions = bio_acc
+            ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
+            ebi_submission.preprocessed_data.ebi_run_accessions = run_acc
     else:
-        study_acc, submission_acc = None, None
+        st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
 
-    return study_acc, submission_acc
+    return st_acc, sa_acc, bio_acc, ex_acc, run_acc
 
 
 def submit_VAMPS(preprocessed_data_id):
