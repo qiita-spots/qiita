@@ -10,7 +10,7 @@ ALTER TABLE qiita.study_sample ADD ebi_sample_accession varchar  ;
 CREATE TABLE qiita.ebi_run_accession (
 	sample_id            varchar  	NOT NULL,
 	preprocessed_data_id bigint		NOT NULL,
-	ebi_run_accession    bigint 	NOT NULL,
+	ebi_run_accession    varchar 	NOT NULL,
 	CONSTRAINT idx_ebi_run_accession PRIMARY KEY ( sample_id, preprocessed_data_id, ebi_run_accession )
  ) ;
 CREATE INDEX idx_ebi_run_accession_sid ON qiita.ebi_run_accession ( sample_id ) ;

@@ -1947,7 +1947,7 @@ Controlled Vocabulary</title></a>
 <a xlink:href='#ebi_run_accession.preprocessed_data_id'><text x='1533' y='607'>preprocessed_data_id</text><title>preprocessed_data_id bigint not null</title></a>
 <a xlink:href='#ebi_run_accession.preprocessed_data_id'><use id='fk' x='1653' y='596' xlink:href='#fk'/><title>References preprocessed_data ( preprocessed_data_id ) </title></a>
   <use id='nn' x='1517' y='612' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.ebi_run_accession'><use id='pk' x='1517' y='611' xlink:href='#pk'/><title>Primary Key  ( sample_id, preprocessed_data_id, ebi_run_accession ) </title></a>
-<a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1533' y='622'>ebi_run_accession</text><title>ebi_run_accession bigint not null</title></a>
+<a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1533' y='622'>ebi_run_accession</text><title>ebi_run_accession varchar not null</title></a>
 
 </g></svg>
 
@@ -5583,7 +5583,7 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>
 		<td><a name='ebi_run_accession.ebi_run_accession'>ebi&#095;run&#095;accession</a></td>
-		<td> bigint  NOT NULL  </td>
+		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
