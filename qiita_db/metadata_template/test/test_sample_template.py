@@ -1053,46 +1053,21 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         new_id = self.new_study.id
         # The returned object has the correct id
         self.assertEqual(st.id, new_id)
-
-        # The table qiita.study_sample has been correctly populates
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_sample WHERE study_id=%s", (new_id,))
-        exp = [["%s.Sample1" % new_id, new_id, None],
-               ["%s.Sample2" % new_id, new_id, None],
-               ["%s.Sample3" % new_id, new_id, None]]
-        self.assertEqual(obs, exp)
-
-        # The relevant rows have been added to the study_sample_columns
-        sql = """SELECT study_id, column_name, column_type
-                 FROM qiita.study_sample_columns
-                 WHERE study_id=%s
-                 ORDER BY column_name"""
-        obs = self.conn_handler.execute_fetchall(sql, (new_id,))
-
-        # study_id, column_name, column_type
-        exp = [[new_id, 'collection_timestamp', 'timestamp'],
-               [new_id, 'description', 'varchar'],
-               [new_id, 'dna_extracted', 'bool'],
-               [new_id, 'host_subject_id', 'varchar'],
-               [new_id, 'int_column', 'integer'],
-               [new_id, 'latitude', 'float8'],
-               [new_id, 'longitude', 'float8'],
-               [new_id, 'physical_specimen_location', 'varchar'],
-               [new_id, 'physical_specimen_remaining', 'bool'],
-               [new_id, 'sample_type', 'varchar'],
-               [new_id, 'scientific_name', 'varchar'],
-               [new_id, 'str_column', 'varchar'],
-               [new_id, 'taxon_id', 'integer']]
-        self.assertEqual(obs, exp)
-
-        # The new table exists
-        self.assertTrue(exists_table("sample_%s" % new_id))
-
-        # The new table hosts the correct values
-        sql = "SELECT * FROM qiita.sample_{0}".format(new_id)
-        obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
-
-        exp = [{'sample_id': "%s.Sample1" % new_id,
+        self.assertEqual(st.study_id, self.new_study.id)
+        self.assertTrue(SampleTemplate.exists(self.new_study.id))
+        exp_sample_ids = {"%s.Sample1" % new_id, "%s.Sample2" % new_id,
+                          "%s.Sample3" % new_id}
+        self.assertEqual(st._get_sample_ids(), exp_sample_ids)
+        self.assertEqual(len(st), 3)
+        exp_categories = {'collection_timestamp', 'description',
+                          'dna_extracted', 'host_subject_id', 'int_column',
+                          'latitude', 'longitude',
+                          'physical_specimen_location',
+                          'physical_specimen_remaining', 'sample_type',
+                          'scientific_name', 'str_column', 'taxon_id'}
+        self.assertEqual(set(st.categories()), exp_categories)
+        exp_dict = {
+            "%s.Sample1" % new_id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
                 'description': "Test Sample 1",
                 'dna_extracted': True,
@@ -1106,7 +1081,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'str_column': "Value for sample 1",
                 'taxon_id': 9606,
                 'scientific_name': 'homo sapiens'},
-               {'sample_id': "%s.Sample2" % new_id,
+            "%s.Sample2" % new_id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
                 'description': "Test Sample 2",
                 'dna_extracted': True,
@@ -1120,7 +1095,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'str_column': "Value for sample 2",
                 'taxon_id': 9606,
                 'scientific_name': 'homo sapiens'},
-               {'sample_id': "%s.Sample3" % new_id,
+            "%s.Sample3" % new_id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
                 'description': "Test Sample 3",
                 'dna_extracted': True,
@@ -1133,8 +1108,9 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'sample_type': "type1",
                 'str_column': "Value for sample 3",
                 'taxon_id': 9606,
-                'scientific_name': 'homo sapiens'}]
-        self.assertEqual(obs, exp)
+                'scientific_name': 'homo sapiens'}}
+        for s_id in exp_sample_ids:
+            self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
 
     def test_delete(self):
         """Deletes Sample template 1"""
@@ -1909,6 +1885,82 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                               self.metadata, self.new_study)
         obs = st.check_restrictions([SAMPLE_TEMPLATE_COLUMNS['EBI']])
         self.assertEqual(obs, {'collection_timestamp'})
+
+    def test_ebi_sample_accessions(self):
+        obs = self.tester.ebi_sample_accesions
+        exp = {'1.SKB8.640193': 'ERS000000',
+               '1.SKD8.640184': 'ERS000001',
+               '1.SKB7.640196': 'ERS000002',
+               '1.SKM9.640192': 'ERS000003',
+               '1.SKM4.640180': 'ERS000004',
+               '1.SKM5.640177': 'ERS000005',
+               '1.SKB5.640181': 'ERS000006',
+               '1.SKD6.640190': 'ERS000007',
+               '1.SKB2.640194': 'ERS000008',
+               '1.SKD2.640178': 'ERS000009',
+               '1.SKM7.640188': 'ERS000010',
+               '1.SKB1.640202': 'ERS000011',
+               '1.SKD1.640179': 'ERS000012',
+               '1.SKD3.640198': 'ERS000013',
+               '1.SKM8.640201': 'ERS000014',
+               '1.SKM2.640199': 'ERS000015',
+               '1.SKB9.640200': 'ERS000016',
+               '1.SKD5.640186': 'ERS000017',
+               '1.SKM3.640197': 'ERS000018',
+               '1.SKD9.640182': 'ERS000019',
+               '1.SKB4.640189': 'ERS000020',
+               '1.SKD7.640191': 'ERS000021',
+               '1.SKM6.640187': 'ERS000022',
+               '1.SKD4.640185': 'ERS000023',
+               '1.SKB3.640195': 'ERS000024',
+               '1.SKB6.640176': 'ERS000025',
+               '1.SKM1.640183': 'ERS000025'}
+        self.assertEqual(obs, exp)
+
+        obs = SampleTemplate.create(
+            self.metadata, self.new_study).ebi_sample_accesions
+        exp = {"%s.Sample1" % self.new_study.id: None,
+               "%s.Sample2" % self.new_study.id: None,
+               "%s.Sample3" % self.new_study.id: None}
+        self.assertEqual(obs, exp)
+
+    def test_biosample_accessions(self):
+        obs = self.tester.biosample_accessions
+        exp = {'1.SKB8.640193': 'SAMEA0000000',
+               '1.SKD8.640184': 'SAMEA0000001',
+               '1.SKB7.640196': 'SAMEA0000002',
+               '1.SKM9.640192': 'SAMEA0000003',
+               '1.SKM4.640180': 'SAMEA0000004',
+               '1.SKM5.640177': 'SAMEA0000005',
+               '1.SKB5.640181': 'SAMEA0000006',
+               '1.SKD6.640190': 'SAMEA0000007',
+               '1.SKB2.640194': 'SAMEA0000008',
+               '1.SKD2.640178': 'SAMEA0000009',
+               '1.SKM7.640188': 'SAMEA0000010',
+               '1.SKB1.640202': 'SAMEA0000011',
+               '1.SKD1.640179': 'SAMEA0000012',
+               '1.SKD3.640198': 'SAMEA0000013',
+               '1.SKM8.640201': 'SAMEA0000014',
+               '1.SKM2.640199': 'SAMEA0000015',
+               '1.SKB9.640200': 'SAMEA0000016',
+               '1.SKD5.640186': 'SAMEA0000017',
+               '1.SKM3.640197': 'SAMEA0000018',
+               '1.SKD9.640182': 'SAMEA0000019',
+               '1.SKB4.640189': 'SAMEA0000020',
+               '1.SKD7.640191': 'SAMEA0000021',
+               '1.SKM6.640187': 'SAMEA0000022',
+               '1.SKD4.640185': 'SAMEA0000023',
+               '1.SKB3.640195': 'SAMEA0000024',
+               '1.SKB6.640176': 'SAMEA0000025',
+               '1.SKM1.640183': 'SAMEA0000026'}
+        self.assertEqual(obs, exp)
+
+        obs = SampleTemplate.create(
+            self.metadata, self.new_study).biosample_accessions
+        exp = {"%s.Sample1" % self.new_study.id: None,
+               "%s.Sample2" % self.new_study.id: None,
+               "%s.Sample3" % self.new_study.id: None}
+        self.assertEqual(obs, exp)
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"

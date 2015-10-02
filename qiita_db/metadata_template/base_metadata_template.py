@@ -1325,3 +1325,22 @@ class MetadataTemplate(QiitaObject):
                 for col in restriction.columns}
 
         return cols.difference(self.categories())
+
+    def _get_accession_numbers(self, column):
+        """
+        """
+        with TRN:
+            sql = """SELECT sample_id, {0}
+                     FROM qiita.{1}
+                     WHERE {2}=%s""".format(column, self._table,
+                                            self._id_column)
+            TRN.add(sql, [self.id])
+            result = {sample_id: accession
+                      for sample_id, accession in TRN.execute_fetchindex()}
+        return result
+
+    def _update_accession_numbers(self, column, values):
+        """
+        """
+        with TRN:
+            pass

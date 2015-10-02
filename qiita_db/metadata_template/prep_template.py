@@ -673,3 +673,14 @@ class PrepTemplate(MetadataTemplate):
             fn = TRN.execute_fetchindex()[0][1]
             base_dir = get_mountpoint('templates')[0][1]
             return join(base_dir, fn)
+
+    @property
+    def ebi_experiment_accessions(self):
+        """The EBI experiment accessions for the samples in the prep template
+
+        Returns
+        -------
+        dict of {str: str}
+            The EBI experiment accessions numbers keyed by sample id
+        """
+        return self._get_accession_numbers('ebi_experiment_accession')

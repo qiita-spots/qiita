@@ -252,3 +252,24 @@ class SampleTemplate(MetadataTemplate):
             # generating all new QIIME mapping files
             for pt_id in Study(self._id).prep_templates():
                 PrepTemplate(pt_id).generate_files()
+
+    @property
+    def ebi_sample_accesions(self):
+        """The EBI sample accessions for the samples in the sample template
+
+        Returns
+        -------
+        dict of {str: str}
+            The EBI sample accession numbers keyed by sample id
+        """
+        return self._get_accession_numbers('ebi_sample_accession')
+
+    @property
+    def biosample_accessions(self):
+        """The biosample accessions for the samples in the sample template
+
+        Returns
+        -------
+        dict of {str: str}
+            The biosample accession numbers keyed by sample id"""
+        return self._get_accession_numbers('biosample_accession')
