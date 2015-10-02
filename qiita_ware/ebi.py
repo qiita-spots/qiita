@@ -80,8 +80,9 @@ class EBISubmission(object):
     ------
     EBISumbissionError
         - If the action is not in EBISubmission.valid_ebi_actions
-        - If the preprocesssed submitted_to_insdc_status is in
-        EBISubmission.valid_ebi_submission_states
+        - If the preprocessed data has been already submitted to EBI
+        - If the status of the study attached to the preprocessed data is
+        submitting
         - If the prep template investigation type is not in the
         ena_ontology.terms or not in the ena_ontology.user_defined_terms
         - If the submission is missing required EBI fields either in the sample
@@ -91,7 +92,7 @@ class EBISubmission(object):
     """
 
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
-    valid_ebi_submission_states = ('submitting', 'success')
+    valid_ebi_submission_states = ('submitting')
     valid_platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
@@ -112,19 +113,26 @@ class EBISubmission(object):
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
         self.action = action
         self.preprocessed_data = PreprocessedData(preprocessed_data_id)
-        s = Study(self.preprocessed_data.study)
-        self.sample_template = SampleTemplate(s.sample_template)
+        self.study = Study(self.preprocessed_data.study)
+        self.sample_template = SampleTemplate(self.study.sample_template)
         self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
 
-        status = self.preprocessed_data.submitted_to_insdc_status()
+        if self.preprocessed_data.is_submitted_to_ebi:
+            error_msg = ("Cannot resubmit! Preprocessed data %d has been "
+                         "already submitted to EBI.")
+            LogEntry.create('Runtime', error_msg)
+            raise EBISumbissionError(error_msg)
+
+        status = self.study.ebi_submission_status
         if status in self.valid_ebi_submission_states:
-            error_msg = "Cannot resubmit! Current status is: %s" % status
+            error_msg = ("Cannot perform parallel EBI submission for the same "
+                         "study. Current status of the study: %s" % status)
             LogEntry.create('Runtime', error_msg)
             raise EBISumbissionError(error_msg)
 
         self.preprocessed_data_id = preprocessed_data_id
-        self.study_title = s.title
-        self.study_abstract = s.info['study_abstract']
+        self.study_title = self.study.title
+        self.study_abstract = self.study.info['study_abstract']
 
         it = self.prep_template.investigation_type
         if it in ena_ontology.terms:
@@ -149,7 +157,7 @@ class EBISubmission(object):
         self.experiment_xml_fp = get_output_fp('experiment.xml')
         self.run_xml_fp = get_output_fp('run.xml')
         self.submission_xml_fp = get_output_fp('submission.xml')
-        self.pmids = s.pmids
+        self.pmids = self.study.pmids
 
         # getting the restrictions
         st_missing = self.sample_template.check_restrictions(
@@ -193,8 +201,8 @@ class EBISubmission(object):
         if error_msgs:
             error_msgs = ("Errors found during EBI submission for study #%d, "
                           "preprocessed data #%d and prep template #%d:\n%s"
-                          % (s.id, preprocessed_data_id, self.prep_template.id,
-                             '\n'.join(error_msgs)))
+                          % (self.study.id, preprocessed_data_id,
+                             self.prep_template.id, '\n'.join(error_msgs)))
             LogEntry.create('Runtime', error_msgs)
             raise EBISumbissionError(error_msgs)
 
