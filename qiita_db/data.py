@@ -1017,6 +1017,24 @@ class PreprocessedData(BaseData):
             is_submitted = TRN.execute_fetchlast()
         return is_submitted
 
+    @property
+    def ebi_run_accessions(self):
+        """The EBI run accessions attached to the preprocessed data
+
+        Returns
+        -------
+        list of str
+            The EBI run accessions
+        """
+        with TRN:
+            sql = """SELECT ebi_run_accession
+                     FROM qiita.ebi_run_accession
+                     WHERE preprocessed_data_id = %s
+                     ORDER BY ebi_run_accession"""
+            TRN.add(sql, [self.id])
+            accessions = TRN.execute_fetchflatten()
+        return accessions
+
 
 class ProcessedData(BaseData):
     r"""Object for dealing with processed data

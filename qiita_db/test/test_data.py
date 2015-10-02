@@ -595,6 +595,17 @@ class PreprocessedDataTests(TestCase):
         self.assertTrue(PreprocessedData(1).is_submitted_to_ebi)
         self.assertFalse(PreprocessedData(2).is_submitted_to_ebi)
 
+    def test_ebi_run_accessions(self):
+        exp = ['ERR0000001', 'ERR0000002', 'ERR0000003', 'ERR0000004',
+               'ERR0000005', 'ERR0000006', 'ERR0000007', 'ERR0000008',
+               'ERR0000009', 'ERR0000010', 'ERR0000011', 'ERR0000012',
+               'ERR0000013', 'ERR0000014', 'ERR0000015', 'ERR0000016',
+               'ERR0000017', 'ERR0000018', 'ERR0000019', 'ERR0000020',
+               'ERR0000021', 'ERR0000022', 'ERR0000023', 'ERR0000024',
+               'ERR0000025', 'ERR0000026', 'ERR0000027']
+        self.assertEqual(PreprocessedData(1).ebi_run_accessions, exp,)
+        self.assertEqual(PreprocessedData(2).ebi_run_accessions, [])
+
 
 @qiita_test_checker()
 class ProcessedDataTests(TestCase):
