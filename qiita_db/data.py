@@ -999,6 +999,24 @@ class PreprocessedData(BaseData):
             result = TRN.execute_fetchflatten()
         return tuple(result)
 
+    @property
+    def is_submitted_to_ebi(self):
+        """Gets if the preprocessed data has been submitted to EBI or not
+
+        Returns
+        -------
+        bool
+            True if the preprocessed data has been submitted to EBI,
+            false otherwise.
+        """
+        with TRN:
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.ebi_run_accession
+                                   WHERE preprocessed_data_id = %s)"""
+            TRN.add(sql, [self.id])
+            is_submitted = TRN.execute_fetchlast()
+        return is_submitted
+
 
 class ProcessedData(BaseData):
     r"""Object for dealing with processed data

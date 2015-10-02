@@ -591,6 +591,10 @@ class PreprocessedDataTests(TestCase):
                                       data_type="16S")
         self.assertEqual(ppd.status, 'sandbox')
 
+    def test_is_submitted_to_ebi(self):
+        self.assertTrue(PreprocessedData(1).is_submitted_to_ebi)
+        self.assertFalse(PreprocessedData(2).is_submitted_to_ebi)
+
 
 @qiita_test_checker()
 class ProcessedDataTests(TestCase):
