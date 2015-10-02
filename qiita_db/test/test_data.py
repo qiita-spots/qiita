@@ -408,65 +408,6 @@ class PreprocessedDataTests(TestCase):
                [obs_id, exp_qual_fp, 5, '852952723', 1, 3]]
         self.assertEqual(obs, exp)
 
-    def test_create_data_type_only(self):
-        # Check that the returned object has the correct id
-        obs = PreprocessedData.create(self.study, self.params_table,
-                                      self.params_id, self.filepaths,
-                                      data_type="18S")
-        self.assertEqual(obs.id, 3)
-
-        # Check that the preprocessed data have been correctly added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.preprocessed_data WHERE "
-            "preprocessed_data_id=3")
-        # preprocessed_data_id, preprocessed_params_table,
-        # preprocessed_params_id, submitted_to_insdc_status,
-        # ebi_submission_accession, ebi_study_accession, data_type_id,
-        # link_filepaths_status, vamps_status, processing_status
-        exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', None, None, 2, 'idle', 'not submitted',
-                'not_processed']]
-        self.assertEqual(obs, exp)
-
-        # Check that the preprocessed data has been linked with its study
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_preprocessed_data WHERE "
-            "preprocessed_data_id=3")
-        exp = [[1, 3]]
-        self.assertEqual(obs, exp)
-
-        # Check that the files have been copied to right location
-        exp_fna_fp = join(self.db_test_ppd_dir,
-                          "3_%s" % basename(self.fna_fp))
-        self.assertTrue(exists(exp_fna_fp))
-        self._clean_up_files.append(exp_fna_fp)
-
-        exp_qual_fp = join(self.db_test_ppd_dir,
-                           "3_%s" % basename(self.qual_fp))
-        self.assertTrue(exists(exp_qual_fp))
-        self._clean_up_files.append(exp_qual_fp)
-
-        # Check that the filepaths have been correctly added to the DB
-        obs_id = self.conn_handler.execute_fetchone(
-            "SELECT count(1) from qiita.filepath")[0]
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d or "
-            "filepath_id=%d" % (obs_id - 1, obs_id))
-        exp_fna_fp = "3_%s" % basename(self.fna_fp)
-        exp_qual_fp = "3_%s" % basename(self.qual_fp)
-        # filepath_id, path, filepath_type_id
-        exp = [[obs_id - 1, exp_fna_fp, 4, '852952723', 1, 3],
-               [obs_id, exp_qual_fp, 5, '852952723', 1, 3]]
-        self.assertEqual(obs, exp)
-
-        # Check that the preprocessed data have been correctly
-        # linked with the filepaths
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.preprocessed_filepath WHERE "
-            "preprocessed_data_id=3")
-        # preprocessed_data_id, filepath_id
-        self.assertEqual(obs, [[3, obs_id - 1], [3, obs_id]])
-
     def test_delete_basic(self):
         """Correctly deletes a preprocessed data"""
         # testing regular delete
@@ -513,31 +454,18 @@ class PreprocessedDataTests(TestCase):
         """Raises an error if the preprocessed_params_table does not exist"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
             PreprocessedData.create(self.study, "foo", self.params_id,
-                                    self.filepaths, data_type="18S")
+                                    self.filepaths, self.prep_template)
         with self.assertRaises(IncompetentQiitaDeveloperError):
             PreprocessedData.create(self.study, "preprocessed_foo",
                                     self.params_id, self.filepaths,
-                                    data_type="18S")
+                                    self.prep_template)
         with self.assertRaises(IncompetentQiitaDeveloperError):
             PreprocessedData.create(self.study, "foo_params", self.params_id,
-                                    self.filepaths, data_type="18S")
+                                    self.filepaths, self.prep_template)
         with self.assertRaises(IncompetentQiitaDeveloperError):
             PreprocessedData.create(self.study, "preprocessed_foo_params",
                                     self.params_id, self.filepaths,
-                                    data_type="18S")
-
-    def test_create_error_data_type(self):
-        with self.assertRaises(QiitaDBLookupError):
-            PreprocessedData.create(self.study,
-                                    "preprocessed_sequence_illumina_params",
-                                    self.params_id, self.filepaths,
-                                    data_type="Metabolomics")
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            PreprocessedData.create(self.study,
-                                    "preprocessed_sequence_illumina_params",
-                                    self.params_id, self.filepaths,
-                                    data_type="Metabolomics",
-                                    prep_template=self.prep_template)
+                                    self.prep_template)
 
     def test_get_filepaths(self):
         """Correctly returns the filepaths to the preprocessed files"""
@@ -684,19 +612,15 @@ class PreprocessedDataTests(TestCase):
         """processing_status works correctly"""
         # Processed case
         ppd = PreprocessedData(1)
-        self.assertEqual(ppd.processing_status, 'not_processed')
+        self.assertEqual(ppd.processing_status, 'processed')
 
         # not processed case
-        ppd = PreprocessedData.create(self.study, self.params_table,
-                                      self.params_id, self.filepaths,
-                                      data_type="18S")
+        ppd = PreprocessedData(2)
         self.assertEqual(ppd.processing_status, 'not_processed')
 
     def test_processing_status_setter(self):
         """Able to update the processing status"""
-        ppd = PreprocessedData.create(self.study, self.params_table,
-                                      self.params_id, self.filepaths,
-                                      data_type="18S")
+        ppd = PreprocessedData(2)
         self.assertEqual(ppd.processing_status, 'not_processed')
         ppd.processing_status = 'processing'
         self.assertEqual(ppd.processing_status, 'processing')
@@ -708,9 +632,7 @@ class PreprocessedDataTests(TestCase):
 
     def test_processing_status_setter_valueerror(self):
         """Raises an error if the processing status is not recognized"""
-        ppd = PreprocessedData.create(self.study, self.params_table,
-                                      self.params_id, self.filepaths,
-                                      data_type="18S")
+        ppd = PreprocessedData(2)
         with self.assertRaises(ValueError):
             ppd.processing_status = 'not a valid state'
 
@@ -733,7 +655,7 @@ class PreprocessedDataTests(TestCase):
         # processed data exists for them
         ppd = PreprocessedData.create(self.study, self.params_table,
                                       self.params_id, self.filepaths,
-                                      data_type="16S")
+                                      self.prep_template)
         self.assertEqual(ppd.status, 'sandbox')
 
 
