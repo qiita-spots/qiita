@@ -189,14 +189,16 @@ class EBISubmission(object):
             sample_prep = self.prep_template[k]
 
             # validating required fields
-            if 'platform' not in sample_prep:
+            if ('platform' not in sample_prep or
+                    sample_prep['platform'] is None):
                 nvp.append(k)
             else:
                 platform = sample_prep['platform'].upper()
                 if platform not in self.valid_platforms:
                     nvp.append(k)
                 else:
-                    if 'instrument_model' not in sample_prep:
+                    if ('instrument_model' not in sample_prep or
+                            sample_prep['instrument_model'] is None):
                         nvim.append(k)
                     else:
                         im = sample_prep['instrument_model'].upper()
@@ -212,8 +214,8 @@ class EBISubmission(object):
                               "(instrumet model wasn't checked): %s" % (
                                 ', '.join(nvp)))
         if nvim:
-            error_msgs.append("These samples have ado not have a valid "
-                              "instrument model: %s" % (', '.join(nvim)))
+            error_msgs.append("These samples do not have a valid instrument "
+                              "model: %s" % (', '.join(nvim)))
         if error_msgs:
             error_msgs = ("Errors found during EBI submission for study #%d, "
                           "preprocessed data #%d and prep template #%d:\n%s"
