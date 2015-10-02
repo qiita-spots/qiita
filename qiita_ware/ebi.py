@@ -637,10 +637,10 @@ class EBISubmission(object):
         for f in fastqs_div:
             ascp_commands.append('ascp --ignore-host-key -L- -d -QT -k2 '
                                  '{0} {1}@{2}:./{3}/'.format(
-                                    ' '.join(f),
-                                    qiita_config.ebi_seq_xfer_user,
-                                    qiita_config.ebi_seq_xfer_url,
-                                    self.ebi_dir))
+                                     ' '.join(f),
+                                     qiita_config.ebi_seq_xfer_user,
+                                     qiita_config.ebi_seq_xfer_url,
+                                     self.ebi_dir))
 
         return ascp_commands
 
