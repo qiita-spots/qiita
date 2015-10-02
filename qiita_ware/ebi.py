@@ -207,6 +207,10 @@ class EBISubmission(object):
             LogEntry.create('Runtime', error_msgs)
             raise EBISumbissionError(error_msgs)
 
+        self._sample_aliases = {}
+        self._experiment_aliases = {}
+        self._run_aliases = {}
+
     def _get_study_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
         study_alias_format = '%s_sid_%s'
@@ -216,8 +220,10 @@ class EBISubmission(object):
 
     def _get_sample_alias(self, sample_name):
         """Format alias using ``self.preprocessed_data_id``, `sample_name`"""
-        return "%s:%s" % (self._get_study_alias(),
+        alias = "%s:%s" % (self._get_study_alias(),
                           escape(clean_whitespace(str(sample_name))))
+        self._sample_aliases[alias] = sample_name
+        return alias
 
     def _get_experiment_alias(self, sample_name):
         """Format alias using ``self.preprocessed_data_id``, and `sample_name`
@@ -226,10 +232,12 @@ class EBISubmission(object):
         only going to allow submission of one prep for each sample
         """
         exp_alias_format = '%s_ptid_%s:%s'
-        return exp_alias_format % (
+        alias = exp_alias_format % (
             qiita_config.ebi_organization_prefix,
             escape(clean_whitespace(str(self.prep_template.id))),
             escape(clean_whitespace(str(sample_name))))
+        self._experiment_aliases[alias] = sample_name
+        return alias
 
     def _get_submission_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
@@ -239,13 +247,15 @@ class EBISubmission(object):
         return submission_alias_format % (qiita_config.ebi_organization_prefix,
                                           safe_preprocessed_data_id)
 
-    def _get_run_alias(self, file_base_name):
-        """Format alias using `file_base_name`
+    def _get_run_alias(self, sample_name):
+        """Format alias using `sample_name`
         """
-        return '%s_ppdid_%s:%s' % (
+        alias = '%s_ppdid_%s:%s' % (
             qiita_config.ebi_organization_prefix,
             escape(clean_whitespace(str(self.preprocessed_data_id))),
-            basename(file_base_name))
+            sample_name)
+        self._run_aliases[alias] = sample_name
+        return alias
 
     def _get_library_name(self, sample_name):
         """Format alias using `sample_name`
@@ -483,7 +493,7 @@ class EBISubmission(object):
                 md5 = safe_md5(fp).hexdigest()
 
             run = ET.SubElement(run_set, 'RUN', {
-                'alias': self._get_run_alias(basename(file_path)),
+                'alias': self._get_run_alias(sample_name),
                 'center_name': qiita_config.ebi_center_name}
             )
             ET.SubElement(run, 'EXPERIMENT_REF', {
@@ -698,10 +708,10 @@ class EBISubmission(object):
                 res[trans_dict[alias]] = elem.get('accession')
             return res
 
-        sample_accessions = data_retriever("SAMPLE", self.sample_aliases)
+        sample_accessions = data_retriever("SAMPLE", self._sample_aliases)
         experiment_accessions = data_retriever("EXPERIMENT",
-                                               self.experiment_aliases)
-        run_accessions = data_retriever("RUN", self.run_aliases)
+                                               self._experiment_aliases)
+        run_accessions = data_retriever("RUN", self._run_aliases)
 
         return (success, study_accession, sample_accessions,
                 experiment_accessions, run_accessions)
