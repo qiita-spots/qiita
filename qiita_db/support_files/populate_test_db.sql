@@ -329,6 +329,36 @@ INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_par
     VALUES ('preprocessed_sequence_illumina_params', 1, 2),
            ('preprocessed_sequence_illumina_params', 2, 2);
 
+-- Insert EBI information for preprocessed data 1
+INSERT INTO qiita.ebi_run_accession (sample_id, preprocessed_data_id, ebi_run_accession)
+    VALUES ('1.SKB1.640202', 1, 'ERR0000001'),
+           ('1.SKB2.640194', 1, 'ERR0000002'),
+           ('1.SKB3.640195', 1, 'ERR0000003'),
+           ('1.SKB4.640189', 1, 'ERR0000004'),
+           ('1.SKB5.640181', 1, 'ERR0000005'),
+           ('1.SKB6.640176', 1, 'ERR0000006'),
+           ('1.SKB7.640196', 1, 'ERR0000007'),
+           ('1.SKB8.640193', 1, 'ERR0000008'),
+           ('1.SKB9.640200', 1, 'ERR0000009'),
+           ('1.SKD1.640179', 1, 'ERR0000010'),
+           ('1.SKD2.640178', 1, 'ERR0000011'),
+           ('1.SKD3.640198', 1, 'ERR0000012'),
+           ('1.SKD4.640185', 1, 'ERR0000013'),
+           ('1.SKD5.640186', 1, 'ERR0000014'),
+           ('1.SKD6.640190', 1, 'ERR0000015'),
+           ('1.SKD7.640191', 1, 'ERR0000016'),
+           ('1.SKD8.640184', 1, 'ERR0000017'),
+           ('1.SKD9.640182', 1, 'ERR0000018'),
+           ('1.SKM1.640183', 1, 'ERR0000019'),
+           ('1.SKM2.640199', 1, 'ERR0000020'),
+           ('1.SKM3.640197', 1, 'ERR0000021'),
+           ('1.SKM4.640180', 1, 'ERR0000022'),
+           ('1.SKM5.640177', 1, 'ERR0000023'),
+           ('1.SKM6.640187', 1, 'ERR0000024'),
+           ('1.SKM7.640188', 1, 'ERR0000025'),
+           ('1.SKM8.640201', 1, 'ERR0000026'),
+           ('1.SKM9.640192', 1, 'ERR0000027');
+
 -- Link the new preprocessed data with the prep template
 INSERT INTO qiita.prep_template_preprocessed_data (prep_template_id, preprocessed_data_id) VALUES (1, 1), (1, 2);
 
