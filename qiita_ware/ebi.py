@@ -1,4 +1,3 @@
-from re import search
 from os.path import basename, join, isdir, isfile
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
@@ -221,7 +220,7 @@ class EBISubmission(object):
     def _get_sample_alias(self, sample_name):
         """Format alias using ``self.preprocessed_data_id``, `sample_name`"""
         alias = "%s:%s" % (self._get_study_alias(),
-                          escape(clean_whitespace(str(sample_name))))
+                           escape(clean_whitespace(str(sample_name))))
         self._sample_aliases[alias] = sample_name
         return alias
 
@@ -678,21 +677,29 @@ class EBISubmission(object):
         sample_accessions : dict of {str: str}
             The sample accession numbers, keyed by sample id. None in case of
             failure
+        biosample_accessions : dict of {str: str}
+            The biosample accession numbers, keyed by sample id. None in case
+            of failure
         experiment_accessions : dict of {str: str}
             The experiment accession numbers, keyed by sample id. None in case
             of failure
         run_accessions : dict of {str: str}
             The run accession numbers, keyed by sample id. None in case of
             failure
+
+        Raises
+        ------
+        EBISubmissionError
+            If multiple study tags are found in the curl result
         """
         try:
             root = ET.fromstring(curl_result)
         except ParseError:
-            return False, None, None, None, None
+            return False, None, None, None, None, None
 
         success = root.get('success') == 'true'
         if not success:
-            return success, None, None, None, None
+            return success, None, None, None, None, None
 
         study_elem = root.findall("STUDY")
         if len(study_elem) > 1:
@@ -701,20 +708,27 @@ class EBISubmission(object):
         study_elem = study_elem[0]
         study_accession = study_elem.get('accession')
 
+        sample_accessions = {}
+        biosample_accessions = {}
+        for elem in root.iter("SAMPLE"):
+            alias = elem.get('alias')
+            sample_id = self._sample_aliases[alias]
+            sample_accessions[sample_id] = elem.get('accession')
+            ext_id = elem.find('EXT_ID')
+            biosample_accessions[sample_id] = ext_id.get('accession')
+
         def data_retriever(key, trans_dict):
             res = {}
             for elem in root.iter(key):
                 alias = elem.get('alias')
                 res[trans_dict[alias]] = elem.get('accession')
             return res
-
-        sample_accessions = data_retriever("SAMPLE", self._sample_aliases)
         experiment_accessions = data_retriever("EXPERIMENT",
                                                self._experiment_aliases)
         run_accessions = data_retriever("RUN", self._run_aliases)
 
         return (success, study_accession, sample_accessions,
-                experiment_accessions, run_accessions)
+                biosample_accessions, experiment_accessions, run_accessions)
 
     def generate_demultiplexed_fastq(self, rewrite_fastq=False, mtime=None):
         """Generates demultiplexed fastq

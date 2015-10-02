@@ -467,7 +467,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         e.generate_submission_xml()
 
         curl_result = ""
-        succ, stacc, saacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+        succ, stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
+            curl_result)
         self.assertFalse(succ)
         self.assertIsNone(stacc)
         self.assertIsNone(saacc)
@@ -475,7 +476,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertIsNone(runacc)
 
         curl_result = 'success="true"'
-        succ, stacc, saacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+        succ, stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
+            curl_result)
         self.assertFalse(succ)
         self.assertIsNone(stacc)
         self.assertIsNone(saacc)
@@ -487,7 +489,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                        'some othe text'
                        '<SUBMISSION accession="sbaccession" some text>'
                        'some final text')
-        succ, stacc, saacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+        succ, stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
+            curl_result)
         self.assertFalse(succ)
         self.assertIsNone(stacc)
         self.assertIsNone(saacc)
@@ -496,13 +499,18 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         curl_result = CURL_RESULT.format(qiita_config.ebi_organization_prefix,
                                          ppd.id)
-        succ, stacc, saacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+        succ, stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
+            curl_result)
         self.assertTrue(succ)
         self.assertEqual(stacc, 'ERP000000')
         exp_saacc = {'1.SKB2.640194': 'ERS000000',
                      '1.SKB6.640176': 'ERS000001',
                      '1.SKM4.640180': 'ERS000002'}
         self.assertEqual(saacc, exp_saacc)
+        exp_bioacc = {'1.SKB2.640194': 'SAMEA0000000',
+                      '1.SKB6.640176': 'SAMEA0000001',
+                      '1.SKM4.640180': 'SAMEA0000002'}
+        self.assertEqual(bioacc, exp_bioacc)
         exp_exacc = {'1.SKB2.640194': 'ERX0000000',
                      '1.SKB6.640176': 'ERX0000001',
                      '1.SKM4.640180': 'ERX0000002'}
