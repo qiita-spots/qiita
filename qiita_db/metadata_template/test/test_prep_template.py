@@ -45,7 +45,7 @@ class BaseTestPrepSample(TestCase):
         self.sample_id = '1.SKB8.640193'
         self.tester = PrepSample(self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
-                               'emp_status', 'barcode',
+                               'emp_status', 'barcode', 'instrument_model',
                                'library_construction_protocol',
                                'primer', 'target_subfragment',
                                'target_gene', 'run_center', 'run_prefix',
@@ -107,7 +107,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_len(self):
         """Len returns the correct number of categories"""
-        self.assertEqual(len(self.tester), 21)
+        self.assertEqual(len(self.tester), 22)
 
     def test_getitem_required(self):
         """Get item returns the correct metadata value from the required table
@@ -172,8 +172,8 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
                'GTGCCAGCMGCCGCGGTAA', 'V4', '16S rRNA', 'ANL',
                's_G1_L001_sequences', '8/1/12', 'ANL',
                'micro biome of soil and rhizosphere of cannabis plants from '
-               'CA', 'Cannabis Soil Microbiome', 'Illumina', '.25,g',
-               'Sequencing by synthesis', 'MiSeq', 'ANL',
+               'CA', 'Cannabis Soil Microbiome', 'Illumina', 'Illumina MiSeq',
+               '.25,g', 'Sequencing by synthesis', 'MiSeq', 'ANL',
                'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 'CCME'}
         self.assertEqual(set(obs), exp)
 
@@ -202,7 +202,8 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
                ('experiment_design_description',
                 'micro biome of soil and rhizosphere of cannabis plants '
                 'from CA'), ('experiment_title', 'Cannabis Soil Microbiome'),
-               ('platform', 'Illumina'), ('samp_size', '.25,g'),
+               ('platform', 'Illumina'),
+               ('instrument_model', 'Illumina MiSeq'), ('samp_size', '.25,g'),
                ('sequencing_meth', 'Sequencing by synthesis'),
                ('illumina_technology', 'MiSeq'), ('sample_center', 'ANL'),
                ('pcr_primers',
@@ -277,6 +278,7 @@ class BaseTestPrepTemplate(TestCase):
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'},
             'SKD8.640184': {'center_name': 'ANL',
@@ -288,6 +290,7 @@ class BaseTestPrepTemplate(TestCase):
                             'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'},
             'SKB7.640196': {'center_name': 'ANL',
@@ -299,6 +302,7 @@ class BaseTestPrepTemplate(TestCase):
                             'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}
             }
@@ -315,6 +319,7 @@ class BaseTestPrepTemplate(TestCase):
                               'barcode': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
+                              'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'},
             '1.SKD8.640184': {'center_name': 'ANL',
@@ -326,6 +331,7 @@ class BaseTestPrepTemplate(TestCase):
                               'barcode': 'CGTAGAGCTCTC',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
+                              'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'},
             '1.SKB7.640196': {'center_name': 'ANL',
@@ -337,6 +343,7 @@ class BaseTestPrepTemplate(TestCase):
                               'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
                               'platform': 'ILLUMINA',
+                              'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'}
             }
@@ -559,8 +566,9 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
             u'target_subfragment', u'target_gene', u'run_center',
             u'run_prefix', u'run_date', u'experiment_center',
             u'experiment_design_description', u'experiment_title', u'platform',
-            u'samp_size', u'sequencing_meth', u'illumina_technology',
-            u'sample_center', u'pcr_primers', u'study_center'})
+            u'instrument_model', u'samp_size', u'sequencing_meth',
+            u'illumina_technology', u'sample_center', u'pcr_primers',
+            u'study_center'})
 
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
@@ -595,6 +603,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                             'barcodesequence': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}
             }
@@ -611,6 +620,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'barcodesequence': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
+                              'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'}
             }
@@ -634,6 +644,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'barcode': 'GTCCGCAAGTTA',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
+                              'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'},
             '2.SKD8.640184': {'center_name': 'ANL',
@@ -645,6 +656,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'barcode': 'CGTAGAGCTCTC',
                               'run_prefix': "s_G1_L001_sequences",
                               'platform': 'ILLUMINA',
+                              'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'},
             '2.SKB7.640196': {'center_name': 'ANL',
@@ -656,6 +668,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'barcode': 'CCTCTGAGAGCT',
                               'run_prefix': "s_G1_L002_sequences",
                               'platform': 'ILLUMINA',
+                              'instrument_model': 'Illumina MiSeq',
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'}
             }
@@ -729,6 +742,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'},
             'SKD8.640184': {'center_name': 'ANL',
@@ -740,6 +754,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'},
             'SKB7.640196': {'center_name': 'ANL',
@@ -751,6 +766,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}
             }
@@ -822,6 +838,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                [new_id, 'barcode', 'varchar'],
                [new_id, 'primer', 'varchar'],
                [new_id, 'platform', 'varchar'],
+               [new_id, 'instrument_model', 'varchar'],
                [new_id, 'experiment_design_description', 'varchar'],
                [new_id, 'library_construction_protocol', 'varchar'],
                [new_id, 'center_name', 'varchar'],
@@ -843,6 +860,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'Value for sample 3',
                 'center_name': 'ANL',
@@ -855,6 +873,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
                 'center_name': 'ANL',
@@ -867,6 +886,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
                 'center_name': 'ANL',
@@ -978,6 +998,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                [new_id, 'run_prefix', 'varchar'],
                [new_id, 'primer', 'varchar'],
                [new_id, 'platform', 'varchar'],
+               [new_id, 'instrument_model', 'varchar'],
                [new_id, 'experiment_design_description', 'varchar'],
                [new_id, 'library_construction_protocol', 'varchar'],
                [new_id, 'center_name', 'varchar'],
@@ -998,6 +1019,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'Value for sample 3',
                 'center_name': 'ANL',
@@ -1009,6 +1031,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
                 'center_name': 'ANL',
@@ -1020,6 +1043,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
                 'center_name': 'ANL',
@@ -1301,6 +1325,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'Value for sample 3',
                 'center_name': 'ANL',
@@ -1314,6 +1339,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
                 'center_name': 'ANL',
@@ -1327,6 +1353,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
                 'center_name': 'ANL',
@@ -1355,6 +1382,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L002_sequences',
                 'str_column': 'NEW VAL',
                 'center_name': 'ANL',
@@ -1368,6 +1396,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 1',
                 'center_name': 'ANL',
@@ -1381,6 +1410,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                 'library_construction_protocol': 'AAAA',
                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                 'platform': 'ILLUMINA',
+                'instrument_model': 'Illumina MiSeq',
                 'run_prefix': 's_G1_L001_sequences',
                 'str_column': 'Value for sample 2',
                 'center_name': 'ANL',
@@ -1394,14 +1424,17 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
-    'library_construction_protocol\tplatform\tprimer\t'
+    'instrument_model\tlibrary_construction_protocol\tplatform\tprimer\t'
     'run_prefix\tstr_column\n'
-    '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
-    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L002_sequences\tValue for sample 3\n'
-    '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
-    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 1\n'
-    '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\t\tEMP\tBBBB\tAAAA\t'
-    'ILLUMINA\tGTGCCAGCMGCCGCGGTAA\ts_G1_L001_sequences\tValue for sample 2\n')
+    '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\t\tEMP\tBBBB\t'
+    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t'
+    's_G1_L002_sequences\tValue for sample 3\n'
+    '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\t\tEMP\tBBBB\t'
+    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t'
+    's_G1_L001_sequences\tValue for sample 1\n'
+    '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\t\tEMP\tBBBB\t'
+    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t'
+    's_G1_L001_sequences\tValue for sample 2\n')
 
 
 if __name__ == '__main__':

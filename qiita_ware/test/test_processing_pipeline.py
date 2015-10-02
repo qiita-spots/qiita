@@ -52,6 +52,7 @@ class ProcessingPipelineTests(TestCase):
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "preprocess_test",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'},
             'SKD8.640184': {'center_name': 'ANL',
@@ -59,6 +60,7 @@ class ProcessingPipelineTests(TestCase):
                             'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "preprocess_test",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'},
             'SKB7.640196': {'center_name': 'ANL',
@@ -66,6 +68,7 @@ class ProcessingPipelineTests(TestCase):
                             'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "preprocess_test",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}
         }
@@ -205,6 +208,7 @@ class ProcessingPipelineTests(TestCase):
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAA',
                             'experiment_design_description': 'BBB'},
             'SKD8.640184': {'center_name': 'ANL',
@@ -216,6 +220,7 @@ class ProcessingPipelineTests(TestCase):
                             'barcode': 'CGTAGAGCTCTC',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAA',
                             'experiment_design_description': 'BBB'},
             'SKB7.640196': {'center_name': 'ANL',
@@ -227,6 +232,7 @@ class ProcessingPipelineTests(TestCase):
                             'barcode': 'CCTCTGAGAGCT',
                             'run_prefix': "s_G1_L002_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAA',
                             'experiment_design_description': 'BBB'}
             }
@@ -256,16 +262,19 @@ class ProcessingPipelineTests(TestCase):
             'SKB8.640193': {'run_prefix': "s1", 'primer': 'A',
                             'barcode': 'A', 'center_name': 'ANL',
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'A',
                             'experiment_design_description': 'A'},
             'SKD8.640184': {'run_prefix': "s2", 'primer': 'A',
                             'barcode': 'A', 'center_name': 'ANL',
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'A',
                             'experiment_design_description': 'A'},
             'SKB7.640196': {'run_prefix': "s3", 'primer': 'A',
                             'barcode': 'A', 'center_name': 'ANL',
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'A',
                             'experiment_design_description': 'A'}}
         md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
@@ -284,16 +293,19 @@ class ProcessingPipelineTests(TestCase):
             'SKB8.640193': {'run_prefix': "s1", 'primer': 'A',
                             'barcode': 'A', 'center_name': 'ANL',
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'A',
                             'experiment_design_description': 'A'},
             'SKD8.640184': {'run_prefix': "s1", 'primer': 'A',
                             'barcode': 'A', 'center_name': 'ANL',
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'A',
                             'experiment_design_description': 'A'},
             'SKB7.640196': {'run_prefix': "s3", 'primer': 'A',
                             'barcode': 'A', 'center_name': 'ANL',
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'A',
                             'experiment_design_description': 'A'}}
         md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
@@ -340,11 +352,13 @@ class ProcessingPipelineTests(TestCase):
             'SKB8.640193': {'run_prefix': "sample1", 'primer': 'A',
                             'barcode': 'A', 'center_name': 'ANL',
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'A',
                             'experiment_design_description': 'A'},
             'SKD8.640184': {'run_prefix': "sample2", 'primer': 'A',
                             'barcode': 'A', 'center_name': 'ANL',
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'A',
                             'experiment_design_description': 'A'}}
         md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
@@ -386,6 +400,7 @@ class ProcessingPipelineTests(TestCase):
             'SKB8.640193': {'run_prefix': "sample1_failure", 'primer': 'A',
                             'barcode': 'A', 'center_name': 'ANL',
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'A',
                             'experiment_design_description': 'A'}}
         md_template = pd.DataFrame.from_dict(metadata_dict, orient='index')
