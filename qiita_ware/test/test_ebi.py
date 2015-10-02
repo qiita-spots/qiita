@@ -252,23 +252,40 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
     def test_parse_EBI_reply(self):
         e = EBISubmission(2, 'ADD')
         curl_result = ""
-        stacc, sbacc = e.parse_EBI_reply(curl_result)
+        succ, stacc, saacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+        self.assertFalse(succ)
         self.assertIsNone(stacc)
-        self.assertIsNone(sbacc)
+        self.assertIsNone(saacc)
+        self.assertIsNone(exacc)
+        self.assertIsNone(runacc)
 
         curl_result = 'success="true"'
-        stacc, sbacc = e.parse_EBI_reply(curl_result)
+        succ, stacc, saacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+        self.assertFalse(succ)
         self.assertIsNone(stacc)
-        self.assertIsNone(sbacc)
+        self.assertIsNone(saacc)
+        self.assertIsNone(exacc)
+        self.assertIsNone(runacc)
 
         curl_result = ('some general text success="true" more text'
                        '<STUDY accession="staccession" some text> '
                        'some othe text'
                        '<SUBMISSION accession="sbaccession" some text>'
                        'some final text')
-        stacc, sbacc = e.parse_EBI_reply(curl_result)
-        self.assertEqual(stacc, "staccession")
-        self.assertEqual(sbacc, "sbaccession")
+        succ, stacc, saacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+        self.assertFalse(succ)
+        self.assertIsNone(stacc)
+        self.assertIsNone(saacc)
+        self.assertIsNone(exacc)
+        self.assertIsNone(runacc)
+
+        curl_result = CURL_RESULT
+        succ, stacc, saacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+        self.assertFalse(succ)
+        self.assertIsNone(stacc)
+        self.assertIsNone(saacc)
+        self.assertIsNone(exacc)
+        self.assertIsNone(runacc)
 
 
 @qiita_test_checker()
