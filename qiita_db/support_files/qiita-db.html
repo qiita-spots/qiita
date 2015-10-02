@@ -732,12 +732,7 @@ table {
 	message_user references qiita_user ( email )</title>
 </path>
 <text x='1039' y='1360' transform='rotate(0 1039,1360)' title='Foreign Key fk_message_user_0
-	message_user references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1620 120 L 1800,120' >
-	<title>Foreign Key fk_required_sample_info_study
-	study_sample references study ( study_id )</title>
-</path>
-<text x='1627' y='115' transform='rotate(0 1627,115)' title='Foreign Key fk_required_sample_info_study
-	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1320 195 L 1320,360' >
+	message_user references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1320 195 L 1320,360' >
 	<title>Foreign Key fk_prep_template
 	prep_template_sample references prep_template ( prep_template_id )</title>
 </path>
@@ -777,7 +772,7 @@ table {
 	study references timeseries_type ( timeseries_type_id )</title>
 </path>
 <text x='1702' y='400' transform='rotate(0 1702,400)' title='Foreign Key fk_study_timeseries_type
-	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1530 540 L 1530,195' >
+	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1530 540 L 1530,210' >
 	<title>Foreign Key fk_ebi_run_accession
 	ebi_run_accession references study_sample ( sample_id )</title>
 </path>
@@ -787,7 +782,12 @@ table {
 	ebi_run_accession references preprocessed_data ( preprocessed_data_id )</title>
 </path>
 <text x='1543' y='645' transform='rotate(90 1543,645)' title='Foreign Key fk_ebi_run_accession_ppd
-	ebi_run_accession references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	ebi_run_accession references preprocessed_data ( preprocessed_data_id )' style='fill:#a1a0a0;'>preprocessed_data_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1620 120 L 1800,120' >
+	<title>Foreign Key fk_required_sample_info_study
+	study_sample references study ( study_id )</title>
+</path>
+<text x='1627' y='115' transform='rotate(0 1627,115)' title='Foreign Key fk_required_sample_info_study
+	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1538' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1564.50 L 45.50 1545.50 Q 45.50 1538.50 52.50 1538.50 L 187.50 1538.50 Q 194.50 1538.50 194.50 1545.50 L 194.50 1564.50 L45.50 1564.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1552' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1812,20 +1812,6 @@ Whether the message has been read or not&#046;</title></a>
   <use id='nn' x='1277' y='1437' xlink:href='#nn'/><a xlink:href='#message.message_time'><text x='1293' y='1447'>message_time</text><title>message_time timestamp not null default current&#095;timestamp</title></a>
   <a xlink:href='#message.expiration'><text x='1293' y='1462'>expiration</text><title>expiration timestamp</title></a>
 
-<!-- ============= Table 'study_sample' ============= -->
-<rect class='table' x='1470' y='98' width='150' height='90' rx='7' ry='7' />
-<path d='M 1470.50 124.50 L 1470.50 105.50 Q 1470.50 98.50 1477.50 98.50 L 1612.50 98.50 Q 1619.50 98.50 1619.50 105.50 L 1619.50 124.50 L1470.50 124.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#study_sample'><text x='1508' y='112' class='tableTitle'>study_sample</text><title>Table qiita.study_sample
-Required info for each sample&#046; One row is one sample&#046;</title></a>
-  <use id='nn' x='1472' y='132' xlink:href='#nn'/><a xlink:href='#study_sample.sample_id'><use id='pk' x='1472' y='131' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
-<a xlink:href='#study_sample.sample_id'><text x='1488' y='142'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#study_sample.sample_id'><use id='ref' x='1608' y='131' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) 
-Referred by ebi_run_accession ( sample_id ) </title></a>
-  <use id='nn' x='1472' y='147' xlink:href='#nn'/><a xlink:href='#study_sample.study_id'><use id='idx' x='1472' y='146' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
-<a xlink:href='#study_sample.study_id'><text x='1488' y='157'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#study_sample.study_id'><use id='fk' x='1608' y='146' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
-  <a xlink:href='#study_sample.ebi_sample_accession'><text x='1488' y='172'>ebi_sample_accession</text><title>ebi_sample_accession varchar</title></a>
-
 <!-- ============= Table 'prep_y' ============= -->
 <rect class='table' x='1170' y='188' width='90' height='75' rx='7' ry='7' />
 <path d='M 1170.50 214.50 L 1170.50 195.50 Q 1170.50 188.50 1177.50 188.50 L 1252.50 188.50 Q 1259.50 188.50 1259.50 195.50 L 1259.50 214.50 L1170.50 214.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1947,7 +1933,22 @@ Controlled Vocabulary</title></a>
 <a xlink:href='#ebi_run_accession.preprocessed_data_id'><text x='1533' y='607'>preprocessed_data_id</text><title>preprocessed_data_id bigint not null</title></a>
 <a xlink:href='#ebi_run_accession.preprocessed_data_id'><use id='fk' x='1653' y='596' xlink:href='#fk'/><title>References preprocessed_data ( preprocessed_data_id ) </title></a>
   <use id='nn' x='1517' y='612' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.ebi_run_accession'><use id='pk' x='1517' y='611' xlink:href='#pk'/><title>Primary Key  ( sample_id, preprocessed_data_id, ebi_run_accession ) </title></a>
-<a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1533' y='622'>ebi_run_accession</text><title>ebi_run_accession varchar not null</title></a>
+<a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1533' y='622'>ebi_run_accession</text><title>ebi_run_accession bigint not null</title></a>
+
+<!-- ============= Table 'study_sample' ============= -->
+<rect class='table' x='1470' y='98' width='150' height='105' rx='7' ry='7' />
+<path d='M 1470.50 124.50 L 1470.50 105.50 Q 1470.50 98.50 1477.50 98.50 L 1612.50 98.50 Q 1619.50 98.50 1619.50 105.50 L 1619.50 124.50 L1470.50 124.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#study_sample'><text x='1508' y='112' class='tableTitle'>study_sample</text><title>Table qiita.study_sample
+Required info for each sample&#046; One row is one sample&#046;</title></a>
+  <use id='nn' x='1472' y='132' xlink:href='#nn'/><a xlink:href='#study_sample.sample_id'><use id='pk' x='1472' y='131' xlink:href='#pk'/><title>Primary Key  ( sample_id ) </title></a>
+<a xlink:href='#study_sample.sample_id'><text x='1488' y='142'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#study_sample.sample_id'><use id='ref' x='1608' y='131' xlink:href='#ref'/><title>Referred by analysis_sample ( sample_id ) 
+Referred by ebi_run_accession ( sample_id ) </title></a>
+  <use id='nn' x='1472' y='147' xlink:href='#nn'/><a xlink:href='#study_sample.study_id'><use id='idx' x='1472' y='146' xlink:href='#idx'/><title>Index  ( study_id ) </title></a>
+<a xlink:href='#study_sample.study_id'><text x='1488' y='157'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_sample.study_id'><use id='fk' x='1608' y='146' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <a xlink:href='#study_sample.ebi_sample_accession'><text x='1488' y='172'>ebi_sample_accession</text><title>ebi_sample_accession varchar</title></a>
+  <a xlink:href='#study_sample.biosample_accession'><text x='1488' y='187'>biosample_accession</text><title>biosample_accession varchar</title></a>
 
 </g></svg>
 
@@ -5183,46 +5184,6 @@ Controlled Vocabulary</title></a>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='study_sample'>Table study_sample</a></th></tr>
-<tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='study_sample.sample_id'>sample&#095;id</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_sample.study_id'>study&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_sample.ebi_sample_accession'>ebi&#095;sample&#095;accession</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;1 primary key</td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_required_sample_info_study</td>
-		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='prep_y'>Table prep_y</a></th></tr>
 <tr><td colspan='3'>Information on how raw data y was prepared &#040;prep template&#041;Linked by y being raw&#095;data&#095;id from raw data table&#046; </td></tr>
 </thead>
@@ -5583,7 +5544,7 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>
 		<td><a name='ebi_run_accession.ebi_run_accession'>ebi&#095;run&#095;accession</a></td>
-		<td> varchar  NOT NULL  </td>
+		<td> bigint  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
@@ -5608,6 +5569,51 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_ebi_run_accession_ppd</td>
 		<td > ( preprocessed&#095;data&#095;id ) ref <a href='#preprocessed&#095;data'>preprocessed&#095;data</a> (preprocessed&#095;data&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='study_sample'>Table study_sample</a></th></tr>
+<tr><td colspan='3'>Required info for each sample&#046; One row is one sample&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_sample.sample_id'>sample&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_sample.study_id'>study&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_sample.ebi_sample_accession'>ebi&#095;sample&#095;accession</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_sample.biosample_accession'>biosample&#095;accession</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;required&#095;sample&#095;info&#095;1 primary key</td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_required_sample_info_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>

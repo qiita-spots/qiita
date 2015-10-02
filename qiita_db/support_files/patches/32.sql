@@ -6,6 +6,7 @@ ALTER TABLE qiita.prep_template_sample ADD ebi_experiment_accession varchar  ;
 ALTER TABLE qiita.study ADD ebi_study_accession varchar  ;
 ALTER TABLE qiita.study ADD ebi_submission_status varchar  NOT NULL DEFAULT 'not submitted';
 ALTER TABLE qiita.study_sample ADD ebi_sample_accession varchar  ;
+ALTER TABLE qiita.study_sample ADD biosample_accession varchar  ;
 
 CREATE TABLE qiita.ebi_run_accession (
 	sample_id            varchar  	NOT NULL,
