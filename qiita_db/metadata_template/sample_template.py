@@ -272,6 +272,12 @@ class SampleTemplate(MetadataTemplate):
         ----------
         values : dict of {str: str}
             The EBI sample accessions, keyed by sample id
+
+        Raises
+        ------
+        QiitaDBError
+            If value tries to change the accession number of a sample that
+            already has an accession number assigned
         """
         self._update_accession_numbers('ebi_sample_accession', value)
 
@@ -282,7 +288,8 @@ class SampleTemplate(MetadataTemplate):
         Returns
         -------
         dict of {str: str}
-            The biosample accession numbers keyed by sample id"""
+            The biosample accession numbers keyed by sample id
+        """
         return self._get_accession_numbers('biosample_accession')
 
     @biosample_accessions.setter
@@ -293,5 +300,11 @@ class SampleTemplate(MetadataTemplate):
         ----------
         values : dict of {str: str}
             The biosample accessions, keyed by sample id
+
+        Raises
+        ------
+        QiitaDBError
+            If value tries to change the accession number of a sample that
+            already has an accession number assigned
         """
         self._update_accession_numbers('biosample_accession', value)

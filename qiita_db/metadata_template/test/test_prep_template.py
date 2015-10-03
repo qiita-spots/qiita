@@ -1380,6 +1380,12 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         pt.ebi_experiment_accessions = exp_acc
         self.assertEqual(pt.ebi_experiment_accessions, exp_acc)
 
+        # We need to wrap the assignment in a function so we can use
+        # npt.assert_warns
+        def f():
+            pt.ebi_experiment_accessions = exp_acc
+        npt.assert_warns(QiitaDBWarning, f)
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'

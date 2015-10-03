@@ -693,5 +693,11 @@ class PrepTemplate(MetadataTemplate):
         ----------
         values : dict of {str: str}
             The EBI experiment accessions, keyed by sample id
+
+        Raises
+        ------
+        QiitaDBError
+            If value tries to change the accession number of a sample that
+            already has an accession number assigned
         """
         self._update_accession_numbers('ebi_experiment_accession', value)

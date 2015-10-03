@@ -1388,12 +1388,16 @@ class MetadataTemplate(QiitaObject):
             for sample in common_samples:
                 del values[sample]
 
-            sql_vals = ', '.join(
-                ["('%s', '%s')" % (k, v) for k, v in viewitems(values)])
-            sql = """UPDATE qiita.{0} AS t
-                     SET {1}=c.{1}
-                     FROM (VALUES {2}) AS c(sample_id, {1})
-                     WHERE c.sample_id = t.sample_id
-                     """.format(self._table, column, sql_vals)
-            TRN.add(sql)
-            TRN.execute()
+            if values:
+                sql_vals = ', '.join(
+                    ["('%s', '%s')" % (k, v) for k, v in viewitems(values)])
+                sql = """UPDATE qiita.{0} AS t
+                         SET {1}=c.{1}
+                         FROM (VALUES {2}) AS c(sample_id, {1})
+                         WHERE c.sample_id = t.sample_id
+                         """.format(self._table, column, sql_vals)
+                TRN.add(sql)
+                TRN.execute()
+            else:
+                warnings.warn("No new accession numbers to update",
+                              QiitaDBWarning)

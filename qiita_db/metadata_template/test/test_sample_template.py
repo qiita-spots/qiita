@@ -1939,6 +1939,12 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         st.ebi_sample_accessions = exp_acc
         self.assertEqual(st.ebi_sample_accessions, exp_acc)
 
+        # We need to wrap the assignment in a function so we can use
+        # npt.assert_warns
+        def f():
+            st.ebi_sample_accessions = exp_acc
+        npt.assert_warns(QiitaDBWarning, f)
+
     def test_biosample_accessions(self):
         obs = self.tester.biosample_accessions
         exp = {'1.SKB8.640193': 'SAMEA0000000',
@@ -1991,6 +1997,12 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         exp_acc["%s.Sample3" % self.new_study.id] = 'SAMEA130000'
         st.biosample_accessions = exp_acc
         self.assertEqual(st.biosample_accessions, exp_acc)
+
+        # We need to wrap the assignment in a function so we can use
+        # npt.assert_warns
+        def f():
+            st.biosample_accessions = exp_acc
+        npt.assert_warns(QiitaDBWarning, f)
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"
