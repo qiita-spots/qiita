@@ -40,6 +40,7 @@ from future.utils import viewitems, viewvalues
 from future.builtins import zip
 from os.path import join
 from functools import partial
+from copy import deepcopy
 
 import pandas as pd
 import numpy as np
@@ -1327,7 +1328,17 @@ class MetadataTemplate(QiitaObject):
         return cols.difference(self.categories())
 
     def _get_accession_numbers(self, column):
-        """
+        """Return the accession numbers stored under the given column
+
+        Parameters
+        ----------
+        column : str
+            The column name where the accession number is stored
+
+        Returns
+        -------
+        dict of {str: str}
+            The accession numbers keyed by sample id
         """
         with TRN:
             sql = """SELECT sample_id, {0}
@@ -1340,7 +1351,49 @@ class MetadataTemplate(QiitaObject):
         return result
 
     def _update_accession_numbers(self, column, values):
-        """
+        """Update the accession numbers stored under the given column
+
+        Parameters
+        ----------
+        column : str
+            The column name where the accession number is stored
+        values : dict of {str: str}
+            The accession numbers keyed by sample id
+
+        Raises
+        ------
+        QiitaDBError
+            If values tries to change the accession number of a sample that
+            already has an assigned accession number
         """
         with TRN:
-            pass
+            sql = """SELECT sample_id, {0}
+                     FROM qiita.{1}
+                     WHERE {2}=%s
+                        AND {0} IS NOT NULL""".format(column, self._table,
+                                                      self._id_column)
+            TRN.add(sql, [self.id])
+            db_vals = {sample_id: accession
+                       for sample_id, accession in TRN.execute_fetchindex()}
+            common_samples = set(db_vals) & set(values)
+            diff = [sample for sample in common_samples
+                    if db_vals[sample] != values[sample]]
+            if diff:
+                raise QiitaDBError(
+                    "The following samples already have an accession number: "
+                    "%s" % ', '.join(diff))
+
+            # Remove the common samples form the values dictionary
+            values = deepcopy(values)
+            for sample in common_samples:
+                del values[sample]
+
+            sql_vals = ', '.join(
+                ["('%s', '%s')" % (k, v) for k, v in viewitems(values)])
+            sql = """UPDATE qiita.{0} AS t
+                     SET {1}=c.{1}
+                     FROM (VALUES {2}) AS c(sample_id, {1})
+                     WHERE c.sample_id = t.sample_id
+                     """.format(self._table, column, sql_vals)
+            TRN.add(sql)
+            TRN.execute()

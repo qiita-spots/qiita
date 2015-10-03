@@ -1887,7 +1887,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, {'collection_timestamp'})
 
     def test_ebi_sample_accessions(self):
-        obs = self.tester.ebi_sample_accesions
+        obs = self.tester.ebi_sample_accessions
         exp = {'1.SKB8.640193': 'ERS000000',
                '1.SKD8.640184': 'ERS000001',
                '1.SKB7.640196': 'ERS000002',
@@ -1918,11 +1918,26 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertEqual(obs, exp)
 
         obs = SampleTemplate.create(
-            self.metadata, self.new_study).ebi_sample_accesions
+            self.metadata, self.new_study).ebi_sample_accessions
         exp = {"%s.Sample1" % self.new_study.id: None,
                "%s.Sample2" % self.new_study.id: None,
                "%s.Sample3" % self.new_study.id: None}
         self.assertEqual(obs, exp)
+
+    def test_ebi_sample_accessions_setter(self):
+        with self.assertRaises(QiitaDBError):
+            self.tester.ebi_sample_accessions = {'1.SKB8.640193': 'ERS000010',
+                                                 '1.SKD8.640184': 'ERS000001'}
+
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        exp_acc = {"%s.Sample1" % self.new_study.id: 'ERS000100',
+                   "%s.Sample2" % self.new_study.id: 'ERS000110'}
+        st.ebi_sample_accessions = exp_acc
+        exp_acc["%s.Sample3" % self.new_study.id] = None
+        self.assertEqual(st.ebi_sample_accessions, exp_acc)
+        exp_acc["%s.Sample3" % self.new_study.id] = 'ERS0000120'
+        st.ebi_sample_accessions = exp_acc
+        self.assertEqual(st.ebi_sample_accessions, exp_acc)
 
     def test_biosample_accessions(self):
         obs = self.tester.biosample_accessions
@@ -1961,6 +1976,21 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                "%s.Sample2" % self.new_study.id: None,
                "%s.Sample3" % self.new_study.id: None}
         self.assertEqual(obs, exp)
+
+    def test_biosample_accessions_setter(self):
+        with self.assertRaises(QiitaDBError):
+            self.tester.biosample_accessions = {'1.SKB8.640193': 'SAMEA110000',
+                                                '1.SKD8.640184': 'SAMEA110000'}
+
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        exp_acc = {"%s.Sample1" % self.new_study.id: 'SAMEA110000',
+                   "%s.Sample2" % self.new_study.id: 'SAMEA120000'}
+        st.biosample_accessions = exp_acc
+        exp_acc["%s.Sample3" % self.new_study.id] = None
+        self.assertEqual(st.biosample_accessions, exp_acc)
+        exp_acc["%s.Sample3" % self.new_study.id] = 'SAMEA130000'
+        st.biosample_accessions = exp_acc
+        self.assertEqual(st.biosample_accessions, exp_acc)
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"

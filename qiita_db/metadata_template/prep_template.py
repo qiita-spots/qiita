@@ -684,3 +684,14 @@ class PrepTemplate(MetadataTemplate):
             The EBI experiment accessions numbers keyed by sample id
         """
         return self._get_accession_numbers('ebi_experiment_accession')
+
+    @ebi_experiment_accessions.setter
+    def ebi_experiment_accessions(self, value):
+        """Sets the EBI experiment accessions
+
+        Parameters
+        ----------
+        values : dict of {str: str}
+            The EBI experiment accessions, keyed by sample id
+        """
+        self._update_accession_numbers('ebi_experiment_accession', value)

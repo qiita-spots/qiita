@@ -254,7 +254,7 @@ class SampleTemplate(MetadataTemplate):
                 PrepTemplate(pt_id).generate_files()
 
     @property
-    def ebi_sample_accesions(self):
+    def ebi_sample_accessions(self):
         """The EBI sample accessions for the samples in the sample template
 
         Returns
@@ -263,6 +263,17 @@ class SampleTemplate(MetadataTemplate):
             The EBI sample accession numbers keyed by sample id
         """
         return self._get_accession_numbers('ebi_sample_accession')
+
+    @ebi_sample_accessions.setter
+    def ebi_sample_accessions(self, value):
+        """Sets the EBI sample accessions
+
+        Parameters
+        ----------
+        values : dict of {str: str}
+            The EBI sample accessions, keyed by sample id
+        """
+        self._update_accession_numbers('ebi_sample_accession', value)
 
     @property
     def biosample_accessions(self):
@@ -273,3 +284,14 @@ class SampleTemplate(MetadataTemplate):
         dict of {str: str}
             The biosample accession numbers keyed by sample id"""
         return self._get_accession_numbers('biosample_accession')
+
+    @biosample_accessions.setter
+    def biosample_accessions(self, value):
+        """Sets the biosample accessions
+
+        Parameters
+        ----------
+        values : dict of {str: str}
+            The biosample accessions, keyed by sample id
+        """
+        self._update_accession_numbers('biosample_accession', value)

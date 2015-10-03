@@ -1364,6 +1364,22 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                '%s.SKB7.640196' % self.test_study.id: None}
         self.assertEqual(obs, exp)
 
+    def test_ebi_experiment_accessions_setter(self):
+        with self.assertRaises(QiitaDBError):
+            self.tester.ebi_experiment_accessions = {
+                '1.SKB8.640193': 'ERX1000000', '1.SKD8.640184': 'ERX1000001'}
+
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
+        exp_acc = {'%s.SKB8.640193' % self.test_study.id: 'ERX0000126',
+                   '%s.SKD8.640184' % self.test_study.id: 'ERX0000127'}
+        pt.ebi_experiment_accessions = exp_acc
+        exp_acc['%s.SKB7.640196' % self.test_study.id] = None
+        self.assertEqual(pt.ebi_experiment_accessions, exp_acc)
+        exp_acc['%s.SKB7.640196' % self.test_study.id] = 'ERX0000128'
+        pt.ebi_experiment_accessions = exp_acc
+        self.assertEqual(pt.ebi_experiment_accessions, exp_acc)
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
