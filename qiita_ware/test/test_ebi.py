@@ -296,7 +296,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                 'SKM6.640187': {'center_name': 'ANL',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
-                                'instrument_model': 'Not valid',},
+                                'instrument_model': 'Not valid'},
                 'SKD9.640182': {'center_name': 'ANL',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
