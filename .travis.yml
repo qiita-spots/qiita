@@ -27,8 +27,10 @@ install:
   - travis_retry pip install .
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
-  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg; fi
-  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg; fi
+  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
+    export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
+    export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
+    fi
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
