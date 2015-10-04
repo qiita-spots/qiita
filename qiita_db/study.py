@@ -867,8 +867,8 @@ class Study(QiitaObject):
         ValueError
             If the status is not known
         """
-        if not (value in ('not submitted', 'submitting', 'submitted')
-                or value.startswith('failed')):
+        if not (value in ('not submitted', 'submitting', 'submitted') or
+                value.startswith('failed')):
             raise ValueError("Unknown status: %s" % value)
         with TRN:
             sql = """UPDATE qiita.{}
