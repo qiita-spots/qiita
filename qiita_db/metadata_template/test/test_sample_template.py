@@ -915,6 +915,11 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'scientific_name': 'homo sapiens'}}
         for s_id in exp_sample_ids:
             self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
+        exp = {"%s.Sample1" % new_id: None,
+               "%s.Sample2" % new_id: None,
+               "%s.Sample3" % new_id: None}
+        self.assertEqual(st.ebi_sample_accessions, exp)
+        self.assertEqual(st.biosample_accessions, exp)
 
     def test_create_int_prefix(self):
         """Creates a new SampleTemplate with sample names int prefixed"""
@@ -980,6 +985,11 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'scientific_name': 'homo sapiens'}}
         for s_id in exp_sample_ids:
             self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
+        exp = {"%s.12.Sample1" % new_id: None,
+               "%s.12.Sample2" % new_id: None,
+               "%s.12.Sample3" % new_id: None}
+        self.assertEqual(st.ebi_sample_accessions, exp)
+        self.assertEqual(st.biosample_accessions, exp)
 
     def test_create_str_prefixes(self):
         """Creates a new SampleTemplate with sample names string prefixed"""
@@ -1045,6 +1055,11 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'scientific_name': 'homo sapiens'}}
         for s_id in exp_sample_ids:
             self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
+        exp = {"%s.foo.Sample1" % new_id: None,
+               "%s.bar.Sample2" % new_id: None,
+               "%s.foo.Sample3" % new_id: None}
+        self.assertEqual(st.ebi_sample_accessions, exp)
+        self.assertEqual(st.biosample_accessions, exp)
 
     def test_create_already_prefixed_samples(self):
         """Creates a new SampleTemplate with the samples already prefixed"""
@@ -1111,6 +1126,11 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'scientific_name': 'homo sapiens'}}
         for s_id in exp_sample_ids:
             self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
+        exp = {"%s.Sample1" % new_id: None,
+               "%s.Sample2" % new_id: None,
+               "%s.Sample3" % new_id: None}
+        self.assertEqual(st.ebi_sample_accessions, exp)
+        self.assertEqual(st.biosample_accessions, exp)
 
     def test_delete(self):
         """Deletes Sample template 1"""
