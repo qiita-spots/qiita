@@ -11,7 +11,7 @@ from future.utils import viewitems
 from skbio.util import safe_md5, create_dir
 
 from qiita_core.qiita_settings import qiita_config
-from qiita_ware.exceptions import EBISumbissionError
+from qiita_ware.exceptions import EBISubmissionError
 from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
@@ -78,7 +78,7 @@ class EBISubmission(object):
 
     Raises
     ------
-    EBISumbissionError
+    EBISubmissionError
         - If the action is not in EBISubmission.valid_ebi_actions
         - If the preprocessed data has been already submitted to EBI
         - If the status of the study attached to the preprocessed data is
@@ -120,7 +120,7 @@ class EBISubmission(object):
                          "actions are: %s" %
                          (action, ', '.join(self.valid_ebi_actions)))
             LogEntry.create('Runtime', error_msg)
-            raise EBISumbissionError(error_msg)
+            raise EBISubmissionError(error_msg)
 
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
         self.action = action
@@ -133,14 +133,14 @@ class EBISubmission(object):
             error_msg = ("Cannot resubmit! Preprocessed data %d has been "
                          "already submitted to EBI.")
             LogEntry.create('Runtime', error_msg)
-            raise EBISumbissionError(error_msg)
+            raise EBISubmissionError(error_msg)
 
         status = self.study.ebi_submission_status
         if status in self.valid_ebi_submission_states:
             error_msg = ("Cannot perform parallel EBI submission for the same "
                          "study. Current status of the study: %s" % status)
             LogEntry.create('Runtime', error_msg)
-            raise EBISumbissionError(error_msg)
+            raise EBISubmissionError(error_msg)
 
         self.preprocessed_data_id = preprocessed_data_id
         self.study_title = self.study.title
@@ -230,7 +230,7 @@ class EBISubmission(object):
                           % (self.study.id, preprocessed_data_id,
                              self.prep_template.id, '\n'.join(error_msgs)))
             LogEntry.create('Runtime', error_msgs)
-            raise EBISumbissionError(error_msgs)
+            raise EBISubmissionError(error_msgs)
 
         self._sample_aliases = {}
         self._experiment_aliases = {}
@@ -714,20 +714,25 @@ class EBISubmission(object):
         Raises
         ------
         EBISubmissionError
+            If curl_result is not a valid XML file
+            If the ebi subumission has not been successful
             If multiple study tags are found in the curl result
         """
         try:
             root = ET.fromstring(curl_result)
         except ParseError:
-            return False, None, None, None, None, None
+            raise EBISubmissionError(
+                "The curl result from the EBI submission doesn't look like "
+                "an XML file:\n%s" % curl_result)
 
         success = root.get('success') == 'true'
         if not success:
-            return success, None, None, None, None, None
+            raise EBISubmissionError("The EBI submission failed:\n%s"
+                                     % curl_result)
 
         study_elem = root.findall("STUDY")
         if len(study_elem) > 1:
-            raise EBISumbissionError(
+            raise EBISubmissionError(
                 "Multiple study tags found in EBI reply: %d" % len(study_elem))
         study_elem = study_elem[0]
         study_accession = study_elem.get('accession')
@@ -751,8 +756,8 @@ class EBISubmission(object):
                                                self._experiment_aliases)
         run_accessions = data_retriever("RUN", self._run_aliases)
 
-        return (success, study_accession, sample_accessions,
-                biosample_accessions, experiment_accessions, run_accessions)
+        return (study_accession, sample_accessions, biosample_accessions,
+                experiment_accessions, run_accessions)
 
     def generate_demultiplexed_fastq(self, rewrite_fastq=False, mtime=None):
         """Generates demultiplexed fastq

@@ -24,7 +24,7 @@ from datetime import date
 from h5py import File
 
 from qiita_ware.ebi import EBISubmission
-from qiita_ware.exceptions import EBISumbissionError
+from qiita_ware.exceptions import EBISubmissionError
 from qiita_ware.demux import to_hdf5
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.data import PreprocessedData
@@ -335,11 +335,11 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
     def test_init_exceptions(self):
         # not a valid action
-        with self.assertRaises(EBISumbissionError):
+        with self.assertRaises(EBISubmissionError):
             EBISubmission(1, 'This is not a valid action')
 
         # already submitted so can't continue
-        with self.assertRaises(EBISumbissionError):
+        with self.assertRaises(EBISubmissionError):
             EBISubmission(1, 'ADD')
 
         ppd = self.generate_new_prep_template_and_write_demux_files()
@@ -352,7 +352,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                     "platform (instrumet model wasn't checked): "
                     "1.SKD6.640190\nThese samples do not have a valid "
                     "instrument model: 1.SKM6.640187")
-        with self.assertRaises(EBISumbissionError) as e:
+        with self.assertRaises(EBISubmissionError) as e:
             EBISubmission(ppd.id, 'ADD')
         self.assertEqual(exp_text, str(e.exception))
 
@@ -478,41 +478,27 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         e.generate_submission_xml()
 
         curl_result = ""
-        succ, stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
-            curl_result)
-        self.assertFalse(succ)
-        self.assertIsNone(stacc)
-        self.assertIsNone(saacc)
-        self.assertIsNone(exacc)
-        self.assertIsNone(runacc)
+        with self.assertRaises(EBISubmissionError):
+            stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
+                curl_result)
 
         curl_result = 'success="true"'
-        succ, stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
-            curl_result)
-        self.assertFalse(succ)
-        self.assertIsNone(stacc)
-        self.assertIsNone(saacc)
-        self.assertIsNone(exacc)
-        self.assertIsNone(runacc)
+        with self.assertRaises(EBISubmissionError):
+            stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
+                curl_result)
 
         curl_result = ('some general text success="true" more text'
                        '<STUDY accession="staccession" some text> '
                        'some othe text'
                        '<SUBMISSION accession="sbaccession" some text>'
                        'some final text')
-        succ, stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
-            curl_result)
-        self.assertFalse(succ)
-        self.assertIsNone(stacc)
-        self.assertIsNone(saacc)
-        self.assertIsNone(exacc)
-        self.assertIsNone(runacc)
+        with self.assertRaises(EBISubmissionError):
+            stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
+                curl_result)
 
         curl_result = CURL_RESULT.format(qiita_config.ebi_organization_prefix,
                                          ppd.id)
-        succ, stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
-            curl_result)
-        self.assertTrue(succ)
+        stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(curl_result)
         self.assertEqual(stacc, 'ERP000000')
         exp_saacc = {'1.SKB2.640194': 'ERS000000',
                      '1.SKB6.640176': 'ERS000001',

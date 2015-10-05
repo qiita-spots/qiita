@@ -18,7 +18,7 @@ from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
-from qiita_ware.exceptions import ComputeError
+from qiita_ware.exceptions import ComputeError, EBISubmissionError
 from traceback import format_exc
 from os import environ
 
@@ -110,21 +110,22 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
                              '%d completed successfully' %
                              preprocessed_data_id))
 
-        success, st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
-            ebi_submission.parse_EBI_reply(xmls_cmds_moi)
-
-        if not success:
-            le = LogEntry.create('Fatal', xmls_cmds_moi,
-                                 info={'ebi_submission': preprocessed_data_id})
+        try:
+            st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
+                ebi_submission.parse_EBI_reply(xmls_cmds_moi)
+        except EBISubmissionError as e:
+            le = LogEntry.create(
+                'Fatal', "Command: %s\nError: %s\n" % (xmls_cmds_moi, str(e)),
+                info={'ebi_submission': preprocessed_data_id})
             ebi_submission.preprocessed_data.update_insdc_status('failed')
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
-        else:
-            ebi_submission.study.ebi_submission_status = 'submitted'
-            ebi_submission.study.ebi_study_accession = st_acc
-            ebi_submission.sample_template.ebi_sample_accessions = sa_acc
-            ebi_submission.sample_template.biosample_accessions = bio_acc
-            ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
-            ebi_submission.preprocessed_data.ebi_run_accessions = run_acc
+
+        ebi_submission.study.ebi_submission_status = 'submitted'
+        ebi_submission.study.ebi_study_accession = st_acc
+        ebi_submission.sample_template.ebi_sample_accessions = sa_acc
+        ebi_submission.sample_template.biosample_accessions = bio_acc
+        ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
+        ebi_submission.preprocessed_data.ebi_run_accessions = run_acc
     else:
         st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
 
