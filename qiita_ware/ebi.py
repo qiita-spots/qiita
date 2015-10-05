@@ -108,9 +108,7 @@ class EBISubmission(object):
                                     'NEXTSEQ 500', 'UNSPECIFIED']}
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
-    experiment_library_fields = [
-        'library_strategy', 'library_source', 'library_selection',
-        'library_layout']
+    experiment_library_fields = ['library_strategy']
 
     def __init__(self, preprocessed_data_id, action):
         error_msgs = []
@@ -462,6 +460,18 @@ class EBISubmission(object):
             library_descriptor = ET.SubElement(design, 'LIBRARY_DESCRIPTOR')
             library_name = ET.SubElement(library_descriptor, 'LIBRARY_NAME')
             library_name.text = self._get_library_name(sample_name)
+
+            # hardcoding some values,
+            # see https://github.com/biocore/qiita/issues/1485
+            library_source = ET.SubElement(library_descriptor,
+                                           "LIBRARY_SOURCE")
+            library_source.text = "METAGENOMIC"
+            library_selection = ET.SubElement(library_descriptor,
+                                              "LIBRARY_SELECTION")
+            library_selection.text = "PCR"
+            library_layout = ET.SubElement(library_descriptor,
+                                           "LIBRARY_LAYOUT")
+            ET.SubElement(library_layout, "SINGLE")
 
             lcp = ET.SubElement(library_descriptor,
                                 "LIBRARY_CONSTRUCTION_PROTOCOL")

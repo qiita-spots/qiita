@@ -787,6 +787,9 @@ center_name="%(center_name)s">
 640194" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB2.640194</LIBRARY_NAME>
+        <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
+        <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
+        <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
         <LIBRARY_CONSTRUCTION_PROTOCOL>This analysis was done as in Caporaso \
 et al 2011 Genome research. The PCR primers (F515/R806) were developed \
 against the V4 region of the 16S rRNA (both bacteria and archaea), which we \
@@ -873,6 +876,9 @@ center_name="%(center_name)s">
 640195" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB3.640195</LIBRARY_NAME>
+        <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
+        <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
+        <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
         <LIBRARY_CONSTRUCTION_PROTOCOL>This analysis was done as in Caporaso \
 et al 2011 Genome research. The PCR primers (F515/R806) were developed \
 against the V4 region of the 16S rRNA (both bacteria and archaea), which we \
@@ -1029,18 +1035,6 @@ ADDDICTTEST = """<TESTING foo="bar">
 </TESTING>
 """
 
-GENLIBDESC = """<design foo="bar">
-    <LIBRARY_DESCRIPTOR>
-        <LIBRARY_NAME>sample</LIBRARY_NAME>
-        <LIBRARY_STRATEGY>OTHER</LIBRARY_STRATEGY>
-        <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
-        <LIBRARY_SELECTION>unspecified</LIBRARY_SELECTION>
-        <LIBRARY_CONSTRUCTION_PROTOCOL>libconsprot
-        </LIBRARY_CONSTRUCTION_PROTOCOL>
-    </LIBRARY_DESCRIPTOR>
-</design>
-"""
-
 GENSPOTDESC = """<design foo="bar">
     <SPOT_DESCRIPTOR>
         <SPOT_DECODE_SPEC />
@@ -1053,51 +1047,6 @@ GENSPOTDESC = """<design foo="bar">
     </SPOT_DESCRIPTOR>
 </design>
 """
-
-SAMPLE_TEMPLATE_ERROR = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status_id\tsample_type\t"
-    "str_column\n"
-    "sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
-    "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\n"
-    "sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified\t"
-    "4.2\t1.1\tlocation1\t1\ttype1\tValue for sample 2\n"
-    "sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified\t"
-    "4.8\t4.41\tlocation1\t1\ttype1\tValue for sample 3\n")
-
-EXP_SAMPLE_TEMPLATE = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status_id\tsample_type\t"
-    "str_column\ttaxon_id\tscientific_name\n"
-    "sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified\t"
-    "42.42\t41.41\tlocation1\t1\ttype1\tValue for sample 1\t9606\t"
-    "homo sapiens\n"
-    "sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified\t"
-    "4.2\t1.1\tlocation1\t1\ttype1\tValue for sample 2\t9606\thomo sapiens\n"
-    "sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified\t"
-    "4.8\t4.41\tlocation1\t1\ttype1\tValue for sample 3\t9606\thomo sapiens\n")
-
-EXP_PREP_TEMPLATE = (
-    "sample_name\tcenter_name\tcenter_project_name\tdata_type_id\t"
-    "temp_status_id\tstr_column\tplatform\texperiment_design_description"
-    "\tlibrary_construction_protocol"
-    "\nsample1\tANL\tTest Project\t2\t1\tValue for sample 3"
-    "\tILLUMINA\texp design\tlib protocol\n"
-    "sample2\tANL\tTest Project\t2\t1\tValue for sample 1"
-    "\tILLUMINA\texp design\tlib protocol\n"
-    "sample3\tANL\tTest Project\t2\t1\tValue for sample 2"
-    "\tILLUMINA\texp design\tlib protocol\n")
-
-EXP_PREP_TEMPLATE_FILTERED = (
-    "sample_name\tcenter_name\tcenter_project_name\tdata_type_id\t"
-    "temp_status_id\tstr_column\tplatform\texperiment_design_description"
-    "\tlibrary_construction_protocol"
-    "\nsample1\tANL\tTest Project\t2\t1\tValue for sample 3"
-    "\tILLUMINA\texp design\tlib protocol\n"
-    "sample2\tANL\tTest Project\t2\t1\tValue for sample 1"
-    "\tILLUMINA\texp design\tlib protocol\n")
 
 CURL_RESULT = """<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
