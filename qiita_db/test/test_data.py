@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-# TODO: Modify DB to fix 1084
-
 from unittest import TestCase, main
 from datetime import datetime
 from os import close, remove
@@ -431,10 +429,9 @@ class PreprocessedDataTests(TestCase):
             PreprocessedData.delete(ppd.id)
         ppd.update_vamps_status('failed')
 
-        # TODO: fails due to EBI submission
-        # ppd.update_insdc_status('success', 'AAAA', 'AAAA')
-        # with self.assertRaises(QiitaDBStatusError):
-        #     PreprocessedData.delete(ppd.id)
+        ppd = PreprocessedData(1)
+        with self.assertRaises(QiitaDBStatusError):
+            PreprocessedData.delete(ppd.id)
 
     def test_create_error_dynamic_table(self):
         """Raises an error if the preprocessed_params_table does not exist"""
