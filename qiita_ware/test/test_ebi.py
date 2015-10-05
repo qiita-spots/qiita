@@ -281,9 +281,18 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                 'SKD6.640190': {'center_name': 'ANL',
                                 'center_project_name': 'Test Project'},
                 'SKM6.640187': {'center_name': 'ANL',
-                                'center_project_name': 'Test Project'},
+                                'center_project_name': 'Test Project',
+                                'platform': 'ILLUMINA',
+                                'instrument_model': 'Not valid'},
                 'SKD9.640182': {'center_name': 'ANL',
-                                'center_project_name': 'Test Project'}
+                                'center_project_name': 'Test Project',
+                                'platform': 'ILLUMINA',
+                                'instrument_model': 'Illumina MiSeq',
+                                'primer': 'GTGCCAGCMGCCGCGGTAA',
+                                'experiment_design_description':
+                                    'microbiome of soil and rhizosphere',
+                                'library_construction_protocol':
+                                    'PMID: 22402401'}
             }
             investigation_type = None
         else:
@@ -291,6 +300,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                 'SKD6.640190': {'center_name': 'ANL',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
+                                'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
                                     'microbiome of soil and rhizosphere',
@@ -299,6 +309,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                 'SKM6.640187': {'center_name': 'ANL',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
+                                'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
                                     'microbiome of soil and rhizosphere',
@@ -307,6 +318,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                 'SKD9.640182': {'center_name': 'ANL',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
+                                'instrument_model': 'Illumina MiSeq',
                                 'primer': 'GTGCCAGCMGCCGCGGTAA',
                                 'experiment_design_description':
                                     'microbiome of soil and rhizosphere',
@@ -336,11 +348,10 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                     "preprocessed data #3 and prep template #2:\nUnrecognized "
                     "investigation type: 'None'. This term is neither one of "
                     "the official terms nor one of the user-defined terms in "
-                    "the ENA ontology.\nMissing column in the prep template: "
-                    "platform, primer, experiment_design_description, "
-                    "library_construction_protocol\nThese samples do not have "
-                    "a valid platform: 1.SKD6.640190, 1.SKM6.640187, "
-                    "1.SKD9.640182")
+                    "the ENA ontology.\nThese samples do not have a valid "
+                    "platform (instrumet model wasn't checked): "
+                    "1.SKD6.640190\nThese samples do not have a valid "
+                    "instrument model: 1.SKM6.640187")
         with self.assertRaises(EBISumbissionError) as e:
             EBISubmission(ppd.id, 'ADD')
         self.assertEqual(exp_text, str(e.exception))
@@ -804,7 +815,7 @@ sequencer adapter regions.
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
-      <ILLUMINA />
+      <ILLUMINA><INSTRUMENT_MODEL>Illumina MiSeq</INSTRUMENT_MODEL></ILLUMINA>
     </PLATFORM>
     <EXPERIMENT_ATTRIBUTES>
       <EXPERIMENT_ATTRIBUTE>
@@ -890,7 +901,7 @@ sequencer adapter regions.
       </LIBRARY_DESCRIPTOR>
     </DESIGN>
     <PLATFORM>
-      <ILLUMINA />
+      <ILLUMINA><INSTRUMENT_MODEL>Illumina MiSeq</INSTRUMENT_MODEL></ILLUMINA>
     </PLATFORM>
     <EXPERIMENT_ATTRIBUTES>
       <EXPERIMENT_ATTRIBUTE>

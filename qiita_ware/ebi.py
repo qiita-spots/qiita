@@ -93,7 +93,19 @@ class EBISubmission(object):
 
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
     valid_ebi_submission_states = ('submitting')
-    valid_platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
+    # valid_platforms dict of 'platform': ['valid_instrument_models']
+    valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
+                                 '454 GS FLX+', '454 GS FLX TITANIUM',
+                                 '454 GS JUNIOR', 'UNSPECIFIED'],
+                       'ILLUMINA': ['ILLUMINA GENOME ANALYZER',
+                                    'ILLUMINA GENOME ANALYZER II',
+                                    'ILLUMINA GENOME ANALYZER IX',
+                                    'ILLUMINA HISEQ 2500',
+                                    'ILLUMINA HISEQ 2000',
+                                    'ILLUMINA HISEQ 1500',
+                                    'ILLUMINA HISEQ 1000', 'ILLUMINA MISEQ',
+                                    'ILLUMINA HISCANSQ', 'HISEQ X TEN',
+                                    'NEXTSEQ 500', 'UNSPECIFIED']}
     xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
     experiment_library_fields = [
@@ -178,26 +190,40 @@ class EBISubmission(object):
         self.sample_demux_fps = {}
         get_output_fp = partial(join, self.ebi_dir)
         nvp = []
+        nvim = []
         for k, v in viewitems(self.sample_template):
             if k not in self.prep_template:
                 continue
             sample_prep = self.prep_template[k]
 
             # validating required fields
-            if 'platform' not in sample_prep:
+            if ('platform' not in sample_prep or
+                    sample_prep['platform'] is None):
                 nvp.append(k)
             else:
                 platform = sample_prep['platform'].upper()
                 if platform not in self.valid_platforms:
                     nvp.append(k)
+                else:
+                    if ('instrument_model' not in sample_prep or
+                            sample_prep['instrument_model'] is None):
+                        nvim.append(k)
+                    else:
+                        im = sample_prep['instrument_model'].upper()
+                        if im not in self.valid_platforms[platform]:
+                            nvim.append(k)
 
             self.samples[k] = v
             self.samples_prep[k] = sample_prep
             self.sample_demux_fps[k] = get_output_fp("%s.fastq.gz" % k)
 
         if nvp:
-            error_msgs.append("These samples do not have a valid platform: "
-                              "%s" % (', '.join(nvp)))
+            error_msgs.append("These samples do not have a valid platform "
+                              "(instrumet model wasn't checked): %s" % (
+                                  ', '.join(nvp)))
+        if nvim:
+            error_msgs.append("These samples do not have a valid instrument "
+                              "model: %s" % (', '.join(nvim)))
         if error_msgs:
             error_msgs = ("Errors found during EBI submission for study #%d, "
                           "preprocessed data #%d and prep template #%d:\n%s"
@@ -454,10 +480,8 @@ class EBISubmission(object):
             platform_element = ET.SubElement(experiment, 'PLATFORM')
             platform_info = ET.SubElement(platform_element,
                                           platform.upper())
-
-            if 'instrument_model' in sample_prep:
-                element = ET.SubElement(platform_info, 'INSTRUMENT_MODEL')
-                element.text = sample_prep.pop('instrument_model')
+            instrument_model = ET.SubElement(platform_info, 'INSTRUMENT_MODEL')
+            instrument_model.text = sample_prep.pop('instrument_model')
 
             if sample_prep:
                 experiment_attributes = ET.SubElement(

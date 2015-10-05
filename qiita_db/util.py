@@ -645,7 +645,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
                     move(old_fp[0], new_fp[0])
                     # In case the transaction executes a rollback, we need to
                     # make sure the files have not been moved
-                    TRN.add_post_rollback_func(move, new_fp, old_fp)
+                    TRN.add_post_rollback_func(move, new_fp[0], old_fp[0])
 
         def str_to_id(x):
             return (x if isinstance(x, (int, long))
