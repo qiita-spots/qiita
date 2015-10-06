@@ -110,6 +110,8 @@ from .sql_connection import TRN
 from .util import exists_table
 
 
+_VALID_EBI_STATUS = ('not submitted', 'submitting', 'submitted')
+
 class Study(QiitaObject):
     r"""Study object to access to the Qiita Study information
 
@@ -152,7 +154,6 @@ class Study(QiitaObject):
     _info_cols = frozenset(chain(
         get_table_cols('study'), get_table_cols('study_status'),
         get_table_cols('timeseries_type'), get_table_cols('study_pmid')))
-    _valid_ebi_status = ('not submitted', 'submitting', 'submitted')
 
     def _lock_non_sandbox(self):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -872,8 +873,8 @@ class Study(QiitaObject):
         ------
         ValueError
             If the status is not known
-        """.format(', '.join(self._valid_ebi_status))
-        if not (value in self._valid_ebi_status or
+        """
+        if not (value in _VALID_EBI_STATUS or
                 value.startswith('failed')):
             raise ValueError("Unknown status: %s" % value)
         with TRN:
@@ -882,6 +883,8 @@ class Study(QiitaObject):
                      WHERE study_id = %s""".format(self._table)
             TRN.add(sql, [value, self.id])
             TRN.execute()
+
+    ebi_submission_status.__doc__.format(', '.join(_VALID_EBI_STATUS))
 
     # --- methods ---
     def raw_data(self, data_type=None):
