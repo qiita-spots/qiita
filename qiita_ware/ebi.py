@@ -1,6 +1,7 @@
 from os.path import basename, join, isdir, isfile
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
+from urllib import quote
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import ParseError
 from xml.sax.saxutils import escape
@@ -623,8 +624,7 @@ class EBISubmission(object):
     def generate_curl_command(
             self,
             ebi_seq_xfer_user=qiita_config.ebi_seq_xfer_user,
-            ebi_access_key=qiita_config.ebi_access_key,
-            ebi_skip_curl_cert=qiita_config.ebi_skip_curl_cert,
+            ebi_seq_xfer_pass=qiita_config.ebi_seq_xfer_pass,
             ebi_dropbox_url=qiita_config.ebi_dropbox_url):
         """Generates the curl command for submission
 
@@ -632,10 +632,8 @@ class EBISubmission(object):
         ----------
         ebi_seq_xfer_user : str
             The user to use when submitting to EBI
-        ebi_access_key : str
-            The access key issued by EBI for REST submissions
-        ebi_skip_curl_cert : bool
-            If the curl certificate should be skipped
+        ebi_seq_xfer_pass : str
+            The user password issued by EBI for REST submissions
         ebi_dropbox_url : str
             The dropbox url
 
@@ -650,13 +648,12 @@ class EBISubmission(object):
           be generated before executing this function
         """
         # make sure that the XML files have been generated
-        url = '?auth=ENA%20{0}%20{1}'.format(ebi_seq_xfer_user,
-                                             ebi_access_key)
+        url = '?auth=ENA%20{0}%20{1}'.format(quote(ebi_seq_xfer_user),
+                                             quote(ebi_seq_xfer_pass))
         curl_command = (
-            'curl {0}-F "SUBMISSION=@{1}" -F "STUDY=@{2}" -F "SAMPLE=@{3}" '
-            '-F "RUN=@{4}" -F "EXPERIMENT=@{5}" "{6}"'
+            'curl -k -F "SUBMISSION=@{0}" -F "STUDY=@{1}" -F "SAMPLE=@{2}" '
+            '-F "RUN=@{3}" -F "EXPERIMENT=@{4}" "{5}"'
         ).format(
-            '-k ' if ebi_skip_curl_cert else '',
             self.submission_xml_fp,
             self.study_xml_fp,
             self.sample_xml_fp,

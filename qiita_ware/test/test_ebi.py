@@ -215,14 +215,11 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         submission = EBISubmission(2, 'ADD')
 
         test_ebi_seq_xfer_user = 'ebi_seq_xfer_user'
-        test_ebi_access_key = 'ebi_access_key'
+        test_ebi_seq_xfer_pass = 'ebi_seq_xfer_pass'
         test_ebi_dropbox_url = 'ebi_dropbox_url'
 
-        # Without curl certificate authentication
-        test_ebi_skip_curl_cert = True
         obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
-                                               test_ebi_access_key,
-                                               test_ebi_skip_curl_cert,
+                                               test_ebi_seq_xfer_pass,
                                                test_ebi_dropbox_url)
         exp = ('curl -k '
                '-F "SUBMISSION=@%(xml_dir)s/submission.xml" '
@@ -231,23 +228,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                '-F "RUN=@%(xml_dir)s/run.xml" '
                '-F "EXPERIMENT=@%(xml_dir)s/experiment.xml" '
                '"ebi_dropbox_url/?auth=ENA%%20ebi_seq_xfer_user'
-               '%%20ebi_access_key"') % {'xml_dir': submission.xml_dir}
-        self.assertEqual(obs, exp)
-
-        # With curl certificate authentication
-        test_ebi_skip_curl_cert = False
-        obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
-                                               test_ebi_access_key,
-                                               test_ebi_skip_curl_cert,
-                                               test_ebi_dropbox_url)
-        exp = ('curl '
-               '-F "SUBMISSION=@%(xml_dir)s/submission.xml" '
-               '-F "STUDY=@%(xml_dir)s/study.xml" '
-               '-F "SAMPLE=@%(xml_dir)s/sample.xml" '
-               '-F "RUN=@%(xml_dir)s/run.xml" '
-               '-F "EXPERIMENT=@%(xml_dir)s/experiment.xml" '
-               '"ebi_dropbox_url/?auth=ENA%%20ebi_seq_xfer_user'
-               '%%20ebi_access_key"') % {'xml_dir': submission.xml_dir}
+               '%%20ebi_seq_xfer_pass"') % {'xml_dir': submission.xml_dir}
         self.assertEqual(obs, exp)
 
 
