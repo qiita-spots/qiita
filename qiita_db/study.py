@@ -152,6 +152,7 @@ class Study(QiitaObject):
     _info_cols = frozenset(chain(
         get_table_cols('study'), get_table_cols('study_status'),
         get_table_cols('timeseries_type'), get_table_cols('study_pmid')))
+    _valid_ebi_status = ('not submitted', 'submitting', 'submitted')
 
     def _lock_non_sandbox(self):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -673,6 +674,11 @@ class Study(QiitaObject):
         Returns
         -------
         SampleTemplate id
+
+        Note
+        ----
+        If the study doesn't have a sample template associated with it, it will
+        return `-1`.
         """
         with TRN:
             sql = """SELECT EXISTS(SELECT *
@@ -680,7 +686,7 @@ class Study(QiitaObject):
                                    WHERE study_id = %s)"""
             TRN.add(sql, [self.id])
             exists = TRN.execute_fetchlast()
-        return self._id if exists else None
+        return self._id if exists else -1
 
     @property
     def data_types(self):
@@ -859,15 +865,15 @@ class Study(QiitaObject):
 
         Parameters
         ----------
-        value = str
+        value : str {%s}
             The new EBI submission status
 
         Raises
         ------
         ValueError
             If the status is not known
-        """
-        if not (value in ('not submitted', 'submitting', 'submitted') or
+        """.format(', '.join(self._valid_ebi_status))
+        if not (value in self._valid_ebi_status or
                 value.startswith('failed')):
             raise ValueError("Unknown status: %s" % value)
         with TRN:

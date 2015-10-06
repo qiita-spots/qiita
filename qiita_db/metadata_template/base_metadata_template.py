@@ -40,6 +40,7 @@ from future.utils import viewitems, viewvalues
 from future.builtins import zip
 from os.path import join
 from functools import partial
+from itertools import chain
 from copy import deepcopy
 
 import pandas as pd
@@ -1328,7 +1329,7 @@ class MetadataTemplate(QiitaObject):
         return cols.difference(self.categories())
 
     def _get_accession_numbers(self, column):
-        """Return the accession numbers stored under the given column
+        """Return the accession numbers stored in `column`
 
         Parameters
         ----------
@@ -1351,20 +1352,21 @@ class MetadataTemplate(QiitaObject):
         return result
 
     def _update_accession_numbers(self, column, values):
-        """Update the accession numbers stored under the given column
+        """Update accession numbers stored in `column` with the ones in `values`
 
         Parameters
         ----------
         column : str
-            The column name where the accession number is stored
+            The column name where the accession number are stored
         values : dict of {str: str}
             The accession numbers keyed by sample id
 
         Raises
         ------
         QiitaDBError
-            If values tries to change the accession number of a sample that
-            already has an assigned accession number
+            If a sample in `values` already has an accession number
+        QiitaDBWarning
+            If `values` is not updating any accesion number
         """
         with TRN:
             sql = """SELECT sample_id, {0}
@@ -1389,14 +1391,13 @@ class MetadataTemplate(QiitaObject):
                 del values[sample]
 
             if values:
-                sql_vals = ', '.join(
-                    ["('%s', '%s')" % (k, v) for k, v in viewitems(values)])
+                sql_vals = ', '.join(["(%s, %s)"] * len(values))
                 sql = """UPDATE qiita.{0} AS t
                          SET {1}=c.{1}
                          FROM (VALUES {2}) AS c(sample_id, {1})
                          WHERE c.sample_id = t.sample_id
                          """.format(self._table, column, sql_vals)
-                TRN.add(sql)
+                TRN.add(sql, list(chain.from_iterable(values.items())))
                 TRN.execute()
             else:
                 warnings.warn("No new accession numbers to update",

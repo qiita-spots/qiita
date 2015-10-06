@@ -479,13 +479,11 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         curl_result = ""
         with self.assertRaises(EBISubmissionError):
-            stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
-                curl_result)
+            e.parse_EBI_reply(curl_result)
 
         curl_result = 'success="true"'
         with self.assertRaises(EBISubmissionError):
-            stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
-                curl_result)
+            e.parse_EBI_reply(curl_result)
 
         curl_result = ('some general text success="true" more text'
                        '<STUDY accession="staccession" some text> '
@@ -493,8 +491,12 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                        '<SUBMISSION accession="sbaccession" some text>'
                        'some final text')
         with self.assertRaises(EBISubmissionError):
-            stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(
-                curl_result)
+            e.parse_EBI_reply(curl_result)
+
+        curl_result = CURL_RESULT_2_STUDY.format(
+            qiita_config.ebi_organization_prefix, ppd.id)
+        with self.assertRaises(EBISubmissionError):
+            e.parse_EBI_reply(curl_result)
 
         curl_result = CURL_RESULT.format(qiita_config.ebi_organization_prefix,
                                          ppd.id)
@@ -1077,6 +1079,35 @@ status="PRIVATE">
     <EXT_ID accession="SAMEA0000002" type="biosample"/>
   </SAMPLE>
   <STUDY accession="ERP000000" alias="{0}_sid_1" status="PRIVATE" \
+holdUntilDate="2016-09-19+01:00"/>
+  <SUBMISSION accession="ERA000000" alias="qiime_submission_570"/>
+  <MESSAGES>
+    <INFO> ADD action for the following XML: study.xml sample.xml \
+experiment.xml run.xml       </INFO>
+  </MESSAGES>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>HOLD</ACTIONS>
+</RECEIPT>
+"""
+
+CURL_RESULT_2_STUDY = """<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+<RECEIPT receiptDate="2015-09-20T23:27:01.924+01:00" \
+submissionFile="submission.xml" success="true">
+  <EXPERIMENT accession="ERX0000000" alias="{0}_ptid_1:1.SKB2.640194" \
+status="PRIVATE"/>
+  <RUN accession="ERR0000000" alias="{0}_ppdid_{1}:1.SKB2.640194" \
+status="PRIVATE"/>
+  <SAMPLE accession="ERS000000" alias="{0}_sid_1:1.SKB2.640194"
+status="PRIVATE">
+    <EXT_ID accession="SAMEA0000000" type="biosample"/>
+  </SAMPLE>
+  <STUDY accession="ERP000000" alias="{0}_sid_1" status="PRIVATE" \
+holdUntilDate="2016-09-19+01:00"/>
+  <STUDY accession="ERP000000" alias="{0}_sid_2" status="PRIVATE" \
 holdUntilDate="2016-09-19+01:00"/>
   <SUBMISSION accession="ERA000000" alias="qiime_submission_570"/>
   <MESSAGES>
