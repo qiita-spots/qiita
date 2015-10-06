@@ -30,6 +30,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_db.data import PreprocessedData
 from qiita_db.study import Study
 from qiita_db.metadata_template import PrepTemplate
+from qiita_db.util import get_mountpoint
 from qiita_core.util import qiita_test_checker
 
 
@@ -75,16 +76,14 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertItemsEqual(e.pmids, ['123456', '7891011'])
         self.assertEqual(e.action, action)
 
-        get_output_fp = partial(join, e.ebi_dir, 'xml_dir')
-        self.assertEqual(e.xml_dir, get_output_fp())
+        get_output_fp = partial(join, e.full_ebi_dir, 'xml_dir')
         self.assertEqual(e.study_xml_fp, get_output_fp('study.xml'))
         self.assertEqual(e.sample_xml_fp, get_output_fp('sample.xml'))
         self.assertEqual(e.experiment_xml_fp,  get_output_fp('experiment.xml'))
         self.assertEqual(e.run_xml_fp, get_output_fp('run.xml'))
         self.assertEqual(e.submission_xml_fp, get_output_fp('submission.xml'))
 
-        get_output_fp = partial(join, e.ebi_dir)
-        self.assertEqual(e.ebi_dir, get_output_fp())
+        get_output_fp = partial(join, e.full_ebi_dir)
         for sample in e.sample_template:
             self.assertEqual(e.sample_template[sample], e.samples[sample])
             self.assertEqual(e.prep_template[sample], e.samples_prep[sample])
@@ -377,7 +376,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             del(submission.samples_prep[k])
 
         submission.generate_demultiplexed_fastq(mtime=1)
-        self.files_to_remove.append(submission.ebi_dir)
+        self.files_to_remove.append(submission.full_ebi_dir)
         obs = ET.tostring(submission.generate_run_xml())
 
         exp = RUNXML % {
@@ -400,7 +399,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         # be created
         ebi_submission = EBISubmission(ppd.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
-        self.files_to_remove.append(ebi_submission.ebi_dir)
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
         self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
@@ -421,40 +420,42 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         ppd = self.write_demux_files(PrepTemplate(1))
         e = EBISubmission(ppd.id, 'ADD')
         e.generate_demultiplexed_fastq()
-        self.files_to_remove.append(e.ebi_dir)
+        self.files_to_remove.append(e.full_ebi_dir)
         e.write_xml_file(e.generate_study_xml(), e.study_xml_fp)
         e.write_xml_file(e.generate_sample_xml(), e.sample_xml_fp)
         e.write_xml_file(e.generate_experiment_xml(), e.experiment_xml_fp)
         e.write_xml_file(e.generate_run_xml(), e.run_xml_fp)
         e.write_xml_file(e.generate_submission_xml(), e.submission_xml_fp)
         obs = e.generate_send_sequences_cmd()
-        exp = ['ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKB2.640194.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+        _, base_fp = get_mountpoint("preprocessed_data")[0]
+        exp = ('ascp --ignore-host-key -L- -d -QT -k2 '
+               '%(ebi_dir)s/1.SKB2.640194.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
                'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKM4.640180.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               '%(ebi_dir)s/1.SKM4.640180.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
                'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKB3.640195.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               '%(ebi_dir)s/1.SKB3.640195.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
                'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKB6.640176.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               '%(ebi_dir)s/1.SKB6.640176.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
                'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKD6.640190.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               '%(ebi_dir)s/1.SKD6.640190.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
                'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKM6.640187.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               '%(ebi_dir)s/1.SKM6.640187.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
                'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKD9.640182.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               '%(ebi_dir)s/1.SKD9.640182.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
                'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKM8.640201.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
+               '%(ebi_dir)s/1.SKM8.640201.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
                'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKM2.640199.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/']
+               '%(ebi_dir)s/1.SKM2.640199.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/' % {
+                   'ebi_dir': e.full_ebi_dir}).split('\n')
         self.assertEqual(obs, exp)
 
     def test_parse_EBI_reply(self):

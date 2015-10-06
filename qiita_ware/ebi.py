@@ -16,7 +16,7 @@ from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
-from qiita_db.util import convert_to_id
+from qiita_db.util import convert_to_id, get_mountpoint, insert_filepaths
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
@@ -157,10 +157,10 @@ class EBISubmission(object):
                               "term is neither one of the official terms nor "
                               "one of the user-defined terms in the ENA "
                               "ontology." % it)
-
-        self.ebi_dir = join(qiita_config.working_dir,
-                            'ebi_submission_%d' % preprocessed_data_id)
-        get_output_fp = partial(join, self.ebi_dir, 'xml_dir')
+        _, base_fp = get_mountpoint("preprocessed_data")[0]
+        self.ebi_dir = '%d_ebi_submission' % preprocessed_data_id
+        self.full_ebi_dir = join(base_fp, self.ebi_dir)
+        get_output_fp = partial(join, self.full_ebi_dir, 'xml_dir')
         self.xml_dir = get_output_fp()
         self.study_xml_fp = get_output_fp('study.xml')
         self.sample_xml_fp = get_output_fp('sample.xml')
@@ -186,7 +186,7 @@ class EBISubmission(object):
         self.samples = {}
         self.samples_prep = {}
         self.sample_demux_fps = {}
-        get_output_fp = partial(join, self.ebi_dir)
+        get_output_fp = partial(join, self.full_ebi_dir)
         nvp = []
         nvim = []
         for k, v in viewitems(self.sample_template):
@@ -535,7 +535,7 @@ class EBISubmission(object):
             data_block = ET.SubElement(run, 'DATA_BLOCK')
             files = ET.SubElement(data_block, 'FILES')
             ET.SubElement(files, 'FILE', {
-                'filename': file_path,
+                'filename': join(self.ebi_dir, basename(file_path)),
                 'filetype': file_type,
                 'quality_scoring_system': 'phred',
                 'checksum_method': 'MD5',
@@ -787,10 +787,10 @@ class EBISubmission(object):
 
         Notes
         -----
-        - As a performace feature, this method will check if self.ebi_dir
+        - As a performace feature, this method will check if self.full_ebi_dir
         already exists and, if it does, the script will assume that in a
         previous execution this step was performed correctly and will simply
-        read the file names from self.ebi_dir
+        read the file names from self.full_ebi_dir
         - When the object is created (init), samples, samples_prep and
         sample_demux_fps hold values for all available samples in the database.
         Here some of those values will be deleted (del's, within the loops) for
@@ -800,8 +800,14 @@ class EBISubmission(object):
         """
         ppd = self.preprocessed_data
 
-        if not isdir(self.ebi_dir) or rewrite_fastq:
-            makedirs(self.ebi_dir)
+        dir_not_exists = not isdir(self.full_ebi_dir)
+        if dir_not_exists or rewrite_fastq:
+            if dir_not_exists:
+                makedirs(self.full_ebi_dir)
+                filetype_id = convert_to_id('directory', 'filepath_type')
+                insert_filepaths([(self.full_ebi_dir, filetype_id)], -1,
+                                 'preprocessed_data', 'filepath',
+                                 move_files=False)
 
             demux = [path for _, path, ftype in ppd.get_filepaths()
                      if ftype == 'preprocessed_demux'][0]
@@ -829,8 +835,9 @@ class EBISubmission(object):
             demux_samples = set()
             extension = '.fastq.gz'
             extension_len = len(extension)
-            for f in listdir(self.ebi_dir):
-                if isfile(join(self.ebi_dir, f)) and f.endswith(extension):
+            for f in listdir(self.full_ebi_dir):
+                fpath = join(self.full_ebi_dir, f)
+                if isfile(fpath) and f.endswith(extension):
                     demux_samples.add(f[:-extension_len])
 
             missing_samples = set(self.samples.keys()).difference(
