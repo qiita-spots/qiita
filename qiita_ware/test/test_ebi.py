@@ -388,6 +388,9 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         exp = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs, exp)
 
+    def test_generate_xml_files(self):
+        ppd = self.write_demux_files(PrepTemplate(1))
+
     def test_generate_demultiplexed_fastq(self):
         # generating demux file for testing
         exp_demux_samples = set(

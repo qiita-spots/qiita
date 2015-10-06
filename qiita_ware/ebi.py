@@ -7,7 +7,7 @@ from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
 
-from future.utils import viewitems
+from future.utils import viewitems, viewvalues
 from skbio.util import safe_md5, create_dir
 
 from qiita_core.qiita_settings import qiita_config
@@ -160,13 +160,13 @@ class EBISubmission(object):
 
         self.ebi_dir = join(qiita_config.working_dir,
                             'ebi_submission_%d' % preprocessed_data_id)
-        get_output_fp = partial(join, self.ebi_dir, 'xml_dir')
-        self.xml_dir = get_output_fp()
-        self.study_xml_fp = get_output_fp('study.xml')
-        self.sample_xml_fp = get_output_fp('sample.xml')
-        self.experiment_xml_fp = get_output_fp('experiment.xml')
-        self.run_xml_fp = get_output_fp('run.xml')
-        self.submission_xml_fp = get_output_fp('submission.xml')
+        self.xml_dir = join(self.ebi_dir, 'xml_dir')
+        self.study_xml_fp = None
+        self.sample_xml_fp = None
+        self.experiment_xml_fp = None
+        self.run_xml_fp = None
+        self.submission_xml_fp = None
+
         self.pmids = self.study.pmids
 
         # getting the restrictions
@@ -619,6 +619,59 @@ class EBISubmission(object):
         """
         create_dir(self.xml_dir)
         ET.ElementTree(element).write(fp, encoding='UTF-8')
+
+    def generate_xml_files(self):
+        """Generate the XML files"""
+        get_output_fp = partial(join, self.xml_dir, 'xml_dir')
+
+        # Generate the run.xml as it should always be generated
+        self.run_xml_fp = get_output_fp('run.xml')
+        self.write_xml_file(self.generate_run_xml(), self.run_xml_fp)
+
+        # The experiment.xml needs to be generated if and only if the
+        # samples in the prep template do not have an ebi_experiment_accession
+        # number
+        bool_array = [acc is None
+                      for acc in viewvalues(
+                          self.prep_template.ebi_experiment_accessions)]
+        # Since we don't allow new samples to be added to a prep template
+        # once it has been submitted, either all samples have the submission
+        # number or none of them has it. By doing the ANY xor ALL, we can check
+        # if that is the case, and raise an error only if some samples have
+        # an ebi_experiment_accession
+        all_bool_array = all(bool_array)
+        if any(bool_array) != all_bool_array:
+            raise EBISubmissionError(
+                "There are samples in the prep template %d that have an "
+                "ebi_experiment_accession, but not all of them have it. This "
+                "is not supported by the system." % self.prep_template.id)
+        if not all_bool_array:
+            self.experiment_xml_fp = get_output_fp('experiment.xml')
+            self.write_xml_file(self.generate_experiment_xml(),
+                                self.experiment_xml_fp)
+
+        # The study.xml file needs to be generated if and only if the study
+        # does NOT have an ebi_study_accession
+        if not self.study.ebi_study_accession:
+            self.study_xml_fp = get_output_fp('study.xml')
+            self.write_xml_file(self.generate_study_xml(), self.study_xml_fp)
+
+        # The sample.xml file needs to be generated if and only if there are
+        # samples in the current submission that do NOT have an
+        # ebi_sample_accession
+        new_samples = [
+            sample for sample, accession in viewitems(
+                self.sample_template.ebi_sample_accessions)
+            if accession is None]
+        if new_samples:
+            self.sample_xml_fp = get_output_fp('sample.xml')
+            self.write_xml_file(self.generate_sample_xml(new_samples),
+                                self.sample_xml_fp)
+
+        # The submission.xml is always generated
+        self.submission_xml_fp = get_output_fp('submission.xml')
+        self.write_xml_file(self.generate_submission_xml(),
+                            self.submission_xml_fp)
 
     def generate_curl_command(
             self,

@@ -60,16 +60,7 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         raise
 
     # step 3: generate and write xml files
-    ebi_submission.write_xml_file(ebi_submission.generate_study_xml(),
-                                  ebi_submission.study_xml_fp)
-    ebi_submission.write_xml_file(ebi_submission.generate_sample_xml(),
-                                  ebi_submission.sample_xml_fp)
-    ebi_submission.write_xml_file(ebi_submission.generate_experiment_xml(),
-                                  ebi_submission.experiment_xml_fp)
-    ebi_submission.write_xml_file(ebi_submission.generate_run_xml(),
-                                  ebi_submission.run_xml_fp)
-    ebi_submission.write_xml_file(ebi_submission.generate_submission_xml(),
-                                  ebi_submission.submission_xml_fp)
+    ebi_submission.generate_xml_files()
 
     if send:
         # step 4: sending sequences
