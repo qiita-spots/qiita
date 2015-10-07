@@ -23,7 +23,8 @@ class PreprocessedDataTab(BaseUIModule):
     def render(self, study, full_access):
         ppd_gen = (PreprocessedData(ppd_id)
                    for ppd_id in study.preprocessed_data())
-        avail_ppd = [(ppd.id, ppd, STATUS_STYLER[ppd.status])
+        avail_ppd = [(ppd.id, ppd, STATUS_STYLER[ppd.status],
+                      ppd.is_submitted_to_ebi)
                      for ppd in ppd_gen
                      if full_access or ppd.status == 'public']
         return self.render_string(
