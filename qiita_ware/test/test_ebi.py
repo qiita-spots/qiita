@@ -144,6 +144,12 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_generate_sample_xml(self):
         submission = EBISubmission(2, 'ADD')
+
+        samples = ['1.SKB2.640194', '1.SKB3.640195']
+        obs = ET.tostring(submission.generate_sample_xml(samples=samples))
+        exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
+        self.assertEqual(obs, exp)
+
         # removing samples so test text is easier to read
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
                        '1.SKM8.640201', '1.SKM2.640199', '1.SKD2.640178',
@@ -161,28 +167,6 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
         self.assertEqual(obs, exp)
 
-    def test_generate_experiment_xml(self):
-        submission = EBISubmission(2, 'ADD')
-        # removing samples so test text is easier to read
-        keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
-                       '1.SKM8.640201', '1.SKM2.640199', '1.SKD2.640178',
-                       '1.SKB7.640196', '1.SKD4.640185', '1.SKB8.640193',
-                       '1.SKM3.640197', '1.SKD5.640186', '1.SKB1.640202',
-                       '1.SKM1.640183', '1.SKD1.640179', '1.SKD3.640198',
-                       '1.SKB5.640181', '1.SKB4.640189', '1.SKB9.640200',
-                       '1.SKM9.640192', '1.SKD8.640184', '1.SKM5.640177',
-                       '1.SKM7.640188', '1.SKD7.640191', '1.SKB6.640176',
-                       '1.SKM4.640180']
-        for k in keys_to_del:
-            del(submission.samples[k])
-            del(submission.samples_prep[k])
-
-        obs = ET.tostring(submission.generate_experiment_xml())
-        exp = EXPERIMENTXML % {
-            'organization_prefix': qiita_config.ebi_organization_prefix}
-        exp = ''.join([l.strip() for l in exp.splitlines()])
-        self.assertEqual(obs, exp)
-
     def test_generate_spot_descriptor(self):
         e = EBISubmission(2, 'ADD')
         elm = ET.Element('design', {'foo': 'bar'})
@@ -194,6 +178,17 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_generate_submission_xml(self):
         submission = EBISubmission(2, 'ADD')
+        submission.experiment_xml_fp = "/some/path/experiment.xml"
+        submission.run_xml_fp = "/some/path/run.xml"
+        obs = ET.tostring(
+            submission.generate_submission_xml(
+                submission_date=date(2015, 9, 3)))
+        exp = SUBMISSIONXML % {
+            'submission_alias': submission._get_submission_alias(),
+            'center_name': qiita_config.ebi_center_name}
+        exp = ''.join([l.strip() for l in exp.splitlines()])
+        self.assertEqual(obs, exp)
+
         submission.study_xml_fp = "/some/path/study.xml"
         submission.sample_xml_fp = "/some/path/sample.xml"
         submission.experiment_xml_fp = "/some/path/experiment.xml"
@@ -201,7 +196,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         obs = ET.tostring(
             submission.generate_submission_xml(
                 submission_date=date(2015, 9, 3)))
-        exp = SUBMISSIONXML % {
+        exp = SUBMISSIONXML_FULL % {
             'submission_alias': submission._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
         exp = ''.join([l.strip() for l in exp.splitlines()])
@@ -382,18 +377,21 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         SampleTemplate.create(metadata, study)
         metadata_dict = {
             'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                        'barcode': 'CGTAGAGCTCTC',
                         'center_name': 'KnightLab',
                         'platform': 'ILLUMINA',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 1"},
             'Sample2': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                        'barcode': 'CGTAGAGCTCTA',
                         'center_name': 'KnightLab',
                         'platform': 'ILLUMINA',
                         'instrument_model': 'Illumina MiSeq',
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 2"},
             'Sample3': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                        'barcode': 'CGTAGAGCTCTT',
                         'center_name': 'KnightLab',
                         'platform': 'ILLUMINA',
                         'instrument_model': 'Illumina MiSeq',
@@ -448,7 +446,63 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         exp = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182']
         self.assertItemsEqual(exp, e.samples)
 
+    def test_generate_experiment_xml(self):
+        ppd = self.generate_new_study_with_preprocessed_data()
+        submission = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(submission.ebi_dir)
+        obs = ET.tostring(submission.generate_experiment_xml())
+        exp = EXPERIMENTXML_NEWSTUDY % {
+            'organization_prefix': qiita_config.ebi_organization_prefix,
+            'center_name': qiita_config.ebi_center_name,
+            'study_id': ppd.study,
+            'pt_id': ppd.prep_template
+        }
+        exp = ''.join([l.strip() for l in exp.splitlines()])
+        self.assertEqual(obs, exp)
+
+        submission = EBISubmission(2, 'ADD')
+        self.files_to_remove.append(submission.ebi_dir)
+        samples = ['1.SKB2.640194', '1.SKB3.640195']
+        obs = ET.tostring(submission.generate_experiment_xml(samples=samples))
+        exp = EXPERIMENTXML
+        exp = ''.join([l.strip() for l in exp.splitlines()])
+        self.assertEqual(obs, exp)
+
+        # removing samples so test text is easier to read
+        keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
+                       '1.SKM8.640201', '1.SKM2.640199', '1.SKD2.640178',
+                       '1.SKB7.640196', '1.SKD4.640185', '1.SKB8.640193',
+                       '1.SKM3.640197', '1.SKD5.640186', '1.SKB1.640202',
+                       '1.SKM1.640183', '1.SKD1.640179', '1.SKD3.640198',
+                       '1.SKB5.640181', '1.SKB4.640189', '1.SKB9.640200',
+                       '1.SKM9.640192', '1.SKD8.640184', '1.SKM5.640177',
+                       '1.SKM7.640188', '1.SKD7.640191', '1.SKB6.640176',
+                       '1.SKM4.640180']
+        for k in keys_to_del:
+            del(submission.samples[k])
+            del(submission.samples_prep[k])
+
+        obs = ET.tostring(submission.generate_experiment_xml())
+        self.assertEqual(obs, exp)
+
     def test_generate_run_xml(self):
+        ppd = self.generate_new_study_with_preprocessed_data()
+        submission = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(submission.ebi_dir)
+        submission.generate_demultiplexed_fastq(mtime=1)
+        obs = ET.tostring(submission.generate_run_xml())
+        exp = RUNXML_NEWSTUDY % {
+            'study_alias': submission._get_study_alias(),
+            'ebi_dir': submission.ebi_dir,
+            'organization_prefix': qiita_config.ebi_organization_prefix,
+            'center_name': qiita_config.ebi_center_name,
+            'ppd_id': ppd.id,
+            'study_id': ppd.study,
+            'pt_id': ppd.prep_template
+        }
+        exp = ''.join([l.strip() for l in exp.splitlines()])
+        self.assertEqual(obs, exp)
+
         ppd = self.write_demux_files(PrepTemplate(1))
         submission = EBISubmission(ppd.id, 'ADD')
 
@@ -467,7 +521,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             'study_alias': submission._get_study_alias(),
             'ebi_dir': submission.ebi_dir,
             'organization_prefix': qiita_config.ebi_organization_prefix,
-            'center_name': qiita_config.ebi_center_name}
+            'center_name': qiita_config.ebi_center_name,
+            'ppd_id': ppd.id}
         exp = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs, exp)
 
@@ -939,6 +994,115 @@ from the same location at different time points in the plant lifecycle.
 """ % {'organization_prefix': qiita_config.ebi_organization_prefix,
        'center_name': qiita_config.ebi_center_name}
 
+EXPERIMENTXML_NEWSTUDY = """
+<EXPERIMENT_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
+NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.\
+experiment.xsd">
+  <EXPERIMENT alias="%(organization_prefix)s_ptid_%(pt_id)s:\
+%(study_id)s.Sample1" center_name="%(center_name)s">
+    <TITLE>%(organization_prefix)s_ptid_%(pt_id)s:%(study_id)s.Sample1</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_sid_%(study_id)s" />
+    <DESIGN>
+      <DESIGN_DESCRIPTION>
+        Random value 1
+      </DESIGN_DESCRIPTION>
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_sid_%(study_id)s:\
+%(study_id)s.Sample1" />
+      <LIBRARY_DESCRIPTOR>
+        <LIBRARY_NAME>%(study_id)s.Sample1</LIBRARY_NAME>
+        <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
+        <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
+        <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
+        <LIBRARY_CONSTRUCTION_PROTOCOL>Protocol ABC
+        </LIBRARY_CONSTRUCTION_PROTOCOL>
+      </LIBRARY_DESCRIPTOR>
+    </DESIGN>
+    <PLATFORM>
+      <ILLUMINA><INSTRUMENT_MODEL>Illumina MiSeq</INSTRUMENT_MODEL></ILLUMINA>
+    </PLATFORM>
+    <EXPERIMENT_ATTRIBUTES>
+      <EXPERIMENT_ATTRIBUTE>
+        <TAG>barcode</TAG><VALUE>CGTAGAGCTCTC</VALUE>
+      </EXPERIMENT_ATTRIBUTE>
+      <EXPERIMENT_ATTRIBUTE>
+        <TAG>center_name</TAG><VALUE>KnightLab</VALUE>
+      </EXPERIMENT_ATTRIBUTE>
+      <EXPERIMENT_ATTRIBUTE>
+        <TAG>primer</TAG><VALUE>GTGCCAGCMGCCGCGGTAA</VALUE>
+      </EXPERIMENT_ATTRIBUTE>
+    </EXPERIMENT_ATTRIBUTES>
+  </EXPERIMENT>
+  <EXPERIMENT alias="%(organization_prefix)s_ptid_%(pt_id)s:\
+%(study_id)s.Sample2" center_name="%(center_name)s">
+    <TITLE>%(organization_prefix)s_ptid_%(pt_id)s:%(study_id)s.Sample2</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_sid_%(study_id)s" />
+    <DESIGN>
+      <DESIGN_DESCRIPTION>
+        Random value 2
+      </DESIGN_DESCRIPTION>
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_sid_%(study_id)s:\
+%(study_id)s.Sample2" />
+      <LIBRARY_DESCRIPTOR>
+        <LIBRARY_NAME>%(study_id)s.Sample2</LIBRARY_NAME>
+        <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
+        <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
+        <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
+        <LIBRARY_CONSTRUCTION_PROTOCOL>Protocol ABC
+        </LIBRARY_CONSTRUCTION_PROTOCOL>
+      </LIBRARY_DESCRIPTOR>
+    </DESIGN>
+    <PLATFORM>
+      <ILLUMINA><INSTRUMENT_MODEL>Illumina MiSeq</INSTRUMENT_MODEL></ILLUMINA>
+    </PLATFORM>
+    <EXPERIMENT_ATTRIBUTES>
+      <EXPERIMENT_ATTRIBUTE>
+        <TAG>barcode</TAG><VALUE>CGTAGAGCTCTA</VALUE>
+      </EXPERIMENT_ATTRIBUTE>
+      <EXPERIMENT_ATTRIBUTE>
+        <TAG>center_name</TAG><VALUE>KnightLab</VALUE>
+      </EXPERIMENT_ATTRIBUTE>
+      <EXPERIMENT_ATTRIBUTE>
+        <TAG>primer</TAG><VALUE>GTGCCAGCMGCCGCGGTAA</VALUE>
+      </EXPERIMENT_ATTRIBUTE>
+    </EXPERIMENT_ATTRIBUTES>
+  </EXPERIMENT>
+  <EXPERIMENT alias="%(organization_prefix)s_ptid_%(pt_id)s:\
+%(study_id)s.Sample3" center_name="%(center_name)s">
+    <TITLE>%(organization_prefix)s_ptid_%(pt_id)s:%(study_id)s.Sample3</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_sid_%(study_id)s" />
+    <DESIGN>
+      <DESIGN_DESCRIPTION>
+        Random value 3
+      </DESIGN_DESCRIPTION>
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_sid_%(study_id)s:\
+%(study_id)s.Sample3" />
+      <LIBRARY_DESCRIPTOR>
+        <LIBRARY_NAME>%(study_id)s.Sample3</LIBRARY_NAME>
+        <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
+        <LIBRARY_SELECTION>PCR</LIBRARY_SELECTION>
+        <LIBRARY_LAYOUT><SINGLE /></LIBRARY_LAYOUT>
+        <LIBRARY_CONSTRUCTION_PROTOCOL>Protocol ABC
+        </LIBRARY_CONSTRUCTION_PROTOCOL>
+      </LIBRARY_DESCRIPTOR>
+    </DESIGN>
+    <PLATFORM>
+      <ILLUMINA><INSTRUMENT_MODEL>Illumina MiSeq</INSTRUMENT_MODEL></ILLUMINA>
+    </PLATFORM>
+    <EXPERIMENT_ATTRIBUTES>
+      <EXPERIMENT_ATTRIBUTE>
+        <TAG>barcode</TAG><VALUE>CGTAGAGCTCTT</VALUE>
+      </EXPERIMENT_ATTRIBUTE>
+      <EXPERIMENT_ATTRIBUTE>
+        <TAG>center_name</TAG><VALUE>KnightLab</VALUE>
+      </EXPERIMENT_ATTRIBUTE>
+      <EXPERIMENT_ATTRIBUTE>
+        <TAG>primer</TAG><VALUE>GTGCCAGCMGCCGCGGTAA</VALUE>
+      </EXPERIMENT_ATTRIBUTE>
+    </EXPERIMENT_ATTRIBUTES>
+  </EXPERIMENT>
+</EXPERIMENT_SET>
+"""
+
 EXPERIMENTXML = """
 <EXPERIMENT_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.\
@@ -946,13 +1110,12 @@ experiment.xsd">
   <EXPERIMENT alias="%(organization_prefix)s_ptid_1:1.SKB2.640194" \
 center_name="%(center_name)s">
     <TITLE>%(organization_prefix)s_ptid_1:1.SKB2.640194</TITLE>
-    <STUDY_REF refname="%(organization_prefix)s_sid_1" />
+    <STUDY_REF accession="EBI123456-BB" />
     <DESIGN>
       <DESIGN_DESCRIPTION>
         micro biome of soil and rhizosphere of cannabis plants from CA
       </DESIGN_DESCRIPTION>
-      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_sid_1:1.SKB2.\
-640194" />
+      <SAMPLE_DESCRIPTOR accession="ERS000008" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB2.640194</LIBRARY_NAME>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
@@ -1035,13 +1198,12 @@ REV:GGACTACHVGGGTWTCTAAT</VALUE>
   <EXPERIMENT alias="%(organization_prefix)s_ptid_1:1.SKB3.640195" \
 center_name="%(center_name)s">
     <TITLE>%(organization_prefix)s_ptid_1:1.SKB3.640195</TITLE>
-    <STUDY_REF refname="%(organization_prefix)s_sid_1" />
+    <STUDY_REF accession="EBI123456-BB" />
     <DESIGN>
       <DESIGN_DESCRIPTION>
         micro biome of soil and rhizosphere of cannabis plants from CA
       </DESIGN_DESCRIPTION>
-      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_sid_1:1.SKB3.\
-640195" />
+      <SAMPLE_DESCRIPTOR accession="ERS000024" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB3.640195</LIBRARY_NAME>
         <LIBRARY_SOURCE>METAGENOMIC</LIBRARY_SOURCE>
@@ -1128,9 +1290,9 @@ REV:GGACTACHVGGGTWTCTAAT</VALUE>
 RUNXML = """
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespace\
 SchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKB2.640194" \
+  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:1.SKB2.640194" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKB2.640194" />
+    <EXPERIMENT_REF accession="ERX0000008" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="938c29679790b9c17e4dab060fa4c8c5" \
@@ -1139,20 +1301,9 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKM4.640180" \
+  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:1.SKB3.640195" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKM4.640180" />
-    <DATA_BLOCK>
-      <FILES>
-        <FILE checksum="2f8f469a8075b42e401ff0a2c85dc0e5" \
-checksum_method="MD5" filename="%(ebi_dir)s/1.SKM4.640180.fastq.gz" \
-filetype="fastq" quality_scoring_system="phred" />
-      </FILES>
-    </DATA_BLOCK>
-  </RUN>
-  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKB3.640195" \
-center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKB3.640195" />
+    <EXPERIMENT_REF accession="ERX0000024" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="550794cf00ec86b9d3e2feb08cb7a97b" \
@@ -1161,9 +1312,9 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKB6.640176" \
+  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:1.SKB6.640176" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKB6.640176" />
+    <EXPERIMENT_REF accession="ERX0000025" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="adcc754811b86a240f0cc3d59c188cd0" \
@@ -1172,7 +1323,76 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
+  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:1.SKM4.640180" \
+center_name="%(center_name)s">
+    <EXPERIMENT_REF accession="ERX0000004" />
+    <DATA_BLOCK>
+      <FILES>
+        <FILE checksum="2f8f469a8075b42e401ff0a2c85dc0e5" \
+checksum_method="MD5" filename="%(ebi_dir)s/1.SKM4.640180.fastq.gz" \
+filetype="fastq" quality_scoring_system="phred" />
+      </FILES>
+    </DATA_BLOCK>
+  </RUN>
 </RUN_SET>
+"""
+
+RUNXML_NEWSTUDY = """
+<RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespace\
+SchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
+  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:%(study_id)s.Sample1" \
+center_name="%(center_name)s">
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_%(pt_id)s:\
+%(study_id)s.Sample1" />
+    <DATA_BLOCK>
+      <FILES>
+        <FILE checksum="83feb38387c3ccf9da28be56def4916e" \
+checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample1.fastq.gz" \
+filetype="fastq" quality_scoring_system="phred" />
+      </FILES>
+    </DATA_BLOCK>
+  </RUN>
+  <RUN alias="%(organization_prefix)s_ppdid_3:%(study_id)s.Sample2" \
+center_name="%(center_name)s">
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_%(pt_id)s:\
+%(study_id)s.Sample2" />
+    <DATA_BLOCK>
+      <FILES>
+        <FILE checksum="49b7fd3db7efad3c11fa305bb331c03e" \
+checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample2.fastq.gz" \
+filetype="fastq" quality_scoring_system="phred" />
+      </FILES>
+    </DATA_BLOCK>
+  </RUN>
+  <RUN alias="%(organization_prefix)s_ppdid_3:%(study_id)s.Sample3" \
+center_name="%(center_name)s">
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_%(pt_id)s:\
+%(study_id)s.Sample3" />
+    <DATA_BLOCK>
+      <FILES>
+        <FILE checksum="55b49d49b3c1bd0edf4d291ba8ce66a1" \
+checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample3.fastq.gz" \
+filetype="fastq" quality_scoring_system="phred" />
+      </FILES>
+    </DATA_BLOCK>
+  </RUN>
+</RUN_SET>
+"""
+
+SUBMISSIONXML_FULL = """
+<SUBMISSION_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
+NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/\
+SRA.submission.xsd">
+  <SUBMISSION alias="%(submission_alias)s" center_name="%(center_name)s">
+    <ACTIONS>
+      <ACTION><ADD schema="study" source="study.xml" /></ACTION>
+      <ACTION><ADD schema="sample" source="sample.xml" /></ACTION>
+      <ACTION><ADD schema="experiment" source="experiment.xml" /></ACTION>
+      <ACTION><ADD schema="run" source="run.xml" /></ACTION>
+      <ACTION><HOLD HoldUntilDate="2016-09-02" /></ACTION>
+    </ACTIONS>
+  </SUBMISSION>
+</SUBMISSION_SET>
 """
 
 SUBMISSIONXML = """
@@ -1181,8 +1401,6 @@ NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/\
 SRA.submission.xsd">
   <SUBMISSION alias="%(submission_alias)s" center_name="%(center_name)s">
     <ACTIONS>
-      <ACTION><ADD schema="study" source="study.xml" /></ACTION>
-      <ACTION><ADD schema="sample" source="sample.xml" /></ACTION>
       <ACTION><ADD schema="experiment" source="experiment.xml" /></ACTION>
       <ACTION><ADD schema="run" source="run.xml" /></ACTION>
       <ACTION><HOLD HoldUntilDate="2016-09-02" /></ACTION>

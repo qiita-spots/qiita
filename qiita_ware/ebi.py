@@ -234,6 +234,11 @@ class EBISubmission(object):
         self._experiment_aliases = {}
         self._run_aliases = {}
 
+        self._ebi_sample_accessions = \
+            self.sample_template.ebi_sample_accessions
+        self._ebi_experiment_accessions = \
+            self.prep_template.ebi_experiment_accessions
+
     def _get_study_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
         study_alias_format = '%s_sid_%s'
@@ -353,6 +358,11 @@ class EBISubmission(object):
     def generate_sample_xml(self, samples=None):
         """Generates the sample XML file
 
+        Parameters
+        ----------
+        samples : list of str, optional
+            The list of samples to be included in the sample xml
+
         Returns
         -------
         ET.Element
@@ -362,9 +372,10 @@ class EBISubmission(object):
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "sample"})
 
-        # samples = samples if samples is not None else viewkeys(self.samples)
-        for sample_name, sample_info in sorted(viewitems(self.samples)):
-            sample_info = dict(sample_info)
+        samples = samples if samples is not None else viewkeys(self.samples)
+
+        for sample_name in sorted(samples):
+            sample_info = dict(self.samples[sample_name])
             sample = ET.SubElement(sample_set, 'SAMPLE', {
                 'alias': self._get_sample_alias(sample_name),
                 'center_name': qiita_config.ebi_center_name}
@@ -419,22 +430,40 @@ class EBISubmission(object):
         base_coord = ET.SubElement(read_spec, 'BASE_COORD')
         base_coord.text = '1'
 
-    def generate_experiment_xml(self):
+    def generate_experiment_xml(self, samples=None):
         """Generates the experiment XML file
+
+        Parameters
+        ----------
+        samples : list of str, optional
+            The list of samples to be included in the experiment xml
 
         Returns
         -------
         ET.Element
             Object with experiment XML values
         """
-        study_alias = self._get_study_alias()
+        study_accession = self.study.ebi_study_accession
+        if study_accession:
+            study_ref_dict = {'accession': study_accession}
+        else:
+            study_ref_dict = {'refname': self._get_study_alias()}
+
         experiment_set = ET.Element('EXPERIMENT_SET', {
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "experiment"})
-        for sample_name, sample_prep in sorted(self.samples_prep.items()):
-            sample_alias = self._get_sample_alias(sample_name)
+
+        samples = samples if samples is not None else viewkeys(self.samples)
+
+        for sample_name in sorted(samples):
             experiment_alias = self._get_experiment_alias(sample_name)
             sample_prep = dict(self.samples_prep[sample_name])
+            if self._ebi_sample_accessions[sample_name]:
+                sample_descriptor_dict = {
+                    'accession': self._ebi_sample_accessions[sample_name]}
+            else:
+                sample_descriptor_dict = {
+                    'refname': self._get_sample_alias(sample_name)}
 
             platform = sample_prep.pop('platform')
             experiment = ET.SubElement(experiment_set, 'EXPERIMENT', {
@@ -443,18 +472,14 @@ class EBISubmission(object):
             )
             title = ET.SubElement(experiment, 'TITLE')
             title.text = experiment_alias
-            ET.SubElement(experiment, 'STUDY_REF', {
-                'refname': study_alias}
-            )
+            ET.SubElement(experiment, 'STUDY_REF', study_ref_dict)
 
             design = ET.SubElement(experiment, 'DESIGN')
             design_description = ET.SubElement(design,
                                                'DESIGN_DESCRIPTION')
             edd = sample_prep.pop('experiment_design_description')
             design_description.text = escape(clean_whitespace(edd))
-            ET.SubElement(
-                design, 'SAMPLE_DESCRIPTOR', {'refname': sample_alias}
-            )
+            ET.SubElement(design, 'SAMPLE_DESCRIPTOR', sample_descriptor_dict)
 
             # this is the library contruction section. The only required fields
             # is library_construction_protocol, the other are optional
@@ -514,10 +539,15 @@ class EBISubmission(object):
         run_set = ET.Element('RUN_SET', {
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "run"})
-        for sample_name, sample_prep in viewitems(self.samples_prep):
+        for sample_name, sample_prep in sorted(viewitems(self.samples_prep)):
             sample_prep = dict(sample_prep)
 
-            experiment_alias = self._get_experiment_alias(sample_name)
+            if self._ebi_experiment_accessions[sample_name]:
+                experiment_ref_dict = {
+                    'accession': self._ebi_experiment_accessions[sample_name]}
+            else:
+                experiment_alias = self._get_experiment_alias(sample_name)
+                experiment_ref_dict = {'refname': experiment_alias}
 
             # We only submit fastq
             file_type = 'fastq'
@@ -530,9 +560,7 @@ class EBISubmission(object):
                 'alias': self._get_run_alias(sample_name),
                 'center_name': qiita_config.ebi_center_name}
             )
-            ET.SubElement(run, 'EXPERIMENT_REF', {
-                'refname': experiment_alias}
-            )
+            ET.SubElement(run, 'EXPERIMENT_REF', experiment_ref_dict)
             data_block = ET.SubElement(run, 'DATA_BLOCK')
             files = ET.SubElement(data_block, 'FILES')
             ET.SubElement(files, 'FILE', {
@@ -637,35 +665,27 @@ class EBISubmission(object):
         # The sample.xml file needs to be generated if and only if there are
         # samples in the current submission that do NOT have an
         # ebi_sample_accession
-        new_samples = [
+        new_samples = {
             sample for sample, accession in viewitems(
                 self.sample_template.ebi_sample_accessions)
-            if accession is None]
+            if accession is None}
+        new_samples = new_samples.intersection(self.samples)
         if new_samples:
             self.sample_xml_fp = get_output_fp('sample.xml')
             self.write_xml_file(self.generate_sample_xml(new_samples),
                                 self.sample_xml_fp)
 
-        # The experiment.xml needs to be generated if and only if the
-        # samples in the prep template do not have an ebi_experiment_accession
-        # number
-        bool_array = [acc is not None
-                      for acc in viewvalues(
-                          self.prep_template.ebi_experiment_accessions)]
-        # Since we don't allow new samples to be added to a prep template
-        # once it has been submitted, either all samples have the submission
-        # number or none of them have it. By doing the ANY xor ALL, we can
-        # check if that is the case, and raise an error only if some samples
-        # have an ebi_experiment_accession
-        all_bool_array = all(bool_array)
-        if any(bool_array) != all_bool_array:
-            raise EBISubmissionError(
-                "There are samples in the prep template %d that have an "
-                "ebi_experiment_accession, but not all of them have it. This "
-                "is not supported by the system." % self.prep_template.id)
-        if not all_bool_array:
+        # The experiment.xml needs to be generated if and only if there are
+        # samples in the current submission that do NO have an
+        # ebi_experiment_accession
+        new_samples = {
+            sample for sample, accession in viewitems(
+                self.prep_template.ebi_experiment_accessions)
+            if accession is None}
+        new_samples = new_samples.intersection(self.samples)
+        if new_samples:
             self.experiment_xml_fp = get_output_fp('experiment.xml')
-            self.write_xml_file(self.generate_experiment_xml(),
+            self.write_xml_file(self.generate_experiment_xml(new_samples),
                                 self.experiment_xml_fp)
 
         # Generate the run.xml as it should always be generated
