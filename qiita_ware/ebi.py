@@ -7,7 +7,7 @@ from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
 
-from future.utils import viewitems, viewvalues, viewkeys
+from future.utils import viewitems, viewkeys
 from skbio.util import safe_md5, create_dir
 
 from qiita_core.qiita_settings import qiita_config
