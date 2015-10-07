@@ -12,7 +12,7 @@ from __future__ import division
 
 from warnings import simplefilter
 from os import remove
-from os.path import join, isdir
+from os.path import join, isdir, exists
 from shutil import rmtree
 from tempfile import mkdtemp
 from unittest import TestCase, main
@@ -42,10 +42,11 @@ class TestEBISubmission(TestCase):
 
     def tearDown(self):
         for f in self.files_to_remove:
-            if isdir(f):
-                rmtree(f)
-            else:
-                remove(f)
+            if exists(f):
+                if isdir(f):
+                    rmtree(f)
+                else:
+                    remove(f)
 
 
 class TestEBISubmissionReadOnly(TestEBISubmission):
@@ -263,7 +264,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
 @qiita_test_checker()
 class TestEBISubmissionWriteRead(TestEBISubmission):
-    def write_demux_files(self, prep_template, study_id=1):
+    def write_demux_files(self, prep_template):
         """Writes a demux test file to avoid duplication of code"""
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')
@@ -272,9 +273,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         with File(demux_fp, "w") as f:
             to_hdf5(fna_fp, f)
 
-        study = Study(study_id)
-
-        ppd = PreprocessedData.create(study,
+        ppd = PreprocessedData.create(Study(1),
                                       "preprocessed_sequence_illumina_params",
                                       1, [(demux_fp, 6)], prep_template)
 
@@ -366,15 +365,18 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             'Sample1': {'collection_timestamp': datetime(2015, 6, 1, 7, 0, 0),
                         'physical_specimen_location': 'location1',
                         'taxon_id': 9606,
-                        'scientific_name': 'homo sapiens'},
+                        'scientific_name': 'homo sapiens',
+                        'Description': 'Test Sample 1'},
             'Sample2': {'collection_timestamp': datetime(2015, 6, 2, 7, 0, 0),
                         'physical_specimen_location': 'location1',
                         'taxon_id': 9606,
-                        'scientific_name': 'homo sapiens'},
+                        'scientific_name': 'homo sapiens',
+                        'Description': 'Test Sample 2'},
             'Sample3': {'collection_timestamp': datetime(2015, 6, 3, 7, 0, 0),
                         'physical_specimen_location': 'location1',
                         'taxon_id': 9606,
-                        'scientific_name': 'homo sapiens'},
+                        'scientific_name': 'homo sapiens',
+                        'Description': 'Test Sample 3'}
         }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         SampleTemplate.create(metadata, study)
@@ -400,7 +402,18 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         pt = PrepTemplate.create(metadata, study, "16S", 'Metagenomics')
-        return self.write_demux_files(pt, study_id=study.id)
+        fna_fp = join(self.temp_dir, 'seqs.fna')
+        demux_fp = join(self.temp_dir, 'demux.seqs')
+        with open(fna_fp, 'w') as f:
+            f.write(FASTA_EXAMPLE_2.format(study.id))
+        with File(demux_fp, 'w') as f:
+            to_hdf5(fna_fp, f)
+
+        ppd = PreprocessedData.create(
+            study, "preprocessed_sequence_illumina_params", 1,
+            [(demux_fp, 6)], pt)
+
+        return ppd
 
     def test_init_exceptions(self):
         # not a valid action
@@ -431,6 +444,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         # the EBISubmission can be generated
         ppd = self.generate_new_prep_template_and_write_demux_files(True)
         e = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(e.ebi_dir)
         exp = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182']
         self.assertItemsEqual(exp, e.samples)
 
@@ -460,6 +474,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
     def test_generate_xml_files(self):
         ppd = self.generate_new_study_with_preprocessed_data()
         e = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(e.ebi_dir)
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
         self.assertIsNone(e.experiment_xml_fp)
@@ -473,8 +488,9 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertIsNotNone(e.study_xml_fp)
         self.assertIsNotNone(e.submission_xml_fp)
 
-        ppd = self.genereate_new_prep_template_and_write_demux_files(True)
+        ppd = self.generate_new_prep_template_and_write_demux_files(True)
         e = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(e.ebi_dir)
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
         self.assertIsNone(e.experiment_xml_fp)
@@ -490,6 +506,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         ppd = self.write_demux_files(PrepTemplate(1))
         e = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(e.ebi_dir)
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
         self.assertIsNone(e.experiment_xml_fp)
@@ -526,6 +543,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         # exists and that we have the same files and ignore not fastq.gz files
         ebi_submission = EBISubmission(ppd.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
+        self.files_to_remove.append(ebi_submission.ebi_dir)
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
         self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
@@ -570,15 +588,16 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
     def test_parse_EBI_reply(self):
         ppd = self.generate_new_study_with_preprocessed_data()
+        study_id = ppd.study
         e = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(e.ebi_dir)
         e.generate_demultiplexed_fastq(mtime=1)
         e.generate_xml_files()
-        curl_result = CURL_RESULT.format(qiita_config.ebi_organization_prefix,
-                                         ppd.id)
+        curl_result = CURL_RESULT_FULL.format(
+            qiita_config.ebi_organization_prefix, ppd.id, study_id,
+            ppd.prep_template)
         stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(curl_result)
 
-        ppd = self.write_demux_files(PrepTemplate(1))
-        e = EBISubmission(ppd.id, 'ADD')
         self.assertEqual(stacc, 'ERP000000')
         study_id = ppd.study
         exp_saacc = {'%d.Sample1' % study_id: 'ERS000000',
@@ -598,6 +617,9 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                       '%d.Sample3' % study_id: 'ERR0000002'}
         self.assertEqual(runacc, exp_runacc)
 
+        ppd = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(e.ebi_dir)
         # removing samples so test text is easier to read
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
                        '1.SKM8.640201', '1.SKM2.640199', '1.SKB3.640195']
@@ -634,19 +656,10 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         curl_result = CURL_RESULT.format(qiita_config.ebi_organization_prefix,
                                          ppd.id)
         stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(curl_result)
-        self.assertEqual(stacc, 'ERP000000')
-        exp_saacc = {'1.SKB2.640194': 'ERS000000',
-                     '1.SKB6.640176': 'ERS000001',
-                     '1.SKM4.640180': 'ERS000002'}
-        self.assertEqual(saacc, exp_saacc)
-        exp_bioacc = {'1.SKB2.640194': 'SAMEA0000000',
-                      '1.SKB6.640176': 'SAMEA0000001',
-                      '1.SKM4.640180': 'SAMEA0000002'}
-        self.assertEqual(bioacc, exp_bioacc)
-        exp_exacc = {'1.SKB2.640194': 'ERX0000000',
-                     '1.SKB6.640176': 'ERX0000001',
-                     '1.SKM4.640180': 'ERX0000002'}
-        self.assertEqual(exacc, exp_exacc)
+        self.assertEqual(stacc, None)
+        self.assertEqual(saacc, {})
+        self.assertEqual(bioacc, {})
+        self.assertEqual(exacc, {})
         exp_runacc = {'1.SKB2.640194': 'ERR0000000',
                       '1.SKB6.640176': 'ERR0000001',
                       '1.SKM4.640180': 'ERR0000002'}
@@ -676,6 +689,26 @@ CCACCCAGTAAC
 >1.SKM8.640201_11 X orig_bc=X new_bc=X bc_diffs=0
 CCACCCAGTAAC
 >1.SKM2.640199_12 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+"""
+
+FASTA_EXAMPLE_2 = """>{0}.Sample1_1 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>{0}.Sample1_2 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>{0}.Sample1_3 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>{0}.Sample2_4 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>{0}.Sample2_5 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>{0}.Sample2_6 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>{0}.Sample3_7 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>{0}.Sample3_8 X orig_bc=X new_bc=X bc_diffs=0
+CCACCCAGTAAC
+>{0}.Sample3_9 X orig_bc=X new_bc=X bc_diffs=0
 CCACCCAGTAAC
 """
 
@@ -1183,35 +1216,35 @@ GENSPOTDESC = """<design foo="bar">
 </design>
 """
 
-CURL_RESULT = """<?xml version="1.0" encoding="UTF-8"?>
+CURL_RESULT_FULL = """<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
 <RECEIPT receiptDate="2015-09-20T23:27:01.924+01:00" \
 submissionFile="submission.xml" success="true">
-  <EXPERIMENT accession="ERX0000000" alias="{0}_ptid_1:1.SKB2.640194" \
+  <EXPERIMENT accession="ERX0000000" alias="{0}_ptid_{3}:{2}.Sample1" \
 status="PRIVATE"/>
-  <EXPERIMENT accession="ERX0000001" alias="{0}_ptid_1:1.SKB6.640176" \
+  <EXPERIMENT accession="ERX0000001" alias="{0}_ptid_{3}:{2}.Sample2" \
 status="PRIVATE"/>
-  <EXPERIMENT accession="ERX0000002" alias="{0}_ptid_1:1.SKM4.640180" \
+  <EXPERIMENT accession="ERX0000002" alias="{0}_ptid_{3}:{2}.Sample3" \
 status="PRIVATE"/>
-  <RUN accession="ERR0000000" alias="{0}_ppdid_{1}:1.SKB2.640194" \
+  <RUN accession="ERR0000000" alias="{0}_ppdid_{1}:{2}.Sample1" \
 status="PRIVATE"/>
-  <RUN accession="ERR0000001" alias="{0}_ppdid_{1}:1.SKB6.640176" \
+  <RUN accession="ERR0000001" alias="{0}_ppdid_{1}:{2}.Sample2" \
 status="PRIVATE"/>
-  <RUN accession="ERR0000002" alias="{0}_ppdid_{1}:1.SKM4.640180" \
+  <RUN accession="ERR0000002" alias="{0}_ppdid_{1}:{2}.Sample3" \
 status="PRIVATE"/>
-  <SAMPLE accession="ERS000000" alias="{0}_sid_1:1.SKB2.640194"
+  <SAMPLE accession="ERS000000" alias="{0}_sid_{2}:{2}.Sample1"
 status="PRIVATE">
     <EXT_ID accession="SAMEA0000000" type="biosample"/>
   </SAMPLE>
-  <SAMPLE accession="ERS000001" alias="{0}_sid_1:1.SKB6.640176"
+  <SAMPLE accession="ERS000001" alias="{0}_sid_{2}:{2}.Sample2"
 status="PRIVATE">
     <EXT_ID accession="SAMEA0000001" type="biosample"/>
   </SAMPLE>
-  <SAMPLE accession="ERS000002" alias="{0}_sid_1:1.SKM4.640180"
+  <SAMPLE accession="ERS000002" alias="{0}_sid_{2}:{2}.Sample3"
 status="PRIVATE">
     <EXT_ID accession="SAMEA0000002" type="biosample"/>
   </SAMPLE>
-  <STUDY accession="ERP000000" alias="{0}_sid_1" status="PRIVATE" \
+  <STUDY accession="ERP000000" alias="{0}_sid_{2}" status="PRIVATE" \
 holdUntilDate="2016-09-19+01:00"/>
   <SUBMISSION accession="ERA000000" alias="qiime_submission_570"/>
   <MESSAGES>
@@ -1221,6 +1254,25 @@ experiment.xml run.xml       </INFO>
   <ACTIONS>ADD</ACTIONS>
   <ACTIONS>ADD</ACTIONS>
   <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>HOLD</ACTIONS>
+</RECEIPT>
+"""
+
+CURL_RESULT = """<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+<RECEIPT receiptDate="2015-09-20T23:27:01.924+01:00" \
+submissionFile="submission.xml" success="true">
+  <RUN accession="ERR0000000" alias="{0}_ppdid_{1}:1.SKB2.640194" \
+status="PRIVATE"/>
+  <RUN accession="ERR0000001" alias="{0}_ppdid_{1}:1.SKB6.640176" \
+status="PRIVATE"/>
+  <RUN accession="ERR0000002" alias="{0}_ppdid_{1}:1.SKM4.640180" \
+status="PRIVATE"/>
+  <SUBMISSION accession="ERA000000" alias="qiime_submission_570"/>
+  <MESSAGES>
+    <INFO> ADD action for the following XML: run.xml       </INFO>
+  </MESSAGES>
   <ACTIONS>ADD</ACTIONS>
   <ACTIONS>HOLD</ACTIONS>
 </RECEIPT>

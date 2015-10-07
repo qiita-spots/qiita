@@ -363,7 +363,6 @@ class EBISubmission(object):
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "sample"})
 
         # samples = samples if samples is not None else viewkeys(self.samples)
-
         for sample_name, sample_info in sorted(viewitems(self.samples)):
             sample_info = dict(sample_info)
             sample = ET.SubElement(sample_set, 'SAMPLE', {
@@ -650,7 +649,7 @@ class EBISubmission(object):
         # The experiment.xml needs to be generated if and only if the
         # samples in the prep template do not have an ebi_experiment_accession
         # number
-        bool_array = [acc is None
+        bool_array = [acc is not None
                       for acc in viewvalues(
                           self.prep_template.ebi_experiment_accessions)]
         # Since we don't allow new samples to be added to a prep template
