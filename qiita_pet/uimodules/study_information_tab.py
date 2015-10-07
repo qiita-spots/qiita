@@ -15,7 +15,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_db.util import get_files_from_uploads_folders, get_data_types
 from qiita_db.study import StudyPerson
 from qiita_db.metadata_template import SampleTemplate
-from qiita_pet.util import linkify, is_localhost
+from qiita_pet.util import linkify, is_localhost, ebi_linkifier
 from .base_uimodule import BaseUIModule
 
 
@@ -65,6 +65,8 @@ class StudyInformationTab(BaseUIModule):
         # Ebi information
         ebi_status = study.ebi_submission_status
         ebi_accession = study.ebi_study_accession
+        if ebi_accession:
+            ebi_accession = (ebi_linkifier.format(ebi_accession))
 
         return self.render_string(
             "study_description_templates/study_information_tab.html",
