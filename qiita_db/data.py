@@ -659,10 +659,7 @@ class PreprocessedData(BaseData):
 
     @classmethod
     def create(cls, study, preprocessed_params_table, preprocessed_params_id,
-               filepaths, prep_template=None, data_type=None,
-               submitted_to_insdc_status='not submitted',
-               ebi_submission_accession=None,
-               ebi_study_accession=None):
+               filepaths, prep_template=None, data_type=None):
         r"""Creates a new object with a new id on the storage system
 
         Parameters
@@ -677,17 +674,11 @@ class PreprocessedData(BaseData):
         filepaths : iterable of tuples (str, int)
             The list of paths to the preprocessed files and its filepath type
             identifier
-        submitted_to_insdc_status : str, {'not submitted', 'submitting', \
-                'success', 'failed'} optional
             Submission status of the raw data files
         prep_template : PrepTemplate, optional
             The PrepTemplate object used to generate this preprocessed data
         data_type : str, optional
             The data_type of the preprocessed_data
-        ebi_submission_accession : str, optional
-            The ebi_submission_accession of the preprocessed_data
-        ebi_study_accession : str, optional
-            The ebi_study_accession of the preprocessed_data
 
         Raises
         ------
@@ -724,13 +715,11 @@ class PreprocessedData(BaseData):
             # and get the preprocessed data id back
             sql = """INSERT INTO qiita.{0} (
                         preprocessed_params_table, preprocessed_params_id,
-                        submitted_to_insdc_status, data_type_id,
-                        ebi_submission_accession, ebi_study_accession)
-                     VALUES (%s, %s, %s, %s, %s, %s)
+                        data_type_id)
+                     VALUES (%s, %s, %s)
                      RETURNING preprocessed_data_id""".format(cls._table)
             TRN.add(sql, [preprocessed_params_table, preprocessed_params_id,
-                          submitted_to_insdc_status, data_type,
-                          ebi_submission_accession, ebi_study_accession])
+                          data_type])
             ppd_id = TRN.execute_fetchlast()
             ppd = cls(ppd_id)
 
@@ -783,16 +772,15 @@ class PreprocessedData(BaseData):
             if ppd.status != 'sandbox':
                 raise QiitaDBStatusError(
                     "Illegal operation on non sandboxed preprocessed data")
+            elif ppd.is_submitted_to_ebi:
+                raise QiitaDBStatusError(
+                    "Illegal operation. This preprocessed data has been "
+                    "added to EBI.")
             elif ppd.submitted_to_vamps_status() not in \
                     valid_submission_states:
                 raise QiitaDBStatusError(
                     "Illegal operation. This preprocessed data has or is "
                     "being added to VAMPS.")
-            elif ppd.submitted_to_insdc_status() not in \
-                    valid_submission_states:
-                raise QiitaDBStatusError(
-                    "Illegal operation. This preprocessed data has or is "
-                    "being added to EBI.")
 
             sql = """SELECT processed_data_id
                      FROM qiita.preprocessed_processed_data
@@ -846,7 +834,12 @@ class PreprocessedData(BaseData):
                      WHERE preprocessed_data_id=%s""".format(
                 self._template_preprocessed_table)
             TRN.add(sql, [self._id])
-            return TRN.execute_fetchlast()
+            result = TRN.execute_fetchindex()
+            # If there is no prep template with the preprocessed data
+            # result will be an empty list
+            if result:
+                result = result[0][0]
+            return result
 
     @property
     def study(self):
@@ -863,70 +856,6 @@ class PreprocessedData(BaseData):
                 self._study_preprocessed_table)
             TRN.add(sql, [self._id])
             return TRN.execute_fetchlast()
-
-    @property
-    def ebi_submission_accession(self):
-        r"""The ebi submission accession of this preprocessed data
-
-        Returns
-        -------
-        str
-            The ebi submission accession of this preprocessed data
-        """
-        with TRN:
-            sql = """SELECT ebi_submission_accession
-                     FROM qiita.{0}
-                     WHERE preprocessed_data_id=%s""".format(self._table)
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
-
-    @property
-    def ebi_study_accession(self):
-        r"""The ebi study accession of this preprocessed data
-
-        Returns
-        -------
-        str
-            The ebi study accession of this preprocessed data
-        """
-        with TRN:
-            sql = """SELECT ebi_study_accession
-                     FROM qiita.{0}
-                     WHERE preprocessed_data_id=%s""".format(self._table)
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
-
-    @ebi_submission_accession.setter
-    def ebi_submission_accession(self, new_ebi_submission_accession):
-        """ Sets the ebi_submission_accession for the preprocessed_data
-
-        Parameters
-        ----------
-        new_ebi_submission_accession: str
-            The new ebi submission accession
-        """
-        with TRN:
-            sql = """UPDATE qiita.{0}
-                     SET ebi_submission_accession = %s
-                     WHERE preprocessed_data_id = %s""".format(self._table)
-            TRN.add(sql, [new_ebi_submission_accession, self._id])
-            TRN.execute()
-
-    @ebi_study_accession.setter
-    def ebi_study_accession(self, new_ebi_study_accession):
-        """ Sets the ebi_study_accession for the preprocessed_data
-
-        Parameters
-        ----------
-        new_ebi_study_accession: str
-            The new ebi study accession
-        """
-        with TRN:
-            sql = """UPDATE qiita.{0}
-                     SET ebi_study_accession = %s
-                     WHERE preprocessed_data_id = %s""".format(self._table)
-            TRN.add(sql, [new_ebi_study_accession, self._id])
-            TRN.execute()
 
     def data_type(self, ret_id=False):
         """Returns the data_type or data_type_id
@@ -950,66 +879,6 @@ class PreprocessedData(BaseData):
                 ret, self._table)
             TRN.add(sql, [self._id])
             return TRN.execute_fetchlast()
-
-    def submitted_to_insdc_status(self):
-        r"""Tells if the raw data has been submitted to INSDC
-
-        Returns
-        -------
-        str
-            One of {'not submitted', 'submitting', 'success', 'failed'}
-        """
-        with TRN:
-            sql = """SELECT submitted_to_insdc_status
-                     FROM qiita.{0}
-                     WHERE preprocessed_data_id=%s""".format(self._table)
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
-
-    def update_insdc_status(self, state, study_acc=None, submission_acc=None):
-        r"""Update the INSDC submission status
-
-        Parameters
-        ----------
-        state : str, {'not submitted', 'submitting', 'success', 'failed'}
-            The current status of submission
-        study_acc : str, optional
-            The study accession from EBI. This is not optional if ``state`` is
-            ``success``.
-        submission_acc : str, optional
-            The submission accession from EBI. This is not optional if
-            ``state`` is ``success``.
-
-        Raises
-        ------
-        ValueError
-            If the state is not known.
-        ValueError
-            If ``state`` is ``success`` and either ``study_acc`` or
-            ``submission_acc`` are ``None``.
-        """
-        with TRN:
-            if state not in ('not submitted', 'submitting', 'success',
-                             'failed'):
-                raise ValueError("Unknown state: %s" % state)
-
-            if state == 'success':
-                if study_acc is None or submission_acc is None:
-                    raise ValueError("study_acc or submission_acc is None!")
-
-                sql = """UPDATE qiita.{0}
-                         SET (submitted_to_insdc_status,
-                              ebi_study_accession,
-                              ebi_submission_accession) = (%s, %s, %s)
-                         WHERE preprocessed_data_id=%s""".format(self._table)
-                TRN.add(sql, [state, study_acc, submission_acc, self.id])
-            else:
-                sql = """UPDATE qiita.{0}
-                         SET submitted_to_insdc_status = %s
-                         WHERE preprocessed_data_id=%s""".format(self._table)
-                TRN.add(sql, [state, self.id])
-
-            TRN.execute()
 
     def submitted_to_vamps_status(self):
         r"""Tells if the raw data has been submitted to VAMPS
@@ -1115,6 +984,60 @@ class PreprocessedData(BaseData):
             TRN.add(sql, [self._id])
 
             return infer_status(TRN.execute_fetchindex())
+
+    @property
+    def preprocessing_info(self):
+        """The preprocessing information
+
+        Returns
+        -------
+        tuple(str, int)
+            The preprocessing parameters table and
+            the preprocessing parameters id
+        """
+        with TRN:
+            sql = """SELECT preprocessed_params_table, preprocessed_params_id
+                     FROM qiita.{0}
+                     WHERE preprocessed_data_id = %s""".format(self._table)
+            TRN.add(sql, [self.id])
+            result = TRN.execute_fetchflatten()
+        return tuple(result)
+
+    @property
+    def is_submitted_to_ebi(self):
+        """Gets if the preprocessed data has been submitted to EBI or not
+
+        Returns
+        -------
+        bool
+            True if the preprocessed data has been submitted to EBI,
+            false otherwise.
+        """
+        with TRN:
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.ebi_run_accession
+                                   WHERE preprocessed_data_id = %s)"""
+            TRN.add(sql, [self.id])
+            is_submitted = TRN.execute_fetchlast()
+        return is_submitted
+
+    @property
+    def ebi_run_accessions(self):
+        """The EBI run accessions attached to the preprocessed data
+
+        Returns
+        -------
+        list of str
+            The EBI run accessions
+        """
+        with TRN:
+            sql = """SELECT ebi_run_accession
+                     FROM qiita.ebi_run_accession
+                     WHERE preprocessed_data_id = %s
+                     ORDER BY ebi_run_accession"""
+            TRN.add(sql, [self.id])
+            accessions = TRN.execute_fetchflatten()
+        return accessions
 
 
 class ProcessedData(BaseData):

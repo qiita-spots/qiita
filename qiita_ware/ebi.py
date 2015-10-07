@@ -1,8 +1,8 @@
-from re import search
 from os.path import basename, join, isdir, isfile
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
 from xml.etree import ElementTree as ET
+from xml.etree.ElementTree import ParseError
 from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
@@ -11,7 +11,7 @@ from future.utils import viewitems
 from skbio.util import safe_md5, create_dir
 
 from qiita_core.qiita_settings import qiita_config
-from qiita_ware.exceptions import EBISumbissionError
+from qiita_ware.exceptions import EBISubmissionError
 from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
@@ -78,10 +78,11 @@ class EBISubmission(object):
 
     Raises
     ------
-    EBISumbissionError
+    EBISubmissionError
         - If the action is not in EBISubmission.valid_ebi_actions
-        - If the preprocesssed submitted_to_insdc_status is in
-        EBISubmission.valid_ebi_submission_states
+        - If the preprocessed data has been already submitted to EBI
+        - If the status of the study attached to the preprocessed data is
+        submitting
         - If the prep template investigation type is not in the
         ena_ontology.terms or not in the ena_ontology.user_defined_terms
         - If the submission is missing required EBI fields either in the sample
@@ -91,7 +92,7 @@ class EBISubmission(object):
     """
 
     valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
-    valid_ebi_submission_states = ('submitting', 'success')
+    valid_ebi_submission_states = ('submitting')
     # valid_platforms dict of 'platform': ['valid_instrument_models']
     valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
                                  '454 GS FLX+', '454 GS FLX TITANIUM',
@@ -117,24 +118,31 @@ class EBISubmission(object):
                          "actions are: %s" %
                          (action, ', '.join(self.valid_ebi_actions)))
             LogEntry.create('Runtime', error_msg)
-            raise EBISumbissionError(error_msg)
+            raise EBISubmissionError(error_msg)
 
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
         self.action = action
         self.preprocessed_data = PreprocessedData(preprocessed_data_id)
-        s = Study(self.preprocessed_data.study)
-        self.sample_template = SampleTemplate(s.sample_template)
+        self.study = Study(self.preprocessed_data.study)
+        self.sample_template = SampleTemplate(self.study.sample_template)
         self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
 
-        status = self.preprocessed_data.submitted_to_insdc_status()
-        if status in self.valid_ebi_submission_states:
-            error_msg = "Cannot resubmit! Current status is: %s" % status
+        if self.preprocessed_data.is_submitted_to_ebi:
+            error_msg = ("Cannot resubmit! Preprocessed data %d has already "
+                         "been submitted to EBI.")
             LogEntry.create('Runtime', error_msg)
-            raise EBISumbissionError(error_msg)
+            raise EBISubmissionError(error_msg)
+
+        status = self.study.ebi_submission_status
+        if status in self.valid_ebi_submission_states:
+            error_msg = ("Cannot perform parallel EBI submission for the same "
+                         "study. Current status of the study: %s" % status)
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
 
         self.preprocessed_data_id = preprocessed_data_id
-        self.study_title = s.title
-        self.study_abstract = s.info['study_abstract']
+        self.study_title = self.study.title
+        self.study_abstract = self.study.info['study_abstract']
 
         it = self.prep_template.investigation_type
         if it in ena_ontology.terms:
@@ -159,7 +167,7 @@ class EBISubmission(object):
         self.experiment_xml_fp = get_output_fp('experiment.xml')
         self.run_xml_fp = get_output_fp('run.xml')
         self.submission_xml_fp = get_output_fp('submission.xml')
-        self.pmids = s.pmids
+        self.pmids = self.study.pmids
 
         # getting the restrictions
         st_missing = self.sample_template.check_restrictions(
@@ -210,29 +218,35 @@ class EBISubmission(object):
         if nvp:
             error_msgs.append("These samples do not have a valid platform "
                               "(instrumet model wasn't checked): %s" % (
-                                ', '.join(nvp)))
+                                  ', '.join(nvp)))
         if nvim:
             error_msgs.append("These samples do not have a valid instrument "
                               "model: %s" % (', '.join(nvim)))
         if error_msgs:
             error_msgs = ("Errors found during EBI submission for study #%d, "
                           "preprocessed data #%d and prep template #%d:\n%s"
-                          % (s.id, preprocessed_data_id, self.prep_template.id,
-                             '\n'.join(error_msgs)))
+                          % (self.study.id, preprocessed_data_id,
+                             self.prep_template.id, '\n'.join(error_msgs)))
             LogEntry.create('Runtime', error_msgs)
-            raise EBISumbissionError(error_msgs)
+            raise EBISubmissionError(error_msgs)
+
+        self._sample_aliases = {}
+        self._experiment_aliases = {}
+        self._run_aliases = {}
 
     def _get_study_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
-        study_alias_format = '%s_ppdid_%s'
+        study_alias_format = '%s_sid_%s'
         return study_alias_format % (
             qiita_config.ebi_organization_prefix,
-            escape(clean_whitespace(str(self.preprocessed_data_id))))
+            escape(clean_whitespace(str(self.study.id))))
 
     def _get_sample_alias(self, sample_name):
         """Format alias using ``self.preprocessed_data_id``, `sample_name`"""
-        return "%s:%s" % (self._get_study_alias(),
-                          escape(clean_whitespace(str(sample_name))))
+        alias = "%s:%s" % (self._get_study_alias(),
+                           escape(clean_whitespace(str(sample_name))))
+        self._sample_aliases[alias] = sample_name
+        return alias
 
     def _get_experiment_alias(self, sample_name):
         """Format alias using ``self.preprocessed_data_id``, and `sample_name`
@@ -240,7 +254,13 @@ class EBISubmission(object):
         Currently, this is identical to _get_sample_alias above, since we are
         only going to allow submission of one prep for each sample
         """
-        return self._get_sample_alias(sample_name)
+        exp_alias_format = '%s_ptid_%s:%s'
+        alias = exp_alias_format % (
+            qiita_config.ebi_organization_prefix,
+            escape(clean_whitespace(str(self.prep_template.id))),
+            escape(clean_whitespace(str(sample_name))))
+        self._experiment_aliases[alias] = sample_name
+        return alias
 
     def _get_submission_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
@@ -250,11 +270,15 @@ class EBISubmission(object):
         return submission_alias_format % (qiita_config.ebi_organization_prefix,
                                           safe_preprocessed_data_id)
 
-    def _get_run_alias(self, file_base_name):
-        """Format alias using `file_base_name`
+    def _get_run_alias(self, sample_name):
+        """Format alias using `sample_name`
         """
-        return '%s_%s_run' % (self._get_study_alias(),
-                              basename(file_base_name))
+        alias = '%s_ppdid_%s:%s' % (
+            qiita_config.ebi_organization_prefix,
+            escape(clean_whitespace(str(self.preprocessed_data_id))),
+            sample_name)
+        self._run_aliases[alias] = sample_name
+        return alias
 
     def _get_library_name(self, sample_name):
         """Format alias using `sample_name`
@@ -502,7 +526,7 @@ class EBISubmission(object):
                 md5 = safe_md5(fp).hexdigest()
 
             run = ET.SubElement(run_set, 'RUN', {
-                'alias': self._get_run_alias(basename(file_path)),
+                'alias': self._get_run_alias(sample_name),
                 'center_name': qiita_config.ebi_center_name}
             )
             ET.SubElement(run, 'EXPERIMENT_REF', {
@@ -663,10 +687,10 @@ class EBISubmission(object):
         for f in fastqs_div:
             ascp_commands.append('ascp --ignore-host-key -L- -d -QT -k2 '
                                  '{0} {1}@{2}:./{3}/'.format(
-                                    ' '.join(f),
-                                    qiita_config.ebi_seq_xfer_user,
-                                    qiita_config.ebi_seq_xfer_url,
-                                    self.ebi_dir))
+                                     ' '.join(f),
+                                     qiita_config.ebi_seq_xfer_user,
+                                     qiita_config.ebi_seq_xfer_url,
+                                     self.ebi_dir))
 
         return ascp_commands
 
@@ -680,23 +704,74 @@ class EBISubmission(object):
 
         Returns
         -------
-        study_accession
-            The study accession number, in case of failure it returns None
-        submission_accession
-            The submission accession number, in case of failure it returns None
+        str
+            The study accession number. None in case of failure
+        dict of {str: str}
+            The sample accession numbers, keyed by sample id. None in case of
+            failure
+        dict of {str: str}
+            The biosample accession numbers, keyed by sample id. None in case
+            of failure
+        dict of {str: str}
+            The experiment accession numbers, keyed by sample id. None in case
+            of failure
+        dict of {str: str}
+            The run accession numbers, keyed by sample id. None in case of
+            failure
+
+        Raises
+        ------
+        EBISubmissionError
+            If curl_result is not a valid XML file
+            If the ebi subumission has not been successful
+            If multiple study tags are found in the curl result
         """
-        study_accession = None
-        submission_accession = None
+        try:
+            root = ET.fromstring(curl_result)
+        except ParseError:
+            error_msg = ("The curl result from the EBI submission doesn't "
+                         "look like an XML file:\n%s" % curl_result)
+            le = LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(
+                "The curl result from the EBI submission doesn't look like "
+                "an XML file. Contact and admin for more information. "
+                "Log id: %d" % le.id)
 
-        if 'success="true"' in curl_result:
-            accessions = search('<STUDY accession="(?P<study>.+?)".*?'
-                                '<SUBMISSION accession="(?P<submission>.+?)"',
-                                curl_result)
-            if accessions is not None:
-                study_accession = accessions.group('study')
-                submission_accession = accessions.group('submission')
+        success = root.get('success') == 'true'
+        if not success:
+            raise EBISubmissionError("The EBI submission failed:\n%s"
+                                     % curl_result)
 
-        return study_accession, submission_accession
+        study_elem = root.findall("STUDY")
+        if len(study_elem) > 1:
+            raise EBISubmissionError(
+                "Multiple study tags found in EBI reply: %d\n%s"
+                % (len(study_elem),
+                   "".join([ET.tostring(s) for s in study_elem])))
+        study_elem = study_elem[0]
+        study_accession = study_elem.get('accession')
+
+        sample_accessions = {}
+        biosample_accessions = {}
+        for elem in root.iter("SAMPLE"):
+            alias = elem.get('alias')
+            sample_id = self._sample_aliases[alias]
+            sample_accessions[sample_id] = elem.get('accession')
+            ext_id = elem.find('EXT_ID')
+            biosample_accessions[sample_id] = ext_id.get('accession')
+
+        def data_retriever(key, trans_dict):
+            res = {}
+            for elem in root.iter(key):
+                alias = elem.get('alias')
+                res[trans_dict[alias]] = elem.get('accession')
+            return res
+        experiment_accessions = data_retriever("EXPERIMENT",
+                                               self._experiment_aliases)
+        run_accessions = data_retriever("RUN", self._run_aliases)
+
+        return (study_accession, sample_accessions, biosample_accessions,
+                experiment_accessions, run_accessions)
 
     def generate_demultiplexed_fastq(self, rewrite_fastq=False, mtime=None):
         """Generates demultiplexed fastq

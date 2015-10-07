@@ -32,12 +32,12 @@ INSERT INTO qiita.study (email, emp_person_id, first_contact,
     mixs_compliant, most_recent_contact, number_samples_collected,
     number_samples_promised, principal_investigator_id, reprocess,
     spatial_series, study_title, study_alias, study_description,
-    study_abstract, vamps_id) VALUES
+    study_abstract, vamps_id, ebi_study_accession, ebi_submission_status) VALUES
     ('test@foo.bar', 2, '2014-05-19 16:10', NULL, 1, 1, TRUE, TRUE,
     '2014-05-19 16:11', 27, 27, 3, FALSE, FALSE,
     'Identification of the Microbiomes for Cannabis Soils', 'Cannabis Soils', 'Analysis of the Cannabis Plant Microbiome',
     'This is a preliminary study to examine the microbiota associated with the Cannabis plant. Soils samples from the bulk soil, soil associated with the roots, and the rhizosphere were extracted and the DNA sequenced. Roots from three independent plants of different strains were examined. These roots were obtained November 11, 2011 from plants that had been harvested in the summer. Future studies will attempt to analyze the soils and rhizospheres from the same location at different time points in the plant lifecycle.',
-    NULL);
+    NULL, 'EBI123456-BB', 'submitted');
 
 -- Add portal to the study
 INSERT INTO qiita.study_portal (study_id, portal_type_id) VALUES (1, 1);
@@ -62,34 +62,34 @@ INSERT INTO qiita.investigation_study (investigation_id, study_id) VALUES (1, 1)
 INSERT INTO qiita.study_experimental_factor (study_id, efo_id) VALUES (1, 1);
 
 -- Add the study_sample for study 1
-INSERT INTO qiita.study_sample (study_id, sample_id) VALUES
-    (1, '1.SKB8.640193'),
-    (1, '1.SKD8.640184'),
-    (1, '1.SKB7.640196'),
-    (1, '1.SKM9.640192'),
-    (1, '1.SKM4.640180'),
-    (1, '1.SKM5.640177'),
-    (1, '1.SKB5.640181'),
-    (1, '1.SKD6.640190'),
-    (1, '1.SKB2.640194'),
-    (1, '1.SKD2.640178'),
-    (1, '1.SKM7.640188'),
-    (1, '1.SKB1.640202'),
-    (1, '1.SKD1.640179'),
-    (1, '1.SKD3.640198'),
-    (1, '1.SKM8.640201'),
-    (1, '1.SKM2.640199'),
-    (1, '1.SKB9.640200'),
-    (1, '1.SKD5.640186'),
-    (1, '1.SKM3.640197'),
-    (1, '1.SKD9.640182'),
-    (1, '1.SKB4.640189'),
-    (1, '1.SKD7.640191'),
-    (1, '1.SKM6.640187'),
-    (1, '1.SKD4.640185'),
-    (1, '1.SKB3.640195'),
-    (1, '1.SKB6.640176'),
-    (1, '1.SKM1.640183');
+INSERT INTO qiita.study_sample (study_id, sample_id, ebi_sample_accession, biosample_accession) VALUES
+    (1, '1.SKB8.640193', 'ERS000000', 'SAMEA0000000'),
+    (1, '1.SKD8.640184', 'ERS000001', 'SAMEA0000001'),
+    (1, '1.SKB7.640196', 'ERS000002', 'SAMEA0000002'),
+    (1, '1.SKM9.640192', 'ERS000003', 'SAMEA0000003'),
+    (1, '1.SKM4.640180', 'ERS000004', 'SAMEA0000004'),
+    (1, '1.SKM5.640177', 'ERS000005', 'SAMEA0000005'),
+    (1, '1.SKB5.640181', 'ERS000006', 'SAMEA0000006'),
+    (1, '1.SKD6.640190', 'ERS000007', 'SAMEA0000007'),
+    (1, '1.SKB2.640194', 'ERS000008', 'SAMEA0000008'),
+    (1, '1.SKD2.640178', 'ERS000009', 'SAMEA0000009'),
+    (1, '1.SKM7.640188', 'ERS000010', 'SAMEA0000010'),
+    (1, '1.SKB1.640202', 'ERS000011', 'SAMEA0000011'),
+    (1, '1.SKD1.640179', 'ERS000012', 'SAMEA0000012'),
+    (1, '1.SKD3.640198', 'ERS000013', 'SAMEA0000013'),
+    (1, '1.SKM8.640201', 'ERS000014', 'SAMEA0000014'),
+    (1, '1.SKM2.640199', 'ERS000015', 'SAMEA0000015'),
+    (1, '1.SKB9.640200', 'ERS000016', 'SAMEA0000016'),
+    (1, '1.SKD5.640186', 'ERS000017', 'SAMEA0000017'),
+    (1, '1.SKM3.640197', 'ERS000018', 'SAMEA0000018'),
+    (1, '1.SKD9.640182', 'ERS000019', 'SAMEA0000019'),
+    (1, '1.SKB4.640189', 'ERS000020', 'SAMEA0000020'),
+    (1, '1.SKD7.640191', 'ERS000021', 'SAMEA0000021'),
+    (1, '1.SKM6.640187', 'ERS000022', 'SAMEA0000022'),
+    (1, '1.SKD4.640185', 'ERS000023', 'SAMEA0000023'),
+    (1, '1.SKB3.640195', 'ERS000024', 'SAMEA0000024'),
+    (1, '1.SKB6.640176', 'ERS000025', 'SAMEA0000025'),
+    (1, '1.SKM1.640183', 'ERS000025', 'SAMEA0000026');
 
 -- Add the study sample columns for study 1
 INSERT INTO qiita.study_sample_columns (study_id, column_name, column_type) VALUES
@@ -195,34 +195,34 @@ INSERT INTO qiita.sample_1 (sample_id, season_environment, assigned_from_geo, te
 INSERT INTO qiita.prep_template (data_type_id, preprocessing_status, investigation_type) VALUES (2, 'success', 'Metagenomics');
 
 -- Add the common prep info for study 1
-INSERT INTO qiita.prep_template_sample (prep_template_id, sample_id) VALUES
-    (1, '1.SKB8.640193'),
-    (1, '1.SKD8.640184'),
-    (1, '1.SKB7.640196'),
-    (1, '1.SKM9.640192'),
-    (1, '1.SKM4.640180'),
-    (1, '1.SKM5.640177'),
-    (1, '1.SKB5.640181'),
-    (1, '1.SKD6.640190'),
-    (1, '1.SKB2.640194'),
-    (1, '1.SKD2.640178'),
-    (1, '1.SKM7.640188'),
-    (1, '1.SKB1.640202'),
-    (1, '1.SKD1.640179'),
-    (1, '1.SKD3.640198'),
-    (1, '1.SKM8.640201'),
-    (1, '1.SKM2.640199'),
-    (1, '1.SKB9.640200'),
-    (1, '1.SKD5.640186'),
-    (1, '1.SKM3.640197'),
-    (1, '1.SKD9.640182'),
-    (1, '1.SKB4.640189'),
-    (1, '1.SKD7.640191'),
-    (1, '1.SKM6.640187'),
-    (1, '1.SKD4.640185'),
-    (1, '1.SKB3.640195'),
-    (1, '1.SKB6.640176'),
-    (1, '1.SKM1.640183');
+INSERT INTO qiita.prep_template_sample (prep_template_id, sample_id, ebi_experiment_accession) VALUES
+    (1, '1.SKB8.640193', 'ERX0000000'),
+    (1, '1.SKD8.640184', 'ERX0000001'),
+    (1, '1.SKB7.640196', 'ERX0000002'),
+    (1, '1.SKM9.640192', 'ERX0000003'),
+    (1, '1.SKM4.640180', 'ERX0000004'),
+    (1, '1.SKM5.640177', 'ERX0000005'),
+    (1, '1.SKB5.640181', 'ERX0000006'),
+    (1, '1.SKD6.640190', 'ERX0000007'),
+    (1, '1.SKB2.640194', 'ERX0000008'),
+    (1, '1.SKD2.640178', 'ERX0000009'),
+    (1, '1.SKM7.640188', 'ERX0000010'),
+    (1, '1.SKB1.640202', 'ERX0000011'),
+    (1, '1.SKD1.640179', 'ERX0000012'),
+    (1, '1.SKD3.640198', 'ERX0000013'),
+    (1, '1.SKM8.640201', 'ERX0000014'),
+    (1, '1.SKM2.640199', 'ERX0000015'),
+    (1, '1.SKB9.640200', 'ERX0000016'),
+    (1, '1.SKD5.640186', 'ERX0000017'),
+    (1, '1.SKM3.640197', 'ERX0000018'),
+    (1, '1.SKD9.640182', 'ERX0000019'),
+    (1, '1.SKB4.640189', 'ERX0000020'),
+    (1, '1.SKD7.640191', 'ERX0000021'),
+    (1, '1.SKM6.640187', 'ERX0000022'),
+    (1, '1.SKD4.640185', 'ERX0000023'),
+    (1, '1.SKB3.640195', 'ERX0000024'),
+    (1, '1.SKB6.640176', 'ERX0000025'),
+    (1, '1.SKM1.640183', 'ERX0000026');
 
 -- Add raw data prep columns
 INSERT INTO qiita.prep_columns (prep_template_id, column_name, column_type) VALUES
@@ -327,9 +327,39 @@ UPDATE qiita.prep_template SET raw_data_id = 1 WHERE prep_template_id = 1;
 -- UPDATE qiita.prep_template SET raw_data_id = 2 WHERE prep_template_id = 2;
 
 -- Insert preprocessed information for prep template 1
-INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, submitted_to_insdc_status, ebi_submission_accession, ebi_study_accession, data_type_id)
-    VALUES ('preprocessed_sequence_illumina_params', 1, 'submitting', 'EBI123456-AA', 'EBI123456-BB', 2),
-           ('preprocessed_sequence_illumina_params', 2, 'not submitted', NULL, NULL, 2);
+INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, data_type_id)
+    VALUES ('preprocessed_sequence_illumina_params', 1, 2),
+           ('preprocessed_sequence_illumina_params', 2, 2);
+
+-- Insert EBI information for preprocessed data 1
+INSERT INTO qiita.ebi_run_accession (sample_id, preprocessed_data_id, ebi_run_accession)
+    VALUES ('1.SKB1.640202', 1, 'ERR0000001'),
+           ('1.SKB2.640194', 1, 'ERR0000002'),
+           ('1.SKB3.640195', 1, 'ERR0000003'),
+           ('1.SKB4.640189', 1, 'ERR0000004'),
+           ('1.SKB5.640181', 1, 'ERR0000005'),
+           ('1.SKB6.640176', 1, 'ERR0000006'),
+           ('1.SKB7.640196', 1, 'ERR0000007'),
+           ('1.SKB8.640193', 1, 'ERR0000008'),
+           ('1.SKB9.640200', 1, 'ERR0000009'),
+           ('1.SKD1.640179', 1, 'ERR0000010'),
+           ('1.SKD2.640178', 1, 'ERR0000011'),
+           ('1.SKD3.640198', 1, 'ERR0000012'),
+           ('1.SKD4.640185', 1, 'ERR0000013'),
+           ('1.SKD5.640186', 1, 'ERR0000014'),
+           ('1.SKD6.640190', 1, 'ERR0000015'),
+           ('1.SKD7.640191', 1, 'ERR0000016'),
+           ('1.SKD8.640184', 1, 'ERR0000017'),
+           ('1.SKD9.640182', 1, 'ERR0000018'),
+           ('1.SKM1.640183', 1, 'ERR0000019'),
+           ('1.SKM2.640199', 1, 'ERR0000020'),
+           ('1.SKM3.640197', 1, 'ERR0000021'),
+           ('1.SKM4.640180', 1, 'ERR0000022'),
+           ('1.SKM5.640177', 1, 'ERR0000023'),
+           ('1.SKM6.640187', 1, 'ERR0000024'),
+           ('1.SKM7.640188', 1, 'ERR0000025'),
+           ('1.SKM8.640201', 1, 'ERR0000026'),
+           ('1.SKM9.640192', 1, 'ERR0000027');
 
 -- Link the new preprocessed data with the prep template
 INSERT INTO qiita.prep_template_preprocessed_data (prep_template_id, preprocessed_data_id) VALUES (1, 1), (1, 2);

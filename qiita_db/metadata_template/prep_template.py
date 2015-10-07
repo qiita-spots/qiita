@@ -673,3 +673,30 @@ class PrepTemplate(MetadataTemplate):
             fn = TRN.execute_fetchindex()[0][1]
             base_dir = get_mountpoint('templates')[0][1]
             return join(base_dir, fn)
+
+    @property
+    def ebi_experiment_accessions(self):
+        """The EBI experiment accessions for the samples in the prep template
+
+        Returns
+        -------
+        dict of {str: str}
+            The EBI experiment accessions numbers keyed by sample id
+        """
+        return self._get_accession_numbers('ebi_experiment_accession')
+
+    @ebi_experiment_accessions.setter
+    def ebi_experiment_accessions(self, value):
+        """Sets the EBI experiment accessions
+
+        Parameters
+        ----------
+        values : dict of {str: str}
+            The EBI experiment accessions, keyed by sample id
+
+        Raises
+        ------
+        QiitaDBError
+            If a sample in `value` already has an accession number
+        """
+        self._update_accession_numbers('ebi_experiment_accession', value)

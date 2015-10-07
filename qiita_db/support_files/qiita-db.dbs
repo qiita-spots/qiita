@@ -441,6 +441,28 @@
 				<column name="data_type" />
 			</index>
 		</table>
+		<table name="ebi_run_accession" >
+			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<column name="preprocessed_data_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="ebi_run_accession" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_ebi_run_accession" unique="PRIMARY_KEY" >
+				<column name="sample_id" />
+				<column name="preprocessed_data_id" />
+				<column name="ebi_run_accession" />
+			</index>
+			<index name="idx_ebi_run_accession" unique="NORMAL" >
+				<column name="sample_id" />
+			</index>
+			<index name="idx_ebi_run_accession" unique="NORMAL" >
+				<column name="preprocessed_data_id" />
+			</index>
+			<fk name="fk_ebi_run_accession" to_schema="qiita" to_table="study_sample" >
+				<fk_column name="sample_id" pk="sample_id" />
+			</fk>
+			<fk name="fk_ebi_run_accession_ppd" to_schema="qiita" to_table="preprocessed_data" >
+				<fk_column name="preprocessed_data_id" pk="preprocessed_data_id" />
+			</fk>
+		</table>
 		<table name="environmental_package" >
 			<column name="environmental_package_name" type="varchar" jt="12" mandatory="y" >
 				<comment><![CDATA[The name of the environmental package]]></comment>
@@ -793,6 +815,7 @@
 				<comment><![CDATA[The prep template identifier]]></comment>
 			</column>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
+			<column name="ebi_experiment_accession" type="varchar" jt="12" />
 			<index name="idx_required_prep_info_2" unique="NORMAL" >
 				<column name="sample_id" />
 			</index>
@@ -826,11 +849,6 @@
 				<comment><![CDATA[Name of table holding the params]]></comment>
 			</column>
 			<column name="preprocessed_params_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="submitted_to_insdc_status" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;not submitted&#039;</defo>
-			</column>
-			<column name="ebi_submission_accession" type="varchar" jt="12" />
-			<column name="ebi_study_accession" type="varchar" jt="12" />
 			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="link_filepaths_status" type="varchar" jt="12" mandatory="y" >
 				<defo>&#039;idle&#039;</defo>
@@ -1283,6 +1301,10 @@ Controlled Vocabulary]]></comment>
 			<column name="study_description" type="text" jt="12" mandatory="y" />
 			<column name="study_abstract" type="text" jt="12" mandatory="y" />
 			<column name="vamps_id" type="varchar" jt="12" />
+			<column name="ebi_study_accession" type="varchar" jt="12" />
+			<column name="ebi_submission_status" type="varchar" jt="12" mandatory="y" >
+				<defo>&#039;not_submitted&#039;</defo>
+			</column>
 			<index name="pk_study" unique="PRIMARY_KEY" >
 				<column name="study_id" />
 			</index>
@@ -1475,6 +1497,8 @@ Controlled Vocabulary]]></comment>
 			<comment>Required info for each sample. One row is one sample.</comment>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="ebi_sample_accession" type="varchar" jt="12" />
+			<column name="biosample_accession" type="varchar" jt="12" />
 			<index name="idx_required_sample_info" unique="NORMAL" >
 				<column name="study_id" />
 			</index>
@@ -1611,7 +1635,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="2205" y="810" />
 		<entity schema="qiita" name="preprocessed_processed_data" color="b2cdf7" x="1275" y="870" />
 		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="90" />
-		<entity schema="qiita" name="prep_y" color="d0def5" x="1230" y="195" />
 		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="585" y="885" />
 		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="735" y="885" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1020" />
@@ -1625,7 +1648,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="environmental_package" color="b2cdf7" x="2250" y="150" />
 		<entity schema="qiita" name="study_environmental_package" color="b2cdf7" x="2250" y="45" />
 		<entity schema="qiita" name="sample_template_filepath" color="b2cdf7" x="1050" y="795" />
-		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1260" y="675" />
 		<entity schema="qiita" name="reference" color="c0d4f3" x="2280" y="960" />
 		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="1740" y="960" />
 		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="2025" y="1050" />
@@ -1643,7 +1665,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="2100" y="255" />
 		<entity schema="qiita" name="processed_data_status" color="c0d4f3" x="1500" y="1050" />
 		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1185" />
-		<entity schema="qiita" name="study_sample" color="d0def5" x="1515" y="105" />
 		<entity schema="qiita" name="raw_data" color="d0def5" x="1020" y="300" />
 		<entity schema="qiita" name="filetype" color="d0def5" x="1035" y="180" />
 		<entity schema="qiita" name="prep_template_preprocessed_data" color="b2cdf7" x="1275" y="555" />
@@ -1651,16 +1672,20 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="raw_filepath" color="c0d4f3" x="1035" y="435" />
 		<entity schema="qiita" name="prep_template_filepath" color="b2cdf7" x="1035" y="525" />
 		<entity schema="qiita" name="study_prep_template" color="d0def5" x="1590" y="420" />
-		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1470" y="285" />
-		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1335" y="195" />
 		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="735" />
 		<entity schema="qiita" name="portal_type" color="c0d4f3" x="720" y="360" />
-		<entity schema="qiita" name="study" color="d0def5" x="1815" y="60" />
 		<entity schema="qiita" name="study_portal" color="a8c4ef" x="1800" y="525" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="1680" y="615" />
 		<entity schema="qiita" name="analysis_portal" color="a8c4ef" x="180" y="645" />
 		<entity schema="qiita" name="message_user" color="a8c4ef" x="1080" y="1365" />
 		<entity schema="qiita" name="message" color="a8c4ef" x="1275" y="1380" />
+		<entity schema="qiita" name="prep_y" color="d0def5" x="1170" y="195" />
+		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1245" y="105" />
+		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1350" y="240" />
+		<entity schema="qiita" name="preprocessed_data" color="c0d4f3" x="1260" y="675" />
+		<entity schema="qiita" name="study" color="d0def5" x="1815" y="60" />
+		<entity schema="qiita" name="ebi_run_accession" color="b2cdf7" x="1515" y="555" />
+		<entity schema="qiita" name="study_sample" color="d0def5" x="1470" y="105" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1720,6 +1745,7 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="prep_template_filepath" />
 			<entity schema="qiita" name="sample_template_filepath" />
 			<entity schema="qiita" name="study_portal" />
+			<entity schema="qiita" name="ebi_run_accession" />
 		</group>
 		<group name="Group_vocabularies" color="00ffcc" >
 			<entity schema="qiita" name="controlled_vocab" />
@@ -1753,5 +1779,10 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="message_user" />
 			<entity schema="qiita" name="message" />
 		</group>
+		<script name="Sql" id="SQL8441877" >
+			<string><![CDATA[ALTER TABLE qiita.study_sample ADD biosample_accession varchar  ;
+
+]]></string>
+		</script>
 	</layout>
 </project>

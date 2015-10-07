@@ -24,7 +24,7 @@ from datetime import date
 from h5py import File
 
 from qiita_ware.ebi import EBISubmission
-from qiita_ware.exceptions import EBISumbissionError
+from qiita_ware.exceptions import EBISubmissionError
 from qiita_ware.demux import to_hdf5
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.data import PreprocessedData
@@ -93,24 +93,32 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_get_study_alias(self):
         e = EBISubmission(2, 'ADD')
-        exp = '%s_ppdid_2' % qiita_config.ebi_organization_prefix
+        exp = '%s_sid_1' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_study_alias(), exp)
 
     def test_get_sample_alias(self):
         e = EBISubmission(2, 'ADD')
-        exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
+        exp = '%s_sid_1:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_sample_alias('foo'), exp)
+        self.assertEqual(e._sample_aliases, {exp: 'foo'})
 
     def test_get_experiment_alias(self):
         e = EBISubmission(2, 'ADD')
-        exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
+        exp = '%s_ptid_1:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_experiment_alias('foo'), exp)
+        self.assertEqual(e._experiment_aliases, {exp: 'foo'})
 
     def test_get_submission_alias(self):
         e = EBISubmission(2, 'ADD')
         obs = e._get_submission_alias()
         exp = '%s_submission_2' % qiita_config.ebi_organization_prefix
         self.assertEqual(obs, exp)
+
+    def test_get_run_alias(self):
+        e = EBISubmission(2, 'ADD')
+        exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
+        self.assertEqual(e._get_run_alias('foo'), exp)
+        self.assertEqual(e._run_aliases, {exp: 'foo'})
 
     def test_get_library_name(self):
         e = EBISubmission(2, 'ADD')
@@ -243,27 +251,6 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                '%%20ebi_access_key"') % {'xml_dir': submission.xml_dir}
         self.assertEqual(obs, exp)
 
-    def test_parse_EBI_reply(self):
-        e = EBISubmission(2, 'ADD')
-        curl_result = ""
-        stacc, sbacc = e.parse_EBI_reply(curl_result)
-        self.assertIsNone(stacc)
-        self.assertIsNone(sbacc)
-
-        curl_result = 'success="true"'
-        stacc, sbacc = e.parse_EBI_reply(curl_result)
-        self.assertIsNone(stacc)
-        self.assertIsNone(sbacc)
-
-        curl_result = ('some general text success="true" more text'
-                       '<STUDY accession="staccession" some text> '
-                       'some othe text'
-                       '<SUBMISSION accession="sbaccession" some text>'
-                       'some final text')
-        stacc, sbacc = e.parse_EBI_reply(curl_result)
-        self.assertEqual(stacc, "staccession")
-        self.assertEqual(sbacc, "sbaccession")
-
 
 @qiita_test_checker()
 class TestEBISubmissionWriteRead(TestEBISubmission):
@@ -348,11 +335,11 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
     def test_init_exceptions(self):
         # not a valid action
-        with self.assertRaises(EBISumbissionError):
+        with self.assertRaises(EBISubmissionError):
             EBISubmission(1, 'This is not a valid action')
 
         # already submitted so can't continue
-        with self.assertRaises(EBISumbissionError):
+        with self.assertRaises(EBISubmissionError):
             EBISubmission(1, 'ADD')
 
         ppd = self.generate_new_prep_template_and_write_demux_files()
@@ -365,7 +352,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                     "platform (instrumet model wasn't checked): "
                     "1.SKD6.640190\nThese samples do not have a valid "
                     "instrument model: 1.SKM6.640187")
-        with self.assertRaises(EBISumbissionError) as e:
+        with self.assertRaises(EBISubmissionError) as e:
             EBISubmission(ppd.id, 'ADD')
         self.assertEqual(exp_text, str(e.exception))
 
@@ -470,6 +457,68 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/']
         self.assertEqual(obs, exp)
 
+    def test_parse_EBI_reply(self):
+        ppd = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(ppd.id, 'ADD')
+
+        # removing samples so test text is easier to read
+        keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
+                       '1.SKM8.640201', '1.SKM2.640199', '1.SKB3.640195']
+        for k in keys_to_del:
+            del(e.samples[k])
+            del(e.samples_prep[k])
+
+        # Genereate the XML files so the aliases are generated
+        # and stored internally
+        e.generate_demultiplexed_fastq(mtime=1)
+        e.generate_study_xml()
+        e.generate_sample_xml()
+        e.generate_experiment_xml()
+        e.generate_run_xml()
+        e.generate_submission_xml()
+
+        curl_result = ""
+        with self.assertRaises(EBISubmissionError):
+            e.parse_EBI_reply(curl_result)
+
+        curl_result = 'success="true"'
+        with self.assertRaises(EBISubmissionError):
+            e.parse_EBI_reply(curl_result)
+
+        curl_result = ('some general text success="true" more text'
+                       '<STUDY accession="staccession" some text> '
+                       'some othe text'
+                       '<SUBMISSION accession="sbaccession" some text>'
+                       'some final text')
+        with self.assertRaises(EBISubmissionError):
+            e.parse_EBI_reply(curl_result)
+
+        curl_result = CURL_RESULT_2_STUDY.format(
+            qiita_config.ebi_organization_prefix, ppd.id)
+        with self.assertRaises(EBISubmissionError):
+            e.parse_EBI_reply(curl_result)
+
+        curl_result = CURL_RESULT.format(qiita_config.ebi_organization_prefix,
+                                         ppd.id)
+        stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+        self.assertEqual(stacc, 'ERP000000')
+        exp_saacc = {'1.SKB2.640194': 'ERS000000',
+                     '1.SKB6.640176': 'ERS000001',
+                     '1.SKM4.640180': 'ERS000002'}
+        self.assertEqual(saacc, exp_saacc)
+        exp_bioacc = {'1.SKB2.640194': 'SAMEA0000000',
+                      '1.SKB6.640176': 'SAMEA0000001',
+                      '1.SKM4.640180': 'SAMEA0000002'}
+        self.assertEqual(bioacc, exp_bioacc)
+        exp_exacc = {'1.SKB2.640194': 'ERX0000000',
+                     '1.SKB6.640176': 'ERX0000001',
+                     '1.SKM4.640180': 'ERX0000002'}
+        self.assertEqual(exacc, exp_exacc)
+        exp_runacc = {'1.SKB2.640194': 'ERR0000000',
+                      '1.SKB6.640176': 'ERR0000001',
+                      '1.SKM4.640180': 'ERR0000002'}
+        self.assertEqual(runacc, exp_runacc)
+
 
 FASTA_EXAMPLE = """>1.SKB2.640194_1 X orig_bc=X new_bc=X bc_diffs=0
 CCACCCAGTAAC
@@ -500,7 +549,7 @@ CCACCCAGTAAC
 SAMPLEXML = """
 <SAMPLE_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.sample.xsd">
-  <SAMPLE alias="%(organization_prefix)s_ppdid_2:1.SKB2.640194" \
+  <SAMPLE alias="%(organization_prefix)s_sid_1:1.SKB2.640194" \
 center_name="%(center_name)s">
       <TITLE>1.SKB2.640194</TITLE>
     <SAMPLE_NAME>
@@ -591,7 +640,7 @@ shrubland biome</VALUE>
       </SAMPLE_ATTRIBUTE>
     </SAMPLE_ATTRIBUTES>
   </SAMPLE>
-  <SAMPLE alias="%(organization_prefix)s_ppdid_2:1.SKB3.640195" \
+  <SAMPLE alias="%(organization_prefix)s_sid_1:1.SKB3.640195" \
 center_name="%(center_name)s">
     <TITLE>1.SKB3.640195</TITLE>
     <SAMPLE_NAME>
@@ -691,7 +740,7 @@ shrubland biome</VALUE>
 STUDYXML = """
 <STUDY_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noName\
 spaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.study.xsd">
-  <STUDY alias="%(organization_prefix)s_ppdid_2" center_name="%(center_name)s">
+  <STUDY alias="%(organization_prefix)s_sid_1" center_name="%(center_name)s">
     <DESCRIPTOR>
       <STUDY_TITLE>
         Identification of the Microbiomes for Cannabis Soils
@@ -728,15 +777,15 @@ EXPERIMENTXML = """
 <EXPERIMENT_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:no\
 NamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.\
 experiment.xsd">
-  <EXPERIMENT alias="%(organization_prefix)s_ppdid_2:1.SKB2.640194" \
+  <EXPERIMENT alias="%(organization_prefix)s_ptid_1:1.SKB2.640194" \
 center_name="%(center_name)s">
-    <TITLE>%(organization_prefix)s_ppdid_2:1.SKB2.640194</TITLE>
-    <STUDY_REF refname="%(organization_prefix)s_ppdid_2" />
+    <TITLE>%(organization_prefix)s_ptid_1:1.SKB2.640194</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_sid_1" />
     <DESIGN>
       <DESIGN_DESCRIPTION>
         micro biome of soil and rhizosphere of cannabis plants from CA
       </DESIGN_DESCRIPTION>
-      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_ppdid_2:1.SKB2.\
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_sid_1:1.SKB2.\
 640194" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB2.640194</LIBRARY_NAME>
@@ -817,15 +866,15 @@ REV:GGACTACHVGGGTWTCTAAT</VALUE>
       </EXPERIMENT_ATTRIBUTE>
     </EXPERIMENT_ATTRIBUTES>
   </EXPERIMENT>
-  <EXPERIMENT alias="%(organization_prefix)s_ppdid_2:1.SKB3.640195" \
+  <EXPERIMENT alias="%(organization_prefix)s_ptid_1:1.SKB3.640195" \
 center_name="%(center_name)s">
-    <TITLE>%(organization_prefix)s_ppdid_2:1.SKB3.640195</TITLE>
-    <STUDY_REF refname="%(organization_prefix)s_ppdid_2" />
+    <TITLE>%(organization_prefix)s_ptid_1:1.SKB3.640195</TITLE>
+    <STUDY_REF refname="%(organization_prefix)s_sid_1" />
     <DESIGN>
       <DESIGN_DESCRIPTION>
         micro biome of soil and rhizosphere of cannabis plants from CA
       </DESIGN_DESCRIPTION>
-      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_ppdid_2:1.SKB3.\
+      <SAMPLE_DESCRIPTOR refname="%(organization_prefix)s_sid_1:1.SKB3.\
 640195" />
       <LIBRARY_DESCRIPTOR>
         <LIBRARY_NAME>1.SKB3.640195</LIBRARY_NAME>
@@ -913,9 +962,9 @@ REV:GGACTACHVGGGTWTCTAAT</VALUE>
 RUNXML = """
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespace\
 SchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="%(study_alias)s_1.SKB2.640194.fastq.gz_run" \
+  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKB2.640194" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKB2.640194" />
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKB2.640194" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="938c29679790b9c17e4dab060fa4c8c5" \
@@ -924,9 +973,9 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(study_alias)s_1.SKM4.640180.fastq.gz_run" \
+  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKM4.640180" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKM4.640180" />
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKM4.640180" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="2f8f469a8075b42e401ff0a2c85dc0e5" \
@@ -935,9 +984,9 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(study_alias)s_1.SKB3.640195.fastq.gz_run" \
+  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKB3.640195" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKB3.640195" />
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKB3.640195" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="550794cf00ec86b9d3e2feb08cb7a97b" \
@@ -946,9 +995,9 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(study_alias)s_1.SKB6.640176.fastq.gz_run" \
+  <RUN alias="%(organization_prefix)s_ppdid_3:1.SKB6.640176" \
 center_name="%(center_name)s">
-    <EXPERIMENT_REF refname="%(organization_prefix)s_ppdid_3:1.SKB6.640176" />
+    <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_1:1.SKB6.640176" />
     <DATA_BLOCK>
       <FILES>
         <FILE checksum="adcc754811b86a240f0cc3d59c188cd0" \
@@ -1001,6 +1050,77 @@ GENSPOTDESC = """<design foo="bar">
 </design>
 """
 
+CURL_RESULT = """<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+<RECEIPT receiptDate="2015-09-20T23:27:01.924+01:00" \
+submissionFile="submission.xml" success="true">
+  <EXPERIMENT accession="ERX0000000" alias="{0}_ptid_1:1.SKB2.640194" \
+status="PRIVATE"/>
+  <EXPERIMENT accession="ERX0000001" alias="{0}_ptid_1:1.SKB6.640176" \
+status="PRIVATE"/>
+  <EXPERIMENT accession="ERX0000002" alias="{0}_ptid_1:1.SKM4.640180" \
+status="PRIVATE"/>
+  <RUN accession="ERR0000000" alias="{0}_ppdid_{1}:1.SKB2.640194" \
+status="PRIVATE"/>
+  <RUN accession="ERR0000001" alias="{0}_ppdid_{1}:1.SKB6.640176" \
+status="PRIVATE"/>
+  <RUN accession="ERR0000002" alias="{0}_ppdid_{1}:1.SKM4.640180" \
+status="PRIVATE"/>
+  <SAMPLE accession="ERS000000" alias="{0}_sid_1:1.SKB2.640194"
+status="PRIVATE">
+    <EXT_ID accession="SAMEA0000000" type="biosample"/>
+  </SAMPLE>
+  <SAMPLE accession="ERS000001" alias="{0}_sid_1:1.SKB6.640176"
+status="PRIVATE">
+    <EXT_ID accession="SAMEA0000001" type="biosample"/>
+  </SAMPLE>
+  <SAMPLE accession="ERS000002" alias="{0}_sid_1:1.SKM4.640180"
+status="PRIVATE">
+    <EXT_ID accession="SAMEA0000002" type="biosample"/>
+  </SAMPLE>
+  <STUDY accession="ERP000000" alias="{0}_sid_1" status="PRIVATE" \
+holdUntilDate="2016-09-19+01:00"/>
+  <SUBMISSION accession="ERA000000" alias="qiime_submission_570"/>
+  <MESSAGES>
+    <INFO> ADD action for the following XML: study.xml sample.xml \
+experiment.xml run.xml       </INFO>
+  </MESSAGES>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>HOLD</ACTIONS>
+</RECEIPT>
+"""
+
+CURL_RESULT_2_STUDY = """<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+<RECEIPT receiptDate="2015-09-20T23:27:01.924+01:00" \
+submissionFile="submission.xml" success="true">
+  <EXPERIMENT accession="ERX0000000" alias="{0}_ptid_1:1.SKB2.640194" \
+status="PRIVATE"/>
+  <RUN accession="ERR0000000" alias="{0}_ppdid_{1}:1.SKB2.640194" \
+status="PRIVATE"/>
+  <SAMPLE accession="ERS000000" alias="{0}_sid_1:1.SKB2.640194"
+status="PRIVATE">
+    <EXT_ID accession="SAMEA0000000" type="biosample"/>
+  </SAMPLE>
+  <STUDY accession="ERP000000" alias="{0}_sid_1" status="PRIVATE" \
+holdUntilDate="2016-09-19+01:00"/>
+  <STUDY accession="ERP000000" alias="{0}_sid_2" status="PRIVATE" \
+holdUntilDate="2016-09-19+01:00"/>
+  <SUBMISSION accession="ERA000000" alias="qiime_submission_570"/>
+  <MESSAGES>
+    <INFO> ADD action for the following XML: study.xml sample.xml \
+experiment.xml run.xml       </INFO>
+  </MESSAGES>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>ADD</ACTIONS>
+  <ACTIONS>HOLD</ACTIONS>
+</RECEIPT>
+"""
 
 if __name__ == "__main__":
     main()

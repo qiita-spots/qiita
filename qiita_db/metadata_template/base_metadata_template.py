@@ -40,6 +40,8 @@ from future.utils import viewitems, viewvalues
 from future.builtins import zip
 from os.path import join
 from functools import partial
+from itertools import chain
+from copy import deepcopy
 
 import pandas as pd
 import numpy as np
@@ -1325,3 +1327,78 @@ class MetadataTemplate(QiitaObject):
                 for col in restriction.columns}
 
         return cols.difference(self.categories())
+
+    def _get_accession_numbers(self, column):
+        """Return the accession numbers stored in `column`
+
+        Parameters
+        ----------
+        column : str
+            The column name where the accession number is stored
+
+        Returns
+        -------
+        dict of {str: str}
+            The accession numbers keyed by sample id
+        """
+        with TRN:
+            sql = """SELECT sample_id, {0}
+                     FROM qiita.{1}
+                     WHERE {2}=%s""".format(column, self._table,
+                                            self._id_column)
+            TRN.add(sql, [self.id])
+            result = {sample_id: accession
+                      for sample_id, accession in TRN.execute_fetchindex()}
+        return result
+
+    def _update_accession_numbers(self, column, values):
+        """Update accession numbers stored in `column` with the ones in `values`
+
+        Parameters
+        ----------
+        column : str
+            The column name where the accession number are stored
+        values : dict of {str: str}
+            The accession numbers keyed by sample id
+
+        Raises
+        ------
+        QiitaDBError
+            If a sample in `values` already has an accession number
+        QiitaDBWarning
+            If `values` is not updating any accesion number
+        """
+        with TRN:
+            sql = """SELECT sample_id, {0}
+                     FROM qiita.{1}
+                     WHERE {2}=%s
+                        AND {0} IS NOT NULL""".format(column, self._table,
+                                                      self._id_column)
+            TRN.add(sql, [self.id])
+            db_vals = {sample_id: accession
+                       for sample_id, accession in TRN.execute_fetchindex()}
+            common_samples = set(db_vals) & set(values)
+            diff = [sample for sample in common_samples
+                    if db_vals[sample] != values[sample]]
+            if diff:
+                raise QiitaDBError(
+                    "The following samples already have an accession number: "
+                    "%s" % ', '.join(diff))
+
+            # Remove the common samples form the values dictionary
+            values = deepcopy(values)
+            for sample in common_samples:
+                del values[sample]
+
+            if values:
+                sql_vals = ', '.join(["(%s, %s)"] * len(values))
+                sql = """UPDATE qiita.{0} AS t
+                         SET {1}=c.{1}
+                         FROM (VALUES {2}) AS c(sample_id, {1})
+                         WHERE c.sample_id = t.sample_id
+                         """.format(self._table, column, sql_vals)
+                TRN.add(sql, list(chain.from_iterable(values.items())))
+                TRN.execute()
+            else:
+                warnings.warn("No new accession numbers to update",
+                              QiitaDBWarning)
