@@ -112,6 +112,7 @@ from .util import exists_table
 
 _VALID_EBI_STATUS = ('not submitted', 'submitting', 'submitted')
 
+
 class Study(QiitaObject):
     r"""Study object to access to the Qiita Study information
 
