@@ -19,7 +19,7 @@ from unittest import TestCase, main
 from xml.etree import ElementTree as ET
 from functools import partial
 import pandas as pd
-from datetime import date
+from datetime import date, datetime
 
 from h5py import File
 
@@ -28,8 +28,9 @@ from qiita_ware.exceptions import EBISubmissionError
 from qiita_ware.demux import to_hdf5
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.data import PreprocessedData
-from qiita_db.study import Study
-from qiita_db.metadata_template import PrepTemplate
+from qiita_db.study import Study, StudyPerson
+from qiita_db.metadata_template import PrepTemplate, SampleTemplate
+from qiita_db.user import User
 from qiita_core.util import qiita_test_checker
 
 
@@ -75,15 +76,14 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertItemsEqual(e.pmids, ['123456', '7891011'])
         self.assertEqual(e.action, action)
 
-        get_output_fp = partial(join, e.ebi_dir, 'xml_dir')
-        self.assertEqual(e.xml_dir, get_output_fp())
-        self.assertEqual(e.study_xml_fp, get_output_fp('study.xml'))
-        self.assertEqual(e.sample_xml_fp, get_output_fp('sample.xml'))
-        self.assertEqual(e.experiment_xml_fp,  get_output_fp('experiment.xml'))
-        self.assertEqual(e.run_xml_fp, get_output_fp('run.xml'))
-        self.assertEqual(e.submission_xml_fp, get_output_fp('submission.xml'))
-
         get_output_fp = partial(join, e.ebi_dir)
+        self.assertEqual(e.xml_dir, get_output_fp('xml_dir'))
+        self.assertEqual(e.study_xml_fp, None)
+        self.assertEqual(e.sample_xml_fp, None)
+        self.assertEqual(e.experiment_xml_fp,  None)
+        self.assertEqual(e.run_xml_fp, None)
+        self.assertEqual(e.submission_xml_fp, None)
+
         self.assertEqual(e.ebi_dir, get_output_fp())
         for sample in e.sample_template:
             self.assertEqual(e.sample_template[sample], e.samples[sample])
@@ -193,6 +193,10 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_generate_submission_xml(self):
         submission = EBISubmission(2, 'ADD')
+        submission.study_xml_fp = "/some/path/study.xml"
+        submission.sample_xml_fp = "/some/path/sample.xml"
+        submission.experiment_xml_fp = "/some/path/experiment.xml"
+        submission.run_xml_fp = "/some/path/run.xml"
         obs = ET.tostring(
             submission.generate_submission_xml(
                 submission_date=date(2015, 9, 3)))
@@ -221,18 +225,23 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
         # Without curl certificate authentication
         test_ebi_skip_curl_cert = True
+        submission.study_xml_fp = "/some/path/study.xml"
+        submission.sample_xml_fp = "/some/path/sample.xml"
+        submission.experiment_xml_fp = "/some/path/experiment.xml"
+        submission.run_xml_fp = "/some/path/run.xml"
+        submission.submission_xml_fp = "/some/path/submission.xml"
         obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
                                                test_ebi_access_key,
                                                test_ebi_skip_curl_cert,
                                                test_ebi_dropbox_url)
         exp = ('curl -k '
-               '-F "SUBMISSION=@%(xml_dir)s/submission.xml" '
-               '-F "STUDY=@%(xml_dir)s/study.xml" '
-               '-F "SAMPLE=@%(xml_dir)s/sample.xml" '
-               '-F "RUN=@%(xml_dir)s/run.xml" '
-               '-F "EXPERIMENT=@%(xml_dir)s/experiment.xml" '
-               '"ebi_dropbox_url/?auth=ENA%%20ebi_seq_xfer_user'
-               '%%20ebi_access_key"') % {'xml_dir': submission.xml_dir}
+               '-F "SUBMISSION=@/some/path/submission.xml" '
+               '-F "STUDY=@/some/path/study.xml" '
+               '-F "SAMPLE=@/some/path/sample.xml" '
+               '-F "RUN=@/some/path/run.xml" '
+               '-F "EXPERIMENT=@/some/path/experiment.xml" '
+               '"ebi_dropbox_url/?auth=ENA%20ebi_seq_xfer_user'
+               '%20ebi_access_key"')
         self.assertEqual(obs, exp)
 
         # With curl certificate authentication
@@ -242,19 +251,19 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                                                test_ebi_skip_curl_cert,
                                                test_ebi_dropbox_url)
         exp = ('curl '
-               '-F "SUBMISSION=@%(xml_dir)s/submission.xml" '
-               '-F "STUDY=@%(xml_dir)s/study.xml" '
-               '-F "SAMPLE=@%(xml_dir)s/sample.xml" '
-               '-F "RUN=@%(xml_dir)s/run.xml" '
-               '-F "EXPERIMENT=@%(xml_dir)s/experiment.xml" '
-               '"ebi_dropbox_url/?auth=ENA%%20ebi_seq_xfer_user'
-               '%%20ebi_access_key"') % {'xml_dir': submission.xml_dir}
+               '-F "SUBMISSION=@/some/path/submission.xml" '
+               '-F "STUDY=@/some/path/study.xml" '
+               '-F "SAMPLE=@/some/path/sample.xml" '
+               '-F "RUN=@/some/path/run.xml" '
+               '-F "EXPERIMENT=@/some/path/experiment.xml" '
+               '"ebi_dropbox_url/?auth=ENA%20ebi_seq_xfer_user'
+               '%20ebi_access_key"')
         self.assertEqual(obs, exp)
 
 
 @qiita_test_checker()
 class TestEBISubmissionWriteRead(TestEBISubmission):
-    def write_demux_files(self, prep_template):
+    def write_demux_files(self, prep_template, study_id=1):
         """Writes a demux test file to avoid duplication of code"""
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')
@@ -263,7 +272,9 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         with File(demux_fp, "w") as f:
             to_hdf5(fna_fp, f)
 
-        ppd = PreprocessedData.create(Study(1),
+        study = Study(study_id)
+
+        ppd = PreprocessedData.create(study,
                                       "preprocessed_sequence_illumina_params",
                                       1, [(demux_fp, 6)], prep_template)
 
@@ -333,6 +344,64 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         return ppd
 
+    def generate_new_study_with_preprocessed_data(self):
+        """Creates a new study up to the processed data for testing"""
+        # ignoring warnings generated when adding templates
+        simplefilter("ignore")
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 3,
+            "number_samples_promised": 3,
+            "study_alias": "Test EBI",
+            "study_description": "Study for testing EBI",
+            "study_abstract": "Study for testing EBI",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        study = Study.create(User('test@foo.bar'), "Test EBI study", [1], info)
+        metadata_dict = {
+            'Sample1': {'collection_timestamp': datetime(2015, 6, 1, 7, 0, 0),
+                        'physical_specimen_location': 'location1',
+                        'taxon_id': 9606,
+                        'scientific_name': 'homo sapiens'},
+            'Sample2': {'collection_timestamp': datetime(2015, 6, 2, 7, 0, 0),
+                        'physical_specimen_location': 'location1',
+                        'taxon_id': 9606,
+                        'scientific_name': 'homo sapiens'},
+            'Sample3': {'collection_timestamp': datetime(2015, 6, 3, 7, 0, 0),
+                        'physical_specimen_location': 'location1',
+                        'taxon_id': 9606,
+                        'scientific_name': 'homo sapiens'},
+        }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        SampleTemplate.create(metadata, study)
+        metadata_dict = {
+            'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                        'center_name': 'KnightLab',
+                        'platform': 'ILLUMINA',
+                        'instrument_model': 'Illumina MiSeq',
+                        'library_construction_protocol': 'Protocol ABC',
+                        'experiment_design_description': "Random value 1"},
+            'Sample2': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                        'center_name': 'KnightLab',
+                        'platform': 'ILLUMINA',
+                        'instrument_model': 'Illumina MiSeq',
+                        'library_construction_protocol': 'Protocol ABC',
+                        'experiment_design_description': "Random value 2"},
+            'Sample3': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                        'center_name': 'KnightLab',
+                        'platform': 'ILLUMINA',
+                        'instrument_model': 'Illumina MiSeq',
+                        'library_construction_protocol': 'Protocol ABC',
+                        'experiment_design_description': "Random value 3"},
+        }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        pt = PrepTemplate.create(metadata, study, "16S", 'Metagenomics')
+        return self.write_demux_files(pt, study_id=study.id)
+
     def test_init_exceptions(self):
         # not a valid action
         with self.assertRaises(EBISubmissionError):
@@ -389,7 +458,50 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertEqual(obs, exp)
 
     def test_generate_xml_files(self):
+        ppd = self.generate_new_study_with_preprocessed_data()
+        e = EBISubmission(ppd.id, 'ADD')
+        e.generate_demultiplexed_fastq()
+        self.assertIsNone(e.run_xml_fp)
+        self.assertIsNone(e.experiment_xml_fp)
+        self.assertIsNone(e.sample_xml_fp)
+        self.assertIsNone(e.study_xml_fp)
+        self.assertIsNone(e.submission_xml_fp)
+        e.generate_xml_files()
+        self.assertIsNotNone(e.run_xml_fp)
+        self.assertIsNotNone(e.experiment_xml_fp)
+        self.assertIsNotNone(e.sample_xml_fp)
+        self.assertIsNotNone(e.study_xml_fp)
+        self.assertIsNotNone(e.submission_xml_fp)
+
+        ppd = self.genereate_new_prep_template_and_write_demux_files(True)
+        e = EBISubmission(ppd.id, 'ADD')
+        e.generate_demultiplexed_fastq()
+        self.assertIsNone(e.run_xml_fp)
+        self.assertIsNone(e.experiment_xml_fp)
+        self.assertIsNone(e.sample_xml_fp)
+        self.assertIsNone(e.study_xml_fp)
+        self.assertIsNone(e.submission_xml_fp)
+        e.generate_xml_files()
+        self.assertIsNotNone(e.run_xml_fp)
+        self.assertIsNotNone(e.experiment_xml_fp)
+        self.assertIsNone(e.sample_xml_fp)
+        self.assertIsNone(e.study_xml_fp)
+        self.assertIsNotNone(e.submission_xml_fp)
+
         ppd = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(ppd.id, 'ADD')
+        e.generate_demultiplexed_fastq()
+        self.assertIsNone(e.run_xml_fp)
+        self.assertIsNone(e.experiment_xml_fp)
+        self.assertIsNone(e.sample_xml_fp)
+        self.assertIsNone(e.study_xml_fp)
+        self.assertIsNone(e.submission_xml_fp)
+        e.generate_xml_files()
+        self.assertIsNotNone(e.run_xml_fp)
+        self.assertIsNone(e.experiment_xml_fp)
+        self.assertIsNone(e.sample_xml_fp)
+        self.assertIsNone(e.study_xml_fp)
+        self.assertIsNotNone(e.submission_xml_fp)
 
     def test_generate_demultiplexed_fastq(self):
         # generating demux file for testing

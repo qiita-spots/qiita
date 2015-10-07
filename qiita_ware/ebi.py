@@ -7,7 +7,7 @@ from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
 
-from future.utils import viewitems, viewvalues
+from future.utils import viewitems, viewvalues, viewkeys
 from skbio.util import safe_md5, create_dir
 
 from qiita_core.qiita_settings import qiita_config
@@ -350,7 +350,7 @@ class EBISubmission(object):
 
         return study_set
 
-    def generate_sample_xml(self):
+    def generate_sample_xml(self, samples=None):
         """Generates the sample XML file
 
         Returns
@@ -361,6 +361,8 @@ class EBISubmission(object):
         sample_set = ET.Element('SAMPLE_SET', {
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "sample"})
+
+        # samples = samples if samples is not None else viewkeys(self.samples)
 
         for sample_name, sample_info in sorted(viewitems(self.samples)):
             sample_info = dict(sample_info)
@@ -573,23 +575,26 @@ class EBISubmission(object):
 
         actions = ET.SubElement(submission, 'ACTIONS')
 
-        study_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(study_action, self.action, {
-            'schema': 'study',
-            'source': basename(self.study_xml_fp)}
-        )
+        if self.study_xml_fp:
+            study_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(study_action, self.action, {
+                'schema': 'study',
+                'source': basename(self.study_xml_fp)}
+            )
 
-        sample_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(sample_action, self.action, {
-            'schema': 'sample',
-            'source': basename(self.sample_xml_fp)}
-        )
+        if self.sample_xml_fp:
+            sample_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(sample_action, self.action, {
+                'schema': 'sample',
+                'source': basename(self.sample_xml_fp)}
+            )
 
-        experiment_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(experiment_action, self.action, {
-            'schema': 'experiment',
-            'source': basename(self.experiment_xml_fp)}
-        )
+        if self.experiment_xml_fp:
+            experiment_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(experiment_action, self.action, {
+                'schema': 'experiment',
+                'source': basename(self.experiment_xml_fp)}
+            )
 
         run_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(run_action, self.action, {
@@ -622,33 +627,7 @@ class EBISubmission(object):
 
     def generate_xml_files(self):
         """Generate the XML files"""
-        get_output_fp = partial(join, self.xml_dir, 'xml_dir')
-
-        # Generate the run.xml as it should always be generated
-        self.run_xml_fp = get_output_fp('run.xml')
-        self.write_xml_file(self.generate_run_xml(), self.run_xml_fp)
-
-        # The experiment.xml needs to be generated if and only if the
-        # samples in the prep template do not have an ebi_experiment_accession
-        # number
-        bool_array = [acc is None
-                      for acc in viewvalues(
-                          self.prep_template.ebi_experiment_accessions)]
-        # Since we don't allow new samples to be added to a prep template
-        # once it has been submitted, either all samples have the submission
-        # number or none of them has it. By doing the ANY xor ALL, we can check
-        # if that is the case, and raise an error only if some samples have
-        # an ebi_experiment_accession
-        all_bool_array = all(bool_array)
-        if any(bool_array) != all_bool_array:
-            raise EBISubmissionError(
-                "There are samples in the prep template %d that have an "
-                "ebi_experiment_accession, but not all of them have it. This "
-                "is not supported by the system." % self.prep_template.id)
-        if not all_bool_array:
-            self.experiment_xml_fp = get_output_fp('experiment.xml')
-            self.write_xml_file(self.generate_experiment_xml(),
-                                self.experiment_xml_fp)
+        get_output_fp = partial(join, self.xml_dir)
 
         # The study.xml file needs to be generated if and only if the study
         # does NOT have an ebi_study_accession
@@ -667,6 +646,32 @@ class EBISubmission(object):
             self.sample_xml_fp = get_output_fp('sample.xml')
             self.write_xml_file(self.generate_sample_xml(new_samples),
                                 self.sample_xml_fp)
+
+        # The experiment.xml needs to be generated if and only if the
+        # samples in the prep template do not have an ebi_experiment_accession
+        # number
+        bool_array = [acc is None
+                      for acc in viewvalues(
+                          self.prep_template.ebi_experiment_accessions)]
+        # Since we don't allow new samples to be added to a prep template
+        # once it has been submitted, either all samples have the submission
+        # number or none of them have it. By doing the ANY xor ALL, we can
+        # check if that is the case, and raise an error only if some samples
+        # have an ebi_experiment_accession
+        all_bool_array = all(bool_array)
+        if any(bool_array) != all_bool_array:
+            raise EBISubmissionError(
+                "There are samples in the prep template %d that have an "
+                "ebi_experiment_accession, but not all of them have it. This "
+                "is not supported by the system." % self.prep_template.id)
+        if not all_bool_array:
+            self.experiment_xml_fp = get_output_fp('experiment.xml')
+            self.write_xml_file(self.generate_experiment_xml(),
+                                self.experiment_xml_fp)
+
+        # Generate the run.xml as it should always be generated
+        self.run_xml_fp = get_output_fp('run.xml')
+        self.write_xml_file(self.generate_run_xml(), self.run_xml_fp)
 
         # The submission.xml is always generated
         self.submission_xml_fp = get_output_fp('submission.xml')
