@@ -799,11 +799,15 @@ class EBISubmission(object):
                                      % curl_result)
 
         study_elem = root.findall("STUDY")
-        if len(study_elem) > 1:
-            raise EBISubmissionError(
-                "Multiple study tags found in EBI reply: %d" % len(study_elem))
-        study_elem = study_elem[0]
-        study_accession = study_elem.get('accession')
+        if study_elem:
+            if len(study_elem) > 1:
+                raise EBISubmissionError(
+                    "Multiple study tags found in EBI reply: %d"
+                    % len(study_elem))
+            study_elem = study_elem[0]
+            study_accession = study_elem.get('accession')
+        else:
+            study_accession = None
 
         sample_accessions = {}
         biosample_accessions = {}

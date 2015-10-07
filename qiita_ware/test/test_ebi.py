@@ -537,11 +537,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         e = EBISubmission(ppd.id, 'ADD')
         e.generate_demultiplexed_fastq()
         self.files_to_remove.append(e.ebi_dir)
-        e.write_xml_file(e.generate_study_xml(), e.study_xml_fp)
-        e.write_xml_file(e.generate_sample_xml(), e.sample_xml_fp)
-        e.write_xml_file(e.generate_experiment_xml(), e.experiment_xml_fp)
-        e.write_xml_file(e.generate_run_xml(), e.run_xml_fp)
-        e.write_xml_file(e.generate_submission_xml(), e.submission_xml_fp)
+        e.generate_xml_files()
         obs = e.generate_send_sequences_cmd()
         exp = ['ascp --ignore-host-key -L- -d -QT -k2 '
                '/tmp/ebi_submission_3/1.SKB2.640194.fastq.gz '
@@ -573,8 +569,34 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertEqual(obs, exp)
 
     def test_parse_EBI_reply(self):
+        ppd = self.generate_new_study_with_preprocessed_data()
+        e = EBISubmission(ppd.id, 'ADD')
+        e.generate_demultiplexed_fastq(mtime=1)
+        e.generate_xml_files()
+        curl_result = CURL_RESULT.format(qiita_config.ebi_organization_prefix,
+                                         ppd.id)
+        stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(curl_result)
+
         ppd = self.write_demux_files(PrepTemplate(1))
         e = EBISubmission(ppd.id, 'ADD')
+        self.assertEqual(stacc, 'ERP000000')
+        study_id = ppd.study
+        exp_saacc = {'%d.Sample1' % study_id: 'ERS000000',
+                     '%d.Sample2' % study_id: 'ERS000001',
+                     '%d.Sample3' % study_id: 'ERS000002'}
+        self.assertEqual(saacc, exp_saacc)
+        exp_bioacc = {'%d.Sample1' % study_id: 'SAMEA0000000',
+                      '%d.Sample2' % study_id: 'SAMEA0000001',
+                      '%d.Sample3' % study_id: 'SAMEA0000002'}
+        self.assertEqual(bioacc, exp_bioacc)
+        exp_exacc = {'%d.Sample1' % study_id: 'ERX0000000',
+                     '%d.Sample2' % study_id: 'ERX0000001',
+                     '%d.Sample3' % study_id: 'ERX0000002'}
+        self.assertEqual(exacc, exp_exacc)
+        exp_runacc = {'%d.Sample1' % study_id: 'ERR0000000',
+                      '%d.Sample2' % study_id: 'ERR0000001',
+                      '%d.Sample3' % study_id: 'ERR0000002'}
+        self.assertEqual(runacc, exp_runacc)
 
         # removing samples so test text is easier to read
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
@@ -586,11 +608,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         # Genereate the XML files so the aliases are generated
         # and stored internally
         e.generate_demultiplexed_fastq(mtime=1)
-        e.generate_study_xml()
-        e.generate_sample_xml()
-        e.generate_experiment_xml()
-        e.generate_run_xml()
-        e.generate_submission_xml()
+        e.generate_xml_files()
 
         curl_result = ""
         with self.assertRaises(EBISubmissionError):
