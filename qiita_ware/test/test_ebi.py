@@ -167,6 +167,9 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         exp = ''.join([l.strip() for l in SAMPLEXML.splitlines()])
         self.assertEqual(obs, exp)
 
+        obs = ET.tostring(submission.generate_sample_xml(samples=[]))
+        self.assertEqual(obs, exp)
+
     def test_generate_spot_descriptor(self):
         e = EBISubmission(2, 'ADD')
         elm = ET.Element('design', {'foo': 'bar'})
