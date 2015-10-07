@@ -112,10 +112,14 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
 
         ebi_submission.study.ebi_submission_status = 'submitted'
-        ebi_submission.study.ebi_study_accession = st_acc
-        ebi_submission.sample_template.ebi_sample_accessions = sa_acc
-        ebi_submission.sample_template.biosample_accessions = bio_acc
-        ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
+        if st_acc:
+            ebi_submission.study.ebi_study_accession = st_acc
+        if sa_acc:
+            ebi_submission.sample_template.ebi_sample_accessions = sa_acc
+        if bio_acc:
+            ebi_submission.sample_template.biosample_accessions = bio_acc
+        if ex_acc:
+            ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
         ebi_submission.preprocessed_data.ebi_run_accessions = run_acc
     else:
         st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
