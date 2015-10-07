@@ -1,6 +1,7 @@
 -- September 22, 2015
 -- Update the database schema to be able to store all the information that EBI
 -- returns, and it is needed to perform further modifications/additions
+-- to the information already present in EBI
 
 ALTER TABLE qiita.prep_template_sample ADD ebi_experiment_accession varchar  ;
 ALTER TABLE qiita.study ADD ebi_study_accession varchar  ;

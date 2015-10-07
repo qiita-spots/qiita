@@ -128,8 +128,8 @@ class EBISubmission(object):
         self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
 
         if self.preprocessed_data.is_submitted_to_ebi:
-            error_msg = ("Cannot resubmit! Preprocessed data %d has been "
-                         "already submitted to EBI.")
+            error_msg = ("Cannot resubmit! Preprocessed data %d has already "
+                         "been submitted to EBI.")
             LogEntry.create('Runtime', error_msg)
             raise EBISubmissionError(error_msg)
 
@@ -762,20 +762,18 @@ class EBISubmission(object):
 
         Returns
         -------
-        bool
-            If the submission was successful or not
-        study_accession : str
+        str
             The study accession number. None in case of failure
-        sample_accessions : dict of {str: str}
+        dict of {str: str}
             The sample accession numbers, keyed by sample id. None in case of
             failure
-        biosample_accessions : dict of {str: str}
+        dict of {str: str}
             The biosample accession numbers, keyed by sample id. None in case
             of failure
-        experiment_accessions : dict of {str: str}
+        dict of {str: str}
             The experiment accession numbers, keyed by sample id. None in case
             of failure
-        run_accessions : dict of {str: str}
+        dict of {str: str}
             The run accession numbers, keyed by sample id. None in case of
             failure
 
@@ -789,9 +787,13 @@ class EBISubmission(object):
         try:
             root = ET.fromstring(curl_result)
         except ParseError:
+            error_msg = ("The curl result from the EBI submission doesn't "
+                         "look like an XML file:\n%s" % curl_result)
+            le = LogEntry.create('Runtime', error_msg)
             raise EBISubmissionError(
                 "The curl result from the EBI submission doesn't look like "
-                "an XML file:\n%s" % curl_result)
+                "an XML file. Contact and admin for more information. "
+                "Log id: %d" % le.id)
 
         success = root.get('success') == 'true'
         if not success:

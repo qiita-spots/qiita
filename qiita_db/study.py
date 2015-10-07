@@ -110,6 +110,9 @@ from .sql_connection import TRN
 from .util import exists_table
 
 
+_VALID_EBI_STATUS = ('not submitted', 'submitting', 'submitted')
+
+
 class Study(QiitaObject):
     r"""Study object to access to the Qiita Study information
 
@@ -673,6 +676,11 @@ class Study(QiitaObject):
         Returns
         -------
         SampleTemplate id
+
+        Note
+        ----
+        If the study doesn't have a sample template associated with it, it will
+        return `-1`.
         """
         with TRN:
             sql = """SELECT EXISTS(SELECT *
@@ -680,7 +688,7 @@ class Study(QiitaObject):
                                    WHERE study_id = %s)"""
             TRN.add(sql, [self.id])
             exists = TRN.execute_fetchlast()
-        return self._id if exists else None
+        return self._id if exists else -1
 
     @property
     def data_types(self):
@@ -859,7 +867,7 @@ class Study(QiitaObject):
 
         Parameters
         ----------
-        value = str
+        value : str {%s}
             The new EBI submission status
 
         Raises
@@ -867,7 +875,7 @@ class Study(QiitaObject):
         ValueError
             If the status is not known
         """
-        if not (value in ('not submitted', 'submitting', 'submitted') or
+        if not (value in _VALID_EBI_STATUS or
                 value.startswith('failed')):
             raise ValueError("Unknown status: %s" % value)
         with TRN:
@@ -876,6 +884,8 @@ class Study(QiitaObject):
                      WHERE study_id = %s""".format(self._table)
             TRN.add(sql, [value, self.id])
             TRN.execute()
+
+    ebi_submission_status.__doc__.format(', '.join(_VALID_EBI_STATUS))
 
     # --- methods ---
     def raw_data(self, data_type=None):
