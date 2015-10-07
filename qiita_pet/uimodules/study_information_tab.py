@@ -62,6 +62,10 @@ class StudyInformationTab(BaseUIModule):
         show_select_sample = (
             study.status == 'sandbox' or self.current_user.level == 'admin')
 
+        # Ebi information
+        ebi_status = study.ebi_submission_status
+        ebi_accession = study.ebi_study_accession
+
         return self.render_string(
             "study_description_templates/study_information_tab.html",
             abstract=abstract,
@@ -77,4 +81,6 @@ class StudyInformationTab(BaseUIModule):
             study_id=study.id,
             sample_templates=sample_templates,
             is_local_request=is_local_request,
-            data_types=data_types)
+            data_types=data_types,
+            ebi_status=ebi_status,
+            ebi_accession=ebi_accession)

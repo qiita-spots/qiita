@@ -37,9 +37,6 @@ class PreprocessedDataInfoTab(BaseUIModule):
     def render(self, study_id, preprocessed_data):
         user = self.current_user
         ppd_id = preprocessed_data.id
-        ebi_status = preprocessed_data.submitted_to_insdc_status()
-        ebi_study_accession = preprocessed_data.ebi_study_accession
-        ebi_submission_accession = preprocessed_data.ebi_submission_accession
         vamps_status = preprocessed_data.submitted_to_vamps_status()
         filepaths = preprocessed_data.get_filepaths()
         is_local_request = is_localhost(self.request.headers['host'])
@@ -80,9 +77,6 @@ class PreprocessedDataInfoTab(BaseUIModule):
             "study_description_templates/preprocessed_data_info_tab.html",
             ppd_id=ppd_id,
             show_ebi_btn=show_ebi_btn,
-            ebi_status=ebi_status,
-            ebi_study_accession=ebi_study_accession,
-            ebi_submission_accession=ebi_submission_accession,
             filepaths=filepaths,
             is_local_request=is_local_request,
             prep_template_id=prep_template_id,
