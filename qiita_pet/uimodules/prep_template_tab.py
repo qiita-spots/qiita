@@ -75,7 +75,8 @@ def _template_generator(study, full_access):
     for pt_id in sorted(study.prep_templates()):
         pt = PrepTemplate(pt_id)
         if full_access or pt.status == 'public':
-            yield (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status])
+            yield (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status],
+                   pt.is_submitted_to_ebi)
 
 
 class PrepTemplateTab(BaseUIModule):
