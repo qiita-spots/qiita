@@ -700,3 +700,24 @@ class PrepTemplate(MetadataTemplate):
             If a sample in `value` already has an accession number
         """
         self._update_accession_numbers('ebi_experiment_accession', value)
+
+    @property
+    def is_submitted_to_ebi(self):
+        """Gets if the prep template has been submitted to EBI or not
+
+        Returns
+        -------
+        bool
+            True if the prep template has been submitted to EBI,
+            false otherwise
+        """
+        with TRN:
+            sql = """SELECT EXISTS(
+                        SELECT sample_id, ebi_experiment_accession
+                        FROM qiita.{0}
+                        WHERE {1}=%s
+                            AND ebi_experiment_accession IS NOT NULL)
+                  """.format(self._table, self._id_column)
+            TRN.add(sql, [self.id])
+            is_submitted = TRN.execute_fetchlast()
+        return is_submitted
