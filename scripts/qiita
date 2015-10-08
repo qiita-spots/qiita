@@ -354,10 +354,8 @@ def remove_study(portal, studies):
 @click.option('--send/--no-send', default=False, help="Controls whether or "
               "not sequence files and metadata will actually be sent to EBI "
               "(default is to generate all the files, but not to send)")
-@click.option('--fastq-dir', type=click.Path(exists=True, file_okay=False,
-                                             resolve_path=True))
 def submit(preprocessed_data_id, action, send, fastq_dir):
-    _submit_EBI(preprocessed_data_id, action, send, fastq_dir)
+    _submit_EBI(preprocessed_data_id, action, send)
 
 
 # #############################################################################

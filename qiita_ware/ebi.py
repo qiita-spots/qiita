@@ -23,24 +23,6 @@ from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 
 
-class InvalidMetadataError(Exception):
-    """Error that is raised when metadata is not representable as a string"""
-    pass
-
-
-class SampleAlreadyExistsError(Exception):
-    """Error that is raised when a sample is added to a submission that already
-    has a sample by that name"""
-    pass
-
-
-class NoXMLError(Exception):
-    """Error that is raised when the generation of one XML file cannot be
-    completed because it depends on another XML file that has not yet been
-    generated"""
-    pass
-
-
 def clean_whitespace(text):
     """Standardizes whitespaces so there is only one space separating tokens
 
@@ -161,6 +143,8 @@ class EBISubmission(object):
         _, base_fp = get_mountpoint("preprocessed_data")[0]
         self.ebi_dir = '%d_ebi_submission' % preprocessed_data_id
         self.full_ebi_dir = join(base_fp, self.ebi_dir)
+        self.ascp_reply = join(self.full_ebi_dir, 'ascp_reply.txt')
+        self.curl_reply = join(self.full_ebi_dir, 'curl_reply.xml')
         self.xml_dir = join(self.full_ebi_dir, 'xml_dir')
         self.study_xml_fp = None
         self.sample_xml_fp = None

@@ -10,6 +10,10 @@ from os.path import join, isdir
 from shutil import rmtree
 from tarfile import open as taropen
 from tempfile import mkdtemp
+from os import environ
+from traceback import format_exc
+from subprocess import call
+from shlex import split as shsplit
 
 from moi.job import system_call
 from qiita_db.study import Study
@@ -19,11 +23,9 @@ from qiita_db.logger import LogEntry
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import ComputeError, EBISubmissionError
-from traceback import format_exc
-from os import environ
 
 
-def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
+def submit_EBI(preprocessed_data_id, action, send):
     """Submit a preprocessed data to EBI
 
     Parameters
@@ -34,27 +36,19 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         The action to perform with this data
     send : bool
         True to actually send the files
-    fastq_dir_fp : str, optional
-        The fastq filepath
-
-    Notes
-    -----
-    If fastq_dir_fp is passed, it must not contain any empty files, or
-    gzipped empty files
     """
     # step 1: init and validate
     ebi_submission = EBISubmission(preprocessed_data_id, action)
 
     # step 2: generate demux fastq files
-    ebi_submission.preprocessed_data.update_insdc_status('demuxing samples')
+    ebi_submission.study.ebi_submission_status = 'submitting'
     try:
         ebi_submission.generate_demultiplexed_fastq()
     except:
         error_msg = format_exc()
-        if isdir(ebi_submission.ebi_dir):
-            rmtree(ebi_submission.ebi_dir)
-        ebi_submission.preprocessed_data.update_insdc_status(
-            'failed: %s' % error_msg)
+        if isdir(ebi_submission.full_ebi_dir):
+            rmtree(ebi_submission.full_ebi_dir)
+        ebi_submission.study.ebi_submission_status = 'failed: %s' % error_msg
         LogEntry.create('Runtime', error_msg,
                         info={'ebi_submission': preprocessed_data_id})
         raise
@@ -66,34 +60,42 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         # step 4: sending sequences
         old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
         environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
-        seqs_cmds = ebi_submission.generate_send_sequences_cmd()
+
         LogEntry.create('Runtime',
                         ("Submitting sequences for pre_processed_id: "
                          "%d" % preprocessed_data_id))
-        try:
-            # place holder for moi call see #1477
-            pass
-        except:
-            LogEntry.create('Fatal', seqs_cmds,
-                            info={'ebi_submission': preprocessed_data_id})
-        else:
-            LogEntry.create('Runtime',
-                            ('Submission of sequences of pre_processed_id: '
-                             '%d completed successfully' %
-                             preprocessed_data_id))
+        for cmd in ebi_submission.generate_send_sequences_cmd():
+            cmd_pieces = shsplit(cmd)
+            try:
+                call(cmd_pieces, stdout=open(ebi_submission.ascp_reply, 'a'))
+            except:
+                with open(ebi_submission.ascp_reply, 'r') as f:
+                    content = f.read()
+                ebi_submission.study.ebi_submission_status = (
+                    "failed: ASCP - %s" % content)
+                LogEntry.create('Fatal', content,
+                                info={
+                                    'ebi_submission': preprocessed_data_id,
+                                    'fail': cmd})
+        LogEntry.create('Runtime',
+                        ('Submission of sequences of pre_processed_id: '
+                         '%d completed successfully' %
+                         preprocessed_data_id))
         environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
         # step 5: sending xml and parsing answer
-        xmls_cmds = ebi_submission.generate_curl_command()
+        xmls_cmds = shsplit(ebi_submission.generate_curl_command())
         LogEntry.create('Runtime',
                         ("Submitting XMLs for pre_processed_id: "
                          "%d" % preprocessed_data_id))
         try:
-            # place holder for moi call see #1477
-            xmls_cmds_moi = xmls_cmds
+            call(xmls_cmds, stdout=open(ebi_submission.curl_reply, 'w'))
+            with open(ebi_submission.curl_reply, 'r') as f:
+                xml_content = f.read()
         except:
-            # handle exception
-            LogEntry.create('Fatal', seqs_cmds,
+            with open(ebi_submission.curl_reply, 'r') as f:
+                xml_content = f.read()
+            LogEntry.create('Fatal', xml_content,
                             info={'ebi_submission': preprocessed_data_id})
         else:
             LogEntry.create('Runtime',
@@ -103,10 +105,10 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
 
         try:
             st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
-                ebi_submission.parse_EBI_reply(xmls_cmds_moi)
+                ebi_submission.parse_EBI_reply(xml_content)
         except EBISubmissionError as e:
             le = LogEntry.create(
-                'Fatal', "Command: %s\nError: %s\n" % (xmls_cmds_moi, str(e)),
+                'Fatal', "Command: %s\nError: %s\n" % (xml_content, str(e)),
                 info={'ebi_submission': preprocessed_data_id})
             ebi_submission.preprocessed_data.update_insdc_status('failed')
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)

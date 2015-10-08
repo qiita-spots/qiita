@@ -78,6 +78,8 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertItemsEqual(e.pmids, ['123456', '7891011'])
         self.assertEqual(e.action, action)
 
+        self.assertEqual(e.ascp_reply, join(e.full_ebi_dir, 'ascp_reply.txt'))
+        self.assertEqual(e.curl_reply, join(e.full_ebi_dir, 'curl_reply.xml'))
         get_output_fp = partial(join, e.full_ebi_dir)
         self.assertEqual(e.xml_dir, get_output_fp('xml_dir'))
         self.assertIsNone(e.study_xml_fp)
