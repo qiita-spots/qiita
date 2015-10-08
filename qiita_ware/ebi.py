@@ -361,7 +361,8 @@ class EBISubmission(object):
         Parameters
         ----------
         samples : list of str, optional
-            The list of samples to be included in the sample xml
+            The list of samples to be included in the sample xml. If not
+            provided or an empty list is provided, all the samples are used
 
         Returns
         -------
@@ -372,7 +373,8 @@ class EBISubmission(object):
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "sample"})
 
-        samples = samples if samples is not None else viewkeys(self.samples)
+        if not samples:
+            samples = viewkeys(self.samples)
 
         for sample_name in sorted(samples):
             sample_info = dict(self.samples[sample_name])
@@ -653,7 +655,7 @@ class EBISubmission(object):
         ET.ElementTree(element).write(fp, encoding='UTF-8')
 
     def generate_xml_files(self):
-        """Generate the XML files"""
+        """Generate all the XML files"""
         get_output_fp = partial(join, self.xml_dir)
 
         # The study.xml file needs to be generated if and only if the study
