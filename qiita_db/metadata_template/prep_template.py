@@ -703,7 +703,7 @@ class PrepTemplate(MetadataTemplate):
 
     @property
     def is_submitted_to_ebi(self):
-        """Gets if the prep template has been submitted to EBI or not
+        """Inquires if the prep template has been submitted to EBI or not
 
         Returns
         -------
