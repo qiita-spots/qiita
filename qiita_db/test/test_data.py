@@ -604,6 +604,43 @@ class PreprocessedDataTests(TestCase):
         self.assertEqual(PreprocessedData(1).ebi_run_accessions, exp,)
         self.assertEqual(PreprocessedData(2).ebi_run_accessions, [])
 
+    def test_ebi_run_accessions_setter(self):
+        new_vals = {
+            '1.SKB1.640202': 'ERR1000001',
+            '1.SKB2.640194': 'ERR1000002',
+            '1.SKB3.640195': 'ERR1000003',
+            '1.SKB4.640189': 'ERR1000004',
+            '1.SKB5.640181': 'ERR1000005',
+            '1.SKB6.640176': 'ERR1000006',
+            '1.SKB7.640196': 'ERR1000007',
+            '1.SKB8.640193': 'ERR1000008',
+            '1.SKB9.640200': 'ERR1000009',
+            '1.SKD1.640179': 'ERR1000010',
+            '1.SKD2.640178': 'ERR1000011',
+            '1.SKD3.640198': 'ERR1000012',
+            '1.SKD4.640185': 'ERR1000013',
+            '1.SKD5.640186': 'ERR1000014',
+            '1.SKD6.640190': 'ERR1000015',
+            '1.SKD7.640191': 'ERR1000016',
+            '1.SKD8.640184': 'ERR1000017',
+            '1.SKD9.640182': 'ERR1000018',
+            '1.SKM1.640183': 'ERR1000019',
+            '1.SKM2.640199': 'ERR1000020',
+            '1.SKM3.640197': 'ERR1000021',
+            '1.SKM4.640180': 'ERR1000022',
+            '1.SKM5.640177': 'ERR1000023',
+            '1.SKM6.640187': 'ERR1000024',
+            '1.SKM7.640188': 'ERR1000025',
+            '1.SKM8.640201': 'ERR1000026',
+            '1.SKM9.640192': 'ERR1000027'}
+        with self.assertRaises(QiitaDBError):
+            PreprocessedData(1).ebi_run_accessions = new_vals
+
+        ppd = PreprocessedData(2)
+        self.assertEqual(ppd.ebi_run_accessions, [])
+        ppd.ebi_run_accessions = new_vals
+        self.assertEqual(ppd.ebi_run_accessions, sorted(new_vals.values()))
+
 
 @qiita_test_checker()
 class ProcessedDataTests(TestCase):
