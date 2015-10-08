@@ -42,6 +42,7 @@ STATUS_STYLER = {
 ebi_linkifier = ('<a href="http://www.ebi.ac.uk/ena/data/view/{0}" '
                  'target="_blank">{0}</a>')
 
+
 def linkify(link_template, item):
     """Formats a strings into a URL using string replacement
 
