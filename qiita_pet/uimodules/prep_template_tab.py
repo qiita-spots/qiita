@@ -22,7 +22,7 @@ from qiita_db.metadata_template import (PrepTemplate, TARGET_GENE_DATA_TYPES,
                                         PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
-from qiita_pet.util import STATUS_STYLER, is_localhost, ebi_linkifier
+from qiita_pet.util import STATUS_STYLER, is_localhost, EBI_LINKIFIER
 from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
 from qiita_core.util import execute_as_transaction
@@ -228,7 +228,7 @@ class PrepTemplateInfoTab(BaseUIModule):
 
         ebi_link = None
         if prep_template.is_submitted_to_ebi:
-            ebi_link = ebi_linkifier.format(study.ebi_study_accession)
+            ebi_link = EBI_LINKIFIER.format(study.ebi_study_accession)
 
         return self.render_string(
             "study_description_templates/prep_template_info_tab.html",

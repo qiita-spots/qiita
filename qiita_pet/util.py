@@ -39,7 +39,7 @@ STATUS_STYLER = {
     'public':
         ('glyphicon glyphicon-eye-open', 'glyphicon glyphicon-globe', 'green')}
 
-ebi_linkifier = ('<a href="http://www.ebi.ac.uk/ena/data/view/{0}" '
+EBI_LINKIFIER = ('<a href="http://www.ebi.ac.uk/ena/data/view/{0}" '
                  'target="_blank">{0}</a>')
 
 
