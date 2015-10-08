@@ -712,17 +712,18 @@ class EBISubmission(object):
         # make sure that the XML files have been generated
         url = '?auth=ENA%20{0}%20{1}'.format(quote(ebi_seq_xfer_user),
                                              quote(ebi_seq_xfer_pass))
-        curl_command = (
-            'curl -k -F "SUBMISSION=@{0}" -F "STUDY=@{1}" -F "SAMPLE=@{2}" '
-            '-F "RUN=@{3}" -F "EXPERIMENT=@{4}" "{5}"'
-        ).format(
-            self.submission_xml_fp,
-            self.study_xml_fp,
-            self.sample_xml_fp,
-            self.run_xml_fp,
-            self.experiment_xml_fp,
-            join(ebi_dropbox_url, url)
-        )
+        curl_command = 'curl -sS -k'
+        if self.submission_xml_fp is not None:
+            curl_command += ' -F "SUBMISSION=@%s"' % self.submission_xml_fp
+        if self.study_xml_fp is not None:
+            curl_command += ' -F "STUDY=@%s"' % self.study_xml_fp
+        if self.sample_xml_fp is not None:
+            curl_command += ' -F "SAMPLE=@%s"' % self.sample_xml_fp
+        if self.run_xml_fp is not None:
+            curl_command += ' -F "RUN=@%s"' % self.run_xml_fp
+        if self.experiment_xml_fp is not None:
+            curl_command += ' -F "EXPERIMENT=@%s"' % self.experiment_xml_fp
+        curl_command += ' "' + join(ebi_dropbox_url, url) + '"'
 
         return curl_command
 
@@ -744,7 +745,7 @@ class EBISubmission(object):
         fastqs_div = [fastqs[i::10] for i in range(10) if fastqs[i::10]]
         ascp_commands = []
         for f in fastqs_div:
-            ascp_commands.append('ascp --ignore-host-key -L- -d -QT -k2 '
+            ascp_commands.append('ascp --ignore-host-key -d -QT -k2 '
                                  '{0} {1}@{2}:./{3}/'.format(
                                      ' '.join(f),
                                      qiita_config.ebi_seq_xfer_user,

@@ -232,7 +232,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
                                                test_ebi_seq_xfer_pass,
                                                test_ebi_dropbox_url)
-        exp = ('curl -k '
+        exp = ('curl -sS -k '
                '-F "SUBMISSION=@/some/path/submission.xml" '
                '-F "STUDY=@/some/path/study.xml" '
                '-F "SAMPLE=@/some/path/sample.xml" '
@@ -599,31 +599,31 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         e.generate_xml_files()
         obs = e.generate_send_sequences_cmd()
         _, base_fp = get_mountpoint("preprocessed_data")[0]
-        exp = ('ascp --ignore-host-key -L- -d -QT -k2 '
+        exp = ('ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKB2.640194.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
-               'ascp --ignore-host-key -L- -d -QT -k2 '
+               'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM4.640180.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
-               'ascp --ignore-host-key -L- -d -QT -k2 '
+               'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKB3.640195.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
-               'ascp --ignore-host-key -L- -d -QT -k2 '
+               'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKB6.640176.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
-               'ascp --ignore-host-key -L- -d -QT -k2 '
+               'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKD6.640190.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
-               'ascp --ignore-host-key -L- -d -QT -k2 '
+               'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM6.640187.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
-               'ascp --ignore-host-key -L- -d -QT -k2 '
+               'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKD9.640182.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
-               'ascp --ignore-host-key -L- -d -QT -k2 '
+               'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM8.640201.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
-               'ascp --ignore-host-key -L- -d -QT -k2 '
+               'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM2.640199.fastq.gz '
                'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/' % {
                    'ebi_dir': e.full_ebi_dir}).split('\n')

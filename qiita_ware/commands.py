@@ -110,7 +110,8 @@ def submit_EBI(preprocessed_data_id, action, send):
             le = LogEntry.create(
                 'Fatal', "Command: %s\nError: %s\n" % (xml_content, str(e)),
                 info={'ebi_submission': preprocessed_data_id})
-            ebi_submission.preprocessed_data.update_insdc_status('failed')
+            ebi_submission.study.ebi_submission_status = (
+                "failed: XML submission, log id: %d" % le.id)
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
 
         ebi_submission.study.ebi_submission_status = 'submitted'
