@@ -16,7 +16,7 @@ from qiita_pet.util import convert_text_html
 from qiita_db.parameters import ProcessedSortmernaParams
 from .base_uimodule import BaseUIModule
 from qiita_pet.util import (generate_param_str, STATUS_STYLER,
-                            is_localhost, ebi_linkifier)
+                            is_localhost, EBI_LINKIFIER)
 
 
 class PreprocessedDataTab(BaseUIModule):
@@ -77,7 +77,7 @@ class PreprocessedDataInfoTab(BaseUIModule):
 
         ebi_link = None
         if preprocessed_data.is_submitted_to_ebi:
-            ebi_link = ebi_linkifier.format(
+            ebi_link = EBI_LINKIFIER.format(
                 Study(study_id).ebi_study_accession)
 
         return self.render_string(
