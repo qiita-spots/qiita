@@ -820,7 +820,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertEqual(set(pt.categories()), exp_categories)
+        self.assertItemsEqual(pt.categories(), exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'barcode': 'CCTCTGAGAGCT',
@@ -950,7 +950,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                           'instrument_model', 'experiment_design_description',
                           'library_construction_protocol', 'center_name',
                           'center_project_name', 'emp_status'}
-        self.assertEqual(set(pt.categories()), exp_categories)
+        self.assertItemsEqual(pt.categories(), exp_categories)
         exp_dict = {
             '%s.SKB7.640196' % self.test_study.id: {
                 'ebi_submission_accession': None,

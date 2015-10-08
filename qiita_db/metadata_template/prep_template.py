@@ -697,7 +697,6 @@ class PrepTemplate(MetadataTemplate):
         Raises
         ------
         QiitaDBError
-            If value tries to change the accession number of a sample that
-            already has an accession number assigned
+            If a sample in `value` already has an accession number
         """
         self._update_accession_numbers('ebi_experiment_accession', value)

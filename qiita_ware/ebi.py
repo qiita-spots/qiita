@@ -8,7 +8,7 @@ from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
 
-from future.utils import viewitems
+from future.utils import viewitems, viewkeys
 from skbio.util import safe_md5, create_dir
 
 from qiita_core.qiita_settings import qiita_config
@@ -129,8 +129,8 @@ class EBISubmission(object):
         self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
 
         if self.preprocessed_data.is_submitted_to_ebi:
-            error_msg = ("Cannot resubmit! Preprocessed data %d has been "
-                         "already submitted to EBI.")
+            error_msg = ("Cannot resubmit! Preprocessed data %d has already "
+                         "been submitted to EBI.")
             LogEntry.create('Runtime', error_msg)
             raise EBISubmissionError(error_msg)
 
@@ -161,13 +161,12 @@ class EBISubmission(object):
         _, base_fp = get_mountpoint("preprocessed_data")[0]
         self.ebi_dir = '%d_ebi_submission' % preprocessed_data_id
         self.full_ebi_dir = join(base_fp, self.ebi_dir)
-        get_output_fp = partial(join, self.full_ebi_dir, 'xml_dir')
-        self.xml_dir = get_output_fp()
-        self.study_xml_fp = get_output_fp('study.xml')
-        self.sample_xml_fp = get_output_fp('sample.xml')
-        self.experiment_xml_fp = get_output_fp('experiment.xml')
-        self.run_xml_fp = get_output_fp('run.xml')
-        self.submission_xml_fp = get_output_fp('submission.xml')
+        self.xml_dir = join(self.full_ebi_dir, 'xml_dir')
+        self.study_xml_fp = None
+        self.sample_xml_fp = None
+        self.experiment_xml_fp = None
+        self.run_xml_fp = None
+        self.submission_xml_fp = None
         self.pmids = self.study.pmids
 
         # getting the restrictions
@@ -234,6 +233,11 @@ class EBISubmission(object):
         self._sample_aliases = {}
         self._experiment_aliases = {}
         self._run_aliases = {}
+
+        self._ebi_sample_accessions = \
+            self.sample_template.ebi_sample_accessions
+        self._ebi_experiment_accessions = \
+            self.prep_template.ebi_experiment_accessions
 
     def _get_study_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
@@ -351,8 +355,14 @@ class EBISubmission(object):
 
         return study_set
 
-    def generate_sample_xml(self):
+    def generate_sample_xml(self, samples=None):
         """Generates the sample XML file
+
+        Parameters
+        ----------
+        samples : list of str, optional
+            The list of samples to be included in the sample xml. If not
+            provided or an empty list is provided, all the samples are used
 
         Returns
         -------
@@ -363,8 +373,11 @@ class EBISubmission(object):
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "sample"})
 
-        for sample_name, sample_info in sorted(viewitems(self.samples)):
-            sample_info = dict(sample_info)
+        if not samples:
+            samples = viewkeys(self.samples)
+
+        for sample_name in sorted(samples):
+            sample_info = dict(self.samples[sample_name])
             sample = ET.SubElement(sample_set, 'SAMPLE', {
                 'alias': self._get_sample_alias(sample_name),
                 'center_name': qiita_config.ebi_center_name}
@@ -419,22 +432,40 @@ class EBISubmission(object):
         base_coord = ET.SubElement(read_spec, 'BASE_COORD')
         base_coord.text = '1'
 
-    def generate_experiment_xml(self):
+    def generate_experiment_xml(self, samples=None):
         """Generates the experiment XML file
+
+        Parameters
+        ----------
+        samples : list of str, optional
+            The list of samples to be included in the experiment xml
 
         Returns
         -------
         ET.Element
             Object with experiment XML values
         """
-        study_alias = self._get_study_alias()
+        study_accession = self.study.ebi_study_accession
+        if study_accession:
+            study_ref_dict = {'accession': study_accession}
+        else:
+            study_ref_dict = {'refname': self._get_study_alias()}
+
         experiment_set = ET.Element('EXPERIMENT_SET', {
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "experiment"})
-        for sample_name, sample_prep in sorted(self.samples_prep.items()):
-            sample_alias = self._get_sample_alias(sample_name)
+
+        samples = samples if samples is not None else viewkeys(self.samples)
+
+        for sample_name in sorted(samples):
             experiment_alias = self._get_experiment_alias(sample_name)
             sample_prep = dict(self.samples_prep[sample_name])
+            if self._ebi_sample_accessions[sample_name]:
+                sample_descriptor_dict = {
+                    'accession': self._ebi_sample_accessions[sample_name]}
+            else:
+                sample_descriptor_dict = {
+                    'refname': self._get_sample_alias(sample_name)}
 
             platform = sample_prep.pop('platform')
             experiment = ET.SubElement(experiment_set, 'EXPERIMENT', {
@@ -443,18 +474,14 @@ class EBISubmission(object):
             )
             title = ET.SubElement(experiment, 'TITLE')
             title.text = experiment_alias
-            ET.SubElement(experiment, 'STUDY_REF', {
-                'refname': study_alias}
-            )
+            ET.SubElement(experiment, 'STUDY_REF', study_ref_dict)
 
             design = ET.SubElement(experiment, 'DESIGN')
             design_description = ET.SubElement(design,
                                                'DESIGN_DESCRIPTION')
             edd = sample_prep.pop('experiment_design_description')
             design_description.text = escape(clean_whitespace(edd))
-            ET.SubElement(
-                design, 'SAMPLE_DESCRIPTOR', {'refname': sample_alias}
-            )
+            ET.SubElement(design, 'SAMPLE_DESCRIPTOR', sample_descriptor_dict)
 
             # this is the library contruction section. The only required fields
             # is library_construction_protocol, the other are optional
@@ -514,10 +541,15 @@ class EBISubmission(object):
         run_set = ET.Element('RUN_SET', {
             'xmlns:xsi': self.xmlns_xsi,
             "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "run"})
-        for sample_name, sample_prep in viewitems(self.samples_prep):
+        for sample_name, sample_prep in sorted(viewitems(self.samples_prep)):
             sample_prep = dict(sample_prep)
 
-            experiment_alias = self._get_experiment_alias(sample_name)
+            if self._ebi_experiment_accessions[sample_name]:
+                experiment_ref_dict = {
+                    'accession': self._ebi_experiment_accessions[sample_name]}
+            else:
+                experiment_alias = self._get_experiment_alias(sample_name)
+                experiment_ref_dict = {'refname': experiment_alias}
 
             # We only submit fastq
             file_type = 'fastq'
@@ -530,9 +562,7 @@ class EBISubmission(object):
                 'alias': self._get_run_alias(sample_name),
                 'center_name': qiita_config.ebi_center_name}
             )
-            ET.SubElement(run, 'EXPERIMENT_REF', {
-                'refname': experiment_alias}
-            )
+            ET.SubElement(run, 'EXPERIMENT_REF', experiment_ref_dict)
             data_block = ET.SubElement(run, 'DATA_BLOCK')
             files = ET.SubElement(data_block, 'FILES')
             ET.SubElement(files, 'FILE', {
@@ -574,23 +604,26 @@ class EBISubmission(object):
 
         actions = ET.SubElement(submission, 'ACTIONS')
 
-        study_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(study_action, self.action, {
-            'schema': 'study',
-            'source': basename(self.study_xml_fp)}
-        )
+        if self.study_xml_fp:
+            study_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(study_action, self.action, {
+                'schema': 'study',
+                'source': basename(self.study_xml_fp)}
+            )
 
-        sample_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(sample_action, self.action, {
-            'schema': 'sample',
-            'source': basename(self.sample_xml_fp)}
-        )
+        if self.sample_xml_fp:
+            sample_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(sample_action, self.action, {
+                'schema': 'sample',
+                'source': basename(self.sample_xml_fp)}
+            )
 
-        experiment_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(experiment_action, self.action, {
-            'schema': 'experiment',
-            'source': basename(self.experiment_xml_fp)}
-        )
+        if self.experiment_xml_fp:
+            experiment_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(experiment_action, self.action, {
+                'schema': 'experiment',
+                'source': basename(self.experiment_xml_fp)}
+            )
 
         run_action = ET.SubElement(actions, 'ACTION')
         ET.SubElement(run_action, self.action, {
@@ -620,6 +653,51 @@ class EBISubmission(object):
         """
         create_dir(self.xml_dir)
         ET.ElementTree(element).write(fp, encoding='UTF-8')
+
+    def generate_xml_files(self):
+        """Generate all the XML files"""
+        get_output_fp = partial(join, self.xml_dir)
+
+        # The study.xml file needs to be generated if and only if the study
+        # does NOT have an ebi_study_accession
+        if not self.study.ebi_study_accession:
+            self.study_xml_fp = get_output_fp('study.xml')
+            self.write_xml_file(self.generate_study_xml(), self.study_xml_fp)
+
+        # The sample.xml file needs to be generated if and only if there are
+        # samples in the current submission that do NOT have an
+        # ebi_sample_accession
+        new_samples = {
+            sample for sample, accession in viewitems(
+                self.sample_template.ebi_sample_accessions)
+            if accession is None}
+        new_samples = new_samples.intersection(self.samples)
+        if new_samples:
+            self.sample_xml_fp = get_output_fp('sample.xml')
+            self.write_xml_file(self.generate_sample_xml(new_samples),
+                                self.sample_xml_fp)
+
+        # The experiment.xml needs to be generated if and only if there are
+        # samples in the current submission that do NO have an
+        # ebi_experiment_accession
+        new_samples = {
+            sample for sample, accession in viewitems(
+                self.prep_template.ebi_experiment_accessions)
+            if accession is None}
+        new_samples = new_samples.intersection(self.samples)
+        if new_samples:
+            self.experiment_xml_fp = get_output_fp('experiment.xml')
+            self.write_xml_file(self.generate_experiment_xml(new_samples),
+                                self.experiment_xml_fp)
+
+        # Generate the run.xml as it should always be generated
+        self.run_xml_fp = get_output_fp('run.xml')
+        self.write_xml_file(self.generate_run_xml(), self.run_xml_fp)
+
+        # The submission.xml is always generated
+        self.submission_xml_fp = get_output_fp('submission.xml')
+        self.write_xml_file(self.generate_submission_xml(),
+                            self.submission_xml_fp)
 
     def generate_curl_command(
             self,
@@ -701,20 +779,18 @@ class EBISubmission(object):
 
         Returns
         -------
-        bool
-            If the submission was successful or not
-        study_accession : str
+        str
             The study accession number. None in case of failure
-        sample_accessions : dict of {str: str}
+        dict of {str: str}
             The sample accession numbers, keyed by sample id. None in case of
             failure
-        biosample_accessions : dict of {str: str}
+        dict of {str: str}
             The biosample accession numbers, keyed by sample id. None in case
             of failure
-        experiment_accessions : dict of {str: str}
+        dict of {str: str}
             The experiment accession numbers, keyed by sample id. None in case
             of failure
-        run_accessions : dict of {str: str}
+        dict of {str: str}
             The run accession numbers, keyed by sample id. None in case of
             failure
 
@@ -728,9 +804,13 @@ class EBISubmission(object):
         try:
             root = ET.fromstring(curl_result)
         except ParseError:
+            error_msg = ("The curl result from the EBI submission doesn't "
+                         "look like an XML file:\n%s" % curl_result)
+            le = LogEntry.create('Runtime', error_msg)
             raise EBISubmissionError(
                 "The curl result from the EBI submission doesn't look like "
-                "an XML file:\n%s" % curl_result)
+                "an XML file. Contact and admin for more information. "
+                "Log id: %d" % le.id)
 
         success = root.get('success') == 'true'
         if not success:
@@ -738,11 +818,15 @@ class EBISubmission(object):
                                      % curl_result)
 
         study_elem = root.findall("STUDY")
-        if len(study_elem) > 1:
-            raise EBISubmissionError(
-                "Multiple study tags found in EBI reply: %d" % len(study_elem))
-        study_elem = study_elem[0]
-        study_accession = study_elem.get('accession')
+        if study_elem:
+            if len(study_elem) > 1:
+                raise EBISubmissionError(
+                    "Multiple study tags found in EBI reply: %d"
+                    % len(study_elem))
+            study_elem = study_elem[0]
+            study_accession = study_elem.get('accession')
+        else:
+            study_accession = None
 
         sample_accessions = {}
         biosample_accessions = {}

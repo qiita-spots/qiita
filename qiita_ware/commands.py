@@ -60,16 +60,7 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         raise
 
     # step 3: generate and write xml files
-    ebi_submission.write_xml_file(ebi_submission.generate_study_xml(),
-                                  ebi_submission.study_xml_fp)
-    ebi_submission.write_xml_file(ebi_submission.generate_sample_xml(),
-                                  ebi_submission.sample_xml_fp)
-    ebi_submission.write_xml_file(ebi_submission.generate_experiment_xml(),
-                                  ebi_submission.experiment_xml_fp)
-    ebi_submission.write_xml_file(ebi_submission.generate_run_xml(),
-                                  ebi_submission.run_xml_fp)
-    ebi_submission.write_xml_file(ebi_submission.generate_submission_xml(),
-                                  ebi_submission.submission_xml_fp)
+    ebi_submission.generate_xml_files()
 
     if send:
         # step 4: sending sequences
@@ -121,10 +112,14 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
 
         ebi_submission.study.ebi_submission_status = 'submitted'
-        ebi_submission.study.ebi_study_accession = st_acc
-        ebi_submission.sample_template.ebi_sample_accessions = sa_acc
-        ebi_submission.sample_template.biosample_accessions = bio_acc
-        ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
+        if st_acc:
+            ebi_submission.study.ebi_study_accession = st_acc
+        if sa_acc:
+            ebi_submission.sample_template.ebi_sample_accessions = sa_acc
+        if bio_acc:
+            ebi_submission.sample_template.biosample_accessions = bio_acc
+        if ex_acc:
+            ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
         ebi_submission.preprocessed_data.ebi_run_accessions = run_acc
     else:
         st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None

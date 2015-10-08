@@ -869,7 +869,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'str_column', 'taxon_id'}
-        self.assertEqual(set(st.categories()), exp_categories)
+        self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % new_id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
@@ -939,7 +939,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'str_column', 'taxon_id'}
-        self.assertEqual(set(st.categories()), exp_categories)
+        self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.12.Sample1" % new_id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
@@ -1009,7 +1009,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'str_column', 'taxon_id'}
-        self.assertEqual(set(st.categories()), exp_categories)
+        self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.foo.Sample1" % new_id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
@@ -1080,7 +1080,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'str_column', 'taxon_id'}
-        self.assertEqual(set(st.categories()), exp_categories)
+        self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % new_id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
@@ -1343,7 +1343,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'str_column', 'taxon_id'}
-        self.assertEqual(set(st.categories()), exp_categories)
+        self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
@@ -1459,7 +1459,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'physical_specimen_location',
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'str_column', 'taxon_id'}
-        self.assertEqual(set(st.categories()), exp_categories)
+        self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
@@ -1548,7 +1548,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'str_column', 'taxon_id',
                           'newcol', 'new_col'}
-        self.assertEqual(set(st.categories()), exp_categories)
+        self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
@@ -1642,7 +1642,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'str_column', 'taxon_id',
                           'newcol'}
-        self.assertEqual(set(st.categories()), exp_categories)
+        self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
@@ -1747,7 +1747,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'physical_specimen_remaining', 'sample_type',
                           'scientific_name', 'str_column', 'taxon_id',
                           'newcol'}
-        self.assertEqual(set(st.categories()), exp_categories)
+        self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
                 'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
