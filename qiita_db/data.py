@@ -77,6 +77,7 @@ Inserting the processed data into the database:
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils import viewitems
 from datetime import datetime
 from os.path import join
 from functools import partial
@@ -1038,6 +1039,41 @@ class PreprocessedData(BaseData):
             TRN.add(sql, [self.id])
             accessions = TRN.execute_fetchflatten()
         return accessions
+
+    @ebi_run_accessions.setter
+    def ebi_run_accessions(self, value):
+        """Sets the EBI run accessions
+
+        Parameters
+        ----------
+        value : dict of {str: str}
+            The EBI run accessions, keyed by samples id
+
+        Raises
+        ------
+        QiitaDBError
+            If the preprocessed data already has ebi run accessions
+        """
+        with TRN:
+            sql = """SELECT EXISTS(
+                        SELECT *
+                        FROM qiita.ebi_run_accession
+                        WHERE preprocessed_data_id = %s
+                            AND ebi_run_accession IS NOT NULL)"""
+            TRN.add(sql, [self.id])
+            exists = TRN.execute_fetchlast()
+            if exists:
+                raise QiitaDBError(
+                    "Can't update EBI run accessions. The processed data %d "
+                    "already has ebi run accessions." % self.id)
+
+            sql = """INSERT INTO qiita.ebi_run_accession
+                        (preprocessed_data_id, sample_id, ebi_run_accession)
+                     VALUES (%s, %s, %s)"""
+            sql_params = [[self.id, sample, accession]
+                          for sample, accession in viewitems(value)]
+            TRN.add(sql, sql_params, many=True)
+            TRN.execute()
 
 
 class ProcessedData(BaseData):
