@@ -1414,6 +1414,12 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             pt.ebi_experiment_accessions = exp_acc
         npt.assert_warns(QiitaDBWarning, f)
 
+    def test_is_submitted_to_ebi(self):
+        self.assertTrue(self.tester.is_submitted_to_ebi)
+        pt = PrepTemplate.create(self.metadata, self.test_study,
+                                 self.data_type)
+        self.assertFalse(pt.is_submitted_to_ebi)
+
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
