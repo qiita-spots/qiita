@@ -37,7 +37,7 @@ These are the columns required for successfully submit your data to EBI:
 | ``physical_specimen_location``   | free text            | Where you would go to find physical sample or DNA, regardless of whether it is still available or not.   |
 +----------------------------------+----------------------+----------------------------------------------------------------------------------------------------------+
 | ``taxon_id``                     | integer              | NCBI's taxon id for the sample                                                                           |
-+-------------------------------------+-------------------------------------------+----------------------------------------------------------------------------------+
++----------------------------------+----------------------+----------------------------------------------------------------------------------------------------------+
 | ``description``                  | free text            | Description of the sample.                                                                               |
 +----------------------------------+----------------------+----------------------------------------------------------------------------------------------------------+
 | ``scientific_name``              | free text            | NCBI's scientific name for the provided taxon ID                                                         |

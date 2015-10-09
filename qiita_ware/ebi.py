@@ -926,7 +926,7 @@ class EBISubmission(object):
 
         if not demux_samples:
             error_msg = ("All samples were removed from the submission "
-                         "because the demux file is empty or the sample names"
+                         "because the demux file is empty or the sample names "
                          "do not match.")
             LogEntry.create('Runtime', error_msg)
             raise EBISubmissionError(error_msg)
