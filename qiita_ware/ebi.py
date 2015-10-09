@@ -7,7 +7,7 @@ from xml.etree.ElementTree import ParseError
 from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
-
+from h5py import File
 from future.utils import viewitems, viewkeys
 from skbio.util import safe_md5, create_dir
 
@@ -17,7 +17,7 @@ from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
-from qiita_db.util import convert_to_id, get_mountpoint, insert_filepaths
+from qiita_db.util import convert_to_id, get_mountpoint
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
@@ -874,40 +874,34 @@ class EBISubmission(object):
 
         dir_not_exists = not isdir(self.full_ebi_dir)
         if dir_not_exists or rewrite_fastq:
-            if dir_not_exists:
-                makedirs(self.full_ebi_dir)
-                filetype_id = convert_to_id('directory', 'filepath_type')
-                insert_filepaths([(self.full_ebi_dir, filetype_id)], -1,
-                                 'preprocessed_data', 'filepath',
-                                 move_files=False)
+            makedirs(self.full_ebi_dir)
 
             demux = [path for _, path, ftype in ppd.get_filepaths()
                      if ftype == 'preprocessed_demux'][0]
 
             demux_samples = set()
-            try:
-                with open_file(demux) as demux_fh:
-                    for s, i in to_per_sample_ascii(demux_fh,
-                                                    self.prep_template.keys()):
-                        sample_fp = self.sample_demux_fps[s]
-                        wrote_sequences = False
-                        with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
-                            for record in i:
-                                fh.write(record)
-                                wrote_sequences = True
+            with open_file(demux) as demux_fh:
+                if not isinstance(demux_fh, File):
+                    error_msg = ("There was an error parsing the demux file: "
+                                 "%s" % demux)
+                    LogEntry.create('Runtime', error_msg)
+                    raise EBISubmissionError(error_msg)
+                for s, i in to_per_sample_ascii(demux_fh,
+                                                self.prep_template.keys()):
+                    sample_fp = self.sample_demux_fps[s]
+                    wrote_sequences = False
+                    with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
+                        for record in i:
+                            fh.write(record)
+                            wrote_sequences = True
 
-                        if wrote_sequences:
-                            demux_samples.add(s)
-                        else:
-                            del(self.samples[s])
-                            del(self.samples_prep[s])
-                            del(self.sample_demux_fps[s])
-                            remove(sample_fp)
-            except Exception as e:
-                error_msg = ("There was an error parsing the demux file: "
-                             "%s" % str(e))
-                LogEntry.create('Runtime', error_msg)
-                raise EBISubmissionError(error_msg)
+                    if wrote_sequences:
+                        demux_samples.add(s)
+                    else:
+                        del(self.samples[s])
+                        del(self.samples_prep[s])
+                        del(self.sample_demux_fps[s])
+                        remove(sample_fp)
         else:
             demux_samples = set()
             extension = '.fastq.gz'

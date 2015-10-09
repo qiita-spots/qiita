@@ -12,10 +12,8 @@ from tarfile import open as taropen
 from tempfile import mkdtemp
 from os import environ
 from traceback import format_exc
-from subprocess import call
-from shlex import split as shsplit
-
 from moi.job import system_call
+
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
@@ -64,44 +62,50 @@ def submit_EBI(preprocessed_data_id, action, send):
         LogEntry.create('Runtime',
                         ("Submitting sequences for pre_processed_id: "
                          "%d" % preprocessed_data_id))
-        for cmd in ebi_submission.generate_send_sequences_cmd():
-            cmd_pieces = shsplit(cmd)
-            try:
-                call(cmd_pieces, stdout=open(ebi_submission.ascp_reply, 'a'))
-            except:
-                with open(ebi_submission.ascp_reply, 'r') as f:
-                    content = f.read()
-                ebi_submission.study.ebi_submission_status = (
-                    "failed: ASCP - %s" % content)
-                LogEntry.create('Fatal', content,
-                                info={
-                                    'ebi_submission': preprocessed_data_id,
-                                    'fail': cmd})
+        try:
+            for cmd in ebi_submission.generate_send_sequences_cmd():
+                try:
+                    stdout, stderr, _ = system_call(cmd)
+                except Exception as e:
+                    error = str(e)
+                    ebi_submission.study.ebi_submission_status = (
+                        "failed: ASCP - %s" % error)
+                    LogEntry.create('Fatal', error,
+                                    info={
+                                        'ebi_submission': preprocessed_data_id,
+                                        'fail': cmd})
+                    raise
+                finally:
+                    open(ebi_submission.ascp_reply, 'a').write(
+                        'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
+        finally:
+            environ['ASPERA_SCP_PASS'] = old_ascp_pass
         LogEntry.create('Runtime',
                         ('Submission of sequences of pre_processed_id: '
                          '%d completed successfully' %
                          preprocessed_data_id))
-        environ['ASPERA_SCP_PASS'] = old_ascp_pass
 
         # step 5: sending xml and parsing answer
-        xmls_cmds = shsplit(ebi_submission.generate_curl_command())
+        xmls_cmds = ebi_submission.generate_curl_command()
         LogEntry.create('Runtime',
                         ("Submitting XMLs for pre_processed_id: "
                          "%d" % preprocessed_data_id))
         try:
-            call(xmls_cmds, stdout=open(ebi_submission.curl_reply, 'w'))
-            with open(ebi_submission.curl_reply, 'r') as f:
-                xml_content = f.read()
-        except:
-            with open(ebi_submission.curl_reply, 'r') as f:
-                xml_content = f.read()
-            LogEntry.create('Fatal', xml_content,
-                            info={'ebi_submission': preprocessed_data_id})
+            xml_content, stderr, _ = system_call(xmls_cmds)
+
+        except Exception as e:
+            error = str(e)
+            LogEntry.create('Fatal', error,
+                            info={'ebi_submission': preprocessed_data_id,
+                                  'fail': cmd})
         else:
             LogEntry.create('Runtime',
                             ('Submission of sequences of pre_processed_id: '
                              '%d completed successfully' %
                              preprocessed_data_id))
+        finally:
+            open(ebi_submission.curl_reply, 'w').write(
+                'stdout:\n%s\n\nstderr: %s' % (xml_content, stderr))
 
         try:
             st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
