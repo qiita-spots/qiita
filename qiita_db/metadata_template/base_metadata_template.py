@@ -1160,19 +1160,15 @@ class MetadataTemplate(QiitaObject):
                     % ', '.join(columns_diff))
 
             # In order to speed up some computation, let's compare only the
-            # common columns. current_map.columns is a superset of
-            # new_map.columns, so this will not fail
-            current_map = current_map[new_map.columns]
+            # common columns and rows. current_map.columns and
+            # current_map.index are supersets of new_map.columns and
+            # new_map.index, respectivelly, so this will not fail
+            current_map = current_map[new_map.columns].loc[new_map.index]
 
             # Get the values that we need to change
             # diff_map is a DataFrame that hold boolean values. If a cell is
             # True, means that the new_map is different from the current_map
             # while False means that the cell has the same value
-            # In order to compare them, they've to be identically labeled, so
-            # we need to sort the 'index' axis to be identically labeled. The
-            # 'column' axis is already the same given the previous line of code
-            current_map.sort_index(axis='index', inplace=True)
-            new_map.sort_index(axis='index', inplace=True)
             diff_map = current_map != new_map
             # ne_stacked holds a MultiIndexed DataFrame in which the first
             # level of indexing is the sample_name and the second one is the
