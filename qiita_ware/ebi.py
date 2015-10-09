@@ -712,20 +712,20 @@ class EBISubmission(object):
         # make sure that the XML files have been generated
         url = '?auth=ENA%20{0}%20{1}'.format(quote(ebi_seq_xfer_user),
                                              quote(ebi_seq_xfer_pass))
-        curl_command = 'curl -sS -k'
+        curl_cmd = ['curl -sS -k']
         if self.submission_xml_fp is not None:
-            curl_command += ' -F "SUBMISSION=@%s"' % self.submission_xml_fp
+            curl_cmd.append(' -F "SUBMISSION=@%s"' % self.submission_xml_fp)
         if self.study_xml_fp is not None:
-            curl_command += ' -F "STUDY=@%s"' % self.study_xml_fp
+            curl_cmd.append(' -F "STUDY=@%s"' % self.study_xml_fp)
         if self.sample_xml_fp is not None:
-            curl_command += ' -F "SAMPLE=@%s"' % self.sample_xml_fp
+            curl_cmd.append(' -F "SAMPLE=@%s"' % self.sample_xml_fp)
         if self.run_xml_fp is not None:
-            curl_command += ' -F "RUN=@%s"' % self.run_xml_fp
+            curl_cmd.append(' -F "RUN=@%s"' % self.run_xml_fp)
         if self.experiment_xml_fp is not None:
-            curl_command += ' -F "EXPERIMENT=@%s"' % self.experiment_xml_fp
-        curl_command += ' "' + join(ebi_dropbox_url, url) + '"'
+            curl_cmd.append(' -F "EXPERIMENT=@%s"' % self.experiment_xml_fp)
+        curl_cmd.append(' "%s"' % join(ebi_dropbox_url, url))
 
-        return curl_command
+        return ''.join(curl_cmd)
 
     def generate_send_sequences_cmd(self):
         """Generate the sequences to EBI via ascp command
@@ -863,6 +863,12 @@ class EBISubmission(object):
         those cases where the fastq.gz files weren't written or exist. This is
         an indication that they had no sequences and this kind of files are not
         accepted in EBI
+
+        Raises
+        ------
+        EBISubmissionError
+            - The demux file couldn't be read
+            - All samples are removed
         """
         ppd = self.preprocessed_data
 
@@ -879,24 +885,29 @@ class EBISubmission(object):
                      if ftype == 'preprocessed_demux'][0]
 
             demux_samples = set()
-            with open_file(demux) as demux_fh:
-                for s, i in to_per_sample_ascii(demux_fh,
-                                                self.prep_template.keys()):
-                    sample_fp = self.sample_demux_fps[s]
-                    wrote_sequences = False
-                    with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
-                        for record in i:
-                            fh.write(record)
-                            wrote_sequences = True
+            try:
+                with open_file(demux) as demux_fh:
+                    for s, i in to_per_sample_ascii(demux_fh,
+                                                    self.prep_template.keys()):
+                        sample_fp = self.sample_demux_fps[s]
+                        wrote_sequences = False
+                        with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
+                            for record in i:
+                                fh.write(record)
+                                wrote_sequences = True
 
-                    if wrote_sequences:
-                        demux_samples.add(s)
-                    else:
-                        del(self.samples[s])
-                        del(self.samples_prep[s])
-                        del(self.sample_demux_fps[s])
-                        remove(sample_fp)
-
+                        if wrote_sequences:
+                            demux_samples.add(s)
+                        else:
+                            del(self.samples[s])
+                            del(self.samples_prep[s])
+                            del(self.sample_demux_fps[s])
+                            remove(sample_fp)
+            except Exception as e:
+                error_msg = ("There was an error parsing the demux file: "
+                             "%s" % str(e))
+                LogEntry.create('Runtime', error_msg)
+                raise EBISubmissionError(error_msg)
         else:
             demux_samples = set()
             extension = '.fastq.gz'
@@ -913,4 +924,10 @@ class EBISubmission(object):
                 del(self.samples_prep[ms])
                 del(self.sample_demux_fps[ms])
 
+        if not demux_samples:
+            error_msg = ("All samples were removed from the submission "
+                         "because the demux file is empty or the sample names"
+                         "do not match.")
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
         return demux_samples

@@ -245,14 +245,26 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
 @qiita_test_checker()
 class TestEBISubmissionWriteRead(TestEBISubmission):
-    def write_demux_files(self, prep_template):
+    def write_demux_files(self, prep_template, sequences='FASTA-EXAMPLE'):
         """Writes a demux test file to avoid duplication of code"""
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')
-        with open(fna_fp, 'w') as f:
-            f.write(FASTA_EXAMPLE)
-        with File(demux_fp, "w") as f:
-            to_hdf5(fna_fp, f)
+        if sequences == 'FASTA-EXAMPLE':
+            with open(fna_fp, 'w') as f:
+                f.write(FASTA_EXAMPLE)
+            with File(demux_fp, "w") as f:
+                to_hdf5(fna_fp, f)
+        elif sequences == 'WRONG-SEQS':
+            with open(fna_fp, 'w') as f:
+                f.write('>a_1 X orig_bc=X new_bc=X bc_diffs=0\nCCC')
+            with File(demux_fp, "w") as f:
+                to_hdf5(fna_fp, f)
+        elif sequences == 'EMPTY':
+            with open(demux_fp, 'w') as f:
+                f.write("")
+        else:
+            raise ValueError('Wrong sequences values: %s. Valid values: '
+                             'FASTA_EXAMPLE, WRONG-SEQS, EMPTY' % sequences)
 
         ppd = PreprocessedData.create(Study(1),
                                       "preprocessed_sequence_illumina_params",
@@ -560,6 +572,21 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertIsNone(e.sample_xml_fp)
         self.assertIsNone(e.study_xml_fp)
         self.assertIsNotNone(e.submission_xml_fp)
+
+    def test_generate_demultiplexed_fastq_failure(self):
+        # generating demux file for testing
+        ppd = self.write_demux_files(PrepTemplate(1), 'EMPTY')
+
+        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
+        with self.assertRaises(EBISubmissionError):
+            ebi_submission.generate_demultiplexed_fastq()
+
+        ppd = self.write_demux_files(PrepTemplate(1), 'WRONG-SEQS')
+        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
+        with self.assertRaises(EBISubmissionError):
+            ebi_submission.generate_demultiplexed_fastq()
 
     def test_generate_demultiplexed_fastq(self):
         # generating demux file for testing
