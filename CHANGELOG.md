@@ -4,6 +4,7 @@ Version 0.2.0-dev (Changes since version 0.2.0 go here)
 -------------------------------------------------------
 
 * Users can now change values and add samples and/or columns to sample and prep templates using the <kbd>Update</kbd> button (see the prep template and sample template tabs).
+* The raw files of a RawData can be now updated using the `qiita db update_raw_data` CLI command.
 * instrument_model is now a required prep template column for EBI submissions.
 
 Version 0.2.0 (2015-08-25)
