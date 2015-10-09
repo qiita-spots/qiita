@@ -67,10 +67,11 @@ def submit_EBI(preprocessed_data_id, action, send):
                 try:
                     stdout, stderr, _ = system_call(cmd)
                 except Exception as e:
-                    error = str(e)
+                    stdout = ''
+                    stderr = str(e)
                     ebi_submission.study.ebi_submission_status = (
-                        "failed: ASCP - %s" % error)
-                    LogEntry.create('Fatal', error,
+                        "failed: ASCP - %s" % stderr)
+                    LogEntry.create('Fatal', stderr,
                                     info={
                                         'ebi_submission': preprocessed_data_id,
                                         'fail': cmd})
