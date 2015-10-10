@@ -69,13 +69,13 @@ def submit_EBI(preprocessed_data_id, action, send):
                 except Exception as e:
                     stdout = ''
                     stderr = str(e)
+                    le = LogEntry.create(
+                        'Fatal', "Command: %s\nError: %s\n" % (cmd, str(e)),
+                        info={'ebi_submission': preprocessed_data_id})
                     ebi_submission.study.ebi_submission_status = (
-                        "failed: ASCP - %s" % stderr)
-                    LogEntry.create('Fatal', stderr,
-                                    info={
-                                        'ebi_submission': preprocessed_data_id,
-                                        'fail': cmd})
-                    raise
+                        "failed: ASCP submission, log id: %d" % le.id)
+                    raise ComputeError("EBI Submission failed! Log id: "
+                                       "%d" % le.id)
                 finally:
                     open(ebi_submission.ascp_reply, 'a').write(
                         'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
@@ -93,12 +93,16 @@ def submit_EBI(preprocessed_data_id, action, send):
                          "%d" % preprocessed_data_id))
         try:
             xml_content, stderr, _ = system_call(xmls_cmds)
-
         except Exception as e:
-            error = str(e)
-            LogEntry.create('Fatal', error,
-                            info={'ebi_submission': preprocessed_data_id,
-                                  'fail': cmd})
+            xml_content = ''
+            stderr = str(e)
+            le = LogEntry.create('Fatal',
+                                 "Command: %s\nError: %s\n" % (
+                                    cmd, str(e)),
+                                 info={'ebi_submission': preprocessed_data_id})
+            ebi_submission.study.ebi_submission_status = (
+                "failed: XML submission, log id: %d" % le.id)
+            raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
         else:
             LogEntry.create('Runtime',
                             ('Submission of sequences of pre_processed_id: '
@@ -116,7 +120,7 @@ def submit_EBI(preprocessed_data_id, action, send):
                 'Fatal', "Command: %s\nError: %s\n" % (xml_content, str(e)),
                 info={'ebi_submission': preprocessed_data_id})
             ebi_submission.study.ebi_submission_status = (
-                "failed: XML submission, log id: %d" % le.id)
+                "failed: XML parsing, log id: %d" % le.id)
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
 
         ebi_submission.study.ebi_submission_status = 'submitted'

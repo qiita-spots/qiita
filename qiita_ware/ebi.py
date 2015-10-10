@@ -882,7 +882,7 @@ class EBISubmission(object):
             demux_samples = set()
             with open_file(demux) as demux_fh:
                 if not isinstance(demux_fh, File):
-                    error_msg = ("'%s' doesn't look like a demux file" % demux)
+                    error_msg = "'%s' doesn't look like a demux file" % demux
                     LogEntry.create('Runtime', error_msg)
                     raise EBISubmissionError(error_msg)
                 for s, i in to_per_sample_ascii(demux_fh,
