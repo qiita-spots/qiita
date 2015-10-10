@@ -43,7 +43,7 @@ script:
       if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
         nosetests --with-doctest --with-coverage;
       else
-        nosetests -I qiita_ware/test/test_ebi.py --with-doctest --with-coverage;
+        nosetests --with-doctest --with-coverage --ignore-files='(^\.|^_|^test_ebi.py$)';
       fi;
     fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then flake8 qiita_* setup.py scripts/qiita
