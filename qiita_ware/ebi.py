@@ -1,12 +1,13 @@
 from os.path import basename, join, isdir, isfile
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
+from urllib import quote
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import ParseError
 from xml.sax.saxutils import escape
 from gzip import GzipFile
 from functools import partial
-
+from h5py import File
 from future.utils import viewitems, viewkeys
 from skbio.util import safe_md5, create_dir
 
@@ -16,28 +17,10 @@ from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
-from qiita_db.util import convert_to_id
+from qiita_db.util import convert_to_id, get_mountpoint
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
-
-
-class InvalidMetadataError(Exception):
-    """Error that is raised when metadata is not representable as a string"""
-    pass
-
-
-class SampleAlreadyExistsError(Exception):
-    """Error that is raised when a sample is added to a submission that already
-    has a sample by that name"""
-    pass
-
-
-class NoXMLError(Exception):
-    """Error that is raised when the generation of one XML file cannot be
-    completed because it depends on another XML file that has not yet been
-    generated"""
-    pass
 
 
 def clean_whitespace(text):
@@ -157,16 +140,17 @@ class EBISubmission(object):
                               "term is neither one of the official terms nor "
                               "one of the user-defined terms in the ENA "
                               "ontology." % it)
-
-        self.ebi_dir = join(qiita_config.working_dir,
-                            'ebi_submission_%d' % preprocessed_data_id)
-        self.xml_dir = join(self.ebi_dir, 'xml_dir')
+        _, base_fp = get_mountpoint("preprocessed_data")[0]
+        self.ebi_dir = '%d_ebi_submission' % preprocessed_data_id
+        self.full_ebi_dir = join(base_fp, self.ebi_dir)
+        self.ascp_reply = join(self.full_ebi_dir, 'ascp_reply.txt')
+        self.curl_reply = join(self.full_ebi_dir, 'curl_reply.xml')
+        self.xml_dir = join(self.full_ebi_dir, 'xml_dir')
         self.study_xml_fp = None
         self.sample_xml_fp = None
         self.experiment_xml_fp = None
         self.run_xml_fp = None
         self.submission_xml_fp = None
-
         self.pmids = self.study.pmids
 
         # getting the restrictions
@@ -186,7 +170,7 @@ class EBISubmission(object):
         self.samples = {}
         self.samples_prep = {}
         self.sample_demux_fps = {}
-        get_output_fp = partial(join, self.ebi_dir)
+        get_output_fp = partial(join, self.full_ebi_dir)
         nvp = []
         nvim = []
         for k, v in viewitems(self.sample_template):
@@ -566,7 +550,7 @@ class EBISubmission(object):
             data_block = ET.SubElement(run, 'DATA_BLOCK')
             files = ET.SubElement(data_block, 'FILES')
             ET.SubElement(files, 'FILE', {
-                'filename': file_path,
+                'filename': join(self.ebi_dir, basename(file_path)),
                 'filetype': file_type,
                 'quality_scoring_system': 'phred',
                 'checksum_method': 'MD5',
@@ -702,8 +686,7 @@ class EBISubmission(object):
     def generate_curl_command(
             self,
             ebi_seq_xfer_user=qiita_config.ebi_seq_xfer_user,
-            ebi_access_key=qiita_config.ebi_access_key,
-            ebi_skip_curl_cert=qiita_config.ebi_skip_curl_cert,
+            ebi_seq_xfer_pass=qiita_config.ebi_seq_xfer_pass,
             ebi_dropbox_url=qiita_config.ebi_dropbox_url):
         """Generates the curl command for submission
 
@@ -711,10 +694,8 @@ class EBISubmission(object):
         ----------
         ebi_seq_xfer_user : str
             The user to use when submitting to EBI
-        ebi_access_key : str
-            The access key issued by EBI for REST submissions
-        ebi_skip_curl_cert : bool
-            If the curl certificate should be skipped
+        ebi_seq_xfer_pass : str
+            The user password issued by EBI for REST submissions
         ebi_dropbox_url : str
             The dropbox url
 
@@ -729,22 +710,22 @@ class EBISubmission(object):
           be generated before executing this function
         """
         # make sure that the XML files have been generated
-        url = '?auth=ENA%20{0}%20{1}'.format(ebi_seq_xfer_user,
-                                             ebi_access_key)
-        curl_command = (
-            'curl {0}-F "SUBMISSION=@{1}" -F "STUDY=@{2}" -F "SAMPLE=@{3}" '
-            '-F "RUN=@{4}" -F "EXPERIMENT=@{5}" "{6}"'
-        ).format(
-            '-k ' if ebi_skip_curl_cert else '',
-            self.submission_xml_fp,
-            self.study_xml_fp,
-            self.sample_xml_fp,
-            self.run_xml_fp,
-            self.experiment_xml_fp,
-            join(ebi_dropbox_url, url)
-        )
+        url = '?auth=ENA%20{0}%20{1}'.format(quote(ebi_seq_xfer_user),
+                                             quote(ebi_seq_xfer_pass))
+        curl_cmd = ['curl -sS -k']
+        if self.submission_xml_fp is not None:
+            curl_cmd.append(' -F "SUBMISSION=@%s"' % self.submission_xml_fp)
+        if self.study_xml_fp is not None:
+            curl_cmd.append(' -F "STUDY=@%s"' % self.study_xml_fp)
+        if self.sample_xml_fp is not None:
+            curl_cmd.append(' -F "SAMPLE=@%s"' % self.sample_xml_fp)
+        if self.run_xml_fp is not None:
+            curl_cmd.append(' -F "RUN=@%s"' % self.run_xml_fp)
+        if self.experiment_xml_fp is not None:
+            curl_cmd.append(' -F "EXPERIMENT=@%s"' % self.experiment_xml_fp)
+        curl_cmd.append(' "%s"' % join(ebi_dropbox_url, url))
 
-        return curl_command
+        return ''.join(curl_cmd)
 
     def generate_send_sequences_cmd(self):
         """Generate the sequences to EBI via ascp command
@@ -764,7 +745,7 @@ class EBISubmission(object):
         fastqs_div = [fastqs[i::10] for i in range(10) if fastqs[i::10]]
         ascp_commands = []
         for f in fastqs_div:
-            ascp_commands.append('ascp --ignore-host-key -L- -d -QT -k2 '
+            ascp_commands.append('ascp --ignore-host-key -d -QT -k2 '
                                  '{0} {1}@{2}:./{3}/'.format(
                                      ' '.join(f),
                                      qiita_config.ebi_seq_xfer_user,
@@ -872,27 +853,38 @@ class EBISubmission(object):
 
         Notes
         -----
-        - As a performace feature, this method will check if self.ebi_dir
+        - As a performace feature, this method will check if self.full_ebi_dir
         already exists and, if it does, the script will assume that in a
         previous execution this step was performed correctly and will simply
-        read the file names from self.ebi_dir
+        read the file names from self.full_ebi_dir
         - When the object is created (init), samples, samples_prep and
         sample_demux_fps hold values for all available samples in the database.
         Here some of those values will be deleted (del's, within the loops) for
         those cases where the fastq.gz files weren't written or exist. This is
         an indication that they had no sequences and this kind of files are not
         accepted in EBI
+
+        Raises
+        ------
+        EBISubmissionError
+            - The demux file couldn't be read
+            - All samples are removed
         """
         ppd = self.preprocessed_data
 
-        if not isdir(self.ebi_dir) or rewrite_fastq:
-            makedirs(self.ebi_dir)
+        dir_not_exists = not isdir(self.full_ebi_dir)
+        if dir_not_exists or rewrite_fastq:
+            makedirs(self.full_ebi_dir)
 
             demux = [path for _, path, ftype in ppd.get_filepaths()
                      if ftype == 'preprocessed_demux'][0]
 
             demux_samples = set()
             with open_file(demux) as demux_fh:
+                if not isinstance(demux_fh, File):
+                    error_msg = "'%s' doesn't look like a demux file" % demux
+                    LogEntry.create('Runtime', error_msg)
+                    raise EBISubmissionError(error_msg)
                 for s, i in to_per_sample_ascii(demux_fh,
                                                 self.prep_template.keys()):
                     sample_fp = self.sample_demux_fps[s]
@@ -909,13 +901,13 @@ class EBISubmission(object):
                         del(self.samples_prep[s])
                         del(self.sample_demux_fps[s])
                         remove(sample_fp)
-
         else:
             demux_samples = set()
             extension = '.fastq.gz'
             extension_len = len(extension)
-            for f in listdir(self.ebi_dir):
-                if isfile(join(self.ebi_dir, f)) and f.endswith(extension):
+            for f in listdir(self.full_ebi_dir):
+                fpath = join(self.full_ebi_dir, f)
+                if isfile(fpath) and f.endswith(extension):
                     demux_samples.add(f[:-extension_len])
 
             missing_samples = set(self.samples.keys()).difference(
@@ -925,4 +917,10 @@ class EBISubmission(object):
                 del(self.samples_prep[ms])
                 del(self.sample_demux_fps[ms])
 
+        if not demux_samples:
+            error_msg = ("All samples were removed from the submission "
+                         "because the demux file is empty or the sample names "
+                         "do not match.")
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
         return demux_samples

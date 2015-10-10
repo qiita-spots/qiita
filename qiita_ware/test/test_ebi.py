@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from __future__ import division
 
 # -----------------------------------------------------------------------------
@@ -28,6 +26,7 @@ from qiita_ware.exceptions import EBISubmissionError
 from qiita_ware.demux import to_hdf5
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.data import PreprocessedData
+from qiita_db.util import get_mountpoint
 from qiita_db.study import Study, StudyPerson
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 from qiita_db.user import User
@@ -77,15 +76,16 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertItemsEqual(e.pmids, ['123456', '7891011'])
         self.assertEqual(e.action, action)
 
-        get_output_fp = partial(join, e.ebi_dir)
+        self.assertEqual(e.ascp_reply, join(e.full_ebi_dir, 'ascp_reply.txt'))
+        self.assertEqual(e.curl_reply, join(e.full_ebi_dir, 'curl_reply.xml'))
+        get_output_fp = partial(join, e.full_ebi_dir)
         self.assertEqual(e.xml_dir, get_output_fp('xml_dir'))
-        self.assertEqual(e.study_xml_fp, None)
-        self.assertEqual(e.sample_xml_fp, None)
-        self.assertEqual(e.experiment_xml_fp,  None)
-        self.assertEqual(e.run_xml_fp, None)
-        self.assertEqual(e.submission_xml_fp, None)
+        self.assertIsNone(e.study_xml_fp)
+        self.assertIsNone(e.sample_xml_fp)
+        self.assertIsNone(e.experiment_xml_fp)
+        self.assertIsNone(e.run_xml_fp)
+        self.assertIsNone(e.submission_xml_fp)
 
-        self.assertEqual(e.ebi_dir, get_output_fp())
         for sample in e.sample_template:
             self.assertEqual(e.sample_template[sample], e.samples[sample])
             self.assertEqual(e.prep_template[sample], e.samples_prep[sample])
@@ -219,57 +219,50 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         submission = EBISubmission(2, 'ADD')
 
         test_ebi_seq_xfer_user = 'ebi_seq_xfer_user'
-        test_ebi_access_key = 'ebi_access_key'
+        test_ebi_seq_xfer_pass = 'ebi_seq_xfer_pass'
         test_ebi_dropbox_url = 'ebi_dropbox_url'
 
-        # Without curl certificate authentication
-        test_ebi_skip_curl_cert = True
         submission.study_xml_fp = "/some/path/study.xml"
         submission.sample_xml_fp = "/some/path/sample.xml"
         submission.experiment_xml_fp = "/some/path/experiment.xml"
         submission.run_xml_fp = "/some/path/run.xml"
         submission.submission_xml_fp = "/some/path/submission.xml"
         obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
-                                               test_ebi_access_key,
-                                               test_ebi_skip_curl_cert,
+                                               test_ebi_seq_xfer_pass,
                                                test_ebi_dropbox_url)
-        exp = ('curl -k '
+        exp = ('curl -sS -k '
                '-F "SUBMISSION=@/some/path/submission.xml" '
                '-F "STUDY=@/some/path/study.xml" '
                '-F "SAMPLE=@/some/path/sample.xml" '
                '-F "RUN=@/some/path/run.xml" '
                '-F "EXPERIMENT=@/some/path/experiment.xml" '
                '"ebi_dropbox_url/?auth=ENA%20ebi_seq_xfer_user'
-               '%20ebi_access_key"')
-        self.assertEqual(obs, exp)
-
-        # With curl certificate authentication
-        test_ebi_skip_curl_cert = False
-        obs = submission.generate_curl_command(test_ebi_seq_xfer_user,
-                                               test_ebi_access_key,
-                                               test_ebi_skip_curl_cert,
-                                               test_ebi_dropbox_url)
-        exp = ('curl '
-               '-F "SUBMISSION=@/some/path/submission.xml" '
-               '-F "STUDY=@/some/path/study.xml" '
-               '-F "SAMPLE=@/some/path/sample.xml" '
-               '-F "RUN=@/some/path/run.xml" '
-               '-F "EXPERIMENT=@/some/path/experiment.xml" '
-               '"ebi_dropbox_url/?auth=ENA%20ebi_seq_xfer_user'
-               '%20ebi_access_key"')
+               '%20ebi_seq_xfer_pass"')
         self.assertEqual(obs, exp)
 
 
 @qiita_test_checker()
 class TestEBISubmissionWriteRead(TestEBISubmission):
-    def write_demux_files(self, prep_template):
+    def write_demux_files(self, prep_template, sequences='FASTA-EXAMPLE'):
         """Writes a demux test file to avoid duplication of code"""
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')
-        with open(fna_fp, 'w') as f:
-            f.write(FASTA_EXAMPLE)
-        with File(demux_fp, "w") as f:
-            to_hdf5(fna_fp, f)
+        if sequences == 'FASTA-EXAMPLE':
+            with open(fna_fp, 'w') as f:
+                f.write(FASTA_EXAMPLE)
+            with File(demux_fp, "w") as f:
+                to_hdf5(fna_fp, f)
+        elif sequences == 'WRONG-SEQS':
+            with open(fna_fp, 'w') as f:
+                f.write('>a_1 X orig_bc=X new_bc=X bc_diffs=0\nCCC')
+            with File(demux_fp, "w") as f:
+                to_hdf5(fna_fp, f)
+        elif sequences == 'EMPTY':
+            with open(demux_fp, 'w') as f:
+                f.write("")
+        else:
+            raise ValueError('Wrong sequences values: %s. Valid values: '
+                             'FASTA_EXAMPLE, WRONG-SEQS, EMPTY' % sequences)
 
         ppd = PreprocessedData.create(Study(1),
                                       "preprocessed_sequence_illumina_params",
@@ -445,14 +438,14 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         # the EBISubmission can be generated
         ppd = self.generate_new_prep_template_and_write_demux_files(True)
         e = EBISubmission(ppd.id, 'ADD')
-        self.files_to_remove.append(e.ebi_dir)
+        self.files_to_remove.append(e.full_ebi_dir)
         exp = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182']
         self.assertItemsEqual(exp, e.samples)
 
     def test_generate_experiment_xml(self):
         ppd = self.generate_new_study_with_preprocessed_data()
         submission = EBISubmission(ppd.id, 'ADD')
-        self.files_to_remove.append(submission.ebi_dir)
+        self.files_to_remove.append(submission.full_ebi_dir)
         obs = ET.tostring(submission.generate_experiment_xml())
         exp = EXPERIMENTXML_NEWSTUDY % {
             'organization_prefix': qiita_config.ebi_organization_prefix,
@@ -464,7 +457,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertEqual(obs, exp)
 
         submission = EBISubmission(2, 'ADD')
-        self.files_to_remove.append(submission.ebi_dir)
+        self.files_to_remove.append(submission.full_ebi_dir)
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_experiment_xml(samples=samples))
         exp = EXPERIMENTXML
@@ -491,7 +484,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
     def test_generate_run_xml(self):
         ppd = self.generate_new_study_with_preprocessed_data()
         submission = EBISubmission(ppd.id, 'ADD')
-        self.files_to_remove.append(submission.ebi_dir)
+        self.files_to_remove.append(submission.full_ebi_dir)
         submission.generate_demultiplexed_fastq(mtime=1)
         obs = ET.tostring(submission.generate_run_xml())
         exp = RUNXML_NEWSTUDY % {
@@ -517,7 +510,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             del(submission.samples_prep[k])
 
         submission.generate_demultiplexed_fastq(mtime=1)
-        self.files_to_remove.append(submission.ebi_dir)
+        self.files_to_remove.append(submission.full_ebi_dir)
         obs = ET.tostring(submission.generate_run_xml())
 
         exp = RUNXML % {
@@ -532,7 +525,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
     def test_generate_xml_files(self):
         ppd = self.generate_new_study_with_preprocessed_data()
         e = EBISubmission(ppd.id, 'ADD')
-        self.files_to_remove.append(e.ebi_dir)
+        self.files_to_remove.append(e.full_ebi_dir)
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
         self.assertIsNone(e.experiment_xml_fp)
@@ -548,7 +541,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         ppd = self.generate_new_prep_template_and_write_demux_files(True)
         e = EBISubmission(ppd.id, 'ADD')
-        self.files_to_remove.append(e.ebi_dir)
+        self.files_to_remove.append(e.full_ebi_dir)
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
         self.assertIsNone(e.experiment_xml_fp)
@@ -564,7 +557,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         ppd = self.write_demux_files(PrepTemplate(1))
         e = EBISubmission(ppd.id, 'ADD')
-        self.files_to_remove.append(e.ebi_dir)
+        self.files_to_remove.append(e.full_ebi_dir)
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
         self.assertIsNone(e.experiment_xml_fp)
@@ -578,6 +571,21 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertIsNone(e.study_xml_fp)
         self.assertIsNotNone(e.submission_xml_fp)
 
+    def test_generate_demultiplexed_fastq_failure(self):
+        # generating demux file for testing
+        ppd = self.write_demux_files(PrepTemplate(1), 'EMPTY')
+
+        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
+        with self.assertRaises(EBISubmissionError):
+            ebi_submission.generate_demultiplexed_fastq()
+
+        ppd = self.write_demux_files(PrepTemplate(1), 'WRONG-SEQS')
+        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
+        with self.assertRaises(EBISubmissionError):
+            ebi_submission.generate_demultiplexed_fastq()
+
     def test_generate_demultiplexed_fastq(self):
         # generating demux file for testing
         exp_demux_samples = set(
@@ -590,7 +598,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         # be created
         ebi_submission = EBISubmission(ppd.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
-        self.files_to_remove.append(ebi_submission.ebi_dir)
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
         self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
@@ -601,7 +609,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         # exists and that we have the same files and ignore not fastq.gz files
         ebi_submission = EBISubmission(ppd.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
-        self.files_to_remove.append(ebi_submission.ebi_dir)
+        self.files_to_remove.append(ebi_submission.full_ebi_dir)
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
         # testing that the samples/samples_prep and demux_samples are the same
         self.assertItemsEqual(obs_demux_samples, ebi_submission.samples.keys())
@@ -612,43 +620,45 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         ppd = self.write_demux_files(PrepTemplate(1))
         e = EBISubmission(ppd.id, 'ADD')
         e.generate_demultiplexed_fastq()
-        self.files_to_remove.append(e.ebi_dir)
+        self.files_to_remove.append(e.full_ebi_dir)
         e.generate_xml_files()
         obs = e.generate_send_sequences_cmd()
-        exp = ['ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKB2.640194.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
-               'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKM4.640180.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
-               'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKB3.640195.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
-               'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKB6.640176.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
-               'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKD6.640190.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
-               'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKM6.640187.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
-               'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKD9.640182.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
-               'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKM8.640201.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/',
-               'ascp --ignore-host-key -L- -d -QT -k2 '
-               '/tmp/ebi_submission_3/1.SKM2.640199.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:.//tmp/ebi_submission_3/']
+        _, base_fp = get_mountpoint("preprocessed_data")[0]
+        exp = ('ascp --ignore-host-key -d -QT -k2 '
+               '%(ebi_dir)s/1.SKB2.640194.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'ascp --ignore-host-key -d -QT -k2 '
+               '%(ebi_dir)s/1.SKM4.640180.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'ascp --ignore-host-key -d -QT -k2 '
+               '%(ebi_dir)s/1.SKB3.640195.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'ascp --ignore-host-key -d -QT -k2 '
+               '%(ebi_dir)s/1.SKB6.640176.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'ascp --ignore-host-key -d -QT -k2 '
+               '%(ebi_dir)s/1.SKD6.640190.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'ascp --ignore-host-key -d -QT -k2 '
+               '%(ebi_dir)s/1.SKM6.640187.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'ascp --ignore-host-key -d -QT -k2 '
+               '%(ebi_dir)s/1.SKD9.640182.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'ascp --ignore-host-key -d -QT -k2 '
+               '%(ebi_dir)s/1.SKM8.640201.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'ascp --ignore-host-key -d -QT -k2 '
+               '%(ebi_dir)s/1.SKM2.640199.fastq.gz '
+               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/' % {
+                   'ebi_dir': e.full_ebi_dir}).split('\n')
         self.assertEqual(obs, exp)
 
     def test_parse_EBI_reply(self):
         ppd = self.generate_new_study_with_preprocessed_data()
         study_id = ppd.study
         e = EBISubmission(ppd.id, 'ADD')
-        self.files_to_remove.append(e.ebi_dir)
+        self.files_to_remove.append(e.full_ebi_dir)
         e.generate_demultiplexed_fastq(mtime=1)
         e.generate_xml_files()
         curl_result = CURL_RESULT_FULL.format(
@@ -677,7 +687,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         ppd = self.write_demux_files(PrepTemplate(1))
         e = EBISubmission(ppd.id, 'ADD')
-        self.files_to_remove.append(e.ebi_dir)
+        self.files_to_remove.append(e.full_ebi_dir)
         # removing samples so test text is easier to read
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
                        '1.SKM8.640201', '1.SKM2.640199', '1.SKB3.640195']
