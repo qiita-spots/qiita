@@ -38,14 +38,8 @@ script:
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then
-      qiita-test-install ;
-      if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
-        nosetests --with-doctest --with-coverage;
-      else
-        nosetests --with-doctest --with-coverage --ignore-files='(^\.|^_|^test_ebi.py$)';
-      fi;
-    fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita-test-install ; fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then flake8 qiita_* setup.py scripts/qiita
     scripts/qiita-env scripts/qiita-test-install ; fi
   - ls -R /home/travis/miniconda3/envs/env_name/lib/python2.7/site-packages/qiita_pet/support_files/doc/
