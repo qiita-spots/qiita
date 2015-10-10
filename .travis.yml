@@ -46,8 +46,6 @@ script:
         nosetests --with-doctest --with-coverage;
       fi;
     fi
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then
-    ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then flake8 qiita_* setup.py scripts/qiita
     scripts/qiita-env scripts/qiita-test-install ; fi
   - ls -R /home/travis/miniconda3/envs/env_name/lib/python2.7/site-packages/qiita_pet/support_files/doc/
