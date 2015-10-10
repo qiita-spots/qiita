@@ -68,7 +68,7 @@ class TestMetadataPipeline(TestCase):
         self.assertEqual(set(obs_st.categories()), exp)
 
         exp = {"barcode", "primer", "center_name", "run_prefix", "platform",
-               "library_construction_protocol",
+               "library_construction_protocol", "instrument_model",
                "experiment_design_description"}
         self.assertEqual(set(obs_pt.categories()), exp)
 
@@ -94,7 +94,7 @@ class TestMetadataPipeline(TestCase):
         self.assertEqual(set(obs_st.categories()), exp)
 
         exp = {"barcode", "primer", "center_name", "run_prefix", "platform",
-               "library_construction_protocol",
+               "library_construction_protocol", "instrument_model",
                "experiment_design_description", "reverselinkerprimer"}
         self.assertEqual(set(obs_pt.categories()), exp)
 
@@ -105,38 +105,41 @@ class TestMetadataPipeline(TestCase):
 
 
 QIIME_MAP = (
-    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\t"
+    "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tinstrument_model\t"
     "physical_specimen_location\tphysical_specimen_remaining\tdna_extracted\t"
     "sample_type\thost_subject_id\tlatitude\tlongitude\ttaxon_id\t"
     "scientific_name\tcenter_name\trun_prefix\tplatform\t"
     "library_construction_protocol\texperiment_design_description\t"
     "collection_timestamp\tDescription\n"
-    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tUCSD\tTRUE\tTRUE\ttype1\t"
-    "NotIdentified\t4.1\t4.1\t9606\thomo sapiens\tANL\trp_1\tILLUMINA\t"
-    "protocol_1\tedd_1\t05/28/15 11:00\tDescription S1\n"
-    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tUCSD\tTRUE\tTRUE\ttype2\t"
-    "NotIdentified\t4.2\t4.2\t9606\thomo sapiens\tANL\trp_1\tILLUMINA\t"
-    "protocol_1\tedd_1\t05/28/15 11:00\tDescription S2\n"
-    "Sample3\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tUCSD\tTRUE\tTRUE\ttype3\t"
-    "NotIdentified\t4.3\t4.3\t9606\thomo sapiens\tANL\trp_2\tILLUMINA\t"
-    "protocol_1\tedd_1\t05/28/15 11:00\tDescription S3\n")
+    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tIllumina MiSeq\tUCSD\tTRUE\t"
+    "TRUE\ttype1\tNotIdentified\t4.1\t4.1\t9606\thomo sapiens\tANL\trp_1\t"
+    "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00\tDescription S1\n"
+    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tIllumina MiSeq\tUCSD\tTRUE\t"
+    "TRUE\ttype2\tNotIdentified\t4.2\t4.2\t9606\thomo sapiens\tANL\trp_1\t"
+    "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00\tDescription S2\n"
+    "Sample3\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tIllumina MiSeq\tUCSD\tTRUE\t"
+    "TRUE\ttype3\tNotIdentified\t4.3\t4.3\t9606\thomo sapiens\tANL\trp_2\t"
+    "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00\tDescription S3\n")
 
 QIIME_MAP_WITH_REVERSE_LINKER_PRIMER = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tReverseLinkerPrimer\t"
     "physical_specimen_location\tphysical_specimen_remaining\tdna_extracted\t"
     "sample_type\thost_subject_id\tlatitude\tlongitude\ttaxon_id\t"
-    "scientific_name\tcenter_name\trun_prefix\tplatform\t"
+    "scientific_name\tcenter_name\trun_prefix\tplatform\tinstrument_model\t"
     "library_construction_protocol\texperiment_design_description\t"
     "collection_timestamp\tDescription\n"
     "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCMGCCGCGGTAA\tUCSD\t"
     "TRUE\tTRUE\ttype1\tNotIdentified\t4.1\t4.1\t9606\thomo sapiens\tANL\t"
-    "rp_1\tILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00\tDescription S1\n"
+    "rp_1\tILLUMINA\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00\t"
+    "Description S1\n"
     "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCMGCCGCGGTAA\tUCSD\t"
     "TRUE\tTRUE\ttype2\tNotIdentified\t4.2\t4.2\t9606\thomo sapiens\tANL\t"
-    "rp_1\tILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00\tDescription S2\n"
+    "rp_1\tILLUMINA\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00\t"
+    "Description S2\n"
     "Sample3\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCMGCCGCGGTAA\tUCSD\t"
     "TRUE\tTRUE\ttype3\tNotIdentified\t4.3\t4.3\t9606\thomo sapiens\tANL\t"
-    "rp_2\tILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00\tDescription S3\n")
+    "rp_2\tILLUMINA\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00\t"
+    "Description S3\n")
 
 QIIME_MAP_ERROR = (
     "#SampleID\tBarcodeSequence\tphysical_specimen_location\t"
