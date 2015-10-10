@@ -189,7 +189,10 @@ def get_lat_longs():
                     AND SPLIT_PART(table_name, '_', 2)::int IN %s;"""
         TRN.add(sql, [tuple(portal_table_ids)])
 
-        sql = "SELECT latitude, longitude FROM qiita.{0}"
+        sql = """SELECT latitude, longitude
+                 FROM qiita.{0}
+                 WHERE latitude IS NOT NULL
+                    AND longitude IS NOT NULL"""
         idx = TRN.index
 
         portal_tables = TRN.execute_fetchflatten()

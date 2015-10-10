@@ -80,7 +80,7 @@ class UtilTests(TestCase):
     def test_stats_from_df(self):
         obs = stats_from_df(SampleTemplate(1).to_dataframe())
         for k in obs:
-            self.assertEqual(obs[k], SUMMARY_STATS[k])
+            self.assertItemsEqual(obs[k], SUMMARY_STATS[k])
 
     def test_dataframe_from_template(self):
         template = PrepTemplate(1)
@@ -327,7 +327,6 @@ SUMMARY_STATS = {
                  ('13.089194595', 1),
                  ('23.1218032799', 1),
                  ('29.1499460692', 1),
-                 ('31.7167821863', 1),
                  ('35.2374368957', 1),
                  ('38.2627021402', 1),
                  ('40.8623799474', 1),
@@ -336,7 +335,6 @@ SUMMARY_STATS = {
                  ('53.5050692395', 1),
                  ('57.571893782', 1),
                  ('60.1102854322', 1),
-                 ('63.6505562766', 1),
                  ('68.0991287718', 1),
                  ('68.51099627', 1),
                  ('74.0894932572', 1),
@@ -392,7 +390,6 @@ SUMMARY_STATS = {
         ('84.9722975792', 1),
         ('86.3615778099', 1),
         ('92.5274472082', 1),
-        ('95.5088566087', 1),
         ('96.0693176066', 1)],
     'pcr_primers': [('FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 27)],
     'ph': [('6.8', 9), ('6.82', 10), ('6.94', 8)],
