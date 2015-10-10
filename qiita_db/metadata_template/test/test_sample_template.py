@@ -1227,6 +1227,19 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         with self.assertRaises(QiitaDBError):
             st.update(self.metadata_dict_updated_column_error)
 
+    def test_update_fewer_samples(self):
+        """Updates using a dataframe with less samples that in the DB"""
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        new_metadata = pd.DataFrame.from_dict(
+            {'Sample1': {'physical_specimen_location': 'CHANGE'}},
+            orient='index')
+        exp = {s_id: st[s_id]._to_dict() for s_id in st}
+        s_id = '%d.Sample1' % self.new_study.id
+        exp[s_id]['physical_specimen_location'] = 'CHANGE'
+        npt.assert_warns(QiitaDBWarning, st.update, new_metadata)
+        obs = {s_id: st[s_id]._to_dict() for s_id in st}
+        self.assertEqual(obs, exp)
+
     def test_update_numpy(self):
         """Update values in existing mapping file with numpy values"""
         metadata_dict = {
