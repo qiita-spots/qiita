@@ -78,16 +78,12 @@ class ConfigurationManager(object):
     smtp_email : str
         The email address that mail will be sent from when sending mail from
         the SMTP server
-    ebi_access_key : str
-        The access key issued by EBI for REST submissions
     ebi_seq_xfer_user : str
         The user to use when submitting to EBI
     ebi_seq_xfer_pass : str
         The password for the ebi_seq_xfer_user
     ebi_seq_xfer_url : str
         The URL of EBI's sequence portal site
-    ebi_skip_curl_cert : bool
-        Whether or not to skip the certificate check when curling the metadata
     ebi_center_name : str
         The name of the sequencing center to use when doing EBI submissions
     ebi_organization_prefix : str
@@ -213,14 +209,11 @@ class ConfigurationManager(object):
 
     def _get_ebi(self, config):
         sec_get = partial(config.get, 'ebi')
-        sec_getbool = partial(config.getboolean, 'ebi')
 
-        self.ebi_access_key = sec_get('EBI_ACCESS_KEY')
         self.ebi_seq_xfer_user = sec_get('EBI_SEQ_XFER_USER')
         self.ebi_seq_xfer_pass = sec_get('EBI_SEQ_XFER_PASS')
         self.ebi_seq_xfer_url = sec_get('EBI_SEQ_XFER_URL')
         self.ebi_dropbox_url = sec_get('EBI_DROPBOX_URL')
-        self.ebi_skip_curl_cert = sec_getbool('EBI_SKIP_CURL_CERT')
         self.ebi_center_name = sec_get('EBI_CENTER_NAME')
         self.ebi_organization_prefix = sec_get('EBI_ORGANIZATION_PREFIX')
 

@@ -39,6 +39,9 @@ STATUS_STYLER = {
     'public':
         ('glyphicon glyphicon-eye-open', 'glyphicon glyphicon-globe', 'green')}
 
+EBI_LINKIFIER = ('<a href="http://www.ebi.ac.uk/ena/data/view/{0}" '
+                 'target="_blank">{0}</a>')
+
 
 def linkify(link_template, item):
     """Formats a strings into a URL using string replacement

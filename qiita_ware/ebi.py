@@ -1,185 +1,241 @@
-from re import search
-from tempfile import mkstemp
-from subprocess import call
-from shlex import split as shsplit
-from glob import glob
-from os.path import basename, exists, join, split
-from os import environ, close
-from datetime import date, timedelta, datetime
+from os.path import basename, join, isdir, isfile
+from os import makedirs, remove, listdir
+from datetime import date, timedelta
+from urllib import quote
 from xml.etree import ElementTree as ET
-from xml.dom import minidom
+from xml.etree.ElementTree import ParseError
 from xml.sax.saxutils import escape
-
-from future.utils import viewitems
-from skbio.util import safe_md5
+from gzip import GzipFile
+from functools import partial
+from h5py import File
+from future.utils import viewitems, viewkeys
+from skbio.util import safe_md5, create_dir
 
 from qiita_core.qiita_settings import qiita_config
-from qiita_ware.exceptions import EBISumbissionError
+from qiita_ware.exceptions import EBISubmissionError
+from qiita_ware.demux import to_per_sample_ascii
+from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
-from qiita_db.util import convert_to_id
+from qiita_db.util import convert_to_id, get_mountpoint
+from qiita_db.study import Study
+from qiita_db.data import PreprocessedData
+from qiita_db.metadata_template import PrepTemplate, SampleTemplate
 
 
-class InvalidMetadataError(Exception):
-    """Error that is raised when metadata is not representable as a string"""
-    pass
-
-
-class SampleAlreadyExistsError(Exception):
-    """Error that is raised when a sample is added to a submission that already
-    has a sample by that name"""
-    pass
-
-
-class NoXMLError(Exception):
-    """Error that is raised when the generation of one XML file cannot be
-    completed because it depends on another XML file that has not yet been
-    generated"""
-    pass
-
-
-def clean_whitespace(s):
-    """Standardizes whitespace so that there is only ever one space separating
-    tokens"""
-    return ' '.join(s.split())
-
-
-def iter_file_via_list_of_dicts(input_file):
-    """Iterates over a TSV file, yielding dicts keyed by the column headers
+def clean_whitespace(text):
+    """Standardizes whitespaces so there is only one space separating tokens
 
     Parameters
     ----------
-    input_file : file
-        The file to iterate over
+    text : str
+        The fixed text
 
     Returns
     -------
-    generator
-        Yields dicts keyed by the column headers
-
-    Notes
-    -----
-    - Assumes the first line contains the column headers
-    - Assumes no duplicate column headers
-    - All column headers will be transformed to lowercase
-    - Skips lines containing only whitespace
+    str
+        fixed text
     """
-    header_line = input_file.readline()
-    header_line = header_line.lstrip('#')
-    headers = [x.strip().lower() for x in header_line.split('\t')]
-    for line in input_file:
-        line = line.strip()
-        if not line:
-            continue
-
-        line_elements = line.split('\t')
-        yield dict(zip(headers, line_elements))
+    return ' '.join(unicode(str(text), 'utf8').split())
 
 
 class EBISubmission(object):
-    """Define an EBI submission and facilitate generation of required XML files
+    """Define an EBI submission, generate submission files and submit
+
+    Submit a preprocessed data to EBI
+
+    The steps for EBI submission are:
+    1. Validate that we have all required info to submit
+    2. Generate per sample demultiplexed files
+    3. Generate XML files for submission
+    4. Submit sequences files
+    5. Submit XML files. The answer has the EBI submission numbers.
 
     Parameters
     ----------
-    preprocessed_data_id : str
-    study_title : str
-    study_abstract : str
-    investigation_type : str
-        Any of the options provided by ebi, see:
-        https://www.ebi.ac.uk/ega/sites/ebi.ac.uk.ega/files/documents/Study.xml
-        If `'Other'` is passed, then you must provide a value in the
-        new_investigation_type argument.
-    empty_value : str, optional
-        Defaults to "no_data". This is the value that will be used when data
-        for a particular metadata field is missing
-    new_investigation_type: str, optional
-        'metagenome', and 'mimarks-survey' are specially recognized and used to
-        set other attributes in the submission, but any string is valid. This
-        value is required only if `'Other'` is passed in `investigation_type`.
-    """
-    def __init__(self, preprocessed_data_id, study_title, study_abstract,
-                 investigation_type, empty_value='no_data',
-                 new_investigation_type=None, pmids=None, **kwargs):
-        self.preprocessed_data_id = preprocessed_data_id
-        self.study_title = study_title
-        self.study_abstract = study_abstract
-        self.investigation_type = investigation_type
-        self.empty_value = empty_value
-        self.new_investigation_type = new_investigation_type
-        self.sequence_files = []
+    preprocessed_data_id : int
+        The preprocesssed data id to submit
+    action : str
+        The action to perform. Valid options see
+        EBISubmission.valid_ebi_actions
 
+    Raises
+    ------
+    EBISubmissionError
+        - If the action is not in EBISubmission.valid_ebi_actions
+        - If the preprocessed data has been already submitted to EBI
+        - If the status of the study attached to the preprocessed data is
+        submitting
+        - If the prep template investigation type is not in the
+        ena_ontology.terms or not in the ena_ontology.user_defined_terms
+        - If the submission is missing required EBI fields either in the sample
+        or prep template
+        - If the sample preparation metadata doesn't have a platform field or
+        it isn't a EBISubmission.valid_platforms
+    """
+
+    valid_ebi_actions = ('ADD', 'VALIDATE', 'MODIFY')
+    valid_ebi_submission_states = ('submitting')
+    # valid_platforms dict of 'platform': ['valid_instrument_models']
+    valid_platforms = {'LS454': ['454 GS', '454 GS 20', '454 GS FLX',
+                                 '454 GS FLX+', '454 GS FLX TITANIUM',
+                                 '454 GS JUNIOR', 'UNSPECIFIED'],
+                       'ILLUMINA': ['ILLUMINA GENOME ANALYZER',
+                                    'ILLUMINA GENOME ANALYZER II',
+                                    'ILLUMINA GENOME ANALYZER IX',
+                                    'ILLUMINA HISEQ 2500',
+                                    'ILLUMINA HISEQ 2000',
+                                    'ILLUMINA HISEQ 1500',
+                                    'ILLUMINA HISEQ 1000', 'ILLUMINA MISEQ',
+                                    'ILLUMINA HISCANSQ', 'HISEQ X TEN',
+                                    'NEXTSEQ 500', 'UNSPECIFIED']}
+    xmlns_xsi = "http://www.w3.org/2001/XMLSchema-instance"
+    xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
+    experiment_library_fields = ['library_strategy']
+
+    def __init__(self, preprocessed_data_id, action):
+        error_msgs = []
+
+        if action not in self.valid_ebi_actions:
+            error_msg = ("%s is not a valid EBI submission action, valid "
+                         "actions are: %s" %
+                         (action, ', '.join(self.valid_ebi_actions)))
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
+
+        ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        self.action = action
+        self.preprocessed_data = PreprocessedData(preprocessed_data_id)
+        self.study = Study(self.preprocessed_data.study)
+        self.sample_template = SampleTemplate(self.study.sample_template)
+        self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
+
+        if self.preprocessed_data.is_submitted_to_ebi:
+            error_msg = ("Cannot resubmit! Preprocessed data %d has already "
+                         "been submitted to EBI.")
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
+
+        status = self.study.ebi_submission_status
+        if status in self.valid_ebi_submission_states:
+            error_msg = ("Cannot perform parallel EBI submission for the same "
+                         "study. Current status of the study: %s" % status)
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
+
+        self.preprocessed_data_id = preprocessed_data_id
+        self.study_title = self.study.title
+        self.study_abstract = self.study.info['study_abstract']
+
+        it = self.prep_template.investigation_type
+        if it in ena_ontology.terms:
+            self.investigation_type = it
+            self.new_investigation_type = None
+        elif it in ena_ontology.user_defined_terms:
+            self.investigation_type = 'Other'
+            self.new_investigation_type = it
+        else:
+            # This should never happen
+            error_msgs.append("Unrecognized investigation type: '%s'. This "
+                              "term is neither one of the official terms nor "
+                              "one of the user-defined terms in the ENA "
+                              "ontology." % it)
+        _, base_fp = get_mountpoint("preprocessed_data")[0]
+        self.ebi_dir = '%d_ebi_submission' % preprocessed_data_id
+        self.full_ebi_dir = join(base_fp, self.ebi_dir)
+        self.ascp_reply = join(self.full_ebi_dir, 'ascp_reply.txt')
+        self.curl_reply = join(self.full_ebi_dir, 'curl_reply.xml')
+        self.xml_dir = join(self.full_ebi_dir, 'xml_dir')
         self.study_xml_fp = None
         self.sample_xml_fp = None
         self.experiment_xml_fp = None
         self.run_xml_fp = None
         self.submission_xml_fp = None
-        self.pmids = pmids if pmids is not None else []
+        self.pmids = self.study.pmids
 
-        self.ebi_dir = self._get_ebi_dir()
+        # getting the restrictions
+        st_missing = self.sample_template.check_restrictions(
+            [self.sample_template.columns_restrictions['EBI']])
+        pt_missing = self.prep_template.check_restrictions(
+            [self.prep_template.columns_restrictions['EBI']])
+        # testing if there are any missing columns
+        if st_missing:
+            error_msgs.append("Missing column in the sample template: %s" %
+                              ', '.join(list(st_missing)))
+        if pt_missing:
+            error_msgs.append("Missing column in the prep template: %s" %
+                              ', '.join(list(pt_missing)))
 
-        if self.investigation_type == 'Other' and \
-                self.new_investigation_type is None:
-            raise ValueError("If the investigation_type is 'Other' you have "
-                             " to specify a value for new_investigation_type.")
-
-        ontology = Ontology(convert_to_id('ENA', 'ontology'))
-        if ontology.term_type(self.investigation_type) == 'not_ontology':
-            raise ValueError("The investigation type must be part of ENA's "
-                             "ontology, '%s' is not valid" %
-                             self.investigation_type)
-
-        # dicts that map investigation_type to library attributes
-        lib_strategies = {'metagenome': 'POOLCLONE',
-                          'mimarks-survey': 'AMPLICON'}
-        lib_selections = {'mimarks-survey': 'PCR'}
-        lib_sources = {}
-
-        # if the investigation_type is 'Other' we should use the value in
-        # the new_investigation_type attribute to retrieve this information
-        if self.investigation_type == 'Other':
-            key = self.new_investigation_type
-        else:
-            key = self.investigation_type
-
-        self.library_strategy = lib_strategies.get(key, "OTHER")
-        self.library_source = lib_sources.get(key, "METAGENOMIC")
-        self.library_selection = lib_selections.get(key, "unspecified")
-
-        # This allows addition of other arbitrary study metadata
-        self.additional_metadata = self._stringify_kwargs(kwargs)
-
-        # This will hold the submission's samples, keyed by the sample name
+        # generating all samples from sample template
         self.samples = {}
+        self.samples_prep = {}
+        self.sample_demux_fps = {}
+        get_output_fp = partial(join, self.full_ebi_dir)
+        nvp = []
+        nvim = []
+        for k, v in viewitems(self.sample_template):
+            if k not in self.prep_template:
+                continue
+            sample_prep = self.prep_template[k]
 
-    def _get_ebi_dir(self):
-        timestamp = datetime.now().strftime('%Y_%m_%d_%H:%M:%S')
-        return '%s_%s' % (self.preprocessed_data_id, timestamp)
+            # validating required fields
+            if ('platform' not in sample_prep or
+                    sample_prep['platform'] is None):
+                nvp.append(k)
+            else:
+                platform = sample_prep['platform'].upper()
+                if platform not in self.valid_platforms:
+                    nvp.append(k)
+                else:
+                    if ('instrument_model' not in sample_prep or
+                            sample_prep['instrument_model'] is None):
+                        nvim.append(k)
+                    else:
+                        im = sample_prep['instrument_model'].upper()
+                        if im not in self.valid_platforms[platform]:
+                            nvim.append(k)
 
-    def _stringify_kwargs(self, kwargs_dict):
-        """Turns values in a dictionay into strings, None, or self.empty_value
-        """
-        try:
-            result = {
-                str(k): str(v) if v is not None else self.empty_value
-                for k, v in viewitems(kwargs_dict)}
-            return result
-        except ValueError:
-            raise InvalidMetadataError("All additional metadata passed via "
-                                       "kwargs to the EBISubmission "
-                                       "constructor must be representatable "
-                                       "as strings.")
+            self.samples[k] = v
+            self.samples_prep[k] = sample_prep
+            self.sample_demux_fps[k] = get_output_fp("%s.fastq.gz" % k)
+
+        if nvp:
+            error_msgs.append("These samples do not have a valid platform "
+                              "(instrumet model wasn't checked): %s" % (
+                                  ', '.join(nvp)))
+        if nvim:
+            error_msgs.append("These samples do not have a valid instrument "
+                              "model: %s" % (', '.join(nvim)))
+        if error_msgs:
+            error_msgs = ("Errors found during EBI submission for study #%d, "
+                          "preprocessed data #%d and prep template #%d:\n%s"
+                          % (self.study.id, preprocessed_data_id,
+                             self.prep_template.id, '\n'.join(error_msgs)))
+            LogEntry.create('Runtime', error_msgs)
+            raise EBISubmissionError(error_msgs)
+
+        self._sample_aliases = {}
+        self._experiment_aliases = {}
+        self._run_aliases = {}
+
+        self._ebi_sample_accessions = \
+            self.sample_template.ebi_sample_accessions
+        self._ebi_experiment_accessions = \
+            self.prep_template.ebi_experiment_accessions
 
     def _get_study_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
-        study_alias_format = '%s_ppdid_%s'
+        study_alias_format = '%s_sid_%s'
         return study_alias_format % (
             qiita_config.ebi_organization_prefix,
-            escape(clean_whitespace(str(self.preprocessed_data_id))))
+            escape(clean_whitespace(str(self.study.id))))
 
     def _get_sample_alias(self, sample_name):
         """Format alias using ``self.preprocessed_data_id``, `sample_name`"""
-        return "%s:%s" % (self._get_study_alias(),
-                          escape(clean_whitespace(str(sample_name))))
+        alias = "%s:%s" % (self._get_study_alias(),
+                           escape(clean_whitespace(str(sample_name))))
+        self._sample_aliases[alias] = sample_name
+        return alias
 
     def _get_experiment_alias(self, sample_name):
         """Format alias using ``self.preprocessed_data_id``, and `sample_name`
@@ -187,7 +243,13 @@ class EBISubmission(object):
         Currently, this is identical to _get_sample_alias above, since we are
         only going to allow submission of one prep for each sample
         """
-        return self._get_sample_alias(sample_name)
+        exp_alias_format = '%s_ptid_%s:%s'
+        alias = exp_alias_format % (
+            qiita_config.ebi_organization_prefix,
+            escape(clean_whitespace(str(self.prep_template.id))),
+            escape(clean_whitespace(str(sample_name))))
+        self._experiment_aliases[alias] = sample_name
+        return alias
 
     def _get_submission_alias(self):
         """Format alias using ``self.preprocessed_data_id``"""
@@ -197,11 +259,15 @@ class EBISubmission(object):
         return submission_alias_format % (qiita_config.ebi_organization_prefix,
                                           safe_preprocessed_data_id)
 
-    def _get_run_alias(self, file_base_name):
-        """Format alias using `file_base_name`
+    def _get_run_alias(self, sample_name):
+        """Format alias using `sample_name`
         """
-        return '%s_%s_run' % (self._get_study_alias(),
-                              basename(file_base_name))
+        alias = '%s_ppdid_%s:%s' % (
+            qiita_config.ebi_organization_prefix,
+            escape(clean_whitespace(str(self.preprocessed_data_id))),
+            sample_name)
+        self._run_aliases[alias] = sample_name
+        return alias
 
     def _get_library_name(self, sample_name):
         """Format alias using `sample_name`
@@ -230,17 +296,16 @@ class EBISubmission(object):
         _id.text = str(pmid)
 
     def generate_study_xml(self):
-        """Generates the study XML file
+        """Generates the string for study XML file
 
         Returns
         -------
-        xml.etree.Element
-            The root elelement of the generated ``ElementTree``
+        ET.Element
+            Object with study XML values
         """
         study_set = ET.Element('STUDY_SET', {
-            'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance",
-            'xsi:noNamespaceSchemaLocation': "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.study.xsd"})
+            'xmlns:xsi': self.xmlns_xsi,
+            'xsi:noNamespaceSchemaLocation': self.xsi_noNSL % "study"})
 
         study = ET.SubElement(study_set, 'STUDY', {
             'alias': self._get_study_alias(),
@@ -272,72 +337,31 @@ class EBISubmission(object):
             for pmid in self.pmids:
                 self._get_pmid_element(study_links, pmid)
 
-        if self.additional_metadata:
-            study_attributes = ET.SubElement(study, 'STUDY_ATTRIBUTES')
-            self._add_dict_as_tags_and_values(study_attributes,
-                                              'STUDY_ATTRIBUTE',
-                                              self.additional_metadata)
-
         return study_set
 
-    def add_sample(self, sample_name, taxon_id, scientific_name,
-                   description, **kwargs):
-        """Adds sample information to the current submission
+    def generate_sample_xml(self, samples=None):
+        """Generates the sample XML file
 
         Parameters
         ----------
-        sample_name : str
-            Unique identifier for the sample
-        taxon_id : str
-            NCBI's taxon ID for the sample
-        scientific_name : str
-            NCBI's scientific name for the `taxon_id`
-        description : str
-
-            Defaults to ``None``. If not provided, the `empty_value` will be
-            used for the description
-
-        Raises
-        ------
-        SampleAlreadyExistsError
-            If `sample_name` already exists in the ``samples`` dict
-        """
-        if sample_name in self.samples:
-            raise SampleAlreadyExistsError("Two samples with the same "
-                                           "sample_name cannot be added to "
-                                           "the same submission. "
-                                           "(sample_name: %s)" % sample_name)
-
-        self.samples[sample_name] = {}
-
-        self.samples[sample_name]['taxon_id'] = escape(
-            clean_whitespace(taxon_id))
-
-        self.samples[sample_name]['scientific_name'] = escape(
-            clean_whitespace(scientific_name))
-
-        self.samples[sample_name]['description'] = escape(
-            clean_whitespace(description))
-
-        self.samples[sample_name]['attributes'] = self._stringify_kwargs(
-            kwargs)
-
-        self.samples[sample_name]['prep'] = None
-
-    def generate_sample_xml(self):
-        """Generates the sample XML file
+        samples : list of str, optional
+            The list of samples to be included in the sample xml. If not
+            provided or an empty list is provided, all the samples are used
 
         Returns
         -------
-        xml.etree.Element
-            The root elelement of the generated ``ElementTree``
+        ET.Element
+            Object with sample XML values
         """
         sample_set = ET.Element('SAMPLE_SET', {
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.sample.xsd"})
+            'xmlns:xsi': self.xmlns_xsi,
+            "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "sample"})
 
-        for sample_name, sample_info in sorted(viewitems(self.samples)):
+        if not samples:
+            samples = viewkeys(self.samples)
+
+        for sample_name in sorted(samples):
+            sample_info = dict(self.samples[sample_name])
             sample = ET.SubElement(sample_set, 'SAMPLE', {
                 'alias': self._get_sample_alias(sample_name),
                 'center_name': qiita_config.ebi_center_name}
@@ -346,110 +370,27 @@ class EBISubmission(object):
             sample_title = ET.SubElement(sample, 'TITLE')
             sample_title.text = escape(clean_whitespace(sample_name))
 
-            sample_name_element = ET.SubElement(sample, 'SAMPLE_NAME')
-            taxon_id = ET.SubElement(sample_name_element, 'TAXON_ID')
-            taxon_id.text = escape(clean_whitespace(sample_info['taxon_id']))
+            sample_sample_name = ET.SubElement(sample, 'SAMPLE_NAME')
+            taxon_id = ET.SubElement(sample_sample_name, 'TAXON_ID')
+            text = sample_info.pop('taxon_id')
+            taxon_id.text = escape(clean_whitespace(text))
 
-            taxon_id = ET.SubElement(sample_name_element, 'SCIENTIFIC_NAME')
-            taxon_id.text = escape(
-                clean_whitespace(sample_info['scientific_name']))
+            scientific_name = ET.SubElement(
+                sample_sample_name, 'SCIENTIFIC_NAME')
+            text = sample_info.pop('scientific_name')
+            scientific_name.text = escape(clean_whitespace(text))
 
             description = ET.SubElement(sample, 'DESCRIPTION')
-            description.text = escape(clean_whitespace(
-                sample_info['description']))
+            text = sample_info.pop('description')
+            description.text = escape(clean_whitespace(text))
 
-            if sample_info['attributes']:
+            if sample_info:
                 sample_attributes = ET.SubElement(sample, 'SAMPLE_ATTRIBUTES')
                 self._add_dict_as_tags_and_values(sample_attributes,
                                                   'SAMPLE_ATTRIBUTE',
-                                                  sample_info['attributes'])
+                                                  sample_info)
 
         return sample_set
-
-    def add_sample_prep(self, sample_name, platform, file_type, file_path,
-                        experiment_design_description,
-                        library_construction_protocol,
-                        **kwargs):
-        """Add prep info for an existing sample
-
-        Parameters
-        ----------
-        sample_name : str
-            The `sample_name` must exist in the ``samples`` list
-        platform : {'LS454', 'ILLUMINA', 'UNKNOWN'}
-            The sequencing platform
-        file_type : {'sff', 'fastq', 'fasta'}
-            The type of file
-        file_path : str
-            The path to the sequence file for this sample
-        experiment_design_description : str
-        library_construction_protocol : str
-
-        Raises
-        ------
-        KeyError
-            If `sample_name` is not in the list of samples in the
-            ``EBISubmission`` object
-        KeyError
-            If there is already prep info associated with the specified sample
-        ValueError
-            If the platform is not one of the recognized platforms
-        """
-        if sample_name not in self.samples:
-            raise KeyError("Sample %s: sample has not yet been associated "
-                           "with the submission.")
-
-        if self.samples[sample_name]['prep']:
-            raise KeyError("Sample %s: multiple rows in prep with this sample "
-                           "id!" % sample_name)
-
-        platforms = ['LS454', 'ILLUMINA', 'UNKNOWN']
-        if platform.upper() not in platforms:
-            raise ValueError("The platform name %s is invalid, must be one of "
-                             "%s (case insensitive)" % (platform,
-                                                        ', '.join(platforms)))
-
-        self.sequence_files.append(file_path)
-        prep_info = self._stringify_kwargs(kwargs)
-        if prep_info is None:
-            prep_info = {}
-        prep_info['platform'] = platform
-        prep_info['file_type'] = file_type
-        prep_info['file_path'] = file_path
-        prep_info['experiment_design_description'] = \
-            experiment_design_description
-        prep_info['library_construction_protocol'] = \
-            library_construction_protocol
-
-        self.samples[sample_name]['prep'] = prep_info
-
-    def _generate_library_descriptor(self, design, sample_name,
-                                     library_construction_protocol):
-        """This XML element (and its subelements) must be written for every
-        sample, but its generation depends on only study-level information.
-        Therefore, we can break it out into its own method.
-        """
-
-        library_descriptor = ET.SubElement(design, 'LIBRARY_DESCRIPTOR')
-        library_name = ET.SubElement(library_descriptor, 'LIBRARY_NAME')
-        library_name.text = self._get_library_name(sample_name)
-
-        library_strategy = ET.SubElement(library_descriptor,
-                                         "LIBRARY_STRATEGY")
-        library_strategy.text = self.library_strategy
-        library_source = ET.SubElement(library_descriptor,
-                                       "LIBRARY_SOURCE")
-        library_source.text = self.library_source
-        library_selection = ET.SubElement(library_descriptor,
-                                          "LIBRARY_SELECTION")
-        library_selection.text = self.library_selection
-        library_layout = ET.SubElement(library_descriptor,
-                                       "LIBRARY_LAYOUT")
-        ET.SubElement(library_layout, "SINGLE")
-        library_construction_protocol_element = ET.SubElement(
-            library_descriptor, "LIBRARY_CONSTRUCTION_PROTOCOL")
-        library_construction_protocol_element.text = escape(clean_whitespace(
-            library_construction_protocol))
 
     def _generate_spot_descriptor(self, design, platform):
         """This XML element (and its subelements) must be written for every
@@ -475,64 +416,101 @@ class EBISubmission(object):
         base_coord = ET.SubElement(read_spec, 'BASE_COORD')
         base_coord.text = '1'
 
-    def generate_experiment_xml(self):
+    def generate_experiment_xml(self, samples=None):
         """Generates the experiment XML file
+
+        Parameters
+        ----------
+        samples : list of str, optional
+            The list of samples to be included in the experiment xml
 
         Returns
         -------
-        xml.etree.Element
-            The root elelement of the generated ``ElementTree``
+        ET.Element
+            Object with experiment XML values
         """
-        study_alias = self._get_study_alias()
+        study_accession = self.study.ebi_study_accession
+        if study_accession:
+            study_ref_dict = {'accession': study_accession}
+        else:
+            study_ref_dict = {'refname': self._get_study_alias()}
+
         experiment_set = ET.Element('EXPERIMENT_SET', {
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.experiment.xsd"})
-        for sample_name, sample_info in sorted(self.samples.items()):
-            sample_alias = self._get_sample_alias(sample_name)
+            'xmlns:xsi': self.xmlns_xsi,
+            "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "experiment"})
 
+        samples = samples if samples is not None else viewkeys(self.samples)
+
+        for sample_name in sorted(samples):
             experiment_alias = self._get_experiment_alias(sample_name)
+            sample_prep = dict(self.samples_prep[sample_name])
+            if self._ebi_sample_accessions[sample_name]:
+                sample_descriptor_dict = {
+                    'accession': self._ebi_sample_accessions[sample_name]}
+            else:
+                sample_descriptor_dict = {
+                    'refname': self._get_sample_alias(sample_name)}
 
-            platform = sample_info['prep']['platform']
+            platform = sample_prep.pop('platform')
             experiment = ET.SubElement(experiment_set, 'EXPERIMENT', {
                 'alias': experiment_alias,
                 'center_name': qiita_config.ebi_center_name}
             )
             title = ET.SubElement(experiment, 'TITLE')
             title.text = experiment_alias
-            ET.SubElement(experiment, 'STUDY_REF', {
-                'refname': study_alias}
-            )
+            ET.SubElement(experiment, 'STUDY_REF', study_ref_dict)
 
             design = ET.SubElement(experiment, 'DESIGN')
             design_description = ET.SubElement(design,
                                                'DESIGN_DESCRIPTION')
-            design_description.text = escape(clean_whitespace(
-                sample_info['prep']['experiment_design_description']))
-            ET.SubElement(
-                design, 'SAMPLE_DESCRIPTOR', {'refname': sample_alias}
-            )
+            edd = sample_prep.pop('experiment_design_description')
+            design_description.text = escape(clean_whitespace(edd))
+            ET.SubElement(design, 'SAMPLE_DESCRIPTOR', sample_descriptor_dict)
 
-            self._generate_library_descriptor(
-                design, sample_name,
-                sample_info['prep']['library_construction_protocol']
-            )
+            # this is the library contruction section. The only required fields
+            # is library_construction_protocol, the other are optional
+            library_descriptor = ET.SubElement(design, 'LIBRARY_DESCRIPTOR')
+            library_name = ET.SubElement(library_descriptor, 'LIBRARY_NAME')
+            library_name.text = self._get_library_name(sample_name)
+
+            # hardcoding some values,
+            # see https://github.com/biocore/qiita/issues/1485
+            library_source = ET.SubElement(library_descriptor,
+                                           "LIBRARY_SOURCE")
+            library_source.text = "METAGENOMIC"
+            library_selection = ET.SubElement(library_descriptor,
+                                              "LIBRARY_SELECTION")
+            library_selection.text = "PCR"
+            library_layout = ET.SubElement(library_descriptor,
+                                           "LIBRARY_LAYOUT")
+            ET.SubElement(library_layout, "SINGLE")
+
+            lcp = ET.SubElement(library_descriptor,
+                                "LIBRARY_CONSTRUCTION_PROTOCOL")
+            lcp.text = escape(clean_whitespace(
+                sample_prep.pop('library_construction_protocol')))
+
+            # these are not requiered field but present add them in the right
+            # format
+            for field in self.experiment_library_fields:
+                if field in sample_prep:
+                    element = ET.SubElement(library_descriptor, field.upper())
+                    element.text = sample_prep.pop(field)
 
             self._generate_spot_descriptor(design, platform)
 
             platform_element = ET.SubElement(experiment, 'PLATFORM')
             platform_info = ET.SubElement(platform_element,
                                           platform.upper())
-            instrument_model = ET.SubElement(platform_info,
-                                             'INSTRUMENT_MODEL')
-            instrument_model.text = 'unspecified'
+            instrument_model = ET.SubElement(platform_info, 'INSTRUMENT_MODEL')
+            instrument_model.text = sample_prep.pop('instrument_model')
 
-            if sample_info['prep']:
+            if sample_prep:
                 experiment_attributes = ET.SubElement(
                     experiment, 'EXPERIMENT_ATTRIBUTES')
                 self._add_dict_as_tags_and_values(experiment_attributes,
                                                   'EXPERIMENT_ATTRIBUTE',
-                                                  sample_info['prep'])
+                                                  sample_prep)
 
         return experiment_set
 
@@ -541,30 +519,34 @@ class EBISubmission(object):
 
         Returns
         -------
-        xml.etree.Element
-            The root elelement of the generated ``ElementTree``
+        ET.Element
+            Object with run XML values
         """
         run_set = ET.Element('RUN_SET', {
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.run.xsd"})
-        for sample_name, sample_info in sorted(viewitems(self.samples)):
+            'xmlns:xsi': self.xmlns_xsi,
+            "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "run"})
+        for sample_name, sample_prep in sorted(viewitems(self.samples_prep)):
+            sample_prep = dict(sample_prep)
 
-            experiment_alias = self._get_experiment_alias(sample_name)
+            if self._ebi_experiment_accessions[sample_name]:
+                experiment_ref_dict = {
+                    'accession': self._ebi_experiment_accessions[sample_name]}
+            else:
+                experiment_alias = self._get_experiment_alias(sample_name)
+                experiment_ref_dict = {'refname': experiment_alias}
 
-            file_type = sample_info['prep']['file_type']
-            file_path = sample_info['prep']['file_path']
+            # We only submit fastq
+            file_type = 'fastq'
+            file_path = self.sample_demux_fps[sample_name]
 
             with open(file_path) as fp:
                 md5 = safe_md5(fp).hexdigest()
 
             run = ET.SubElement(run_set, 'RUN', {
-                'alias': self._get_run_alias(basename(file_path)),
+                'alias': self._get_run_alias(sample_name),
                 'center_name': qiita_config.ebi_center_name}
             )
-            ET.SubElement(run, 'EXPERIMENT_REF', {
-                'refname': experiment_alias}
-            )
+            ET.SubElement(run, 'EXPERIMENT_REF', experiment_ref_dict)
             data_block = ET.SubElement(run, 'DATA_BLOCK')
             files = ET.SubElement(data_block, 'FILES')
             ET.SubElement(files, 'FILE', {
@@ -577,37 +559,28 @@ class EBISubmission(object):
 
         return run_set
 
-    def generate_submission_xml(self, action):
+    def generate_submission_xml(self, submission_date=None):
         """Generates the submission XML file
 
         Parameters
         ----------
-        action : {'ADD', 'VALIDATE', 'UPDATE'}
-            What action to take when communicating with EBI
+        submission_date : date, optional
+            Date when the submission was created, when None date.today() will
+            be used.
 
         Returns
         -------
-        xml.etree.Element
-            The root elelement of the generated ``ElementTree``
+        ET.Element
+            Object with submission XML values
 
-        Raises
-        ------
-        NoXMLError
-            If one of the necessary XML files has not been generated
+        Notes
+        -----
+            EBI requieres a date when the submission will be automatically made
+            public. This date is generated from the submission date + 365 days.
         """
-        if any([self.study_xml_fp is None,
-                self.sample_xml_fp is None,
-                self.experiment_xml_fp is None,
-                self.run_xml_fp is None]):
-            raise NoXMLError("One of the necessary XML files has not been "
-                             "generated. Make sure you write out the other "
-                             "XML files before attempting to write the "
-                             "submission XML file.")
-
         submission_set = ET.Element('SUBMISSION_SET', {
-            "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xsi:noNamespaceSchemaLocation": "ftp://ftp.sra.ebi.ac.uk/meta/xsd"
-                                             "/sra_1_3/SRA.submission.xsd"})
+            'xmlns:xsi': self.xmlns_xsi,
+            "xsi:noNamespaceSchemaLocation": self.xsi_noNSL % "submission"})
         submission = ET.SubElement(submission_set, 'SUBMISSION', {
             'alias': self._get_submission_alias(),
             'center_name': qiita_config.ebi_center_name}
@@ -615,284 +588,105 @@ class EBISubmission(object):
 
         actions = ET.SubElement(submission, 'ACTIONS')
 
-        study_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(study_action, action, {
-            'schema': 'study',
-            'source': basename(self.study_xml_fp)}
-        )
+        if self.study_xml_fp:
+            study_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(study_action, self.action, {
+                'schema': 'study',
+                'source': basename(self.study_xml_fp)}
+            )
 
-        sample_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(sample_action, action, {
-            'schema': 'sample',
-            'source': basename(self.sample_xml_fp)}
-        )
+        if self.sample_xml_fp:
+            sample_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(sample_action, self.action, {
+                'schema': 'sample',
+                'source': basename(self.sample_xml_fp)}
+            )
 
-        experiment_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(experiment_action, action, {
-            'schema': 'experiment',
-            'source': basename(self.experiment_xml_fp)}
-        )
+        if self.experiment_xml_fp:
+            experiment_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(experiment_action, self.action, {
+                'schema': 'experiment',
+                'source': basename(self.experiment_xml_fp)}
+            )
 
         run_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(run_action, action, {
+        ET.SubElement(run_action, self.action, {
             'schema': 'run', 'source': basename(self.run_xml_fp)}
         )
 
-        if action == 'ADD':
+        if submission_date is None:
+            submission_date = date.today()
+        if self.action == 'ADD':
             hold_action = ET.SubElement(actions, 'ACTION')
             ET.SubElement(hold_action, 'HOLD', {
-                'HoldUntilDate': str(date.today() + timedelta(365))}
+                'HoldUntilDate': str(submission_date + timedelta(365))}
             )
 
         return submission_set
 
-    def _write_xml_file(self, xml_gen_fn, attribute_name, fp,
-                        xml_gen_fn_arg=None):
+    def write_xml_file(self, element, fp):
         """Writes an XML file after calling one of the XML generation
         functions
 
         Parameters
         ----------
-        xml_gen_fn : function
-            The function that will be called to generate the XML that will be
-            written
-        attribute_name : str
-            The name of the attribute in which to store the output filepath
+        element : ET.Element
+            The Element to be written
         fp : str
             The filepath to which the XML will be written
-        xml_gen_fn_arg : str, optional
-            Defaults to None. If None, no arguments will be passed to
-            xml_gen_fn. Otherwise, this will be passed as the only argument to
-            xml_gen_fn
-
-        Notes
-        -----
-        xml_gen_fn_arg is needed for generating the submission XML
         """
-        if xml_gen_fn_arg is None:
-            xml_element = xml_gen_fn()
-        else:
-            xml_element = xml_gen_fn(xml_gen_fn_arg)
+        create_dir(self.xml_dir)
+        ET.ElementTree(element).write(fp, encoding='UTF-8')
 
-        xml = minidom.parseString(ET.tostring(xml_element))
+    def generate_xml_files(self):
+        """Generate all the XML files"""
+        get_output_fp = partial(join, self.xml_dir)
 
-        with open(fp, 'w') as outfile:
-            outfile.write(xml.toxml(encoding='UTF-8'))
+        # The study.xml file needs to be generated if and only if the study
+        # does NOT have an ebi_study_accession
+        if not self.study.ebi_study_accession:
+            self.study_xml_fp = get_output_fp('study.xml')
+            self.write_xml_file(self.generate_study_xml(), self.study_xml_fp)
 
-        setattr(self, attribute_name, fp)
+        # The sample.xml file needs to be generated if and only if there are
+        # samples in the current submission that do NOT have an
+        # ebi_sample_accession
+        new_samples = {
+            sample for sample, accession in viewitems(
+                self.sample_template.ebi_sample_accessions)
+            if accession is None}
+        new_samples = new_samples.intersection(self.samples)
+        if new_samples:
+            self.sample_xml_fp = get_output_fp('sample.xml')
+            self.write_xml_file(self.generate_sample_xml(new_samples),
+                                self.sample_xml_fp)
 
-    def write_study_xml(self, fp):
-        """Write the study XML file using the current data
+        # The experiment.xml needs to be generated if and only if there are
+        # samples in the current submission that do NO have an
+        # ebi_experiment_accession
+        new_samples = {
+            sample for sample, accession in viewitems(
+                self.prep_template.ebi_experiment_accessions)
+            if accession is None}
+        new_samples = new_samples.intersection(self.samples)
+        if new_samples:
+            self.experiment_xml_fp = get_output_fp('experiment.xml')
+            self.write_xml_file(self.generate_experiment_xml(new_samples),
+                                self.experiment_xml_fp)
 
-        Parameters
-        ----------
-        fp : str
-            The filepath to which the XML will be written
+        # Generate the run.xml as it should always be generated
+        self.run_xml_fp = get_output_fp('run.xml')
+        self.write_xml_file(self.generate_run_xml(), self.run_xml_fp)
 
-        Notes
-        -----
-        If `fp` points to an existing file, it will be overwritten
-        """
-        self._write_xml_file(self.generate_study_xml, 'study_xml_fp', fp)
-
-    def write_sample_xml(self, fp):
-        """Write the sample XML file using the current data
-
-        Parameters
-        ----------
-        fp : str
-            The filepath to which the XML will be written
-
-        Notes
-        -----
-        If `fp` points to an existing file, it will be overwritten
-        """
-        self._write_xml_file(self.generate_sample_xml, 'sample_xml_fp', fp)
-
-    def write_experiment_xml(self, fp):
-        """Write the experiment XML file using the current data
-
-        Parameters
-        ----------
-        fp : str
-            The filepath to which the XML will be written
-
-        Notes
-        -----
-        If `fp` points to an existing file, it will be overwritten
-        """
-        self._write_xml_file(self.generate_experiment_xml,
-                             'experiment_xml_fp', fp)
-
-    def write_run_xml(self, fp):
-        """Write the run XML file using the current data
-
-        Parameters
-        ----------
-        fp : str
-            The filepath to which the XML will be written
-
-        Notes
-        -----
-        If `fp` points to an existing file, it will be overwritten
-        """
-        self._write_xml_file(self.generate_run_xml, 'run_xml_fp', fp)
-
-    def write_submission_xml(self, fp, action):
-        """Write the submission XML file using the current data
-
-        Parameters
-        ----------
-        fp : str
-            The filepath to which the XML will be written
-        action : {'ADD', 'VALIDATE', 'UPDATE'}
-            What action to take when communicating with EBI
-
-        Notes
-        -----
-        If `fp` points to an existing file, it will be overwritten
-        """
-        self._write_xml_file(self.generate_submission_xml, 'submission_xml_fp',
-                             fp, action)
-
-    def write_all_xml_files(self, study_fp, sample_fp, experiment_fp, run_fp,
-                            submission_fp, action):
-        """Write all XML files needed for an EBI submission using current data
-
-        Parameters
-        ----------
-        study_fp : str
-            The filepath to which the study XML will be written
-        sample_fp : str
-            The filepath to which the sample XML will be written
-        experiment_fp : str
-            The filepath to which the experiment XML will be written
-        run_fp : str
-            The filepath to which the run XML will be written
-        submission_fp : str
-            The filepath to which the submission XML will be written
-        action : {'ADD', 'VALIDATE', 'UPDATE'}
-            What action to take when communicating with EBI
-
-        Notes
-        -----
-        If any of the filepaths point to an existing file, it will be
-        overwritten
-        """
-        self.write_study_xml(study_fp)
-        self.write_sample_xml(sample_fp)
-        self.write_experiment_xml(experiment_fp)
-        self.write_run_xml(run_fp)
-        self.write_submission_xml(submission_fp, action)
-
-    def add_samples_from_templates(self, sample_template, prep_template,
-                                   per_sample_fastq_dir):
-        """
-        Parameters
-        ----------
-        sample_template : file
-        prep_template : file
-        per_sample_fastq_dir : str
-            Path to the directory containing per-sample FASTQ files where
-            the sequence labels should be:
-            ``SampleID_SequenceNumber And Additional Notes if Applicable``
-
-        Raises
-        ------
-        EBISumbissionError
-            If a sample doesn't have the required EBI submission information
-        """
-        if not exists(per_sample_fastq_dir):
-            raise IOError('The directory with the FASTQ file does not exist.')
-
-        for sample in iter_file_via_list_of_dicts(sample_template):
-            sample_name = sample.pop('sample_name')
-            taxon_id = sample.pop('taxon_id', None)
-            scientific_name = sample.pop('scientific_name', None)
-            description = sample.pop('description', None)
-
-            if taxon_id is None or scientific_name is None or \
-                    description is None:
-                raise EBISumbissionError(
-                    "Sample '%s' is missing required EBI submission "
-                    "information. taxon_id: %s; scientific_name: %s; "
-                    "description: %s" % (sample_name, taxon_id,
-                                         scientific_name, description))
-
-            self.add_sample(sample_name, taxon_id, scientific_name,
-                            description, **sample)
-
-        prep_template_samples = []
-        for prep in iter_file_via_list_of_dicts(prep_template):
-            sample_name = prep.pop('sample_name')
-            prep_template_samples.append(sample_name)
-            platform = prep.pop('platform')
-            experiment_design_description = prep.pop(
-                'experiment_design_description')
-            library_construction_protocol = prep.pop(
-                'library_construction_protocol')
-
-            file_path = join(per_sample_fastq_dir, sample_name+'.fastq.gz')
-            self.add_sample_prep(sample_name, platform, 'fastq',
-                                 file_path, experiment_design_description,
-                                 library_construction_protocol,
-                                 **prep)
-
-        to_remove = set(self.samples).difference(prep_template_samples)
-        for sample in to_remove:
-            del self.samples[sample]
-
-    @classmethod
-    def from_templates_and_per_sample_fastqs(cls, preprocessed_data_id,
-                                             study_title,
-                                             study_abstract,
-                                             investigation_type,
-                                             sample_template, prep_template,
-                                             per_sample_fastq_dir,
-                                             new_investigation_type=None,
-                                             pmids=None,
-                                             **kwargs):
-        """Generate an ``EBISubmission`` from templates and FASTQ files
-
-        Parameters
-        ----------
-        preprocessed_data_id : str
-        study_title : str
-        study_abstract : str
-        investigation_type : str
-        sample_template : file
-        prep_template : file
-        per_sample_fastq_dir : str
-            Path to the direcotry containing per-sample FASTQ files containing
-            The sequence labels should be:
-            ``SampleID_SequenceNumber And Additional Notes if Applicable``
-        new_investigation_type : str, optional
-        pmids : list, optional
-            The pubmed IDs that are associated with this submission
-
-        Notes
-        -----
-        - kwargs will be passed directly to the ``EBISubmission`` constructor,
-          which will add them as key-value pairs to the study attributes
-          section of the submission
-        """
-        # initialize the EBISubmission object
-        submission = cls(preprocessed_data_id, study_title, study_abstract,
-                         investigation_type,
-                         new_investigation_type=new_investigation_type,
-                         pmids=pmids, **kwargs)
-
-        submission.add_samples_from_templates(sample_template,
-                                              prep_template,
-                                              per_sample_fastq_dir)
-
-        return submission
+        # The submission.xml is always generated
+        self.submission_xml_fp = get_output_fp('submission.xml')
+        self.write_xml_file(self.generate_submission_xml(),
+                            self.submission_xml_fp)
 
     def generate_curl_command(
             self,
             ebi_seq_xfer_user=qiita_config.ebi_seq_xfer_user,
-            ebi_access_key=qiita_config.ebi_access_key,
-            ebi_skip_curl_cert=qiita_config.ebi_skip_curl_cert,
+            ebi_seq_xfer_pass=qiita_config.ebi_seq_xfer_pass,
             ebi_dropbox_url=qiita_config.ebi_dropbox_url):
         """Generates the curl command for submission
 
@@ -900,10 +694,8 @@ class EBISubmission(object):
         ----------
         ebi_seq_xfer_user : str
             The user to use when submitting to EBI
-        ebi_access_key : str
-            The access key issued by EBI for REST submissions
-        ebi_skip_curl_cert : bool
-            If the curl certificate should be skipped
+        ebi_seq_xfer_pass : str
+            The user password issued by EBI for REST submissions
         ebi_dropbox_url : str
             The dropbox url
 
@@ -918,107 +710,217 @@ class EBISubmission(object):
           be generated before executing this function
         """
         # make sure that the XML files have been generated
-        if any([self.study_xml_fp is None,
-                self.sample_xml_fp is None,
-                self.experiment_xml_fp is None,
-                self.run_xml_fp is None,
-                self.submission_xml_fp is None]):
-            raise NoXMLError("One of the necessary XML files has not been "
-                             "generated. Make sure you write out all 5 of the "
-                             "XML files before attempting to generate the "
-                             "curl command.")
+        url = '?auth=ENA%20{0}%20{1}'.format(quote(ebi_seq_xfer_user),
+                                             quote(ebi_seq_xfer_pass))
+        curl_cmd = ['curl -sS -k']
+        if self.submission_xml_fp is not None:
+            curl_cmd.append(' -F "SUBMISSION=@%s"' % self.submission_xml_fp)
+        if self.study_xml_fp is not None:
+            curl_cmd.append(' -F "STUDY=@%s"' % self.study_xml_fp)
+        if self.sample_xml_fp is not None:
+            curl_cmd.append(' -F "SAMPLE=@%s"' % self.sample_xml_fp)
+        if self.run_xml_fp is not None:
+            curl_cmd.append(' -F "RUN=@%s"' % self.run_xml_fp)
+        if self.experiment_xml_fp is not None:
+            curl_cmd.append(' -F "EXPERIMENT=@%s"' % self.experiment_xml_fp)
+        curl_cmd.append(' "%s"' % join(ebi_dropbox_url, url))
 
-        url = '?auth=ERA%20{0}%20{1}%3D'.format(ebi_seq_xfer_user,
-                                                ebi_access_key)
-        curl_command = (
-            'curl {0}-F "SUBMISSION=@{1}" -F "STUDY=@{2}" -F "SAMPLE=@{3}" '
-            '-F "RUN=@{4}" -F "EXPERIMENT=@{5}" "{6}"'
-        ).format(
-            '-k ' if ebi_skip_curl_cert else '',
-            self.submission_xml_fp,
-            self.study_xml_fp,
-            self.sample_xml_fp,
-            self.run_xml_fp,
-            self.experiment_xml_fp,
-            join(ebi_dropbox_url, url)
-        )
+        return ''.join(curl_cmd)
 
-        return curl_command
+    def generate_send_sequences_cmd(self):
+        """Generate the sequences to EBI via ascp command
 
-    def send_sequences(self):
-        # Send the sequence files by directory
-        unique_dirs = set()
-        for f in self.sequence_files:
-            basedir, filename = split(f)
-            unique_dirs.add(basedir)
+        Returns
+        -------
+        ascp_command
+            The ascp command to be executed
 
-        # Set the ASCP password to the one in the Qiita config, but remember
-        # the old pass so that we can politely reset it
-        old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
-        environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
+        Notes
+        -----
+        - All 5 XML files (study, sample, experiment, run, and submission) must
+          be generated before executing this function
+        """
+        fastqs = [sfp for _, sfp in viewitems(self.sample_demux_fps)]
+        # divide all the fastqs in groups of 10
+        fastqs_div = [fastqs[i::10] for i in range(10) if fastqs[i::10]]
+        ascp_commands = []
+        for f in fastqs_div:
+            ascp_commands.append('ascp --ignore-host-key -d -QT -k2 '
+                                 '{0} {1}@{2}:./{3}/'.format(
+                                     ' '.join(f),
+                                     qiita_config.ebi_seq_xfer_user,
+                                     qiita_config.ebi_seq_xfer_url,
+                                     self.ebi_dir))
 
-        for unique_dir in unique_dirs:
-            # Get the list of FASTQ files to submit
-            fastqs = glob(join(unique_dir, '*.fastq.gz'))
+        return ascp_commands
 
-            ascp_command = 'ascp -d -QT -k2 -L- {0} {1}@{2}:./{3}/'.format(
-                ' '.join(fastqs), qiita_config.ebi_seq_xfer_user,
-                qiita_config.ebi_seq_xfer_url, self.ebi_dir)
+    def parse_EBI_reply(self, curl_result):
+        """Parse and verify reply from EBI after sending XML files
 
-            # Generate the command using shlex.split so that we don't have to
-            # pass shell=True to subprocess.call
-            ascp_command_parts = shsplit(ascp_command)
+        Parameters
+        ----------
+        curl_result : str
+            The reply sent by EBI after sending XML files
 
-            # Don't leave the password lingering in the environment if there
-            # is any error
-            try:
-                call(ascp_command_parts)
-            finally:
-                environ['ASPERA_SCP_PASS'] = old_ascp_pass
+        Returns
+        -------
+        str
+            The study accession number. None in case of failure
+        dict of {str: str}
+            The sample accession numbers, keyed by sample id. None in case of
+            failure
+        dict of {str: str}
+            The biosample accession numbers, keyed by sample id. None in case
+            of failure
+        dict of {str: str}
+            The experiment accession numbers, keyed by sample id. None in case
+            of failure
+        dict of {str: str}
+            The run accession numbers, keyed by sample id. None in case of
+            failure
 
-    def send_xml(self):
-        # Send the XML files
-        curl_command = self.generate_curl_command()
-        curl_command_parts = shsplit(curl_command)
-        temp_fd, temp_fp = mkstemp()
-        call(curl_command_parts, stdout=temp_fd)
-        close(temp_fd)
+        Raises
+        ------
+        EBISubmissionError
+            If curl_result is not a valid XML file
+            If the ebi subumission has not been successful
+            If multiple study tags are found in the curl result
+        """
+        try:
+            root = ET.fromstring(curl_result)
+        except ParseError:
+            error_msg = ("The curl result from the EBI submission doesn't "
+                         "look like an XML file:\n%s" % curl_result)
+            le = LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(
+                "The curl result from the EBI submission doesn't look like "
+                "an XML file. Contact and admin for more information. "
+                "Log id: %d" % le.id)
 
-        with open(temp_fp, 'U') as curl_output_f:
-            curl_result = curl_output_f.read()
+        success = root.get('success') == 'true'
+        if not success:
+            raise EBISubmissionError("The EBI submission failed:\n%s"
+                                     % curl_result)
 
-        study_accession = None
-        submission_accession = None
-
-        if 'success="true"' in curl_result:
-            LogEntry.create('Runtime', curl_result)
-
-            print curl_result
-            print "SUCCESS"
-
-            accessions = search('<STUDY accession="(?P<study>.+?)".*?'
-                                '<SUBMISSION accession="(?P<submission>.+?)"',
-                                curl_result)
-            if accessions is not None:
-                study_accession = accessions.group('study')
-                submission_accession = accessions.group('submission')
-
-                LogEntry.create('Runtime', "Study accession:\t%s" %
-                                study_accession)
-                LogEntry.create('Runtime', "Submission accession:\t%s" %
-                                submission_accession)
-
-                print "Study accession:\t", study_accession
-                print "Submission accession:\t", submission_accession
-            else:
-                LogEntry.create('Runtime', ("However, the accession numbers "
-                                            "could not be found in the output "
-                                            "above."))
-                print ("However, the accession numbers could not be found in "
-                       "the output above.")
+        study_elem = root.findall("STUDY")
+        if study_elem:
+            if len(study_elem) > 1:
+                raise EBISubmissionError(
+                    "Multiple study tags found in EBI reply: %d"
+                    % len(study_elem))
+            study_elem = study_elem[0]
+            study_accession = study_elem.get('accession')
         else:
-            LogEntry.create('Fatal', curl_result)
-            print curl_result
-            print "FAILED"
+            study_accession = None
 
-        return (study_accession, submission_accession)
+        sample_accessions = {}
+        biosample_accessions = {}
+        for elem in root.iter("SAMPLE"):
+            alias = elem.get('alias')
+            sample_id = self._sample_aliases[alias]
+            sample_accessions[sample_id] = elem.get('accession')
+            ext_id = elem.find('EXT_ID')
+            biosample_accessions[sample_id] = ext_id.get('accession')
+
+        def data_retriever(key, trans_dict):
+            res = {}
+            for elem in root.iter(key):
+                alias = elem.get('alias')
+                res[trans_dict[alias]] = elem.get('accession')
+            return res
+        experiment_accessions = data_retriever("EXPERIMENT",
+                                               self._experiment_aliases)
+        run_accessions = data_retriever("RUN", self._run_aliases)
+
+        return (study_accession, sample_accessions, biosample_accessions,
+                experiment_accessions, run_accessions)
+
+    def generate_demultiplexed_fastq(self, rewrite_fastq=False, mtime=None):
+        """Generates demultiplexed fastq
+
+        Parameters
+        ----------
+        rewrite_fastq : bool, optional
+            If true, it forces the rewrite of the fastq files
+        mtime : float, optional
+            The time to use when creating the gz files. If None, the current
+            time will be used by gzip.GzipFile. This is useful for testing.
+
+        Returns
+        -------
+        demux_samples
+            List of successful demultiplexed samples
+
+        Notes
+        -----
+        - As a performace feature, this method will check if self.full_ebi_dir
+        already exists and, if it does, the script will assume that in a
+        previous execution this step was performed correctly and will simply
+        read the file names from self.full_ebi_dir
+        - When the object is created (init), samples, samples_prep and
+        sample_demux_fps hold values for all available samples in the database.
+        Here some of those values will be deleted (del's, within the loops) for
+        those cases where the fastq.gz files weren't written or exist. This is
+        an indication that they had no sequences and this kind of files are not
+        accepted in EBI
+
+        Raises
+        ------
+        EBISubmissionError
+            - The demux file couldn't be read
+            - All samples are removed
+        """
+        ppd = self.preprocessed_data
+
+        dir_not_exists = not isdir(self.full_ebi_dir)
+        if dir_not_exists or rewrite_fastq:
+            makedirs(self.full_ebi_dir)
+
+            demux = [path for _, path, ftype in ppd.get_filepaths()
+                     if ftype == 'preprocessed_demux'][0]
+
+            demux_samples = set()
+            with open_file(demux) as demux_fh:
+                if not isinstance(demux_fh, File):
+                    error_msg = "'%s' doesn't look like a demux file" % demux
+                    LogEntry.create('Runtime', error_msg)
+                    raise EBISubmissionError(error_msg)
+                for s, i in to_per_sample_ascii(demux_fh,
+                                                self.prep_template.keys()):
+                    sample_fp = self.sample_demux_fps[s]
+                    wrote_sequences = False
+                    with GzipFile(sample_fp, mode='w', mtime=mtime) as fh:
+                        for record in i:
+                            fh.write(record)
+                            wrote_sequences = True
+
+                    if wrote_sequences:
+                        demux_samples.add(s)
+                    else:
+                        del(self.samples[s])
+                        del(self.samples_prep[s])
+                        del(self.sample_demux_fps[s])
+                        remove(sample_fp)
+        else:
+            demux_samples = set()
+            extension = '.fastq.gz'
+            extension_len = len(extension)
+            for f in listdir(self.full_ebi_dir):
+                fpath = join(self.full_ebi_dir, f)
+                if isfile(fpath) and f.endswith(extension):
+                    demux_samples.add(f[:-extension_len])
+
+            missing_samples = set(self.samples.keys()).difference(
+                set(demux_samples))
+            for ms in missing_samples:
+                del(self.samples[ms])
+                del(self.samples_prep[ms])
+                del(self.sample_demux_fps[ms])
+
+        if not demux_samples:
+            error_msg = ("All samples were removed from the submission "
+                         "because the demux file is empty or the sample names "
+                         "do not match.")
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
+        return demux_samples

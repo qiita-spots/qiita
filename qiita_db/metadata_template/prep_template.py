@@ -673,3 +673,51 @@ class PrepTemplate(MetadataTemplate):
             fn = TRN.execute_fetchindex()[0][1]
             base_dir = get_mountpoint('templates')[0][1]
             return join(base_dir, fn)
+
+    @property
+    def ebi_experiment_accessions(self):
+        """The EBI experiment accessions for the samples in the prep template
+
+        Returns
+        -------
+        dict of {str: str}
+            The EBI experiment accessions numbers keyed by sample id
+        """
+        return self._get_accession_numbers('ebi_experiment_accession')
+
+    @ebi_experiment_accessions.setter
+    def ebi_experiment_accessions(self, value):
+        """Sets the EBI experiment accessions
+
+        Parameters
+        ----------
+        values : dict of {str: str}
+            The EBI experiment accessions, keyed by sample id
+
+        Raises
+        ------
+        QiitaDBError
+            If a sample in `value` already has an accession number
+        """
+        self._update_accession_numbers('ebi_experiment_accession', value)
+
+    @property
+    def is_submitted_to_ebi(self):
+        """Inquires if the prep template has been submitted to EBI or not
+
+        Returns
+        -------
+        bool
+            True if the prep template has been submitted to EBI,
+            false otherwise
+        """
+        with TRN:
+            sql = """SELECT EXISTS(
+                        SELECT sample_id, ebi_experiment_accession
+                        FROM qiita.{0}
+                        WHERE {1}=%s
+                            AND ebi_experiment_accession IS NOT NULL)
+                  """.format(self._table, self._id_column)
+            TRN.add(sql, [self.id])
+            is_submitted = TRN.execute_fetchlast()
+        return is_submitted

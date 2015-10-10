@@ -102,8 +102,7 @@ def load_study_from_cmd(owner, title, info):
 
 
 def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
-                                    filepathtype, params_id,
-                                    submitted_to_insdc_status,
+                                    filepath_type, params_id,
                                     prep_template_id, data_type):
     r"""Adds preprocessed data to the database
 
@@ -111,18 +110,15 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
     ----------
     study_id : int
         The study id to which the preprocessed data belongs
-    filedir : str
-        Directory path of the preprocessed data
-    filepathtype: str
-        The filepath_type of the preprecessed data
-    params_table_name : str
+    params_table : str
         The name of the table which contains the parameters of the
         preprocessing
+    filedir : str
+        Directory path of the preprocessed data
+    filepath_type: str
+        The filepath_type of the preprecessed data
     params_id : int
         The id of parameters int the params_table
-    submitted_to_insdc_status : str, {'not submitted', 'submitting', \
-            'success', 'failed'}
-        INSDC submission status
     prep_template_id : int
         Prep template id associated with data
     data_type : str
@@ -130,14 +126,13 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
     """
     with TRN:
         fp_types_dict = get_filepath_types()
-        fp_type = fp_types_dict[filepathtype]
+        fp_type = fp_types_dict[filepath_type]
         filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
         pt = (None if prep_template_id is None
               else PrepTemplate(prep_template_id))
         return PreprocessedData.create(
             Study(study_id), params_table, params_id, filepaths,
             prep_template=pt,
-            submitted_to_insdc_status=submitted_to_insdc_status,
             data_type=data_type)
 
 
