@@ -7,30 +7,23 @@
 # -----------------------------------------------------------------------------
 
 from os.path import join, isdir
-from os import makedirs, remove
-from functools import partial
-from tempfile import mkdtemp
-from gzip import open as gzopen
+from shutil import rmtree
 from tarfile import open as taropen
+from tempfile import mkdtemp
+from os import environ
+from traceback import format_exc
 from moi.job import system_call
 
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
 from qiita_db.metadata_template import PrepTemplate, SampleTemplate
+from qiita_db.logger import LogEntry
 from qiita_core.qiita_settings import qiita_config
-
 from qiita_ware.ebi import EBISubmission
-from qiita_ware.demux import to_per_sample_ascii
-from qiita_ware.exceptions import ComputeError
-from qiita_ware.util import open_file
-from qiita_db.util import convert_to_id
-from qiita_db.ontology import Ontology
+from qiita_ware.exceptions import ComputeError, EBISubmissionError
 
 
-ebi_actions = ['ADD', 'VALIDATE', 'MODIFY']
-
-
-def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
+def submit_EBI(preprocessed_data_id, action, send):
     """Submit a preprocessed data to EBI
 
     Parameters
@@ -41,128 +34,109 @@ def submit_EBI(preprocessed_data_id, action, send, fastq_dir_fp=None):
         The action to perform with this data
     send : bool
         True to actually send the files
-    fastq_dir_fp : str, optional
-        The fastq filepath
-
-    Notes
-    -----
-    If fastq_dir_fp is passed, it must not contain any empty files, or
-    gzipped empty files
     """
-    preprocessed_data = PreprocessedData(preprocessed_data_id)
-    preprocessed_data_id_str = str(preprocessed_data_id)
-    study = Study(preprocessed_data.study)
-    sample_template = SampleTemplate(study.sample_template)
-    prep_template = PrepTemplate(preprocessed_data.prep_template)
+    # step 1: init and validate
+    ebi_submission = EBISubmission(preprocessed_data_id, action)
 
-    investigation_type = None
-    new_investigation_type = None
+    # step 2: generate demux fastq files
+    ebi_submission.study.ebi_submission_status = 'submitting'
+    try:
+        ebi_submission.generate_demultiplexed_fastq()
+    except:
+        error_msg = format_exc()
+        if isdir(ebi_submission.full_ebi_dir):
+            rmtree(ebi_submission.full_ebi_dir)
+        ebi_submission.study.ebi_submission_status = 'failed: %s' % error_msg
+        LogEntry.create('Runtime', error_msg,
+                        info={'ebi_submission': preprocessed_data_id})
+        raise
 
-    status = preprocessed_data.submitted_to_insdc_status()
-    if status in ('submitting', 'success'):
-        raise ValueError("Cannot resubmit! Current status is: %s" % status)
-
-    if send:
-        # If we intend actually to send the files, then change the status in
-        # the database
-        preprocessed_data.update_insdc_status('submitting')
-
-    # we need to figure out whether the investigation type is a known one
-    # or if we have to submit a "new_investigation_type" to EBI
-    current_type = prep_template.investigation_type
-    ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
-    if current_type in ena_ontology.terms:
-        investigation_type = current_type
-    elif current_type in ena_ontology.user_defined_terms:
-        investigation_type = 'Other'
-        new_investigation_type = current_type
-    else:
-        # This should never happen
-        raise ValueError("Unrecognized investigation type: '%s'. This term "
-                         "is neither one of the official terms nor one of the "
-                         "user-defined terms in the ENA ontology")
-
-    if fastq_dir_fp is not None:
-        # If the user specifies a FASTQ directory, use it
-
-        # Set demux_samples to None so that MetadataTemplate.to_file will put
-        # all samples in the template files
-        demux_samples = None
-    else:
-        # If the user does not specify a FASTQ directory, create one and
-        # re-serialize the per-sample FASTQs from the demux file
-        fastq_dir_fp = mkdtemp(prefix=qiita_config.working_dir)
-        demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
-                 if ftype == 'preprocessed_demux'][0]
-
-        # Keep track of which files were actually in the demux file so that we
-        # can write those rows to the prep and samples templates
-        demux_samples = set()
-
-        with open_file(demux) as demux_fh:
-            for samp, iterator in to_per_sample_ascii(demux_fh,
-                                                      list(sample_template)):
-                demux_samples.add(samp)
-                sample_fp = join(fastq_dir_fp, "%s.fastq.gz" % samp)
-                wrote_sequences = False
-                with gzopen(sample_fp, 'w') as fh:
-                    for record in iterator:
-                        fh.write(record)
-                        wrote_sequences = True
-
-                if not wrote_sequences:
-                    remove(sample_fp)
-
-    output_dir = fastq_dir_fp + '_submission'
-
-    samp_fp = join(fastq_dir_fp, 'sample_metadata.txt')
-    prep_fp = join(fastq_dir_fp, 'prep_metadata.txt')
-
-    sample_template.to_file(samp_fp, demux_samples)
-    prep_template.to_file(prep_fp, demux_samples)
-
-    # Get specific output directory and set filepaths
-    get_output_fp = partial(join, output_dir)
-    study_fp = get_output_fp('study.xml')
-    sample_fp = get_output_fp('sample.xml')
-    experiment_fp = get_output_fp('experiment.xml')
-    run_fp = get_output_fp('run.xml')
-    submission_fp = get_output_fp('submission.xml')
-
-    if not isdir(output_dir):
-        makedirs(output_dir)
-    else:
-        raise IOError('The output folder already exists: %s' %
-                      output_dir)
-
-    with open(samp_fp, 'U') as st, open(prep_fp, 'U') as pt:
-        submission = EBISubmission.from_templates_and_per_sample_fastqs(
-            preprocessed_data_id_str, study.title,
-            study.info['study_abstract'], investigation_type, st, pt,
-            fastq_dir_fp, new_investigation_type=new_investigation_type,
-            pmids=study.pmids)
-
-    submission.write_all_xml_files(study_fp, sample_fp, experiment_fp, run_fp,
-                                   submission_fp, action)
+    # step 3: generate and write xml files
+    ebi_submission.generate_xml_files()
 
     if send:
-        submission.send_sequences()
-        study_accession, submission_accession = submission.send_xml()
+        # step 4: sending sequences
+        old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
+        environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
 
-        if study_accession is None or submission_accession is None:
-            preprocessed_data.update_insdc_status('failed')
+        LogEntry.create('Runtime',
+                        ("Submitting sequences for pre_processed_id: "
+                         "%d" % preprocessed_data_id))
+        try:
+            for cmd in ebi_submission.generate_send_sequences_cmd():
+                try:
+                    stdout, stderr, _ = system_call(cmd)
+                except Exception as e:
+                    stdout = ''
+                    stderr = str(e)
+                    le = LogEntry.create(
+                        'Fatal', "Command: %s\nError: %s\n" % (cmd, str(e)),
+                        info={'ebi_submission': preprocessed_data_id})
+                    ebi_submission.study.ebi_submission_status = (
+                        "failed: ASCP submission, log id: %d" % le.id)
+                    raise ComputeError("EBI Submission failed! Log id: "
+                                       "%d" % le.id)
+                finally:
+                    open(ebi_submission.ascp_reply, 'a').write(
+                        'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
+        finally:
+            environ['ASPERA_SCP_PASS'] = old_ascp_pass
+        LogEntry.create('Runtime',
+                        ('Submission of sequences of pre_processed_id: '
+                         '%d completed successfully' %
+                         preprocessed_data_id))
 
-            raise ComputeError("EBI Submission failed!")
+        # step 5: sending xml and parsing answer
+        xmls_cmds = ebi_submission.generate_curl_command()
+        LogEntry.create('Runtime',
+                        ("Submitting XMLs for pre_processed_id: "
+                         "%d" % preprocessed_data_id))
+        try:
+            xml_content, stderr, _ = system_call(xmls_cmds)
+        except Exception as e:
+            xml_content = ''
+            stderr = str(e)
+            le = LogEntry.create('Fatal',
+                                 "Command: %s\nError: %s\n" % (
+                                    cmd, str(e)),
+                                 info={'ebi_submission': preprocessed_data_id})
+            ebi_submission.study.ebi_submission_status = (
+                "failed: XML submission, log id: %d" % le.id)
+            raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
         else:
-            preprocessed_data.update_insdc_status('success', study_accession,
-                                                  submission_accession)
+            LogEntry.create('Runtime',
+                            ('Submission of sequences of pre_processed_id: '
+                             '%d completed successfully' %
+                             preprocessed_data_id))
+        finally:
+            open(ebi_submission.curl_reply, 'w').write(
+                'stdout:\n%s\n\nstderr: %s' % (xml_content, stderr))
+
+        try:
+            st_acc, sa_acc, bio_acc, ex_acc, run_acc = \
+                ebi_submission.parse_EBI_reply(xml_content)
+        except EBISubmissionError as e:
+            le = LogEntry.create(
+                'Fatal', "Command: %s\nError: %s\n" % (xml_content, str(e)),
+                info={'ebi_submission': preprocessed_data_id})
+            ebi_submission.study.ebi_submission_status = (
+                "failed: XML parsing, log id: %d" % le.id)
+            raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
+
+        ebi_submission.study.ebi_submission_status = 'submitted'
+        if st_acc:
+            ebi_submission.study.ebi_study_accession = st_acc
+        if sa_acc:
+            ebi_submission.sample_template.ebi_sample_accessions = sa_acc
+        if bio_acc:
+            ebi_submission.sample_template.biosample_accessions = bio_acc
+        if ex_acc:
+            ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
+        ebi_submission.preprocessed_data.ebi_run_accessions = run_acc
     else:
-        study_accession, submission_accession = None, None
+        st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
 
-    return study_accession, submission_accession
-
-
-submit_EBI.__doc__ %= ebi_actions
+    return st_acc, sa_acc, bio_acc, ex_acc, run_acc
 
 
 def submit_VAMPS(preprocessed_data_id):

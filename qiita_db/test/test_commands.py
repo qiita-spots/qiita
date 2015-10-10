@@ -96,7 +96,7 @@ class TestImportPreprocessedData(TestCase):
         initial_fp_count = get_count('qiita.filepath')
         ppd = load_preprocessed_data_from_cmd(
             1, 'preprocessed_sequence_illumina_params',
-            self.tmpdir, 'preprocessed_fasta', 1, False, 1, None)
+            self.tmpdir, 'preprocessed_fasta', 1, 1, None)
         self.files_to_remove.append(
             join(self.db_test_ppd_dir,
                  '%d_%s' % (ppd.id, basename(self.file1))))
@@ -113,7 +113,7 @@ class TestImportPreprocessedData(TestCase):
         initial_fp_count = get_count('qiita.filepath')
         ppd = load_preprocessed_data_from_cmd(
             1, 'preprocessed_sequence_illumina_params',
-            self.tmpdir, 'preprocessed_fasta', 1, False, None, '16S')
+            self.tmpdir, 'preprocessed_fasta', 1, None, '16S')
         self.files_to_remove.append(
             join(self.db_test_ppd_dir,
                  '%d_%s' % (ppd.id, basename(self.file1))))
@@ -209,6 +209,7 @@ class TestLoadRawDataFromCmd(TestCase):
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
@@ -834,13 +835,16 @@ PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'description\tebi_submission_accession\temp_status\tprimer\t'
     'run_prefix\tstr_column\tplatform\tlibrary_construction_protocol\t'
-    'experiment_design_description\n'
+    'experiment_design_description\tinstrument_model\n'
     'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tskb7\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 3\tA\tB\tC\n'
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 3\tA\tB\tC\t'
+    'Illumina MiSeq\n'
     'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tskb8\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 1\tA\tB\tC\n'
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 1\tA\tB\tC\t'
+    'Illumina MiSeq\n'
     'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tskd8\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 2\tA\tB\tC\n')
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 2\tA\tB\tC\t'
+    'Illumina MiSeq\n')
 
 PY_PATCH = """
 from qiita_db.study import Study
