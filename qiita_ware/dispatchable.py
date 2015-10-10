@@ -52,11 +52,7 @@ def preprocessor(study_id, prep_template_id, param_id, param_constructor):
 
 def submit_to_ebi(preprocessed_data_id, submission_type):
     """Submit a study to EBI"""
-    study_acc, submission_acc = submit_EBI(preprocessed_data_id,
-                                           submission_type,
-                                           True)
-
-    return study_acc, submission_acc
+    submit_EBI(preprocessed_data_id, submission_type, True)
 
 
 def submit_to_VAMPS(preprocessed_data_id):

@@ -79,9 +79,9 @@ function parameters_changed(obj, ppd_id){
 
 <div class="tab-pane" id="preprocessed_data_info_{{ppd_id}}" style="padding: 10px;">
   <a href="#" onclick="display_tab('prep_template_tab', {{prep_template_id}});">Prep template</a><br/>
-  <b>EBI status:</b> {{ebi_status}}<br/>
-  <b>EBI study accession:</b> {{ebi_study_accession}}<br/>
-  <b>EBI submission accession:</b> {{ebi_submission_accession}}<br/>
+  {% if ebi_link %}
+    <b>EBI accession:</b> {% raw ebi_link %}<br/>
+  {% end %}
   <b>VAMPS status:</b> {{vamps_status}}<br/>
   {% module EditInvestigationType(ena_terms, user_defined_terms, prep_template_id, inv_type, ppd_id) %}
   {% if show_ebi_btn %}

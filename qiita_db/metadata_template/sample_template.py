@@ -252,3 +252,57 @@ class SampleTemplate(MetadataTemplate):
             # generating all new QIIME mapping files
             for pt_id in Study(self._id).prep_templates():
                 PrepTemplate(pt_id).generate_files()
+
+    @property
+    def ebi_sample_accessions(self):
+        """The EBI sample accessions for the samples in the sample template
+
+        Returns
+        -------
+        dict of {str: str}
+            The EBI sample accession numbers keyed by sample id
+        """
+        return self._get_accession_numbers('ebi_sample_accession')
+
+    @ebi_sample_accessions.setter
+    def ebi_sample_accessions(self, value):
+        """Sets the EBI sample accessions
+
+        Parameters
+        ----------
+        values : dict of {str: str}
+            The EBI sample accessions, keyed by sample id
+
+        Raises
+        ------
+        QiitaDBError
+            If a sample in `value` already has an accession number
+        """
+        self._update_accession_numbers('ebi_sample_accession', value)
+
+    @property
+    def biosample_accessions(self):
+        """The biosample accessions for the samples in the sample template
+
+        Returns
+        -------
+        dict of {str: str}
+            The biosample accession numbers keyed by sample id
+        """
+        return self._get_accession_numbers('biosample_accession')
+
+    @biosample_accessions.setter
+    def biosample_accessions(self, value):
+        """Sets the biosample accessions
+
+        Parameters
+        ----------
+        values : dict of {str: str}
+            The biosample accessions, keyed by sample id
+
+        Raises
+        ------
+        QiitaDBError
+            If a sample in `value` already has an accession number
+        """
+        self._update_accession_numbers('biosample_accession', value)

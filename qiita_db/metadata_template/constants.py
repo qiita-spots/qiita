@@ -37,6 +37,7 @@ PREP_TEMPLATE_COLUMNS = {
         columns={'primer': 'varchar',
                  'center_name': 'varchar',
                  'platform': 'varchar',
+                 'instrument_model': 'varchar',
                  'library_construction_protocol': 'varchar',
                  'experiment_design_description': 'varchar'},
         error_msg="EBI submission disabled")

@@ -61,6 +61,13 @@
         {% end %}
       </td>
     </tr>
+    {% if ebi_link %}
+    <tr>
+      <td>
+        <b>EBI accession:</b> {% raw ebi_link %}
+      </td>
+    </tr>
+    {% end %}
     <tr>
       <td style="padding: 5px;">
         <a class="btn btn-primary" href="/metadata_summary/?study_id={{study_id}}&prep_template={{pt_id}}">

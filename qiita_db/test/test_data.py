@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-# TODO: Modify DB to fix 1084
-
 from unittest import TestCase, main
 from datetime import datetime
 from os import close, remove
@@ -22,7 +20,7 @@ from qiita_db.exceptions import (QiitaDBError, QiitaDBUnknownIDError,
                                  QiitaDBStatusError, QiitaDBLookupError)
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.util import get_mountpoint, get_count
+from qiita_db.util import get_mountpoint, get_count, convert_to_id
 from qiita_db.data import BaseData, RawData, PreprocessedData, ProcessedData
 from qiita_db.metadata_template import PrepTemplate
 
@@ -63,6 +61,7 @@ class RawDataTests(TestCase):
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
@@ -355,126 +354,54 @@ class PreprocessedDataTests(TestCase):
             remove(f)
 
     def test_create(self):
-        """Correctly creates all the rows in the DB for preprocessed data"""
+        """Correctly creates the preprocessed data object"""
         # Check that the returned object has the correct id
+        new_id = get_count('qiita.preprocessed_data') + 1
         obs = PreprocessedData.create(
             self.study, self.params_table,
-            self.params_id, self.filepaths, prep_template=self.prep_template,
-            ebi_submission_accession=self.ebi_submission_accession,
-            ebi_study_accession=self.ebi_study_accession)
-        self.assertEqual(obs.id, 3)
+            self.params_id, self.filepaths, prep_template=self.prep_template)
+        self.assertEqual(obs.id, new_id)
 
-        # Check that the preprocessed data have been correctly added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.preprocessed_data WHERE "
-            "preprocessed_data_id=3")
-        # preprocessed_data_id, preprocessed_params_table,
-        # preprocessed_params_id, submitted_to_insdc_status,
-        # ebi_submission_accession, ebi_study_accession, data_type_id,
-        # link_filepaths_status, vamps_status, processing_status
-        exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', "EBI123456-A", "EBI123456-B", 2, 'idle',
-                'not submitted', 'not_processed']]
-        self.assertEqual(obs, exp)
-
-        # Check that the preprocessed data has been linked with its study
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_preprocessed_data WHERE "
-            "preprocessed_data_id=3")
-        exp = [[1, 3]]
-        self.assertEqual(obs, exp)
-
-        # Check that the files have been copied to right location
-        exp_fna_fp = join(self.db_test_ppd_dir,
-                          "3_%s" % basename(self.fna_fp))
-        self.assertTrue(exists(exp_fna_fp))
-        self._clean_up_files.append(exp_fna_fp)
-
-        exp_qual_fp = join(self.db_test_ppd_dir,
-                           "3_%s" % basename(self.qual_fp))
-        self.assertTrue(exists(exp_qual_fp))
-        self._clean_up_files.append(exp_qual_fp)
-
-        # Check that the filepaths have been correctly added to the DB
-        obs_id = self.conn_handler.execute_fetchone(
-            "SELECT count(1) from qiita.filepath")[0]
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d or "
-            "filepath_id=%d" % (obs_id - 1, obs_id))
-        exp_fna_fp = "3_%s" % basename(self.fna_fp)
-        exp_qual_fp = "3_%s" % basename(self.qual_fp)
-        # filepath_id, path, filepath_type_id
-        exp = [[obs_id - 1, exp_fna_fp, 4, '852952723', 1, 3],
-               [obs_id, exp_qual_fp, 5, '852952723', 1, 3]]
-        self.assertEqual(obs, exp)
+        # Check that all the information is initialized correctly
+        self.assertEqual(obs.processed_data, [])
+        self.assertEqual(obs.prep_template, self.prep_template.id)
+        self.assertEqual(obs.study, self.study.id)
+        self.assertEqual(obs.data_type(), self.prep_template.data_type())
+        self.assertEqual(obs.data_type(ret_id=True),
+                         self.prep_template.data_type(ret_id=True))
+        self.assertEqual(obs.submitted_to_vamps_status(), "not submitted")
+        self.assertEqual(obs.processing_status, "not_processed")
+        self.assertEqual(obs.status, "sandbox")
+        self.assertEqual(obs.preprocessing_info,
+                         (self.params_table, self.params_id))
 
     def test_create_data_type_only(self):
         # Check that the returned object has the correct id
+        new_id = get_count('qiita.preprocessed_data') + 1
         obs = PreprocessedData.create(self.study, self.params_table,
                                       self.params_id, self.filepaths,
                                       data_type="18S")
-        self.assertEqual(obs.id, 3)
+        self.assertEqual(obs.id, new_id)
 
-        # Check that the preprocessed data have been correctly added to the DB
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.preprocessed_data WHERE "
-            "preprocessed_data_id=3")
-        # preprocessed_data_id, preprocessed_params_table,
-        # preprocessed_params_id, submitted_to_insdc_status,
-        # ebi_submission_accession, ebi_study_accession, data_type_id,
-        # link_filepaths_status, vamps_status, processing_status
-        exp = [[3, "preprocessed_sequence_illumina_params", 1,
-                'not submitted', None, None, 2, 'idle', 'not submitted',
-                'not_processed']]
-        self.assertEqual(obs, exp)
-
-        # Check that the preprocessed data has been linked with its study
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_preprocessed_data WHERE "
-            "preprocessed_data_id=3")
-        exp = [[1, 3]]
-        self.assertEqual(obs, exp)
-
-        # Check that the files have been copied to right location
-        exp_fna_fp = join(self.db_test_ppd_dir,
-                          "3_%s" % basename(self.fna_fp))
-        self.assertTrue(exists(exp_fna_fp))
-        self._clean_up_files.append(exp_fna_fp)
-
-        exp_qual_fp = join(self.db_test_ppd_dir,
-                           "3_%s" % basename(self.qual_fp))
-        self.assertTrue(exists(exp_qual_fp))
-        self._clean_up_files.append(exp_qual_fp)
-
-        # Check that the filepaths have been correctly added to the DB
-        obs_id = self.conn_handler.execute_fetchone(
-            "SELECT count(1) from qiita.filepath")[0]
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.filepath WHERE filepath_id=%d or "
-            "filepath_id=%d" % (obs_id - 1, obs_id))
-        exp_fna_fp = "3_%s" % basename(self.fna_fp)
-        exp_qual_fp = "3_%s" % basename(self.qual_fp)
-        # filepath_id, path, filepath_type_id
-        exp = [[obs_id - 1, exp_fna_fp, 4, '852952723', 1, 3],
-               [obs_id, exp_qual_fp, 5, '852952723', 1, 3]]
-        self.assertEqual(obs, exp)
-
-        # Check that the preprocessed data have been correctly
-        # linked with the filepaths
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.preprocessed_filepath WHERE "
-            "preprocessed_data_id=3")
-        # preprocessed_data_id, filepath_id
-        self.assertEqual(obs, [[3, obs_id - 1], [3, obs_id]])
+        # Check that all the information is initialized correctly
+        self.assertEqual(obs.processed_data, [])
+        self.assertEqual(obs.prep_template, [])
+        self.assertEqual(obs.study, self.study.id)
+        self.assertEqual(obs.data_type(), "18S")
+        self.assertEqual(obs.data_type(ret_id=True),
+                         convert_to_id("18S", "data_type"))
+        self.assertEqual(obs.submitted_to_vamps_status(), "not submitted")
+        self.assertEqual(obs.processing_status, "not_processed")
+        self.assertEqual(obs.status, "sandbox")
+        self.assertEqual(obs.preprocessing_info,
+                         (self.params_table, self.params_id))
 
     def test_delete_basic(self):
         """Correctly deletes a preprocessed data"""
         # testing regular delete
         ppd = PreprocessedData.create(
             self.study, self.params_table,
-            self.params_id, self.filepaths, prep_template=self.prep_template,
-            ebi_submission_accession=self.ebi_submission_accession,
-            ebi_study_accession=self.ebi_study_accession)
+            self.params_id, self.filepaths, prep_template=self.prep_template)
         PreprocessedData.delete(ppd.id)
 
         # testing that the deleted preprocessed data can't be instantiated
@@ -494,9 +421,7 @@ class PreprocessedDataTests(TestCase):
         # submitted to EBI or VAMPS
         ppd = PreprocessedData.create(
             self.study, self.params_table,
-            self.params_id, self.filepaths, prep_template=self.prep_template,
-            ebi_submission_accession=self.ebi_submission_accession,
-            ebi_study_accession=self.ebi_study_accession)
+            self.params_id, self.filepaths, prep_template=self.prep_template)
 
         # fails due to VAMPS submission
         ppd.update_vamps_status('success')
@@ -504,8 +429,7 @@ class PreprocessedDataTests(TestCase):
             PreprocessedData.delete(ppd.id)
         ppd.update_vamps_status('failed')
 
-        # fails due to EBI submission
-        ppd.update_insdc_status('success', 'AAAA', 'AAAA')
+        ppd = PreprocessedData(1)
         with self.assertRaises(QiitaDBStatusError):
             PreprocessedData.delete(ppd.id)
 
@@ -566,63 +490,6 @@ class PreprocessedDataTests(TestCase):
         ppd = PreprocessedData(1)
         self.assertEqual(ppd.study, 1)
 
-    def test_ebi_submission_accession(self):
-        """Correctly returns the ebi_submission_accession"""
-        ppd = PreprocessedData(1)
-        self.assertEqual(ppd.ebi_submission_accession, 'EBI123456-AA')
-
-    def test_ebi_ebi_study_accession(self):
-        """Correctly returns the ebi_study_accession"""
-        ppd = PreprocessedData(1)
-        self.assertEqual(ppd.ebi_study_accession, 'EBI123456-BB')
-
-    def test_set_ebi_submission_accession(self):
-        new = PreprocessedData.create(
-            self.study, self.params_table, self.params_id, self.filepaths,
-            prep_template=self.prep_template,
-            ebi_submission_accession=self.ebi_submission_accession,
-            ebi_study_accession=self.ebi_study_accession)
-
-        new.ebi_submission_accession = 'EBI12345-CC'
-        self.assertEqual(new.ebi_submission_accession, 'EBI12345-CC')
-
-    def test_ebi_study_accession(self):
-        new = PreprocessedData.create(
-            self.study, self.params_table,
-            self.params_id, self.filepaths, prep_template=self.prep_template,
-            ebi_submission_accession=self.ebi_submission_accession,
-            ebi_study_accession=self.ebi_study_accession)
-
-        new.ebi_study_accession = 'EBI12345-DD'
-        self.assertEqual(new.ebi_study_accession, 'EBI12345-DD')
-
-    def test_submitted_to_insdc_status(self):
-        """submitted_to_insdc_status works correctly"""
-        # False case
-        pd = PreprocessedData(1)
-        self.assertEqual(pd.submitted_to_insdc_status(), 'submitting')
-        # True case
-        pd = PreprocessedData(2)
-        self.assertEqual(pd.submitted_to_insdc_status(), 'not submitted')
-
-    def test_update_insdc_status(self):
-        """Able to update insdc status"""
-        pd = PreprocessedData(1)
-        self.assertEqual(pd.submitted_to_insdc_status(), 'submitting')
-        pd.update_insdc_status('failed')
-        self.assertEqual(pd.submitted_to_insdc_status(), 'failed')
-
-        pd.update_insdc_status('success', 'foo', 'bar')
-        self.assertEqual(pd.submitted_to_insdc_status(), 'success')
-        self.assertEqual(pd.ebi_study_accession, 'foo')
-        self.assertEqual(pd.ebi_submission_accession, 'bar')
-
-        with self.assertRaises(ValueError):
-            pd.update_insdc_status('not valid state')
-
-        with self.assertRaises(ValueError):
-            pd.update_insdc_status('success', 'only one accession')
-
     def test_data_type(self):
         """Correctly returns the data_type of preprocessed_data"""
         pd = ProcessedData(1)
@@ -651,20 +518,6 @@ class PreprocessedDataTests(TestCase):
         ppd = PreprocessedData(1)
         with self.assertRaises(ValueError):
             ppd._set_link_filepaths_status('not a valid status')
-
-    def test_insdc_status(self):
-        ppd = PreprocessedData(1)
-
-        # verifying current value
-        self.assertEqual(ppd.submitted_to_insdc_status(), 'submitting')
-
-        # changing value and then verifying new value
-        ppd.update_insdc_status('failed')
-        self.assertEqual(ppd.submitted_to_insdc_status(), 'failed')
-
-        # checking failure
-        with self.assertRaises(ValueError):
-            ppd.update_insdc_status('not a valid status')
 
     def test_vamps_status(self):
         ppd = PreprocessedData(1)
@@ -735,6 +588,58 @@ class PreprocessedDataTests(TestCase):
                                       self.params_id, self.filepaths,
                                       data_type="16S")
         self.assertEqual(ppd.status, 'sandbox')
+
+    def test_is_submitted_to_ebi(self):
+        self.assertTrue(PreprocessedData(1).is_submitted_to_ebi)
+        self.assertFalse(PreprocessedData(2).is_submitted_to_ebi)
+
+    def test_ebi_run_accessions(self):
+        exp = ['ERR0000001', 'ERR0000002', 'ERR0000003', 'ERR0000004',
+               'ERR0000005', 'ERR0000006', 'ERR0000007', 'ERR0000008',
+               'ERR0000009', 'ERR0000010', 'ERR0000011', 'ERR0000012',
+               'ERR0000013', 'ERR0000014', 'ERR0000015', 'ERR0000016',
+               'ERR0000017', 'ERR0000018', 'ERR0000019', 'ERR0000020',
+               'ERR0000021', 'ERR0000022', 'ERR0000023', 'ERR0000024',
+               'ERR0000025', 'ERR0000026', 'ERR0000027']
+        self.assertEqual(PreprocessedData(1).ebi_run_accessions, exp,)
+        self.assertEqual(PreprocessedData(2).ebi_run_accessions, [])
+
+    def test_ebi_run_accessions_setter(self):
+        new_vals = {
+            '1.SKB1.640202': 'ERR1000001',
+            '1.SKB2.640194': 'ERR1000002',
+            '1.SKB3.640195': 'ERR1000003',
+            '1.SKB4.640189': 'ERR1000004',
+            '1.SKB5.640181': 'ERR1000005',
+            '1.SKB6.640176': 'ERR1000006',
+            '1.SKB7.640196': 'ERR1000007',
+            '1.SKB8.640193': 'ERR1000008',
+            '1.SKB9.640200': 'ERR1000009',
+            '1.SKD1.640179': 'ERR1000010',
+            '1.SKD2.640178': 'ERR1000011',
+            '1.SKD3.640198': 'ERR1000012',
+            '1.SKD4.640185': 'ERR1000013',
+            '1.SKD5.640186': 'ERR1000014',
+            '1.SKD6.640190': 'ERR1000015',
+            '1.SKD7.640191': 'ERR1000016',
+            '1.SKD8.640184': 'ERR1000017',
+            '1.SKD9.640182': 'ERR1000018',
+            '1.SKM1.640183': 'ERR1000019',
+            '1.SKM2.640199': 'ERR1000020',
+            '1.SKM3.640197': 'ERR1000021',
+            '1.SKM4.640180': 'ERR1000022',
+            '1.SKM5.640177': 'ERR1000023',
+            '1.SKM6.640187': 'ERR1000024',
+            '1.SKM7.640188': 'ERR1000025',
+            '1.SKM8.640201': 'ERR1000026',
+            '1.SKM9.640192': 'ERR1000027'}
+        with self.assertRaises(QiitaDBError):
+            PreprocessedData(1).ebi_run_accessions = new_vals
+
+        ppd = PreprocessedData(2)
+        self.assertEqual(ppd.ebi_run_accessions, [])
+        ppd.ebi_run_accessions = new_vals
+        self.assertEqual(ppd.ebi_run_accessions, sorted(new_vals.values()))
 
 
 @qiita_test_checker()
