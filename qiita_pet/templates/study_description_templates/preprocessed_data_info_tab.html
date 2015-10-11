@@ -88,7 +88,9 @@ function parameters_changed(obj, ppd_id){
   <br/>
   <table border="0" width="60%">
     <tr>
-      <td><a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a></td>
+      {% if not ebi_link %}
+        <td><a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a></td>
+      {% end %}
       <td><a class="btn btn-primary glyphicon glyphicon-export" href="/vamps/{{ppd_id}}" style="word-spacing: -10px;"> Submit to VAMPS</a></td>
     </tr>
   </table>
