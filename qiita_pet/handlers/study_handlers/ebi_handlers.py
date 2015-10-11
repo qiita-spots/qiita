@@ -110,9 +110,7 @@ class EBISubmitHandler(BaseHandler):
 
         msg = ''
         msg_level = 'success'
-        ppd = PreprocessedData(preprocessed_data_id)
-        study_id = ppd.study
-        pt_id = ppd.prep_template
+        study_id = PreprocessedData(preprocessed_data_id).ppd.study
         study = Study(study_id)
         state = study.ebi_submission_status
         if state == 'submitting':
@@ -125,9 +123,10 @@ class EBISubmitHandler(BaseHandler):
 
             self.render('compute_wait.html',
                         job_id=job_id, title='EBI Submission',
-                        completion_redirect=(
-                            '/study/description/%s?top_tab=prep_template_tab'
-                            '&sub_tab=%s' % (study_id, pt_id)))
+                        completion_redirect=('/study/description/%s?top_tab='
+                                             'preprocessed_data_tab&sub_tab=%s'
+                                             % (study_id,
+                                                preprocessed_data_id)))
             return
 
         self.display_template(preprocessed_data_id, msg, msg_level)
