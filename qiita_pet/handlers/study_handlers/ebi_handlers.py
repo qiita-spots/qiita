@@ -110,7 +110,7 @@ class EBISubmitHandler(BaseHandler):
 
         msg = ''
         msg_level = 'success'
-        study_id = PreprocessedData(preprocessed_data_id).ppd.study
+        study_id = PreprocessedData(preprocessed_data_id).study
         study = Study(study_id)
         state = study.ebi_submission_status
         if state == 'submitting':
