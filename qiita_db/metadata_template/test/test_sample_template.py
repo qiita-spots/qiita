@@ -1201,6 +1201,17 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
         self.assertEqual(before, after)
 
+    def test_update_equal(self):
+        """It doesn't fail with the exact same template"""
+        # Create a new sample tempalte
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        exp = {s_id: st[s_id]._to_dict() for s_id in st}
+        # Try to update the sample template with the same values
+        npt.assert_warns(QiitaDBWarning, st.update, self.metadata)
+        # Check that no values have been changed
+        obs = {s_id: st[s_id]._to_dict() for s_id in st}
+        self.assertEqual(obs, exp)
+
     def test_update(self):
         """Updates values in existing mapping file"""
         # creating a new sample template

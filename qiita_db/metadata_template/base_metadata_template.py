@@ -1185,6 +1185,8 @@ class MetadataTemplate(QiitaObject):
                     "There are no differences between the data stored in the "
                     "DB and the new data provided",
                     QiitaDBWarning)
+                return
+
             changed.index.names = ['sample_name', 'column']
             # the combination of np.where and boolean indexing produces
             # a numpy array with only the values that actually changed
