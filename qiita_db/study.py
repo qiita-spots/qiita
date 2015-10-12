@@ -110,6 +110,9 @@ from .sql_connection import TRN
 from .util import exists_table
 
 
+_VALID_EBI_STATUS = ('not submitted', 'submitting', 'submitted')
+
+
 class Study(QiitaObject):
     r"""Study object to access to the Qiita Study information
 
@@ -146,7 +149,8 @@ class Study(QiitaObject):
     _table = "study"
     _portal_table = "study_portal"
     # The following columns are considered not part of the study info
-    _non_info = frozenset(["email", "study_title"])
+    _non_info = frozenset(["email", "study_title", "ebi_submission_status",
+                           "ebi_study_accession"])
     # The following tables are considered part of info
     _info_cols = frozenset(chain(
         get_table_cols('study'), get_table_cols('study_status'),
@@ -672,8 +676,19 @@ class Study(QiitaObject):
         Returns
         -------
         SampleTemplate id
+
+        Note
+        ----
+        If the study doesn't have a sample template associated with it, it will
+        return `-1`.
         """
-        return self._id
+        with TRN:
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.study_sample
+                                   WHERE study_id = %s)"""
+            TRN.add(sql, [self.id])
+            exists = TRN.execute_fetchlast()
+        return self._id if exists else -1
 
     @property
     def data_types(self):
@@ -788,6 +803,89 @@ class Study(QiitaObject):
                      WHERE study_id = %s"""
             TRN.add(sql, [self._id])
             return TRN.execute_fetchflatten()
+
+    @property
+    def ebi_study_accession(self):
+        """The EBI study accession for this study
+
+        Returns
+        -------
+        str
+            The study EBI accession
+        """
+        with TRN:
+            sql = """SELECT ebi_study_accession
+                     FROM qiita.{0}
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [self._id])
+            return TRN.execute_fetchlast()
+
+    @ebi_study_accession.setter
+    def ebi_study_accession(self, value):
+        """Sets the study's EBI study accession
+
+        Parameters
+        ----------
+        value : str
+            The new EBI study accession
+
+        Raises
+        ------
+        QiitDBError
+            If the study already has an EBI study accession
+        """
+        with TRN:
+            if self.ebi_study_accession is not None:
+                raise QiitaDBError(
+                    "Study %s already has an EBI study accession"
+                    % self.id)
+            sql = """UPDATE qiita.{}
+                     SET ebi_study_accession = %s
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [value, self.id])
+            TRN.execute()
+
+    @property
+    def ebi_submission_status(self):
+        """The EBI submission status of this study
+
+        Returns
+        -------
+        str
+            The study EBI submission status
+        """
+        with TRN:
+            sql = """SELECT ebi_submission_status
+                     FROM qiita.{0}
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
+
+    @ebi_submission_status.setter
+    def ebi_submission_status(self, value):
+        """Sets the study's EBI submission status
+
+        Parameters
+        ----------
+        value : str {%s}
+            The new EBI submission status
+
+        Raises
+        ------
+        ValueError
+            If the status is not known
+        """
+        if not (value in _VALID_EBI_STATUS or
+                value.startswith('failed')):
+            raise ValueError("Unknown status: %s" % value)
+        with TRN:
+            sql = """UPDATE qiita.{}
+                     SET ebi_submission_status = %s
+                     WHERE study_id = %s""".format(self._table)
+            TRN.add(sql, [value, self.id])
+            TRN.execute()
+
+    ebi_submission_status.__doc__.format(', '.join(_VALID_EBI_STATUS))
 
     # --- methods ---
     def raw_data(self, data_type=None):

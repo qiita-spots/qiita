@@ -18,7 +18,7 @@ from shutil import move
 from .study import Study, StudyPerson
 from .user import User
 from .util import (get_filetypes, get_filepath_types, compute_checksum,
-                   convert_to_id)
+                   convert_to_id, move_filepaths_to_upload_folder)
 from .data import RawData, PreprocessedData, ProcessedData
 from .metadata_template import (SampleTemplate, PrepTemplate,
                                 load_template_to_dataframe)
@@ -102,8 +102,7 @@ def load_study_from_cmd(owner, title, info):
 
 
 def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
-                                    filepathtype, params_id,
-                                    submitted_to_insdc_status,
+                                    filepath_type, params_id,
                                     prep_template_id, data_type):
     r"""Adds preprocessed data to the database
 
@@ -111,18 +110,15 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
     ----------
     study_id : int
         The study id to which the preprocessed data belongs
-    filedir : str
-        Directory path of the preprocessed data
-    filepathtype: str
-        The filepath_type of the preprecessed data
-    params_table_name : str
+    params_table : str
         The name of the table which contains the parameters of the
         preprocessing
+    filedir : str
+        Directory path of the preprocessed data
+    filepath_type: str
+        The filepath_type of the preprecessed data
     params_id : int
         The id of parameters int the params_table
-    submitted_to_insdc_status : str, {'not submitted', 'submitting', \
-            'success', 'failed'}
-        INSDC submission status
     prep_template_id : int
         Prep template id associated with data
     data_type : str
@@ -130,14 +126,13 @@ def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
     """
     with TRN:
         fp_types_dict = get_filepath_types()
-        fp_type = fp_types_dict[filepathtype]
+        fp_type = fp_types_dict[filepath_type]
         filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
         pt = (None if prep_template_id is None
               else PrepTemplate(prep_template_id))
         return PreprocessedData.create(
             Study(study_id), params_table, params_id, filepaths,
             prep_template=pt,
-            submitted_to_insdc_status=submitted_to_insdc_status,
             data_type=data_type)
 
 
@@ -307,6 +302,73 @@ def load_parameters_from_cmd(name, fp, table):
     return constructor.create(name, **params)
 
 
+def update_raw_data_from_cmd(filepaths, filepath_types, study_id, rd_id=None):
+    """Updates the raw data of the study 'study_id'
+
+    Parameters
+    ----------
+    filepaths : iterable of str
+        Paths to the raw data files
+    filepath_types : iterable of str
+        Describes the contents of the files
+    study_id : int
+        The study_id of the study to be updated
+    rd_id : int, optional
+        The id of the raw data to be updated. If not provided, the raw data
+        with lowest id in the study will be updated
+
+    Returns
+    -------
+    qiita_db.data.RawData
+
+    Raises
+    ------
+    ValueError
+        If 'filepaths' and 'filepath_types' do not have the same length
+        If the study does not have any raw data
+        If rd_id is provided and it does not belong to the given study
+    """
+    if len(filepaths) != len(filepath_types):
+        raise ValueError("Please provide exactly one filepath_type for each "
+                         "and every filepath")
+    with TRN:
+        study = Study(study_id)
+        raw_data_ids = study.raw_data()
+        if not raw_data_ids:
+            raise ValueError("Study %d does not have any raw data" % study_id)
+
+        if rd_id:
+            if rd_id not in raw_data_ids:
+                raise ValueError(
+                    "The raw data %d does not exist in the study %d. Available"
+                    " raw data: %s"
+                    % (rd_id, study_id, ', '.join(map(str, raw_data_ids))))
+            raw_data = RawData(rd_id)
+        else:
+            raw_data = RawData(sorted(raw_data_ids)[0])
+
+        filepath_types_dict = get_filepath_types()
+        try:
+            filepath_types = [filepath_types_dict[x] for x in filepath_types]
+        except KeyError:
+            supported_types = filepath_types_dict.keys()
+            unsupported_types = set(filepath_types).difference(supported_types)
+            raise ValueError(
+                "Some filepath types provided are not recognized (%s). "
+                "Please choose from: %s"
+                % (', '.join(unsupported_types), ', '.join(supported_types)))
+
+        fps = raw_data.get_filepaths()
+        sql = "DELETE FROM qiita.raw_filepath WHERE raw_data_id = %s"
+        TRN.add(sql, [raw_data.id])
+        TRN.execute()
+        move_filepaths_to_upload_folder(study_id, fps)
+
+        raw_data.add_filepaths(list(zip(filepaths, filepath_types)))
+
+    return raw_data
+
+
 def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
     """Updates the preprocessed data of the study 'study_id'
 
@@ -351,7 +413,8 @@ def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
         study = Study(study_id)
         ppds = study.preprocessed_data()
         if not ppds:
-            raise ValueError("Study %s does not have any preprocessed data")
+            raise ValueError("Study %s does not have any preprocessed data",
+                             study_id)
 
         if ppd_id:
             if ppd_id not in ppds:

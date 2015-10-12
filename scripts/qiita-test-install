@@ -356,14 +356,12 @@ def main():
         send_email = True
     except:
         send_email = False
-    ebi_credentials = (qiita_config.ebi_access_key != '' and
-                       qiita_config.ebi_center_name != '' and
+    ebi_credentials = (qiita_config.ebi_center_name != '' and
                        qiita_config.ebi_dropbox_url != '' and
                        qiita_config.ebi_organization_prefix != '' and
                        qiita_config.ebi_seq_xfer_pass != '' and
                        qiita_config.ebi_seq_xfer_url != '' and
-                       qiita_config.ebi_seq_xfer_user != '' and
-                       qiita_config.ebi_skip_curl_cert != '')
+                       qiita_config.ebi_seq_xfer_user != '')
     vamps_credentials = (qiita_config.vamps_pass != '' and
                          qiita_config.vamps_url != '' and
                          qiita_config.vamps_user != '')

@@ -30,6 +30,7 @@ from qiita_db.commands import (load_sample_template_from_cmd,
                                load_preprocessed_data_from_cmd,
                                load_prep_template_from_cmd,
                                load_parameters_from_cmd, SUPPORTED_PARAMS,
+                               update_raw_data_from_cmd,
                                update_preprocessed_data_from_cmd)
 from qiita_db.portal import Portal
 from qiita_db.sql_connection import SQLConnectionHandler
@@ -38,7 +39,8 @@ from qiita_db.reference import Reference
 from qiita_db.logger import LogEntry
 from qiita_db.util import add_system_message, clear_system_messages
 from qiita_core.qiita_settings import qiita_config
-from qiita_ware.commands import ebi_actions, submit_EBI as _submit_EBI
+from qiita_ware.ebi import EBISubmission
+from qiita_ware.commands import submit_EBI as _submit_EBI
 from qiita_ware.processing_pipeline import generate_demux_file
 from qiita_ware.context import system_call, ComputeError
 from moi import r_client
@@ -164,17 +166,14 @@ def load_raw(fp, fp_type, filetype, prep_template):
               help="id in the paramater table associated with the parameters")
 @click.option('--prep_template_id',
               help="Prep template id associated with data", default=None)
-@click.option('--insdc', is_flag=True,
-              help="If provided, the preprocessed data have been submitted "
-                   "to insdc")
 @click.option('--data_type', default=None,
               type=click.Choice(get_data_types()),
               help="The data type of data")
 def load_preprocessed(study_id, params_table, filedir, filepathtype,
-                      params_id, prep_template_id, insdc, data_type):
+                      params_id, prep_template_id, data_type):
     """Loads a preprocessed data to the database"""
     preproc_data = load_preprocessed_data_from_cmd(
-        study_id, params_table, filedir, filepathtype, params_id, insdc,
+        study_id, params_table, filedir, filepathtype, params_id,
         prep_template_id, data_type)
     click.echo("Preprocessed data successfully added to the database with "
                "id %s" % preproc_data.id)
@@ -279,6 +278,25 @@ def load_parameters(fp, table, name):
 
 
 @db.command()
+@click.option('--fp', required=True, type=click.Path(resolve_path=True,
+              readable=True, exists=True), multiple=True,
+              help='Path to the raw data file. This option can be used '
+              'multiple times if there are multiple raw data files.')
+@click.option('--fp_type', required=True, multiple=True, help='Describes the '
+              'contents of the file. Pass one fp_type per fp.',
+              type=click.Choice(get_filepath_types().keys()))
+@click.option('--study', required=True, type=click.IntRange(1),
+              help='Study whose raw data will be updated')
+@click.option('--raw_data', required=False, type=click.IntRange(1),
+              help='Raw data to be updated. If not passed, the raw data with '
+                   'lowest id in the study will be updated.')
+def update_raw_data(fp, fp_type, study, raw_data):
+    """Updates the raw data with the provided raw data files"""
+    rd = update_raw_data_from_cmd(fp, fp_type, study, rd_id=raw_data)
+    click.echo("Raw data %s successfully updated" % rd.id)
+
+
+@db.command()
 @click.argument('sl_out_dir', required=True,
                 type=click.Path(resolve_path=True, readable=True, exists=True,
                                 file_okay=False))
@@ -349,17 +367,15 @@ def remove_study(portal, studies):
 
 @ebi.command()
 @click.option('--preprocessed_data_id', required=True, type=int)
-@click.option('--action', type=click.Choice(ebi_actions),
+@click.option('--action', type=click.Choice(EBISubmission.valid_ebi_actions),
               default='submit', help='The generated XML files will specify '
               'this "action", which controls how the EBI servers handle the '
               'metadata')
 @click.option('--send/--no-send', default=False, help="Controls whether or "
               "not sequence files and metadata will actually be sent to EBI "
               "(default is to generate all the files, but not to send)")
-@click.option('--fastq-dir', type=click.Path(exists=True, file_okay=False,
-                                             resolve_path=True))
 def submit(preprocessed_data_id, action, send, fastq_dir):
-    _submit_EBI(preprocessed_data_id, action, send, fastq_dir)
+    _submit_EBI(preprocessed_data_id, action, send)
 
 
 # #############################################################################

@@ -42,6 +42,6 @@ class ComputeError(QiitaWareError):
     pass
 
 
-class EBISumbissionError(QiitaWareError):
+class EBISubmissionError(QiitaWareError):
     """Error used when EBI cannot be submitted"""
     pass

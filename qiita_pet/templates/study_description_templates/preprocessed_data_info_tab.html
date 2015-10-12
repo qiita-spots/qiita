@@ -79,16 +79,18 @@ function parameters_changed(obj, ppd_id){
 
 <div class="tab-pane" id="preprocessed_data_info_{{ppd_id}}" style="padding: 10px;">
   <a href="#" onclick="display_tab('prep_template_tab', {{prep_template_id}});">Prep template</a><br/>
-  <b>EBI status:</b> {{ebi_status}}<br/>
-  <b>EBI study accession:</b> {{ebi_study_accession}}<br/>
-  <b>EBI submission accession:</b> {{ebi_submission_accession}}<br/>
+  {% if ebi_link %}
+    <b>EBI accession:</b> {% raw ebi_link %}<br/>
+  {% end %}
   <b>VAMPS status:</b> {{vamps_status}}<br/>
   {% module EditInvestigationType(ena_terms, user_defined_terms, prep_template_id, inv_type, ppd_id) %}
   {% if show_ebi_btn %}
   <br/>
   <table border="0" width="60%">
     <tr>
-      <td><a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a></td>
+      {% if not ebi_link %}
+        <td><a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a></td>
+      {% end %}
       <td><a class="btn btn-primary glyphicon glyphicon-export" href="/vamps/{{ppd_id}}" style="word-spacing: -10px;"> Submit to VAMPS</a></td>
     </tr>
   </table>

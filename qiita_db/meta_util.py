@@ -14,6 +14,7 @@ Methods
     :toctree: generated/
 
     get_accessible_filepath_ids
+    get_lat_longs
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -24,11 +25,15 @@ Methods
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+from itertools import chain
+
+from qiita_core.qiita_settings import qiita_config
 from .study import Study
 from .data import RawData, PreprocessedData, ProcessedData
 from .analysis import Analysis
 from .sql_connection import TRN
 from .metadata_template import PrepTemplate, SampleTemplate
+from .portal import Portal
 
 
 def _get_data_fpids(constructor, object_id):
@@ -163,3 +168,36 @@ def get_accessible_filepath_ids(user):
             filepath_ids.update(analysis.all_associated_filepath_ids)
 
         return filepath_ids
+
+
+def get_lat_longs():
+    """Retrieve the latitude and longitude of all the samples in the DB
+
+    Returns
+    -------
+    list of [float, float]
+        The latitude and longitude for each sample in the database
+    """
+    portal_table_ids = Portal(qiita_config.portal).get_studies()
+
+    with TRN:
+        sql = """SELECT DISTINCT table_name
+                 FROM information_schema.columns
+                 WHERE table_name SIMILAR TO 'sample_[0-9]+'
+                    AND table_schema = 'qiita'
+                    AND column_name IN ('latitude', 'longitude')
+                    AND SPLIT_PART(table_name, '_', 2)::int IN %s;"""
+        TRN.add(sql, [tuple(portal_table_ids)])
+
+        sql = """SELECT latitude, longitude
+                 FROM qiita.{0}
+                 WHERE latitude IS NOT NULL
+                    AND longitude IS NOT NULL"""
+        idx = TRN.index
+
+        portal_tables = TRN.execute_fetchflatten()
+
+        for table in portal_tables:
+            TRN.add(sql.format(table))
+
+        return list(chain.from_iterable(TRN.execute()[idx:]))

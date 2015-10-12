@@ -110,13 +110,11 @@ class EBISubmitHandler(BaseHandler):
 
         msg = ''
         msg_level = 'success'
-        preprocessed_data = PreprocessedData(preprocessed_data_id)
-        state = preprocessed_data.submitted_to_insdc_status()
+        study_id = PreprocessedData(preprocessed_data_id).study
+        study = Study(study_id)
+        state = study.ebi_submission_status
         if state == 'submitting':
             msg = "Cannot resubmit! Current state is: %s" % state
-            msg_level = 'danger'
-        elif state == 'success' and submission_type == "ADD":
-            msg = "Cannot resubmit! Current state is: %s, use MODIFY" % state
             msg_level = 'danger'
         else:
             channel = user.id
@@ -125,7 +123,10 @@ class EBISubmitHandler(BaseHandler):
 
             self.render('compute_wait.html',
                         job_id=job_id, title='EBI Submission',
-                        completion_redirect='/compute_complete/%s' % job_id)
+                        completion_redirect=('/study/description/%s?top_tab='
+                                             'preprocessed_data_tab&sub_tab=%s'
+                                             % (study_id,
+                                                preprocessed_data_id)))
             return
 
         self.display_template(preprocessed_data_id, msg, msg_level)

@@ -4,9 +4,10 @@
     <!-- Nav tab: adding prep template -->
     <li class="active"><a href="#add_prep_template_tab" role="tab" data-toggle="tab">Add prep template</a></li>
     <!-- Nav tabs: one for each prep template available -->
-  {% for pt_id, pt_data_type, _, (class_icon1, class_icon2, color) in available_prep_templates %}
+  {% for pt_id, pt_data_type, _, (class_icon1, class_icon2, color), ebi in available_prep_templates %}
     <li><a href="#prep_template_info_{{pt_id}}" role="tab" data-toggle="tab">
-      {{pt_data_type}} (ID: {{pt_id}})&nbsp;
+      {{pt_data_type}} (ID: {{pt_id}})&nbsp;&nbsp;
+      {% if ebi %} EBI {% end %}
         <div class="{{class_icon1}}" style="color: {{color}};"></div>
         <div class="{{class_icon2}}" style="color: {{color}};"></div>
       <button class="close" title="Remove this prep template" type="button" onclick="delete_prep_template('{{pt_data_type}}', {{pt_id}})">&nbsp; ×</button>
@@ -72,7 +73,7 @@
     </div>
 
     <!-- Show Prep template info tabs -->
-    {% for _, _, pt, _ in available_prep_templates %}
+    {% for _, _, pt, _, _ in available_prep_templates %}
       {% module PrepTemplateInfoTab(study, pt, full_access, ena_terms, user_defined_terms) %}
     {% end %}
 

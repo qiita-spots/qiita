@@ -14,6 +14,7 @@ from unittest import TestCase, main
 from future.utils.six import StringIO
 from future import standard_library
 from functools import partial
+from operator import itemgetter
 
 import pandas as pd
 
@@ -23,13 +24,15 @@ from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
                                load_processed_data_cmd,
                                load_preprocessed_data_from_cmd,
                                load_parameters_from_cmd,
+                               update_raw_data_from_cmd,
                                update_preprocessed_data_from_cmd)
 from qiita_db.environment_manager import patch
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_db.data import PreprocessedData
+from qiita_db.data import PreprocessedData, RawData
 from qiita_db.util import (get_count, check_count, get_db_files_base_dir,
-                           get_mountpoint)
+                           get_mountpoint, compute_checksum,
+                           get_files_from_uploads_folders)
 from qiita_db.metadata_template import PrepTemplate
 from qiita_core.util import qiita_test_checker
 from qiita_ware.processing_pipeline import generate_demux_file
@@ -93,7 +96,7 @@ class TestImportPreprocessedData(TestCase):
         initial_fp_count = get_count('qiita.filepath')
         ppd = load_preprocessed_data_from_cmd(
             1, 'preprocessed_sequence_illumina_params',
-            self.tmpdir, 'preprocessed_fasta', 1, False, 1, None)
+            self.tmpdir, 'preprocessed_fasta', 1, 1, None)
         self.files_to_remove.append(
             join(self.db_test_ppd_dir,
                  '%d_%s' % (ppd.id, basename(self.file1))))
@@ -110,7 +113,7 @@ class TestImportPreprocessedData(TestCase):
         initial_fp_count = get_count('qiita.filepath')
         ppd = load_preprocessed_data_from_cmd(
             1, 'preprocessed_sequence_illumina_params',
-            self.tmpdir, 'preprocessed_fasta', 1, False, None, '16S')
+            self.tmpdir, 'preprocessed_fasta', 1, None, '16S')
         self.files_to_remove.append(
             join(self.db_test_ppd_dir,
                  '%d_%s' % (ppd.id, basename(self.file1))))
@@ -206,6 +209,7 @@ class TestLoadRawDataFromCmd(TestCase):
                             'barcode': 'GTCCGCAAGTTA',
                             'run_prefix': "s_G1_L001_sequences",
                             'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
@@ -450,6 +454,111 @@ class TestPatch(TestCase):
         self.assertEqual(obs, exp)
 
         self._assert_current_patch('10.sql')
+
+
+@qiita_test_checker()
+class TestUpdateRawDataFromCmd(TestCase):
+    def setUp(self):
+        fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        fd, barcodes_fp = mkstemp(suffix='_barcodes.fastq')
+        close(fd)
+        self.filepaths = [seqs_fp, barcodes_fp]
+        self.checksums = []
+        for fp in sorted(self.filepaths):
+            with open(fp, 'w') as f:
+                f.write("%s\n" % fp)
+            self.checksums.append(compute_checksum(fp))
+        self.filepaths_types = ["raw_forward_seqs", "raw_barcodes"]
+        self._clean_up_files = [seqs_fp, barcodes_fp]
+
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": StudyPerson(2),
+            "principal_investigator_id": StudyPerson(3),
+            "lab_person_id": StudyPerson(1)
+        }
+        self.new_study = Study.create(User("test@foo.bar"),
+                                      "Update raw data test",
+                                      efo=[1], info=info)
+        self.study = Study(1)
+        # The files for the RawData object attached to study 1 does not exist.
+        # Create them so we can actually perform the tests
+        for _, fp, _ in RawData(1).get_filepaths():
+            with open(fp, 'w') as f:
+                f.write('\n')
+            self._clean_up_files.append(fp)
+
+        self.uploaded_files = get_files_from_uploads_folders(
+            str(self.study.id))
+
+    def tearDown(self):
+        new_uploaded_files = get_files_from_uploads_folders(str(self.study.id))
+        new_files = set(new_uploaded_files).difference(self.uploaded_files)
+        path_builder = partial(join, get_mountpoint("uploads")[0][1], '1')
+        for _, fp in new_files:
+            self._clean_up_files.append(path_builder(fp))
+        for f in self._clean_up_files:
+            if exists(f):
+                remove(f)
+
+    def test_update_raw_data_from_cmd_diff_length(self):
+        with self.assertRaises(ValueError):
+            update_raw_data_from_cmd(self.filepaths[1:], self.filepaths_types,
+                                     self.study.id)
+        with self.assertRaises(ValueError):
+            update_raw_data_from_cmd(self.filepaths, self.filepaths_types[1:],
+                                     self.study.id)
+
+    def test_update_raw_data_from_cmd_no_raw_data(self):
+        with self.assertRaises(ValueError):
+            update_raw_data_from_cmd(self.filepaths, self.filepaths_types,
+                                     self.new_study.id)
+
+    def test_update_raw_data_from_cmd_wrong_raw_data_id(self):
+        # Using max(raw_data_ids) + 1 to make sure that the raw data id
+        # passed does not belong to the study
+        with self.assertRaises(ValueError):
+            update_raw_data_from_cmd(self.filepaths, self.filepaths_types,
+                                     self.study.id,
+                                     max(self.study.raw_data()) + 1)
+
+    def test_update_raw_data_from_cmd(self):
+        rd = update_raw_data_from_cmd(self.filepaths, self.filepaths_types,
+                                      self.study.id)
+        # Make sure that we are cleaning the environment
+        for _, fp, _ in rd.get_filepaths():
+            self._clean_up_files.append(fp)
+
+        # The checkums are in filepath order. If we sort the rd.get_filepath()
+        # result by the filepath (itemgetter(1)) we will get them in the same
+        # order, so the checksums will not fail
+        for obs, exp in zip(sorted(rd.get_filepaths(), key=itemgetter(1)),
+                            self.checksums):
+            self.assertEqual(compute_checksum(obs[1]), exp)
+
+    def test_update_raw_data_from_cmd_rd_id(self):
+        rd = update_raw_data_from_cmd(self.filepaths, self.filepaths_types,
+                                      self.study.id, self.study.raw_data()[0])
+        # Make sure that we are cleaning the environment
+        for _, fp, _ in rd.get_filepaths():
+            self._clean_up_files.append(fp)
+
+        # The checkums are in filepath order. If we sort the rd.get_filepath()
+        # result by the filepath (itemgetter(1)) we will get them in the same
+        # order, so the checksums will not fail
+        for obs, exp in zip(sorted(rd.get_filepaths(), key=itemgetter(1)),
+                            self.checksums):
+            self.assertEqual(compute_checksum(obs[1]), exp)
 
 
 @qiita_test_checker()
@@ -726,13 +835,16 @@ PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'description\tebi_submission_accession\temp_status\tprimer\t'
     'run_prefix\tstr_column\tplatform\tlibrary_construction_protocol\t'
-    'experiment_design_description\n'
+    'experiment_design_description\tinstrument_model\n'
     'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tskb7\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 3\tA\tB\tC\n'
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 3\tA\tB\tC\t'
+    'Illumina MiSeq\n'
     'SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\tskb8\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 1\tA\tB\tC\n'
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 1\tA\tB\tC\t'
+    'Illumina MiSeq\n'
     'SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\tskd8\tNone\tEMP\t'
-    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 2\tA\tB\tC\n')
+    'GTGCCAGCMGCCGCGGTAA\tts_G1_L001_sequences\tValue for sample 2\tA\tB\tC\t'
+    'Illumina MiSeq\n')
 
 PY_PATCH = """
 from qiita_db.study import Study

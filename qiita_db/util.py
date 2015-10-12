@@ -25,7 +25,6 @@ Methods
     check_required_columns
     convert_from_id
     convert_to_id
-    get_lat_longs
     get_environmental_packages
     purge_filepaths
     move_filepaths_to_upload_folder
@@ -646,7 +645,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
                     move(old_fp[0], new_fp[0])
                     # In case the transaction executes a rollback, we need to
                     # make sure the files have not been moved
-                    TRN.add_post_rollback_func(move, new_fp, old_fp)
+                    TRN.add_post_rollback_func(move, new_fp[0], old_fp[0])
 
         def str_to_id(x):
             return (x if isinstance(x, (int, long))
@@ -967,30 +966,6 @@ def get_processed_params_tables():
                  ORDER BY table_name"""
         TRN.add(sql)
         return TRN.execute_fetchflatten()
-
-
-def get_lat_longs():
-    """Retrieve the latitude and longitude of all the samples in the DB
-
-    Returns
-    -------
-    list of [float, float]
-        The latitude and longitude for each sample in the database
-    """
-    with TRN:
-        sql = """SELECT DISTINCT table_name
-                 FROM information_schema.columns
-                 WHERE SUBSTR(table_name, 1, 7) = 'sample_'
-                    AND table_schema = 'qiita'
-                    AND column_name IN ('latitude', 'longitude');"""
-        TRN.add(sql)
-
-        sql = "SELECT latitude, longitude FROM qiita.{0}"
-        idx = TRN.index
-        for table in TRN.execute_fetchflatten():
-            TRN.add(sql.format(table))
-
-        return list(chain.from_iterable(TRN.execute()[idx:]))
 
 
 def get_environmental_packages():

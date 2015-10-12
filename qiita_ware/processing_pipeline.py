@@ -24,12 +24,13 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
     """Generates a minimal QIIME-compliant mapping file for split libraries
 
     The columns of the generated file are, in order: SampleID, BarcodeSequence,
-    LinkerPrimerSequence, Description. All values are taken from the prep
-    template except for Description, which always receive the value "Qiita MMF"
+    LinkerPrimerSequence, [ReverseLinkerPrimer] Description. All values are
+    taken from the prep template except for Description, which always receive
+    the value "Qiita MMF"
 
     Parameters
     ----------
-    prep_template : PrepTemplate
+    prep_template : qiita_db.metadata_template.PrepTemplate
         The prep template from which we need to generate the minimal mapping
     out_dir : str
         Path to the output directory
@@ -40,42 +41,45 @@ def _get_qiime_minimal_mapping(prep_template, out_dir):
         The paths to the qiime minimal mapping files
     """
     from functools import partial
-    from collections import defaultdict
     from os.path import join
     import pandas as pd
 
-    # The prep templates has a QIIME mapping file, get it
-    qiime_map = pd.read_csv(prep_template.qiime_map_fp, sep='\t',
-                            keep_default_na=False, na_values=['unknown'],
-                            index_col=False,
-                            converters=defaultdict(lambda: str))
-    qiime_map.set_index('#SampleID', inplace=True, drop=True)
+    pt_df = prep_template.to_dataframe()
 
-    # We use our own description to avoid potential processing problems
-    qiime_map['Description'] = pd.Series(['Qiita MMF'] * len(qiime_map.index),
-                                         index=qiime_map.index)
+    rename_cols = {
+        'barcode': 'BarcodeSequence',
+        'primer': 'LinkerPrimerSequence',
+    }
 
-    # We ensure the order of the columns as QIIME is expecting
-    if 'ReverseLinkerPrimer' in qiime_map:
+    # Ensure the order of the columns as QIIME is expecting
+    if 'reverselinkerprimer' in pt_df:
+        rename_cols['reverselinkerprimer'] = 'ReverseLinkerPrimer'
         cols = ['BarcodeSequence', 'LinkerPrimerSequence',
                 'ReverseLinkerPrimer', 'Description']
     else:
         cols = ['BarcodeSequence', 'LinkerPrimerSequence', 'Description']
 
+    pt_df.rename(columns=rename_cols, inplace=True)
+
+    # Sometimes, the Description column can generate some problems in QIIME,
+    # depending on its values. We set it up to read Qiita MMF for all rows
+    pt_df['Description'] = pd.Series(['Qiita MMF'] * len(pt_df.index),
+                                     index=pt_df.index)
+
     path_builder = partial(join, out_dir)
-    if 'run_prefix' in qiime_map:
+    if 'run_prefix' in pt_df:
         # The study potentially has more than 1 lane, so we should generate a
         # qiime MMF for each of the lanes. We know how to split the prep
         # template based on the run_prefix column
         output_fps = []
-        for prefix, df in qiime_map.groupby('run_prefix'):
+        for prefix, df in pt_df.groupby('run_prefix'):
             df = df[cols]
             out_fp = path_builder("%s_MMF.txt" % prefix)
             output_fps.append(out_fp)
             df.to_csv(out_fp, index_label="#SampleID", sep='\t')
     else:
         # The study only has one lane, just write the MMF
-        df = qiime_map[cols]
+        df = pt_df[cols]
         out_fp = path_builder("prep_%d_MMF.txt" % prep_template.id)
         output_fps = [out_fp]
         df.to_csv(out_fp, index_label="#SampleID", sep='\t')
