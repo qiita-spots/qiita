@@ -1392,8 +1392,12 @@ class MetadataTemplate(QiitaObject):
                          SET {1}=c.{1}
                          FROM (VALUES {2}) AS c(sample_id, {1})
                          WHERE c.sample_id = t.sample_id
-                         """.format(self._table, column, sql_vals)
-                TRN.add(sql, list(chain.from_iterable(values.items())))
+                            AND t.{3} = %s
+                         """.format(self._table, column, sql_vals,
+                                    self._id_column)
+                sql_vals = list(chain.from_iterable(values.items()))
+                sql_vals.append(self.id)
+                TRN.add(sql, sql_vals)
                 TRN.execute()
             else:
                 warnings.warn("No new accession numbers to update",
