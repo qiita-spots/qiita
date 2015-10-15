@@ -506,7 +506,8 @@ class MetadataTemplate(QiitaObject):
         return "%s%d" % (cls._table_prefix, obj_id)
 
     @classmethod
-    def _clean_validate_template(cls, md_template, study_id, restriction_dict):
+    def _clean_validate_template(cls, md_template, study_id, restriction_dict,
+                                 current_columns=None):
         """Takes care of all validation and cleaning of metadata templates
 
         Parameters
@@ -517,6 +518,8 @@ class MetadataTemplate(QiitaObject):
             The study to which the metadata template belongs to.
         restriction_dict : dict of {str: Restriction}
             A dictionary with the restrictions that apply to the metadata
+        current_columns : iterable of str, optional
+            The current list of metadata columns
 
         Returns
         -------
@@ -560,8 +563,11 @@ class MetadataTemplate(QiitaObject):
 
         # Check if we have the columns required for some functionality
         warning_msg = []
+        columns = set(md_template.columns)
+        if current_columns:
+            columns.update(current_columns)
         for key, restriction in viewitems(restriction_dict):
-            missing = set(restriction.columns).difference(md_template)
+            missing = set(restriction.columns).difference(columns)
 
             if missing:
                 warning_msg.append(
@@ -1115,7 +1121,8 @@ class MetadataTemplate(QiitaObject):
         """
         with TRN:
             md_template = self._clean_validate_template(
-                md_template, self.study_id, self.columns_restrictions)
+                md_template, self.study_id, self.columns_restrictions,
+                current_columns=self.categories())
             self._common_extend_steps(md_template)
             self.generate_files()
 
@@ -1139,8 +1146,9 @@ class MetadataTemplate(QiitaObject):
         """
         with TRN:
             # Clean and validate the metadata template given
-            new_map = self._clean_validate_template(md_template, self.study_id,
-                                                    self.columns_restrictions)
+            new_map = self._clean_validate_template(
+                md_template, self.study_id, self.columns_restrictions,
+                current_columns=self.categories())
             # Retrieving current metadata
             current_map = self.to_dataframe()
 
@@ -1185,6 +1193,8 @@ class MetadataTemplate(QiitaObject):
                     "There are no differences between the data stored in the "
                     "DB and the new data provided",
                     QiitaDBWarning)
+                return
+
             changed.index.names = ['sample_name', 'column']
             # the combination of np.where and boolean indexing produces
             # a numpy array with only the values that actually changed
