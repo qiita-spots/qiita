@@ -1414,6 +1414,22 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             pt.ebi_experiment_accessions = exp_acc
         npt.assert_warns(QiitaDBWarning, f)
 
+    def test_ebi_experiment_accessions_setter_common_samples(self):
+        # If 2 different prep templates have common samples, setting the
+        # ebi_experiment_accession should affect only the prep template
+        # that it was called to, not both prep templates
+        pt1 = PrepTemplate.create(self.metadata, self.test_study,
+                                  self.data_type)
+        pt2 = PrepTemplate.create(self.metadata, self.test_study,
+                                  self.data_type)
+        exp_acc1 = {'%s.SKB8.640193' % self.test_study.id: 'ERX0000126',
+                    '%s.SKD8.640184' % self.test_study.id: 'ERX0000127'}
+        pt1.ebi_experiment_accessions = exp_acc1
+        exp_acc1['%s.SKB7.640196' % self.test_study.id] = None
+        self.assertEqual(pt1.ebi_experiment_accessions, exp_acc1)
+        exp_acc2 = {k: None for k in exp_acc1.keys()}
+        self.assertEqual(pt2.ebi_experiment_accessions, exp_acc2)
+
     def test_is_submitted_to_ebi(self):
         self.assertTrue(self.tester.is_submitted_to_ebi)
         pt = PrepTemplate.create(self.metadata, self.test_study,

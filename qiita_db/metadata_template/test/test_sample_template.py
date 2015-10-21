@@ -716,6 +716,38 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         exp.sort_index(axis=1, inplace=True)
         assert_frame_equal(obs, exp)
 
+    def test_clean_validate_template_columns(self):
+        metadata_dict = {
+            'Sample1': {'physical_specimen_location': 'location1',
+                        'physical_specimen_remaining': True,
+                        'dna_extracted': True,
+                        'sample_type': 'type1',
+                        'host_subject_id': 'NotIdentified',
+                        'Description': 'Test Sample 1',
+                        'latitude': 42.42,
+                        'longitude': 41.41}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        cols = ['collection_timestamp', 'taxon_id', 'scientific_name']
+        obs = SampleTemplate._clean_validate_template(
+            metadata, 2, SAMPLE_TEMPLATE_COLUMNS, current_columns=cols)
+        metadata_dict = {
+            '2.Sample1': {'physical_specimen_location': 'location1',
+                          'physical_specimen_remaining': True,
+                          'dna_extracted': True,
+                          'sample_type': 'type1',
+                          'host_subject_id': 'NotIdentified',
+                          'description': 'Test Sample 1',
+                          'latitude': 42.42,
+                          'longitude': 41.41}
+            }
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        obs.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
+
     def test_clean_validate_template(self):
         obs = SampleTemplate._clean_validate_template(self.metadata, 2,
                                                       SAMPLE_TEMPLATE_COLUMNS)
@@ -1201,6 +1233,17 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
         self.assertEqual(before, after)
 
+    def test_update_equal(self):
+        """It doesn't fail with the exact same template"""
+        # Create a new sample tempalte
+        st = SampleTemplate.create(self.metadata, self.new_study)
+        exp = {s_id: st[s_id]._to_dict() for s_id in st}
+        # Try to update the sample template with the same values
+        npt.assert_warns(QiitaDBWarning, st.update, self.metadata)
+        # Check that no values have been changed
+        obs = {s_id: st[s_id]._to_dict() for s_id in st}
+        self.assertEqual(obs, exp)
+
     def test_update(self):
         """Updates values in existing mapping file"""
         # creating a new sample template
@@ -1236,7 +1279,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         exp = {s_id: st[s_id]._to_dict() for s_id in st}
         s_id = '%d.Sample1' % self.new_study.id
         exp[s_id]['physical_specimen_location'] = 'CHANGE'
-        npt.assert_warns(QiitaDBWarning, st.update, new_metadata)
+        st.update(new_metadata)
         obs = {s_id: st[s_id]._to_dict() for s_id in st}
         self.assertEqual(obs, exp)
 
