@@ -1899,7 +1899,7 @@ Referred by study_artifact ( artifact_id ) </title></a>
 <a xlink:href='#artifact.visibility_id'><text x='1218' y='847'>visibility_id</text><title>visibility_id bigint not null
 If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public</title></a>
 <a xlink:href='#artifact.visibility_id'><use id='fk' x='1383' y='836' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
-  <use id='nn' x='1202' y='852' xlink:href='#nn'/><a xlink:href='#artifact.file_status'><text x='1218' y='862'>file_status</text><title>file_status bigint not null
+  <use id='nn' x='1202' y='852' xlink:href='#nn'/><a xlink:href='#artifact.file_status'><text x='1218' y='862'>file_status</text><title>file_status varchar not null
 If it is linking&#044; unlinking or idle</title></a>
   <a xlink:href='#artifact.artifact_type_id'><use id='idx' x='1202' y='866' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
 <a xlink:href='#artifact.artifact_type_id'><text x='1218' y='877'>artifact_type_id</text><title>artifact_type_id integer</title></a>
@@ -5437,7 +5437,7 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>
 		<td><a name='artifact.file_status'>file&#095;status</a></td>
-		<td> bigint  NOT NULL  </td>
+		<td> varchar  NOT NULL  </td>
 		<td> If it is linking&#044; unlinking or idle </td>
 	</tr>
 	<tr>

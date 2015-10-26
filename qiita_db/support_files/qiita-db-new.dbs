@@ -217,7 +217,7 @@
 			<column name="visibility_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[If the artifact is sandbox, awaiting_for_approval, private or public]]></comment>
 			</column>
-			<column name="file_status" type="bigint" length="1" jt="-5" mandatory="y" >
+			<column name="file_status" type="varchar" jt="12" mandatory="y" >
 				<comment><![CDATA[If it is linking, unlinking or idle]]></comment>
 			</column>
 			<column name="artifact_type_id" type="integer" jt="4" />
@@ -1729,74 +1729,5 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="publication" />
 			<entity schema="qiita" name="soft_command" />
 		</group>
-		<script name="Sql" id="SQL6892793" >
-			<string><![CDATA[CREATE TABLE qiita.artifact ( 
-	artifact_id          bigserial  NOT NULL,
-	generated_timestamp  timestamp  NOT NULL,
-	command_id           bigint  ,
-	command_parameters_id bigint  ,
-	visibility_id        bigint  NOT NULL,
-	file_status          bigint  NOT NULL,
-	artifact_type_id     integer  ,
-	can_be_submitted_to_ebi bool DEFAULT 'FALSE' NOT NULL,
-	can_be_submitted_to_vamps bool DEFAULT 'FALSE' NOT NULL,
-	CONSTRAINT pk_artifact PRIMARY KEY ( artifact_id )
- ) ;
-
-CREATE INDEX idx_artifact_0 ON qiita.artifact ( visibility_id ) ;
-
-CREATE INDEX idx_artifact_1 ON qiita.artifact ( artifact_type_id ) ;
-
-CREATE INDEX idx_artifact ON qiita.artifact ( command_id ) ;
-
-COMMENT ON TABLE qiita.artifact IS 'Represents data in the system';
-
-COMMENT ON COLUMN qiita.artifact.visibility_id IS 'If the artifact is sandbox, awaiting_for_approval, private or public';
-
-COMMENT ON COLUMN qiita.artifact.file_status IS 'If it is linking, unlinking or idle';
-
-ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_visibility FOREIGN KEY ( visibility_id ) REFERENCES qiita.visibility( visibility_id )    ;
-
-ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_filetype FOREIGN KEY ( artifact_type_id ) REFERENCES qiita.artifact_type( artifact_type_id )    ;
-
-ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_soft_command FOREIGN KEY ( command_id ) REFERENCES qiita.soft_command( command_id )    ;
-
-]]></string>
-		</script>
-		<script name="Sql_001" id="SQL7675036" >
-			<string><![CDATA[CREATE TABLE qiita.artifact ( 
-	artifact_id          bigserial  NOT NULL,
-	generated_timestamp  timestamp  NOT NULL,
-	command_id           bigint  ,
-	command_parameters_id bigint  ,
-	visibility_id        bigint  NOT NULL,
-	file_status          bigint  NOT NULL,
-	artifact_type_id     integer  ,
-	can_be_submitted_to_ebi bool DEFAULT 'FALSE' NOT NULL,
-	can_be_submitted_to_vamps bool DEFAULT 'FALSE' NOT NULL,
-	submitted_to_vamps   bool DEFAULT 'FALSE' NOT NULL,
-	CONSTRAINT pk_artifact PRIMARY KEY ( artifact_id )
- ) ;
-
-CREATE INDEX idx_artifact_0 ON qiita.artifact ( visibility_id ) ;
-
-CREATE INDEX idx_artifact_1 ON qiita.artifact ( artifact_type_id ) ;
-
-CREATE INDEX idx_artifact ON qiita.artifact ( command_id ) ;
-
-COMMENT ON TABLE qiita.artifact IS 'Represents data in the system';
-
-COMMENT ON COLUMN qiita.artifact.visibility_id IS 'If the artifact is sandbox, awaiting_for_approval, private or public';
-
-COMMENT ON COLUMN qiita.artifact.file_status IS 'If it is linking, unlinking or idle';
-
-ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_visibility FOREIGN KEY ( visibility_id ) REFERENCES qiita.visibility( visibility_id )    ;
-
-ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_filetype FOREIGN KEY ( artifact_type_id ) REFERENCES qiita.artifact_type( artifact_type_id )    ;
-
-ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_soft_command FOREIGN KEY ( command_id ) REFERENCES qiita.soft_command( command_id )    ;
-
-]]></string>
-		</script>
 	</layout>
 </project>
