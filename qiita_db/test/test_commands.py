@@ -11,7 +11,7 @@ from os.path import exists, join, basename
 from tempfile import mkstemp, mkdtemp
 from shutil import rmtree
 from unittest import TestCase, main
-from future.utils.six import StringIO
+from io import StringIO
 from future import standard_library
 from functools import partial
 from operator import itemgetter

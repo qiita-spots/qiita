@@ -9,7 +9,7 @@
 from __future__ import division
 from collections import defaultdict
 from future.utils import PY3, viewitems
-from future.utils.six import StringIO
+from io import StringIO
 
 import pandas as pd
 import numpy as np
