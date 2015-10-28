@@ -268,7 +268,7 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='160' y='208' width='325' height='2' />
 
 <!-- ============= Group 'Group_study' ============= -->
-<rect class='grp' style='fill:#99ff99;stroke:#c5e0c5' x='1904' y='10' width='737' height='740' />
+<rect class='grp' style='fill:#99ff99;stroke:#c5e0c5' x='1904' y='10' width='737' height='650' />
 <text x='1915' y='25'>Group_study</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1915' y='28' width='715' height='2' />
 
@@ -283,9 +283,9 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='505' y='1468' width='145' height='2' />
 
 <!-- ============= Group 'Group_logging' ============= -->
-<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='1079' y='1525' width='257' height='170' />
-<text x='1090' y='1540'>Group_logging</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1090' y='1543' width='235' height='2' />
+<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='719' y='1480' width='257' height='170' />
+<text x='730' y='1495'>Group_logging</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='730' y='1498' width='235' height='2' />
 
 <!-- ============= Group 'Group_filepaths' ============= -->
 <rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='569' y='700' width='422' height='425' />
@@ -298,14 +298,14 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='40' y='478' width='340' height='2' />
 
 <!-- ============= Group 'Group_messages' ============= -->
-<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='704' y='1525' width='332' height='170' />
-<text x='715' y='1540'>Group_messages</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='715' y='1543' width='310' height='2' />
+<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='1214' y='1285' width='332' height='170' />
+<text x='1225' y='1300'>Group_messages</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1225' y='1303' width='310' height='2' />
 
 <!-- ============= Group 'Group_artifact' ============= -->
-<rect class='grp' style='fill:#ffcccc;stroke:#e0c5c5' x='1034' y='700' width='512' height='350' />
-<text x='1045' y='715'>Group_artifact</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1045' y='718' width='490' height='2' />
+<rect class='grp' style='fill:#ffcccc;stroke:#e0c5c5' x='1034' y='670' width='677' height='380' />
+<text x='1045' y='685'>Group_artifact</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1045' y='688' width='655' height='2' />
 
 <!-- ============= Group 'Group_template' ============= -->
 <rect class='grp' style='fill:#ffffcc;stroke:#e0e0c5' x='1034' y='115' width='782' height='560' />
@@ -313,9 +313,14 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1045' y='133' width='760' height='2' />
 
 <!-- ============= Group 'Group_processing' ============= -->
-<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='1559' y='805' width='887' height='800' />
-<text x='1570' y='820'>Group_processing</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1570' y='823' width='865' height='2' />
+<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='1709' y='745' width='512' height='860' />
+<text x='1720' y='760'>Group_processing</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1720' y='763' width='490' height='2' />
+
+<!-- ============= Group 'Group_publication' ============= -->
+<rect class='grp' style='fill:#ffccff;stroke:#e0c5e0' x='2249' y='670' width='317' height='215' />
+<text x='2260' y='685'>Group_publication</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='2260' y='688' width='295' height='2' />
 
 <path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 60 1680 L 60,1560' >
 	<title>Foreign Key fk_controlled_vocab_values
@@ -372,11 +377,11 @@ table {
 	analysis_users references qiita_user ( email )</title>
 </path>
 <text x='137' y='880' transform='rotate(270 137,880)' title='Foreign Key fk_analysis_users_user
-	analysis_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1200 1575 L 1215,1575' >
+	analysis_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 840 1530 L 855,1530' >
 	<title>Foreign Key fk_logging_severity
 	logging references severity ( severity_id )</title>
 </path>
-<text x='1207' y='1570' transform='rotate(0 1207,1570)' title='Foreign Key fk_logging_severity
+<text x='847' y='1525' transform='rotate(0 847,1525)' title='Foreign Key fk_logging_severity
 	logging references severity ( severity_id )' style='fill:#a1a0a0;'>severity_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 375 1335 L 315,1335' >
 	<title>Foreign Key fk_command_data_type
 	command_data_type references command ( command_id )</title>
@@ -432,11 +437,11 @@ table {
 	job references data_type ( data_type_id )</title>
 </path>
 <text x='517' y='1195' transform='rotate(0 517,1195)' title='Foreign Key fk_job_data_type
-	job references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 1260 L 1102,1260 Q 1110,1260 1110,1267 L 1110,1545' >
+	job references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 510 1290 L 742,1290 Q 750,1290 750,1297 L 750,1500' >
 	<title>Foreign Key fk_job
 	job references logging ( log_id -> logging_id )</title>
 </path>
-<text x='517' y='1255' transform='rotate(0 517,1255)' title='Foreign Key fk_job
+<text x='517' y='1285' transform='rotate(0 517,1285)' title='Foreign Key fk_job
 	job references logging ( log_id -> logging_id )' style='fill:#a1a0a0;'>log_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 660 960 L 660,1020' >
 	<title>Foreign Key fk_filepath
 	filepath references filepath_type ( filepath_type_id )</title>
@@ -542,16 +547,16 @@ table {
 	analysis_portal references portal_type ( portal_type_id )</title>
 </path>
 <text x='227' y='775' transform='rotate(270 227,775)' title='Foreign Key fk_analysis_portal_0
-	analysis_portal references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 825 1575 L 900,1575' >
+	analysis_portal references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1335 1335 L 1410,1335' >
 	<title>Foreign Key fk_message_user
 	message_user references message ( message_id )</title>
 </path>
-<text x='832' y='1570' transform='rotate(0 832,1570)' title='Foreign Key fk_message_user
-	message_user references message ( message_id )' style='fill:#a1a0a0;'>message_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 825 1590 L 877,1590 Q 885,1590 885,1582 L 885,1147 Q 885,1140 892,1140 L 922,1140 Q 930,1140 930,1132 L 930,997 Q 930,990 922,990 L 532,990 Q 525,990 525,982 L 525,427 Q 525,420 517,420 L 480,420' >
+<text x='1342' y='1330' transform='rotate(0 1342,1330)' title='Foreign Key fk_message_user
+	message_user references message ( message_id )' style='fill:#a1a0a0;'>message_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 1320 L 997,1320 Q 990,1320 990,1312 L 990,427 Q 990,420 982,420 L 480,420' >
 	<title>Foreign Key fk_message_user_0
 	message_user references qiita_user ( email )</title>
 </path>
-<text x='832' y='1585' transform='rotate(0 832,1585)' title='Foreign Key fk_message_user_0
+<text x='1189' y='1315' transform='rotate(0 1189,1315)' title='Foreign Key fk_message_user_0
 	message_user references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1035 480 L 697,480 Q 690,480 690,487 L 690,810' >
 	<title>Foreign Key fk_filepath_id
 	prep_template_filepath references filepath ( filepath_id )</title>
@@ -572,7 +577,7 @@ table {
 	sample_template_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='981' y='625' transform='rotate(0 981,625)' title='Foreign Key fk_filepath_id
-	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 525 L 997,525 Q 990,525 990,532 L 990,1177 Q 990,1185 982,1185 L 795,1185' >
+	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 525 L 1012,525 Q 1005,525 1005,532 L 1005,1177 Q 1005,1185 997,1185 L 795,1185' >
 	<title>Foreign Key fk_prep_template_data_type
 	prep_template references data_type ( data_type_id )</title>
 </path>
@@ -592,7 +597,7 @@ table {
 	analysis_sample references study_sample ( sample_id )</title>
 </path>
 <text x='-22' y='1330' transform='rotate(0 -22,1330)' title='Foreign Key fk_analysis_sample
-	analysis_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 1410 L 172,1410 Q 180,1410 180,1417 L 180,1432 Q 180,1440 187,1440 L 1207,1440 Q 1215,1440 1215,1432 L 1215,930' >
+	analysis_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 1410 L 172,1410 Q 180,1410 180,1417 L 180,1432 Q 180,1440 187,1440 L 1012,1440 Q 1020,1440 1020,1432 L 1020,727 Q 1020,720 1027,720 L 1207,720 Q 1215,720 1215,727 L 1215,735' >
 	<title>Foreign Key fk_analysis_sample_artifact
 	analysis_sample references artifact ( artifact_id )</title>
 </path>
@@ -647,11 +652,11 @@ table {
 	study references study_person ( principal_investigator_id -> study_person_id )</title>
 </path>
 <text x='2122' y='295' transform='rotate(0 2122,295)' title='Foreign Key fk_study_study_pi_person
-	study references study_person ( principal_investigator_id -> study_person_id )' style='fill:#a1a0a0;'>principal_investigator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2115 615 L 2137,615 Q 2145,615 2145,622 L 2145,630' >
+	study references study_person ( principal_investigator_id -> study_person_id )' style='fill:#a1a0a0;'>principal_investigator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2115 555 L 2220,555' >
 	<title>Foreign Key fk_study_timeseries_type
 	study references timeseries_type ( timeseries_type_id )</title>
 </path>
-<text x='2122' y='610' transform='rotate(0 2122,610)' title='Foreign Key fk_study_timeseries_type
+<text x='2122' y='550' transform='rotate(0 2122,550)' title='Foreign Key fk_study_timeseries_type
 	study references timeseries_type ( timeseries_type_id )' style='fill:#a1a0a0;'>timeseries_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2205 450 L 2115,450' >
 	<title>Foreign Key fk_study_experimental_factor
 	study_experimental_factor references study ( study_id )</title>
@@ -692,32 +697,7 @@ table {
 	study_portal references portal_type ( portal_type_id )</title>
 </path>
 <text x='1905' y='85' transform='rotate(0 1905,85)' title='Foreign Key fk_study_portal_0
-	study_portal references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1560 1275 L 952,1275 Q 945,1275 945,1267 L 945,937 Q 945,930 937,930 L 810,930' >
-	<title>Foreign Key fk_reference_sequence_filepath
-	reference references filepath ( sequence_filepath -> filepath_id )</title>
-</path>
-<text x='1465' y='1270' transform='rotate(0 1465,1270)' title='Foreign Key fk_reference_sequence_filepath
-	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1560 1290 L 967,1290 Q 960,1290 960,1282 L 960,922 Q 960,915 952,915 L 810,915' >
-	<title>Foreign Key fk_reference_taxonomy_filepath
-	reference references filepath ( taxonomy_filepath -> filepath_id )</title>
-</path>
-<text x='1462' y='1285' transform='rotate(0 1462,1285)' title='Foreign Key fk_reference_taxonomy_filepath
-	reference references filepath ( taxonomy_filepath -> filepath_id )' style='fill:#a1a0a0;'>taxonomy_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1560 1305 L 982,1305 Q 975,1305 975,1297 L 975,982 Q 975,975 967,975 L 802,975 Q 795,975 795,967 L 795,960' >
-	<title>Foreign Key fk_reference_tree_filepath
-	reference references filepath ( tree_filepath -> filepath_id )</title>
-</path>
-<text x='1495' y='1300' transform='rotate(0 1495,1300)' title='Foreign Key fk_reference_tree_filepath
-	reference references filepath ( tree_filepath -> filepath_id )' style='fill:#a1a0a0;'>tree_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1290 L 1710,1290' >
-	<title>Foreign Key fk_processed_params_sortmerna
-	processed_params_sortmerna references reference ( reference_id )</title>
-</path>
-<text x='1675' y='1285' transform='rotate(0 1675,1285)' title='Foreign Key fk_processed_params_sortmerna
-	processed_params_sortmerna references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1590 1455 L 1590,1410' >
-	<title>Foreign Key fk_processed_params_uclust
-	processed_params_uclust references reference ( reference_id )</title>
-</path>
-<text x='1592' y='1450' transform='rotate(270 1592,1450)' title='Foreign Key fk_processed_params_uclust
-	processed_params_uclust references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1695 720 L 1942,720 Q 1950,720 1950,712 L 1950,630' >
+	study_portal references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1695 720 L 1942,720 Q 1950,720 1950,712 L 1950,630' >
 	<title>Foreign Key fk_study_artifact_study
 	study_artifact references study ( study_id )</title>
 </path>
@@ -727,16 +707,16 @@ table {
 	study_artifact references artifact ( artifact_id )</title>
 </path>
 <text x='1538' y='700' transform='rotate(0 1538,700)' title='Foreign Key fk_study_artifact_artifact
-	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1890 855 L 1860,855' >
+	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2250 795 L 2025,795' >
 	<title>Foreign Key fk_software_publication
 	software_publication references software ( software_id )</title>
 </path>
-<text x='1830' y='850' transform='rotate(0 1830,850)' title='Foreign Key fk_software_publication
-	software_publication references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2040 855 L 2085,855' >
+<text x='2190' y='790' transform='rotate(0 2190,790)' title='Foreign Key fk_software_publication
+	software_publication references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2400 810 L 2445,810' >
 	<title>Foreign Key fk_software_publication_0
 	software_publication references publication ( publication_doi -> doi )</title>
 </path>
-<text x='2047' y='850' transform='rotate(0 2047,850)' title='Foreign Key fk_software_publication_0
+<text x='2407' y='805' transform='rotate(0 2407,805)' title='Foreign Key fk_software_publication_0
 	software_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 180 L 1882,180 Q 1890,180 1890,187 L 1890,247 Q 1890,255 1897,255 L 1920,255' >
 	<title>Foreign Key fk_required_sample_info_study
 	study_sample references study ( study_id )</title>
@@ -747,32 +727,62 @@ table {
 	ebi_run_accession references artifact ( artifact_id )</title>
 </path>
 <text x='1397' y='925' transform='rotate(270 1397,925)' title='Foreign Key fk_ebi_run_accession_artifact
-	ebi_run_accession references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 900 L 1177,900 Q 1170,900 1170,907 L 1170,930' >
+	ebi_run_accession references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 930 L 1215,952 Q 1215,960 1207,960 L 1200,960' >
 	<title>Foreign Key fk_artifact_visibility
 	artifact references visibility ( visibility_id )</title>
 </path>
-<text x='1127' y='895' transform='rotate(0 1127,895)' title='Foreign Key fk_artifact_visibility
+<text x='1228' y='930' transform='rotate(90 1228,930)' title='Foreign Key fk_artifact_visibility
 	artifact references visibility ( visibility_id )' style='fill:#a1a0a0;'>visibility_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 840 L 1417,840 Q 1425,840 1425,832 L 1425,825' >
 	<title>Foreign Key fk_artifact_filetype
 	artifact references artifact_type ( artifact_type_id )</title>
 </path>
 <text x='1402' y='835' transform='rotate(0 1402,835)' title='Foreign Key fk_artifact_filetype
-	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 855 L 1560,855' >
+	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 855 L 1725,855' >
 	<title>Foreign Key fk_artifact_soft_command
 	artifact references software_command ( command_id )</title>
 </path>
 <text x='1402' y='850' transform='rotate(0 1402,850)' title='Foreign Key fk_artifact_soft_command
-	artifact references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2190 555 L 2115,555' >
-	<title>Foreign Key fk_study_pmid_study
-	study_pmid references study ( study_id )</title>
-</path>
-<text x='2146' y='550' transform='rotate(0 2146,550)' title='Foreign Key fk_study_pmid_study
-	study_pmid references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1710 855 L 1740,855' >
+	artifact references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1875 795 L 1905,795' >
 	<title>Foreign Key fk_soft_command_software
 	software_command references software ( software_id )</title>
 </path>
-<text x='1717' y='850' transform='rotate(0 1717,850)' title='Foreign Key fk_soft_command_software
-	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+<text x='1882' y='790' transform='rotate(0 1882,790)' title='Foreign Key fk_soft_command_software
+	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2250 705 L 2107,705 Q 2100,705 2100,697 L 2100,630' >
+	<title>Foreign Key fk_study_publication_study
+	study_publication references study ( study_id )</title>
+</path>
+<text x='2206' y='700' transform='rotate(0 2206,700)' title='Foreign Key fk_study_publication_study
+	study_publication references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2385 765 L 2467,765 Q 2475,765 2475,772 L 2475,780' >
+	<title>Foreign Key fk_study_publication
+	study_publication references publication ( publication_doi -> doi )</title>
+</path>
+<text x='2392' y='760' transform='rotate(0 2392,760)' title='Foreign Key fk_study_publication
+	study_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1725 1050 L 937,1050 Q 930,1050 930,1042 L 930,937 Q 930,930 922,930 L 810,930' >
+	<title>Foreign Key fk_reference_sequence_filepath
+	reference references filepath ( sequence_filepath -> filepath_id )</title>
+</path>
+<text x='1630' y='1045' transform='rotate(0 1630,1045)' title='Foreign Key fk_reference_sequence_filepath
+	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1725 1065 L 952,1065 Q 945,1065 945,1057 L 945,922 Q 945,915 937,915 L 810,915' >
+	<title>Foreign Key fk_reference_taxonomy_filepath
+	reference references filepath ( taxonomy_filepath -> filepath_id )</title>
+</path>
+<text x='1627' y='1060' transform='rotate(0 1627,1060)' title='Foreign Key fk_reference_taxonomy_filepath
+	reference references filepath ( taxonomy_filepath -> filepath_id )' style='fill:#a1a0a0;'>taxonomy_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1725 1080 L 967,1080 Q 960,1080 960,1072 L 960,982 Q 960,975 952,975 L 802,975 Q 795,975 795,967 L 795,960' >
+	<title>Foreign Key fk_reference_tree_filepath
+	reference references filepath ( tree_filepath -> filepath_id )</title>
+</path>
+<text x='1660' y='1075' transform='rotate(0 1660,1075)' title='Foreign Key fk_reference_tree_filepath
+	reference references filepath ( tree_filepath -> filepath_id )' style='fill:#a1a0a0;'>tree_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1875 1110 L 1860,1110' >
+	<title>Foreign Key fk_processed_params_sortmerna
+	processed_params_sortmerna references reference ( reference_id )</title>
+</path>
+<text x='1810' y='1105' transform='rotate(0 1810,1105)' title='Foreign Key fk_processed_params_sortmerna
+	processed_params_sortmerna references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1755 1140 L 1755,1110' >
+	<title>Foreign Key fk_processed_params_uclust
+	processed_params_uclust references reference ( reference_id )</title>
+</path>
+<text x='1757' y='1135' transform='rotate(270 1757,1135)' title='Foreign Key fk_processed_params_uclust
+	processed_params_uclust references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -884,20 +894,20 @@ JSON of optional options for command</title></a>
 JSON of output options for the command</title></a>
 
 <!-- ============= Table 'logging' ============= -->
-<rect class='table' x='1095' y='1553' width='105' height='120' rx='7' ry='7' />
-<path d='M 1095.50 1579.50 L 1095.50 1560.50 Q 1095.50 1553.50 1102.50 1553.50 L 1192.50 1553.50 Q 1199.50 1553.50 1199.50 1560.50 L 1199.50 1579.50 L1095.50 1579.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#logging'><text x='1127' y='1567' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
-  <use id='nn' x='1097' y='1587' xlink:href='#nn'/><a xlink:href='#logging.logging_id'><use id='pk' x='1097' y='1586' xlink:href='#pk'/><title>Primary Key  ( logging_id ) </title></a>
-<a xlink:href='#logging.logging_id'><text x='1113' y='1597'>logging_id</text><title>logging_id bigserial not null</title></a>
-<a xlink:href='#logging.logging_id'><use id='ref' x='1188' y='1586' xlink:href='#ref'/><title>Referred by job ( log_id -> logging_id ) </title></a>
-  <use id='nn' x='1097' y='1602' xlink:href='#nn'/><a xlink:href='#logging.time'><text x='1113' y='1612'>time</text><title>time timestamp not null
+<rect class='table' x='735' y='1508' width='105' height='120' rx='7' ry='7' />
+<path d='M 735.50 1534.50 L 735.50 1515.50 Q 735.50 1508.50 742.50 1508.50 L 832.50 1508.50 Q 839.50 1508.50 839.50 1515.50 L 839.50 1534.50 L735.50 1534.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#logging'><text x='767' y='1522' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
+  <use id='nn' x='737' y='1542' xlink:href='#nn'/><a xlink:href='#logging.logging_id'><use id='pk' x='737' y='1541' xlink:href='#pk'/><title>Primary Key  ( logging_id ) </title></a>
+<a xlink:href='#logging.logging_id'><text x='753' y='1552'>logging_id</text><title>logging_id bigserial not null</title></a>
+<a xlink:href='#logging.logging_id'><use id='ref' x='828' y='1541' xlink:href='#ref'/><title>Referred by job ( log_id -> logging_id ) </title></a>
+  <use id='nn' x='737' y='1557' xlink:href='#nn'/><a xlink:href='#logging.time'><text x='753' y='1567'>time</text><title>time timestamp not null
 Time the error was thrown</title></a>
-  <use id='nn' x='1097' y='1617' xlink:href='#nn'/><a xlink:href='#logging.severity_id'><use id='idx' x='1097' y='1616' xlink:href='#idx'/><title>Index  ( severity_id ) </title></a>
-<a xlink:href='#logging.severity_id'><text x='1113' y='1627'>severity_id</text><title>severity_id integer not null</title></a>
-<a xlink:href='#logging.severity_id'><use id='fk' x='1188' y='1616' xlink:href='#fk'/><title>References severity ( severity_id ) </title></a>
-  <use id='nn' x='1097' y='1632' xlink:href='#nn'/><a xlink:href='#logging.msg'><text x='1113' y='1642'>msg</text><title>msg varchar not null
+  <use id='nn' x='737' y='1572' xlink:href='#nn'/><a xlink:href='#logging.severity_id'><use id='idx' x='737' y='1571' xlink:href='#idx'/><title>Index  ( severity_id ) </title></a>
+<a xlink:href='#logging.severity_id'><text x='753' y='1582'>severity_id</text><title>severity_id integer not null</title></a>
+<a xlink:href='#logging.severity_id'><use id='fk' x='828' y='1571' xlink:href='#fk'/><title>References severity ( severity_id ) </title></a>
+  <use id='nn' x='737' y='1587' xlink:href='#nn'/><a xlink:href='#logging.msg'><text x='753' y='1597'>msg</text><title>msg varchar not null
 Error message thrown</title></a>
-  <a xlink:href='#logging.information'><text x='1113' y='1657'>information</text><title>information varchar
+  <a xlink:href='#logging.information'><text x='753' y='1612'>information</text><title>information varchar
 Other applicable information &#040;depending on error&#041;</title></a>
 
 <!-- ============= Table 'command_data_type' ============= -->
@@ -1059,14 +1069,14 @@ One of the user levels &#040;admin&#044; user&#044; guest&#044; etc&#041;</title
 <a xlink:href='#job_status.status'><text x='228' y='1237'>status</text><title>status varchar not null</title></a>
 
 <!-- ============= Table 'severity' ============= -->
-<rect class='table' x='1230' y='1553' width='90' height='75' rx='7' ry='7' />
-<path d='M 1230.50 1579.50 L 1230.50 1560.50 Q 1230.50 1553.50 1237.50 1553.50 L 1312.50 1553.50 Q 1319.50 1553.50 1319.50 1560.50 L 1319.50 1579.50 L1230.50 1579.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#severity'><text x='1254' y='1567' class='tableTitle'>severity</text><title>Table qiita.severity</title></a>
-  <use id='nn' x='1232' y='1587' xlink:href='#nn'/><a xlink:href='#severity.severity_id'><use id='pk' x='1232' y='1586' xlink:href='#pk'/><title>Primary Key  ( severity_id ) </title></a>
-<a xlink:href='#severity.severity_id'><text x='1248' y='1597'>severity_id</text><title>severity_id serial not null</title></a>
-<a xlink:href='#severity.severity_id'><use id='ref' x='1308' y='1586' xlink:href='#ref'/><title>Referred by logging ( severity_id ) </title></a>
-  <use id='nn' x='1232' y='1602' xlink:href='#nn'/><a xlink:href='#severity.severity'><use id='unq' x='1232' y='1601' xlink:href='#unq'/><title>Unique Index  ( severity ) </title></a>
-<a xlink:href='#severity.severity'><text x='1248' y='1612'>severity</text><title>severity varchar not null</title></a>
+<rect class='table' x='870' y='1508' width='90' height='75' rx='7' ry='7' />
+<path d='M 870.50 1534.50 L 870.50 1515.50 Q 870.50 1508.50 877.50 1508.50 L 952.50 1508.50 Q 959.50 1508.50 959.50 1515.50 L 959.50 1534.50 L870.50 1534.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#severity'><text x='894' y='1522' class='tableTitle'>severity</text><title>Table qiita.severity</title></a>
+  <use id='nn' x='872' y='1542' xlink:href='#nn'/><a xlink:href='#severity.severity_id'><use id='pk' x='872' y='1541' xlink:href='#pk'/><title>Primary Key  ( severity_id ) </title></a>
+<a xlink:href='#severity.severity_id'><text x='888' y='1552'>severity_id</text><title>severity_id serial not null</title></a>
+<a xlink:href='#severity.severity_id'><use id='ref' x='948' y='1541' xlink:href='#ref'/><title>Referred by logging ( severity_id ) </title></a>
+  <use id='nn' x='872' y='1557' xlink:href='#nn'/><a xlink:href='#severity.severity'><use id='unq' x='872' y='1556' xlink:href='#unq'/><title>Unique Index  ( severity ) </title></a>
+<a xlink:href='#severity.severity'><text x='888' y='1567'>severity</text><title>severity varchar not null</title></a>
 
 <!-- ============= Table 'job' ============= -->
 <rect class='table' x='405' y='1163' width='105' height='135' rx='7' ry='7' />
@@ -1338,28 +1348,28 @@ Controls what analyses are visible on what portals</title></a>
 <a xlink:href='#analysis_portal.portal_type_id'><use id='fk' x='288' y='836' xlink:href='#fk'/><title>References portal_type ( portal_type_id ) </title></a>
 
 <!-- ============= Table 'message_user' ============= -->
-<rect class='table' x='720' y='1553' width='105' height='90' rx='7' ry='7' />
-<path d='M 720.50 1579.50 L 720.50 1560.50 Q 720.50 1553.50 727.50 1553.50 L 817.50 1553.50 Q 824.50 1553.50 824.50 1560.50 L 824.50 1579.50 L720.50 1579.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
-<a xlink:href='#message_user'><text x='734' y='1567' class='tableTitle'>message_user</text><title>Table qiita.message_user</title></a>
-  <use id='nn' x='722' y='1587' xlink:href='#nn'/><a xlink:href='#message_user.email'><use id='pk' x='722' y='1586' xlink:href='#pk'/><title>Primary Key  ( email, message_id ) Index  ( email ) </title></a>
-<a xlink:href='#message_user.email'><text x='738' y='1597'>email</text><title>email varchar not null</title></a>
-<a xlink:href='#message_user.email'><use id='fk' x='813' y='1586' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
-  <use id='nn' x='722' y='1602' xlink:href='#nn'/><a xlink:href='#message_user.message_id'><use id='pk' x='722' y='1601' xlink:href='#pk'/><title>Primary Key  ( email, message_id ) Index  ( message_id ) </title></a>
-<a xlink:href='#message_user.message_id'><text x='738' y='1612'>message_id</text><title>message_id bigint not null</title></a>
-<a xlink:href='#message_user.message_id'><use id='fk' x='813' y='1601' xlink:href='#fk'/><title>References message ( message_id ) </title></a>
-  <use id='nn' x='722' y='1617' xlink:href='#nn'/><a xlink:href='#message_user.read'><text x='738' y='1627'>read</text><title>read bool not null default &#039;false&#039;
+<rect class='table' x='1230' y='1313' width='105' height='90' rx='7' ry='7' />
+<path d='M 1230.50 1339.50 L 1230.50 1320.50 Q 1230.50 1313.50 1237.50 1313.50 L 1327.50 1313.50 Q 1334.50 1313.50 1334.50 1320.50 L 1334.50 1339.50 L1230.50 1339.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#message_user'><text x='1244' y='1327' class='tableTitle'>message_user</text><title>Table qiita.message_user</title></a>
+  <use id='nn' x='1232' y='1347' xlink:href='#nn'/><a xlink:href='#message_user.email'><use id='pk' x='1232' y='1346' xlink:href='#pk'/><title>Primary Key  ( email, message_id ) Index  ( email ) </title></a>
+<a xlink:href='#message_user.email'><text x='1248' y='1357'>email</text><title>email varchar not null</title></a>
+<a xlink:href='#message_user.email'><use id='fk' x='1323' y='1346' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+  <use id='nn' x='1232' y='1362' xlink:href='#nn'/><a xlink:href='#message_user.message_id'><use id='pk' x='1232' y='1361' xlink:href='#pk'/><title>Primary Key  ( email, message_id ) Index  ( message_id ) </title></a>
+<a xlink:href='#message_user.message_id'><text x='1248' y='1372'>message_id</text><title>message_id bigint not null</title></a>
+<a xlink:href='#message_user.message_id'><use id='fk' x='1323' y='1361' xlink:href='#fk'/><title>References message ( message_id ) </title></a>
+  <use id='nn' x='1232' y='1377' xlink:href='#nn'/><a xlink:href='#message_user.read'><text x='1248' y='1387'>read</text><title>read bool not null default &#039;false&#039;
 Whether the message has been read or not&#046;</title></a>
 
 <!-- ============= Table 'message' ============= -->
-<rect class='table' x='915' y='1568' width='105' height='105' rx='7' ry='7' />
-<path d='M 915.50 1594.50 L 915.50 1575.50 Q 915.50 1568.50 922.50 1568.50 L 1012.50 1568.50 Q 1019.50 1568.50 1019.50 1575.50 L 1019.50 1594.50 L915.50 1594.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
-<a xlink:href='#message'><text x='944' y='1582' class='tableTitle'>message</text><title>Table qiita.message</title></a>
-  <use id='nn' x='917' y='1602' xlink:href='#nn'/><a xlink:href='#message.message_id'><use id='pk' x='917' y='1601' xlink:href='#pk'/><title>Primary Key  ( message_id ) </title></a>
-<a xlink:href='#message.message_id'><text x='933' y='1612'>message_id</text><title>message_id bigserial not null</title></a>
-<a xlink:href='#message.message_id'><use id='ref' x='1008' y='1601' xlink:href='#ref'/><title>Referred by message_user ( message_id ) </title></a>
-  <use id='nn' x='917' y='1617' xlink:href='#nn'/><a xlink:href='#message.message'><text x='933' y='1627'>message</text><title>message varchar not null</title></a>
-  <use id='nn' x='917' y='1632' xlink:href='#nn'/><a xlink:href='#message.message_time'><text x='933' y='1642'>message_time</text><title>message_time timestamp not null default current&#095;timestamp</title></a>
-  <a xlink:href='#message.expiration'><text x='933' y='1657'>expiration</text><title>expiration timestamp</title></a>
+<rect class='table' x='1425' y='1328' width='105' height='105' rx='7' ry='7' />
+<path d='M 1425.50 1354.50 L 1425.50 1335.50 Q 1425.50 1328.50 1432.50 1328.50 L 1522.50 1328.50 Q 1529.50 1328.50 1529.50 1335.50 L 1529.50 1354.50 L1425.50 1354.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#message'><text x='1454' y='1342' class='tableTitle'>message</text><title>Table qiita.message</title></a>
+  <use id='nn' x='1427' y='1362' xlink:href='#nn'/><a xlink:href='#message.message_id'><use id='pk' x='1427' y='1361' xlink:href='#pk'/><title>Primary Key  ( message_id ) </title></a>
+<a xlink:href='#message.message_id'><text x='1443' y='1372'>message_id</text><title>message_id bigserial not null</title></a>
+<a xlink:href='#message.message_id'><use id='ref' x='1518' y='1361' xlink:href='#ref'/><title>Referred by message_user ( message_id ) </title></a>
+  <use id='nn' x='1427' y='1377' xlink:href='#nn'/><a xlink:href='#message.message'><text x='1443' y='1387'>message</text><title>message varchar not null</title></a>
+  <use id='nn' x='1427' y='1392' xlink:href='#nn'/><a xlink:href='#message.message_time'><text x='1443' y='1402'>message_time</text><title>message_time timestamp not null default current&#095;timestamp</title></a>
+  <a xlink:href='#message.expiration'><text x='1443' y='1417'>expiration</text><title>expiration timestamp</title></a>
 
 <!-- ============= Table 'sample_x' ============= -->
 <rect class='table' x='1635' y='203' width='165' height='90' rx='7' ry='7' />
@@ -1474,12 +1484,12 @@ Referred by sample_template_filepath ( study_id )
 Referred by study_artifact ( study_id ) 
 Referred by study_environmental_package ( study_id ) 
 Referred by study_experimental_factor ( study_id ) 
-Referred by study_pmid ( study_id ) 
 Referred by study_portal ( study_id ) 
 Referred by study_prep_template ( study_id ) 
 Referred by study_sample ( study_id ) 
 Referred by study_sample_columns ( study_id ) 
-Referred by study_users ( study_id ) </title></a>
+Referred by study_users ( study_id ) 
+Referred by study_publication ( study_id ) </title></a>
   <use id='nn' x='1937' y='297' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1937' y='296' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1953' y='307'>email</text><title>email varchar not null
 Email of study owner</title></a>
@@ -1535,18 +1545,6 @@ Referred by study ( principal_investigator_id -> study_person_id ) </title></a>
 The institution with which this person is affiliated</title></a>
   <a xlink:href='#study_person.address'><text x='2238' y='292'>address</text><title>address varchar&#040;100&#041;</title></a>
   <a xlink:href='#study_person.phone'><text x='2238' y='307'>phone</text><title>phone varchar</title></a>
-
-<!-- ============= Table 'timeseries_type' ============= -->
-<rect class='table' x='2130' y='638' width='135' height='90' rx='7' ry='7' />
-<path d='M 2130.50 664.50 L 2130.50 645.50 Q 2130.50 638.50 2137.50 638.50 L 2257.50 638.50 Q 2264.50 638.50 2264.50 645.50 L 2264.50 664.50 L2130.50 664.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#timeseries_type'><text x='2155' y='652' class='tableTitle'>timeseries_type</text><title>Table qiita.timeseries_type</title></a>
-  <use id='nn' x='2132' y='672' xlink:href='#nn'/><a xlink:href='#timeseries_type.timeseries_type_id'><use id='pk' x='2132' y='671' xlink:href='#pk'/><title>Primary Key  ( timeseries_type_id ) </title></a>
-<a xlink:href='#timeseries_type.timeseries_type_id'><text x='2148' y='682'>timeseries_type_id</text><title>timeseries_type_id bigserial not null</title></a>
-<a xlink:href='#timeseries_type.timeseries_type_id'><use id='ref' x='2253' y='671' xlink:href='#ref'/><title>Referred by study ( timeseries_type_id ) </title></a>
-  <use id='nn' x='2132' y='687' xlink:href='#nn'/><a xlink:href='#timeseries_type.timeseries_type'><use id='unq' x='2132' y='686' xlink:href='#unq'/><title>Unique Index  ( timeseries_type, intervention_type ) </title></a>
-<a xlink:href='#timeseries_type.timeseries_type'><text x='2148' y='697'>timeseries_type</text><title>timeseries_type varchar not null</title></a>
-  <use id='nn' x='2132' y='702' xlink:href='#nn'/><a xlink:href='#timeseries_type.intervention_type'><use id='unq' x='2132' y='701' xlink:href='#unq'/><title>Unique Index  ( timeseries_type, intervention_type ) </title></a>
-<a xlink:href='#timeseries_type.intervention_type'><text x='2148' y='712'>intervention_type</text><title>intervention_type varchar not null default &#039;None&#039;</title></a>
 
 <!-- ============= Table 'study_experimental_factor' ============= -->
 <rect class='table' x='2220' y='443' width='165' height='75' rx='7' ry='7' />
@@ -1634,60 +1632,6 @@ Referred by prep_template ( data_type_id ) </title></a>
 <a xlink:href='#data_type.data_type'><text x='708' y='1222'>data_type</text><title>data_type varchar not null
 Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a>
 
-<!-- ============= Table 'reference' ============= -->
-<rect class='table' x='1575' y='1268' width='135' height='135' rx='7' ry='7' />
-<path d='M 1575.50 1294.50 L 1575.50 1275.50 Q 1575.50 1268.50 1582.50 1268.50 L 1702.50 1268.50 Q 1709.50 1268.50 1709.50 1275.50 L 1709.50 1294.50 L1575.50 1294.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#reference'><text x='1617' y='1282' class='tableTitle'>reference</text><title>Table qiita.reference</title></a>
-  <use id='nn' x='1577' y='1302' xlink:href='#nn'/><a xlink:href='#reference.reference_id'><use id='pk' x='1577' y='1301' xlink:href='#pk'/><title>Primary Key  ( reference_id ) </title></a>
-<a xlink:href='#reference.reference_id'><text x='1593' y='1312'>reference_id</text><title>reference_id bigserial not null</title></a>
-<a xlink:href='#reference.reference_id'><use id='ref' x='1698' y='1301' xlink:href='#ref'/><title>Referred by processed_params_sortmerna ( reference_id ) 
-Referred by processed_params_uclust ( reference_id ) </title></a>
-  <use id='nn' x='1577' y='1317' xlink:href='#nn'/><a xlink:href='#reference.reference_name'><text x='1593' y='1327'>reference_name</text><title>reference_name varchar not null</title></a>
-  <a xlink:href='#reference.reference_version'><text x='1593' y='1342'>reference_version</text><title>reference_version varchar</title></a>
-  <use id='nn' x='1577' y='1347' xlink:href='#nn'/><a xlink:href='#reference.sequence_filepath'><use id='idx' x='1577' y='1346' xlink:href='#idx'/><title>Index  ( sequence_filepath ) </title></a>
-<a xlink:href='#reference.sequence_filepath'><text x='1593' y='1357'>sequence_filepath</text><title>sequence_filepath bigint not null</title></a>
-<a xlink:href='#reference.sequence_filepath'><use id='fk' x='1698' y='1346' xlink:href='#fk'/><title>References filepath ( sequence_filepath -> filepath_id ) </title></a>
-  <a xlink:href='#reference.taxonomy_filepath'><use id='idx' x='1577' y='1361' xlink:href='#idx'/><title>Index  ( taxonomy_filepath ) </title></a>
-<a xlink:href='#reference.taxonomy_filepath'><text x='1593' y='1372'>taxonomy_filepath</text><title>taxonomy_filepath bigint</title></a>
-<a xlink:href='#reference.taxonomy_filepath'><use id='fk' x='1698' y='1361' xlink:href='#fk'/><title>References filepath ( taxonomy_filepath -> filepath_id ) </title></a>
-  <a xlink:href='#reference.tree_filepath'><use id='idx' x='1577' y='1376' xlink:href='#idx'/><title>Index  ( tree_filepath ) </title></a>
-<a xlink:href='#reference.tree_filepath'><text x='1593' y='1387'>tree_filepath</text><title>tree_filepath bigint</title></a>
-<a xlink:href='#reference.tree_filepath'><use id='fk' x='1698' y='1376' xlink:href='#fk'/><title>References filepath ( tree_filepath -> filepath_id ) </title></a>
-
-<!-- ============= Table 'processed_params_sortmerna' ============= -->
-<rect class='table' x='1755' y='1268' width='180' height='165' rx='7' ry='7' />
-<path d='M 1755.50 1294.50 L 1755.50 1275.50 Q 1755.50 1268.50 1762.50 1268.50 L 1927.50 1268.50 Q 1934.50 1268.50 1934.50 1275.50 L 1934.50 1294.50 L1755.50 1294.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
-<a xlink:href='#processed_params_sortmerna'><text x='1763' y='1282' class='tableTitle'>processed_params_sortmerna</text><title>Table qiita.processed_params_sortmerna
-Parameters used for processing data using method sortmerna</title></a>
-  <use id='nn' x='1757' y='1302' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.processed_params_id'><use id='pk' x='1757' y='1301' xlink:href='#pk'/><title>Primary Key  ( processed_params_id ) </title></a>
-<a xlink:href='#processed_params_sortmerna.processed_params_id'><text x='1773' y='1312'>processed_params_id</text><title>processed_params_id bigserial not null</title></a>
-  <use id='nn' x='1757' y='1317' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.reference_id'><use id='idx' x='1757' y='1316' xlink:href='#idx'/><title>Index  ( reference_id ) </title></a>
-<a xlink:href='#processed_params_sortmerna.reference_id'><text x='1773' y='1327'>reference_id</text><title>reference_id bigint not null
-What version of reference or type of reference used</title></a>
-<a xlink:href='#processed_params_sortmerna.reference_id'><use id='fk' x='1923' y='1316' xlink:href='#fk'/><title>References reference ( reference_id ) </title></a>
-  <use id='nn' x='1757' y='1332' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.sortmerna_e_value'><text x='1773' y='1342'>sortmerna_e_value</text><title>sortmerna_e_value float8 not null</title></a>
-  <use id='nn' x='1757' y='1347' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.sortmerna_max_pos'><text x='1773' y='1357'>sortmerna_max_pos</text><title>sortmerna_max_pos integer not null</title></a>
-  <use id='nn' x='1757' y='1362' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.similarity'><text x='1773' y='1372'>similarity</text><title>similarity float8 not null</title></a>
-  <use id='nn' x='1757' y='1377' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.sortmerna_coverage'><text x='1773' y='1387'>sortmerna_coverage</text><title>sortmerna_coverage float8 not null</title></a>
-  <use id='nn' x='1757' y='1392' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.threads'><text x='1773' y='1402'>threads</text><title>threads integer not null</title></a>
-  <use id='nn' x='1757' y='1407' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.param_set_name'><text x='1773' y='1417'>param_set_name</text><title>param_set_name varchar&#040;100&#041; not null default &#039;Default&#039;
-The name of the parameter set</title></a>
-
-<!-- ============= Table 'processed_params_uclust' ============= -->
-<rect class='table' x='1575' y='1463' width='180' height='120' rx='7' ry='7' />
-<path d='M 1575.50 1489.50 L 1575.50 1470.50 Q 1575.50 1463.50 1582.50 1463.50 L 1747.50 1463.50 Q 1754.50 1463.50 1754.50 1470.50 L 1754.50 1489.50 L1575.50 1489.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#processed_params_uclust'><text x='1594' y='1477' class='tableTitle'>processed_params_uclust</text><title>Table qiita.processed_params_uclust
-Parameters used for processing data using method uclust</title></a>
-  <use id='nn' x='1577' y='1497' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.processed_params_id'><use id='pk' x='1577' y='1496' xlink:href='#pk'/><title>Primary Key  ( processed_params_id ) </title></a>
-<a xlink:href='#processed_params_uclust.processed_params_id'><text x='1593' y='1507'>processed_params_id</text><title>processed_params_id bigserial not null</title></a>
-  <use id='nn' x='1577' y='1512' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.reference_id'><use id='idx' x='1577' y='1511' xlink:href='#idx'/><title>Index  ( reference_id ) </title></a>
-<a xlink:href='#processed_params_uclust.reference_id'><text x='1593' y='1522'>reference_id</text><title>reference_id bigint not null
-What version of reference or type of reference used</title></a>
-<a xlink:href='#processed_params_uclust.reference_id'><use id='fk' x='1743' y='1511' xlink:href='#fk'/><title>References reference ( reference_id ) </title></a>
-  <use id='nn' x='1577' y='1527' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.similarity'><text x='1593' y='1537'>similarity</text><title>similarity float8 not null default 0&#046;97</title></a>
-  <use id='nn' x='1577' y='1542' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.enable_rev_strand_match'><text x='1593' y='1552'>enable_rev_strand_match</text><title>enable_rev_strand_match bool not null default TRUE</title></a>
-  <use id='nn' x='1577' y='1557' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.suppress_new_clusters'><text x='1593' y='1567'>suppress_new_clusters</text><title>suppress_new_clusters bool not null default TRUE</title></a>
-
 <!-- ============= Table 'study_artifact' ============= -->
 <rect class='table' x='1605' y='698' width='90' height='75' rx='7' ry='7' />
 <path d='M 1605.50 724.50 L 1605.50 705.50 Q 1605.50 698.50 1612.50 698.50 L 1687.50 698.50 Q 1694.50 698.50 1694.50 705.50 L 1694.50 724.50 L1605.50 724.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -1699,96 +1643,28 @@ What version of reference or type of reference used</title></a>
 <a xlink:href='#study_artifact.artifact_id'><text x='1623' y='757'>artifact_id</text><title>artifact_id bigint not null</title></a>
 <a xlink:href='#study_artifact.artifact_id'><use id='fk' x='1683' y='746' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
 
-<!-- ============= Table 'preprocessed_sequence_454_params' ============= -->
-<rect class='table' x='1950' y='1193' width='225' height='300' rx='7' ry='7' />
-<path d='M 1950.50 1219.50 L 1950.50 1200.50 Q 1950.50 1193.50 1957.50 1193.50 L 2167.50 1193.50 Q 2174.50 1193.50 2174.50 1200.50 L 2174.50 1219.50 L1950.50 1219.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#preprocessed_sequence_454_params'><text x='1960' y='1207' class='tableTitle'>preprocessed_sequence_454_params</text><title>Table qiita.preprocessed_sequence_454_params
-Parameters used for processing sequence data&#046;</title></a>
-  <use id='nn' x='1952' y='1227' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.preprocessed_params_id'><use id='pk' x='1952' y='1226' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
-<a xlink:href='#preprocessed_sequence_454_params.preprocessed_params_id'><text x='1968' y='1237'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
-  <use id='nn' x='1952' y='1242' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.param_set_name'><text x='1968' y='1252'>param_set_name</text><title>param_set_name varchar&#040;100&#041; not null
-The name of the parameter set</title></a>
-  <use id='nn' x='1952' y='1257' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.min_seq_len'><text x='1968' y='1267'>min_seq_len</text><title>min_seq_len integer not null default 200
-The minimum sequence length</title></a>
-  <use id='nn' x='1952' y='1272' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_seq_len'><text x='1968' y='1282'>max_seq_len</text><title>max_seq_len integer not null default 1000
-The maximum sequence length</title></a>
-  <use id='nn' x='1952' y='1287' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.trim_seq_length'><text x='1968' y='1297'>trim_seq_length</text><title>trim_seq_length bool not null default f
-Whether to trim the sequence length or not</title></a>
-  <use id='nn' x='1952' y='1302' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.min_qual_score'><text x='1968' y='1312'>min_qual_score</text><title>min_qual_score integer not null default 25
-The minimum phred quality score</title></a>
-  <use id='nn' x='1952' y='1317' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_ambig'><text x='1968' y='1327'>max_ambig</text><title>max_ambig integer not null default 6
-The maximum number of ambiguous characters</title></a>
-  <use id='nn' x='1952' y='1332' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_homopolymer'><text x='1968' y='1342'>max_homopolymer</text><title>max_homopolymer integer not null default 6
-The maximum homopolymer run</title></a>
-  <use id='nn' x='1952' y='1347' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_primer_mismatch'><text x='1968' y='1357'>max_primer_mismatch</text><title>max_primer_mismatch integer not null default 0
-Maximum number of mismatches to the primer allowed</title></a>
-  <use id='nn' x='1952' y='1362' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.barcode_type'><text x='1968' y='1372'>barcode_type</text><title>barcode_type varchar not null default &#039;golay&#095;12&#039;
-The barcode type used</title></a>
-  <use id='nn' x='1952' y='1377' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_barcode_errors'><text x='1968' y='1387'>max_barcode_errors</text><title>max_barcode_errors real not null default 1&#046;5
-The maximum number of allowed barcode errors</title></a>
-  <use id='nn' x='1952' y='1392' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.disable_bc_correction'><text x='1968' y='1402'>disable_bc_correction</text><title>disable_bc_correction bool not null default f
-Disable barcode correction</title></a>
-  <use id='nn' x='1952' y='1407' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.qual_score_window'><text x='1968' y='1417'>qual_score_window</text><title>qual_score_window integer not null default 0
-Enable a sliding window quality score threshold&#044; this is the size of the window</title></a>
-  <use id='nn' x='1952' y='1422' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.disable_primers'><text x='1968' y='1432'>disable_primers</text><title>disable_primers bool not null default f
-Disable primer checking</title></a>
-  <use id='nn' x='1952' y='1437' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.reverse_primers'><text x='1968' y='1447'>reverse_primers</text><title>reverse_primers varchar not null default &#039;disable&#039;
-Check for reverse primers</title></a>
-  <use id='nn' x='1952' y='1452' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.reverse_primer_mismatches'><text x='1968' y='1462'>reverse_primer_mismatches</text><title>reverse_primer_mismatches integer not null default 0
-The number of allowed mismatches in the reverse primer</title></a>
-  <use id='nn' x='1952' y='1467' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.truncate_ambig_bases_bool'><text x='1968' y='1477'>truncate_ambig_bases_bool</text><title>truncate_ambig_bases_bool bool not null default f
-Truncate at the first ambiguous base</title></a>
-
-<!-- ============= Table 'preprocessed_sequence_illumina_params' ============= -->
-<rect class='table' x='2190' y='1193' width='240' height='210' rx='7' ry='7' />
-<path d='M 2190.50 1219.50 L 2190.50 1200.50 Q 2190.50 1193.50 2197.50 1193.50 L 2422.50 1193.50 Q 2429.50 1193.50 2429.50 1200.50 L 2429.50 1219.50 L2190.50 1219.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#preprocessed_sequence_illumina_params'><text x='2197' y='1207' class='tableTitle'>preprocessed_sequence_illumina_params</text><title>Table qiita.preprocessed_sequence_illumina_params
-Parameters used for processing illumina sequence data&#046;</title></a>
-  <use id='nn' x='2192' y='1227' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.preprocessed_params_id'><use id='pk' x='2192' y='1226' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
-<a xlink:href='#preprocessed_sequence_illumina_params.preprocessed_params_id'><text x='2208' y='1237'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
-  <use id='nn' x='2192' y='1242' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.max_bad_run_length'><text x='2208' y='1252'>max_bad_run_length</text><title>max_bad_run_length integer not null default 3</title></a>
-  <use id='nn' x='2192' y='1257' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.min_per_read_length_fraction'><text x='2208' y='1267'>min_per_read_length_fraction</text><title>min_per_read_length_fraction real not null default 0&#046;75</title></a>
-  <use id='nn' x='2192' y='1272' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.sequence_max_n'><text x='2208' y='1282'>sequence_max_n</text><title>sequence_max_n integer not null default 0</title></a>
-  <use id='nn' x='2192' y='1287' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.rev_comp_barcode'><text x='2208' y='1297'>rev_comp_barcode</text><title>rev_comp_barcode bool not null default FALSE</title></a>
-  <use id='nn' x='2192' y='1302' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.rev_comp_mapping_barcodes'><text x='2208' y='1312'>rev_comp_mapping_barcodes</text><title>rev_comp_mapping_barcodes bool not null default FALSE</title></a>
-  <use id='nn' x='2192' y='1317' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.rev_comp'><text x='2208' y='1327'>rev_comp</text><title>rev_comp bool not null default FALSE</title></a>
-  <use id='nn' x='2192' y='1332' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.phred_quality_threshold'><text x='2208' y='1342'>phred_quality_threshold</text><title>phred_quality_threshold integer not null default 3</title></a>
-  <use id='nn' x='2192' y='1347' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.barcode_type'><text x='2208' y='1357'>barcode_type</text><title>barcode_type varchar not null default &#039;golay&#095;12&#039;</title></a>
-  <use id='nn' x='2192' y='1362' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.max_barcode_errors'><text x='2208' y='1372'>max_barcode_errors</text><title>max_barcode_errors real not null default 1&#046;5</title></a>
-  <use id='nn' x='2192' y='1377' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.param_set_name'><text x='2208' y='1387'>param_set_name</text><title>param_set_name varchar&#040;100&#041; not null
-The name of the parameter set</title></a>
-
-<!-- ============= Table 'preprocessed_spectra_params' ============= -->
-<rect class='table' x='2220' y='1418' width='180' height='75' rx='7' ry='7' />
-<path d='M 2220.50 1444.50 L 2220.50 1425.50 Q 2220.50 1418.50 2227.50 1418.50 L 2392.50 1418.50 Q 2399.50 1418.50 2399.50 1425.50 L 2399.50 1444.50 L2220.50 1444.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#preprocessed_spectra_params'><text x='2227' y='1432' class='tableTitle'>preprocessed_spectra_params</text><title>Table qiita.preprocessed_spectra_params
-Parameters used for processing spectra data&#046;</title></a>
-  <use id='nn' x='2222' y='1452' xlink:href='#nn'/><a xlink:href='#preprocessed_spectra_params.preprocessed_params_id'><use id='pk' x='2222' y='1451' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
-<a xlink:href='#preprocessed_spectra_params.preprocessed_params_id'><text x='2238' y='1462'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
-  <a xlink:href='#preprocessed_spectra_params.col'><text x='2238' y='1477'>col</text><title>col varchar</title></a>
-
 <!-- ============= Table 'software' ============= -->
-<rect class='table' x='1755' y='833' width='105' height='105' rx='7' ry='7' />
-<path d='M 1755.50 859.50 L 1755.50 840.50 Q 1755.50 833.50 1762.50 833.50 L 1852.50 833.50 Q 1859.50 833.50 1859.50 840.50 L 1859.50 859.50 L1755.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software'><text x='1784' y='847' class='tableTitle'>software</text><title>Table qiita.software</title></a>
-  <use id='nn' x='1757' y='867' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='1757' y='866' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
-<a xlink:href='#software.software_id'><text x='1773' y='877'>software_id</text><title>software_id bigserial not null</title></a>
-<a xlink:href='#software.software_id'><use id='ref' x='1848' y='866' xlink:href='#ref'/><title>Referred by software_command ( software_id ) 
+<rect class='table' x='1920' y='773' width='105' height='105' rx='7' ry='7' />
+<path d='M 1920.50 799.50 L 1920.50 780.50 Q 1920.50 773.50 1927.50 773.50 L 2017.50 773.50 Q 2024.50 773.50 2024.50 780.50 L 2024.50 799.50 L1920.50 799.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software'><text x='1949' y='787' class='tableTitle'>software</text><title>Table qiita.software</title></a>
+  <use id='nn' x='1922' y='807' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='1922' y='806' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
+<a xlink:href='#software.software_id'><text x='1938' y='817'>software_id</text><title>software_id bigserial not null</title></a>
+<a xlink:href='#software.software_id'><use id='ref' x='2013' y='806' xlink:href='#ref'/><title>Referred by software_command ( software_id ) 
 Referred by software_publication ( software_id ) </title></a>
-  <use id='nn' x='1757' y='882' xlink:href='#nn'/><a xlink:href='#software.name'><text x='1773' y='892'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='1757' y='897' xlink:href='#nn'/><a xlink:href='#software.version'><text x='1773' y='907'>version</text><title>version varchar not null</title></a>
-  <use id='nn' x='1757' y='912' xlink:href='#nn'/><a xlink:href='#software.description'><text x='1773' y='922'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='1922' y='822' xlink:href='#nn'/><a xlink:href='#software.name'><text x='1938' y='832'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='1922' y='837' xlink:href='#nn'/><a xlink:href='#software.version'><text x='1938' y='847'>version</text><title>version varchar not null</title></a>
+  <use id='nn' x='1922' y='852' xlink:href='#nn'/><a xlink:href='#software.description'><text x='1938' y='862'>description</text><title>description varchar not null</title></a>
 
 <!-- ============= Table 'software_publication' ============= -->
-<rect class='table' x='1905' y='833' width='135' height='75' rx='7' ry='7' />
-<path d='M 1905.50 859.50 L 1905.50 840.50 Q 1905.50 833.50 1912.50 833.50 L 2032.50 833.50 Q 2039.50 833.50 2039.50 840.50 L 2039.50 859.50 L1905.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software_publication'><text x='1916' y='847' class='tableTitle'>software_publication</text><title>Table qiita.software_publication</title></a>
-  <use id='nn' x='1907' y='867' xlink:href='#nn'/><a xlink:href='#software_publication.software_id'><use id='pk' x='1907' y='866' xlink:href='#pk'/><title>Index  ( software_id ) Primary Key  ( software_id, publication_doi ) </title></a>
-<a xlink:href='#software_publication.software_id'><text x='1923' y='877'>software_id</text><title>software_id bigint not null</title></a>
-<a xlink:href='#software_publication.software_id'><use id='fk' x='2028' y='866' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
-  <use id='nn' x='1907' y='882' xlink:href='#nn'/><a xlink:href='#software_publication.publication_doi'><use id='pk' x='1907' y='881' xlink:href='#pk'/><title>Index  ( publication_doi ) Primary Key  ( software_id, publication_doi ) </title></a>
-<a xlink:href='#software_publication.publication_doi'><text x='1923' y='892'>publication_doi</text><title>publication_doi varchar not null</title></a>
-<a xlink:href='#software_publication.publication_doi'><use id='fk' x='2028' y='881' xlink:href='#fk'/><title>References publication ( publication_doi -> doi ) </title></a>
+<rect class='table' x='2265' y='788' width='135' height='75' rx='7' ry='7' />
+<path d='M 2265.50 814.50 L 2265.50 795.50 Q 2265.50 788.50 2272.50 788.50 L 2392.50 788.50 Q 2399.50 788.50 2399.50 795.50 L 2399.50 814.50 L2265.50 814.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software_publication'><text x='2276' y='802' class='tableTitle'>software_publication</text><title>Table qiita.software_publication</title></a>
+  <use id='nn' x='2267' y='822' xlink:href='#nn'/><a xlink:href='#software_publication.software_id'><use id='pk' x='2267' y='821' xlink:href='#pk'/><title>Index  ( software_id ) Primary Key  ( software_id, publication_doi ) </title></a>
+<a xlink:href='#software_publication.software_id'><text x='2283' y='832'>software_id</text><title>software_id bigint not null</title></a>
+<a xlink:href='#software_publication.software_id'><use id='fk' x='2388' y='821' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
+  <use id='nn' x='2267' y='837' xlink:href='#nn'/><a xlink:href='#software_publication.publication_doi'><use id='pk' x='2267' y='836' xlink:href='#pk'/><title>Index  ( publication_doi ) Primary Key  ( software_id, publication_doi ) </title></a>
+<a xlink:href='#software_publication.publication_doi'><text x='2283' y='847'>publication_doi</text><title>publication_doi varchar not null</title></a>
+<a xlink:href='#software_publication.publication_doi'><use id='fk' x='2388' y='836' xlink:href='#fk'/><title>References publication ( publication_doi -> doi ) </title></a>
 
 <!-- ============= Table 'visibility' ============= -->
 <rect class='table' x='1050' y='938' width='150' height='90' rx='7' ry='7' />
@@ -1871,40 +1747,175 @@ If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private o
   <use id='nn' x='1202' y='882' xlink:href='#nn'/><a xlink:href='#artifact.can_be_submitted_to_vamps'><text x='1218' y='892'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
   <use id='nn' x='1202' y='897' xlink:href='#nn'/><a xlink:href='#artifact.submitted_to_vamps'><text x='1218' y='907'>submitted_to_vamps</text><title>submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
 
-<!-- ============= Table 'study_pmid' ============= -->
-<rect class='table' x='2205' y='548' width='75' height='75' rx='7' ry='7' />
-<path d='M 2205.50 574.50 L 2205.50 555.50 Q 2205.50 548.50 2212.50 548.50 L 2272.50 548.50 Q 2279.50 548.50 2279.50 555.50 L 2279.50 574.50 L2205.50 574.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#study_pmid'><text x='2211' y='562' class='tableTitle'>study_pmid</text><title>Table qiita.study_pmid
-Links a study to all PMIDs for papers created from study</title></a>
-  <use id='nn' x='2207' y='582' xlink:href='#nn'/><a xlink:href='#study_pmid.study_id'><use id='pk' x='2207' y='581' xlink:href='#pk'/><title>Primary Key  ( study_id, pmid ) Index  ( study_id ) </title></a>
-<a xlink:href='#study_pmid.study_id'><text x='2223' y='592'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#study_pmid.study_id'><use id='fk' x='2268' y='581' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
-  <use id='nn' x='2207' y='597' xlink:href='#nn'/><a xlink:href='#study_pmid.pmid'><use id='pk' x='2207' y='596' xlink:href='#pk'/><title>Primary Key  ( study_id, pmid ) </title></a>
-<a xlink:href='#study_pmid.pmid'><text x='2223' y='607'>pmid</text><title>pmid varchar not null</title></a>
-
 <!-- ============= Table 'software_command' ============= -->
-<rect class='table' x='1575' y='833' width='135' height='135' rx='7' ry='7' />
-<path d='M 1575.50 859.50 L 1575.50 840.50 Q 1575.50 833.50 1582.50 833.50 L 1702.50 833.50 Q 1709.50 833.50 1709.50 840.50 L 1709.50 859.50 L1575.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software_command'><text x='1590' y='847' class='tableTitle'>software_command</text><title>Table qiita.software_command</title></a>
-  <use id='nn' x='1577' y='867' xlink:href='#nn'/><a xlink:href='#software_command.command_id'><use id='pk' x='1577' y='866' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
-<a xlink:href='#software_command.command_id'><text x='1593' y='877'>command_id</text><title>command_id bigserial not null</title></a>
-<a xlink:href='#software_command.command_id'><use id='ref' x='1698' y='866' xlink:href='#ref'/><title>Referred by artifact ( command_id ) </title></a>
-  <use id='nn' x='1577' y='882' xlink:href='#nn'/><a xlink:href='#software_command.name'><text x='1593' y='892'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='1577' y='897' xlink:href='#nn'/><a xlink:href='#software_command.software_id'><use id='idx' x='1577' y='896' xlink:href='#idx'/><title>Index  ( software_id ) </title></a>
-<a xlink:href='#software_command.software_id'><text x='1593' y='907'>software_id</text><title>software_id bigint not null</title></a>
-<a xlink:href='#software_command.software_id'><use id='fk' x='1698' y='896' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
-  <use id='nn' x='1577' y='912' xlink:href='#nn'/><a xlink:href='#software_command.description'><text x='1593' y='922'>description</text><title>description varchar not null</title></a>
-  <a xlink:href='#software_command.cli_cmd'><text x='1593' y='937'>cli_cmd</text><title>cli_cmd varchar</title></a>
-  <use id='nn' x='1577' y='942' xlink:href='#nn'/><a xlink:href='#software_command.parameters_table'><text x='1593' y='952'>parameters_table</text><title>parameters_table varchar not null</title></a>
+<rect class='table' x='1740' y='773' width='135' height='135' rx='7' ry='7' />
+<path d='M 1740.50 799.50 L 1740.50 780.50 Q 1740.50 773.50 1747.50 773.50 L 1867.50 773.50 Q 1874.50 773.50 1874.50 780.50 L 1874.50 799.50 L1740.50 799.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software_command'><text x='1755' y='787' class='tableTitle'>software_command</text><title>Table qiita.software_command</title></a>
+  <use id='nn' x='1742' y='807' xlink:href='#nn'/><a xlink:href='#software_command.command_id'><use id='pk' x='1742' y='806' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
+<a xlink:href='#software_command.command_id'><text x='1758' y='817'>command_id</text><title>command_id bigserial not null</title></a>
+<a xlink:href='#software_command.command_id'><use id='ref' x='1863' y='806' xlink:href='#ref'/><title>Referred by artifact ( command_id ) </title></a>
+  <use id='nn' x='1742' y='822' xlink:href='#nn'/><a xlink:href='#software_command.name'><text x='1758' y='832'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='1742' y='837' xlink:href='#nn'/><a xlink:href='#software_command.software_id'><use id='idx' x='1742' y='836' xlink:href='#idx'/><title>Index  ( software_id ) </title></a>
+<a xlink:href='#software_command.software_id'><text x='1758' y='847'>software_id</text><title>software_id bigint not null</title></a>
+<a xlink:href='#software_command.software_id'><use id='fk' x='1863' y='836' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
+  <use id='nn' x='1742' y='852' xlink:href='#nn'/><a xlink:href='#software_command.description'><text x='1758' y='862'>description</text><title>description varchar not null</title></a>
+  <a xlink:href='#software_command.cli_cmd'><text x='1758' y='877'>cli_cmd</text><title>cli_cmd varchar</title></a>
+  <use id='nn' x='1742' y='882' xlink:href='#nn'/><a xlink:href='#software_command.parameters_table'><text x='1758' y='892'>parameters_table</text><title>parameters_table varchar not null</title></a>
 
 <!-- ============= Table 'publication' ============= -->
-<rect class='table' x='2100' y='833' width='90' height='75' rx='7' ry='7' />
-<path d='M 2100.50 859.50 L 2100.50 840.50 Q 2100.50 833.50 2107.50 833.50 L 2182.50 833.50 Q 2189.50 833.50 2189.50 840.50 L 2189.50 859.50 L2100.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#publication'><text x='2115' y='847' class='tableTitle'>publication</text><title>Table qiita.publication</title></a>
-  <use id='nn' x='2102' y='867' xlink:href='#nn'/><a xlink:href='#publication.doi'><use id='pk' x='2102' y='866' xlink:href='#pk'/><title>Primary Key  ( doi ) </title></a>
-<a xlink:href='#publication.doi'><text x='2118' y='877'>doi</text><title>doi varchar not null</title></a>
-<a xlink:href='#publication.doi'><use id='ref' x='2178' y='866' xlink:href='#ref'/><title>Referred by software_publication ( publication_doi -> doi ) </title></a>
-  <a xlink:href='#publication.pubmed_id'><text x='2118' y='892'>pubmed_id</text><title>pubmed_id varchar</title></a>
+<rect class='table' x='2460' y='788' width='90' height='75' rx='7' ry='7' />
+<path d='M 2460.50 814.50 L 2460.50 795.50 Q 2460.50 788.50 2467.50 788.50 L 2542.50 788.50 Q 2549.50 788.50 2549.50 795.50 L 2549.50 814.50 L2460.50 814.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#publication'><text x='2475' y='802' class='tableTitle'>publication</text><title>Table qiita.publication</title></a>
+  <use id='nn' x='2462' y='822' xlink:href='#nn'/><a xlink:href='#publication.doi'><use id='pk' x='2462' y='821' xlink:href='#pk'/><title>Primary Key  ( doi ) </title></a>
+<a xlink:href='#publication.doi'><text x='2478' y='832'>doi</text><title>doi varchar not null</title></a>
+<a xlink:href='#publication.doi'><use id='ref' x='2538' y='821' xlink:href='#ref'/><title>Referred by software_publication ( publication_doi -> doi ) 
+Referred by study_publication ( publication_doi -> doi ) </title></a>
+  <a xlink:href='#publication.pubmed_id'><text x='2478' y='847'>pubmed_id</text><title>pubmed_id varchar</title></a>
+
+<!-- ============= Table 'timeseries_type' ============= -->
+<rect class='table' x='2235' y='548' width='135' height='90' rx='7' ry='7' />
+<path d='M 2235.50 574.50 L 2235.50 555.50 Q 2235.50 548.50 2242.50 548.50 L 2362.50 548.50 Q 2369.50 548.50 2369.50 555.50 L 2369.50 574.50 L2235.50 574.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#timeseries_type'><text x='2260' y='562' class='tableTitle'>timeseries_type</text><title>Table qiita.timeseries_type</title></a>
+  <use id='nn' x='2237' y='582' xlink:href='#nn'/><a xlink:href='#timeseries_type.timeseries_type_id'><use id='pk' x='2237' y='581' xlink:href='#pk'/><title>Primary Key  ( timeseries_type_id ) </title></a>
+<a xlink:href='#timeseries_type.timeseries_type_id'><text x='2253' y='592'>timeseries_type_id</text><title>timeseries_type_id bigserial not null</title></a>
+<a xlink:href='#timeseries_type.timeseries_type_id'><use id='ref' x='2358' y='581' xlink:href='#ref'/><title>Referred by study ( timeseries_type_id ) </title></a>
+  <use id='nn' x='2237' y='597' xlink:href='#nn'/><a xlink:href='#timeseries_type.timeseries_type'><use id='unq' x='2237' y='596' xlink:href='#unq'/><title>Unique Index  ( timeseries_type, intervention_type ) </title></a>
+<a xlink:href='#timeseries_type.timeseries_type'><text x='2253' y='607'>timeseries_type</text><title>timeseries_type varchar not null</title></a>
+  <use id='nn' x='2237' y='612' xlink:href='#nn'/><a xlink:href='#timeseries_type.intervention_type'><use id='unq' x='2237' y='611' xlink:href='#unq'/><title>Unique Index  ( timeseries_type, intervention_type ) </title></a>
+<a xlink:href='#timeseries_type.intervention_type'><text x='2253' y='622'>intervention_type</text><title>intervention_type varchar not null default &#039;None&#039;</title></a>
+
+<!-- ============= Table 'study_publication' ============= -->
+<rect class='table' x='2265' y='698' width='120' height='75' rx='7' ry='7' />
+<path d='M 2265.50 724.50 L 2265.50 705.50 Q 2265.50 698.50 2272.50 698.50 L 2377.50 698.50 Q 2384.50 698.50 2384.50 705.50 L 2384.50 724.50 L2265.50 724.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#study_publication'><text x='2277' y='712' class='tableTitle'>study_publication</text><title>Table qiita.study_publication</title></a>
+  <use id='nn' x='2267' y='732' xlink:href='#nn'/><a xlink:href='#study_publication.study_id'><use id='pk' x='2267' y='731' xlink:href='#pk'/><title>Index  ( study_id ) Primary Key  ( study_id, publication_doi ) </title></a>
+<a xlink:href='#study_publication.study_id'><text x='2283' y='742'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_publication.study_id'><use id='fk' x='2373' y='731' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <use id='nn' x='2267' y='747' xlink:href='#nn'/><a xlink:href='#study_publication.publication_doi'><use id='pk' x='2267' y='746' xlink:href='#pk'/><title>Index  ( publication_doi ) Primary Key  ( study_id, publication_doi ) </title></a>
+<a xlink:href='#study_publication.publication_doi'><text x='2283' y='757'>publication_doi</text><title>publication_doi varchar not null</title></a>
+<a xlink:href='#study_publication.publication_doi'><use id='fk' x='2373' y='746' xlink:href='#fk'/><title>References publication ( publication_doi -> doi ) </title></a>
+
+<!-- ============= Table 'reference' ============= -->
+<rect class='table' x='1740' y='968' width='135' height='135' rx='7' ry='7' />
+<path d='M 1740.50 994.50 L 1740.50 975.50 Q 1740.50 968.50 1747.50 968.50 L 1867.50 968.50 Q 1874.50 968.50 1874.50 975.50 L 1874.50 994.50 L1740.50 994.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#reference'><text x='1782' y='982' class='tableTitle'>reference</text><title>Table qiita.reference</title></a>
+  <use id='nn' x='1742' y='1002' xlink:href='#nn'/><a xlink:href='#reference.reference_id'><use id='pk' x='1742' y='1001' xlink:href='#pk'/><title>Primary Key  ( reference_id ) </title></a>
+<a xlink:href='#reference.reference_id'><text x='1758' y='1012'>reference_id</text><title>reference_id bigserial not null</title></a>
+<a xlink:href='#reference.reference_id'><use id='ref' x='1863' y='1001' xlink:href='#ref'/><title>Referred by processed_params_sortmerna ( reference_id ) 
+Referred by processed_params_uclust ( reference_id ) </title></a>
+  <use id='nn' x='1742' y='1017' xlink:href='#nn'/><a xlink:href='#reference.reference_name'><text x='1758' y='1027'>reference_name</text><title>reference_name varchar not null</title></a>
+  <a xlink:href='#reference.reference_version'><text x='1758' y='1042'>reference_version</text><title>reference_version varchar</title></a>
+  <use id='nn' x='1742' y='1047' xlink:href='#nn'/><a xlink:href='#reference.sequence_filepath'><use id='idx' x='1742' y='1046' xlink:href='#idx'/><title>Index  ( sequence_filepath ) </title></a>
+<a xlink:href='#reference.sequence_filepath'><text x='1758' y='1057'>sequence_filepath</text><title>sequence_filepath bigint not null</title></a>
+<a xlink:href='#reference.sequence_filepath'><use id='fk' x='1863' y='1046' xlink:href='#fk'/><title>References filepath ( sequence_filepath -> filepath_id ) </title></a>
+  <a xlink:href='#reference.taxonomy_filepath'><use id='idx' x='1742' y='1061' xlink:href='#idx'/><title>Index  ( taxonomy_filepath ) </title></a>
+<a xlink:href='#reference.taxonomy_filepath'><text x='1758' y='1072'>taxonomy_filepath</text><title>taxonomy_filepath bigint</title></a>
+<a xlink:href='#reference.taxonomy_filepath'><use id='fk' x='1863' y='1061' xlink:href='#fk'/><title>References filepath ( taxonomy_filepath -> filepath_id ) </title></a>
+  <a xlink:href='#reference.tree_filepath'><use id='idx' x='1742' y='1076' xlink:href='#idx'/><title>Index  ( tree_filepath ) </title></a>
+<a xlink:href='#reference.tree_filepath'><text x='1758' y='1087'>tree_filepath</text><title>tree_filepath bigint</title></a>
+<a xlink:href='#reference.tree_filepath'><use id='fk' x='1863' y='1076' xlink:href='#fk'/><title>References filepath ( tree_filepath -> filepath_id ) </title></a>
+
+<!-- ============= Table 'processed_params_sortmerna' ============= -->
+<rect class='table' x='1890' y='968' width='180' height='165' rx='7' ry='7' />
+<path d='M 1890.50 994.50 L 1890.50 975.50 Q 1890.50 968.50 1897.50 968.50 L 2062.50 968.50 Q 2069.50 968.50 2069.50 975.50 L 2069.50 994.50 L1890.50 994.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
+<a xlink:href='#processed_params_sortmerna'><text x='1898' y='982' class='tableTitle'>processed_params_sortmerna</text><title>Table qiita.processed_params_sortmerna
+Parameters used for processing data using method sortmerna</title></a>
+  <use id='nn' x='1892' y='1002' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.processed_params_id'><use id='pk' x='1892' y='1001' xlink:href='#pk'/><title>Primary Key  ( processed_params_id ) </title></a>
+<a xlink:href='#processed_params_sortmerna.processed_params_id'><text x='1908' y='1012'>processed_params_id</text><title>processed_params_id bigserial not null</title></a>
+  <use id='nn' x='1892' y='1017' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.reference_id'><use id='idx' x='1892' y='1016' xlink:href='#idx'/><title>Index  ( reference_id ) </title></a>
+<a xlink:href='#processed_params_sortmerna.reference_id'><text x='1908' y='1027'>reference_id</text><title>reference_id bigint not null
+What version of reference or type of reference used</title></a>
+<a xlink:href='#processed_params_sortmerna.reference_id'><use id='fk' x='2058' y='1016' xlink:href='#fk'/><title>References reference ( reference_id ) </title></a>
+  <use id='nn' x='1892' y='1032' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.sortmerna_e_value'><text x='1908' y='1042'>sortmerna_e_value</text><title>sortmerna_e_value float8 not null</title></a>
+  <use id='nn' x='1892' y='1047' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.sortmerna_max_pos'><text x='1908' y='1057'>sortmerna_max_pos</text><title>sortmerna_max_pos integer not null</title></a>
+  <use id='nn' x='1892' y='1062' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.similarity'><text x='1908' y='1072'>similarity</text><title>similarity float8 not null</title></a>
+  <use id='nn' x='1892' y='1077' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.sortmerna_coverage'><text x='1908' y='1087'>sortmerna_coverage</text><title>sortmerna_coverage float8 not null</title></a>
+  <use id='nn' x='1892' y='1092' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.threads'><text x='1908' y='1102'>threads</text><title>threads integer not null</title></a>
+  <use id='nn' x='1892' y='1107' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.param_set_name'><text x='1908' y='1117'>param_set_name</text><title>param_set_name varchar&#040;100&#041; not null default &#039;Default&#039;
+The name of the parameter set</title></a>
+
+<!-- ============= Table 'processed_params_uclust' ============= -->
+<rect class='table' x='1740' y='1148' width='180' height='120' rx='7' ry='7' />
+<path d='M 1740.50 1174.50 L 1740.50 1155.50 Q 1740.50 1148.50 1747.50 1148.50 L 1912.50 1148.50 Q 1919.50 1148.50 1919.50 1155.50 L 1919.50 1174.50 L1740.50 1174.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#processed_params_uclust'><text x='1759' y='1162' class='tableTitle'>processed_params_uclust</text><title>Table qiita.processed_params_uclust
+Parameters used for processing data using method uclust</title></a>
+  <use id='nn' x='1742' y='1182' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.processed_params_id'><use id='pk' x='1742' y='1181' xlink:href='#pk'/><title>Primary Key  ( processed_params_id ) </title></a>
+<a xlink:href='#processed_params_uclust.processed_params_id'><text x='1758' y='1192'>processed_params_id</text><title>processed_params_id bigserial not null</title></a>
+  <use id='nn' x='1742' y='1197' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.reference_id'><use id='idx' x='1742' y='1196' xlink:href='#idx'/><title>Index  ( reference_id ) </title></a>
+<a xlink:href='#processed_params_uclust.reference_id'><text x='1758' y='1207'>reference_id</text><title>reference_id bigint not null
+What version of reference or type of reference used</title></a>
+<a xlink:href='#processed_params_uclust.reference_id'><use id='fk' x='1908' y='1196' xlink:href='#fk'/><title>References reference ( reference_id ) </title></a>
+  <use id='nn' x='1742' y='1212' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.similarity'><text x='1758' y='1222'>similarity</text><title>similarity float8 not null default 0&#046;97</title></a>
+  <use id='nn' x='1742' y='1227' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.enable_rev_strand_match'><text x='1758' y='1237'>enable_rev_strand_match</text><title>enable_rev_strand_match bool not null default TRUE</title></a>
+  <use id='nn' x='1742' y='1242' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.suppress_new_clusters'><text x='1758' y='1252'>suppress_new_clusters</text><title>suppress_new_clusters bool not null default TRUE</title></a>
+
+<!-- ============= Table 'preprocessed_sequence_454_params' ============= -->
+<rect class='table' x='1725' y='1283' width='225' height='300' rx='7' ry='7' />
+<path d='M 1725.50 1309.50 L 1725.50 1290.50 Q 1725.50 1283.50 1732.50 1283.50 L 1942.50 1283.50 Q 1949.50 1283.50 1949.50 1290.50 L 1949.50 1309.50 L1725.50 1309.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#preprocessed_sequence_454_params'><text x='1735' y='1297' class='tableTitle'>preprocessed_sequence_454_params</text><title>Table qiita.preprocessed_sequence_454_params
+Parameters used for processing sequence data&#046;</title></a>
+  <use id='nn' x='1727' y='1317' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.preprocessed_params_id'><use id='pk' x='1727' y='1316' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
+<a xlink:href='#preprocessed_sequence_454_params.preprocessed_params_id'><text x='1743' y='1327'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
+  <use id='nn' x='1727' y='1332' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.param_set_name'><text x='1743' y='1342'>param_set_name</text><title>param_set_name varchar&#040;100&#041; not null
+The name of the parameter set</title></a>
+  <use id='nn' x='1727' y='1347' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.min_seq_len'><text x='1743' y='1357'>min_seq_len</text><title>min_seq_len integer not null default 200
+The minimum sequence length</title></a>
+  <use id='nn' x='1727' y='1362' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_seq_len'><text x='1743' y='1372'>max_seq_len</text><title>max_seq_len integer not null default 1000
+The maximum sequence length</title></a>
+  <use id='nn' x='1727' y='1377' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.trim_seq_length'><text x='1743' y='1387'>trim_seq_length</text><title>trim_seq_length bool not null default f
+Whether to trim the sequence length or not</title></a>
+  <use id='nn' x='1727' y='1392' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.min_qual_score'><text x='1743' y='1402'>min_qual_score</text><title>min_qual_score integer not null default 25
+The minimum phred quality score</title></a>
+  <use id='nn' x='1727' y='1407' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_ambig'><text x='1743' y='1417'>max_ambig</text><title>max_ambig integer not null default 6
+The maximum number of ambiguous characters</title></a>
+  <use id='nn' x='1727' y='1422' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_homopolymer'><text x='1743' y='1432'>max_homopolymer</text><title>max_homopolymer integer not null default 6
+The maximum homopolymer run</title></a>
+  <use id='nn' x='1727' y='1437' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_primer_mismatch'><text x='1743' y='1447'>max_primer_mismatch</text><title>max_primer_mismatch integer not null default 0
+Maximum number of mismatches to the primer allowed</title></a>
+  <use id='nn' x='1727' y='1452' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.barcode_type'><text x='1743' y='1462'>barcode_type</text><title>barcode_type varchar not null default &#039;golay&#095;12&#039;
+The barcode type used</title></a>
+  <use id='nn' x='1727' y='1467' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.max_barcode_errors'><text x='1743' y='1477'>max_barcode_errors</text><title>max_barcode_errors real not null default 1&#046;5
+The maximum number of allowed barcode errors</title></a>
+  <use id='nn' x='1727' y='1482' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.disable_bc_correction'><text x='1743' y='1492'>disable_bc_correction</text><title>disable_bc_correction bool not null default f
+Disable barcode correction</title></a>
+  <use id='nn' x='1727' y='1497' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.qual_score_window'><text x='1743' y='1507'>qual_score_window</text><title>qual_score_window integer not null default 0
+Enable a sliding window quality score threshold&#044; this is the size of the window</title></a>
+  <use id='nn' x='1727' y='1512' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.disable_primers'><text x='1743' y='1522'>disable_primers</text><title>disable_primers bool not null default f
+Disable primer checking</title></a>
+  <use id='nn' x='1727' y='1527' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.reverse_primers'><text x='1743' y='1537'>reverse_primers</text><title>reverse_primers varchar not null default &#039;disable&#039;
+Check for reverse primers</title></a>
+  <use id='nn' x='1727' y='1542' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.reverse_primer_mismatches'><text x='1743' y='1552'>reverse_primer_mismatches</text><title>reverse_primer_mismatches integer not null default 0
+The number of allowed mismatches in the reverse primer</title></a>
+  <use id='nn' x='1727' y='1557' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.truncate_ambig_bases_bool'><text x='1743' y='1567'>truncate_ambig_bases_bool</text><title>truncate_ambig_bases_bool bool not null default f
+Truncate at the first ambiguous base</title></a>
+
+<!-- ============= Table 'preprocessed_sequence_illumina_params' ============= -->
+<rect class='table' x='1965' y='1283' width='240' height='210' rx='7' ry='7' />
+<path d='M 1965.50 1309.50 L 1965.50 1290.50 Q 1965.50 1283.50 1972.50 1283.50 L 2197.50 1283.50 Q 2204.50 1283.50 2204.50 1290.50 L 2204.50 1309.50 L1965.50 1309.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#preprocessed_sequence_illumina_params'><text x='1972' y='1297' class='tableTitle'>preprocessed_sequence_illumina_params</text><title>Table qiita.preprocessed_sequence_illumina_params
+Parameters used for processing illumina sequence data&#046;</title></a>
+  <use id='nn' x='1967' y='1317' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.preprocessed_params_id'><use id='pk' x='1967' y='1316' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
+<a xlink:href='#preprocessed_sequence_illumina_params.preprocessed_params_id'><text x='1983' y='1327'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
+  <use id='nn' x='1967' y='1332' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.max_bad_run_length'><text x='1983' y='1342'>max_bad_run_length</text><title>max_bad_run_length integer not null default 3</title></a>
+  <use id='nn' x='1967' y='1347' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.min_per_read_length_fraction'><text x='1983' y='1357'>min_per_read_length_fraction</text><title>min_per_read_length_fraction real not null default 0&#046;75</title></a>
+  <use id='nn' x='1967' y='1362' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.sequence_max_n'><text x='1983' y='1372'>sequence_max_n</text><title>sequence_max_n integer not null default 0</title></a>
+  <use id='nn' x='1967' y='1377' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.rev_comp_barcode'><text x='1983' y='1387'>rev_comp_barcode</text><title>rev_comp_barcode bool not null default FALSE</title></a>
+  <use id='nn' x='1967' y='1392' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.rev_comp_mapping_barcodes'><text x='1983' y='1402'>rev_comp_mapping_barcodes</text><title>rev_comp_mapping_barcodes bool not null default FALSE</title></a>
+  <use id='nn' x='1967' y='1407' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.rev_comp'><text x='1983' y='1417'>rev_comp</text><title>rev_comp bool not null default FALSE</title></a>
+  <use id='nn' x='1967' y='1422' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.phred_quality_threshold'><text x='1983' y='1432'>phred_quality_threshold</text><title>phred_quality_threshold integer not null default 3</title></a>
+  <use id='nn' x='1967' y='1437' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.barcode_type'><text x='1983' y='1447'>barcode_type</text><title>barcode_type varchar not null default &#039;golay&#095;12&#039;</title></a>
+  <use id='nn' x='1967' y='1452' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.max_barcode_errors'><text x='1983' y='1462'>max_barcode_errors</text><title>max_barcode_errors real not null default 1&#046;5</title></a>
+  <use id='nn' x='1967' y='1467' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.param_set_name'><text x='1983' y='1477'>param_set_name</text><title>param_set_name varchar&#040;100&#041; not null
+The name of the parameter set</title></a>
+
+<!-- ============= Table 'preprocessed_spectra_params' ============= -->
+<rect class='table' x='1995' y='1508' width='180' height='75' rx='7' ry='7' />
+<path d='M 1995.50 1534.50 L 1995.50 1515.50 Q 1995.50 1508.50 2002.50 1508.50 L 2167.50 1508.50 Q 2174.50 1508.50 2174.50 1515.50 L 2174.50 1534.50 L1995.50 1534.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#preprocessed_spectra_params'><text x='2002' y='1522' class='tableTitle'>preprocessed_spectra_params</text><title>Table qiita.preprocessed_spectra_params
+Parameters used for processing spectra data&#046;</title></a>
+  <use id='nn' x='1997' y='1542' xlink:href='#nn'/><a xlink:href='#preprocessed_spectra_params.preprocessed_params_id'><use id='pk' x='1997' y='1541' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
+<a xlink:href='#preprocessed_spectra_params.preprocessed_params_id'><text x='2013' y='1552'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
+  <a xlink:href='#preprocessed_spectra_params.col'><text x='2013' y='1567'>col</text><title>col varchar</title></a>
 
 </g></svg>
 
@@ -4333,39 +4344,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='timeseries_type'>Table timeseries_type</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='timeseries_type.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='timeseries_type.timeseries_type'>timeseries&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='timeseries_type.intervention_type'>intervention&#095;type</a></td>
-		<td> varchar  NOT NULL  DEFO 'None' </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;timeseries&#095;type primary key</td>
-		<td> ON timeseries&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;timeseries&#095;type unique</td>
-		<td> ON timeseries&#095;type&#044; intervention&#095;type</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='study_experimental_factor'>Table study_experimental_factor</a></th></tr>
 <tr><td colspan='3'>EFO ontological link of experimental factors to studies </td></tr>
 </thead>
@@ -4629,193 +4607,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='reference'>Table reference</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='reference.reference_id'>reference&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='reference.reference_name'>reference&#095;name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='reference.reference_version'>reference&#095;version</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='reference.sequence_filepath'>sequence&#095;filepath</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='reference.taxonomy_filepath'>taxonomy&#095;filepath</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='reference.tree_filepath'>tree&#095;filepath</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;reference primary key</td>
-		<td> ON reference&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;reference </td>
-		<td> ON sequence&#095;filepath</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;reference&#095;0 </td>
-		<td> ON taxonomy&#095;filepath</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;reference&#095;1 </td>
-		<td> ON tree&#095;filepath</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_reference_sequence_filepath</td>
-		<td > ( sequence&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_reference_taxonomy_filepath</td>
-		<td > ( taxonomy&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_reference_tree_filepath</td>
-		<td > ( tree&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='processed_params_sortmerna'>Table processed_params_sortmerna</a></th></tr>
-<tr><td colspan='3'>Parameters used for processing data using method sortmerna </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='processed_params_sortmerna.processed_params_id'>processed&#095;params&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.reference_id'>reference&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> What version of reference or type of reference used </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.sortmerna_e_value'>sortmerna&#095;e&#095;value</a></td>
-		<td> float8  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.sortmerna_max_pos'>sortmerna&#095;max&#095;pos</a></td>
-		<td> integer  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.similarity'>similarity</a></td>
-		<td> float8  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.sortmerna_coverage'>sortmerna&#095;coverage</a></td>
-		<td> float8  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.threads'>threads</a></td>
-		<td> integer  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_sortmerna.param_set_name'>param&#095;set&#095;name</a></td>
-		<td> varchar&#040; 100 &#041;  NOT NULL  DEFO 'Default' </td>
-		<td> The name of the parameter set </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;processed&#095;params&#095;sortmerna primary key</td>
-		<td> ON processed&#095;params&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processed&#095;params&#095;sortmerna </td>
-		<td> ON reference&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_processed_params_sortmerna</td>
-		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='processed_params_uclust'>Table processed_params_uclust</a></th></tr>
-<tr><td colspan='3'>Parameters used for processing data using method uclust </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='processed_params_uclust.processed_params_id'>processed&#095;params&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_uclust.reference_id'>reference&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> What version of reference or type of reference used </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_uclust.similarity'>similarity</a></td>
-		<td> float8  NOT NULL  DEFO 0.97 </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_uclust.enable_rev_strand_match'>enable&#095;rev&#095;strand&#095;match</a></td>
-		<td> bool  NOT NULL  DEFO TRUE </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processed_params_uclust.suppress_new_clusters'>suppress&#095;new&#095;clusters</a></td>
-		<td> bool  NOT NULL  DEFO TRUE </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;processed&#095;params&#095;uclust primary key</td>
-		<td> ON processed&#095;params&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processed&#095;params&#095;uclust </td>
-		<td> ON reference&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_processed_params_uclust</td>
-		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='study_artifact'>Table study_artifact</a></th></tr>
 </thead>
 <tbody>
@@ -4851,201 +4642,6 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_study_artifact_artifact</td>
 		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='preprocessed_sequence_454_params'>Table preprocessed_sequence_454_params</a></th></tr>
-<tr><td colspan='3'>Parameters used for processing sequence data&#046; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.param_set_name'>param&#095;set&#095;name</a></td>
-		<td> varchar&#040; 100 &#041;  NOT NULL  </td>
-		<td> The name of the parameter set </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.min_seq_len'>min&#095;seq&#095;len</a></td>
-		<td> integer  NOT NULL  DEFO 200 </td>
-		<td> The minimum sequence length </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.max_seq_len'>max&#095;seq&#095;len</a></td>
-		<td> integer  NOT NULL  DEFO 1000 </td>
-		<td> The maximum sequence length </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.trim_seq_length'>trim&#095;seq&#095;length</a></td>
-		<td> bool  NOT NULL  DEFO f </td>
-		<td> Whether to trim the sequence length or not </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.min_qual_score'>min&#095;qual&#095;score</a></td>
-		<td> integer  NOT NULL  DEFO 25 </td>
-		<td> The minimum phred quality score </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.max_ambig'>max&#095;ambig</a></td>
-		<td> integer  NOT NULL  DEFO 6 </td>
-		<td> The maximum number of ambiguous characters </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.max_homopolymer'>max&#095;homopolymer</a></td>
-		<td> integer  NOT NULL  DEFO 6 </td>
-		<td> The maximum homopolymer run </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.max_primer_mismatch'>max&#095;primer&#095;mismatch</a></td>
-		<td> integer  NOT NULL  DEFO 0 </td>
-		<td> Maximum number of mismatches to the primer allowed </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.barcode_type'>barcode&#095;type</a></td>
-		<td> varchar  NOT NULL  DEFO 'golay_12' </td>
-		<td> The barcode type used </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.max_barcode_errors'>max&#095;barcode&#095;errors</a></td>
-		<td> real  NOT NULL  DEFO 1.5 </td>
-		<td> The maximum number of allowed barcode errors </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.disable_bc_correction'>disable&#095;bc&#095;correction</a></td>
-		<td> bool  NOT NULL  DEFO f </td>
-		<td> Disable barcode correction </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.qual_score_window'>qual&#095;score&#095;window</a></td>
-		<td> integer  NOT NULL  DEFO 0 </td>
-		<td> Enable a sliding window quality score threshold&#044; this is the size of the window </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.disable_primers'>disable&#095;primers</a></td>
-		<td> bool  NOT NULL  DEFO f </td>
-		<td> Disable primer checking </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.reverse_primers'>reverse&#095;primers</a></td>
-		<td> varchar  NOT NULL  DEFO 'disable' </td>
-		<td> Check for reverse primers </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.reverse_primer_mismatches'>reverse&#095;primer&#095;mismatches</a></td>
-		<td> integer  NOT NULL  DEFO 0 </td>
-		<td> The number of allowed mismatches in the reverse primer </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_454_params.truncate_ambig_bases_bool'>truncate&#095;ambig&#095;bases&#095;bool</a></td>
-		<td> bool  NOT NULL  DEFO f </td>
-		<td> Truncate at the first ambiguous base </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;454&#095;params primary key</td>
-		<td> ON preprocessed&#095;params&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='preprocessed_sequence_illumina_params'>Table preprocessed_sequence_illumina_params</a></th></tr>
-<tr><td colspan='3'>Parameters used for processing illumina sequence data&#046; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.max_bad_run_length'>max&#095;bad&#095;run&#095;length</a></td>
-		<td> integer  NOT NULL  DEFO 3 </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.min_per_read_length_fraction'>min&#095;per&#095;read&#095;length&#095;fraction</a></td>
-		<td> real  NOT NULL  DEFO 0.75 </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.sequence_max_n'>sequence&#095;max&#095;n</a></td>
-		<td> integer  NOT NULL  DEFO 0 </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.rev_comp_barcode'>rev&#095;comp&#095;barcode</a></td>
-		<td> bool  NOT NULL  DEFO FALSE </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.rev_comp_mapping_barcodes'>rev&#095;comp&#095;mapping&#095;barcodes</a></td>
-		<td> bool  NOT NULL  DEFO FALSE </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.rev_comp'>rev&#095;comp</a></td>
-		<td> bool  NOT NULL  DEFO FALSE </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.phred_quality_threshold'>phred&#095;quality&#095;threshold</a></td>
-		<td> integer  NOT NULL  DEFO 3 </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.barcode_type'>barcode&#095;type</a></td>
-		<td> varchar  NOT NULL  DEFO 'golay_12' </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.max_barcode_errors'>max&#095;barcode&#095;errors</a></td>
-		<td> real  NOT NULL  DEFO 1.5 </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.param_set_name'>param&#095;set&#095;name</a></td>
-		<td> varchar&#040; 100 &#041;  NOT NULL  </td>
-		<td> The name of the parameter set </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;illumina&#095;params primary key</td>
-		<td> ON preprocessed&#095;params&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='preprocessed_spectra_params'>Table preprocessed_spectra_params</a></th></tr>
-<tr><td colspan='3'>Parameters used for processing spectra data&#046; </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='preprocessed_spectra_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='preprocessed_spectra_params.col'>col</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;preprocessed&#095;spectra&#095;params primary key</td>
-		<td> ON preprocessed&#095;params&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5379,41 +4975,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='study_pmid'>Table study_pmid</a></th></tr>
-<tr><td colspan='3'>Links a study to all PMIDs for papers created from study </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='study_pmid.study_id'>study&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_pmid.pmid'>pmid</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;study&#095;pmid primary key</td>
-		<td> ON study&#095;id&#044; pmid</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;pmid&#095;0 </td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_study_pmid_study</td>
-		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='software_command'>Table software_command</a></th></tr>
 </thead>
 <tbody>
@@ -5484,6 +5045,464 @@ Controlled Vocabulary </td>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;publication primary key</td>
 		<td> ON doi</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='timeseries_type'>Table timeseries_type</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='timeseries_type.timeseries_type_id'>timeseries&#095;type&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='timeseries_type.timeseries_type'>timeseries&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='timeseries_type.intervention_type'>intervention&#095;type</a></td>
+		<td> varchar  NOT NULL  DEFO 'None' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;timeseries&#095;type primary key</td>
+		<td> ON timeseries&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;timeseries&#095;type unique</td>
+		<td> ON timeseries&#095;type&#044; intervention&#095;type</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='study_publication'>Table study_publication</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='study_publication.study_id'>study&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='study_publication.publication_doi'>publication&#095;doi</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;study&#095;publication </td>
+		<td> ON study&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;publication </td>
+		<td> ON publication&#095;doi</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;study&#095;publication&#095;0 primary key</td>
+		<td> ON study&#095;id&#044; publication&#095;doi</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_study_publication_study</td>
+		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_study_publication</td>
+		<td > ( publication&#095;doi ) ref <a href='#publication'>publication</a> (doi) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='reference'>Table reference</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='reference.reference_id'>reference&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='reference.reference_name'>reference&#095;name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='reference.reference_version'>reference&#095;version</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='reference.sequence_filepath'>sequence&#095;filepath</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='reference.taxonomy_filepath'>taxonomy&#095;filepath</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='reference.tree_filepath'>tree&#095;filepath</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;reference primary key</td>
+		<td> ON reference&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;reference </td>
+		<td> ON sequence&#095;filepath</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;reference&#095;0 </td>
+		<td> ON taxonomy&#095;filepath</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;reference&#095;1 </td>
+		<td> ON tree&#095;filepath</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_reference_sequence_filepath</td>
+		<td > ( sequence&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_reference_taxonomy_filepath</td>
+		<td > ( taxonomy&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_reference_tree_filepath</td>
+		<td > ( tree&#095;filepath ) ref <a href='#filepath'>filepath</a> (filepath&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='processed_params_sortmerna'>Table processed_params_sortmerna</a></th></tr>
+<tr><td colspan='3'>Parameters used for processing data using method sortmerna </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='processed_params_sortmerna.processed_params_id'>processed&#095;params&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.reference_id'>reference&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> What version of reference or type of reference used </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.sortmerna_e_value'>sortmerna&#095;e&#095;value</a></td>
+		<td> float8  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.sortmerna_max_pos'>sortmerna&#095;max&#095;pos</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.similarity'>similarity</a></td>
+		<td> float8  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.sortmerna_coverage'>sortmerna&#095;coverage</a></td>
+		<td> float8  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.threads'>threads</a></td>
+		<td> integer  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_sortmerna.param_set_name'>param&#095;set&#095;name</a></td>
+		<td> varchar&#040; 100 &#041;  NOT NULL  DEFO 'Default' </td>
+		<td> The name of the parameter set </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processed&#095;params&#095;sortmerna primary key</td>
+		<td> ON processed&#095;params&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processed&#095;params&#095;sortmerna </td>
+		<td> ON reference&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_processed_params_sortmerna</td>
+		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='processed_params_uclust'>Table processed_params_uclust</a></th></tr>
+<tr><td colspan='3'>Parameters used for processing data using method uclust </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='processed_params_uclust.processed_params_id'>processed&#095;params&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_uclust.reference_id'>reference&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> What version of reference or type of reference used </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_uclust.similarity'>similarity</a></td>
+		<td> float8  NOT NULL  DEFO 0.97 </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_uclust.enable_rev_strand_match'>enable&#095;rev&#095;strand&#095;match</a></td>
+		<td> bool  NOT NULL  DEFO TRUE </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processed_params_uclust.suppress_new_clusters'>suppress&#095;new&#095;clusters</a></td>
+		<td> bool  NOT NULL  DEFO TRUE </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processed&#095;params&#095;uclust primary key</td>
+		<td> ON processed&#095;params&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processed&#095;params&#095;uclust </td>
+		<td> ON reference&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_processed_params_uclust</td>
+		<td > ( reference&#095;id ) ref <a href='#reference'>reference</a> (reference&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='preprocessed_sequence_454_params'>Table preprocessed_sequence_454_params</a></th></tr>
+<tr><td colspan='3'>Parameters used for processing sequence data&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.param_set_name'>param&#095;set&#095;name</a></td>
+		<td> varchar&#040; 100 &#041;  NOT NULL  </td>
+		<td> The name of the parameter set </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.min_seq_len'>min&#095;seq&#095;len</a></td>
+		<td> integer  NOT NULL  DEFO 200 </td>
+		<td> The minimum sequence length </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.max_seq_len'>max&#095;seq&#095;len</a></td>
+		<td> integer  NOT NULL  DEFO 1000 </td>
+		<td> The maximum sequence length </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.trim_seq_length'>trim&#095;seq&#095;length</a></td>
+		<td> bool  NOT NULL  DEFO f </td>
+		<td> Whether to trim the sequence length or not </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.min_qual_score'>min&#095;qual&#095;score</a></td>
+		<td> integer  NOT NULL  DEFO 25 </td>
+		<td> The minimum phred quality score </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.max_ambig'>max&#095;ambig</a></td>
+		<td> integer  NOT NULL  DEFO 6 </td>
+		<td> The maximum number of ambiguous characters </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.max_homopolymer'>max&#095;homopolymer</a></td>
+		<td> integer  NOT NULL  DEFO 6 </td>
+		<td> The maximum homopolymer run </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.max_primer_mismatch'>max&#095;primer&#095;mismatch</a></td>
+		<td> integer  NOT NULL  DEFO 0 </td>
+		<td> Maximum number of mismatches to the primer allowed </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.barcode_type'>barcode&#095;type</a></td>
+		<td> varchar  NOT NULL  DEFO 'golay_12' </td>
+		<td> The barcode type used </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.max_barcode_errors'>max&#095;barcode&#095;errors</a></td>
+		<td> real  NOT NULL  DEFO 1.5 </td>
+		<td> The maximum number of allowed barcode errors </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.disable_bc_correction'>disable&#095;bc&#095;correction</a></td>
+		<td> bool  NOT NULL  DEFO f </td>
+		<td> Disable barcode correction </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.qual_score_window'>qual&#095;score&#095;window</a></td>
+		<td> integer  NOT NULL  DEFO 0 </td>
+		<td> Enable a sliding window quality score threshold&#044; this is the size of the window </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.disable_primers'>disable&#095;primers</a></td>
+		<td> bool  NOT NULL  DEFO f </td>
+		<td> Disable primer checking </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.reverse_primers'>reverse&#095;primers</a></td>
+		<td> varchar  NOT NULL  DEFO 'disable' </td>
+		<td> Check for reverse primers </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.reverse_primer_mismatches'>reverse&#095;primer&#095;mismatches</a></td>
+		<td> integer  NOT NULL  DEFO 0 </td>
+		<td> The number of allowed mismatches in the reverse primer </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_454_params.truncate_ambig_bases_bool'>truncate&#095;ambig&#095;bases&#095;bool</a></td>
+		<td> bool  NOT NULL  DEFO f </td>
+		<td> Truncate at the first ambiguous base </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;454&#095;params primary key</td>
+		<td> ON preprocessed&#095;params&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='preprocessed_sequence_illumina_params'>Table preprocessed_sequence_illumina_params</a></th></tr>
+<tr><td colspan='3'>Parameters used for processing illumina sequence data&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.max_bad_run_length'>max&#095;bad&#095;run&#095;length</a></td>
+		<td> integer  NOT NULL  DEFO 3 </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.min_per_read_length_fraction'>min&#095;per&#095;read&#095;length&#095;fraction</a></td>
+		<td> real  NOT NULL  DEFO 0.75 </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.sequence_max_n'>sequence&#095;max&#095;n</a></td>
+		<td> integer  NOT NULL  DEFO 0 </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.rev_comp_barcode'>rev&#095;comp&#095;barcode</a></td>
+		<td> bool  NOT NULL  DEFO FALSE </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.rev_comp_mapping_barcodes'>rev&#095;comp&#095;mapping&#095;barcodes</a></td>
+		<td> bool  NOT NULL  DEFO FALSE </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.rev_comp'>rev&#095;comp</a></td>
+		<td> bool  NOT NULL  DEFO FALSE </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.phred_quality_threshold'>phred&#095;quality&#095;threshold</a></td>
+		<td> integer  NOT NULL  DEFO 3 </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.barcode_type'>barcode&#095;type</a></td>
+		<td> varchar  NOT NULL  DEFO 'golay_12' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.max_barcode_errors'>max&#095;barcode&#095;errors</a></td>
+		<td> real  NOT NULL  DEFO 1.5 </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_sequence_illumina_params.param_set_name'>param&#095;set&#095;name</a></td>
+		<td> varchar&#040; 100 &#041;  NOT NULL  </td>
+		<td> The name of the parameter set </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;illumina&#095;params primary key</td>
+		<td> ON preprocessed&#095;params&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='preprocessed_spectra_params'>Table preprocessed_spectra_params</a></th></tr>
+<tr><td colspan='3'>Parameters used for processing spectra data&#046; </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='preprocessed_spectra_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='preprocessed_spectra_params.col'>col</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;preprocessed&#095;spectra&#095;params primary key</td>
+		<td> ON preprocessed&#095;params&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>

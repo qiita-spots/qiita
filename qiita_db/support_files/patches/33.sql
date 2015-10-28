@@ -2,8 +2,6 @@
 -- Change the database structure to remove the RawData, PreprocessedData and
 -- ProcessedData division to unify it into the Artifact object
 
--- Creating the new tables
-
 -- Rename the table filetype
 ALTER TABLE qiita.filetype RENAME TO artifact_type;
 ALTER TABLE qiita.artifact_type RENAME COLUMN filetype_id TO artifact_type_id;
@@ -22,51 +20,63 @@ UPDATE qiita.visibility
     SET visibility_description = 'Visible to everybody'
     WHERE visibility = 'public';
 
-    -- Software table - holds the information of a given software package present
-    -- in the system and can be used to process an artifact
-    CREATE TABLE qiita.software (
-        software_id          bigserial  NOT NULL,
-        name                 varchar  NOT NULL,
-        version              varchar  NOT NULL,
-        description          varchar  NOT NULL,
-        CONSTRAINT pk_software PRIMARY KEY ( software_id )
-     ) ;
+-- Software table - holds the information of a given software package present
+-- in the system and can be used to process an artifact
+CREATE TABLE qiita.software (
+    software_id          bigserial  NOT NULL,
+    name                 varchar  NOT NULL,
+    version              varchar  NOT NULL,
+    description          varchar  NOT NULL,
+    CONSTRAINT pk_software PRIMARY KEY ( software_id )
+ ) ;
 
-    -- software_command table - holds the information of a command in a given software
-    -- this table should be renamed to command once the command table in the
-    -- analysis table is merged with this one
-    CREATE TABLE qiita.software_command (
-        command_id           bigserial  NOT NULL,
-        name                 varchar  NOT NULL,
-        software_id          bigint  NOT NULL,
-        description          varchar  NOT NULL,
-        cli_cmd              varchar  ,
-        parameters_table     varchar  NOT NULL,
-        CONSTRAINT pk_software_command PRIMARY KEY ( command_id )
-     ) ;
-    CREATE INDEX idx_software_command ON qiita.software_command ( software_id ) ;
-    ALTER TABLE qiita.software_command ADD CONSTRAINT fk_software_command_software FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id );
+-- software_command table - holds the information of a command in a given software
+-- this table should be renamed to command once the command table in the
+-- analysis table is merged with this one
+CREATE TABLE qiita.software_command (
+    command_id           bigserial  NOT NULL,
+    name                 varchar  NOT NULL,
+    software_id          bigint  NOT NULL,
+    description          varchar  NOT NULL,
+    cli_cmd              varchar  ,
+    parameters_table     varchar  NOT NULL,
+    CONSTRAINT pk_software_command PRIMARY KEY ( command_id )
+ ) ;
+CREATE INDEX idx_software_command ON qiita.software_command ( software_id ) ;
+ALTER TABLE qiita.software_command ADD CONSTRAINT fk_software_command_software FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id );
 
-    -- Publication table - holds the minimum information for a given publication
-    -- It is useful to keep track of the publication of the studies and the software
-    -- used for processing artifacts
-    CREATE TABLE qiita.publication (
-        doi                  varchar  NOT NULL,
-        pubmed_id            varchar  ,
-        CONSTRAINT pk_publication PRIMARY KEY ( doi )
-     ) ;
+-- Publication table - holds the minimum information for a given publication
+-- It is useful to keep track of the publication of the studies and the software
+-- used for processing artifacts
+CREATE TABLE qiita.publication (
+    doi                  varchar  NOT NULL,
+    pubmed_id            varchar  ,
+    CONSTRAINT pk_publication PRIMARY KEY ( doi )
+ ) ;
 
-    -- Software publictation table - relates each software package with the lists of
-    -- its related publciations
-    CREATE TABLE qiita.software_publication (
-        software_id          bigint  NOT NULL,
-        publication_doi      varchar  NOT NULL,
-        CONSTRAINT idx_software_publication_0 PRIMARY KEY ( software_id, publication_doi )
-     ) ;
-    CREATE INDEX idx_software_publication_software ON qiita.software_publication ( software_id ) ;
-    CREATE INDEX idx_software_publication_publication ON qiita.software_publication ( publication_doi ) ;
-    ALTER TABLE qiita.software_publication ADD CONSTRAINT fk_software_publication FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id )    ;
-    ALTER TABLE qiita.software_publication ADD CONSTRAINT fk_software_publication_0 FOREIGN KEY ( publication_doi ) REFERENCES qiita.publication( doi )    ;
+-- Software publictation table - relates each software package with the list of
+-- its related publciations
+CREATE TABLE qiita.software_publication (
+    software_id          bigint  NOT NULL,
+    publication_doi      varchar  NOT NULL,
+    CONSTRAINT idx_software_publication_0 PRIMARY KEY ( software_id, publication_doi )
+ ) ;
+CREATE INDEX idx_software_publication_software ON qiita.software_publication ( software_id ) ;
+CREATE INDEX idx_software_publication_publication ON qiita.software_publication ( publication_doi ) ;
+ALTER TABLE qiita.software_publication ADD CONSTRAINT fk_software_publication FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id )    ;
+ALTER TABLE qiita.software_publication ADD CONSTRAINT fk_software_publication_0 FOREIGN KEY ( publication_doi ) REFERENCES qiita.publication( doi )    ;
+
+-- Study publication table - relates each study with the list of its related
+-- publication
+CREATE TABLE qiita.study_publication (
+	study_id             bigint  NOT NULL,
+	publication_doi      varchar  NOT NULL,
+	CONSTRAINT idx_study_publication_0 PRIMARY KEY ( study_id, publication_doi )
+ ) ;
+CREATE INDEX idx_study_publication_study ON qiita.study_publication ( study_id ) ;
+CREATE INDEX idx_study_publication_doi ON qiita.study_publication ( publication_doi ) ;
+ALTER TABLE qiita.study_publication ADD CONSTRAINT fk_study_publication_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ;
+ALTER TABLE qiita.study_publication ADD CONSTRAINT fk_study_publication FOREIGN KEY ( publication_doi ) REFERENCES qiita.publication( doi )    ;
 
 -- Artifact table - holds an abstract data object from the system
 CREATE TABLE qiita.artifact (
@@ -233,6 +243,7 @@ DECLARE
     rd_fp_vals      RECORD;
     ppd_fp_vals     RECORD;
     pd_fp_vals      RECORD;
+    study_pmids     RECORD;
     rd_vis_id       bigint;
     ppd_vis_id      bigint;
     rd_a_id         bigint;
@@ -394,6 +405,19 @@ BEGIN
             END LOOP;
         END LOOP;
     END LOOP;
+
+    -- Move the study_pmid information to the publication and study_publication
+    -- tables
+    FOR study_pmids IN
+        SELECT study_id, pmid
+        FROM qiita.study_pmid
+    LOOP
+        INSERT INTO qiita.publication (doi, pubmed_id)
+            VALUES (study_pmids.pmid, study_pmids.pmid);
+
+        INSERT INTO qiita.study_publication (study_id, publication_doi)
+            VALUES (study_pmids.study_id, study_pmids.pmid);
+    END LOOP;
 END $do$;
 
 -- Set the NOT NULL constraints that we couldn't set before because we were
@@ -424,3 +448,4 @@ DROP TABLE qiita.prep_template_preprocessed_data;
 DROP TABLE qiita.preprocessed_data;
 DROP TABLE qiita.raw_filepath;
 DROP TABLE qiita.raw_data;
+DROP TABLE qiita.study_pmid;

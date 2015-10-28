@@ -1369,21 +1369,6 @@ Controlled Vocabulary]]></comment>
 				<column name="affiliation" />
 			</index>
 		</table>
-		<table name="study_pmid" >
-			<comment>Links a study to all PMIDs for papers created from study</comment>
-			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="pmid" type="varchar" jt="12" mandatory="y" />
-			<index name="idx_study_pmid" unique="PRIMARY_KEY" >
-				<column name="study_id" />
-				<column name="pmid" />
-			</index>
-			<index name="idx_study_pmid_0" unique="NORMAL" >
-				<column name="study_id" />
-			</index>
-			<fk name="fk_study_pmid_study" to_schema="qiita" to_table="study" >
-				<fk_column name="study_id" pk="study_id" />
-			</fk>
-		</table>
 		<table name="study_portal" >
 			<comment>Controls what studies are visible on what portals</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
@@ -1424,6 +1409,26 @@ Controlled Vocabulary]]></comment>
 			</fk>
 			<fk name="fk_study_prep_template_pt" to_schema="qiita" to_table="prep_template" >
 				<fk_column name="prep_template_id" pk="prep_template_id" />
+			</fk>
+		</table>
+		<table name="study_publication" >
+			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="publication_doi" type="varchar" jt="12" mandatory="y" />
+			<index name="idx_study_publication" unique="NORMAL" >
+				<column name="study_id" />
+			</index>
+			<index name="idx_study_publication" unique="NORMAL" >
+				<column name="publication_doi" />
+			</index>
+			<index name="idx_study_publication_0" unique="PRIMARY_KEY" >
+				<column name="study_id" />
+				<column name="publication_doi" />
+			</index>
+			<fk name="fk_study_publication_study" to_schema="qiita" to_table="study" >
+				<fk_column name="study_id" pk="study_id" />
+			</fk>
+			<fk name="fk_study_publication" to_schema="qiita" to_table="publication" >
+				<fk_column name="publication_doi" pk="doi" />
 			</fk>
 		</table>
 		<table name="study_sample" >
@@ -1560,7 +1565,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="300" y="1650" />
 		<entity schema="qiita" name="analysis_users" color="d0def5" x="60" y="900" />
 		<entity schema="qiita" name="command" color="d0def5" x="210" y="1275" />
-		<entity schema="qiita" name="logging" color="c0d4f3" x="1095" y="1560" />
+		<entity schema="qiita" name="logging" color="c0d4f3" x="735" y="1515" />
 		<entity schema="qiita" name="command_data_type" color="c0d4f3" x="390" y="1335" />
 		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="405" y="900" />
 		<entity schema="qiita" name="analysis_workflow" color="c0d4f3" x="390" y="810" />
@@ -1573,7 +1578,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="735" y="1035" />
 		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="225" />
 		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="1185" />
-		<entity schema="qiita" name="severity" color="c0d4f3" x="1230" y="1560" />
+		<entity schema="qiita" name="severity" color="c0d4f3" x="870" y="1515" />
 		<entity schema="qiita" name="job" color="d0def5" x="405" y="1170" />
 		<entity schema="qiita" name="filepath" color="c0d4f3" x="645" y="825" />
 		<entity schema="qiita" name="data_directory" color="b2cdf7" x="840" y="735" />
@@ -1591,8 +1596,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="885" />
 		<entity schema="qiita" name="portal_type" color="c0d4f3" x="720" y="510" />
 		<entity schema="qiita" name="analysis_portal" color="a8c4ef" x="180" y="795" />
-		<entity schema="qiita" name="message_user" color="a8c4ef" x="720" y="1560" />
-		<entity schema="qiita" name="message" color="a8c4ef" x="915" y="1575" />
+		<entity schema="qiita" name="message_user" color="a8c4ef" x="1230" y="1320" />
+		<entity schema="qiita" name="message" color="a8c4ef" x="1425" y="1335" />
 		<entity schema="qiita" name="sample_x" color="d0def5" x="1635" y="210" />
 		<entity schema="qiita" name="prep_template_filepath" color="b2cdf7" x="1050" y="435" />
 		<entity schema="qiita" name="sample_template_filepath" color="b2cdf7" x="1050" y="585" />
@@ -1603,7 +1608,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_users" color="d0def5" x="1920" y="135" />
 		<entity schema="qiita" name="study" color="d0def5" x="1935" y="255" />
 		<entity schema="qiita" name="study_person" color="c0d4f3" x="2220" y="195" />
-		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2130" y="645" />
 		<entity schema="qiita" name="study_experimental_factor" color="c0d4f3" x="2220" y="450" />
 		<entity schema="qiita" name="study_environmental_package" color="b2cdf7" x="2160" y="90" />
 		<entity schema="qiita" name="environmental_package" color="b2cdf7" x="2430" y="90" />
@@ -1611,23 +1615,24 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="2430" y="300" />
 		<entity schema="qiita" name="study_portal" color="a8c4ef" x="1995" y="45" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1170" />
-		<entity schema="qiita" name="reference" color="c0d4f3" x="1575" y="1275" />
-		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1755" y="1275" />
-		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="1575" y="1470" />
 		<entity schema="qiita" name="study_artifact" color="b2cdf7" x="1605" y="705" />
-		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="1950" y="1200" />
-		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="2190" y="1200" />
-		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="2220" y="1425" />
-		<entity schema="qiita" name="software" color="b2cdf7" x="1755" y="840" />
-		<entity schema="qiita" name="software_publication" color="b2cdf7" x="1905" y="840" />
+		<entity schema="qiita" name="software" color="b2cdf7" x="1920" y="780" />
+		<entity schema="qiita" name="software_publication" color="b2cdf7" x="2265" y="795" />
 		<entity schema="qiita" name="visibility" color="b2cdf7" x="1050" y="945" />
 		<entity schema="qiita" name="study_sample" color="d0def5" x="1455" y="150" />
 		<entity schema="qiita" name="ebi_run_accession" color="b2cdf7" x="1350" y="945" />
 		<entity schema="qiita" name="artifact_type" color="d0def5" x="1410" y="735" />
 		<entity schema="qiita" name="artifact" color="b2cdf7" x="1200" y="750" />
-		<entity schema="qiita" name="study_pmid" color="c0d4f3" x="2205" y="555" />
-		<entity schema="qiita" name="software_command" color="b2cdf7" x="1575" y="840" />
-		<entity schema="qiita" name="publication" color="b2cdf7" x="2100" y="840" />
+		<entity schema="qiita" name="software_command" color="b2cdf7" x="1740" y="780" />
+		<entity schema="qiita" name="publication" color="b2cdf7" x="2460" y="795" />
+		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2235" y="555" />
+		<entity schema="qiita" name="study_publication" color="b2cdf7" x="2265" y="705" />
+		<entity schema="qiita" name="reference" color="c0d4f3" x="1740" y="975" />
+		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1890" y="975" />
+		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="1740" y="1155" />
+		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="1725" y="1290" />
+		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="1965" y="1290" />
+		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="1995" y="1515" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1653,7 +1658,6 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="study" />
 			<entity schema="qiita" name="study_users" />
 			<entity schema="qiita" name="study_experimental_factor" />
-			<entity schema="qiita" name="study_pmid" />
 			<entity schema="qiita" name="investigation_study" />
 			<entity schema="qiita" name="investigation" />
 			<entity schema="qiita" name="study_person" />
@@ -1701,6 +1705,7 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="visibility" />
 			<entity schema="qiita" name="artifact_type" />
 			<entity schema="qiita" name="ebi_run_accession" />
+			<entity schema="qiita" name="study_artifact" />
 		</group>
 		<group name="Group_template" color="ffffcc" >
 			<entity schema="qiita" name="prep_y" />
@@ -1722,9 +1727,12 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="processed_params_sortmerna" />
 			<entity schema="qiita" name="preprocessed_spectra_params" />
 			<entity schema="qiita" name="software" />
-			<entity schema="qiita" name="software_publication" />
-			<entity schema="qiita" name="publication" />
 			<entity schema="qiita" name="software_command" />
+		</group>
+		<group name="Group_publication" color="ffccff" >
+			<entity schema="qiita" name="publication" />
+			<entity schema="qiita" name="software_publication" />
+			<entity schema="qiita" name="study_publication" />
 		</group>
 	</layout>
 </project>
