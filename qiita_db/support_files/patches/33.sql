@@ -22,6 +22,52 @@ UPDATE qiita.visibility
     SET visibility_description = 'Visible to everybody'
     WHERE visibility = 'public';
 
+    -- Software table - holds the information of a given software package present
+    -- in the system and can be used to process an artifact
+    CREATE TABLE qiita.software (
+        software_id          bigserial  NOT NULL,
+        name                 varchar  NOT NULL,
+        version              varchar  NOT NULL,
+        description          varchar  NOT NULL,
+        CONSTRAINT pk_software PRIMARY KEY ( software_id )
+     ) ;
+
+    -- software_command table - holds the information of a command in a given software
+    -- this table should be renamed to command once the command table in the
+    -- analysis table is merged with this one
+    CREATE TABLE qiita.software_command (
+        command_id           bigserial  NOT NULL,
+        name                 varchar  NOT NULL,
+        software_id          bigint  NOT NULL,
+        description          varchar  NOT NULL,
+        cli_cmd              varchar  ,
+        parameters_table     varchar  NOT NULL,
+        CONSTRAINT pk_software_command PRIMARY KEY ( command_id )
+     ) ;
+    CREATE INDEX idx_software_command ON qiita.software_command ( software_id ) ;
+    ALTER TABLE qiita.software_command ADD CONSTRAINT fk_software_command_software FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id );
+
+    -- Publication table - holds the minimum information for a given publication
+    -- It is useful to keep track of the publication of the studies and the software
+    -- used for processing artifacts
+    CREATE TABLE qiita.publication (
+        doi                  varchar  NOT NULL,
+        pubmed_id            varchar  ,
+        CONSTRAINT pk_publication PRIMARY KEY ( doi )
+     ) ;
+
+    -- Software publictation table - relates each software package with the lists of
+    -- its related publciations
+    CREATE TABLE qiita.software_publication (
+        software_id          bigint  NOT NULL,
+        publication_doi      varchar  NOT NULL,
+        CONSTRAINT idx_software_publication_0 PRIMARY KEY ( software_id, publication_doi )
+     ) ;
+    CREATE INDEX idx_software_publication_software ON qiita.software_publication ( software_id ) ;
+    CREATE INDEX idx_software_publication_publication ON qiita.software_publication ( publication_doi ) ;
+    ALTER TABLE qiita.software_publication ADD CONSTRAINT fk_software_publication FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id )    ;
+    ALTER TABLE qiita.software_publication ADD CONSTRAINT fk_software_publication_0 FOREIGN KEY ( publication_doi ) REFERENCES qiita.publication( doi )    ;
+
 -- Artifact table - holds an abstract data object from the system
 CREATE TABLE qiita.artifact (
     artifact_id                         bigserial  NOT NULL,
@@ -29,7 +75,6 @@ CREATE TABLE qiita.artifact (
     command_id                          bigint  ,
     command_parameters_id               bigint  ,
     visibility_id                       bigint  NOT NULL,
-    file_status                         varchar  NOT NULL,
     artifact_type_id                    integer  ,
     can_be_submitted_to_ebi             bool DEFAULT 'FALSE' NOT NULL,
 	can_be_submitted_to_vamps           bool DEFAULT 'FALSE' NOT NULL,
@@ -41,8 +86,9 @@ CREATE INDEX idx_artifact_1 ON qiita.artifact ( artifact_type_id ) ;
 CREATE INDEX idx_artifact ON qiita.artifact ( command_id ) ;
 COMMENT ON TABLE qiita.artifact IS 'Represents data in the system';
 COMMENT ON COLUMN qiita.artifact.visibility_id IS 'If the artifact is sandbox, awaiting_for_approval, private or public';
-COMMENT ON COLUMN qiita.artifact.file_status IS 'If it is linking, unlinking or idle';
 ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_type FOREIGN KEY ( artifact_type_id ) REFERENCES qiita.artifact_type( artifact_type_id )    ;
+ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_visibility FOREIGN KEY ( visibility_id ) REFERENCES qiita.visibility( visibility_id )    ;
+ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_software_command FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
 
 -- Artifact filepath table - relates an artifact with its files
 CREATE TABLE qiita.artifact_filepath (
@@ -77,57 +123,6 @@ CREATE INDEX idx_study_artifact_study ON qiita.study_artifact ( study_id ) ;
 CREATE INDEX idx_study_artifact_artifact ON qiita.study_artifact ( artifact_id ) ;
 ALTER TABLE qiita.study_artifact ADD CONSTRAINT fk_study_artifact_study FOREIGN KEY ( study_id ) REFERENCES qiita.study( study_id )    ;
 ALTER TABLE qiita.study_artifact ADD CONSTRAINT fk_study_artifact_artifact FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact( artifact_id )    ;
-
--- Software table - holds the information of a given software package present
--- in the system and can be used to process an artifact
-CREATE TABLE qiita.software (
-    software_id          bigserial  NOT NULL,
-    name                 varchar  NOT NULL,
-    version              varchar  NOT NULL,
-    description          varchar  NOT NULL,
-    CONSTRAINT pk_software PRIMARY KEY ( software_id )
- ) ;
-
--- soft_command table - holds the information of a command in a given software
--- this table should be renamed to command once the command table in the
--- analysis table is merged with this one
-CREATE TABLE qiita.soft_command (
-    command_id           bigserial  NOT NULL,
-    name                 varchar  NOT NULL,
-    software_id          bigint  NOT NULL,
-    description          varchar  NOT NULL,
-    cli_cmd              varchar  ,
-    parameters_table     varchar  NOT NULL,
-    CONSTRAINT pk_soft_command PRIMARY KEY ( command_id )
- ) ;
-CREATE INDEX idx_soft_command ON qiita.soft_command ( software_id ) ;
-ALTER TABLE qiita.soft_command ADD CONSTRAINT fk_soft_command_software FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id );
-
--- Publication table - holds the minimum information for a given publication
--- It is useful to keep track of the publication of the studies and the software
--- used for processing artifacts
-CREATE TABLE qiita.publication (
-    doi                  varchar  NOT NULL,
-    pubmed_id            integer  ,
-    CONSTRAINT pk_publication PRIMARY KEY ( doi )
- ) ;
-
--- Software publictation table - relates each software package with the lists of
--- its related publciations
-CREATE TABLE qiita.software_publication (
-    software_id          bigint  NOT NULL,
-    publication_doi      varchar  NOT NULL,
-    CONSTRAINT idx_software_publication_0 PRIMARY KEY ( software_id, publication_doi )
- ) ;
-CREATE INDEX idx_software_publication_software ON qiita.software_publication ( software_id ) ;
-CREATE INDEX idx_software_publication_publication ON qiita.software_publication ( publication_doi ) ;
-ALTER TABLE qiita.software_publication ADD CONSTRAINT fk_software_publication FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id )    ;
-ALTER TABLE qiita.software_publication ADD CONSTRAINT fk_software_publication_0 FOREIGN KEY ( publication_doi ) REFERENCES qiita.publication( doi )    ;
-
--- Add remaining FK to the artifact table. Creating here since the target tables
--- do not exist when the artifact table was created
-ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_visibility FOREIGN KEY ( visibility_id ) REFERENCES qiita.visibility( visibility_id )    ;
-ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_soft_command FOREIGN KEY ( command_id ) REFERENCES qiita.soft_command( command_id )    ;
 
 -- Create a function to infer the visibility of the artifact from the
 -- raw data
@@ -184,15 +179,15 @@ CREATE FUNCTION infer_ppd_status(ppd_id bigint) RETURNS bigint AS $$
     END;
 $$ LANGUAGE plpgsql;
 
--- Populate the software and soft_command tables so we can assignt the
+-- Populate the software and software_command tables so we can assignt the
 -- correct values to the preprocessed and processed tables
 INSERT INTO qiita.software (name, version, description) VALUES
-    ('QIIME', '1.9.1', 'Quantitative Insigts Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data');
+    ('QIIME', '1.9.1', 'Quantitative Insights Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data');
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1038/nmeth.f.303', '20383131');
 INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (1, '10.1038/nmeth.f.303');
 -- Magic number 1: be just created the software table and inserted the QIIME
 -- software, which will receive the ID 1
-INSERT INTO qiita.soft_command (software_id, name, description, cli_cmd, parameters_table) VALUES
+INSERT INTO qiita.software_command (software_id, name, description, cli_cmd, parameters_table) VALUES
     (1, 'Split libraries FASTQ', 'Demultiplexes and applies quality control to FASTQ data', 'split_libraries_fastq.py', 'preprocessed_sequence_illumina_params'),
     (1, 'Split libraries', 'Demultiplexes and applies quality control to FASTA data', 'split_libraries.py', 'preprocessed_sequence_454_params'),
     (1, 'Pick closed-reference OTUs', 'OTU picking using a closed reference approach', 'pick_closed_reference_otus.py', 'processed_params_sortmerna');
@@ -223,7 +218,7 @@ CREATE INDEX idx_ebi_run_accession_artifact_id ON qiita.ebi_run_accession (artif
 ALTER TABLE qiita.ebi_run_accession ADD CONSTRAINT fk_ebi_run_accesion_artifact
     FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact(artifact_id);
 
--- We need to modufy tge analysis_sample table to point to the artifact table
+-- We need to modify the analysis_sample table to point to the artifact table
 -- rather than to the processed data table
 ALTER TABLE qiita.analysis_sample ADD artifact_id bigint;
 CREATE INDEX idx_analysis_sample_artifact_id ON qiita.analysis_sample ( artifact_id ) ;
@@ -264,7 +259,7 @@ BEGIN
     -- intentional as the raw data sharing should be done at filepath level rather
     -- than at raw data level. See issue #1459.
     FOR pt_vals IN
-        SELECT prep_template_id, raw_data_id, filetype_id, link_filepaths_status, study_id
+        SELECT prep_template_id, raw_data_id, filetype_id, study_id
         FROM qiita.prep_template
             JOIN qiita.raw_data USING (raw_data_id)
             JOIN qiita.study_prep_template USING (prep_template_id)
@@ -275,8 +270,8 @@ BEGIN
         SELECT infer_rd_status(pt_vals.raw_data_id, pt_vals.study_id) INTO rd_vis_id;
 
         -- Insert the raw data in the artifact table
-        INSERT INTO qiita.artifact (generated_timestamp, visibility_id, file_status, artifact_type_id)
-            VALUES (now(), rd_vis_id, pt_vals.link_filepaths_status, pt_vals.filetype_id)
+        INSERT INTO qiita.artifact (generated_timestamp, visibility_id, artifact_type_id)
+            VALUES (now(), rd_vis_id, pt_vals.filetype_id)
             RETURNING artifact_id INTO rd_a_id;
 
         -- Relate the artifact with their studies
@@ -302,8 +297,7 @@ BEGIN
         -- and, by extension, by the current raw data
         FOR ppd_vals IN
             SELECT preprocessed_data_id, preprocessed_params_table, preprocessed_params_id,
-                   data_type_id, link_filepaths_status, submitted_to_vamps_status,
-                   processing_status
+                   data_type_id, submitted_to_vamps_status, processing_status
             FROM qiita.preprocessed_data
                 JOIN qiita.prep_template_preprocessed_data USING (preprocessed_data_id)
             WHERE prep_template_id = pt_vals.prep_template_id
@@ -316,12 +310,11 @@ BEGIN
 
             -- Insert the preprocessed data in the artifact table
             INSERT INTO qiita.artifact (generated_timestamp, visibility_id,
-                                        file_status, artifact_type_id, command_id,
+                                        artifact_type_id, command_id,
                                         command_parameters_id, can_be_submitted_to_ebi,
                                         can_be_submitted_to_vamps)
-                VALUES (now(), ppd_vis_id, ppd_vals.link_filepaths_status,
-                        demux_type_id, ppd_cmd_id, ppd_vals.preprocessed_params_id,
-                        TRUE, TRUE)
+                VALUES (now(), ppd_vis_id, demux_type_id, ppd_cmd_id,
+                        ppd_vals.preprocessed_params_id, TRUE, TRUE)
                 RETURNING artifact_id INTO ppd_a_id;
 
             -- Relate the artifact with the study
@@ -359,22 +352,20 @@ BEGIN
             -- preprocessed data
             FOR pd_vals IN
                 SELECT processed_data_id, processed_params_table, processed_params_id,
-                       processed_date, data_type_id, link_filepaths_status,
-                       processed_data_status_id
+                       processed_date, data_type_id, processed_data_status_id
                 FROM qiita.processed_data
                     JOIN qiita.preprocessed_processed_data USING (processed_data_id)
                 WHERE preprocessed_data_id = ppd_vals.preprocessed_data_id
             LOOP
                 -- Insert the processed data in the artifact table
-                -- Magic number 3: we've created the soft_command table here
+                -- Magic number 3: we've created the software_command table here
                 -- and we know the order that we inserted the commands. The
                 -- OTU pickking command is the number 3
                 INSERT INTO qiita.artifact (generated_timestamp, visibility_id,
-                                            file_status, artifact_type_id,
-                                            command_id, command_parameters_id)
+                                            artifact_type_id, command_id,
+                                            command_parameters_id)
                     VALUES (pd_vals.processed_date, pd_vals.processed_data_status_id,
-                            pd_vals.link_filepaths_status, biom_type_id, 3,
-                            pd_vals.processed_params_id)
+                            biom_type_id, 3, pd_vals.processed_params_id)
                     RETURNING artifact_id into pd_a_id;
 
                 -- Relate the artifact with the study
