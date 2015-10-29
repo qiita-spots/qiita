@@ -34,13 +34,13 @@ Since Qiita is a package that is continuously growing, we found ourselves in a p
 4. Avoid competing PR. If you're working on an issue that can conflict with another developer, coordinate with him/her to get the work done. If coordination proves difficult, include the rest of the development team in the discussion to determine the best way to proceed.
 5. If you find an issue while working on a PR, you must either:
   * if it's a small change and completely unrelated to your PR, stage your changes, create a new branch and submit a PR. It will likely be merged fast and will reduce the time that issue is going to be present in the code base.
-  * if it's a big issue, create an issue on GitHub, make sure someone is assigned to the issue, and add a comment in the code with the issue number (e.g. `# See issue #XXX`). This will help other developers to identify the the source of the issue and it will likely be solved faster.
+  * if it's a big issue, create an issue on GitHub, make sure someone is assigned to the issue, and add a comment in the code with the issue number (e.g. `# See issue #XXX`). This will help other developers to identify the source of the issue and it will likely be solved faster.
 6. Group issues in blocks that can be solved together. Using the GitHub's label system will be the best way to do this.
 7. When you start working in a complex issue, discussing the path that you're going to take to solve it with other developers will help to identify potential problems in your solution and to make a correct definition of the issue scope. Starting the discussion in the GitHub issue tracker is recommended. If no consensus could be reached in some solution, moving the discussion to a meeting will be the path to move forward.
 8. UI development is tricky and really subjective. In order to smooth the progress, this should be the path to develop the UI:
   1. Discuss as a group (in meetings or in the issue tracker) the overall design of the new UI.
   2. The developer assigned to the issue, will mock up some view in straight HTML or with a static tornado page, and shares the view with the rest of the developer team.
-  3. The developer team reach a consensus in the new UI layout, by modifying the mock up and/or providing constructive feedback to the assigned developer. After all, the developer team will be the first users of the new UI, so if something smells fishy it will become a bigger problem for the end users.
+  3. The developer team reaches a consensus in the new UI layout, by modifying the mock up and/or providing constructive feedback to the assigned developer. After all, the developer team will be the first users of the new UI, so if something smells fishy it will become a bigger problem for the end users.
   4. After a consensus is reached, the assigned developer implements the new UI.
   5. Once the PR is issued, another round of improvements can be done until a consensus is reached. Sometimes, the first consensus is not the best layout; and new ideas/improvements are always welcome!
 9. Last but not least, you are working as part of a team and you should try to help others when possible.
@@ -109,7 +109,7 @@ If you need to submit a patch that changes only data but does not alter the sche
 
 Occasionally, SQL alone cannot effect the desired changes, and a corresponding python script must be run after the SQL patch is applied. If this is the case, a python file should be created in the `patches/python_patches` directory, and it should have the same basename as the SQL file. For example, if there is a patch `4.sql` in the `patches` directory, and this patch requires a python script be run after the SQL is applied, then the python file should be placed at `patches/python_patches/4.py`. Note that not every SQL patch will have a corresponding python patch, but every python patch will have a corresponding SQL patch.
 
-If in the future we discover a use-case where a python patch must be applied for which there *is no corresponding SQL patch*, then a blank SQL patch file will still need to created.
+If in the future we discover a use-case where a python patch must be applied for which there *is no corresponding SQL patch*, then a blank SQL patch file will still need to be created.
 
 ##SQL coding guidelines
 Since the `qiita_db` code contains a mixture of python code and SQL code, here are some coding guidelines to add SQL code to Qiita:
