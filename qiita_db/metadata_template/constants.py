@@ -72,7 +72,7 @@ ALL_RESTRICTIONS = [SAMPLE_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS,
                     PREP_TEMPLATE_COLUMNS_TARGET_GENE]
 
 # This is what we consider as "NaN" cell values on metadata import
-NA_VALUES = ['', 'no_data', 'unknown', 'Unknown', 'Unspecified', 'unspecified']
+NA_VALUES = ['', 'no_data', 'unknown', 'Unknown']
 
 # These are what will be considered 'True' bool values on metadata import
 TRUE_VALUES = ['Yes', 'yes', 'YES', 'Y', 'y', 'True', 'true', 'TRUE', 't', 'T']
