@@ -56,35 +56,36 @@ def submit_EBI(preprocessed_data_id, action, send):
 
     if send:
         # step 4: sending sequences
-        old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
-        environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
+        if action != 'MODIFY':
+            old_ascp_pass = environ.get('ASPERA_SCP_PASS', '')
+            environ['ASPERA_SCP_PASS'] = qiita_config.ebi_seq_xfer_pass
 
-        LogEntry.create('Runtime',
-                        ("Submitting sequences for pre_processed_id: "
-                         "%d" % preprocessed_data_id))
-        try:
-            for cmd in ebi_submission.generate_send_sequences_cmd():
-                try:
-                    stdout, stderr, _ = system_call(cmd)
-                except Exception as e:
-                    stdout = ''
-                    stderr = str(e)
-                    le = LogEntry.create(
-                        'Fatal', "Command: %s\nError: %s\n" % (cmd, str(e)),
-                        info={'ebi_submission': preprocessed_data_id})
-                    ebi_submission.study.ebi_submission_status = (
-                        "failed: ASCP submission, log id: %d" % le.id)
-                    raise ComputeError("EBI Submission failed! Log id: "
-                                       "%d" % le.id)
-                finally:
-                    open(ebi_submission.ascp_reply, 'a').write(
-                        'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
-        finally:
-            environ['ASPERA_SCP_PASS'] = old_ascp_pass
-        LogEntry.create('Runtime',
-                        ('Submission of sequences of pre_processed_id: '
-                         '%d completed successfully' %
-                         preprocessed_data_id))
+            LogEntry.create('Runtime',
+                            ("Submitting sequences for pre_processed_id: "
+                             "%d" % preprocessed_data_id))
+            try:
+                for cmd in ebi_submission.generate_send_sequences_cmd():
+                    try:
+                        stdout, stderr, _ = system_call(cmd)
+                    except Exception as e:
+                        stdout = ''
+                        stderr = str(e)
+                        le = LogEntry.create(
+                            'Fatal', "Command: %s\nError: %s\n" % (cmd, str(e)),
+                            info={'ebi_submission': preprocessed_data_id})
+                        ebi_submission.study.ebi_submission_status = (
+                            "failed: ASCP submission, log id: %d" % le.id)
+                        raise ComputeError("EBI Submission failed! Log id: "
+                                           "%d" % le.id)
+                    finally:
+                        open(ebi_submission.ascp_reply, 'a').write(
+                            'stdout:\n%s\n\nstderr: %s' % (stdout, stderr))
+            finally:
+                environ['ASPERA_SCP_PASS'] = old_ascp_pass
+            LogEntry.create('Runtime',
+                            ('Submission of sequences of pre_processed_id: '
+                             '%d completed successfully' %
+                             preprocessed_data_id))
 
         # step 5: sending xml and parsing answer
         xmls_cmds = ebi_submission.generate_curl_command()
@@ -124,15 +125,16 @@ def submit_EBI(preprocessed_data_id, action, send):
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)
 
         ebi_submission.study.ebi_submission_status = 'submitted'
-        if st_acc:
-            ebi_submission.study.ebi_study_accession = st_acc
-        if sa_acc:
-            ebi_submission.sample_template.ebi_sample_accessions = sa_acc
-        if bio_acc:
-            ebi_submission.sample_template.biosample_accessions = bio_acc
-        if ex_acc:
-            ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
-        ebi_submission.preprocessed_data.ebi_run_accessions = run_acc
+        if action == 'ADD':
+            if st_acc:
+                ebi_submission.study.ebi_study_accession = st_acc
+            if sa_acc:
+                ebi_submission.sample_template.ebi_sample_accessions = sa_acc
+            if bio_acc:
+                ebi_submission.sample_template.biosample_accessions = bio_acc
+            if ex_acc:
+                ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
+            ebi_submission.preprocessed_data.ebi_run_accessions = run_acc
     else:
         st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
 

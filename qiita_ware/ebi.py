@@ -1,4 +1,4 @@
-from os.path import basename, join, isdir, isfile
+from os.path import basename, join, isdir, isfile, exists
 from os import makedirs, remove, listdir
 from datetime import date, timedelta
 from urllib import quote
@@ -110,7 +110,7 @@ class EBISubmission(object):
         self.sample_template = SampleTemplate(self.study.sample_template)
         self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
 
-        if self.preprocessed_data.is_submitted_to_ebi:
+        if self.preprocessed_data.is_submitted_to_ebi and action != 'MODIFY':
             error_msg = ("Cannot resubmit! Preprocessed data %d has already "
                          "been submitted to EBI.")
             LogEntry.create('Runtime', error_msg)
@@ -609,10 +609,11 @@ class EBISubmission(object):
                 'source': basename(self.experiment_xml_fp)}
             )
 
-        run_action = ET.SubElement(actions, 'ACTION')
-        ET.SubElement(run_action, self.action, {
-            'schema': 'run', 'source': basename(self.run_xml_fp)}
-        )
+        if self.run_xml_fp:
+            run_action = ET.SubElement(actions, 'ACTION')
+            ET.SubElement(run_action, self.action, {
+                'schema': 'run', 'source': basename(self.run_xml_fp)}
+            )
 
         if submission_date is None:
             submission_date = date.today()
@@ -642,44 +643,80 @@ class EBISubmission(object):
         """Generate all the XML files"""
         get_output_fp = partial(join, self.xml_dir)
 
-        # The study.xml file needs to be generated if and only if the study
-        # does NOT have an ebi_study_accession
-        if not self.study.ebi_study_accession:
-            self.study_xml_fp = get_output_fp('study.xml')
-            self.write_xml_file(self.generate_study_xml(), self.study_xml_fp)
+        # There are really only 2 main cases for EBI submission: ADD and
+        # MODIFY and the only exception is in MODIFY
+        if self.action != 'MODIFY':
+            # The study.xml file needs to be generated if and only if the study
+            # does NOT have an ebi_study_accession
+            if not self.study.ebi_study_accession:
+                self.study_xml_fp = get_output_fp('study.xml')
+                self.write_xml_file(self.generate_study_xml(),
+                                    self.study_xml_fp)
 
-        # The sample.xml file needs to be generated if and only if there are
-        # samples in the current submission that do NOT have an
-        # ebi_sample_accession
-        new_samples = {
-            sample for sample, accession in viewitems(
-                self.sample_template.ebi_sample_accessions)
-            if accession is None}
-        new_samples = new_samples.intersection(self.samples)
-        if new_samples:
-            self.sample_xml_fp = get_output_fp('sample.xml')
-            self.write_xml_file(self.generate_sample_xml(new_samples),
+            # The sample.xml file needs to be generated if and only if there
+            # are samples in the current submission that do NOT have an
+            # ebi_sample_accession
+            new_samples = {
+                sample for sample, accession in viewitems(
+                    self.sample_template.ebi_sample_accessions)
+                if accession is None}
+            new_samples = new_samples.intersection(self.samples)
+            if new_samples:
+                self.sample_xml_fp = get_output_fp('sample.xml')
+                self.write_xml_file(self.generate_sample_xml(new_samples),
+                                    self.sample_xml_fp)
+
+            # The experiment.xml needs to be generated if and only if there are
+            # samples in the current submission that do NO have an
+            # ebi_experiment_accession
+            new_samples = {
+                sample for sample, accession in viewitems(
+                    self.prep_template.ebi_experiment_accessions)
+                if accession is None}
+            new_samples = new_samples.intersection(self.samples)
+            if new_samples:
+                self.experiment_xml_fp = get_output_fp('experiment.xml')
+                self.write_xml_file(self.generate_experiment_xml(new_samples),
+                                    self.experiment_xml_fp)
+
+            # Generate the run.xml as it should always be generated
+            self.run_xml_fp = get_output_fp('run.xml')
+            self.write_xml_file(self.generate_run_xml(), self.run_xml_fp)
+
+            self.submission_xml_fp = get_output_fp('submission.xml')
+        else:
+            # When MODIFY we can only modify the sample (sample.xml) and prep
+            # (experiment.xml) template. The easiest is to generate both and
+            # submit them. Note that we are assuming that Qiita is not
+            # allowing to change preprocessing required information
+            samples = self.sample_template.ebi_sample_accessions
+
+            # finding unique name for sample xml
+            i = 0
+            while True:
+                self.sample_xml_fp = get_output_fp('sample_%d.xml' % i)
+                if not exists(self.sample_xml_fp): break
+                i = i + 1
+            self.write_xml_file(self.generate_sample_xml(samples),
                                 self.sample_xml_fp)
 
-        # The experiment.xml needs to be generated if and only if there are
-        # samples in the current submission that do NO have an
-        # ebi_experiment_accession
-        new_samples = {
-            sample for sample, accession in viewitems(
-                self.prep_template.ebi_experiment_accessions)
-            if accession is None}
-        new_samples = new_samples.intersection(self.samples)
-        if new_samples:
-            self.experiment_xml_fp = get_output_fp('experiment.xml')
-            self.write_xml_file(self.generate_experiment_xml(new_samples),
+            # finding unique name for experiment xml
+            i = 0
+            while True:
+                self.experiment_xml_fp = get_output_fp('experiment_%d.xml' % i)
+                if not exists(self.experiment_xml_fp): break
+                i = i + 1
+            self.write_xml_file(self.generate_experiment_xml(samples),
                                 self.experiment_xml_fp)
 
-        # Generate the run.xml as it should always be generated
-        self.run_xml_fp = get_output_fp('run.xml')
-        self.write_xml_file(self.generate_run_xml(), self.run_xml_fp)
+            # finding unique name for experiment xml
+            i = 0
+            while True:
+                self.submission_xml_fp = get_output_fp('submission_%d.xml' % i)
+                if not exists(self.submission_xml_fp): break
+                i = i + 1
 
         # The submission.xml is always generated
-        self.submission_xml_fp = get_output_fp('submission.xml')
         self.write_xml_file(self.generate_submission_xml(),
                             self.submission_xml_fp)
 
