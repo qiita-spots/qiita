@@ -42,6 +42,13 @@ class QiitaDBLookupError(QiitaDBError, LookupError):
     pass
 
 
+class QiitaDBArtifactCreationError(QiitaDBError):
+    """Exception when creating an artifact"""
+    def __init__(self, reason):
+        super(QiitaDBArtifactCreationError, self).__init__()
+        self.args = ("Cannot create artifact: %s" % reason)
+
+
 class QiitaDBDuplicateError(QiitaDBError):
     """Exception when duplicating something in the database"""
     def __init__(self, obj_name, attributes):
