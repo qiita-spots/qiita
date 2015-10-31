@@ -695,7 +695,8 @@ class EBISubmission(object):
             i = 0
             while True:
                 self.sample_xml_fp = get_output_fp('sample_%d.xml' % i)
-                if not exists(self.sample_xml_fp): break
+                if not exists(self.sample_xml_fp):
+                    break
                 i = i + 1
             self.write_xml_file(self.generate_sample_xml(samples),
                                 self.sample_xml_fp)
@@ -704,7 +705,8 @@ class EBISubmission(object):
             i = 0
             while True:
                 self.experiment_xml_fp = get_output_fp('experiment_%d.xml' % i)
-                if not exists(self.experiment_xml_fp): break
+                if not exists(self.experiment_xml_fp):
+                    break
                 i = i + 1
             self.write_xml_file(self.generate_experiment_xml(samples),
                                 self.experiment_xml_fp)
@@ -713,7 +715,8 @@ class EBISubmission(object):
             i = 0
             while True:
                 self.submission_xml_fp = get_output_fp('submission_%d.xml' % i)
-                if not exists(self.submission_xml_fp): break
+                if not exists(self.submission_xml_fp):
+                    break
                 i = i + 1
 
         # The submission.xml is always generated

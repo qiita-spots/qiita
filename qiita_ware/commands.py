@@ -71,7 +71,8 @@ def submit_EBI(preprocessed_data_id, action, send):
                         stdout = ''
                         stderr = str(e)
                         le = LogEntry.create(
-                            'Fatal', "Command: %s\nError: %s\n" % (cmd, str(e)),
+                            'Fatal', "Command: %s\nError: %s\n" % (cmd,
+                                                                   str(e)),
                             info={'ebi_submission': preprocessed_data_id})
                         ebi_submission.study.ebi_submission_status = (
                             "failed: ASCP submission, log id: %d" % le.id)
