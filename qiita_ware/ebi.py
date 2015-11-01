@@ -278,6 +278,8 @@ class EBISubmission(object):
                                      data_dict):
         """Format key/value data using a common EBI XML motif"""
         for attr, val in sorted(data_dict.items()):
+            if val is None:
+                val = "Unknown"
             attribute_element = ET.SubElement(parent_node,
                                               attribute_element_name)
             tag = ET.SubElement(attribute_element, 'TAG')
@@ -711,7 +713,7 @@ class EBISubmission(object):
             self.write_xml_file(self.generate_experiment_xml(samples),
                                 self.experiment_xml_fp)
 
-            # finding unique name for experiment xml
+            # finding unique name for run xml
             i = 0
             while True:
                 self.submission_xml_fp = get_output_fp('submission_%d.xml' % i)
