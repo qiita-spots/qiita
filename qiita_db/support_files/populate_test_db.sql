@@ -50,7 +50,7 @@ INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
 
 -- Insert PMIDs for study
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.100/123456', '123456'), ('10.100/7891011', '7891011');
-INSERT INTO qiita.study_publication (study_id, doi) VALUES (1, '10.100/123456'), (1, '10.100/7891011');
+INSERT INTO qiita.study_publication (study_id, publication_doi) VALUES (1, '10.100/123456'), (1, '10.100/7891011');
 
 -- Insert an investigation
 INSERT INTO qiita.investigation (investigation_name, investigation_description, contact_person_id) VALUES
@@ -312,47 +312,46 @@ INSERT INTO qiita.prep_1 (sample_id, barcode, LIBRARY_CONSTRUCTION_PROTOCOL, pri
 -- Link the prep template to the study
 INSERT INTO qiita.study_prep_template (study_id, prep_template_id) VALUES (1, 1);
 
--- Insert the artifact (raw_data) information for prep_template 1
-INSERT INTO qiita.artifact (generated_timestamp, visibility_id, artifact_type_id)
-    VALUES ('Mon Oct 1 09:30:27 2012', 3, 3);
+-- Insert some artifacts
+--   1 ---> 2 ---> 4
+--      \-> 3
+INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters_id,
+                            visibility_id, artifact_type_id, can_be_submitted_to_ebi,
+                            can_be_submitted_to_vamps)
+    VALUES ('Mon Oct 1 09:30:27 2012', NULL, NULL, 3, 3, FALSE, FALSE),
+           ('Mon Oct 1 09:30:27 2012', 1, 1, 3, 6, TRUE, TRUE),
+           ('Mon Oct 1 09:30:27 2012', 1, 2, 3, 6, TRUE, TRUE),
+           ('Mon Oct 1 09:30:27 2012', 3, 1, 3, 7, FALSE, FALSE);
 
--- Insert the filepaths for artifact 1
+-- Link the child artifacts with their parents artifacts
+INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
+    VALUES (1, 2), (1, 3),
+           (2, 4);
+
+-- Insert filepaths for the artifacts and reference
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id)
     VALUES ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
-           ('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
+           ('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
+           ('1_seqs.fna', 4, '852952723', 1, 3),
+           ('1_seqs.qual', 5, '852952723', 1, 3),
+           ('1_seqs.demux', 6, 852952723, 1, 3),
+           ('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6),
+           ('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6),
+           ('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6),
+           ('1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1, 4);
 
--- Insert (link) the artifact with the filepaths
-INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id) VALUES (1, 1), (1, 2);
-
--- Insert (link) the study with the artifact
-INSERT INTO qiita.study_artifact (study_id, artifact_id) VALUES (1, 1);
+-- Link the artifacts with the filepaths
+INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
+    VALUES (1, 1), (1, 2),
+           (2, 3), (2, 4), (2, 5),
+           (3, 9);
 
 -- Link the artifact with the prep template
 UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
 
--- Insert two childs of artifact 1
-INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters_id,
-                            visibility_id, artifact_type_id, can_be_submitted_to_ebi,
-                            can_be_submitted_to_vamps)
-    VALUES ('Mon Oct 1 09:30:27 2012', TODO, 1, 3, TODO, TRUE, TRUE),
-           ('Mon Oct 1 09:30:27 2012', TODO, 2, 3, TODO, TRUE, TRUE);
-
--- Link the childs (artifacts 2 and 3) with the parent artifact (1).
-INSERT INTO qiita.parent_artifact (artifact_id, parent_id)
-    VALUES (2, 1), (3, 1);
-
--- Link the artifacts with the study
-INSERT INTO qiita.study_artifact (study_id, artifact_id) VALUES (1, 2), (1, 3);
-
--- Insert files for artifact 2
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id)
-    VALUES ('1_seqs.fna', 4, '852952723', 1, 3),
-           ('1_seqs.qual', 5, '852952723', 1, 3),
-           ('1_seqs.demux', 6, 852952723, 1, 3);
-
--- Insert (link) the artifact 2 with its filepath
-INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id)
-    VALUES (2, 3), (1, 4), (1, 5);
+-- Link the study with the artifacts
+INSERT INTO qiita.study_artifact (study_id, artifact_id)
+    VALUES (1, 1), (1, 2), (1, 3), (1, 4);
 
 -- Insert EBI information for artifact 2
 INSERT INTO qiita.ebi_run_accession (sample_id, artifact_id, ebi_run_accession)
@@ -384,35 +383,11 @@ INSERT INTO qiita.ebi_run_accession (sample_id, artifact_id, ebi_run_accession)
            ('1.SKM8.640201', 2, 'ERR0000026'),
            ('1.SKM9.640192', 2, 'ERR0000027');
 
--- Insert a child of artifact 2
-INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters_id,
-                            visibility_id, artifact_type_id)
-    VALUES ('Mon Oct 1 09:30:27 2012', TODO, 1, 3, TODO);
-
--- Link the child (4) with the parent artifact (2)
-INSERT INTO qiita.parent_artifact (artifact_id, parent_id) VALUES (4, 2);
-
--- Link the artifact with the study
-INSERT INTO qiita.study_artifact (study_id, artifact_id) VALUES (1, 4);
-
--- Insert the reference files for reference 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6),
-('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6),
-('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6);
-
 -- Populate the reference table
 INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('Greengenes', '13_8', 6, 7, 8);
 
 -- Insert the processed params uclust used for preprocessed data 1
 INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, suppress_new_clusters, reference_id) VALUES (0.97, TRUE, TRUE, 1);
-
--- Insert the biom table filepath for processed data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1, 4);
-
--- Insert (link) the processed data with the processed filepath
-INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 9);
 
 -- Insert filepath for job results files
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
@@ -442,7 +417,9 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 12, 2), (1, 13, NULL);
 
 -- Attach samples to analysis
-INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (1,1,'1.SKB8.640193'), (1,1,'1.SKD8.640184'), (1,1,'1.SKB7.640196'), (1,1,'1.SKM9.640192'), (1,1,'1.SKM4.640180'), (2,1,'1.SKB8.640193'), (2,1,'1.SKD8.640184'), (2,1,'1.SKB7.640196'), (2,1,'1.SKM3.640197');
+INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id)
+    VALUES (1, 4, '1.SKB8.640193'), (1, 4, '1.SKD8.640184'), (1, 4, '1.SKB7.640196'), (1, 4, '1.SKM9.640192'), (1, 4, '1.SKM4.640180'),
+           (2, 4, '1.SKB8.640193'), (2, 4, '1.SKD8.640184'), (2, 4, '1.SKB7.640196'), (2, 4, '1.SKM3.640197');
 
 --Share analysis with shared user
 INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar');
@@ -488,7 +465,8 @@ INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) 
 INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES (3, 1), (4, 1), (5, 1), (6, 1), (7, 2), (8, 2), (9, 2), (10, 2);
 
 -- Attach samples to analysis
-INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (3,1,'1.SKD8.640184'), (3,1,'1.SKB7.640196'), (3,1,'1.SKM9.640192'), (3,1,'1.SKM4.640180');
+INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id)
+    VALUES (3, 4, '1.SKD8.640184'), (3, 4, '1.SKB7.640196'), (3, 4, '1.SKM9.640192'), (3, 4, '1.SKM4.640180');
 
 -- Create the new prep_template_filepath
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9);
