@@ -49,7 +49,8 @@ INSERT INTO qiita.study_environmental_package (study_id, environmental_package_n
 INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
 
 -- Insert PMIDs for study
-INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (1, '123456'), (1, '7891011');
+INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.100/123456', '123456'), ('10.100/7891011', '7891011');
+INSERT INTO qiita.study_publication (study_id, doi) VALUES (1, '10.100/123456'), (1, '10.100/7891011');
 
 -- Insert an investigation
 INSERT INTO qiita.investigation (investigation_name, investigation_description, contact_person_id) VALUES
@@ -311,79 +312,88 @@ INSERT INTO qiita.prep_1 (sample_id, barcode, LIBRARY_CONSTRUCTION_PROTOCOL, pri
 -- Link the prep template to the study
 INSERT INTO qiita.study_prep_template (study_id, prep_template_id) VALUES (1, 1);
 
--- Insert the raw data information for prep_template 1
-INSERT INTO qiita.raw_data (filetype_id) VALUES (3);
+-- Insert the artifact (raw_data) information for prep_template 1
+INSERT INTO qiita.artifact (generated_timestamp, visibility_id, artifact_type_id)
+    VALUES ('Mon Oct 1 09:30:27 2012', 3, 3);
 
--- Insert the raw data filepaths for study 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
-('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
+-- Insert the filepaths for artifact 1
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id)
+    VALUES ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
+           ('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
 
--- Insert (link) the raw data with the raw filepaths
-INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2);
+-- Insert (link) the artifact with the filepaths
+INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id) VALUES (1, 1), (1, 2);
 
--- Insert (link) the study with the raw data
-UPDATE qiita.prep_template SET raw_data_id = 1 WHERE prep_template_id = 1;
--- UPDATE qiita.prep_template SET raw_data_id = 2 WHERE prep_template_id = 2;
+-- Insert (link) the study with the artifact
+INSERT INTO qiita.study_artifact (study_id, artifact_id) VALUES (1, 1);
 
--- Insert preprocessed information for prep template 1
-INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, data_type_id)
-    VALUES ('preprocessed_sequence_illumina_params', 1, 2),
-           ('preprocessed_sequence_illumina_params', 2, 2);
+-- Link the artifact with the prep template
+UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
 
--- Insert EBI information for preprocessed data 1
-INSERT INTO qiita.ebi_run_accession (sample_id, preprocessed_data_id, ebi_run_accession)
-    VALUES ('1.SKB1.640202', 1, 'ERR0000001'),
-           ('1.SKB2.640194', 1, 'ERR0000002'),
-           ('1.SKB3.640195', 1, 'ERR0000003'),
-           ('1.SKB4.640189', 1, 'ERR0000004'),
-           ('1.SKB5.640181', 1, 'ERR0000005'),
-           ('1.SKB6.640176', 1, 'ERR0000006'),
-           ('1.SKB7.640196', 1, 'ERR0000007'),
-           ('1.SKB8.640193', 1, 'ERR0000008'),
-           ('1.SKB9.640200', 1, 'ERR0000009'),
-           ('1.SKD1.640179', 1, 'ERR0000010'),
-           ('1.SKD2.640178', 1, 'ERR0000011'),
-           ('1.SKD3.640198', 1, 'ERR0000012'),
-           ('1.SKD4.640185', 1, 'ERR0000013'),
-           ('1.SKD5.640186', 1, 'ERR0000014'),
-           ('1.SKD6.640190', 1, 'ERR0000015'),
-           ('1.SKD7.640191', 1, 'ERR0000016'),
-           ('1.SKD8.640184', 1, 'ERR0000017'),
-           ('1.SKD9.640182', 1, 'ERR0000018'),
-           ('1.SKM1.640183', 1, 'ERR0000019'),
-           ('1.SKM2.640199', 1, 'ERR0000020'),
-           ('1.SKM3.640197', 1, 'ERR0000021'),
-           ('1.SKM4.640180', 1, 'ERR0000022'),
-           ('1.SKM5.640177', 1, 'ERR0000023'),
-           ('1.SKM6.640187', 1, 'ERR0000024'),
-           ('1.SKM7.640188', 1, 'ERR0000025'),
-           ('1.SKM8.640201', 1, 'ERR0000026'),
-           ('1.SKM9.640192', 1, 'ERR0000027');
+-- Insert two childs of artifact 1
+INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters_id,
+                            visibility_id, artifact_type_id, can_be_submitted_to_ebi,
+                            can_be_submitted_to_vamps)
+    VALUES ('Mon Oct 1 09:30:27 2012', TODO, 1, 3, TODO, TRUE, TRUE),
+           ('Mon Oct 1 09:30:27 2012', TODO, 2, 3, TODO, TRUE, TRUE);
 
--- Link the new preprocessed data with the prep template
-INSERT INTO qiita.prep_template_preprocessed_data (prep_template_id, preprocessed_data_id) VALUES (1, 1), (1, 2);
+-- Link the childs (artifacts 2 and 3) with the parent artifact (1).
+INSERT INTO qiita.parent_artifact (artifact_id, parent_id)
+    VALUES (2, 1), (3, 1);
 
--- Insert (link) preprocessed information to study 1
-INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1), (2, 1);
+-- Link the artifacts with the study
+INSERT INTO qiita.study_artifact (study_id, artifact_id) VALUES (1, 2), (1, 3);
 
--- Insert the preprocessed filepath for raw data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('1_seqs.fna', 4, '852952723', 1, 3),
-('1_seqs.qual', 5, '852952723', 1, 3),
-('1_seqs.demux', 6, 852952723, 1, 3);
+-- Insert files for artifact 2
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id)
+    VALUES ('1_seqs.fna', 4, '852952723', 1, 3),
+           ('1_seqs.qual', 5, '852952723', 1, 3),
+           ('1_seqs.demux', 6, 852952723, 1, 3);
 
--- Insert (link) the preprocessed data with the preprocessed filepaths
-INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 3), (1, 4), (1, 5);
+-- Insert (link) the artifact 2 with its filepath
+INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id)
+    VALUES (2, 3), (1, 4), (1, 5);
 
--- Insert processed information for study 0 and processed data 1
-INSERT INTO qiita.processed_data (processed_params_table, processed_params_id, processed_date, data_type_id, processed_data_status_id) VALUES ('processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012', 2, 3);
+-- Insert EBI information for artifact 2
+INSERT INTO qiita.ebi_run_accession (sample_id, artifact_id, ebi_run_accession)
+    VALUES ('1.SKB1.640202', 2, 'ERR0000001'),
+           ('1.SKB2.640194', 2, 'ERR0000002'),
+           ('1.SKB3.640195', 2, 'ERR0000003'),
+           ('1.SKB4.640189', 2, 'ERR0000004'),
+           ('1.SKB5.640181', 2, 'ERR0000005'),
+           ('1.SKB6.640176', 2, 'ERR0000006'),
+           ('1.SKB7.640196', 2, 'ERR0000007'),
+           ('1.SKB8.640193', 2, 'ERR0000008'),
+           ('1.SKB9.640200', 2, 'ERR0000009'),
+           ('1.SKD1.640179', 2, 'ERR0000010'),
+           ('1.SKD2.640178', 2, 'ERR0000011'),
+           ('1.SKD3.640198', 2, 'ERR0000012'),
+           ('1.SKD4.640185', 2, 'ERR0000013'),
+           ('1.SKD5.640186', 2, 'ERR0000014'),
+           ('1.SKD6.640190', 2, 'ERR0000015'),
+           ('1.SKD7.640191', 2, 'ERR0000016'),
+           ('1.SKD8.640184', 2, 'ERR0000017'),
+           ('1.SKD9.640182', 2, 'ERR0000018'),
+           ('1.SKM1.640183', 2, 'ERR0000019'),
+           ('1.SKM2.640199', 2, 'ERR0000020'),
+           ('1.SKM3.640197', 2, 'ERR0000021'),
+           ('1.SKM4.640180', 2, 'ERR0000022'),
+           ('1.SKM5.640177', 2, 'ERR0000023'),
+           ('1.SKM6.640187', 2, 'ERR0000024'),
+           ('1.SKM7.640188', 2, 'ERR0000025'),
+           ('1.SKM8.640201', 2, 'ERR0000026'),
+           ('1.SKM9.640192', 2, 'ERR0000027');
 
--- Insert (link) processed information to study 1
-INSERT INTO qiita.study_processed_data (processed_data_id, study_id) VALUES (1, 1);
+-- Insert a child of artifact 2
+INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters_id,
+                            visibility_id, artifact_type_id)
+    VALUES ('Mon Oct 1 09:30:27 2012', TODO, 1, 3, TODO);
 
--- Link the processed data with the preprocessed data
-INSERT INTO qiita.preprocessed_processed_data (preprocessed_data_id, processed_data_id) VALUES (1, 1);
+-- Link the child (4) with the parent artifact (2)
+INSERT INTO qiita.parent_artifact (artifact_id, parent_id) VALUES (4, 2);
+
+-- Link the artifact with the study
+INSERT INTO qiita.study_artifact (study_id, artifact_id) VALUES (1, 4);
 
 -- Insert the reference files for reference 1
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
