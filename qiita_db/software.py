@@ -329,6 +329,16 @@ class Parameters(object):
     qiita_db.software.Command
     """
 
+    def __eq__(self, other):
+        """Self and other are equal based on type, database id and table"""
+        if type(self) != type(other):
+            return False
+        if other._table != self._table:
+            return False
+        if other.id != self.id:
+            return False
+        return True
+
     def __init__(self, id_, command):
         """Initializes the object
 
@@ -351,7 +361,7 @@ class Parameters(object):
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.{0}
-                        WHERE parameters_id = %s)""".format(self.table)
+                        WHERE parameters_id = %s)""".format(self._table)
             TRN.add(sql, [self.id])
             if not TRN.execute_fetchlast():
                 raise QiitaDBUnknownIDError(self.id, self._table)
@@ -374,7 +384,6 @@ class Parameters(object):
         """
         with TRN:
             table = command.parameters_table
-            cls._check_columns(table, **kwargs)
 
             db_cols = set(get_table_cols(table))
             db_cols.remove("param_set_name")
@@ -498,7 +507,7 @@ class Parameters(object):
         with TRN:
             table_cols = get_table_cols_w_type(self._table)
             table_cols.remove(['parameters_id', 'bigint'])
-            table_cols.remove(['param_set_name', 'varchar'])
+            table_cols.remove(['param_set_name', 'character varying'])
 
             values = self.values
 
