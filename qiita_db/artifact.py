@@ -244,7 +244,7 @@ class Artifact(QiitaObject):
         pass
 
     @property
-    def ebi_run_accession(self):
+    def ebi_run_accessions(self):
         pass
 
     @property
