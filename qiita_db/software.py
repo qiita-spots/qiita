@@ -347,14 +347,14 @@ class Parameters(object):
         """
         with TRN:
             self._table = command.parameters_table
-            self._id = id_
+            self.id = id_
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.{0}
                         WHERE parameters_id = %s)""".format(self.table)
-            TRN.add(sql, [self._id])
+            TRN.add(sql, [self.id])
             if not TRN.execute_fetchlast():
-                raise QiitaDBUnknownIDError(self._id, self._table)
+                raise QiitaDBUnknownIDError(self.id, self._table)
 
     @classmethod
     def exists(cls, command, **kwargs):
@@ -444,7 +444,9 @@ class Parameters(object):
             Yields a parameter instance
         """
         with TRN:
-            sql = "SELECT parameters_id FROM qiita.{0}".format(
+            sql = """SELECT parameters_id
+                     FROM qiita.{0}
+                     ORDER BY parameters_id""".format(
                 command.parameters_table)
             TRN.add(sql)
             for result in TRN.execute_fetchflatten():
@@ -463,7 +465,7 @@ class Parameters(object):
             sql = """SELECT param_set_name
                      FROM qiita.{0}
                      WHERE parameters_id = %s""".format(self._table)
-            TRN.add(sql, [self._id])
+            TRN.add(sql, [self.id])
             return TRN.execute_fetchlast()
 
     @property
