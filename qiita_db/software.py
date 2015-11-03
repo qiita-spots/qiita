@@ -445,7 +445,7 @@ class Parameters(object):
 
     @classmethod
     def iter(cls, command):
-        """Iterates over all parameter set of the given command
+        """Iterates over all parameter sets of the given command
 
         Returns
         -------
