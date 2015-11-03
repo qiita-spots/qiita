@@ -313,8 +313,8 @@ INSERT INTO qiita.prep_1 (sample_id, barcode, LIBRARY_CONSTRUCTION_PROTOCOL, pri
 INSERT INTO qiita.study_prep_template (study_id, prep_template_id) VALUES (1, 1);
 
 -- Insert some artifacts
---   1 ---> 2 ---> 4
---      \-> 3
+--   1 (Raw fastq) ---> 2 (demultiplexed) ---> 4 (otu table)
+--                  \-> 3 (demultiplexed)
 INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters_id,
                             visibility_id, artifact_type_id, can_be_submitted_to_ebi,
                             can_be_submitted_to_vamps)
