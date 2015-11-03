@@ -907,7 +907,7 @@
 		</table>
 		<table name="preprocessed_sequence_454_params" >
 			<comment>Parameters used for processing sequence data.</comment>
-			<column name="preprocessed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="param_set_name" type="varchar" length="100" jt="12" mandatory="y" >
 				<comment><![CDATA[The name of the parameter set]]></comment>
 			</column>
@@ -972,12 +972,12 @@
 				<comment><![CDATA[Truncate at the first ambiguous base]]></comment>
 			</column>
 			<index name="pk_preprocessed_sequence_454_params" unique="PRIMARY_KEY" >
-				<column name="preprocessed_params_id" />
+				<column name="parameters_id" />
 			</index>
 		</table>
 		<table name="preprocessed_sequence_illumina_params" >
 			<comment>Parameters used for processing illumina sequence data.</comment>
-			<column name="preprocessed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="max_bad_run_length" type="integer" jt="4" mandatory="y" >
 				<defo>3</defo>
 			</column>
@@ -1009,20 +1009,20 @@
 				<comment><![CDATA[The name of the parameter set]]></comment>
 			</column>
 			<index name="pk_preprocessed_sequence_illumina_params" unique="PRIMARY_KEY" >
-				<column name="preprocessed_params_id" />
+				<column name="parameters_id" />
 			</index>
 		</table>
 		<table name="preprocessed_spectra_params" >
 			<comment>Parameters used for processing spectra data.</comment>
-			<column name="preprocessed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="col" type="varchar" jt="12" />
 			<index name="pk_preprocessed_spectra_params" unique="PRIMARY_KEY" >
-				<column name="preprocessed_params_id" />
+				<column name="parameters_id" />
 			</index>
 		</table>
 		<table name="processed_params_sortmerna" >
 			<comment>Parameters used for processing data using method sortmerna</comment>
-			<column name="processed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="reference_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[What version of reference or type of reference used]]></comment>
 			</column>
@@ -1036,7 +1036,7 @@
 				<comment><![CDATA[The name of the parameter set]]></comment>
 			</column>
 			<index name="pk_processed_params_sortmerna" unique="PRIMARY_KEY" >
-				<column name="processed_params_id" />
+				<column name="parameters_id" />
 			</index>
 			<index name="idx_processed_params_sortmerna" unique="NORMAL" >
 				<column name="reference_id" />
@@ -1047,7 +1047,7 @@
 		</table>
 		<table name="processed_params_uclust" >
 			<comment>Parameters used for processing data using method uclust</comment>
-			<column name="processed_params_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="reference_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[What version of reference or type of reference used]]></comment>
 			</column>
@@ -1061,7 +1061,7 @@
 				<defo>TRUE</defo>
 			</column>
 			<index name="pk_processed_params_uclust" unique="PRIMARY_KEY" >
-				<column name="processed_params_id" />
+				<column name="parameters_id" />
 			</index>
 			<index name="idx_processed_params_uclust" unique="NORMAL" >
 				<column name="reference_id" />

@@ -178,7 +178,7 @@ class BaseParameters(QiitaObject):
 class PreprocessedIlluminaParams(BaseParameters):
     r"""Gives access to the preprocessed parameters of illumina data"""
 
-    _column_id = "preprocessed_params_id"
+    _column_id = "parameters_id"
     _table = "preprocessed_sequence_illumina_params"
     _ignore_cols = {"param_set_name"}
 
@@ -186,7 +186,7 @@ class PreprocessedIlluminaParams(BaseParameters):
 class Preprocessed454Params(BaseParameters):
     r"""Gives access to the preprocessed parameters of illumina data"""
 
-    _column_id = "preprocessed_params_id"
+    _column_id = "parameters_id"
     _table = "preprocessed_sequence_454_params"
     _ignore_cols = {"param_set_name"}
 
@@ -194,7 +194,7 @@ class Preprocessed454Params(BaseParameters):
 class ProcessedSortmernaParams(BaseParameters):
     r"""Gives access to the processed parameters using SortMeRNA"""
 
-    _column_id = "processed_params_id"
+    _column_id = "parameters_id"
     _table = "processed_params_sortmerna"
     _ignore_cols = {'reference_id', 'param_set_name'}
 

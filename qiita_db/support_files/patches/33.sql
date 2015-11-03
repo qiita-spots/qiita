@@ -449,3 +449,10 @@ DROP TABLE qiita.preprocessed_data;
 DROP TABLE qiita.raw_filepath;
 DROP TABLE qiita.raw_data;
 DROP TABLE qiita.study_pmid;
+
+-- Rename the id columns from the parameters tables
+ALTER TABLE qiita.processed_params_sortmerna RENAME COLUMN processed_params_id TO parameters_id;
+ALTER TABLE qiita.processed_params_uclust RENAME COLUMN processed_params_id TO parameters_id;
+ALTER TABLE qiita.preprocessed_sequence_454_params RENAME COLUMN preprocessed_params_id TO parameters_id;
+ALTER TABLE qiita.preprocessed_sequence_illumina_params RENAME COLUMN preprocessed_params_id TO parameters_id;
+ALTER TABLE qiita.preprocessed_spectra_params RENAME COLUMN preprocessed_params_id TO parameters_id;
