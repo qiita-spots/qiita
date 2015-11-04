@@ -51,14 +51,14 @@ class QiitaDBArtifactCreationError(QiitaDBError):
     """Exception when creating an artifact"""
     def __init__(self, reason):
         super(QiitaDBArtifactCreationError, self).__init__()
-        self.args = ("Cannot create artifact: %s" % reason)
+        self.args = ("Cannot create artifact: %s" % reason,)
 
 
 class QiitaDBArtifactDeletionError(QiitaDBError):
     """Exception when deleting an artifact"""
     def __init__(self, a_id, reason):
         super(QiitaDBArtifactDeletionError, self).__init__()
-        self.args = ("Cannot delete artifact %d: %s" % (a_id, reason))
+        self.args = ("Cannot delete artifact %d: %s" % (a_id, reason),)
 
 
 class QiitaDBDuplicateError(QiitaDBError):
