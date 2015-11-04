@@ -7,12 +7,21 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+from future.utils import viewitems
 from datetime import datetime
+from os.path import join
+from functools import partial
 
 from .base import QiitaObject
 from .sql_connection import TRN
-from .exceptions import QiitaDBArtifactCreationError
-from .util import convert_to_id, insert_filepaths
+from .exceptions import (QiitaDBArtifactCreationError,
+                         QiitaDBArtifactDeletionError,
+                         QiitaDBOperationNotPermittedError)
+from .util import (convert_to_id, insert_filepaths,
+                   move_filepaths_to_upload_folder, get_db_files_base_dir)
+from .software import Parameters, Command
+from .study import Study
+from .metadata_template import PrepTemplate
 
 
 class Artifact(QiitaObject):
@@ -48,7 +57,7 @@ class Artifact(QiitaObject):
     def create(cls, filepaths, artifact_type, timestamp=None,
                prep_template=None, parents=None, processing_parameters=None,
                can_be_submitted_to_ebi=False, can_be_submitted_to_vamps=False):
-        r"""Creates a new artifact on the storage system
+        r"""Creates a new artifact in the system
 
         Parameters
         ----------
@@ -67,7 +76,7 @@ class Artifact(QiitaObject):
         parents : iterable of qiita_db.artifact.Artifact, optional
             The list of artifacts from which the new artifact has been
             generated. If not provided, `prep_template` should be provided.
-        processeing_parameters : qiita_db.parameter.Parameter, optional
+        processing_parameters : qiita_db.software.Parameter, optional
             The processing parameters used to generate the new artifact
             from `parents`. It is required if `parents` is provided. It should
             not be provided if `prep_template` is provided.
@@ -200,53 +209,387 @@ class Artifact(QiitaObject):
 
     @classmethod
     def delete(cls, artifact_id):
-        r""""""
-        pass
+        r"""Deletes an artifact from the system
+
+        Parameters
+        ----------
+        artifact_id : int
+            The artifact to be removed
+
+        Raises
+        ------
+        QiitaDBArtifactDeletionError
+            If the artifact is public
+            If the artifact has children
+            If the artifact has been analyzed
+            If the artifact has been submitted to EBI
+            If the artifact has been submitted to VAMPS
+        """
+        with TRN:
+            # This will fail if the artifact with id=artifact_id doesn't exist
+            instance = cls(artifact_id)
+
+            # Check if the artifact is public
+            if instance.visibility == 'public':
+                raise QiitaDBArtifactDeletionError(artifact_id, "it is public")
+
+            # Check if this artifact has any children
+            if instance.children:
+                raise QiitaDBArtifactDeletionError(
+                    artifact_id,
+                    "it has children: %s" % ', '.join(instance.children))
+
+            # Check if the artifact has been analyzed
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.analysis_sample
+                                   WHERE artifact_id = %s)"""
+            TRN.add(sql, [artifact_id])
+            if TRN.execute_fetchlast():
+                raise QiitaDBArtifactDeletionError(
+                    artifact_id, "it has been analyzed")
+
+            # Check if the artifact has been submitted to EBI
+            if instance.can_be_submitted_to_ebi and \
+                    instance.ebi_run_accessions:
+                raise QiitaDBArtifactDeletionError(
+                    artifact_id, "it has been submitted to EBI")
+
+            # Check if the artifact has been submitted to VAMPS
+            if instance.can_be_submitted_to_vamps and \
+                    instance.is_submitted_to_vamps:
+                raise QiitaDBArtifactDeletionError(
+                    artifact_id, "it has been submitted to VAMPS")
+
+            # We can now remove the artifact
+            filepaths = instance.filepaths
+            study = instance.study
+
+            sql = """DELETE FROM qiita.artifact_filepath
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [artifact_id])
+
+            # If the artifact doesn't have parents, we move the files to the
+            # uploads folder. We also need to nullify the column in the prep
+            # template table
+            if not instance.parents:
+                move_filepaths_to_upload_folder(study, filepaths)
+
+                sql = """UPDATE qiita.prep_template
+                         SET artifact_id = NULL
+                         WHERE prep_template IN %s"""
+                TRN.add(sql, [tuple(instance.prep_templates)])
+            else:
+                sql = """DELETE FROM qiita.parent_artifact
+                         WHERE artifact_id = %s"""
+                TRN.add(sql, [artifact_id])
+
+            # Detach the artifact from the study_artifact table
+            sql = "DELETE FROM qiita.study_artifact WHERE artifact_id = %s"
+            TRN.add(sql, [artifact_id])
+
+            # Delete the row in the artifact table
+            sql = "DELETE FROM qiita.artifact WHERE artifact_id = %s"
+            TRN.add(sql, [artifact_id])
 
     @property
     def timestamp(self):
-        pass
+        """The timestamp when the artifact was generated
+
+        Returns
+        -------
+        datetime
+            The timestamp when the artifact was generated
+        """
+        with TRN:
+            sql = """SELECT generated_timestamp
+                     FROM qiita.artifact
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
 
     @property
     def processing_parameters(self):
-        pass
+        """The processing parameters used to generate the artifact
+
+        Returns
+        -------
+        qiita_db.software.Parameters or None
+            The parameters used to generate the artifact if it has parents.
+            None otherwise.
+        """
+        with TRN:
+            sql = """SELECT command_id, command_parameters_id
+                     FROM qiita.artifact
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            # Only one row will be returned
+            res = TRN.execute_fetchindex()[0]
+            if res[0] is None:
+                return None
+            return Parameters(res[1], Command[res[0]])
 
     @property
     def visibility(self):
-        pass
+        """The visibility of the artifact
+
+        Returns
+        -------
+        str
+            The visibility of the artifact
+        """
+        with TRN:
+            sql = """SELECT visibility
+                     FROM qiita.artifact
+                        JOIN qiita.visibility USING (visibility_id)
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlas()
 
     @property
     def artifact_type(self):
-        pass
+        """The artifact type
+
+        Returns
+        -------
+        str
+            The artifact type
+        """
+        with TRN:
+            sql = """SELECT artifact_type
+                     FROM qiita.artifact
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
 
     @property
     def can_be_submitted_to_ebi(self):
-        pass
+        """Whether if the artifact can be submitted to EBI or not
 
-    @property
-    def can_be_submitted_to_vamps(self):
-        pass
-
-    @property
-    def is_submitted_to_vamps(self):
-        pass
-
-    @property
-    def filepaths(self):
-        pass
-
-    @property
-    def parents(self):
-        pass
-
-    @property
-    def prep_template(self):
-        pass
+        Returns
+        -------
+        bool
+            True if the artifact can be submitted to EBI. False otherwise.
+        """
+        with TRN:
+            sql = """SELECT can_be_submitted_to_ebi
+                     FROM qiita.artifact
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
 
     @property
     def ebi_run_accessions(self):
-        pass
+        """The EBI run accessions attached to this artifact
+
+        Returns
+        -------
+        dict of {str: str}
+            The EBI run accessions keyed by sample id
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the artifact cannot be submitted to EBI
+        """
+        with TRN:
+            if not self.can_be_submitted_to_ebi:
+                raise QiitaDBOperationNotPermittedError(
+                    "Artifact %s cannot be submitted to EBI" % self.id)
+            sql = """SELECT sample_id, ebi_run_accession
+                     FROM qiita.ebi_run_accession
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return {s_id: ebi_acc for s_id, ebi_acc in
+                    TRN.execute_fetchindex()}
+
+    @ebi_run_accessions.setter
+    def ebi_run_accessions(self, values):
+        """Set the ebi run accession attached to this artifact
+
+        Parameters
+        ----------
+        values : dict of {str: str}
+            The EBI accession number keyed by sample id
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the artifact cannot be submitted to EBI
+            If the artifact has been already submitted to EBI
+        """
+        with TRN:
+            if not self.can_be_submitted_to_ebi:
+                raise QiitaDBOperationNotPermittedError(
+                    "Artifact %s cannot be submitted to EBI" % self.id)
+
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.ebi_run_accession
+                                   WHERE artifact_id = %s)"""
+            TRN.add(sql, [self.id])
+            if TRN.execute_fetchlast():
+                raise QiitaDBOperationNotPermittedError(
+                    "Artifact %s already submitted to EBI" % self.id)
+
+            sql = """INSERT INTO qiita.ebi_run_accession
+                        (sample_id, artifact_id, ebi_run_accession)
+                     VALUES (%s, %s, %s)"""
+            sql_args = [[sample, self.id, accession]
+                        for sample, accession in viewitems(values)]
+            TRN.add(sql, sql_args, many=True)
+            TRN.execute()
+
+    @property
+    def can_be_submitted_to_vamps(self):
+        """Whether if the artifact can be submitted to VAMPS or not
+
+        Returns
+        -------
+        bool
+            True if the artifact can be submitted to VAMPS. False otherwise.
+        """
+        with TRN:
+            sql = """SELECT can_be_submitted_to_vamps
+                     FROM qiita.artifact
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
+
+    @property
+    def is_submitted_to_vamps(self):
+        """Whether if the artifact has been submitted to VAMPS or not
+
+        Returns
+        -------
+        bool
+            True if the artifact has been submitted to VAMPS. False otherwise
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the artifact cannot be submitted to VAMPS
+        """
+        with TRN:
+            if not self.can_be_submiited_to_vamps:
+                raise QiitaDBOperationNotPermittedError(
+                    "Artifact %s cannot be submitted to VAMPS" % self.id)
+            sql = """SELECT is_submitted_to_vamps
+                     FROM qiita.artifact
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
+
+    @is_submitted_to_vamps.setter
+    def is_submitted_to_vamps(self, value):
+        """Set if the artifact has been submitted to VAMPS
+
+        Parameters
+        ----------
+        value : bool
+            Whether the artifact has been submitted to VAMPS or not
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the artifact cannot be submitted to VAMPS
+        """
+        with TRN:
+            if not self.can_be_submiited_to_vamps:
+                raise QiitaDBOperationNotPermittedError(
+                    "Artifact %s cannot be submitted to VAMPS" % self.id)
+            sql = """UPDATE qiita.artifact
+                     SET is_submitted_to_vamps = %s
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [value, self.id])
+            TRN.execute()
+
+    @property
+    def filepaths(self):
+        """Returns the filepaths associated with the artifact
+
+        Returns
+        -------
+        list of 3-tuples
+            A list of (filepath_id, path, filetype) of all the files associated
+            with the artifact
+        """
+        with TRN:
+            sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
+                            subdirectory
+                     FROM qiita.filepath
+                        JOIN qiita.artifact_filepath USING (filepath_id)
+                        JOIN qiita.filepath_type USING (filepath_type_id)
+                        JOIN qiita.data_directory USING (data_directory_id)
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            results = TRN.execute_fetchindex()
+            base_dir = get_db_files_base_dir()
+            path_builder = partial(join, base_dir)
+
+            return [(fpid, path_builder(mp, sd, fp), fp_type)
+                    for fpid, fp, fp_type, mp, sd in results]
+
+    @property
+    def parents(self):
+        """Returns the parents of the artifact
+
+        Returns
+        -------
+        list of qiita_db.artifact.Artifact
+            The parent artifacts
+        """
+        with TRN:
+            sql = """SELECT parent_id
+                     FROM qiita.parent_artifact
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return [Artifact(p_id) for p_id in TRN.execute_fetchflatten()]
+
+    @property
+    def children(self):
+        """Returns the list of children of the artifact
+
+        Returns
+        -------
+        list of qiita_db.artifact.Artifact
+            The children artifacts
+        """
+        with TRN:
+            sql = """SELECT artifact_id
+                     FROM qiita.parent_artifact
+                     WHERE parent_id = %s"""
+            TRN.add(sql, [self.id])
+            return [Artifact(c_id) for c_id in TRN.execute_fetchflatten()]
+
+    @property
+    def prep_templates(self):
+        """The prep templates attached to this artifact
+
+        Returns
+        -------
+        list of qiita_db.metadata_template.PrepTemplate
+        """
+        with TRN:
+            sql = """SELECT prep_template_id
+                     FROM qiita.prep_template
+                     WHERE artifact_id IN (SELECT *
+                                           FROM find_artifact_roots(%s))"""
+            TRN.add(sql, [self.id])
+            return [PrepTemplate(pt_id)
+                    for pt_id in TRN.execute_fetchflatten()]
 
     @property
     def study(self):
-        pass
+        """The study to which the artifact belongs to
+
+        Returns
+        -------
+        qiita_db.study.Study
+            The study that owns the artifact
+        """
+        with TRN:
+            sql = """SELECT study_id
+                     FROM qiita.studt_artifact
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return Study(TRN.execute_fetchlast())

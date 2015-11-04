@@ -456,3 +456,26 @@ ALTER TABLE qiita.processed_params_uclust RENAME COLUMN processed_params_id TO p
 ALTER TABLE qiita.preprocessed_sequence_454_params RENAME COLUMN preprocessed_params_id TO parameters_id;
 ALTER TABLE qiita.preprocessed_sequence_illumina_params RENAME COLUMN preprocessed_params_id TO parameters_id;
 ALTER TABLE qiita.preprocessed_spectra_params RENAME COLUMN preprocessed_params_id TO parameters_id;
+
+-- Create a function to return the roots of an artifact, i.e. the source artifacts
+CREATE FUNCTION find_artifact_roots(a_id bigint) RETURNS SETOF bigint AS $$
+BEGIN
+    IF EXISTS(SELECT * FROM qiita.parent_artifact WHERE artifact_id = a_id) THEN
+        RETURN QUERY WITH RECURSIVE root AS (
+            SELECT artifact_id, parent_id
+            FROM qiita.parent_artifact
+            WHERE artifact_id = a_id
+          UNION
+            SELECT p.artifact_id, p.parent_id
+            FROM qiita.parent_artifact p
+            JOIN root r ON (r.parent_id = p.artifact_id)
+        )
+        SELECT DISTINCT parent_id
+            FROM root
+            WHERE parent_id NOT IN (SELECT artifact_id
+                                    FROM qiita.parent_artifact);
+    ELSE
+        RETURN QUERY SELECT a_id;
+    END IF;
+END
+$$ LANGUAGE plpgsql;
