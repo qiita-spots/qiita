@@ -244,6 +244,7 @@ DECLARE
     ppd_fp_vals     RECORD;
     pd_fp_vals      RECORD;
     study_pmids     RECORD;
+    a_type          RECORD;
     rd_vis_id       bigint;
     ppd_vis_id      bigint;
     rd_a_id         bigint;
@@ -260,7 +261,7 @@ BEGIN
         VALUES ('Demultiplexed', 'Demultiplexed and QC sequeneces')
         RETURNING artifact_type_id INTO demux_type_id;
     INSERT INTO qiita.artifact_type (artifact_type, description)
-        VALUES ('BIOM table', 'Biom table')
+        VALUES ('BIOM', 'Biom table')
         RETURNING artifact_type_id INTO biom_type_id;
 
     -- Loop through all the prep templates. We are going to transfer all the data
@@ -418,6 +419,25 @@ BEGIN
         INSERT INTO qiita.study_publication (study_id, publication_doi)
             VALUES (study_pmids.study_id, study_pmids.pmid);
     END LOOP;
+
+    -- The column subdirectory in the data_directory was unused
+    -- We are going to "recycle" it so we can indicate which mountpoints use the
+    -- new file structure in which a subdirectory for the artifact is created and
+    -- the files are stored under such subdirectory, rather than just prefixing
+    -- the files with the artifact_id
+    ALTER TABLE qiita.data_directory ALTER COLUMN subdirectory SET DATA TYPE bool USING FALSE;
+    ALTER TABLE qiita.data_directory ALTER COLUMN subdirectory SET DEFAULT FALSE;
+    ALTER TABLE qiita.data_directory ALTER COLUMN subdirectory SET NOT NULL;
+
+    -- The artifacts will be stored now based on the artifact type
+    -- Add the new mountpoints to the qiita.data_directory table
+    FOR a_type IN
+        SELECT artifact_type
+        FROM qiita.artifact_type
+    LOOP
+        INSERT INTO qiita.data_directory (data_type, mountpoint, subdirectory, active)
+            VALUES (a_type.artifact_type, a_type.artifact_type, true, true);
+    END LOOP;
 END $do$;
 
 -- Set the NOT NULL constraints that we couldn't set before because we were
@@ -458,7 +478,7 @@ ALTER TABLE qiita.preprocessed_sequence_illumina_params RENAME COLUMN preprocess
 ALTER TABLE qiita.preprocessed_spectra_params RENAME COLUMN preprocessed_params_id TO parameters_id;
 
 -- Create a function to return the roots of an artifact, i.e. the source artifacts
-CREATE FUNCTION find_artifact_roots(a_id bigint) RETURNS SETOF bigint AS $$
+CREATE FUNCTION qiita.find_artifact_roots(a_id bigint) RETURNS SETOF bigint AS $$
 BEGIN
     IF EXISTS(SELECT * FROM qiita.parent_artifact WHERE artifact_id = a_id) THEN
         RETURN QUERY WITH RECURSIVE root AS (

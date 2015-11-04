@@ -1131,18 +1131,6 @@ Referred by sample_template_filepath ( filepath_id ) </title></a>
 <a xlink:href='#filepath.data_directory_id'><text x='663' y='937'>data_directory_id</text><title>data_directory_id bigserial</title></a>
 <a xlink:href='#filepath.data_directory_id'><use id='fk' x='798' y='926' xlink:href='#fk'/><title>References data_directory ( data_directory_id ) </title></a>
 
-<!-- ============= Table 'data_directory' ============= -->
-<rect class='table' x='840' y='728' width='135' height='120' rx='7' ry='7' />
-<path d='M 840.50 754.50 L 840.50 735.50 Q 840.50 728.50 847.50 728.50 L 967.50 728.50 Q 974.50 728.50 974.50 735.50 L 974.50 754.50 L840.50 754.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#data_directory'><text x='868' y='742' class='tableTitle'>data_directory</text><title>Table qiita.data_directory</title></a>
-  <use id='nn' x='842' y='762' xlink:href='#nn'/><a xlink:href='#data_directory.data_directory_id'><use id='pk' x='842' y='761' xlink:href='#pk'/><title>Primary Key  ( data_directory_id ) </title></a>
-<a xlink:href='#data_directory.data_directory_id'><text x='858' y='772'>data_directory_id</text><title>data_directory_id bigserial not null</title></a>
-<a xlink:href='#data_directory.data_directory_id'><use id='ref' x='963' y='761' xlink:href='#ref'/><title>Referred by filepath ( data_directory_id ) </title></a>
-  <use id='nn' x='842' y='777' xlink:href='#nn'/><a xlink:href='#data_directory.data_type'><text x='858' y='787'>data_type</text><title>data_type varchar not null</title></a>
-  <use id='nn' x='842' y='792' xlink:href='#nn'/><a xlink:href='#data_directory.mountpoint'><text x='858' y='802'>mountpoint</text><title>mountpoint varchar not null</title></a>
-  <use id='nn' x='842' y='807' xlink:href='#nn'/><a xlink:href='#data_directory.subdirectory'><text x='858' y='817'>subdirectory</text><title>subdirectory varchar not null</title></a>
-  <use id='nn' x='842' y='822' xlink:href='#nn'/><a xlink:href='#data_directory.active'><text x='858' y='832'>active</text><title>active bool not null</title></a>
-
 <!-- ============= Table 'term' ============= -->
 <rect class='table' x='540' y='1778' width='105' height='210' rx='7' ry='7' />
 <path d='M 540.50 1804.50 L 540.50 1785.50 Q 540.50 1778.50 547.50 1778.50 L 637.50 1778.50 Q 644.50 1778.50 644.50 1785.50 L 644.50 1804.50 L540.50 1804.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1916,6 +1904,18 @@ Parameters used for processing spectra data&#046;</title></a>
   <use id='nn' x='1997' y='1542' xlink:href='#nn'/><a xlink:href='#preprocessed_spectra_params.parameters_id'><use id='pk' x='1997' y='1541' xlink:href='#pk'/><title>Primary Key  ( parameters_id ) </title></a>
 <a xlink:href='#preprocessed_spectra_params.parameters_id'><text x='2013' y='1552'>parameters_id</text><title>parameters_id bigserial not null</title></a>
   <a xlink:href='#preprocessed_spectra_params.col'><text x='2013' y='1567'>col</text><title>col varchar</title></a>
+
+<!-- ============= Table 'data_directory' ============= -->
+<rect class='table' x='840' y='728' width='135' height='120' rx='7' ry='7' />
+<path d='M 840.50 754.50 L 840.50 735.50 Q 840.50 728.50 847.50 728.50 L 967.50 728.50 Q 974.50 728.50 974.50 735.50 L 974.50 754.50 L840.50 754.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#data_directory'><text x='868' y='742' class='tableTitle'>data_directory</text><title>Table qiita.data_directory</title></a>
+  <use id='nn' x='842' y='762' xlink:href='#nn'/><a xlink:href='#data_directory.data_directory_id'><use id='pk' x='842' y='761' xlink:href='#pk'/><title>Primary Key  ( data_directory_id ) </title></a>
+<a xlink:href='#data_directory.data_directory_id'><text x='858' y='772'>data_directory_id</text><title>data_directory_id bigserial not null</title></a>
+<a xlink:href='#data_directory.data_directory_id'><use id='ref' x='963' y='761' xlink:href='#ref'/><title>Referred by filepath ( data_directory_id ) </title></a>
+  <use id='nn' x='842' y='777' xlink:href='#nn'/><a xlink:href='#data_directory.data_type'><text x='858' y='787'>data_type</text><title>data_type varchar not null</title></a>
+  <use id='nn' x='842' y='792' xlink:href='#nn'/><a xlink:href='#data_directory.mountpoint'><text x='858' y='802'>mountpoint</text><title>mountpoint varchar not null</title></a>
+  <use id='nn' x='842' y='807' xlink:href='#nn'/><a xlink:href='#data_directory.subdirectory'><text x='858' y='817'>subdirectory</text><title>subdirectory bool not null default FALSE</title></a>
+  <use id='nn' x='842' y='822' xlink:href='#nn'/><a xlink:href='#data_directory.active'><text x='858' y='832'>active</text><title>active bool not null</title></a>
 
 </g></svg>
 
@@ -2980,45 +2980,6 @@ Parameters used for processing spectra data&#046;</title></a>
 	<tr>
 		<td>fk_filepath_data_directory</td>
 		<td > ( data&#095;directory&#095;id ) ref <a href='#data&#095;directory'>data&#095;directory</a> (data&#095;directory&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='data_directory'>Table data_directory</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='data_directory.data_directory_id'>data&#095;directory&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='data_directory.data_type'>data&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='data_directory.mountpoint'>mountpoint</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='data_directory.subdirectory'>subdirectory</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='data_directory.active'>active</a></td>
-		<td> bool  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;data&#095;directory primary key</td>
-		<td> ON data&#095;directory&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5503,6 +5464,45 @@ Controlled Vocabulary </td>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;preprocessed&#095;spectra&#095;params primary key</td>
 		<td> ON parameters&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='data_directory'>Table data_directory</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='data_directory.data_directory_id'>data&#095;directory&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_directory.data_type'>data&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_directory.mountpoint'>mountpoint</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_directory.subdirectory'>subdirectory</a></td>
+		<td> bool  NOT NULL  DEFO FALSE </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_directory.active'>active</a></td>
+		<td> bool  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;data&#095;directory primary key</td>
+		<td> ON data&#095;directory&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
