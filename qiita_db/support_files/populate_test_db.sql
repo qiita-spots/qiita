@@ -319,9 +319,9 @@ INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters_
                             visibility_id, artifact_type_id, can_be_submitted_to_ebi,
                             can_be_submitted_to_vamps)
     VALUES ('Mon Oct 1 09:30:27 2012', NULL, NULL, 3, 3, FALSE, FALSE),
-           ('Mon Oct 1 09:30:27 2012', 1, 1, 3, 6, TRUE, TRUE),
-           ('Mon Oct 1 09:30:27 2012', 1, 2, 3, 6, TRUE, TRUE),
-           ('Mon Oct 1 09:30:27 2012', 3, 1, 3, 7, FALSE, FALSE);
+           ('Mon Oct 1 10:30:27 2012', 1, 1, 3, 6, TRUE, TRUE),
+           ('Mon Oct 1 11:30:27 2012', 1, 2, 3, 6, TRUE, TRUE),
+           ('Tue Oct 2 17:30:00 2012', 3, 1, 3, 7, FALSE, FALSE);
 
 -- Link the child artifacts with their parents artifacts
 INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
