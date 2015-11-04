@@ -137,7 +137,7 @@ class Artifact(QiitaObject):
 
         with TRN:
             visibility_id = convert_to_id("sandbox", "visibility")
-            artifact_type_id = convert_to_id("sandbox", "artifact_type")
+            artifact_type_id = convert_to_id(artifact_type, "artifact_type")
 
             if parents:
                 # Check that all parents belong to the same study
