@@ -195,7 +195,8 @@ class Artifact(QiitaObject):
             TRN.add(sql, sql_args)
 
             # Associate the artifact with its filepaths
-            fp_ids = insert_filepaths(filepaths, a_id, cls._table, "filepath")
+            fp_ids = insert_filepaths(filepaths, a_id, artifact_type,
+                                      "filepath")
             sql = """INSERT INTO qiita.artifact_filepath
                         (artifact_id, filepath_id)
                      VALUES (%s, %s)"""
