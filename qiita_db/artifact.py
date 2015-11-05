@@ -9,8 +9,6 @@
 from __future__ import division
 from future.utils import viewitems
 from datetime import datetime
-from os.path import join
-from functools import partial
 
 from .base import QiitaObject
 from .sql_connection import TRN
@@ -18,7 +16,7 @@ from .exceptions import (QiitaDBArtifactCreationError,
                          QiitaDBArtifactDeletionError,
                          QiitaDBOperationNotPermittedError)
 from .util import (convert_to_id, insert_filepaths,
-                   move_filepaths_to_upload_folder, get_db_files_base_dir)
+                   move_filepaths_to_upload_folder, retrieve_filepaths)
 from .software import Parameters, Command
 from .study import Study
 from .metadata_template import PrepTemplate
@@ -509,25 +507,11 @@ class Artifact(QiitaObject):
 
         Returns
         -------
-        list of 3-tuples
+        list of (int, str, str)
             A list of (filepath_id, path, filetype) of all the files associated
             with the artifact
         """
-        with TRN:
-            sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
-                            subdirectory
-                     FROM qiita.filepath
-                        JOIN qiita.artifact_filepath USING (filepath_id)
-                        JOIN qiita.filepath_type USING (filepath_type_id)
-                        JOIN qiita.data_directory USING (data_directory_id)
-                     WHERE artifact_id = %s"""
-            TRN.add(sql, [self.id])
-            results = TRN.execute_fetchindex()
-            base_dir = get_db_files_base_dir()
-            path_builder = partial(join, base_dir)
-
-            return [(fpid, path_builder(mp, sd, fp), fp_type)
-                    for fpid, fp, fp_type, mp, sd in results]
+        return retrieve_filepaths("artifact_filepath", "artifact_id", self.id)
 
     @property
     def parents(self):
