@@ -12,6 +12,7 @@ from os import close, remove
 from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
+from functools import partial
 
 import pandas as pd
 
@@ -40,7 +41,8 @@ from qiita_db.util import (exists_table, exists_dynamic_table, scrub_data,
                            move_upload_files_to_trash,
                            check_access_to_analysis_result, infer_status,
                            get_preprocessed_params_tables, add_message,
-                           add_system_message, clear_system_messages)
+                           add_system_message, clear_system_messages,
+                           retrieve_filepaths)
 
 
 @qiita_test_checker()
@@ -93,7 +95,7 @@ class DBUtilTests(TestCase):
     def test_get_table_cols_w_type(self):
         obs = get_table_cols_w_type("preprocessed_sequence_illumina_params")
         exp = [['param_set_name', 'character varying'],
-               ['preprocessed_params_id', 'bigint'],
+               ['parameters_id', 'bigint'],
                ['max_bad_run_length', 'integer'],
                ['min_per_read_length_fraction', 'real'],
                ['sequence_max_n', 'integer'],
@@ -274,6 +276,15 @@ class DBUtilTests(TestCase):
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
+    def test_retrieve_filepaths(self):
+        obs = retrieve_filepaths('artifact_filepath', 'artifact_id', 1)
+        path_builder = partial(join, get_db_files_base_dir(), "raw_data")
+        exp = [(1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                "raw_forward_seqs"),
+               (2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                "raw_barcodes")]
+        self.assertEqual(obs, exp)
+
     def _common_purge_filpeaths_test(self):
         # Get all the filepaths so we can test if they've been removed or not
         sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
@@ -403,15 +414,15 @@ class DBUtilTests(TestCase):
             get_filepath_id("raw_data", "Not_a_path")
 
     def test_get_mountpoint(self):
-        exp = [(5, join(get_db_files_base_dir(), 'raw_data', ''))]
+        exp = [(5, join(get_db_files_base_dir(), 'raw_data'))]
         obs = get_mountpoint("raw_data")
         self.assertEqual(obs, exp)
 
-        exp = [(1, join(get_db_files_base_dir(), 'analysis', ''))]
+        exp = [(1, join(get_db_files_base_dir(), 'analysis'))]
         obs = get_mountpoint("analysis")
         self.assertEqual(obs, exp)
 
-        exp = [(2, join(get_db_files_base_dir(), 'job', ''))]
+        exp = [(2, join(get_db_files_base_dir(), 'job'))]
         obs = get_mountpoint("job")
         self.assertEqual(obs, exp)
 
@@ -420,41 +431,51 @@ class DBUtilTests(TestCase):
         self.conn_handler.execute(
             "UPDATE qiita.data_directory SET active=false WHERE "
             "data_directory_id=1")
-        self.conn_handler.execute(
-            "INSERT INTO qiita.data_directory (data_type, mountpoint, "
-            "subdirectory, active) VALUES ('analysis', 'analysis', 'tmp', "
-            "true), ('raw_data', 'raw_data', 'tmp', false)")
+        count = get_count('qiita.data_directory')
+        sql = """INSERT INTO qiita.data_directory (data_type, mountpoint,
+                                                   subdirectory, active)
+                 VALUES ('analysis', 'analysis_tmp', true, true),
+                        ('raw_data', 'raw_data_tmp', true, false)"""
+        self.conn_handler.execute(sql)
 
         # this should have been updated
-        exp = [(10, join(get_db_files_base_dir(), 'analysis', 'tmp'))]
+        exp = [(count + 1, join(get_db_files_base_dir(), 'analysis_tmp'))]
         obs = get_mountpoint("analysis")
         self.assertEqual(obs, exp)
 
         # these 2 shouldn't
-        exp = [(5, join(get_db_files_base_dir(), 'raw_data', ''))]
+        exp = [(5, join(get_db_files_base_dir(), 'raw_data'))]
         obs = get_mountpoint("raw_data")
         self.assertEqual(obs, exp)
 
-        exp = [(2, join(get_db_files_base_dir(), 'job', ''))]
+        exp = [(2, join(get_db_files_base_dir(), 'job'))]
         obs = get_mountpoint("job")
         self.assertEqual(obs, exp)
 
         # testing multi returns
-        exp = [(5, join(get_db_files_base_dir(), 'raw_data', '')),
-               (11, join(get_db_files_base_dir(), 'raw_data', 'tmp'))]
+        exp = [(5, join(get_db_files_base_dir(), 'raw_data')),
+               (count + 2, join(get_db_files_base_dir(), 'raw_data_tmp'))]
         obs = get_mountpoint("raw_data", retrieve_all=True)
         self.assertEqual(obs, exp)
 
+        # testing retrieve subdirectory
+        exp = [
+            (5, join(get_db_files_base_dir(), 'raw_data'), False),
+            (count + 2, join(get_db_files_base_dir(), 'raw_data_tmp'), True)]
+        obs = get_mountpoint("raw_data", retrieve_all=True,
+                             retrieve_subdir=True)
+        self.assertEqual(obs, exp)
+
     def test_get_mountpoint_path_by_id(self):
-        exp = join(get_db_files_base_dir(), 'raw_data', '')
+        exp = join(get_db_files_base_dir(), 'raw_data')
         obs = get_mountpoint_path_by_id(5)
         self.assertEqual(obs, exp)
 
-        exp = join(get_db_files_base_dir(), 'analysis', '')
+        exp = join(get_db_files_base_dir(), 'analysis')
         obs = get_mountpoint_path_by_id(1)
         self.assertEqual(obs, exp)
 
-        exp = join(get_db_files_base_dir(), 'job', '')
+        exp = join(get_db_files_base_dir(), 'job')
         obs = get_mountpoint_path_by_id(2)
         self.assertEqual(obs, exp)
 
@@ -463,22 +484,24 @@ class DBUtilTests(TestCase):
         self.conn_handler.execute(
             "UPDATE qiita.data_directory SET active=false WHERE "
             "data_directory_id=1")
-        self.conn_handler.execute(
-            "INSERT INTO qiita.data_directory (data_type, mountpoint, "
-            "subdirectory, active) VALUES ('analysis', 'analysis', 'tmp', "
-            "true), ('raw_data', 'raw_data', 'tmp', false)")
+        count = get_count('qiita.data_directory')
+        sql = """INSERT INTO qiita.data_directory (data_type, mountpoint,
+                                                   subdirectory, active)
+                 VALUES ('analysis', 'analysis_tmp', true, true),
+                        ('raw_data', 'raw_data_tmp', true, false)"""
+        self.conn_handler.execute(sql)
 
         # this should have been updated
-        exp = join(get_db_files_base_dir(), 'analysis', 'tmp')
-        obs = get_mountpoint_path_by_id(10)
+        exp = join(get_db_files_base_dir(), 'analysis_tmp')
+        obs = get_mountpoint_path_by_id(count + 1)
         self.assertEqual(obs, exp)
 
         # these 2 shouldn't
-        exp = join(get_db_files_base_dir(), 'raw_data', '')
+        exp = join(get_db_files_base_dir(), 'raw_data')
         obs = get_mountpoint_path_by_id(5)
         self.assertEqual(obs, exp)
 
-        exp = join(get_db_files_base_dir(), 'job', '')
+        exp = join(get_db_files_base_dir(), 'job')
         obs = get_mountpoint_path_by_id(2)
         self.assertEqual(obs, exp)
 
