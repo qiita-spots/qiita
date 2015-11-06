@@ -1486,10 +1486,10 @@ Referred by study_environmental_package ( study_id )
 Referred by study_experimental_factor ( study_id ) 
 Referred by study_portal ( study_id ) 
 Referred by study_prep_template ( study_id ) 
+Referred by study_publication ( study_id ) 
 Referred by study_sample ( study_id ) 
 Referred by study_sample_columns ( study_id ) 
-Referred by study_users ( study_id ) 
-Referred by study_publication ( study_id ) </title></a>
+Referred by study_users ( study_id ) </title></a>
   <use id='nn' x='1937' y='297' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1937' y='296' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1953' y='307'>email</text><title>email varchar not null
 Email of study owner</title></a>
@@ -1820,8 +1820,8 @@ Referred by processed_params_uclust ( reference_id ) </title></a>
 <path d='M 1890.50 994.50 L 1890.50 975.50 Q 1890.50 968.50 1897.50 968.50 L 2062.50 968.50 Q 2069.50 968.50 2069.50 975.50 L 2069.50 994.50 L1890.50 994.50 ' style='fill:url(#tableHeaderGradient3); stroke:none;' />
 <a xlink:href='#processed_params_sortmerna'><text x='1898' y='982' class='tableTitle'>processed_params_sortmerna</text><title>Table qiita.processed_params_sortmerna
 Parameters used for processing data using method sortmerna</title></a>
-  <use id='nn' x='1892' y='1002' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.processed_params_id'><use id='pk' x='1892' y='1001' xlink:href='#pk'/><title>Primary Key  ( processed_params_id ) </title></a>
-<a xlink:href='#processed_params_sortmerna.processed_params_id'><text x='1908' y='1012'>processed_params_id</text><title>processed_params_id bigserial not null</title></a>
+  <use id='nn' x='1892' y='1002' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.parameters_id'><use id='pk' x='1892' y='1001' xlink:href='#pk'/><title>Primary Key  ( parameters_id ) </title></a>
+<a xlink:href='#processed_params_sortmerna.parameters_id'><text x='1908' y='1012'>parameters_id</text><title>parameters_id bigserial not null</title></a>
   <use id='nn' x='1892' y='1017' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.reference_id'><use id='idx' x='1892' y='1016' xlink:href='#idx'/><title>Index  ( reference_id ) </title></a>
 <a xlink:href='#processed_params_sortmerna.reference_id'><text x='1908' y='1027'>reference_id</text><title>reference_id bigint not null
 What version of reference or type of reference used</title></a>
@@ -1839,8 +1839,8 @@ The name of the parameter set</title></a>
 <path d='M 1740.50 1174.50 L 1740.50 1155.50 Q 1740.50 1148.50 1747.50 1148.50 L 1912.50 1148.50 Q 1919.50 1148.50 1919.50 1155.50 L 1919.50 1174.50 L1740.50 1174.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#processed_params_uclust'><text x='1759' y='1162' class='tableTitle'>processed_params_uclust</text><title>Table qiita.processed_params_uclust
 Parameters used for processing data using method uclust</title></a>
-  <use id='nn' x='1742' y='1182' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.processed_params_id'><use id='pk' x='1742' y='1181' xlink:href='#pk'/><title>Primary Key  ( processed_params_id ) </title></a>
-<a xlink:href='#processed_params_uclust.processed_params_id'><text x='1758' y='1192'>processed_params_id</text><title>processed_params_id bigserial not null</title></a>
+  <use id='nn' x='1742' y='1182' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.parameters_id'><use id='pk' x='1742' y='1181' xlink:href='#pk'/><title>Primary Key  ( parameters_id ) </title></a>
+<a xlink:href='#processed_params_uclust.parameters_id'><text x='1758' y='1192'>parameters_id</text><title>parameters_id bigserial not null</title></a>
   <use id='nn' x='1742' y='1197' xlink:href='#nn'/><a xlink:href='#processed_params_uclust.reference_id'><use id='idx' x='1742' y='1196' xlink:href='#idx'/><title>Index  ( reference_id ) </title></a>
 <a xlink:href='#processed_params_uclust.reference_id'><text x='1758' y='1207'>reference_id</text><title>reference_id bigint not null
 What version of reference or type of reference used</title></a>
@@ -1854,8 +1854,8 @@ What version of reference or type of reference used</title></a>
 <path d='M 1725.50 1309.50 L 1725.50 1290.50 Q 1725.50 1283.50 1732.50 1283.50 L 1942.50 1283.50 Q 1949.50 1283.50 1949.50 1290.50 L 1949.50 1309.50 L1725.50 1309.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
 <a xlink:href='#preprocessed_sequence_454_params'><text x='1735' y='1297' class='tableTitle'>preprocessed_sequence_454_params</text><title>Table qiita.preprocessed_sequence_454_params
 Parameters used for processing sequence data&#046;</title></a>
-  <use id='nn' x='1727' y='1317' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.preprocessed_params_id'><use id='pk' x='1727' y='1316' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
-<a xlink:href='#preprocessed_sequence_454_params.preprocessed_params_id'><text x='1743' y='1327'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
+  <use id='nn' x='1727' y='1317' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.parameters_id'><use id='pk' x='1727' y='1316' xlink:href='#pk'/><title>Primary Key  ( parameters_id ) </title></a>
+<a xlink:href='#preprocessed_sequence_454_params.parameters_id'><text x='1743' y='1327'>parameters_id</text><title>parameters_id bigserial not null</title></a>
   <use id='nn' x='1727' y='1332' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.param_set_name'><text x='1743' y='1342'>param_set_name</text><title>param_set_name varchar&#040;100&#041; not null
 The name of the parameter set</title></a>
   <use id='nn' x='1727' y='1347' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_454_params.min_seq_len'><text x='1743' y='1357'>min_seq_len</text><title>min_seq_len integer not null default 200
@@ -1894,8 +1894,8 @@ Truncate at the first ambiguous base</title></a>
 <path d='M 1965.50 1309.50 L 1965.50 1290.50 Q 1965.50 1283.50 1972.50 1283.50 L 2197.50 1283.50 Q 2204.50 1283.50 2204.50 1290.50 L 2204.50 1309.50 L1965.50 1309.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#preprocessed_sequence_illumina_params'><text x='1972' y='1297' class='tableTitle'>preprocessed_sequence_illumina_params</text><title>Table qiita.preprocessed_sequence_illumina_params
 Parameters used for processing illumina sequence data&#046;</title></a>
-  <use id='nn' x='1967' y='1317' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.preprocessed_params_id'><use id='pk' x='1967' y='1316' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
-<a xlink:href='#preprocessed_sequence_illumina_params.preprocessed_params_id'><text x='1983' y='1327'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
+  <use id='nn' x='1967' y='1317' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.parameters_id'><use id='pk' x='1967' y='1316' xlink:href='#pk'/><title>Primary Key  ( parameters_id ) </title></a>
+<a xlink:href='#preprocessed_sequence_illumina_params.parameters_id'><text x='1983' y='1327'>parameters_id</text><title>parameters_id bigserial not null</title></a>
   <use id='nn' x='1967' y='1332' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.max_bad_run_length'><text x='1983' y='1342'>max_bad_run_length</text><title>max_bad_run_length integer not null default 3</title></a>
   <use id='nn' x='1967' y='1347' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.min_per_read_length_fraction'><text x='1983' y='1357'>min_per_read_length_fraction</text><title>min_per_read_length_fraction real not null default 0&#046;75</title></a>
   <use id='nn' x='1967' y='1362' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.sequence_max_n'><text x='1983' y='1372'>sequence_max_n</text><title>sequence_max_n integer not null default 0</title></a>
@@ -1913,8 +1913,8 @@ The name of the parameter set</title></a>
 <path d='M 1995.50 1534.50 L 1995.50 1515.50 Q 1995.50 1508.50 2002.50 1508.50 L 2167.50 1508.50 Q 2174.50 1508.50 2174.50 1515.50 L 2174.50 1534.50 L1995.50 1534.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#preprocessed_spectra_params'><text x='2002' y='1522' class='tableTitle'>preprocessed_spectra_params</text><title>Table qiita.preprocessed_spectra_params
 Parameters used for processing spectra data&#046;</title></a>
-  <use id='nn' x='1997' y='1542' xlink:href='#nn'/><a xlink:href='#preprocessed_spectra_params.preprocessed_params_id'><use id='pk' x='1997' y='1541' xlink:href='#pk'/><title>Primary Key  ( preprocessed_params_id ) </title></a>
-<a xlink:href='#preprocessed_spectra_params.preprocessed_params_id'><text x='2013' y='1552'>preprocessed_params_id</text><title>preprocessed_params_id bigserial not null</title></a>
+  <use id='nn' x='1997' y='1542' xlink:href='#nn'/><a xlink:href='#preprocessed_spectra_params.parameters_id'><use id='pk' x='1997' y='1541' xlink:href='#pk'/><title>Primary Key  ( parameters_id ) </title></a>
+<a xlink:href='#preprocessed_spectra_params.parameters_id'><text x='2013' y='1552'>parameters_id</text><title>parameters_id bigserial not null</title></a>
   <a xlink:href='#preprocessed_spectra_params.col'><text x='2013' y='1567'>col</text><title>col varchar</title></a>
 
 </g></svg>
@@ -5206,7 +5206,7 @@ Controlled Vocabulary </td>
 </thead>
 <tbody>
 	<tr>
-		<td><a name='processed_params_sortmerna.processed_params_id'>processed&#095;params&#095;id</a></td>
+		<td><a name='processed_params_sortmerna.parameters_id'>parameters&#095;id</a></td>
 		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
@@ -5247,7 +5247,7 @@ Controlled Vocabulary </td>
 	</tr>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;processed&#095;params&#095;sortmerna primary key</td>
-		<td> ON processed&#095;params&#095;id</td>
+		<td> ON parameters&#095;id</td>
 		<td>  </td>
 	</tr>
 	<tr>		<td>idx&#095;processed&#095;params&#095;sortmerna </td>
@@ -5271,7 +5271,7 @@ Controlled Vocabulary </td>
 </thead>
 <tbody>
 	<tr>
-		<td><a name='processed_params_uclust.processed_params_id'>processed&#095;params&#095;id</a></td>
+		<td><a name='processed_params_uclust.parameters_id'>parameters&#095;id</a></td>
 		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
@@ -5297,7 +5297,7 @@ Controlled Vocabulary </td>
 	</tr>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;processed&#095;params&#095;uclust primary key</td>
-		<td> ON processed&#095;params&#095;id</td>
+		<td> ON parameters&#095;id</td>
 		<td>  </td>
 	</tr>
 	<tr>		<td>idx&#095;processed&#095;params&#095;uclust </td>
@@ -5321,7 +5321,7 @@ Controlled Vocabulary </td>
 </thead>
 <tbody>
 	<tr>
-		<td><a name='preprocessed_sequence_454_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
+		<td><a name='preprocessed_sequence_454_params.parameters_id'>parameters&#095;id</a></td>
 		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
@@ -5407,7 +5407,7 @@ Controlled Vocabulary </td>
 	</tr>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;454&#095;params primary key</td>
-		<td> ON preprocessed&#095;params&#095;id</td>
+		<td> ON parameters&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5421,7 +5421,7 @@ Controlled Vocabulary </td>
 </thead>
 <tbody>
 	<tr>
-		<td><a name='preprocessed_sequence_illumina_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
+		<td><a name='preprocessed_sequence_illumina_params.parameters_id'>parameters&#095;id</a></td>
 		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
@@ -5477,7 +5477,7 @@ Controlled Vocabulary </td>
 	</tr>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;illumina&#095;params primary key</td>
-		<td> ON preprocessed&#095;params&#095;id</td>
+		<td> ON parameters&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5491,7 +5491,7 @@ Controlled Vocabulary </td>
 </thead>
 <tbody>
 	<tr>
-		<td><a name='preprocessed_spectra_params.preprocessed_params_id'>preprocessed&#095;params&#095;id</a></td>
+		<td><a name='preprocessed_spectra_params.parameters_id'>parameters&#095;id</a></td>
 		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
@@ -5502,7 +5502,7 @@ Controlled Vocabulary </td>
 	</tr>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;preprocessed&#095;spectra&#095;params primary key</td>
-		<td> ON preprocessed&#095;params&#095;id</td>
+		<td> ON parameters&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>
