@@ -118,6 +118,7 @@ class ParametersTests(TestCase):
         obs = Parameters(1, Command(1))
         self.assertEqual(obs.id, 1)
         self.assertEqual(obs._table, "preprocessed_sequence_illumina_params")
+        self.assertEqual(obs.command, Command(1))
 
     def test_exists(self):
         cmd = Command(1)
@@ -154,6 +155,8 @@ class ParametersTests(TestCase):
                'max_barcode_errors': 1.5}
         self.assertEqual(obs.values, exp)
 
+        self.assertEqual(obs.command, cmd)
+
     def test_iter(self):
         cmd = Command(1)
         obs = list(Parameters.iter(cmd))
@@ -172,9 +175,10 @@ class ParametersTests(TestCase):
         self.assertEqual(Parameters(1, Command(1)).values, exp)
 
     def test_to_str(self):
-        exp = ("--barcode_type golay_12 --max_bad_run_length 3 "
-               "--max_barcode_errors 1.5 --min_per_read_length_fraction 0.75 "
-               "--phred_quality_threshold 3 --sequence_max_n 0")
+        exp = ("--barcode_type 'golay_12' --max_bad_run_length '3' "
+               "--max_barcode_errors '1.5' "
+               "--min_per_read_length_fraction '0.75' "
+               "--phred_quality_threshold '3' --sequence_max_n '0'")
         self.assertEqual(Parameters(1, Command(1)).to_str(), exp)
 
     def test_command(self):

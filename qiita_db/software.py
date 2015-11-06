@@ -391,6 +391,7 @@ class Parameters(object):
         with TRN:
             self._table = command.parameters_table
             self.id = id_
+            self._command = command
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.{0}
@@ -528,6 +529,17 @@ class Parameters(object):
             del result["parameters_id"]
             del result["param_set_name"]
             return result
+
+    @property
+    def command(self):
+        """The command that this parameter set belongs to
+
+        Returns
+        -------
+        qiita_db.software.Command
+            The command that this parameter set belongs to
+        """
+        return self._command
 
     def to_str(self):
         """Generates a string with the parameter values
