@@ -139,12 +139,12 @@ class Artifact(QiitaObject):
 
             if parents:
                 # Check that all parents belong to the same study
-                studies = {p.study for p in parents}
+                studies = {p.study.id for p in parents}
                 if len(studies) > 1:
                     raise QiitaDBArtifactCreationError(
                         "parents from multiple studies provided: %s"
                         % ', '.join(studies))
-                study_id = studies[0]
+                study_id = studies.pop()
 
                 # Create the artifact
                 sql = """INSERT INTO qiita.artifact
@@ -201,7 +201,7 @@ class Artifact(QiitaObject):
                         (artifact_id, filepath_id)
                      VALUES (%s, %s)"""
             sql_args = [[a_id, fp_id] for fp_id in fp_ids]
-            TRN.add(sql, sql_args)
+            TRN.add(sql, sql_args, many=True)
             TRN.execute()
 
         return instance
@@ -236,7 +236,8 @@ class Artifact(QiitaObject):
             if instance.children:
                 raise QiitaDBArtifactDeletionError(
                     artifact_id,
-                    "it has children: %s" % ', '.join(instance.children))
+                    "it has children: %s"
+                    % ', '.join([str(c.id) for c in instance.children]))
 
             # Check if the artifact has been analyzed
             sql = """SELECT EXISTS(SELECT *
@@ -271,12 +272,12 @@ class Artifact(QiitaObject):
             # uploads folder. We also need to nullify the column in the prep
             # template table
             if not instance.parents:
-                move_filepaths_to_upload_folder(study, filepaths)
+                move_filepaths_to_upload_folder(study.id, filepaths)
 
                 sql = """UPDATE qiita.prep_template
                          SET artifact_id = NULL
-                         WHERE prep_template IN %s"""
-                TRN.add(sql, [tuple(instance.prep_templates)])
+                         WHERE prep_template_id IN %s"""
+                TRN.add(sql, [tuple(pt.id for pt in instance.prep_templates)])
             else:
                 sql = """DELETE FROM qiita.parent_artifact
                          WHERE artifact_id = %s"""
@@ -325,7 +326,7 @@ class Artifact(QiitaObject):
             res = TRN.execute_fetchindex()[0]
             if res[0] is None:
                 return None
-            return Parameters(res[1], Command[res[0]])
+            return Parameters(res[1], Command(res[0]))
 
     @property
     def visibility(self):
@@ -342,7 +343,23 @@ class Artifact(QiitaObject):
                         JOIN qiita.visibility USING (visibility_id)
                      WHERE artifact_id = %s"""
             TRN.add(sql, [self.id])
-            return TRN.execute_fetchlas()
+            return TRN.execute_fetchlast()
+
+    @visibility.setter
+    def visibility(self, value):
+        """Sets the visibility of the artifact
+
+        Parameters
+        ----------
+        value : str
+            The new visibility of the artifact
+        """
+        with TRN:
+            sql = """UPDATE qiita.artifact
+                     SET visibility_id = %s
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [convert_to_id(value, "visibility"), self.id])
+            TRN.execute()
 
     @property
     def artifact_type(self):
@@ -469,10 +486,10 @@ class Artifact(QiitaObject):
             If the artifact cannot be submitted to VAMPS
         """
         with TRN:
-            if not self.can_be_submiited_to_vamps:
+            if not self.can_be_submitted_to_vamps:
                 raise QiitaDBOperationNotPermittedError(
                     "Artifact %s cannot be submitted to VAMPS" % self.id)
-            sql = """SELECT is_submitted_to_vamps
+            sql = """SELECT submitted_to_vamps
                      FROM qiita.artifact
                      WHERE artifact_id = %s"""
             TRN.add(sql, [self.id])
@@ -493,11 +510,11 @@ class Artifact(QiitaObject):
             If the artifact cannot be submitted to VAMPS
         """
         with TRN:
-            if not self.can_be_submiited_to_vamps:
+            if not self.can_be_submitted_to_vamps:
                 raise QiitaDBOperationNotPermittedError(
                     "Artifact %s cannot be submitted to VAMPS" % self.id)
             sql = """UPDATE qiita.artifact
-                     SET is_submitted_to_vamps = %s
+                     SET submitted_to_vamps = %s
                      WHERE artifact_id = %s"""
             TRN.add(sql, [value, self.id])
             TRN.execute()
@@ -557,8 +574,9 @@ class Artifact(QiitaObject):
         with TRN:
             sql = """SELECT prep_template_id
                      FROM qiita.prep_template
-                     WHERE artifact_id IN (SELECT *
-                                           FROM find_artifact_roots(%s))"""
+                     WHERE artifact_id IN (
+                        SELECT *
+                        FROM qiita.find_artifact_roots(%s))"""
             TRN.add(sql, [self.id])
             return [PrepTemplate(pt_id)
                     for pt_id in TRN.execute_fetchflatten()]
@@ -574,7 +592,7 @@ class Artifact(QiitaObject):
         """
         with TRN:
             sql = """SELECT study_id
-                     FROM qiita.studt_artifact
+                     FROM qiita.study_artifact
                      WHERE artifact_id = %s"""
             TRN.add(sql, [self.id])
             return Study(TRN.execute_fetchlast())

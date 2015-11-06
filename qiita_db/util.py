@@ -644,10 +644,12 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
             if subdir:
                 # Generate the new filepaths, format:
                 # mountpoint/obj_id/original_name
+                dirname = db_path(str(obj_id))
+                if not exists(dirname):
+                    makedirs(dirname)
                 new_filepaths = [
-                    (db_path(obj_id, basename(path)), id_)
-                    for path, id_ in filepaths
-                ]
+                    (join(dirname, basename(path)), id_)
+                    for path, id_ in filepaths]
             else:
                 # Generate the new fileapths. format:
                 # mountpoint/DataId_OriginalName
@@ -664,7 +666,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
         def str_to_id(x):
             return (x if isinstance(x, (int, long))
                     else convert_to_id(x, "filepath_type"))
-        paths_w_checksum = [(relpath(path, base_fp), str_to_id(id_),
+        paths_w_checksum = [(basename(path), str_to_id(id_),
                             compute_checksum(path))
                             for path, id_ in new_filepaths]
         # Create the list of SQL values to add
@@ -699,7 +701,7 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
 
     def path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
         if subdirectory:
-            return join(db_dir, mountpoint, obj_id, filepath)
+            return join(db_dir, mountpoint, str(obj_id), filepath)
         else:
             return join(db_dir, mountpoint, filepath)
 
