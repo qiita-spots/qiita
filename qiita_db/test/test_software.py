@@ -10,12 +10,23 @@ from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.software import Command, Software, Parameters
+from qiita_db.exceptions import QiitaDBDuplicateError
 
 
 @qiita_test_checker()
 class CommandTests(TestCase):
     def setUp(self):
         self.software = Software(1)
+
+    def test_exists(self):
+        self.assertFalse(Command.exists(self.software, "donotexists"))
+        self.assertTrue(Command.exists(self.software, "split_libraries.py"))
+
+    def test_create_error_duplicate(self):
+        with self.assertRaises(QiitaDBDuplicateError):
+            Command.create(
+                self.software, "Test Command", "This is a command for testing",
+                "split_libraries.py", "preprocessed_spectra_params")
 
     def test_create(self):
         obs = Command.create(

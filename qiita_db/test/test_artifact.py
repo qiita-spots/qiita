@@ -14,6 +14,9 @@ from os.path import exists, join, basename
 from functools import partial
 
 import pandas as pd
+import numpy as np
+from biom.table import Table
+from biom.util import biom_open
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
@@ -57,6 +60,13 @@ class ArtifactTests(TestCase):
                     "GTGTGCCAGCAGCCGCGGTAATACGTAGGG\n")
         self.filepaths_processed = [(self.fp3, 4)]
 
+        # Generate some file for a BIOM
+        fd, self.fp4 = mkstemp(suffix='_table.biom')
+        t = Table(np.array([[1, 2], [3, 4]]), ['a', 'b'], ['x', 'y'])
+        with biom_open(self.fp4, 'w') as f:
+            t.to_hdf5(f, "test")
+        self.filepaths_biom = [(self.fp4, 7)]
+
         # Create a new prep template
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
@@ -70,7 +80,7 @@ class ArtifactTests(TestCase):
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         self.prep_template = PrepTemplate.create(metadata, Study(1), "16S")
 
-        self._clean_up_files = [self.fp1, self.fp2, self.fp3]
+        self._clean_up_files = [self.fp1, self.fp2, self.fp3, self.fp4]
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -162,6 +172,34 @@ class ArtifactTests(TestCase):
         self.assertEqual(obs.ebi_run_accessions, dict())
         self.assertEqual(obs.study, Study(1))
 
+    def test_create_biom(self):
+        fp_count = get_count('qiita.filepath')
+        exp_timestamp = datetime(2015, 11, 1, 16, 40)
+        exp_params = Parameters(1, Command(3))
+        obs = Artifact.create(self.filepaths_biom, "BIOM",
+                              timestamp=exp_timestamp,
+                              parents=[Artifact(2)],
+                              processing_parameters=exp_params)
+        self.assertEqual(obs.timestamp, exp_timestamp)
+        self.assertEqual(obs.processing_parameters, exp_params)
+        self.assertEqual(obs.visibility, 'sandbox')
+        self.assertEqual(obs.artifact_type, 'BIOM')
+        self.assertFalse(obs.can_be_submitted_to_ebi)
+        self.assertFalse(obs.can_be_submitted_to_vamps)
+        with self.assertRaises(QiitaDBOperationNotPermittedError):
+            obs.ebi_run_accessions
+
+        with self.assertRaises(QiitaDBOperationNotPermittedError):
+            obs.is_submitted_to_vamps
+
+        db_biom_dir = get_mountpoint('BIOM')[0][1]
+        path_builder = partial(join, db_biom_dir, str(obs.id))
+        exp_fps = [(fp_count + 1, path_builder(basename(self.fp4)), 'biom')]
+        self.assertEqual(obs.filepaths, exp_fps)
+        self.assertEqual(obs.parents, [Artifact(2)])
+        self.assertEqual(obs.prep_templates, [PrepTemplate(1)])
+        self.assertEqual(obs.study, Study(1))
+
     def test_delete_error_public(self):
         test = Artifact.create(self.filepaths_root, "FASTQ",
                                prep_template=self.prep_template)
@@ -207,7 +245,7 @@ class ArtifactTests(TestCase):
         with self.assertRaises(QiitaDBUnknownIDError):
             Artifact(test.id)
 
-    def test_tiemstamp(self):
+    def test_timestamp(self):
         self.assertEqual(Artifact(1).timestamp,
                          datetime(2012, 10, 1, 9, 30, 27))
         self.assertEqual(Artifact(2).timestamp,

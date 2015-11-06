@@ -55,6 +55,30 @@ class Command(QiitaObject):
             return TRN.execute_fetchlast()
 
     @classmethod
+    def exists(cls, software, cli_cmd):
+        """Checks if the command already exists in the system
+
+        Parameters
+        ----------
+        qiita_db.software.Software
+            The software to which this command belongs to.
+        cli_cmd : str
+            The CLI used to call this command
+
+        Returns
+        -------
+        bool
+            Whether the command exists in the system or not
+        """
+        with TRN:
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.software_command
+                                   WHERE software_id = %s
+                                        AND cli_cmd = %s)"""
+            TRN.add(sql, [software.id, cli_cmd])
+            return TRN.execute_fetchlast()
+
+    @classmethod
     def create(cls, software, name, description, cli_cmd, parameters_table):
         r"""Creates a new command in the system
 
@@ -78,6 +102,10 @@ class Command(QiitaObject):
             The newly created command
         """
         with TRN:
+            if cls.exists(software, cli_cmd):
+                raise QiitaDBDuplicateError(
+                    "command", "software: %d, cli_cmd: %s"
+                               % (software.id, cli_cmd))
             sql = """INSERT INTO qiita.software_command
                             (name, software_id, description, cli_cmd,
                              parameters_table)
@@ -156,7 +184,7 @@ class Command(QiitaObject):
 
 
 class Software(QiitaObject):
-    r"""A software available in the system
+    r"""A software package available in the system
 
     Attributes
     ----------
@@ -189,7 +217,7 @@ class Software(QiitaObject):
             The version of the software
         description : str
             The description of the software
-        publications : list of 2-tuples of str
+        publications : list of (str, str), optional
             A list with the (DOI, pubmed_id) of the publications attached to
             the software
         """
@@ -274,7 +302,7 @@ class Software(QiitaObject):
 
         Returns
         -------
-        list of 2-tuples of str
+        list of (str, str)
             The list of DOI and pubmed_id attached to the publication
         """
         with TRN:
@@ -294,6 +322,11 @@ class Software(QiitaObject):
         publications : list of 2-tuples of str
             A list with the (DOI, pubmed_id) of the publications to be attached
             to the software
+
+        Notes
+        -----
+        For more information about pubmed id, visit
+        https://www.nlm.nih.gov/bsd/disted/pubmedtutorial/020_830.html
         """
         with TRN:
             sql = """INSERT INTO qiita.publication (doi, pubmed_id)
@@ -358,7 +391,6 @@ class Parameters(object):
         with TRN:
             self._table = command.parameters_table
             self.id = id_
-            self._command = command
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.{0}
@@ -497,16 +529,6 @@ class Parameters(object):
             del result["param_set_name"]
             return result
 
-    @property
-    def command(self):
-        """The command to which the parameter set belongs to
-
-        Returns
-        -------
-        qiita_db.software.Command
-        """
-        return self._command
-
     def to_str(self):
         """Generates a string with the parameter values
 
@@ -528,6 +550,6 @@ class Parameters(object):
                     if values[p_name]:
                         result.append("--%s" % p_name)
                 else:
-                    result.append("--%s %s" % (p_name, values[p_name]))
+                    result.append("--%s '%s'" % (p_name, values[p_name]))
 
             return " ".join(result)

@@ -23,7 +23,8 @@ from .metadata_template import PrepTemplate
 
 
 class Artifact(QiitaObject):
-    r"""A piece of data that different commands can be applied on
+    r"""Any kind of file (or group of files) stored in the system and its
+    attributes
 
     Attributes
     ----------
@@ -116,16 +117,15 @@ class Artifact(QiitaObject):
         elif not (parents or prep_template):
             raise QiitaDBArtifactCreationError(
                 "at least parents or prep_template must be provided")
-
-        # If parents is provided, processing parameters should also be provided
-        if parents and not processing_parameters:
+        elif parents and not processing_parameters:
+            # If parents is provided, processing parameters should also be
+            # provided
             raise QiitaDBArtifactCreationError(
                 "if parents is provided, processing_parameters should also be"
                 "provided.")
-
-        # If prep_template is provided, processing_parameters should not be
-        # provided
-        if prep_template and processing_parameters:
+        elif prep_template and processing_parameters:
+            # If prep_template is provided, processing_parameters should not be
+            # provided
             raise QiitaDBArtifactCreationError(
                 "if prep_template is provided, processing_parameters should "
                 "not be provided.")
