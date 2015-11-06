@@ -156,7 +156,7 @@ class Command(QiitaObject):
 
 
 class Software(QiitaObject):
-    r"""A software available in the system
+    r"""A software package available in the system
 
     Attributes
     ----------
@@ -189,7 +189,7 @@ class Software(QiitaObject):
             The version of the software
         description : str
             The description of the software
-        publications : list of 2-tuples of str
+        publications : list of (str, str), optional
             A list with the (DOI, pubmed_id) of the publications attached to
             the software
         """
@@ -274,7 +274,7 @@ class Software(QiitaObject):
 
         Returns
         -------
-        list of 2-tuples of str
+        list of (str, str)
             The list of DOI and pubmed_id attached to the publication
         """
         with TRN:
@@ -294,6 +294,11 @@ class Software(QiitaObject):
         publications : list of 2-tuples of str
             A list with the (DOI, pubmed_id) of the publications to be attached
             to the software
+
+        Notes
+        -----
+        For more information about pubmed id, visit
+        https://www.nlm.nih.gov/bsd/disted/pubmedtutorial/020_830.html
         """
         with TRN:
             sql = """INSERT INTO qiita.publication (doi, pubmed_id)
@@ -517,6 +522,6 @@ class Parameters(object):
                     if values[p_name]:
                         result.append("--%s" % p_name)
                 else:
-                    result.append("--%s %s" % (p_name, values[p_name]))
+                    result.append("--%s '%s'" % (p_name, values[p_name]))
 
             return " ".join(result)
