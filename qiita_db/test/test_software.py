@@ -166,5 +166,8 @@ class ParametersTests(TestCase):
                "--phred_quality_threshold 3 --sequence_max_n 0")
         self.assertEqual(Parameters(1, Command(1)).to_str(), exp)
 
+    def test_command(self):
+        self.assertEqual(Parameters(1, Command(1)).command, Command(1))
+
 if __name__ == '__main__':
     main()
