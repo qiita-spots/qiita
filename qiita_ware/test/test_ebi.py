@@ -131,7 +131,9 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         e = EBISubmission(2, 'ADD')
         elm = ET.Element('TESTING', {'foo': 'bar'})
 
-        e._add_dict_as_tags_and_values(elm, 'foo', {'x': 'y', '>x': '<y'})
+        e._add_dict_as_tags_and_values(elm, 'foo', {'x': 'y',
+                                                    '>x': '<y',
+                                                    'none': None})
         obs = ET.tostring(elm)
         exp = ''.join([v.strip() for v in ADDDICTTEST.splitlines()])
         self.assertEqual(obs, exp)
@@ -315,7 +317,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                                 'experiment_design_description':
                                     'microbiome of soil and rhizosphere',
                                 'library_construction_protocol':
-                                    'PMID: 22402401'},
+                                    'PMID: 22402401',
+                                'extra_value': 1.2},
                 'SKD9.640182': {'center_name': 'ANL',
                                 'center_project_name': 'Test Project',
                                 'platform': 'ILLUMINA',
@@ -324,7 +327,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                                 'experiment_design_description':
                                     'microbiome of soil and rhizosphere',
                                 'library_construction_protocol':
-                                    'PMID: 22402401'}
+                                    'PMID: 22402401',
+                                'extra_value': 'Unspecified'}
             }
             investigation_type = "Metagenomics"
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
@@ -1158,7 +1162,7 @@ sequencer adapter regions.
         <TAG>center_name</TAG><VALUE>ANL</VALUE>
       </EXPERIMENT_ATTRIBUTE>
       <EXPERIMENT_ATTRIBUTE>
-        <TAG>center_project_name</TAG><VALUE>None</VALUE>
+        <TAG>center_project_name</TAG><VALUE>Unknown</VALUE>
       </EXPERIMENT_ATTRIBUTE>
       <EXPERIMENT_ATTRIBUTE>
         <TAG>emp_status</TAG><VALUE>EMP</VALUE>
@@ -1246,7 +1250,7 @@ sequencer adapter regions.
         <TAG>center_name</TAG><VALUE>ANL</VALUE>
       </EXPERIMENT_ATTRIBUTE>
       <EXPERIMENT_ATTRIBUTE>
-        <TAG>center_project_name</TAG><VALUE>None</VALUE>
+        <TAG>center_project_name</TAG><VALUE>Unknown</VALUE>
       </EXPERIMENT_ATTRIBUTE>
       <EXPERIMENT_ATTRIBUTE>
         <TAG>emp_status</TAG><VALUE>EMP</VALUE>
@@ -1426,6 +1430,10 @@ ADDDICTTEST = """<TESTING foo="bar">
     <foo>
         <TAG>&gt;x</TAG>
         <VALUE>&lt;y</VALUE>
+    </foo>
+    <foo>
+        <TAG>none</TAG>
+        <VALUE>Unknown</VALUE>
     </foo>
     <foo>
         <TAG>x</TAG>

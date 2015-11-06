@@ -185,11 +185,11 @@ class QiitaConfig(TestCase):
             self.redis_version = None
 
     def test_future_library_version(self):
-        acceptable_version = (0, 13, 0)
+        acceptable_version = (0, 14, 0)
         string_acceptable_version = '.'.join(map(str, acceptable_version))
         version = tuple(map(int, future_lib_version.split('.')))
 
-        self.assertTrue(acceptable_version == version,
+        self.assertTrue(acceptable_version <= version,
                         'Unsupported future version. You have %s but %s is '
                         'requiered' % (future_lib_version,
                                        string_acceptable_version))
