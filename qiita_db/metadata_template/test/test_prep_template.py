@@ -29,7 +29,7 @@ from qiita_db.exceptions import (QiitaDBUnknownIDError,
                                  QiitaDBError,
                                  QiitaDBDuplicateSamplesError)
 from qiita_db.study import Study
-from qiita_db.data import RawData, ProcessedData
+from qiita_db.artifact import Artifact
 from qiita_db.util import exists_table, get_mountpoint, get_count
 from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
 from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
@@ -242,11 +242,10 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         obs_bool, obs_msg = self.prep_template.can_be_extended(
             ["NEW_SAMPLE"], [])
         self.assertFalse(obs_bool)
-        self.assertEqual(obs_msg,
-                         "Preprocessed data have already been generated (%s). "
-                         "No new samples can be added to the prep template."
-                         % ', '.join(
-                             map(str, self.prep_template.preprocessed_data)))
+        exp_msg = ("The artifact attached to the prep template has been "
+                   "already processed. No new samples can be added to the "
+                   "prep template")
+        self.assertEqual(obs_msg, exp_msg)
 
 
 @qiita_test_checker()
@@ -533,10 +532,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         """data_type returns the int with the data_type_id"""
         self.assertTrue(self.tester.data_type(ret_id=True), 2)
 
-    def test_preprocessed_data(self):
-        """Returns the preprocessed data list generated from this template"""
-        self.assertEqual(self.tester.preprocessed_data, [1, 2])
-
     def test_investigation_type(self):
         """investigation_type works correctly"""
         self.assertEqual(self.tester.investigation_type, "Metagenomics")
@@ -804,9 +799,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(pt.id, new_id)
         self.assertEqual(pt.data_type(), self.data_type)
         self.assertEqual(pt.data_type(ret_id=True), self.data_type_id)
-        self.assertEqual(pt.raw_data, None)
-        self.assertEqual(pt.preprocessed_data, [])
-        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+        self.assertEqual(pt.artifact, None)
         self.assertEqual(pt.investigation_type, None)
         self.assertEqual(pt.study_id, self.test_study.id)
         self.assertEqual(pt.status, "sandbox")
@@ -1018,7 +1011,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         """Try to delete a prep template with a raw data attached to id"""
         pt = PrepTemplate.create(self.metadata, self.test_study,
                                  self.data_type_id)
-        pt.raw_data = RawData(1)
+        pt.artifact = Artifact(1)
         with self.assertRaises(QiitaDBExecutionError):
             PrepTemplate.delete(pt.id)
 
@@ -1133,8 +1126,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
         # Check that changing the status of the processed data, the status
         # of the prep template changes
-        pd = ProcessedData(1)
-        pd.status = 'public'
+        a = Artifact(1)
+        a.visibility = 'public'
         self.assertEqual(pt.status, 'public')
 
         # New prep templates have the status to sandbox because there is no
@@ -1202,17 +1195,17 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(pt.raw_data, None)
 
     def test_raw_data_setter_error(self):
-        rd = RawData(1)
+        a = Artifact(1)
         with self.assertRaises(QiitaDBError):
-            self.tester.raw_data = rd
+            self.tester.artifact = a
 
     def test_raw_data_setter(self):
-        rd = RawData(1)
+        a = Artifact(1)
         pt = PrepTemplate.create(self.metadata, self.test_study,
                                  self.data_type_id)
         self.assertEqual(pt.raw_data, None)
-        pt.raw_data = rd
-        self.assertEqual(pt.raw_data, rd.id)
+        pt.artifact = a
+        self.assertEqual(pt.raw_data, a.id)
 
     def test_can_be_updated_on_new(self):
         """test if the template can be updated"""

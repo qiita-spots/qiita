@@ -324,8 +324,12 @@ class PrepTemplate(MetadataTemplate):
         PREP_TEMPLATE_COLUMNS_TARGET_GENE
         """
         with TRN:
-            if (not self.preprocessed_data or
-               self.data_type() not in TARGET_GENE_DATA_TYPES):
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.parent_artifact
+                                   WHERE parent_id = %s)"""
+            TRN.add(sql, [self.artifact])
+            if (not TRN.execute_fetchlast() or
+                    self.data_type() not in TARGET_GENE_DATA_TYPES):
                 return True
 
             tg_columns = set(chain.from_iterable(
@@ -359,11 +363,17 @@ class PrepTemplate(MetadataTemplate):
         New samples can't be added to the prep template if a preprocessed
         data has been already generated.
         """
-        ppd_data = self.preprocessed_data
-        if new_samples and ppd_data:
-            return False, ("Preprocessed data have already been generated "
-                           "(%s). No new samples can be added to the prep "
-                           "template." % ', '.join(map(str, ppd_data)))
+        if new_samples:
+            with TRN:
+                sql = """SELECT EXISTS(SELECT *
+                                       FROM qiita.parent_artifact
+                                       WHERE parent_id = %s)"""
+                TRN.add(sql, [self.artifact])
+                if TRN.execute_fetchlast():
+                    return False, ("The artifact attached to the prep "
+                                   "template has been already processed. No "
+                                   "new samples can be added to the prep "
+                                   "template")
         return True, ""
 
     @property
@@ -396,53 +406,6 @@ class PrepTemplate(MetadataTemplate):
                      SET artifact_id = %s
                      WHERE prep_template_id = %s"""
             TRN.add(sql, [artifact.id, self.id])
-            TRN.execute()
-
-    @property
-    def preprocessed_data(self):
-        with TRN:
-            sql = """SELECT preprocessed_data_id
-                     FROM qiita.prep_template_preprocessed_data
-                     WHERE prep_template_id=%s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchflatten()
-
-    @property
-    def preprocessing_status(self):
-        r"""Tells if the data has been preprocessed or not
-
-        Returns
-        -------
-        str
-            One of {'not_preprocessed', 'preprocessing', 'success', 'failed'}
-        """
-        with TRN:
-            sql = """SELECT preprocessing_status FROM qiita.prep_template
-                     WHERE {0}=%s""".format(self._id_column)
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
-
-    @preprocessing_status.setter
-    def preprocessing_status(self, state):
-        r"""Update the preprocessing status
-
-        Parameters
-        ----------
-        state : str, {'not_preprocessed', 'preprocessing', 'success', 'failed'}
-            The current status of preprocessing
-
-        Raises
-        ------
-        ValueError
-            If the state is not known.
-        """
-        if (state not in ('not_preprocessed', 'preprocessing', 'success') and
-                not state.startswith('failed:')):
-            raise ValueError('Unknown state: %s' % state)
-        with TRN:
-            sql = """UPDATE qiita.prep_template SET preprocessing_status = %s
-                     WHERE {0} = %s""".format(self._id_column)
-            TRN.add(sql, [state, self.id])
             TRN.execute()
 
     @property
@@ -636,15 +599,11 @@ class PrepTemplate(MetadataTemplate):
         is 'sandbox'.
         """
         with TRN:
-            sql = """SELECT processed_data_status
-                    FROM qiita.processed_data_status pds
-                      JOIN qiita.processed_data pd
-                        USING (processed_data_status_id)
-                      JOIN qiita.preprocessed_processed_data ppd_pd
-                        USING (processed_data_id)
-                      JOIN qiita.prep_template_preprocessed_data pt_ppd
-                        USING (preprocessed_data_id)
-                    WHERE pt_ppd.prep_template_id=%s"""
+            sql = """SELECT visibility
+                     FROM qiita.prep_template
+                        JOIN qiita.artifact USING (artifact_id)
+                        JOIN qiita.visibility USING (visibility_id)
+                     WHERE prep_template_id = %s"""
             TRN.add(sql, [self._id])
 
             return infer_status(TRN.execute_fetchindex())
