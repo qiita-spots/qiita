@@ -13,9 +13,10 @@ from time import strftime
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 import qiita_db as qdb
+from .base_metadata_template import BaseSample, MetadataTemplate
 
 
-class Sample(qdb.metadata_template.base_metadata_template.BaseSample):
+class Sample(BaseSample):
     r"""Class that models a sample present in a SampleTemplate.
 
     See Also
@@ -45,8 +46,7 @@ class Sample(qdb.metadata_template.base_metadata_template.BaseSample):
             raise IncompetentQiitaDeveloperError()
 
 
-class SampleTemplate(
-        qdb.metadata_template.base_metadata_template.MetadataTemplate):
+class SampleTemplate(MetadataTemplate):
     r"""Represent the SampleTemplate of a study. Provides access to the
     tables in the DB that holds the sample metadata information.
 

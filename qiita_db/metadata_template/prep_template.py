@@ -18,14 +18,17 @@ import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
+from .constants import (PREP_TEMPLATE_COLUMNS, TARGET_GENE_DATA_TYPES,
+                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+from .base_metadata_template import BaseSample, MetadataTemplate
 
-PREP_TEMPLATE_COLUMNS = qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS
-TARGET_GENE_DATA_TYPES = qdb.metadata_template.constants.TARGET_GENE_DATA_TYPES
-PREP_TEMPLATE_COLUMNS_TARGET_GENE = \
-    qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS_TARGET_GENE
+# PREP_TEMPLATE_COLUMNS = qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS
+# TARGET_GENE_DATA_TYPES = qdb.metadata_template.constants.TARGET_GENE_DATA_TYPES
+# PREP_TEMPLATE_COLUMNS_TARGET_GENE = \
+#     qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS_TARGET_GENE
 
 
-class PrepSample(qdb.metadata_template.base_metadata_template.BaseSample):
+class PrepSample(BaseSample):
     r"""Class that models a sample present in a PrepTemplate.
 
     See Also
@@ -55,8 +58,7 @@ class PrepSample(qdb.metadata_template.base_metadata_template.BaseSample):
             raise IncompetentQiitaDeveloperError()
 
 
-class PrepTemplate(
-        qdb.metadata_template.base_metadata_templateMetadataTemplate):
+class PrepTemplate(MetadataTemplate):
     r"""Represent the PrepTemplate of a raw data. Provides access to the
     tables in the DB that holds the sample preparation information.
 
