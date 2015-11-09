@@ -49,21 +49,10 @@ from skbio.util import find_duplicates
 import warnings
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-
-from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
-                                 QiitaDBNotImplementedError, QiitaDBError,
-                                 QiitaDBWarning, QiitaDBDuplicateHeaderError,
-                                 QiitaDBDuplicateSamplesError)
-from qiita_db.base import QiitaObject
-from qiita_db.sql_connection import TRN
-from qiita_db.util import (exists_table, get_table_cols,
-                           get_mountpoint, insert_filepaths)
-from qiita_db.logger import LogEntry
-from .util import (as_python_types, get_datatypes, get_invalid_sample_names,
-                   prefix_sample_names_with_id, type_lookup, cast_to_python)
+import qiita_db as qdb
 
 
-class BaseSample(QiitaObject):
+class BaseSample(qdb.base.QiitaObject):
     r"""Sample object that accesses the db to get the information of a sample
     belonging to a PrepTemplate or a SampleTemplate.
 
@@ -138,7 +127,8 @@ class BaseSample(QiitaObject):
         # Check if the sample id is present on the passed metadata template
         # This test will check that the sample id is actually present on the db
         if sample_id not in md_template:
-            raise QiitaDBUnknownIDError(sample_id, self.__class__.__name__)
+            raise qdb.exceptions.QiitaDBUnknownIDError(
+                sample_id, self.__class__.__name__)
         # Assign private attributes
         self._id = sample_id
         self._md_template = md_template
@@ -175,14 +165,14 @@ class BaseSample(QiitaObject):
         bool
             True if already exists. False otherwise.
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             cls._check_subclass()
             sql = """SELECT EXISTS(
                         SELECT * FROM qiita.{0}
                         WHERE sample_id=%s AND {1}=%s
                     )""".format(cls._table, cls._id_column)
-            TRN.add(sql, [sample_id, md_template.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [sample_id, md_template.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     def _get_categories(self):
         r"""Returns all the available metadata categories for the sample
@@ -193,7 +183,7 @@ class BaseSample(QiitaObject):
             The set of all available metadata categories
         """
         # Get all the columns
-        cols = get_table_cols(self._dynamic_table)
+        cols = qdb.util.get_table_cols(self._dynamic_table)
         # Remove the sample_id column as this column is used internally for
         # data storage and it doesn't actually belong to the metadata
         cols.remove('sample_id')
@@ -207,11 +197,11 @@ class BaseSample(QiitaObject):
         dict of {str: str}
             A dictionary of the form {category: value}
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = "SELECT * FROM qiita.{0} WHERE sample_id=%s".format(
                 self._dynamic_table)
-            TRN.add(sql, [self._id])
-            d = dict(TRN.execute_fetchindex()[0])
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            d = dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
 
             # Remove the sample_id, is not part of the metadata
             del d['sample_id']
@@ -251,7 +241,7 @@ class BaseSample(QiitaObject):
         --------
         get
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             key = key.lower()
             if key not in self._get_categories():
                 # The key is not available for the sample, so raise a KeyError
@@ -261,8 +251,8 @@ class BaseSample(QiitaObject):
 
             sql = """SELECT {0} FROM qiita.{1}
                      WHERE sample_id=%s""".format(key, self._dynamic_table)
-            TRN.add(sql, [self._id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     def setitem(self, column, value):
         """Sets `value` as value for the given `column`
@@ -280,16 +270,17 @@ class BaseSample(QiitaObject):
         QiitaDBColumnError
             If the column does not exist in the table
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             # Check if the column exist in the table
             if column not in self._get_categories():
-                raise QiitaDBColumnError("Column %s does not exist in %s" %
-                                         (column, self._dynamic_table))
+                raise qdb.exceptions.QiitaDBColumnError(
+                    "Column %s does not exist in %s" %
+                    (column, self._dynamic_table))
 
             sql = """UPDATE qiita.{0}
                      SET {1}=%s
                      WHERE sample_id=%s""".format(self._dynamic_table, column)
-            TRN.add(sql, [value, self._id])
+            qdb.sql_connection.TRN.add(sql, [value, self._id])
 
     def __setitem__(self, column, value):
         r"""Sets the metadata value for the category `column`
@@ -307,23 +298,25 @@ class BaseSample(QiitaObject):
         ValueError
             If the value type does not match the one in the DB
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             self.setitem(column, value)
 
             try:
-                TRN.execute()
+                qdb.sql_connection.TRN.execute()
             except ValueError as e:
                 # catching error so we can check if the error is due to
                 # different column type or something else
-                value_type = type_lookup(type(value))
+                value_type = qdb.metadata_template.util.type_lookup(
+                    type(value))
 
                 sql = """SELECT udt_name
                          FROM information_schema.columns
                          WHERE column_name = %s
                             AND table_schema = 'qiita'
                             AND (table_name = %s OR table_name = %s)"""
-                TRN.add(sql, [column, self._table, self._dynamic_table])
-                column_type = TRN.execute_fetchlast()
+                sql_args = [column, self._table, self._dynamic_table]
+                qdb.sql_connection.TRN.add(sql, sql_args)
+                column_type = qdb.sql_connection.TRN.execute_fetchlast()
 
                 if column_type != value_type:
                     raise ValueError(
@@ -343,7 +336,7 @@ class BaseSample(QiitaObject):
         key : str
             The sample id
         """
-        raise QiitaDBNotImplementedError()
+        raise qdb.exceptions.QiitaDBNotImplementedError()
 
     def __iter__(self):
         r"""Iterator over the metadata keys
@@ -435,7 +428,7 @@ class BaseSample(QiitaObject):
             return None
 
 
-class MetadataTemplate(QiitaObject):
+class MetadataTemplate(qdb.base.QiitaObject):
     r"""Metadata map object that accesses the db to get the sample/prep
     template information
 
@@ -475,11 +468,11 @@ class MetadataTemplate(QiitaObject):
 
     def _check_id(self, id_):
         r"""Checks that the MetadataTemplate id_ exists on the database"""
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1}=%s)".format(
                 self._table, self._id_column)
-            TRN.add(sql, [id_])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [id_])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
     def _table_name(cls, obj_id):
@@ -534,16 +527,16 @@ class MetadataTemplate(QiitaObject):
             If there are missing columns required for some functionality
         """
         cls._check_subclass()
-        invalid_ids = get_invalid_sample_names(md_template.index)
+        invalid_ids = qdb.metadata_template.util.get_invalid_sample_names(
+            md_template.index)
         if invalid_ids:
-            raise QiitaDBColumnError("The following sample names in the "
-                                     "template contain invalid characters "
-                                     "(only alphanumeric characters or periods"
-                                     " are allowed): %s." %
-                                     ", ".join(invalid_ids))
+            raise qdb.exceptions.QiitaDBColumnError(
+                "The following sample names in the template contain invalid "
+                "characters (only alphanumeric characters or periods are "
+                "allowed): %s." % ", ".join(invalid_ids))
 
         if len(set(md_template.index)) != len(md_template.index):
-            raise QiitaDBDuplicateSamplesError(
+            raise qdb.exceptions.QiitaDBDuplicateSamplesError(
                 find_duplicates(md_template.index))
 
         # We are going to modify the md_template. We create a copy so
@@ -551,14 +544,15 @@ class MetadataTemplate(QiitaObject):
         md_template = md_template.copy(deep=True)
 
         # Prefix the sample names with the study_id
-        prefix_sample_names_with_id(md_template, study_id)
+        qdb.metadata_template.util.prefix_sample_names_with_id(md_template,
+                                                               study_id)
 
         # In the database, all the column headers are lowercase
         md_template.columns = [c.lower() for c in md_template.columns]
 
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
-            raise QiitaDBDuplicateHeaderError(
+            raise qdb.exceptions.QiitaDBDuplicateHeaderError(
                 find_duplicates(md_template.columns))
 
         # Check if we have the columns required for some functionality
@@ -578,7 +572,7 @@ class MetadataTemplate(QiitaObject):
                 "Some functionality will be disabled due to missing "
                 "columns:\n\t%s.\nSee the Templates tutorial for a description"
                 " of these fields." % ";\n\t".join(warning_msg),
-                QiitaDBWarning)
+                qdb.exceptions.QiitaDBWarning)
 
         return md_template
 
@@ -593,7 +587,7 @@ class MetadataTemplate(QiitaObject):
         obj_id : int
             The id of the object being created
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             cls._check_subclass()
 
             # Get some useful information from the metadata template
@@ -604,10 +598,11 @@ class MetadataTemplate(QiitaObject):
             values = [[obj_id, s_id] for s_id in sample_ids]
             sql = """INSERT INTO qiita.{0} ({1}, sample_id)
                      VALUES (%s, %s)""".format(cls._table, cls._id_column)
-            TRN.add(sql, values, many=True)
+            qdb.sql_connection.TRN.add(sql, values, many=True)
 
             # Insert rows on *_columns table
-            datatypes = get_datatypes(md_template.ix[:, headers])
+            datatypes = qdb.metadata_template.util.get_datatypes(
+                md_template.ix[:, headers])
             # psycopg2 requires a list of tuples, in which each tuple is a set
             # of values to use in the string formatting of the query. We have
             # all the values in different lists (but in the same order) so use
@@ -616,7 +611,7 @@ class MetadataTemplate(QiitaObject):
             sql = """INSERT INTO qiita.{0} ({1}, column_name, column_type)
                      VALUES (%s, %s, %s)""".format(cls._column_table,
                                                    cls._id_column)
-            TRN.add(sql, values, many=True)
+            qdb.sql_connection.TRN.add(sql, values, many=True)
 
             # Create table with custom columns
             table_name = cls._table_name(obj_id)
@@ -628,20 +623,21 @@ class MetadataTemplate(QiitaObject):
                             REFERENCES qiita.study_sample (sample_id)
                             ON UPDATE CASCADE
                      )""".format(table_name, ', '.join(column_datatype))
-            TRN.add(sql)
+            qdb.sql_connection.TRN.add(sql)
 
             # Insert values on custom table
-            values = as_python_types(md_template, headers)
+            values = qdb.metadata_template.util.as_python_types(md_template,
+                                                                headers)
             values.insert(0, sample_ids)
             values = [list(v) for v in zip(*values)]
             sql = """INSERT INTO qiita.{0} (sample_id, {1})
                      VALUES (%s, {2})""".format(
                 table_name, ", ".join(headers),
                 ', '.join(["%s"] * len(headers)))
-            TRN.add(sql, values, many=True)
+            qdb.sql_connection.TRN.add(sql, values, many=True)
 
             # Execute all the steps
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
 
     def can_be_extended(self, new_samples, new_cols):
         """Whether the template can be updated or not
@@ -665,7 +661,7 @@ class MetadataTemplate(QiitaObject):
         QiitaDBNotImplementedError
             This method should be implemented in the subclasses
         """
-        raise QiitaDBNotImplementedError(
+        raise qdb.exceptions.QiitaDBNotImplementedError(
             "The method 'can_be_extended' should be implemented in "
             "the subclasses")
 
@@ -682,7 +678,7 @@ class MetadataTemplate(QiitaObject):
         QiitaDBNotImplementedError
             This method should be implemented in the subclasses
         """
-        raise QiitaDBNotImplementedError(
+        raise qdb.exceptions.QiitaDBNotImplementedError(
             "The method 'can_be_updated' should be implemented in "
             "the subclasses")
 
@@ -694,7 +690,7 @@ class MetadataTemplate(QiitaObject):
         md_template : DataFrame
             The metadata template file contents indexed by sample ids
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             # Check if we are adding new samples
             sample_ids = md_template.index.tolist()
             curr_samples = set(self.keys())
@@ -712,26 +708,29 @@ class MetadataTemplate(QiitaObject):
                                                             new_cols)
 
             if not is_extendable:
-                raise QiitaDBError(error_msg)
+                raise qdb.exceptions.QiitaDBError(error_msg)
 
             table_name = self._table_name(self._id)
             if new_cols:
                 warnings.warn(
                     "The following columns have been added to the existing"
                     " template: %s" % ", ".join(new_cols),
-                    QiitaDBWarning)
+                    qdb.exceptions.QiitaDBWarning)
                 # If we are adding new columns, add them first (simplifies
                 # code). Sorting the new columns to enforce an order
                 new_cols = sorted(new_cols)
-                datatypes = get_datatypes(md_template.ix[:, new_cols])
+                datatypes = qdb.metadata_template.util.get_datatypes(
+                    md_template.ix[:, new_cols])
                 sql_cols = """INSERT INTO qiita.{0}
                                     ({1}, column_name, column_type)
                               VALUES (%s, %s, %s)""".format(self._column_table,
                                                             self._id_column)
                 sql_alter = """ALTER TABLE qiita.{0} ADD COLUMN {1} {2}"""
                 for category, dtype in zip(new_cols, datatypes):
-                    TRN.add(sql_cols, [self._id, category, dtype])
-                    TRN.add(sql_alter.format(table_name, category, dtype))
+                    qdb.sql_connection.TRN.add(
+                        sql_cols, [self._id, category, dtype])
+                    qdb.sql_connection.TRN.add(
+                        sql_alter.format(table_name, category, dtype))
 
                 if existing_samples:
                     # The values for the new columns are the only ones that get
@@ -739,7 +738,8 @@ class MetadataTemplate(QiitaObject):
                     # be modified (see update for that functionality)
                     min_md_template = \
                         md_template[new_cols].loc[existing_samples]
-                    values = as_python_types(min_md_template, new_cols)
+                    values = qdb.metadata_template.util.as_python_types(
+                        min_md_template, new_cols)
                     values.append(existing_samples)
                     # psycopg2 requires a list of iterable, in which each
                     # iterable is a set of values to use in the string
@@ -752,13 +752,13 @@ class MetadataTemplate(QiitaObject):
                              SET {1}
                              WHERE sample_id=%s""".format(table_name,
                                                           ",".join(set_str))
-                    TRN.add(sql, values, many=True)
+                    qdb.sql_connection.TRN.add(sql, values, many=True)
 
             if new_samples:
                 warnings.warn(
                     "The following samples have been added to the existing"
                     " template: %s" % ", ".join(new_samples),
-                    QiitaDBWarning)
+                    qdb.exceptions.QiitaDBWarning)
                 new_samples = sorted(new_samples)
                 # At this point we only want the information
                 # from the new samples
@@ -769,20 +769,21 @@ class MetadataTemplate(QiitaObject):
                 sql = """INSERT INTO qiita.{0} ({1}, sample_id)
                          VALUES (%s, %s)""".format(self._table,
                                                    self._id_column)
-                TRN.add(sql, values, many=True)
+                qdb.sql_connection.TRN.add(sql, values, many=True)
 
                 # Insert values on custom table
-                values = as_python_types(md_template, headers)
+                values = qdb.metadata_template.util.as_python_types(
+                    md_template, headers)
                 values.insert(0, new_samples)
                 values = [list(v) for v in zip(*values)]
                 sql = """INSERT INTO qiita.{0} (sample_id, {1})
                          VALUES (%s, {2})""".format(
                     table_name, ", ".join(headers),
                     ', '.join(["%s"] * len(headers)))
-                TRN.add(sql, values, many=True)
+                qdb.sql_connection.TRN.add(sql, values, many=True)
 
             # Execute all the steps
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
 
     @classmethod
     def exists(cls, obj_id):
@@ -799,7 +800,7 @@ class MetadataTemplate(QiitaObject):
             True if already exists. False otherwise.
         """
         cls._check_subclass()
-        return exists_table(cls._table_name(obj_id))
+        return qdb.util.exists_table(cls._table_name(obj_id))
 
     def _get_sample_ids(self):
         r"""Returns all the available samples for the metadata template
@@ -809,11 +810,11 @@ class MetadataTemplate(QiitaObject):
         set of str
             The set of all available sample ids
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = "SELECT sample_id FROM qiita.{0} WHERE {1}=%s".format(
                 self._table, self._id_column)
-            TRN.add(sql, [self._id])
-            return set(TRN.execute_fetchflatten())
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return set(qdb.sql_connection.TRN.execute_fetchflatten())
 
     def __len__(self):
         r"""Returns the number of samples in the metadata template
@@ -847,7 +848,7 @@ class MetadataTemplate(QiitaObject):
         --------
         get
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             if key in self:
                 return self._sample_cls(key, self)
             else:
@@ -864,7 +865,7 @@ class MetadataTemplate(QiitaObject):
         value : Sample
             The sample obj holding the new sample values
         """
-        raise QiitaDBNotImplementedError()
+        raise qdb.exceptions.QiitaDBNotImplementedError()
 
     def __delitem__(self, key):
         r"""Removes the sample with sample id `key` from the database
@@ -874,7 +875,7 @@ class MetadataTemplate(QiitaObject):
         key : str
             The sample id
         """
-        raise QiitaDBNotImplementedError()
+        raise qdb.exceptions.QiitaDBNotImplementedError()
 
     def __iter__(self):
         r"""Iterator over the sample ids
@@ -928,7 +929,7 @@ class MetadataTemplate(QiitaObject):
         Iterator
             Iterator over Sample obj
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             return iter(self._sample_cls(sample_id, self)
                         for sample_id in self._get_sample_ids())
 
@@ -940,7 +941,7 @@ class MetadataTemplate(QiitaObject):
         Iterator
             Iterator over (sample_ids, values) tuples
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             return iter((sample_id, self._sample_cls(sample_id, self))
                         for sample_id in self._get_sample_ids())
 
@@ -1002,7 +1003,7 @@ class MetadataTemplate(QiitaObject):
         QiitaDBNotImplementedError
             This method should be implemented by the subclasses
         """
-        raise QiitaDBNotImplementedError(
+        raise qdb.exceptions.QiitaDBNotImplementedError(
             "generate_files should be implemented in the subclass!")
 
     def to_file(self, fp, samples=None):
@@ -1017,7 +1018,7 @@ class MetadataTemplate(QiitaObject):
             If supplied, only the specified samples will be written to the
             file
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             df = self.to_dataframe()
             if samples is not None:
                 df = df.loc[samples]
@@ -1039,13 +1040,13 @@ class MetadataTemplate(QiitaObject):
         pandas DataFrame
             The metadata in the template,indexed on sample id
         """
-        with TRN:
-            cols = sorted(get_table_cols(self._table_name(self._id)))
+        with qdb.sql_connection.TRN:
+            cols = sorted(qdb.util.get_table_cols(self._table_name(self._id)))
             # Get all metadata for the template
             sql = "SELECT {0} FROM qiita.{1}".format(", ".join(cols),
                                                      self._table_name(self.id))
-            TRN.add(sql, [self._id])
-            meta = TRN.execute_fetchindex()
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            meta = qdb.sql_connection.TRN.execute_fetchindex()
 
             # Create the dataframe and clean it up a bit
             df = pd.DataFrame((list(x) for x in meta), columns=cols)
@@ -1056,26 +1057,26 @@ class MetadataTemplate(QiitaObject):
     def add_filepath(self, filepath, fp_id=None):
         r"""Populates the DB tables for storing the filepath and connects the
         `self` objects with this filepath"""
-        with TRN:
+        with qdb.sql_connection.TRN:
             fp_id = self._fp_id if fp_id is None else fp_id
 
             try:
-                fpp_id = insert_filepaths([(filepath, fp_id)], None,
-                                          "templates", "filepath",
-                                          move_files=False)[0]
+                fpp_id = qdb.util.insert_filepaths(
+                    [(filepath, fp_id)], None, "templates", "filepath",
+                    move_files=False)[0]
                 sql = """INSERT INTO qiita.{0} ({1}, filepath_id)
                          VALUES (%s, %s)""".format(self._filepath_table,
                                                    self._id_column)
-                TRN.add(sql, [self._id, fpp_id])
-                TRN.execute()
+                qdb.sql_connection.TRN.add(sql, [self._id, fpp_id])
+                qdb.sql_connection.TRN.execute()
             except Exception as e:
-                LogEntry.create('Runtime', str(e),
-                                info={self.__class__.__name__: self.id})
+                qdb.logger.LogEntry.create(
+                    'Runtime', str(e), info={self.__class__.__name__: self.id})
                 raise e
 
     def get_filepaths(self):
         r"""Retrieves the list of (filepath_id, filepath)"""
-        with TRN:
+        with qdb.sql_connection.TRN:
             try:
                 sql = """SELECT filepath_id, filepath
                          FROM qiita.filepath
@@ -1085,14 +1086,14 @@ class MetadataTemplate(QiitaObject):
                          ORDER BY filepath_id DESC""".format(
                     self._filepath_table, self._id_column)
 
-                TRN.add(sql, [self.id])
-                filepath_ids = TRN.execute_fetchindex()
+                qdb.sql_connection.TRN.add(sql, [self.id])
+                filepath_ids = qdb.sql_connection.TRN.execute_fetchindex()
             except Exception as e:
-                LogEntry.create('Runtime', str(e),
-                                info={self.__class__.__name__: self.id})
+                qdb.logger.LogEntry.create(
+                    'Runtime', str(e), info={self.__class__.__name__: self.id})
                 raise e
 
-            _, fb = get_mountpoint('templates')[0]
+            _, fb = qdb.util.get_mountpoint('templates')[0]
             base_fp = partial(join, fb)
 
             return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]
@@ -1106,7 +1107,7 @@ class MetadataTemplate(QiitaObject):
             The static and dynamic category fields
 
         """
-        cols = get_table_cols(self._table_name(self._id))
+        cols = qdb.util.get_table_cols(self._table_name(self._id))
         cols.remove("sample_id")
 
         return cols
@@ -1119,7 +1120,7 @@ class MetadataTemplate(QiitaObject):
         md_template : DataFrame
             The metadata template contents indexed by sample ids
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             md_template = self._clean_validate_template(
                 md_template, self.study_id, self.columns_restrictions,
                 current_columns=self.categories())
@@ -1144,7 +1145,7 @@ class MetadataTemplate(QiitaObject):
             If there are no differences between the contents of the DB and the
             passed md_template
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             # Clean and validate the metadata template given
             new_map = self._clean_validate_template(
                 md_template, self.study_id, self.columns_restrictions,
@@ -1155,7 +1156,7 @@ class MetadataTemplate(QiitaObject):
             # simple validations of sample ids and column names
             samples_diff = set(new_map.index).difference(current_map.index)
             if samples_diff:
-                raise QiitaDBError(
+                raise qdb.exceptions.QiitaDBError(
                     'The new template differs from what is stored '
                     'in database by these samples names: %s'
                     % ', '.join(samples_diff))
@@ -1163,7 +1164,7 @@ class MetadataTemplate(QiitaObject):
             if not set(current_map.columns).issuperset(new_map.columns):
                 columns_diff = set(new_map.columns).difference(
                     current_map.columns)
-                raise QiitaDBError(
+                raise qdb.exceptions.QiitaDBError(
                     'Some of the columns in your template are not present in '
                     'the system. Use "extend" if you want to add more columns '
                     'to the template. Missing columns: %s'
@@ -1192,7 +1193,7 @@ class MetadataTemplate(QiitaObject):
                 warnings.warn(
                     "There are no differences between the data stored in the "
                     "DB and the new data provided",
-                    QiitaDBWarning)
+                    qdb.exceptions.QiitaDBWarning)
                 return
 
             changed.index.names = ['sample_name', 'column']
@@ -1213,7 +1214,7 @@ class MetadataTemplate(QiitaObject):
             cols_to_update = to_update.index.levels[col_idx][indices]
 
             if not self.can_be_updated(columns=set(cols_to_update)):
-                raise QiitaDBError(
+                raise qdb.exceptions.QiitaDBError(
                     'The new template is modifying fields that cannot be '
                     'modified. Try removing the restricted fields or '
                     'deleting the processed data. You are trying to modify: %s'
@@ -1240,13 +1241,15 @@ class MetadataTemplate(QiitaObject):
                                sql_values, sql_cols)
             sql_args = []
             for sample in samples_to_update:
-                sample_vals = [cast_to_python(new_map[col][sample])
-                               for col in cols_to_update]
+                sample_vals = [
+                    qdb.metadata_template.util.cast_to_python(
+                        new_map[col][sample])
+                    for col in cols_to_update]
                 sample_vals.insert(0, sample)
                 sql_args.extend(sample_vals)
 
-            TRN.add(sql, sql_args)
-            TRN.execute()
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            qdb.sql_connection.TRN.execute()
 
             self.generate_files()
 
@@ -1271,11 +1274,11 @@ class MetadataTemplate(QiitaObject):
             If one of the new values cannot be inserted in the DB due to
             different types
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             if not set(self.keys()).issuperset(samples_and_values):
                 missing = set(self.keys()) - set(samples_and_values)
                 table_name = self._table_name(self._id)
-                raise QiitaDBUnknownIDError(missing, table_name)
+                raise qdb.exceptions.QiitaDBUnknownIDError(missing, table_name)
 
             for k, v in viewitems(samples_and_values):
                 sample = self[k]
@@ -1284,22 +1287,23 @@ class MetadataTemplate(QiitaObject):
                 sample.setitem(category, v)
 
             try:
-                TRN.execute()
+                qdb.sql_connection.TRN.execute()
             except ValueError as e:
                 # catching error so we can check if the error is due to
                 # different column type or something else
 
-                value_types = set(type_lookup(type(value))
-                                  for value in viewvalues(samples_and_values))
+                value_types = set(
+                    qdb.metadata_template.util.type_lookup(type(value))
+                    for value in viewvalues(samples_and_values))
 
                 sql = """SELECT udt_name
                          FROM information_schema.columns
                          WHERE column_name = %s
                             AND table_schema = 'qiita'
                             AND (table_name = %s OR table_name = %s)"""
-                TRN.add(sql,
-                        [category, self._table, self._table_name(self._id)])
-                column_type = TRN.execute_fetchlast()
+                qdb.sql_connection.TRN.add(
+                    sql, [category, self._table, self._table_name(self._id)])
+                column_type = qdb.sql_connection.TRN.execute_fetchlast()
 
                 if any([column_type != vt for vt in value_types]):
                     value_str = ', '.join(
@@ -1347,14 +1351,15 @@ class MetadataTemplate(QiitaObject):
         dict of {str: str}
             The accession numbers keyed by sample id
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT sample_id, {0}
                      FROM qiita.{1}
                      WHERE {2}=%s""".format(column, self._table,
                                             self._id_column)
-            TRN.add(sql, [self.id])
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            dbresult = qdb.sql_connection.TRN.execute_fetchindex()
             result = {sample_id: accession
-                      for sample_id, accession in TRN.execute_fetchindex()}
+                      for sample_id, accession in dbresult}
         return result
 
     def _update_accession_numbers(self, column, values):
@@ -1374,20 +1379,21 @@ class MetadataTemplate(QiitaObject):
         QiitaDBWarning
             If `values` is not updating any accesion number
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT sample_id, {0}
                      FROM qiita.{1}
                      WHERE {2}=%s
                         AND {0} IS NOT NULL""".format(column, self._table,
                                                       self._id_column)
-            TRN.add(sql, [self.id])
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            dbresult = qdb.sql_connection.TRN.execute_fetchindex()
             db_vals = {sample_id: accession
-                       for sample_id, accession in TRN.execute_fetchindex()}
+                       for sample_id, accession in dbresult}
             common_samples = set(db_vals) & set(values)
             diff = [sample for sample in common_samples
                     if db_vals[sample] != values[sample]]
             if diff:
-                raise QiitaDBError(
+                raise qdb.exceptions.QiitaDBError(
                     "The following samples already have an accession number: "
                     "%s" % ', '.join(diff))
 
@@ -1407,8 +1413,8 @@ class MetadataTemplate(QiitaObject):
                                     self._id_column)
                 sql_vals = list(chain.from_iterable(values.items()))
                 sql_vals.append(self.id)
-                TRN.add(sql, sql_vals)
-                TRN.execute()
+                qdb.sql_connection.TRN.add(sql, sql_vals)
+                qdb.sql_connection.TRN.execute()
             else:
                 warnings.warn("No new accession numbers to update",
-                              QiitaDBWarning)
+                              qdb.exceptions.QiitaDBWarning)
