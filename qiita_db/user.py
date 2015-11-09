@@ -405,7 +405,8 @@ class User(qdb.base.QiitaObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                      WHERE email = %s AND dflt = true AND portal = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.analysis.Analysis(
+                qdb.sql_connection.TRN.execute_fetchlast())
 
     @property
     def user_studies(self):
@@ -417,7 +418,9 @@ class User(qdb.base.QiitaObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                      WHERE email = %s AND portal = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
+            return set(
+                qdb.study.Study(sid)
+                for sid in qdb.sql_connection.TRN.execute_fetchflatten())
 
     @property
     def shared_studies(self):
@@ -429,7 +432,9 @@ class User(qdb.base.QiitaObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                      WHERE email = %s and portal = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
+            return set(
+                qdb.study.Study(sid)
+                for sid in qdb.sql_connection.TRN.execute_fetchflatten())
 
     @property
     def private_analyses(self):
@@ -440,7 +445,9 @@ class User(qdb.base.QiitaObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                      WHERE email = %s AND dflt = false AND portal = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
+            return set(
+                qdb.analysis.Analysis(aid)
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten())
 
     @property
     def shared_analyses(self):
@@ -451,7 +458,9 @@ class User(qdb.base.QiitaObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                      WHERE email = %s AND portal = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, qiita_config.portal])
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
+            return set(
+                qdb.analysis.Analysis(aid)
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten())
 
     @property
     def unread_messages(self):

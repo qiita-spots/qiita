@@ -212,6 +212,10 @@ class QiitaObject(object):
         r"""Self and other are not equal based on type and database id"""
         return not self.__eq__(other)
 
+    def __hash__(self):
+        r"""The hash of an object is based on the id"""
+        return hash(str(self.id))
+
     @property
     def id(self):
         r"""The object id on the storage system"""
