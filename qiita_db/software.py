@@ -6,14 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .base import QiitaObject
-from .sql_connection import TRN
-from .exceptions import (QiitaDBDuplicateError, QiitaDBError,
-                         QiitaDBUnknownIDError)
-from .util import get_table_cols, get_table_cols_w_type
+import qiita_db as qdb
 
 
-class Command(QiitaObject):
+class Command(qdb.base.QiitaObject):
     r"""An executable command available in the system
 
     Attributes
@@ -46,13 +42,13 @@ class Command(QiitaObject):
         This function overwrites the base function, as the sql layout doesn't
         follow the same conventions done in the other classes.
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.software_command
                         WHERE command_id = %s)"""
-            TRN.add(sql, [id_])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [id_])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
     def exists(cls, software, cli_cmd):
@@ -70,13 +66,13 @@ class Command(QiitaObject):
         bool
             Whether the command exists in the system or not
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT EXISTS(SELECT *
                                    FROM qiita.software_command
                                    WHERE software_id = %s
                                         AND cli_cmd = %s)"""
-            TRN.add(sql, [software.id, cli_cmd])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [software.id, cli_cmd])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
     def create(cls, software, name, description, cli_cmd, parameters_table):
@@ -101,9 +97,9 @@ class Command(QiitaObject):
         qiita_db.software.Command
             The newly created command
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             if cls.exists(software, cli_cmd):
-                raise QiitaDBDuplicateError(
+                raise qdb.exceptions.QiitaDBDuplicateError(
                     "command", "software: %d, cli_cmd: %s"
                                % (software.id, cli_cmd))
             sql = """INSERT INTO qiita.software_command
@@ -113,8 +109,8 @@ class Command(QiitaObject):
                      RETURNING command_id"""
             sql_params = [name, software.id, description, cli_cmd,
                           parameters_table]
-            TRN.add(sql, sql_params)
-            c_id = TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, sql_params)
+            c_id = qdb.sql_connection.TRN.execute_fetchlast()
 
         return cls(c_id)
 
@@ -127,12 +123,12 @@ class Command(QiitaObject):
         str
             The name of the command
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT name
                      FROM qiita.software_command
                      WHERE command_id = %s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
     def description(self):
@@ -143,12 +139,12 @@ class Command(QiitaObject):
         str
             The description of the command
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT description
                      FROM qiita.software_command
                      WHERE command_id = %s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
     def cli(self):
@@ -159,12 +155,12 @@ class Command(QiitaObject):
         str
             The CLI used to call the command
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT cli_cmd
                      FROM qiita.software_command
                      WHERE command_id = %s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
     def parameters_table(self):
@@ -175,15 +171,15 @@ class Command(QiitaObject):
         str
             The name of the table
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT parameters_table
                      FROM qiita.software_command
                      WHERE command_id = %s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
 
-class Software(QiitaObject):
+class Software(qdb.base.QiitaObject):
     r"""A software package available in the system
 
     Attributes
@@ -221,13 +217,13 @@ class Software(QiitaObject):
             A list with the (DOI, pubmed_id) of the publications attached to
             the software
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.software (name, version, description)
                         VALUES (%s, %s, %s)
                         RETURNING software_id"""
             sql_params = [name, version, description]
-            TRN.add(sql, sql_params)
-            s_id = TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, sql_params)
+            s_id = qdb.sql_connection.TRN.execute_fetchlast()
 
             instance = cls(s_id)
 
@@ -245,10 +241,10 @@ class Software(QiitaObject):
         str
             The name of the software
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = "SELECT name FROM qiita.software WHERE software_id = %s"
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
     def version(self):
@@ -259,10 +255,10 @@ class Software(QiitaObject):
         str
             The version of the software
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = "SELECT version FROM qiita.software WHERE software_id = %s"
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
     def description(self):
@@ -273,12 +269,12 @@ class Software(QiitaObject):
         str
             The software description
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT description
                      FROM qiita.software
                      WHERE software_id = %s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
     def commands(self):
@@ -289,12 +285,12 @@ class Software(QiitaObject):
         list of int
             The command identifiers
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT command_id
                      FROM qiita.software_command
                      WHERE software_id = %s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchflatten()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchflatten()
 
     @property
     def publications(self):
@@ -305,14 +301,14 @@ class Software(QiitaObject):
         list of (str, str)
             The list of DOI and pubmed_id attached to the publication
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT p.doi, p.pubmed_id
                         FROM qiita.publication p
                             JOIN qiita.software_publication sp
                                 ON p.doi = sp.publication_doi
                         WHERE sp.software_id = %s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchindex()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchindex()
 
     def add_publications(self, publications):
         """Add publications to the software
@@ -328,17 +324,17 @@ class Software(QiitaObject):
         For more information about pubmed id, visit
         https://www.nlm.nih.gov/bsd/disted/pubmedtutorial/020_830.html
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.publication (doi, pubmed_id)
                         VALUES (%s, %s)"""
-            TRN.add(sql, publications, many=True)
+            qdb.sql_connection.TRN.add(sql, publications, many=True)
 
             sql = """INSERT INTO qiita.software_publication
                             (software_id, publication_doi)
                         VALUES (%s, %s)"""
             sql_params = [[self.id, doi] for doi, _ in publications]
-            TRN.add(sql, sql_params, many=True)
-            TRN.execute()
+            qdb.sql_connection.TRN.add(sql, sql_params, many=True)
+            qdb.sql_connection.TRN.execute()
 
 
 class Parameters(object):
@@ -388,7 +384,7 @@ class Parameters(object):
             If `id_` does not correspond to a parameter set for the given
             command
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             self._table = command.parameters_table
             self.id = id_
             self._command = command
@@ -396,9 +392,10 @@ class Parameters(object):
                         SELECT *
                         FROM qiita.{0}
                         WHERE parameters_id = %s)""".format(self._table)
-            TRN.add(sql, [self.id])
-            if not TRN.execute_fetchlast():
-                raise QiitaDBUnknownIDError(self.id, self._table)
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            if not qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBUnknownIDError(
+                    self.id, self._table)
 
     @classmethod
     def exists(cls, command, **kwargs):
@@ -416,30 +413,30 @@ class Parameters(object):
         bool
             Whether if the parameter set exists in the given command
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             table = command.parameters_table
 
-            db_cols = set(get_table_cols(table))
+            db_cols = set(qdb.util.get_table_cols(table))
             db_cols.remove("param_set_name")
             db_cols.remove("parameters_id")
             missing = db_cols.difference(kwargs)
 
             if missing:
-                raise QiitaDBError(
+                raise qdb.exceptions.QiitaDBError(
                     "Missing parameters for command %s: %s"
                     % (command.name, ', '.join(missing)))
 
             extra = set(kwargs).difference(db_cols)
             if extra:
-                raise QiitaDBError(
+                raise qdb.exceptions.QiitaDBError(
                     "Extra parameters for command %s: %s"
                     % (command.name, ', '.join(extra)))
 
             cols = ["{} = %s".format(col) for col in kwargs]
             sql = "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1})".format(
                 table, ' AND '.join(cols))
-            TRN.add(sql, kwargs.values())
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, kwargs.values())
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
     def create(cls, param_set_name, command, **kwargs):
@@ -459,10 +456,10 @@ class Parameters(object):
         qiita_db.software.Parameters
             The new parameter set instance
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             if cls.exists(command, **kwargs):
-                raise QiitaDBDuplicateError(command.parameters_table,
-                                            "Values: %s" % kwargs)
+                raise qdb.exceptions.QiitaDBDuplicateError(
+                    command.parameters_table, "Values: %s" % kwargs)
 
             vals = kwargs.values()
             vals.insert(0, param_set_name)
@@ -473,9 +470,9 @@ class Parameters(object):
                 command.parameters_table,
                 ', '.join(kwargs),
                 ', '.join(['%s'] * len(kwargs)))
-            TRN.add(sql, vals)
+            qdb.sql_connection.TRN.add(sql, vals)
 
-            return cls(TRN.execute_fetchlast(), command)
+            return cls(qdb.sql_connection.TRN.execute_fetchlast(), command)
 
     @classmethod
     def iter(cls, command):
@@ -486,13 +483,13 @@ class Parameters(object):
         generator
             Yields a parameter instance
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT parameters_id
                      FROM qiita.{0}
                      ORDER BY parameters_id""".format(
                 command.parameters_table)
-            TRN.add(sql)
-            for result in TRN.execute_fetchflatten():
+            qdb.sql_connection.TRN.add(sql)
+            for result in qdb.sql_connection.TRN.execute_fetchflatten():
                 yield cls(result, command)
 
     @property
@@ -504,12 +501,12 @@ class Parameters(object):
         str
             The name of the parameter set
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT param_set_name
                      FROM qiita.{0}
                      WHERE parameters_id = %s""".format(self._table)
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
     def values(self):
@@ -520,12 +517,12 @@ class Parameters(object):
         dict
             Dictionary with the parameters values keyed by parameter name
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = "SELECT * FROM qiita.{0} WHERE parameters_id = %s".format(
                 self._table)
-            TRN.add(sql, [self.id])
+            qdb.sql_connection.TRN.add(sql, [self.id])
             # There should be only one row
-            result = dict(TRN.execute_fetchindex()[0])
+            result = dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
             del result["parameters_id"]
             del result["param_set_name"]
             return result
@@ -549,8 +546,8 @@ class Parameters(object):
         str
             The string with all the parameters
         """
-        with TRN:
-            table_cols = get_table_cols_w_type(self._table)
+        with qdb.sql_connection.TRN:
+            table_cols = qdb.util.get_table_cols_w_type(self._table)
             table_cols.remove(['parameters_id', 'bigint'])
             table_cols.remove(['param_set_name', 'character varying'])
 
