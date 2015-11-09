@@ -28,12 +28,7 @@ from __future__ import division
 from itertools import chain
 
 from qiita_core.qiita_settings import qiita_config
-from .study import Study
-from .data import RawData, PreprocessedData, ProcessedData
-from .analysis import Analysis
-from .sql_connection import TRN
-from .metadata_template import PrepTemplate, SampleTemplate
-from .portal import Portal
+import qiita_db as qdb
 
 
 def _get_data_fpids(constructor, object_id):
@@ -50,7 +45,7 @@ def _get_data_fpids(constructor, object_id):
     -------
     set of int
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         obj = constructor(object_id)
         return {fpid for fpid, _, _ in obj.get_filepaths()}
 
@@ -78,11 +73,12 @@ def get_accessible_filepath_ids(user):
     Admins have access to all files, so all filepath ids are returned for
     admins
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         if user.level == "admin":
             # admins have access all files
-            TRN.add("SELECT filepath_id FROM qiita.filepath")
-            return set(TRN.execute_fetchflatten())
+            qdb.sql_connection.TRN.add(
+                "SELECT filepath_id FROM qiita.filepath")
+            return set(qdb.sql_connection.TRN.execute_fetchflatten())
 
         # First, the studies
         # There are private and shared studies
@@ -90,7 +86,7 @@ def get_accessible_filepath_ids(user):
 
         filepath_ids = set()
         for study_id in study_ids:
-            study = Study(study_id)
+            study = qdb.study.Study(study_id)
 
             # For each study, there are raw, preprocessed, and
             # processed filepaths
@@ -98,9 +94,10 @@ def get_accessible_filepath_ids(user):
             preprocessed_data_ids = study.preprocessed_data()
             processed_data_ids = study.processed_data()
 
-            constructor_data_ids = ((RawData, raw_data_ids),
-                                    (PreprocessedData, preprocessed_data_ids),
-                                    (ProcessedData, processed_data_ids))
+            constructor_data_ids = (
+                (qdb.data.RawData, raw_data_ids),
+                (qdb.data.PreprocessedData, preprocessed_data_ids),
+                (qdb.data.ProcessedData, processed_data_ids))
 
             for constructor, data_ids in constructor_data_ids:
                 for data_id in data_ids:
@@ -109,59 +106,68 @@ def get_accessible_filepath_ids(user):
             # adding prep and sample templates
             prep_fp_ids = []
             for rdid in study.raw_data():
-                for pt_id in RawData(rdid).prep_templates:
+                for pt_id in qdb.data.RawData(rdid).prep_templates:
                     # related to https://github.com/biocore/qiita/issues/596
-                    if PrepTemplate.exists(pt_id):
-                        for _id, _ in PrepTemplate(pt_id).get_filepaths():
+                    if qdb.metadata_template.prep_template.PrepTemplate.exists(
+                            pt_id):
+                        pt = qdb.metadata_template.prep_template.PrepTemplate(
+                            pt_id)
+                        for _id, _ in pt.get_filepaths():
                             prep_fp_ids.append(_id)
             filepath_ids.update(prep_fp_ids)
 
-            if SampleTemplate.exists(study_id):
+            if qdb.metadata_template.sample_template.SampleTemplate.exists(
+                    study_id):
+                st = qdb.metadata_template.sample_template.SampleTemplate(
+                    study_id)
                 sample_fp_ids = [_id for _id, _
-                                 in SampleTemplate(study_id).get_filepaths()]
+                                 in st.get_filepaths()]
                 filepath_ids.update(sample_fp_ids)
 
         # Next, the public processed data
-        processed_data_ids = ProcessedData.get_by_status('public')
+        processed_data_ids = qdb.data.ProcessedData.get_by_status('public')
         for pd_id in processed_data_ids:
-            processed_data = ProcessedData(pd_id)
+            processed_data = qdb.data.ProcessedData(pd_id)
 
             # Add the filepaths of the processed data
             pd_fps = (fpid for fpid, _, _ in processed_data.get_filepaths())
             filepath_ids.update(pd_fps)
 
             # Each processed data has a preprocessed data
-            ppd = PreprocessedData(processed_data.preprocessed_data)
+            ppd = qdb.data.PreprocessedData(processed_data.preprocessed_data)
             ppd_fps = (fpid for fpid, _, _ in ppd.get_filepaths())
             filepath_ids.update(ppd_fps)
 
             # Each preprocessed data has a prep template
             pt_id = ppd.prep_template
             # related to https://github.com/biocore/qiita/issues/596
-            if PrepTemplate.exists(pt_id):
-                pt = PrepTemplate(pt_id)
+            if qdb.metadata_template.prep_template.PrepTemplate.exists(pt_id):
+                pt = qdb.metadata_template.prep_template.PrepTemplate(pt_id)
                 pt_fps = (fpid for fpid, _ in pt.get_filepaths())
                 filepath_ids.update(pt_fps)
 
                 # Each prep template has a raw data
-                rd = RawData(pt.raw_data)
+                rd = qdb.data.RawData(pt.raw_data)
                 rd_fps = (fpid for fpid, _, _ in rd.get_filepaths())
                 filepath_ids.update(rd_fps)
 
             # And each processed data has a study, which has a sample template
             st_id = processed_data.study
-            if SampleTemplate.exists(st_id):
+            if qdb.metadata_template.sample_template.SampleTemplate.exists(
+                    st_id):
+                st = qdb.metadata_template.sample_template.SampleTemplate(
+                    st_id)
                 sample_fp_ids = (_id for _id, _
-                                 in SampleTemplate(st_id).get_filepaths())
+                                 in st.get_filepaths())
                 filepath_ids.update(sample_fp_ids)
 
         # Next, analyses
         # Same as before, there are public, private, and shared
-        analysis_ids = Analysis.get_by_status('public') | \
+        analysis_ids = qdb.analysis.Analysis.get_by_status('public') | \
             user.private_analyses | user.shared_analyses
 
         for analysis_id in analysis_ids:
-            analysis = Analysis(analysis_id)
+            analysis = qdb.analysis.Analysis(analysis_id)
 
             # For each analysis, there are mapping, biom, and job result
             # filepaths
@@ -178,26 +184,27 @@ def get_lat_longs():
     list of [float, float]
         The latitude and longitude for each sample in the database
     """
-    portal_table_ids = Portal(qiita_config.portal).get_studies()
+    portal_table_ids = qdb.portal.Portal(qiita_config.portal).get_studies()
 
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT DISTINCT table_name
                  FROM information_schema.columns
                  WHERE table_name SIMILAR TO 'sample_[0-9]+'
                     AND table_schema = 'qiita'
                     AND column_name IN ('latitude', 'longitude')
                     AND SPLIT_PART(table_name, '_', 2)::int IN %s;"""
-        TRN.add(sql, [tuple(portal_table_ids)])
+        qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
 
         sql = """SELECT latitude, longitude
                  FROM qiita.{0}
                  WHERE latitude IS NOT NULL
                     AND longitude IS NOT NULL"""
-        idx = TRN.index
+        idx = qdb.sql_connection.TRN.index
 
-        portal_tables = TRN.execute_fetchflatten()
+        portal_tables = qdb.sql_connection.TRN.execute_fetchflatten()
 
         for table in portal_tables:
-            TRN.add(sql.format(table))
+            qdb.sql_connection.TRN.add(sql.format(table))
 
-        return list(chain.from_iterable(TRN.execute()[idx:]))
+        return list(
+            chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:]))
