@@ -6,22 +6,20 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita_db.ontology import Ontology
-from qiita_db.util import convert_to_id
 from os.path import abspath, dirname, join, exists, basename, splitext
 from functools import partial
 from os import mkdir
 import gzip
 from glob import glob
+from natsort import natsorted
 
 from future import standard_library
 from future.utils import viewitems
 
 from qiita_core.exceptions import QiitaEnvironmentError
 from qiita_core.qiita_settings import qiita_config
-from .sql_connection import SQLConnectionHandler, TRN
-from .reference import Reference
-from natsort import natsorted
+import qiita_db as qdb
+
 
 with standard_library.hooks():
     from urllib.request import urlretrieve
@@ -63,13 +61,13 @@ def create_layout_and_patch(verbose=False):
     verbose : bool, optional
         If true, print the current step. Default: False.
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         if verbose:
             print('Building SQL layout')
         # Create the schema
         with open(LAYOUT_FP, 'U') as f:
-            TRN.add(f.read())
-        TRN.execute()
+            qdb.sql_connection.TRN.add(f.read())
+        qdb.sql_connection.TRN.execute()
 
         if verbose:
             print('Patching Database...')
@@ -78,10 +76,10 @@ def create_layout_and_patch(verbose=False):
 
 def _populate_test_db():
     print('Populating database with demo data')
-    with TRN:
+    with qdb.sql_connection.TRN:
         with open(POPULATE_FP, 'U') as f:
-            TRN.add(f.read())
-        TRN.execute()
+            qdb.sql_connection.TRN.add(f.read())
+        qdb.sql_connection.TRN.execute()
 
 
 def _add_ontology_data():
@@ -103,21 +101,21 @@ def _add_ontology_data():
             raise IOError("Error: Could not fetch ontologies file from %s" %
                           url)
 
-    with TRN:
+    with qdb.sql_connection.TRN:
         with gzip.open(fp, 'rb') as f:
-            TRN.add(f.read())
-        TRN.execute()
+            qdb.sql_connection.TRN.add(f.read())
+        qdb.sql_connection.TRN.execute()
 
 
 def _insert_processed_params(ref):
-    with TRN:
+    with qdb.sql_connection.TRN:
         sortmerna_sql = """INSERT INTO qiita.processed_params_sortmerna
                            (reference_id, sortmerna_e_value, sortmerna_max_pos,
                             similarity, sortmerna_coverage, threads)
                            VALUES
                            (%s, 1, 10000, 0.97, 0.97, 1)"""
-        TRN.add(sortmerna_sql, [ref._id])
-        TRN.execute()
+        qdb.sql_connection.TRN.add(sortmerna_sql, [ref._id])
+        qdb.sql_connection.TRN.execute()
 
 
 def _download_reference_files():
@@ -147,9 +145,10 @@ def _download_reference_files():
             except:
                 raise IOError("Error: Could not fetch %s file from %s" %
                               (file_type, url))
-    with TRN:
-        ref = Reference.create('Greengenes', '13_8', files['sequence'][0],
-                               files['taxonomy'][0], files['tree'][0])
+    with qdb.sql_connection.TRN:
+        ref = qdb.reference.Reference.create(
+            'Greengenes', '13_8', files['sequence'][0],
+            files['taxonomy'][0], files['tree'][0])
 
         _insert_processed_params(ref)
 
@@ -182,7 +181,8 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                                "configuration")
 
     # Connect to the postgres server
-    admin_conn = SQLConnectionHandler(admin='admin_without_database')
+    admin_conn = qdb.sql_connection.SQLConnectionHandler(
+        admin='admin_without_database')
 
     # Check that it does not already exists
     if _check_db_exists(qiita_config.database, admin_conn):
@@ -197,22 +197,22 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
     admin_conn.autocommit = False
 
     del admin_conn
-    SQLConnectionHandler.close()
+    qdb.sql_connection.SQLConnectionHandler.close()
 
-    with TRN:
+    with qdb.sql_connection.TRN:
         print('Inserting database metadata')
         # Build the SQL layout into the database
         with open(SETTINGS_FP, 'U') as f:
-            TRN.add(f.read())
-        TRN.execute()
+            qdb.sql_connection.TRN.add(f.read())
+        qdb.sql_connection.TRN.execute()
 
         # Insert the settings values to the database
         sql = """INSERT INTO settings (test, base_data_dir, base_work_dir)
                  VALUES (%s, %s, %s)"""
-        TRN.add(sql, [qiita_config.test_environment,
-                      qiita_config.base_data_dir,
-                      qiita_config.working_dir])
-        TRN.execute()
+        qdb.sql_connection.TRN.add(
+            sql, [qiita_config.test_environment, qiita_config.base_data_dir,
+                  qiita_config.working_dir])
+        qdb.sql_connection.TRN.execute()
 
         create_layout_and_patch(verbose=True)
 
@@ -222,7 +222,8 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             # these values can only be added if the environment is being loaded
             # with the ontologies, thus this cannot exist inside intialize.sql
             # because otherwise loading the ontologies would be a requirement
-            ontology = Ontology(convert_to_id('ENA', 'ontology'))
+            ontology = qdb.ontology.Ontology(
+                qdb.util.convert_to_id('ENA', 'ontology'))
             ontology.add_user_defined_term('Amplicon Sequencing')
 
         if download_reference:
@@ -238,24 +239,25 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                 ('demo@microbio.me', 4,
                 '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe',
                 'Demo', 'Qitta Dev', '1345 Colorado Avenue', '303-492-1984')"""
-            TRN.add(sql)
+            qdb.sql_connection.TRN.add(sql)
             sql = """INSERT INTO qiita.analysis (email, name, description,
                                                  dflt, analysis_status_id)
                      VALUES ('demo@microbio.me', 'demo@microbio.me-dflt',
                              'dflt', 't', 1)
                      RETURNING analysis_id"""
-            TRN.add(sql)
-            analysis_id = TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql)
+            analysis_id = qdb.sql_connection.TRN.execute_fetchlast()
 
             # Add default analysis to all portals
             sql = "SELECT portal_type_id FROM qiita.portal_type"
-            TRN.add(sql)
-            args = [[analysis_id, p_id] for p_id in TRN.execute_fetchflatten()]
+            qdb.sql_connection.TRN.add(sql)
+            args = [[analysis_id, p_id]
+                    for p_id in qdb.sql_connection.TRN.execute_fetchflatten()]
             sql = """INSERT INTO qiita.analysis_portal
                         (analysis_id, portal_type_id)
                      VALUES (%s, %s)"""
-            TRN.add(sql, args, many=True)
-            TRN.execute()
+            qdb.sql_connection.TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.execute()
 
             print('Demo user successfully created')
 
@@ -271,9 +273,9 @@ def drop_environment(ask_for_confirmation):
     """
     # The transaction has an open connection to the database, so we need
     # to close it in order to drop the environment
-    TRN.close()
+    qdb.sql_connection.TRN.close()
     # Connect to the postgres server
-    conn = SQLConnectionHandler()
+    conn = qdb.sql_connection.SQLConnectionHandler()
     settings_sql = "SELECT test FROM settings"
     is_test_environment = conn.execute_fetchone(settings_sql)[0]
 
@@ -293,8 +295,9 @@ def drop_environment(ask_for_confirmation):
             do_drop = True
 
     if do_drop:
-        SQLConnectionHandler.close()
-        admin_conn = SQLConnectionHandler(admin='admin_without_database')
+        qdb.sql_connection.SQLConnectionHandler.close()
+        admin_conn = qdb.sql_connection.SQLConnectionHandler(
+            admin='admin_without_database')
         admin_conn.autocommit = True
         admin_conn.execute('DROP DATABASE %s' % qiita_config.database)
         admin_conn.autocommit = False
@@ -305,18 +308,19 @@ def drop_environment(ask_for_confirmation):
 def drop_and_rebuild_tst_database():
     """Drops the qiita schema and rebuilds the test database
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         # Drop the schema
-        TRN.add("DROP SCHEMA IF EXISTS qiita CASCADE")
+        qdb.sql_connection.TRN.add("DROP SCHEMA IF EXISTS qiita CASCADE")
         # Set the database to unpatched
-        TRN.add("UPDATE settings SET current_patch = 'unpatched'")
+        qdb.sql_connection.TRN.add(
+            "UPDATE settings SET current_patch = 'unpatched'")
         # Create the database and apply patches
         create_layout_and_patch()
         # Populate the database
         with open(POPULATE_FP, 'U') as f:
-            TRN.add(f.read())
+            qdb.sql_connection.TRN.add(f.read())
 
-        TRN.execute()
+        qdb.sql_connection.TRN.execute()
 
 
 def reset_test_database(wrapped_fn):
@@ -341,7 +345,7 @@ def clean_test_environment():
     re-populating it.
     """
     # First, we check that we are not in a production environment
-    conn_handler = SQLConnectionHandler()
+    conn_handler = qdb.sql_connection.SQLConnectionHandler()
     # It is possible that we are connecting to a production database
     test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
     # Or the loaded configuration file belongs to a production environment
@@ -363,9 +367,9 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
     Pulls the current patch from the settings table and applies all subsequent
     patches found in the patches directory.
     """
-    with TRN:
-        TRN.add("SELECT current_patch FROM settings")
-        current_patch = TRN.execute_fetchlast()
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT current_patch FROM settings")
+        current_patch = qdb.sql_connection.TRN.execute_fetchlast()
         current_sql_patch_fp = join(patches_dir, current_patch)
         corresponding_py_patch = partial(join, patches_dir, 'python_patches')
 
@@ -390,10 +394,11 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
             with open(sql_patch_fp, 'U') as patch_file:
                 if verbose:
                     print('\tApplying patch %s...' % sql_patch_filename)
-                TRN.add(patch_file.read())
-                TRN.add(patch_update_sql, [sql_patch_filename])
+                qdb.sql_connection.TRN.add(patch_file.read())
+                qdb.sql_connection.TRN.add(
+                    patch_update_sql, [sql_patch_filename])
 
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
 
             if exists(py_patch_fp):
                 if verbose:
