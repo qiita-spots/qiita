@@ -220,7 +220,7 @@ class TestStudy(TestCase):
 
         # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
-                    'pmid', 'study_title']
+                    'publication_doi', 'study_title']
         obs = qdb.study.Study.get_info([1], exp_keys)
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
@@ -246,7 +246,7 @@ class TestStudy(TestCase):
 
         qdb.study.Study.create(user, 'test_study_1', efo=[1], info=info)
         obs = qdb.study.Study.get_info(info_cols=exp_keys)
-        exp = [[True, ['123456', '7891011'], False,
+        exp = [[True, ['10.100/123456', '10.100/7891011'], False,
                 'Identification of the Microbiomes for Cannabis Soils',
                 'None'],
                [False, None, False, 'test_study_1', 'None']]
@@ -273,7 +273,7 @@ class TestStudy(TestCase):
             self.study.has_access(qdb.user.User("demo@microbio.me"), True))
 
     def test_owner(self):
-        self.assertEqual(self.study.owner, "test@foo.bar")
+        self.assertEqual(self.study.owner, qdb.user.User("test@foo.bar"))
 
     def test_share(self):
         # Clear all sharing associations
@@ -287,7 +287,8 @@ class TestStudy(TestCase):
 
         # Then share the study with shared@foo.bar
         self.study.share(qdb.user.User("shared@foo.bar"))
-        self.assertEqual(self.study.shared_with, ["shared@foo.bar"])
+        self.assertEqual(self.study.shared_with,
+                         [qdb.user.User("shared@foo.bar")])
 
     def test_unshare(self):
         self._change_processed_data_status('sandbox')
@@ -380,7 +381,7 @@ class TestStudy(TestCase):
         self.assertEqual(obs.investigation, None)
         self.assertEqual(obs.sample_template, None)
         self.assertEqual(obs.data_types, [])
-        self.assertEqual(obs.owner, 'test@foo.bar')
+        self.assertEqual(obs.owner, qdb.user.User('test@foo.bar'))
         self.assertEqual(obs.environmental_packages, [])
         self.assertEqual(obs._portals, ['QIITA'])
         self.assertEqual(obs.ebi_study_accession, None)
@@ -446,7 +447,7 @@ class TestStudy(TestCase):
         self.assertEqual(obs.investigation, None)
         self.assertEqual(obs.sample_template, None)
         self.assertEqual(obs.data_types, [])
-        self.assertEqual(obs.owner, 'test@foo.bar')
+        self.assertEqual(obs.owner, qdb.user.User('test@foo.bar'))
         self.assertEqual(obs.environmental_packages, [])
         self.assertEqual(obs._portals, ['QIITA'])
         self.assertEqual(obs.ebi_study_accession, None)
@@ -645,7 +646,8 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.status, "private")
 
     def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with, ['shared@foo.bar'])
+        self.assertEqual(self.study.shared_with,
+                         [qdb.user.User('shared@foo.bar')])
 
     def test_retrieve_publications(self):
         exp = [['10.100/123456', '123456'], ['10.100/7891011', '7891011']]
@@ -666,12 +668,13 @@ class TestStudy(TestCase):
         self.study.publications = new_values
         self.assertEqual(self.study.publications, new_values)
 
-    def test_pmids_setter_typeerror(self):
+    def test_publications_setter_typeerror(self):
         with self.assertRaises(TypeError):
-            self.study.pmids = '123456'
+            self.study.publications = '123456'
 
     def test_retrieve_investigation(self):
-        self.assertEqual(self.study.investigation, 1)
+        self.assertEqual(self.study.investigation,
+                         qdb.investigation.Investigation(1))
 
     def test_retrieve_investigation_empty(self):
         new = qdb.study.Study.create(
@@ -681,7 +684,9 @@ class TestStudy(TestCase):
         self.assertEqual(new.investigation, None)
 
     def test_retrieve_sample_template(self):
-        self.assertEqual(self.study.sample_template, 1)
+        self.assertEqual(
+            self.study.sample_template,
+            qdb.metadata_template.sample_template.SampleTemplate(1))
 
     def test_retrieve_data_types(self):
         self.assertEqual(self.study.data_types, ['18S'])

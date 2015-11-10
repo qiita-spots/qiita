@@ -150,7 +150,7 @@ class Study(qdb.base.QiitaObject):
         qdb.util.get_table_cols('study'),
         qdb.util.get_table_cols('study_status'),
         qdb.util.get_table_cols('timeseries_type'),
-        qdb.util.get_table_cols('study_pmid')))
+        qdb.util.get_table_cols('study_publication')))
 
     def _lock_non_sandbox(self):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -1018,10 +1018,10 @@ class Study(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # Make sure the study is not already shared with the given user
-            if user.id in self.shared_with:
+            if user in self.shared_with:
                 return
             # Do not allow the study to be shared with the owner
-            if user.id == self.owner:
+            if user == self.owner:
                 return
 
             sql = """INSERT INTO qiita.study_users (study_id, email)
