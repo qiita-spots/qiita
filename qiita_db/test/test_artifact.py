@@ -106,23 +106,31 @@ class ArtifactTests(TestCase):
             Artifact.create(self.filepaths_root, "FASTQ",
                             parents=[Artifact(1)])
 
-    def test_create_prep_template_and_processing_parameters(self):
+    def test_create_error_prep_template_and_processing_parameters(self):
         params = Parameters(1, Command(1))
         with self.assertRaises(QiitaDBArtifactCreationError):
             Artifact.create(self.filepaths_root, "FASTQ",
                             prep_template=self.prep_template,
                             processing_parameters=params)
 
+    def test_create_error_different_data_types(self):
+        new = Artifact.create(self.filepaths_root, "FASTQ",
+                              prep_template=self.prep_template)
+        with self.assertRaises(QiitaDBArtifactCreationError):
+            Artifact.create(self.filepaths_processed, "Demultiplexed",
+                            parents=[Artifact(1), new],
+                            processing_parameters=Parameters(1, Command(1)))
+
     def test_create_root(self):
         fp_count = get_count('qiita.filepath')
-        exp_timestamp = datetime(2015, 11, 1, 16, 35)
+        before = datetime.now()
         obs = Artifact.create(self.filepaths_root, "FASTQ",
-                              timestamp=exp_timestamp,
                               prep_template=self.prep_template)
-        self.assertEqual(obs.timestamp, exp_timestamp)
+        self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertIsNone(obs.processing_parameters)
         self.assertEqual(obs.visibility, 'sandbox')
         self.assertEqual(obs.artifact_type, "FASTQ")
+        self.assertEqual(obs.data_type, self.prep_template.data_type())
         self.assertFalse(obs.can_be_submitted_to_ebi)
         self.assertFalse(obs.can_be_submitted_to_vamps)
 
@@ -147,17 +155,18 @@ class ArtifactTests(TestCase):
 
     def test_create_processed(self):
         fp_count = get_count('qiita.filepath')
-        exp_timestamp = datetime(2015, 11, 1, 16, 40)
         exp_params = Parameters(1, Command(1))
+        before = datetime.now()
         obs = Artifact.create(self.filepaths_processed, "Demultiplexed",
-                              timestamp=exp_timestamp, parents=[Artifact(1)],
+                              parents=[Artifact(1)],
                               processing_parameters=exp_params,
                               can_be_submitted_to_ebi=True,
                               can_be_submitted_to_vamps=True)
-        self.assertEqual(obs.timestamp, exp_timestamp)
+        self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
         self.assertEqual(obs.artifact_type, "Demultiplexed")
+        self.assertEqual(obs.data_type, Artifact(1).data_type)
         self.assertTrue(obs.can_be_submitted_to_ebi)
         self.assertTrue(obs.can_be_submitted_to_vamps)
         self.assertFalse(obs.is_submitted_to_vamps)
@@ -174,16 +183,16 @@ class ArtifactTests(TestCase):
 
     def test_create_biom(self):
         fp_count = get_count('qiita.filepath')
-        exp_timestamp = datetime(2015, 11, 1, 16, 40)
+        before = datetime.now()
         exp_params = Parameters(1, Command(3))
         obs = Artifact.create(self.filepaths_biom, "BIOM",
-                              timestamp=exp_timestamp,
                               parents=[Artifact(2)],
                               processing_parameters=exp_params)
-        self.assertEqual(obs.timestamp, exp_timestamp)
+        self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
         self.assertEqual(obs.artifact_type, 'BIOM')
+        self.assertEqual(obs.data_type, Artifact(2).data_type)
         self.assertFalse(obs.can_be_submitted_to_ebi)
         self.assertFalse(obs.can_be_submitted_to_vamps)
         with self.assertRaises(QiitaDBOperationNotPermittedError):
@@ -281,6 +290,12 @@ class ArtifactTests(TestCase):
         self.assertEqual(Artifact(2).artifact_type, "Demultiplexed")
         self.assertEqual(Artifact(3).artifact_type, "Demultiplexed")
         self.assertEqual(Artifact(4).artifact_type, "BIOM")
+
+    def test_data_type(self):
+        self.assertEqual(Artifact(1).data_type, "18S")
+        self.assertEqual(Artifact(2).data_type, "18S")
+        self.assertEqual(Artifact(3).data_type, "18S")
+        self.assertEqual(Artifact(4).data_type, "18S")
 
     def test_can_be_submitted_to_ebi(self):
         self.assertFalse(Artifact(1).can_be_submitted_to_ebi)
