@@ -22,11 +22,6 @@ from .constants import (PREP_TEMPLATE_COLUMNS, TARGET_GENE_DATA_TYPES,
                         PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 from .base_metadata_template import BaseSample, MetadataTemplate
 
-# PREP_TEMPLATE_COLUMNS = qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS
-# TARGET_GENE_DATA_TYPES = qdb.metadata_template.constants.TARGET_GENE_DATA_TYPES
-# PREP_TEMPLATE_COLUMNS_TARGET_GENE = \
-#     qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS_TARGET_GENE
-
 
 class PrepSample(BaseSample):
     r"""Class that models a sample present in a PrepTemplate.

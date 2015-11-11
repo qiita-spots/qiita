@@ -698,6 +698,12 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
         The name of the column that represents the object id
     obj_id : int
         The object id
+
+    Returns
+    -------
+    list of (int, str, str)
+        The list of (filepath id, filepath, filepath_type) attached to the
+        object id
     """
 
     def path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
