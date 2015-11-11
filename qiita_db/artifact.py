@@ -32,6 +32,7 @@ class Artifact(QiitaObject):
     processing_parameters
     visibility
     artifact_type
+    data_type
     can_be_submitted_to_ebi
     can_be_submitted_to_vamps
     is_submitted_to_vamps
@@ -157,16 +158,24 @@ class Artifact(QiitaObject):
                         % ', '.join(studies))
                 study_id = studies.pop()
 
+                # Check that all parents have the same data type
+                dtypes = {p.data_type for p in parents}
+                if len(dtypes) > 1:
+                    raise QiitaDBArtifactCreationError(
+                        "parents have multiple data types: %s"
+                        % ", ".join(dtypes))
+                dtype_id = convert_to_id(dtypes.pop(), "data_type")
+
                 # Create the artifact
                 sql = """INSERT INTO qiita.artifact
-                            (generated_timestamp, command_id,
+                            (generated_timestamp, command_id, data_type_id,
                              command_parameters_id, visibility_id,
                              artifact_type_id, can_be_submitted_to_ebi,
                              can_be_submitted_to_vamps, submitted_to_vamps)
-                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                          RETURNING artifact_id"""
                 sql_args = [timestamp, processing_parameters.command.id,
-                            processing_parameters.id, visibility_id,
+                            dtype_id, processing_parameters.id, visibility_id,
                             artifact_type_id, can_be_submitted_to_ebi,
                             can_be_submitted_to_vamps, False]
                 TRN.add(sql, sql_args)
@@ -181,16 +190,19 @@ class Artifact(QiitaObject):
 
                 instance = cls(a_id)
             else:
+                dtype_id = convert_to_id(prep_template.data_type(),
+                                         "data_type")
                 # Create the artifact
                 sql = """INSERT INTO qiita.artifact
                             (generated_timestamp, visibility_id,
-                             artifact_type_id, can_be_submitted_to_ebi,
+                             artifact_type_id, data_type_id,
+                             can_be_submitted_to_ebi,
                              can_be_submitted_to_vamps, submitted_to_vamps)
-                         VALUES (%s, %s, %s, %s, %s, %s)
+                         VALUES (%s, %s, %s, %s, %s, %s, %s)
                          RETURNING artifact_id"""
                 sql_args = [timestamp, visibility_id, artifact_type_id,
-                            can_be_submitted_to_ebi, can_be_submitted_to_vamps,
-                            False]
+                            dtype_id, can_be_submitted_to_ebi,
+                            can_be_submitted_to_vamps, False]
                 TRN.add(sql, sql_args)
                 a_id = TRN.execute_fetchlast()
 
@@ -385,6 +397,23 @@ class Artifact(QiitaObject):
             sql = """SELECT artifact_type
                      FROM qiita.artifact
                         JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE artifact_id = %s"""
+            TRN.add(sql, [self.id])
+            return TRN.execute_fetchlast()
+
+    @property
+    def data_type(self):
+        """The data type of the artifact
+
+        Returns
+        -------
+        str
+            The artifact data type
+        """
+        with TRN:
+            sql = """SELECT data_type
+                     FROM qiita.artifact
+                        JOIN qiita.data_type USING (data_type_id)
                      WHERE artifact_id = %s"""
             TRN.add(sql, [self.id])
             return TRN.execute_fetchlast()
