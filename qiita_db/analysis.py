@@ -85,7 +85,7 @@ class Analysis(qdb.base.QiitaStatusObject):
 
     @classmethod
     def get_by_status(cls, status):
-        """Returns analysis ids for all Analyses with given status
+        """Returns all Analyses with given status
 
         Parameters
         ----------
@@ -94,7 +94,7 @@ class Analysis(qdb.base.QiitaStatusObject):
 
         Returns
         -------
-        set of int
+        set of Analysis
             All analyses in the database with the given status
         """
         with qdb.sql_connection.TRN:
@@ -105,7 +105,9 @@ class Analysis(qdb.base.QiitaStatusObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                      WHERE status = %s AND portal = %s""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [status, qiita_config.portal])
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
+            return set(
+                cls(aid)
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten())
 
     @classmethod
     def create(cls, owner, name, description, parent=None, from_default=False):
@@ -265,14 +267,14 @@ class Analysis(qdb.base.QiitaStatusObject):
 
         Returns
         -------
-        str
-            Name of the Analysis
+        qiita_db.user.User
+            The owner of the Analysis
         """
         with qdb.sql_connection.TRN:
             sql = "SELECT email FROM qiita.{0} WHERE analysis_id = %s".format(
                 self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.user.User(qdb.sql_connection.TRN.execute_fetchlast())
 
     @property
     def name(self):
@@ -358,13 +360,13 @@ class Analysis(qdb.base.QiitaStatusObject):
         Returns
         -------
         dict
-            Format is {processed_data_id: [sample_id, sample_id, ...]}
+            Format is {artifact_id: [sample_id, sample_id, ...]}
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT processed_data_id, sample_id
+            sql = """SELECT artifaact_id, sample_id
                      FROM qiita.analysis_sample
                      WHERE analysis_id = %s
-                     ORDER BY processed_data_id"""
+                     ORDER BY artifact_id"""
             ret_samples = defaultdict(list)
             qdb.sql_connection.TRN.add(sql, [self._id])
             # turn into dict of samples keyed to processed_data_id
@@ -379,7 +381,7 @@ class Analysis(qdb.base.QiitaStatusObject):
         Returns
         -------
         dict of sets
-            Format is {processed_data_id: {sample_id, sample_id, ...}, ...}
+            Format is {artifact_id: {sample_id, sample_id, ...}, ...}
         """
         with qdb.sql_connection.TRN:
             bioms = self.biom_tables
