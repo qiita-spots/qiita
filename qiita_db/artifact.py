@@ -59,7 +59,7 @@ class Artifact(QiitaObject):
                can_be_submitted_to_ebi=False, can_be_submitted_to_vamps=False):
         r"""Creates a new artifact in the system
 
-        The parameters depend based on how the artifact was generated:
+        The parameters depend on how the artifact was generated:
             - If the artifact was uploaded by the user, the parameter
             `prep_template` should be provided and the parameters `parents` and
             `processing_parameters` should not be provided.
@@ -69,9 +69,9 @@ class Artifact(QiitaObject):
             be provided.
 
         The parameters `can_be_submitted_to_ebi` and
-        `can_be_submiited_to_vamps` defaults to false and they should be
+        `can_be_submitted_to_vamps` defaults to false and they should be
         provided if and only if the artifact can be submitted to EBI and
-        VAMPS, respectivelly.
+        VAMPS, respectively.
 
         Parameters
         ----------
@@ -116,7 +116,7 @@ class Artifact(QiitaObject):
         Notes
         -----
         The visibility of the artifact is set by default to `sandbox`
-        The timestamps of the artifact is set by default to `datetime.now()`
+        The timestamp of the artifact is set by default to `datetime.now()`
         """
         # We need at least one file
         if not filepaths:
@@ -420,7 +420,7 @@ class Artifact(QiitaObject):
 
     @property
     def can_be_submitted_to_ebi(self):
-        """Whether if the artifact can be submitted to EBI or not
+        """Whether the artifact can be submitted to EBI or not
 
         Returns
         -------
@@ -461,7 +461,7 @@ class Artifact(QiitaObject):
 
     @ebi_run_accessions.setter
     def ebi_run_accessions(self, values):
-        """Set the ebi run accession attached to this artifact
+        """Set the EBI run accession attached to this artifact
 
         Parameters
         ----------
@@ -497,7 +497,7 @@ class Artifact(QiitaObject):
 
     @property
     def can_be_submitted_to_vamps(self):
-        """Whether if the artifact can be submitted to VAMPS or not
+        """Whether the artifact can be submitted to VAMPS or not
 
         Returns
         -------

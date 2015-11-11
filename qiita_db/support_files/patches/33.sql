@@ -265,7 +265,7 @@ BEGIN
         VALUES ('Demultiplexed', 'Demultiplexed and QC sequeneces')
         RETURNING artifact_type_id INTO demux_type_id;
     INSERT INTO qiita.artifact_type (artifact_type, description)
-        VALUES ('BIOM', 'Biom table')
+        VALUES ('BIOM', 'BIOM table')
         RETURNING artifact_type_id INTO biom_type_id;
 
     -- Loop through all the prep templates. We are going to transfer all the data

@@ -14,8 +14,7 @@ from os.path import exists, join, basename
 from functools import partial
 
 import pandas as pd
-import numpy as np
-from biom.table import Table
+from biom import example_table as et
 from biom.util import biom_open
 
 from qiita_core.util import qiita_test_checker
@@ -62,9 +61,8 @@ class ArtifactTests(TestCase):
 
         # Generate some file for a BIOM
         fd, self.fp4 = mkstemp(suffix='_table.biom')
-        t = Table(np.array([[1, 2], [3, 4]]), ['a', 'b'], ['x', 'y'])
         with biom_open(self.fp4, 'w') as f:
-            t.to_hdf5(f, "test")
+            et.to_hdf5(f, "test")
         self.filepaths_biom = [(self.fp4, 7)]
 
         # Create a new prep template
