@@ -926,8 +926,8 @@ class Study(qdb.base.QiitaObject):
         Parameters
         ----------
         dtype : str, optional
-            If given, retrieve only artifacts for given type. Default, return
-            all artifacts.
+            If given, retrieve only artifacts for given data type. Default,
+            return all artifacts associated with the study.
 
         Returns
         -------
@@ -937,9 +937,9 @@ class Study(qdb.base.QiitaObject):
             if dtype:
                 sql = """SELECT artifact_id
                          FROM qiita.artifact
-                            JOIN qiita.artifact_type USING (artifact_type)
+                            JOIN qiita.data_type USING (data_type_id)
                             JOIN qiita.study_artifact USING (artifact_id)
-                         WHERE study_id = %s AND artifact_type = %s"""
+                         WHERE study_id = %s AND data_type = %s"""
                 sql_args = [self._id, dtype]
             else:
                 sql = """SELECT artifact_id

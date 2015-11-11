@@ -704,6 +704,8 @@ class TestStudy(TestCase):
                qdb.artifact.Artifact(3),
                qdb.artifact.Artifact(4)]
         self.assertEqual(self.study.artifacts(), exp)
+        self.assertEqual(self.study.artifacts(dtype="16S"), [])
+        self.assertEqual(self.study.artifacts(dtype="18S"), exp)
 
     def test_retrieve_artifacts_none(self):
         new = qdb.study.Study.create(
@@ -738,8 +740,10 @@ class TestStudy(TestCase):
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_environmental_packages_setter(self):
-        new = qdb.study.Study.create(qdb.user.User('test@foo.bar'), 'NOT Identification of the '
-                           'Microbiomes for Cannabis Soils', [1], self.info)
+        new = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'),
+            'NOT Identification of the Microbiomes for Cannabis Soils', [1],
+            self.info)
         obs = new.environmental_packages
         exp = []
         self.assertEqual(obs, exp)
@@ -750,14 +754,18 @@ class TestStudy(TestCase):
         self.assertEqual(sorted(obs), sorted(new_values))
 
     def test_environmental_packages_setter_typeerror(self):
-        new = qdb.study.Study.create(qdb.user.User('test@foo.bar'), 'NOT Identification of the '
-                           'Microbiomes for Cannabis Soils', [1], self.info)
+        new = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'),
+            'NOT Identification of the Microbiomes for Cannabis Soils', [1],
+            self.info)
         with self.assertRaises(TypeError):
             new.environmental_packages = 'air'
 
     def test_environmental_packages_setter_valueerror(self):
-        new = qdb.study.Study.create(qdb.user.User('test@foo.bar'), 'NOT Identification of the '
-                           'Microbiomes for Cannabis Soils', [1], self.info)
+        new = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'),
+            'NOT Identification of the Microbiomes for Cannabis Soils', [1],
+            self.info)
         with self.assertRaises(ValueError):
             new.environmental_packages = ['air', 'not a package']
 
