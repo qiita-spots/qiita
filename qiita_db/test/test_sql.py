@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from tempfile import mkstemp
-from os import close
+from os import close, remove
+from os.path import exists
 
 import pandas as pd
 
@@ -14,6 +15,14 @@ from qiita_db.metadata_template import PrepTemplate
 @qiita_test_checker()
 class TestSQL(TestCase):
     """Tests that the database triggers and procedures work properly"""
+    def setUp(self):
+        self._files_to_remove = []
+
+    def tearDown(self):
+        for fp in self._files_to_remove:
+            if exists(fp):
+                remove(fp)
+
     def test_collection_job_trigger_bad_insert(self):
         # make sure an incorrect job raises an error
         with self.assertRaises(ValueError):
@@ -56,6 +65,7 @@ class TestSQL(TestCase):
         sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
         fd, fp = mkstemp(suffix='_table.biom')
         close(fd)
+        self._files_to_remove.append(fp)
         with open(fp, 'w') as f:
             f.write("test")
         fp = [(fp, 7)]
@@ -63,6 +73,7 @@ class TestSQL(TestCase):
                               processing_parameters=Parameters(1, Command(1)),
                               can_be_submitted_to_ebi=True,
                               can_be_submitted_to_vamps=True)
+        self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
         obs = self.conn_handler.execute_fetchall(sql, [new.id])
         exp = [[1]]
         self.assertEqual(obs, exp)
@@ -79,13 +90,16 @@ class TestSQL(TestCase):
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
             orient='index')
-        pt = PrepTemplate.create(metadata, Study(1), "16S")
+        pt = PrepTemplate.create(metadata, Study(1), "18S")
         fd, fp = mkstemp(suffix='_seqs.fastq')
         close(fd)
+        self._files_to_remove.append(fp)
         with open(fp, 'w') as f:
             f.write("test")
         fp = [(fp, 1)]
         new_root = Artifact.create(fp, "FASTQ", prep_template=pt)
+        self._files_to_remove.extend(
+            [afp for _, afp, _ in new_root.filepaths])
         return new_root
 
     def test_find_artifact_roots_is_root_without_children(self):
@@ -109,13 +123,14 @@ class TestSQL(TestCase):
         # Add a child of 2 roots
         fd, fp = mkstemp(suffix='_seqs.fna')
         close(fd)
+        self._files_to_remove.append(fp)
         with open(fp, 'w') as f:
             f.write("test")
         fp = [(fp, 4)]
         new = Artifact.create(fp, "Demultiplexed",
                               parents=[Artifact(1), new_root],
                               processing_parameters=Parameters(1, Command(1)))
-
+        self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
         obs = self.conn_handler.execute_fetchall(sql, [new.id])
         exp = [[1], [new_root.id]]
         self.assertEqual(obs, exp)
