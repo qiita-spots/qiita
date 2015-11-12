@@ -367,10 +367,11 @@ class PrepTemplate(MetadataTemplate):
         return True, ""
 
     @property
-    def raw_data(self):
+    def artifact(self):
         with TRN:
-            sql = """SELECT raw_data_id FROM qiita.prep_template
-                     WHERE prep_template_id=%s"""
+            sql = """SELECT artifact_id
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
             TRN.add(sql, [self.id])
             result = TRN.execute_fetchindex()
             if result:
@@ -379,24 +380,22 @@ class PrepTemplate(MetadataTemplate):
                 return result[0][0]
             return None
 
-    @raw_data.setter
-    def raw_data(self, raw_data):
+    @artifact.setter
+    def artifact(self, artifact):
         with TRN:
-            sql = """SELECT (
-                        SELECT raw_data_id
-                        FROM qiita.prep_template
-                        WHERE prep_template_id=%s)
-                    IS NOT NULL"""
+            sql = """SELECT (SELECT artifact_id
+                             FROM qiita.prep_template
+                             WHERE prep_template_id = %s)
+                     IS NOT NULL"""
             TRN.add(sql, [self.id])
-            exists = TRN.execute_fetchlast()
-            if exists:
+            if TRN.execute_fetchlast():
                 raise QiitaDBError(
-                    "Prep template %d already has a raw data associated"
+                    "Prep template %d already has an artifact associated"
                     % self.id)
             sql = """UPDATE qiita.prep_template
-                     SET raw_data_id = %s
+                     SET artifact_id = %s
                      WHERE prep_template_id = %s"""
-            TRN.add(sql, [raw_data.id, self.id])
+            TRN.add(sql, [artifact.id, self.id])
             TRN.execute()
 
     @property

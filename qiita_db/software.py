@@ -55,6 +55,30 @@ class Command(QiitaObject):
             return TRN.execute_fetchlast()
 
     @classmethod
+    def exists(cls, software, cli_cmd):
+        """Checks if the command already exists in the system
+
+        Parameters
+        ----------
+        qiita_db.software.Software
+            The software to which this command belongs to.
+        cli_cmd : str
+            The CLI used to call this command
+
+        Returns
+        -------
+        bool
+            Whether the command exists in the system or not
+        """
+        with TRN:
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.software_command
+                                   WHERE software_id = %s
+                                        AND cli_cmd = %s)"""
+            TRN.add(sql, [software.id, cli_cmd])
+            return TRN.execute_fetchlast()
+
+    @classmethod
     def create(cls, software, name, description, cli_cmd, parameters_table):
         r"""Creates a new command in the system
 
@@ -78,6 +102,10 @@ class Command(QiitaObject):
             The newly created command
         """
         with TRN:
+            if cls.exists(software, cli_cmd):
+                raise QiitaDBDuplicateError(
+                    "command", "software: %d, cli_cmd: %s"
+                               % (software.id, cli_cmd))
             sql = """INSERT INTO qiita.software_command
                             (name, software_id, description, cli_cmd,
                              parameters_table)
@@ -363,6 +391,7 @@ class Parameters(object):
         with TRN:
             self._table = command.parameters_table
             self.id = id_
+            self._command = command
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.{0}
@@ -500,6 +529,17 @@ class Parameters(object):
             del result["parameters_id"]
             del result["param_set_name"]
             return result
+
+    @property
+    def command(self):
+        """The command that this parameter set belongs to
+
+        Returns
+        -------
+        qiita_db.software.Command
+            The command that this parameter set belongs to
+        """
+        return self._command
 
     def to_str(self):
         """Generates a string with the parameter values

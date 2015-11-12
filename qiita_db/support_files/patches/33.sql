@@ -86,6 +86,7 @@ CREATE TABLE qiita.artifact (
     command_parameters_id               bigint  ,
     visibility_id                       bigint  NOT NULL,
     artifact_type_id                    integer  ,
+    data_type_id                        bigint  NOT NULL,
     can_be_submitted_to_ebi             bool DEFAULT 'FALSE' NOT NULL,
 	can_be_submitted_to_vamps           bool DEFAULT 'FALSE' NOT NULL,
     submitted_to_vamps                  bool DEFAULT 'FALSE' NOT NULL,
@@ -93,12 +94,15 @@ CREATE TABLE qiita.artifact (
  ) ;
 CREATE INDEX idx_artifact_0 ON qiita.artifact ( visibility_id ) ;
 CREATE INDEX idx_artifact_1 ON qiita.artifact ( artifact_type_id ) ;
+CREATE INDEX idx_artifact_2 ON qiita.artifact ( data_type_id ) ;
 CREATE INDEX idx_artifact ON qiita.artifact ( command_id ) ;
 COMMENT ON TABLE qiita.artifact IS 'Represents data in the system';
 COMMENT ON COLUMN qiita.artifact.visibility_id IS 'If the artifact is sandbox, awaiting_for_approval, private or public';
 ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_type FOREIGN KEY ( artifact_type_id ) REFERENCES qiita.artifact_type( artifact_type_id )    ;
 ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_visibility FOREIGN KEY ( visibility_id ) REFERENCES qiita.visibility( visibility_id )    ;
 ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_software_command FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
+ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    ;
+
 
 -- Artifact filepath table - relates an artifact with its files
 CREATE TABLE qiita.artifact_filepath (
@@ -244,6 +248,7 @@ DECLARE
     ppd_fp_vals     RECORD;
     pd_fp_vals      RECORD;
     study_pmids     RECORD;
+    a_type          RECORD;
     rd_vis_id       bigint;
     ppd_vis_id      bigint;
     rd_a_id         bigint;
@@ -260,7 +265,7 @@ BEGIN
         VALUES ('Demultiplexed', 'Demultiplexed and QC sequeneces')
         RETURNING artifact_type_id INTO demux_type_id;
     INSERT INTO qiita.artifact_type (artifact_type, description)
-        VALUES ('BIOM table', 'Biom table')
+        VALUES ('BIOM', 'BIOM table')
         RETURNING artifact_type_id INTO biom_type_id;
 
     -- Loop through all the prep templates. We are going to transfer all the data
@@ -270,7 +275,7 @@ BEGIN
     -- intentional as the raw data sharing should be done at filepath level rather
     -- than at raw data level. See issue #1459.
     FOR pt_vals IN
-        SELECT prep_template_id, raw_data_id, filetype_id, study_id
+        SELECT prep_template_id, raw_data_id, filetype_id, study_id, data_type_id
         FROM qiita.prep_template
             JOIN qiita.raw_data USING (raw_data_id)
             JOIN qiita.study_prep_template USING (prep_template_id)
@@ -281,8 +286,8 @@ BEGIN
         SELECT infer_rd_status(pt_vals.raw_data_id, pt_vals.study_id) INTO rd_vis_id;
 
         -- Insert the raw data in the artifact table
-        INSERT INTO qiita.artifact (generated_timestamp, visibility_id, artifact_type_id)
-            VALUES (now(), rd_vis_id, pt_vals.filetype_id)
+        INSERT INTO qiita.artifact (generated_timestamp, visibility_id, artifact_type_id, data_type_id)
+            VALUES (now(), rd_vis_id, pt_vals.filetype_id, pt_vals.data_type_id)
             RETURNING artifact_id INTO rd_a_id;
 
         -- Relate the artifact with their studies
@@ -308,7 +313,7 @@ BEGIN
         -- and, by extension, by the current raw data
         FOR ppd_vals IN
             SELECT preprocessed_data_id, preprocessed_params_table, preprocessed_params_id,
-                   data_type_id, submitted_to_vamps_status, processing_status
+                   data_type_id, submitted_to_vamps_status, processing_status, data_type_id
             FROM qiita.preprocessed_data
                 JOIN qiita.prep_template_preprocessed_data USING (preprocessed_data_id)
             WHERE prep_template_id = pt_vals.prep_template_id
@@ -321,10 +326,10 @@ BEGIN
 
             -- Insert the preprocessed data in the artifact table
             INSERT INTO qiita.artifact (generated_timestamp, visibility_id,
-                                        artifact_type_id, command_id,
+                                        artifact_type_id, data_type_id, command_id,
                                         command_parameters_id, can_be_submitted_to_ebi,
                                         can_be_submitted_to_vamps)
-                VALUES (now(), ppd_vis_id, demux_type_id, ppd_cmd_id,
+                VALUES (now(), ppd_vis_id, demux_type_id, ppd_vals.data_type_id, ppd_cmd_id,
                         ppd_vals.preprocessed_params_id, TRUE, TRUE)
                 RETURNING artifact_id INTO ppd_a_id;
 
@@ -363,7 +368,7 @@ BEGIN
             -- preprocessed data
             FOR pd_vals IN
                 SELECT processed_data_id, processed_params_table, processed_params_id,
-                       processed_date, data_type_id, processed_data_status_id
+                       processed_date, data_type_id, processed_data_status_id, data_type_id
                 FROM qiita.processed_data
                     JOIN qiita.preprocessed_processed_data USING (processed_data_id)
                 WHERE preprocessed_data_id = ppd_vals.preprocessed_data_id
@@ -373,10 +378,10 @@ BEGIN
                 -- and we know the order that we inserted the commands. The
                 -- OTU pickking command is the number 3
                 INSERT INTO qiita.artifact (generated_timestamp, visibility_id,
-                                            artifact_type_id, command_id,
+                                            artifact_type_id, data_type_id, command_id,
                                             command_parameters_id)
                     VALUES (pd_vals.processed_date, pd_vals.processed_data_status_id,
-                            biom_type_id, 3, pd_vals.processed_params_id)
+                            biom_type_id, ppd_vals.data_type_id, 3, pd_vals.processed_params_id)
                     RETURNING artifact_id into pd_a_id;
 
                 -- Relate the artifact with the study
@@ -418,6 +423,25 @@ BEGIN
         INSERT INTO qiita.study_publication (study_id, publication_doi)
             VALUES (study_pmids.study_id, study_pmids.pmid);
     END LOOP;
+
+    -- The column subdirectory in the data_directory was unused
+    -- We are going to "recycle" it so we can indicate which mountpoints use the
+    -- new file structure in which a subdirectory for the artifact is created and
+    -- the files are stored under such subdirectory, rather than just prefixing
+    -- the files with the artifact_id
+    ALTER TABLE qiita.data_directory ALTER COLUMN subdirectory SET DATA TYPE bool USING FALSE;
+    ALTER TABLE qiita.data_directory ALTER COLUMN subdirectory SET DEFAULT FALSE;
+    ALTER TABLE qiita.data_directory ALTER COLUMN subdirectory SET NOT NULL;
+
+    -- The artifacts will be stored now based on the artifact type
+    -- Add the new mountpoints to the qiita.data_directory table
+    FOR a_type IN
+        SELECT artifact_type
+        FROM qiita.artifact_type
+    LOOP
+        INSERT INTO qiita.data_directory (data_type, mountpoint, subdirectory, active)
+            VALUES (a_type.artifact_type, a_type.artifact_type, true, true);
+    END LOOP;
 END $do$;
 
 -- Set the NOT NULL constraints that we couldn't set before because we were
@@ -456,3 +480,26 @@ ALTER TABLE qiita.processed_params_uclust RENAME COLUMN processed_params_id TO p
 ALTER TABLE qiita.preprocessed_sequence_454_params RENAME COLUMN preprocessed_params_id TO parameters_id;
 ALTER TABLE qiita.preprocessed_sequence_illumina_params RENAME COLUMN preprocessed_params_id TO parameters_id;
 ALTER TABLE qiita.preprocessed_spectra_params RENAME COLUMN preprocessed_params_id TO parameters_id;
+
+-- Create a function to return the roots of an artifact, i.e. the source artifacts
+CREATE FUNCTION qiita.find_artifact_roots(a_id bigint) RETURNS SETOF bigint AS $$
+BEGIN
+    IF EXISTS(SELECT * FROM qiita.parent_artifact WHERE artifact_id = a_id) THEN
+        RETURN QUERY WITH RECURSIVE root AS (
+            SELECT artifact_id, parent_id
+            FROM qiita.parent_artifact
+            WHERE artifact_id = a_id
+          UNION
+            SELECT p.artifact_id, p.parent_id
+            FROM qiita.parent_artifact p
+            JOIN root r ON (r.parent_id = p.artifact_id)
+        )
+        SELECT DISTINCT parent_id
+            FROM root
+            WHERE parent_id NOT IN (SELECT artifact_id
+                                    FROM qiita.parent_artifact);
+    ELSE
+        RETURN QUERY SELECT a_id;
+    END IF;
+END
+$$ LANGUAGE plpgsql;

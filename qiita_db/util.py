@@ -547,15 +547,18 @@ def move_upload_files_to_trash(study_id, files_to_move):
         rename(fullpath, new_fullpath)
 
 
-def get_mountpoint(mount_type, retrieve_all=False):
+def get_mountpoint(mount_type, retrieve_all=False, retrieve_subdir=False):
     r""" Returns the most recent values from data directory for the given type
 
     Parameters
     ----------
     mount_type : str
         The data mount type
-    retrieve_all : bool
-        Retrieve all the available mount points or just the active one
+    retrieve_all : bool, optional
+        Retrieve all the available mount points or just the active one.
+        Default: False.
+    retrieve_subdir : bool, optional
+        Retrieve the subdirectory column. Default: False.
 
     Returns
     -------
@@ -572,9 +575,13 @@ def get_mountpoint(mount_type, retrieve_all=False):
                      FROM qiita.data_directory
                      WHERE data_type=%s AND active=true"""
         TRN.add(sql, [mount_type])
-        result = TRN.execute_fetchindex()
+        db_result = TRN.execute_fetchindex()
         basedir = get_db_files_base_dir()
-        return [(d, join(basedir, m, s)) for d, m, s in result]
+        if retrieve_subdir:
+            result = [(d, join(basedir, m), s) for d, m, s in db_result]
+        else:
+            result = [(d, join(basedir, m)) for d, m, _ in db_result]
+        return result
 
 
 def get_mountpoint_path_by_id(mount_id):
@@ -591,11 +598,11 @@ def get_mountpoint_path_by_id(mount_id):
         The mountpoint path
     """
     with TRN:
-        sql = """SELECT mountpoint, subdirectory FROM qiita.data_directory
+        sql = """SELECT mountpoint FROM qiita.data_directory
                  WHERE data_directory_id=%s"""
         TRN.add(sql, [mount_id])
-        mountpoint, subdirectory = TRN.execute_fetchindex()[0]
-        return join(get_db_files_base_dir(), mountpoint, subdirectory)
+        mountpoint = TRN.execute_fetchlast()
+        return join(get_db_files_base_dir(), mountpoint)
 
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table,
@@ -629,17 +636,26 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
     with TRN:
         new_filepaths = filepaths
 
-        dd_id, mp = get_mountpoint(table)[0]
+        dd_id, mp, subdir = get_mountpoint(table, retrieve_subdir=True)[0]
         base_fp = join(get_db_files_base_dir(), mp)
 
         if move_files:
-            # Generate the new fileapths. Format: DataId_OriginalName
-            # Keeping the original name is useful for checking if the RawData
-            # alrady exists on the DB
             db_path = partial(join, base_fp)
-            new_filepaths = [
-                (db_path("%s_%s" % (obj_id, basename(path))), id_)
-                for path, id_ in filepaths]
+            if subdir:
+                # Generate the new filepaths, format:
+                # mountpoint/obj_id/original_name
+                dirname = db_path(str(obj_id))
+                if not exists(dirname):
+                    makedirs(dirname)
+                new_filepaths = [
+                    (join(dirname, basename(path)), id_)
+                    for path, id_ in filepaths]
+            else:
+                # Generate the new fileapths. format:
+                # mountpoint/DataId_OriginalName
+                new_filepaths = [
+                    (db_path("%s_%s" % (obj_id, basename(path))), id_)
+                    for path, id_ in filepaths]
             # Move the original files to the controlled DB directory
             for old_fp, new_fp in zip(filepaths, new_filepaths):
                     move(old_fp[0], new_fp[0])
@@ -650,7 +666,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
         def str_to_id(x):
             return (x if isinstance(x, (int, long))
                     else convert_to_id(x, "filepath_type"))
-        paths_w_checksum = [(relpath(path, base_fp), str_to_id(id_),
+        paths_w_checksum = [(basename(path), str_to_id(id_),
                             compute_checksum(path))
                             for path, id_ in new_filepaths]
         # Create the list of SQL values to add
@@ -668,6 +684,47 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
         # queries to the transaction, so the ids are in the last idx queries
         return list(chain.from_iterable(
             chain.from_iterable(TRN.execute()[idx:])))
+
+
+def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
+    """Retrieves the filepaths for the given object id
+
+    Parameters
+    ----------
+    obj_fp_table : str
+        The name of the table that links the object and the filepath
+    obj_id_column : str
+        The name of the column that represents the object id
+    obj_id : int
+        The object id
+
+    Returns
+    -------
+    list of (int, str, str)
+        The list of (filepath id, filepath, filepath_type) attached to the
+        object id
+    """
+
+    def path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
+        if subdirectory:
+            return join(db_dir, mountpoint, str(obj_id), filepath)
+        else:
+            return join(db_dir, mountpoint, filepath)
+
+    with TRN:
+        sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
+                        subdirectory
+                 FROM qiita.filepath
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                    JOIN qiita.data_directory USING (data_directory_id)
+                    JOIN qiita.{0} USING (filepath_id)
+                 WHERE {1} = %s""".format(obj_fp_table, obj_id_column)
+        TRN.add(sql, [obj_id])
+        results = TRN.execute_fetchindex()
+        db_dir = get_db_files_base_dir()
+
+        return [(fpid, path_builder(db_dir, fp, m, s, obj_id), fp_type)
+                for fpid, fp, fp_type, m, s in results]
 
 
 def purge_filepaths():
@@ -788,7 +845,7 @@ def get_filepath_id(table, fp):
 
 
 def filepath_id_to_rel_path(filepath_id):
-    """Gets the full path, relative to the base directory
+    """Gets the relative to the base directory of filepath_id
 
     Returns
     -------
@@ -796,7 +853,7 @@ def filepath_id_to_rel_path(filepath_id):
         The relative path for the given filepath id
     """
     with TRN:
-        sql = """SELECT mountpoint, subdirectory, filepath
+        sql = """SELECT mountpoint, filepath
                  FROM qiita.filepath
                  JOIN qiita.data_directory USING (data_directory_id)
                  WHERE filepath_id = %s"""
@@ -821,7 +878,7 @@ def filepath_ids_to_rel_paths(filepath_ids):
         return {}
 
     with TRN:
-        sql = """SELECT filepath_id, mountpoint, subdirectory, filepath
+        sql = """SELECT filepath_id, mountpoint, filepath
                  FROM qiita.filepath
                  JOIN qiita.data_directory USING (data_directory_id)
                  WHERE filepath_id IN %s"""
