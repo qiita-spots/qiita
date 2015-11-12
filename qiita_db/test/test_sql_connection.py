@@ -10,9 +10,9 @@ from psycopg2.extensions import (ISOLATION_LEVEL_AUTOCOMMIT,
                                  ISOLATION_LEVEL_READ_COMMITTED,
                                  TRANSACTION_STATUS_IDLE)
 
-from qiita_db.sql_connection import SQLConnectionHandler, Transaction, TRN
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
+import qiita_db as qdb
 
 
 DB_TEST_TABLE = """CREATE TABLE qiita.test_table (
@@ -66,7 +66,7 @@ class TestBase(TestCase):
 
 class TestConnHandler(TestBase):
     def test_init(self):
-        obs = SQLConnectionHandler()
+        obs = qdb.sql_connection.SQLConnectionHandler()
         self.assertEqual(obs.admin, 'no_admin')
         self.assertEqual(obs.queues, {})
         self.assertTrue(isinstance(obs._connection, connection))
@@ -74,22 +74,22 @@ class TestConnHandler(TestBase):
 
         # Let's close the connection and make sure that it gets reopened
         obs.close()
-        obs = SQLConnectionHandler()
+        obs = qdb.sql_connection.SQLConnectionHandler()
         self.assertEqual(self.conn_handler._user_conn.closed, 0)
 
     def test_init_admin_error(self):
         with self.assertRaises(ValueError):
-            SQLConnectionHandler(admin='not a valid value')
+            qdb.sql_connection.SQLConnectionHandler(admin='not a valid value')
 
     def test_init_admin_with_database(self):
-        obs = SQLConnectionHandler(admin='admin_with_database')
+        obs = qdb.sql_connection.SQLConnectionHandler(admin='admin_with_database')
         self.assertEqual(obs.admin, 'admin_with_database')
         self.assertEqual(obs.queues, {})
         self.assertTrue(isinstance(obs._connection, connection))
         self.assertEqual(self.conn_handler._user_conn.closed, 0)
 
     def test_init_admin_without_database(self):
-        obs = SQLConnectionHandler(admin='admin_without_database')
+        obs = qdb.sql_connection.SQLConnectionHandler(admin='admin_without_database')
         self.assertEqual(obs.admin, 'admin_without_database')
         self.assertEqual(obs.queues, {})
         self.assertTrue(isinstance(obs._connection, connection))
@@ -208,7 +208,7 @@ class TestConnHandler(TestBase):
 
 class TestTransaction(TestBase):
     def test_init(self):
-        obs = Transaction()
+        obs = qdb.sql_connection.Transaction()
         self.assertEqual(obs._queries, [])
         self.assertEqual(obs._results, [])
         self.assertEqual(obs._connection, None)
@@ -218,74 +218,74 @@ class TestTransaction(TestBase):
         self.assertTrue(isinstance(obs._connection, connection))
 
     def test_add(self):
-        with TRN:
-            self.assertEqual(TRN._queries, [])
+        with qdb.sql_connection.TRN:
+            self.assertEqual(qdb.sql_connection.TRN._queries, [])
 
             sql1 = "INSERT INTO qiita.test_table (bool_column) VALUES (%s)"
             args1 = [True]
-            TRN.add(sql1, args1)
+            qdb.sql_connection.TRN.add(sql1, args1)
             sql2 = "INSERT INTO qiita.test_table (int_column) VALUES (1)"
-            TRN.add(sql2)
+            qdb.sql_connection.TRN.add(sql2)
             args3 = (False,)
-            TRN.add(sql1, args3)
+            qdb.sql_connection.TRN.add(sql1, args3)
             sql3 = "INSERT INTO qiita.test_table (int_column) VALEUS (%(foo)s)"
             args4 = {'foo': 1}
-            TRN.add(sql3, args4)
+            qdb.sql_connection.TRN.add(sql3, args4)
 
             exp = [(sql1, args1), (sql2, None), (sql1, args3), (sql3, args4)]
-            self.assertEqual(TRN._queries, exp)
+            self.assertEqual(qdb.sql_connection.TRN._queries, exp)
 
             # Remove queries so __exit__ doesn't try to execute it
-            TRN._queries = []
+            qdb.sql_connection.TRN._queries = []
 
     def test_add_many(self):
-        with TRN:
-            self.assertEqual(TRN._queries, [])
+        with qdb.sql_connection.TRN:
+            self.assertEqual(qdb.sql_connection.TRN._queries, [])
 
             sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
             args = [[1], [2], [3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
 
             exp = [(sql, [1]), (sql, [2]), (sql, [3])]
-            self.assertEqual(TRN._queries, exp)
+            self.assertEqual(qdb.sql_connection.TRN._queries, exp)
 
     def test_add_error(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             with self.assertRaises(TypeError):
-                TRN.add("SELECT 42", 1)
+                qdb.sql_connection.TRN.add("SELECT 42", 1)
 
             with self.assertRaises(TypeError):
-                TRN.add("SELECT 42", {'foo': 'bar'}, many=True)
+                qdb.sql_connection.TRN.add("SELECT 42", {'foo': 'bar'}, many=True)
 
             with self.assertRaises(TypeError):
-                TRN.add("SELECT 42", [1, 1], many=True)
+                qdb.sql_connection.TRN.add("SELECT 42", [1, 1], many=True)
 
     def test_execute(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s)"""
-            TRN.add(sql, ["test_insert", 2])
+            qdb.sql_connection.TRN.add(sql, ["test_insert", 2])
             sql = """UPDATE qiita.test_table
                      SET int_column = %s, bool_column = %s
                      WHERE str_column = %s"""
-            TRN.add(sql, [20, False, "test_insert"])
-            obs = TRN.execute()
+            qdb.sql_connection.TRN.add(sql, [20, False, "test_insert"])
+            obs = qdb.sql_connection.TRN.execute()
             self.assertEqual(obs, [None, None])
             self._assert_sql_equal([])
 
         self._assert_sql_equal([("test_insert", False, 20)])
 
     def test_execute_many(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s)"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
             sql = """UPDATE qiita.test_table
                      SET int_column = %s, bool_column = %s
                      WHERE str_column = %s"""
-            TRN.add(sql, [20, False, 'insert2'])
-            obs = TRN.execute()
+            qdb.sql_connection.TRN.add(sql, [20, False, 'insert2'])
+            obs = qdb.sql_connection.TRN.execute()
             self.assertEqual(obs, [None, None, None, None])
 
             self._assert_sql_equal([])
@@ -295,28 +295,28 @@ class TestTransaction(TestBase):
                                 ('insert2', False, 20)])
 
     def test_execute_return(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
-            TRN.add(sql, ['test_insert', 2])
+            qdb.sql_connection.TRN.add(sql, ['test_insert', 2])
             sql = """UPDATE qiita.test_table SET bool_column = %s
                      WHERE str_column = %s RETURNING int_column"""
-            TRN.add(sql, [False, 'test_insert'])
-            obs = TRN.execute()
+            qdb.sql_connection.TRN.add(sql, [False, 'test_insert'])
+            obs = qdb.sql_connection.TRN.execute()
             self.assertEqual(obs, [[['test_insert', 2]], [[2]]])
 
     def test_execute_return_many(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
             sql = """UPDATE qiita.test_table SET bool_column = %s
                      WHERE str_column = %s"""
-            TRN.add(sql, [False, 'insert2'])
+            qdb.sql_connection.TRN.add(sql, [False, 'insert2'])
             sql = "SELECT * FROM qiita.test_table"
-            TRN.add(sql)
-            obs = TRN.execute()
+            qdb.sql_connection.TRN.add(sql)
+            obs = qdb.sql_connection.TRN.execute()
             exp = [[['insert1', 1]],  # First query of the many query
                    [['insert2', 2]],  # Second query of the many query
                    [['insert3', 3]],  # Third query of the many query
@@ -327,70 +327,70 @@ class TestTransaction(TestBase):
             self.assertEqual(obs, exp)
 
     def test_execute_huge_transaction(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             # Add a lot of inserts to the transaction
             sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
             for i in range(1000):
-                TRN.add(sql, [i])
+                qdb.sql_connection.TRN.add(sql, [i])
             # Add some updates to the transaction
             sql = """UPDATE qiita.test_table SET bool_column = %s
                      WHERE int_column = %s"""
             for i in range(500):
-                TRN.add(sql, [False, i])
+                qdb.sql_connection.TRN.add(sql, [False, i])
             # Make the transaction fail with the last insert
             sql = """INSERT INTO qiita.table_to_make (the_trans_to_fail)
                      VALUES (1)"""
-            TRN.add(sql)
+            qdb.sql_connection.TRN.add(sql)
 
             with self.assertRaises(ValueError):
-                TRN.execute()
+                qdb.sql_connection.TRN.execute()
 
             # make sure rollback correctly
             self._assert_sql_equal([])
 
     def test_execute_commit_false(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
 
-            obs = TRN.execute()
+            obs = qdb.sql_connection.TRN.execute()
             exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
             self.assertEqual(obs, exp)
 
             self._assert_sql_equal([])
 
-            TRN.commit()
+            qdb.sql_connection.TRN.commit()
 
             self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
                                     ('insert3', True, 3)])
 
     def test_execute_commit_false_rollback(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
 
-            obs = TRN.execute()
+            obs = qdb.sql_connection.TRN.execute()
             exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
             self.assertEqual(obs, exp)
 
             self._assert_sql_equal([])
 
-            TRN.rollback()
+            qdb.sql_connection.TRN.rollback()
 
             self._assert_sql_equal([])
 
     def test_execute_commit_false_wipe_queries(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
 
-            obs = TRN.execute()
+            obs = qdb.sql_connection.TRN.execute()
             exp = [[['insert1', 1]], [['insert2', 2]], [['insert3', 3]]]
             self.assertEqual(obs, exp)
 
@@ -399,166 +399,166 @@ class TestTransaction(TestBase):
             sql = """UPDATE qiita.test_table SET bool_column = %s
                      WHERE str_column = %s"""
             args = [False, 'insert2']
-            TRN.add(sql, args)
-            self.assertEqual(TRN._queries, [(sql, args)])
+            qdb.sql_connection.TRN.add(sql, args)
+            self.assertEqual(qdb.sql_connection.TRN._queries, [(sql, args)])
 
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
             self._assert_sql_equal([])
 
         self._assert_sql_equal([('insert1', True, 1), ('insert3', True, 3),
                                 ('insert2', False, 2)])
 
     def test_execute_fetchlast(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
 
             sql = """SELECT EXISTS(
                         SELECT * FROM qiita.test_table WHERE int_column=%s)"""
-            TRN.add(sql, [2])
-            self.assertTrue(TRN.execute_fetchlast())
+            qdb.sql_connection.TRN.add(sql, [2])
+            self.assertTrue(qdb.sql_connection.TRN.execute_fetchlast())
 
     def test_execute_fetchindex(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
-            self.assertEqual(TRN.execute_fetchindex(), [['insert3', 3]])
+            qdb.sql_connection.TRN.add(sql, args, many=True)
+            self.assertEqual(qdb.sql_connection.TRN.execute_fetchindex(), [['insert3', 3]])
 
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert4', 4], ['insert5', 5], ['insert6', 6]]
-            TRN.add(sql, args, many=True)
-            self.assertEqual(TRN.execute_fetchindex(3), [['insert4', 4]])
+            qdb.sql_connection.TRN.add(sql, args, many=True)
+            self.assertEqual(qdb.sql_connection.TRN.execute_fetchindex(3), [['insert4', 4]])
 
     def test_execute_fetchflatten(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s)"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
 
             sql = "SELECT str_column, int_column FROM qiita.test_table"
-            TRN.add(sql)
+            qdb.sql_connection.TRN.add(sql)
 
             sql = "SELECT int_column FROM qiita.test_table"
-            TRN.add(sql)
-            obs = TRN.execute_fetchflatten()
+            qdb.sql_connection.TRN.add(sql)
+            obs = qdb.sql_connection.TRN.execute_fetchflatten()
             self.assertEqual(obs, [1, 2, 3])
 
             sql = "SELECT 42"
-            TRN.add(sql)
-            obs = TRN.execute_fetchflatten(idx=3)
+            qdb.sql_connection.TRN.add(sql)
+            obs = qdb.sql_connection.TRN.execute_fetchflatten(idx=3)
             self.assertEqual(obs, ['insert1', 1, 'insert2', 2, 'insert3', 3])
 
     def test_context_manager_rollback(self):
         try:
-            with TRN:
+            with qdb.sql_connection.TRN:
                 sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
                 args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-                TRN.add(sql, args, many=True)
+                qdb.sql_connection.TRN.add(sql, args, many=True)
 
-                TRN.execute()
+                qdb.sql_connection.TRN.execute()
                 raise ValueError("Force exiting the context manager")
         except ValueError:
             pass
         self._assert_sql_equal([])
         self.assertEqual(
-            TRN._connection.get_transaction_status(),
+            qdb.sql_connection.TRN._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
 
     def test_context_manager_execute(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                  VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
             self._assert_sql_equal([])
 
         self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
                                 ('insert3', True, 3)])
         self.assertEqual(
-            TRN._connection.get_transaction_status(),
+            qdb.sql_connection.TRN._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
 
     def test_context_manager_no_commit(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                  VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
 
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
             self._assert_sql_equal([])
 
         self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
                                 ('insert3', True, 3)])
         self.assertEqual(
-            TRN._connection.get_transaction_status(),
+            qdb.sql_connection.TRN._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
 
     def test_context_manager_multiple(self):
-        self.assertEqual(TRN._contexts_entered, 0)
+        self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 0)
 
-        with TRN:
-            self.assertEqual(TRN._contexts_entered, 1)
+        with qdb.sql_connection.TRN:
+            self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 1)
 
-            TRN.add("SELECT 42")
-            with TRN:
-                self.assertEqual(TRN._contexts_entered, 2)
+            qdb.sql_connection.TRN.add("SELECT 42")
+            with qdb.sql_connection.TRN:
+                self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 2)
                 sql = """INSERT INTO qiita.test_table (str_column, int_column)
                          VALUES (%s, %s) RETURNING str_column, int_column"""
                 args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-                TRN.add(sql, args, many=True)
+                qdb.sql_connection.TRN.add(sql, args, many=True)
 
             # We exited the second context, nothing should have been executed
-            self.assertEqual(TRN._contexts_entered, 1)
+            self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 1)
             self.assertEqual(
-                TRN._connection.get_transaction_status(),
+                qdb.sql_connection.TRN._connection.get_transaction_status(),
                 TRANSACTION_STATUS_IDLE)
             self._assert_sql_equal([])
 
         # We have exited the first context, everything should have been
         # executed and committed
-        self.assertEqual(TRN._contexts_entered, 0)
+        self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 0)
         self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
                                 ('insert3', True, 3)])
         self.assertEqual(
-            TRN._connection.get_transaction_status(),
+            qdb.sql_connection.TRN._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
 
     def test_context_manager_multiple_2(self):
-        self.assertEqual(TRN._contexts_entered, 0)
+        self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 0)
 
         def tester():
-            self.assertEqual(TRN._contexts_entered, 1)
-            with TRN:
-                self.assertEqual(TRN._contexts_entered, 2)
+            self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 1)
+            with qdb.sql_connection.TRN:
+                self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 2)
                 sql = """SELECT EXISTS(
                         SELECT * FROM qiita.test_table WHERE int_column=%s)"""
-                TRN.add(sql, [2])
-                self.assertTrue(TRN.execute_fetchlast())
-            self.assertEqual(TRN._contexts_entered, 1)
+                qdb.sql_connection.TRN.add(sql, [2])
+                self.assertTrue(qdb.sql_connection.TRN.execute_fetchlast())
+            self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 1)
 
-        with TRN:
-            self.assertEqual(TRN._contexts_entered, 1)
+        with qdb.sql_connection.TRN:
+            self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 1)
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                          VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
-            TRN.add(sql, args, many=True)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
             tester()
-            self.assertEqual(TRN._contexts_entered, 1)
+            self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 1)
             self._assert_sql_equal([])
 
-        self.assertEqual(TRN._contexts_entered, 0)
+        self.assertEqual(qdb.sql_connection.TRN._contexts_entered, 0)
         self._assert_sql_equal([('insert1', True, 1), ('insert2', True, 2),
                                 ('insert3', True, 3)])
         self.assertEqual(
-            TRN._connection.get_transaction_status(),
+            qdb.sql_connection.TRN._connection.get_transaction_status(),
             TRANSACTION_STATUS_IDLE)
 
     def test_post_commit_funcs(self):
@@ -570,9 +570,9 @@ class TestTransaction(TestBase):
             with open(fp, 'w') as f:
                 f.write('\n')
 
-        with TRN:
-            TRN.add("SELECT 42")
-            TRN.add_post_commit_func(func, fp)
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT 42")
+            qdb.sql_connection.TRN.add_post_commit_func(func, fp)
 
         self.assertTrue(exists(fp))
 
@@ -581,9 +581,9 @@ class TestTransaction(TestBase):
             raise ValueError()
 
         with self.assertRaises(RuntimeError):
-            with TRN:
-                TRN.add("SELECT 42")
-                TRN.add_post_commit_func(func)
+            with qdb.sql_connection.TRN:
+                qdb.sql_connection.TRN.add("SELECT 42")
+                qdb.sql_connection.TRN.add_post_commit_func(func)
 
     def test_post_rollback_funcs(self):
         fd, fp = mkstemp()
@@ -594,10 +594,10 @@ class TestTransaction(TestBase):
             with open(fp, 'w') as f:
                 f.write('\n')
 
-        with TRN:
-            TRN.add("SELECT 42")
-            TRN.add_post_rollback_func(func, fp)
-            TRN.rollback()
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT 42")
+            qdb.sql_connection.TRN.add_post_rollback_func(func, fp)
+            qdb.sql_connection.TRN.rollback()
 
         self.assertTrue(exists(fp))
 
@@ -606,49 +606,49 @@ class TestTransaction(TestBase):
             raise ValueError()
 
         with self.assertRaises(RuntimeError):
-            with TRN:
-                TRN.add("SELECT 42")
-                TRN.add_post_rollback_func(func)
-                TRN.rollback()
+            with qdb.sql_connection.TRN:
+                qdb.sql_connection.TRN.add("SELECT 42")
+                qdb.sql_connection.TRN.add_post_rollback_func(func)
+                qdb.sql_connection.TRN.rollback()
 
     def test_context_manager_checker(self):
         with self.assertRaises(RuntimeError):
-            TRN.add("SELECT 42")
+            qdb.sql_connection.TRN.add("SELECT 42")
 
         with self.assertRaises(RuntimeError):
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
 
         with self.assertRaises(RuntimeError):
-            TRN.commit()
+            qdb.sql_connection.TRN.commit()
 
         with self.assertRaises(RuntimeError):
-            TRN.rollback()
+            qdb.sql_connection.TRN.rollback()
 
-        with TRN:
-            TRN.add("SELECT 42")
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add("SELECT 42")
 
         with self.assertRaises(RuntimeError):
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
 
     def test_index(self):
-        with TRN:
-            self.assertEqual(TRN.index, 0)
+        with qdb.sql_connection.TRN:
+            self.assertEqual(qdb.sql_connection.TRN.index, 0)
 
-            TRN.add("SELECT 42")
-            self.assertEqual(TRN.index, 1)
+            qdb.sql_connection.TRN.add("SELECT 42")
+            self.assertEqual(qdb.sql_connection.TRN.index, 1)
 
             sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
             args = [[1], [2], [3]]
-            TRN.add(sql, args, many=True)
-            self.assertEqual(TRN.index, 4)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
+            self.assertEqual(qdb.sql_connection.TRN.index, 4)
 
-            TRN.execute()
-            self.assertEqual(TRN.index, 4)
+            qdb.sql_connection.TRN.execute()
+            self.assertEqual(qdb.sql_connection.TRN.index, 4)
 
-            TRN.add(sql, args, many=True)
-            self.assertEqual(TRN.index, 7)
+            qdb.sql_connection.TRN.add(sql, args, many=True)
+            self.assertEqual(qdb.sql_connection.TRN.index, 7)
 
-        self.assertEqual(TRN.index, 0)
+        self.assertEqual(qdb.sql_connection.TRN.index, 0)
 
 if __name__ == "__main__":
     main()
