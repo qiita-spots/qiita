@@ -68,7 +68,8 @@ class DBUtilTests(TestCase):
         self.assertEqual(set(obs), exp)
 
     def test_get_table_cols_w_type(self):
-        obs = qdb.util.get_table_cols_w_type("preprocessed_sequence_illumina_params")
+        obs = qdb.util.get_table_cols_w_type(
+            "preprocessed_sequence_illumina_params")
         exp = [['param_set_name', 'character varying'],
                ['parameters_id', 'bigint'],
                ['max_bad_run_length', 'integer'],
@@ -118,10 +119,12 @@ class DBUtilTests(TestCase):
 
     def test_convert_to_id(self):
         """Tests that ids are returned correctly"""
-        self.assertEqual(qdb.util.convert_to_id("directory", "filepath_type"), 8)
-        self.assertEqual(qdb.util.convert_to_id("running", "analysis_status",
-                                       "status"), 3)
-        self.assertEqual(qdb.util.convert_to_id("EMP", "portal_type", "portal"), 2)
+        self.assertEqual(
+            qdb.util.convert_to_id("directory", "filepath_type"), 8)
+        self.assertEqual(
+            qdb.util.convert_to_id("running", "analysis_status", "status"), 3)
+        self.assertEqual(
+            qdb.util.convert_to_id("EMP", "portal_type", "portal"), 2)
 
     def test_convert_to_id_bad_value(self):
         """Tests that ids are returned correctly"""
@@ -227,8 +230,8 @@ class DBUtilTests(TestCase):
 
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
             "SELECT count(1) FROM qiita.filepath")[0]
-        obs = qdb.util.insert_filepaths([(fp, "raw_forward_seqs")], 1, "raw_data",
-                               "filepath")
+        obs = qdb.util.insert_filepaths(
+            [(fp, "raw_forward_seqs")], 1, "raw_data", "filepath")
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
@@ -245,8 +248,10 @@ class DBUtilTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_retrieve_filepaths(self):
-        obs = qdb.util.retrieve_filepaths('artifact_filepath', 'artifact_id', 1)
-        path_builder = partial(join, qdb.util.get_db_files_base_dir(), "raw_data")
+        obs = qdb.util.retrieve_filepaths('artifact_filepath',
+                                          'artifact_id', 1)
+        path_builder = partial(
+            join, qdb.util.get_db_files_base_dir(), "raw_data")
         exp = [(1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
                 "raw_forward_seqs"),
                (2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
@@ -256,8 +261,8 @@ class DBUtilTests(TestCase):
     def _common_purge_filpeaths_test(self):
         # Get all the filepaths so we can test if they've been removed or not
         sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
-        fps = [join(qdb.util.get_mountpoint_path_by_id(dd_id), fp) for fp, dd_id in
-               self.conn_handler.execute_fetchall(sql_fp)]
+        fps = [join(qdb.util.get_mountpoint_path_by_id(dd_id), fp)
+               for fp, dd_id in self.conn_handler.execute_fetchall(sql_fp)]
 
         # Make sure that the files exist - specially for travis
         for fp in fps:
@@ -349,7 +354,8 @@ class DBUtilTests(TestCase):
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        pt = qdb.metadata_template.prep_template.PrepTemplate.create(metadata, qdb.study.Study(1), "16S")
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, qdb.study.Study(1), "16S")
 
         artifact = qdb.artifact.Artifact.create(
             [(seqs_fp, 1)], "FASTQ", prep_template=pt)
@@ -357,14 +363,15 @@ class DBUtilTests(TestCase):
         # deleting reference so we can directly call
         # move_filepaths_to_upload_folder
         for fid, _, _ in filepaths:
-            self.conn_handler.execute(
-                "DELETE FROM qiita.artifact_filepath WHERE filepath_id=%s", (fid,))
+            sql = "DELETE FROM qiita.artifact_filepath WHERE filepath_id=%s"
+            self.conn_handler.execute(sql, (fid,))
 
         # moving filepaths
         qdb.util.move_filepaths_to_upload_folder(st.id, filepaths)
 
         # check that they do not exist in the old path but do in the new one
-        path_for_removal = join(qdb.util.get_mountpoint("uploads")[0][1], str(st.id))
+        path_for_removal = join(qdb.util.get_mountpoint("uploads")[0][1],
+                                str(st.id))
         for _, fp, _ in filepaths:
             self.assertFalse(exists(fp))
             new_fp = join(path_for_removal, basename(fp).split('_', 1)[1])
@@ -408,7 +415,8 @@ class DBUtilTests(TestCase):
         self.conn_handler.execute(sql)
 
         # this should have been updated
-        exp = [(count + 1, join(qdb.util.get_db_files_base_dir(), 'analysis_tmp'))]
+        exp = [(count + 1, join(qdb.util.get_db_files_base_dir(),
+                'analysis_tmp'))]
         obs = qdb.util.get_mountpoint("analysis")
         self.assertEqual(obs, exp)
 
@@ -423,16 +431,18 @@ class DBUtilTests(TestCase):
 
         # testing multi returns
         exp = [(5, join(qdb.util.get_db_files_base_dir(), 'raw_data')),
-               (count + 2, join(qdb.util.get_db_files_base_dir(), 'raw_data_tmp'))]
+               (count + 2, join(qdb.util.get_db_files_base_dir(),
+                'raw_data_tmp'))]
         obs = qdb.util.get_mountpoint("raw_data", retrieve_all=True)
         self.assertEqual(obs, exp)
 
         # testing retrieve subdirectory
         exp = [
             (5, join(qdb.util.get_db_files_base_dir(), 'raw_data'), False),
-            (count + 2, join(qdb.util.get_db_files_base_dir(), 'raw_data_tmp'), True)]
+            (count + 2, join(qdb.util.get_db_files_base_dir(), 'raw_data_tmp'),
+             True)]
         obs = qdb.util.get_mountpoint("raw_data", retrieve_all=True,
-                             retrieve_subdir=True)
+                                      retrieve_subdir=True)
         self.assertEqual(obs, exp)
 
     def test_get_mountpoint_path_by_id(self):
@@ -573,17 +583,19 @@ class DBUtilTests(TestCase):
 
     def test_check_access_to_analysis_result(self):
         obs = qdb.util.check_access_to_analysis_result('test@foo.bar',
-                                              '1_job_result.txt')
+                                                       '1_job_result.txt')
         exp = [10]
 
         self.assertEqual(obs, exp)
 
     def test_add_message(self):
         count = qdb.util.get_count('qiita.message') + 1
-        users = [qdb.user.User('shared@foo.bar'), qdb.user.User('admin@foo.bar')]
+        users = [qdb.user.User('shared@foo.bar'),
+                 qdb.user.User('admin@foo.bar')]
         qdb.util.add_message("TEST MESSAGE", users)
 
-        obs = [[x[0], x[1]] for x in qdb.user.User('shared@foo.bar').messages()]
+        obs = [[x[0], x[1]]
+               for x in qdb.user.User('shared@foo.bar').messages()]
         exp = [[count, 'TEST MESSAGE'], [1, 'message 1']]
         self.assertEqual(obs, exp)
         obs = [[x[0], x[1]] for x in qdb.user.User('admin@foo.bar').messages()]
@@ -592,9 +604,11 @@ class DBUtilTests(TestCase):
 
     def test_add_system_message(self):
         count = qdb.util.get_count('qiita.message') + 1
-        qdb.util.add_system_message("SYS MESSAGE", datetime(2015, 8, 5, 19, 41))
+        qdb.util.add_system_message("SYS MESSAGE",
+                                    datetime(2015, 8, 5, 19, 41))
 
-        obs = [[x[0], x[1]] for x in qdb.user.User('shared@foo.bar').messages()]
+        obs = [[x[0], x[1]]
+               for x in qdb.user.User('shared@foo.bar').messages()]
         exp = [[count, 'SYS MESSAGE'], [1, 'message 1']]
         self.assertEqual(obs, exp)
         obs = [[x[0], x[1]] for x in qdb.user.User('admin@foo.bar').messages()]
@@ -608,17 +622,21 @@ class DBUtilTests(TestCase):
 
     def test_clear_system_messages(self):
         message_id = qdb.util.get_count('qiita.message') + 1
-        obs = [[x[0], x[1]] for x in qdb.user.User('shared@foo.bar').messages()]
+        obs = [[x[0], x[1]]
+               for x in qdb.user.User('shared@foo.bar').messages()]
         exp = [[1, 'message 1']]
         self.assertEqual(obs, exp)
 
-        qdb.util.add_system_message("SYS MESSAGE", datetime(2015, 8, 5, 19, 41))
-        obs = [[x[0], x[1]] for x in qdb.user.User('shared@foo.bar').messages()]
+        qdb.util.add_system_message("SYS MESSAGE",
+                                    datetime(2015, 8, 5, 19, 41))
+        obs = [[x[0], x[1]]
+               for x in qdb.user.User('shared@foo.bar').messages()]
         exp = [[1, 'message 1'], [message_id, 'SYS MESSAGE']]
         self.assertItemsEqual(obs, exp)
 
         qdb.util.clear_system_messages()
-        obs = [[x[0], x[1]] for x in qdb.user.User('shared@foo.bar').messages()]
+        obs = [[x[0], x[1]]
+               for x in qdb.user.User('shared@foo.bar').messages()]
         exp = [[1, 'message 1']]
         self.assertEqual(obs, exp)
 
@@ -643,7 +661,8 @@ class UtilTests(TestCase):
 
     def test_scrub_data_nothing(self):
         """Returns the same string without changes"""
-        self.assertEqual(qdb.util.scrub_data("nothing_changes"), "nothing_changes")
+        self.assertEqual(qdb.util.scrub_data("nothing_changes"),
+                         "nothing_changes")
 
     def test_scrub_data_semicolon(self):
         """Correctly removes the semicolon from the string"""
