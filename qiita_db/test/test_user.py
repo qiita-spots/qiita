@@ -263,22 +263,22 @@ class UserTest(TestCase):
 
     def test_verify_code(self):
         qdb.util.add_system_message("TESTMESSAGE_OLD", datetime.now())
-        qdb.util.add_system_message("TESTMESSAGE",
-                           datetime.now() + timedelta(seconds=59))
+        qdb.util.add_system_message(
+            "TESTMESSAGE", datetime.now() + timedelta(seconds=59))
         sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
                "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
                ",null)")
         self.conn_handler.execute(sql)
 
-        self.assertFalse(qdb.user.User.verify_code('new@test.bar', 'wrongcode',
-                                          'create'))
-        self.assertFalse(qdb.user.User.verify_code('new@test.bar', 'wrongcode',
-                                          'reset'))
+        self.assertFalse(
+            qdb.user.User.verify_code('new@test.bar', 'wrongcode', 'create'))
+        self.assertFalse(
+            qdb.user.User.verify_code('new@test.bar', 'wrongcode', 'reset'))
 
-        self.assertTrue(qdb.user.User.verify_code('new@test.bar', 'verifycode',
-                                         'create'))
-        self.assertTrue(qdb.user.User.verify_code('new@test.bar', 'resetcode',
-                                         'reset'))
+        self.assertTrue(
+            qdb.user.User.verify_code('new@test.bar', 'verifycode', 'create'))
+        self.assertTrue(
+            qdb.user.User.verify_code('new@test.bar', 'resetcode', 'reset'))
 
         # make sure errors raised if code already used or wrong type
         with self.assertRaises(qdb.exceptions.QiitaDBError):
