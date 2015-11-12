@@ -344,7 +344,7 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
     VALUES (1, 1), (1, 2),
            (2, 3), (2, 4), (2, 5),
-           (3, 9);
+           (4, 9);
 
 -- Link the artifact with the prep template
 UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
