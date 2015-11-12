@@ -3,13 +3,8 @@ from unittest import TestCase, main
 import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.portal import Portal
-from qiita_db.study import Study, StudyPerson
-from qiita_db.user import User
-from qiita_db.analysis import Analysis
-from qiita_db.exceptions import (QiitaDBError, QiitaDBDuplicateError,
-                                 QiitaDBWarning, QiitaDBLookupError)
 from qiita_core.qiita_settings import qiita_config
+import qiita_db as qdb
 
 
 @qiita_test_checker()
@@ -17,21 +12,21 @@ class TestPortal(TestCase):
     portal = qiita_config.portal
 
     def setUp(self):
-        self.study = Study(1)
-        self.analysis = Analysis(1)
-        self.qiita_portal = Portal('QIITA')
-        self.emp_portal = Portal('EMP')
+        self.study = qdb.study.Study(1)
+        self.analysis = qdb.analysis.Analysis(1)
+        self.qiita_portal = qdb.portal.Portal('QIITA')
+        self.emp_portal = qdb.portal.Portal('EMP')
 
     def tearDown(self):
         qiita_config.portal = self.portal
 
     def test_list_portals(self):
-        obs = Portal.list_portals()
+        obs = qdb.portal.Portal.list_portals()
         exp = ['EMP']
         self.assertEqual(obs, exp)
 
     def test_add_portal(self):
-        Portal.create("NEWPORTAL", "SOMEDESC")
+        qdb.portal.Portal.create("NEWPORTAL", "SOMEDESC")
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.portal_type")
         exp = [[1, 'QIITA', 'QIITA portal. Access to all data stored '
@@ -46,17 +41,17 @@ class TestPortal(TestCase):
                [9, 2], [10, 2], [11, 4], [12, 4], [13, 4], [14, 4]]
         self.assertItemsEqual(obs, exp)
 
-        with self.assertRaises(QiitaDBDuplicateError):
-            Portal.create("EMP", "DOESNTMATTERFORDESC")
+        with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
+            qdb.portal.Portal.create("EMP", "DOESNTMATTERFORDESC")
 
     def test_remove_portal(self):
-        Portal.create("NEWPORTAL", "SOMEDESC")
+        qdb.portal.Portal.create("NEWPORTAL", "SOMEDESC")
         # Select some samples on a default analysis
         qiita_config.portal = "NEWPORTAL"
-        a = Analysis(User("test@foo.bar").default_analysis)
+        a = qdb.user.User("test@foo.bar").default_analysis
         a.add_samples({1: ['1.SKB8.640193', '1.SKD5.640186']})
 
-        Portal.delete("NEWPORTAL")
+        qdb.portal.Portal.delete("NEWPORTAL")
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.portal_type")
         exp = [[1, 'QIITA', 'QIITA portal. Access to all data stored '
@@ -70,18 +65,19 @@ class TestPortal(TestCase):
                [9, 2], [10, 2]]
         self.assertItemsEqual(obs, exp)
 
-        with self.assertRaises(QiitaDBLookupError):
-            Portal.delete("NOEXISTPORTAL")
-        with self.assertRaises(QiitaDBError):
-            Portal.delete("QIITA")
+        with self.assertRaises(qdb.exceptions.QiitaDBLookupError):
+            qdb.portal.Portal.delete("NOEXISTPORTAL")
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.portal.Portal.delete("QIITA")
 
-        Portal.create("NEWPORTAL2", "SOMEDESC")
+        qdb.portal.Portal.create("NEWPORTAL2", "SOMEDESC")
         # Add analysis to this new portal and make sure error raised
         qiita_config.portal = "NEWPORTAL2"
-        Analysis.create(User("test@foo.bar"), "newportal analysis", "desc")
+        qdb.analysis.Analysis.create(
+            qdb.user.User("test@foo.bar"), "newportal analysis", "desc")
         qiita_config.portal = "QIITA"
-        with self.assertRaises(QiitaDBError):
-            Portal.delete("NEWPORTAL2")
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.portal.Portal.delete("NEWPORTAL2")
 
         # Add study to this new portal and make sure error raised
         info = {
@@ -95,27 +91,28 @@ class TestPortal(TestCase):
                                  "fried chicken",
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
-            "emp_person_id": StudyPerson(2),
-            "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
+            "emp_person_id": qdb.study.StudyPerson(2),
+            "principal_investigator_id": qdb.study.StudyPerson(3),
+            "lab_person_id": qdb.study.StudyPerson(1)
         }
-        Portal.create("NEWPORTAL3", "SOMEDESC")
+        qdb.portal.Portal.create("NEWPORTAL3", "SOMEDESC")
         qiita_config.portal = "NEWPORTAL3"
-        Study.create(User('test@foo.bar'), "Fried chicken microbiome",
-                     [1], info)
+        qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), "Fried chicken microbiome",
+            [1], info)
         qiita_config.portal = "QIITA"
-        with self.assertRaises(QiitaDBError):
-            Portal.delete("NEWPORTAL3")
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.portal.Portal.delete("NEWPORTAL3")
 
     def test_check_studies(self):
-        with self.assertRaises(QiitaDBError):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
             self.qiita_portal._check_studies([2000000000000, 122222222222222])
 
     def test_check_analyses(self):
-        with self.assertRaises(QiitaDBError):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
             self.qiita_portal._check_analyses([2000000000000, 122222222222222])
 
-        with self.assertRaises(QiitaDBError):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
             self.qiita_portal._check_analyses([8, 9])
 
     def test_get_studies_by_portal(self):
@@ -123,7 +120,7 @@ class TestPortal(TestCase):
         self.assertEqual(obs, set())
 
         obs = self.qiita_portal.get_studies()
-        self.assertEqual(obs, {1})
+        self.assertEqual(obs, {qdb.study.Study(1)})
 
     def test_add_study_portals(self):
         self.emp_portal.add_studies([self.study.id])
@@ -131,7 +128,8 @@ class TestPortal(TestCase):
         self.assertEqual(obs, ['EMP', 'QIITA'])
 
         obs = npt.assert_warns(
-            QiitaDBWarning, self.emp_portal.add_studies, [self.study.id])
+            qdb.exceptions.QiitaDBWarning, self.emp_portal.add_studies,
+            [self.study.id])
 
     def test_remove_study_portals(self):
         with self.assertRaises(ValueError):
@@ -144,7 +142,7 @@ class TestPortal(TestCase):
         self.assertItemsEqual(obs, ['QIITA', 'EMP'])
 
         # Test study removal failure
-        with self.assertRaises(QiitaDBError):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
             self.emp_portal.remove_studies([self.study.id])
         obs = self.study._portals
         self.assertItemsEqual(obs, ['QIITA', 'EMP'])
@@ -156,19 +154,27 @@ class TestPortal(TestCase):
         self.assertEqual(obs, ['QIITA'])
 
         obs = npt.assert_warns(
-            QiitaDBWarning, self.emp_portal.remove_studies, [self.study.id])
+            qdb.exceptions.QiitaDBWarning, self.emp_portal.remove_studies,
+            [self.study.id])
 
     def test_get_analyses_by_portal(self):
+        qiita_config.portal = 'EMP'
+        exp = {qdb.analysis.Analysis(7), qdb.analysis.Analysis(8),
+               qdb.analysis.Analysis(9), qdb.analysis.Analysis(10)}
         obs = self.emp_portal.get_analyses()
-        self.assertEqual(obs, {7, 8, 9, 10})
+        self.assertEqual(obs, exp)
 
+        qiita_config.portal = 'QIITA'
+        exp = {qdb.analysis.Analysis(1), qdb.analysis.Analysis(2),
+               qdb.analysis.Analysis(3), qdb.analysis.Analysis(4),
+               qdb.analysis.Analysis(5), qdb.analysis.Analysis(6)}
         obs = self.qiita_portal.get_analyses()
-        self.assertEqual(obs, {1, 2, 3, 4, 5, 6})
+        self.assertEqual(obs, exp)
 
     def test_add_analysis_portals(self):
         obs = self.analysis._portals
         self.assertEqual(obs, ['QIITA'])
-        with self.assertRaises(QiitaDBError):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
             self.emp_portal.add_analyses([self.analysis.id])
         obs = self.analysis._portals
         self.assertEqual(obs, ['QIITA'])
@@ -179,7 +185,8 @@ class TestPortal(TestCase):
         self.assertEqual(obs, ['EMP', 'QIITA'])
 
         obs = npt.assert_warns(
-            QiitaDBWarning, self.emp_portal.add_analyses, [self.analysis.id])
+            qdb.exceptions.QiitaDBWarning, self.emp_portal.add_analyses,
+            [self.analysis.id])
 
     def test_remove_analysis_portals(self):
         with self.assertRaises(ValueError):
@@ -196,7 +203,7 @@ class TestPortal(TestCase):
         self.assertEqual(obs, ['QIITA'])
 
         obs = npt.assert_warns(
-            QiitaDBWarning, self.emp_portal.remove_analyses,
+            qdb.exceptions.QiitaDBWarning, self.emp_portal.remove_analyses,
             [self.analysis.id])
 
 
