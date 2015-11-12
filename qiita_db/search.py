@@ -199,9 +199,9 @@ class QiitaStudySearch(object):
             study_ids = set(qdb.sql_connection.TRN.execute_fetchflatten())
             # strip to only studies user has access to
             if user.level not in {'admin', 'dev', 'superuser'}:
-                study_ids = study_ids.intersection(
-                    qdb.study.Study.get_by_status('public') |
-                    user.user_studies | user.shared_studies)
+                studies = qdb.study.Study.get_by_status('public') | \
+                    user.user_studies | user.shared_studies
+                study_ids = study_ids.intersection([s.id for s in studies])
 
             results = {}
             # run search on each study to get out the matching samples
@@ -331,7 +331,11 @@ class QiitaStudySearch(object):
 
         # combine the query
         if only_with_processed_data:
-            sql.append('SELECT study_id FROM qiita.study_processed_data')
+            sql.append("SELECT DISTINCT study_id "
+                       "FROM qiita.study_artifact "
+                       "JOIN qiita.artifact USING (artifact_id) "
+                       "JOIN qiita.artifact_type USING (artifact_type_id) "
+                       "WHERE artifact_type = 'BIOM'")
 
         # restrict to studies in portal
         sql.append("SELECT study_id from qiita.study_portal "
@@ -396,16 +400,20 @@ class QiitaStudySearch(object):
                 study = qdb.study.Study(study_id)
                 study_sample_ids = {s[0] for s in study_meta}
                 study_proc_ids[study_id] = defaultdict(list)
-                for proc_data_id in study.processed_data():
-                    proc_data = qdb.data.ProcessedData(proc_data_id)
-                    datatype = proc_data.data_type()
+                for artifact in study.artifacts():
+                    if artifact.artifact_type != 'BIOM':
+                        continue
+                    datatype = artifact.data_type
                     # skip processed data if it doesn't fit the given datatypes
                     if datatypes is not None and datatype not in datatypes:
                         continue
-                    filter_samps = proc_data.samples.intersection(
+                    artifact_samples = set()
+                    for pt in artifact.prep_templates:
+                        artifact_samples.update(pt.keys())
+                    filter_samps = artifact_samples.intersection(
                         study_sample_ids)
                     if filter_samps:
-                        proc_data_samples[proc_data_id] = sorted(filter_samps)
-                        study_proc_ids[study_id][datatype].append(proc_data_id)
+                        proc_data_samples[artifact.id] = sorted(filter_samps)
+                        study_proc_ids[study_id][datatype].append(artifact.id)
 
             return study_proc_ids, proc_data_samples, samples_meta
