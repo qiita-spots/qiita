@@ -4,9 +4,12 @@
 # make the RawData to be effectively just a container for the raw files,
 # which is how it was acting previously.
 
+from os.path import join
+from functools import partial
+
 from qiita_db.sql_connection import TRN
-from qiita_db.data import RawData
-from qiita_db.util import move_filepaths_to_upload_folder
+from qiita_db.util import (move_filepaths_to_upload_folder, get_mountpoint,
+                           convert_from_id)
 
 with TRN:
     # the system may contain raw data with no prep template associated to it.
@@ -28,8 +31,19 @@ with TRN:
                      WHERE raw_data_id = %s"""
     move_files = []
     for rd_id in rd_ids:
-        rd = RawData(rd_id)
-        filepaths = rd.get_filepaths()
+        sql = """SELECT filepath_id, filepath, filepath_type_id
+                 FROM qiita.filepath
+                 WHERE filepath_id IN (
+                    SELECT filepath_id
+                    FROM qiita.raw_filepath
+                    WHERE raw_data_id = %s)"""
+        TRN.add(sql, [rd_id])
+        db_paths = TRN.execute_fetchindex()
+        fb = get_mountpoint("raw_data")[0][1]
+        base_fp = partial(join, fb)
+        filepaths = [(fpid, base_fp(fp), convert_from_id(fid, "filepath_type"))
+                     for fpid, fp, fid in db_paths]
+
         TRN.add(sql_studies, [rd_id])
         studies = TRN.execute_fetchflatten()
         if filepaths:
