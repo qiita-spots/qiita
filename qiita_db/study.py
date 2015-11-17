@@ -150,7 +150,7 @@ class Study(qdb.base.QiitaObject):
         qdb.util.get_table_cols('study'),
         qdb.util.get_table_cols('study_status'),
         qdb.util.get_table_cols('timeseries_type'),
-        qdb.util.get_table_cols('study_pmid')))
+        qdb.util.get_table_cols('study_publication')))
 
     def _lock_non_sandbox(self):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -160,16 +160,14 @@ class Study(qdb.base.QiitaObject):
 
     @property
     def status(self):
-        r"""The status is inferred by the status of its processed data"""
+        r"""The status is inferred by the status of its artifacts"""
         with qdb.sql_connection.TRN:
-            # Get the status of all its processed data
-            sql = """SELECT processed_data_status
-                     FROM qiita.processed_data_status pds
-                        JOIN qiita.processed_data pd
-                            USING (processed_data_status_id)
-                        JOIN qiita.study_processed_data spd
-                            USING (processed_data_id)
-                     WHERE spd.study_id = %s"""
+            # Get the status of all its artifacts
+            sql = """SELECT DISTINCT visibility
+                     FROM qiita.visibility
+                        JOIN qiita.artifact USING (visibility_id)
+                        JOIN qiita.study_artifact USING (artifact_id)
+                     WHERE study_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.util.infer_status(
                 qdb.sql_connection.TRN.execute_fetchindex())
@@ -185,36 +183,34 @@ class Study(qdb.base.QiitaObject):
 
         Returns
         -------
-        set of int
-            All study ids in the database that match the given status
+        set of qiita_db.study.Study
+            All studies in the database that match the given status
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT study_id
-                     FROM qiita.study_processed_data
-                        JOIN qiita.processed_data USING (processed_data_id)
-                        JOIN qiita.processed_data_status
-                            USING (processed_data_status_id)
+            sql = """SELECT DISTINCT study_id
+                     FROM qiita.study_artifact
+                        JOIN qiita.artifact USING (artifact_id)
+                        JOIN qiita.visibility USING (visibility_id)
                         JOIN qiita.study_portal USING (study_id)
                         JOIN qiita.portal_type USING (portal_type_id)
-                     WHERE processed_data_status=%s AND portal = %s"""
+                      WHERE visibility = %s AND portal = %s"""
             qdb.sql_connection.TRN.add(sql, [status, qiita_config.portal])
             studies = set(qdb.sql_connection.TRN.execute_fetchflatten())
             # If status is sandbox, all the studies that are not present in the
-            # study_processed_data are also sandbox
+            # study_artifact table are also sandbox
             if status == 'sandbox':
                 sql = """SELECT study_id
                          FROM qiita.study
                             JOIN qiita.study_portal USING (study_id)
                             JOIN qiita.portal_type USING (portal_type_id)
-                         WHERE portal = %s
-                            AND study_id NOT IN (
+                         WHERE portal = %s AND study_id NOT IN (
                                 SELECT study_id
-                                FROM qiita.study_processed_data)"""
+                                FROM qiita.study_artifact)"""
                 qdb.sql_connection.TRN.add(sql, [qiita_config.portal])
                 studies = studies.union(
                     qdb.sql_connection.TRN.execute_fetchflatten())
 
-            return studies
+            return set(cls(sid) for sid in studies)
 
     @classmethod
     def get_info(cls, study_ids=None, info_cols=None):
@@ -247,9 +243,10 @@ class Study(qdb.base.QiitaObject):
                         qiita.study
                         JOIN qiita.timeseries_type  USING (timeseries_type_id)
                         LEFT JOIN (
-                            SELECT study_id, array_agg(pmid ORDER BY pmid) AS
-                                pmid
-                            FROM qiita.study_pmid
+                            SELECT study_id, array_agg(
+                                    publication_doi ORDER BY publication_doi)
+                                AS publication_doi
+                            FROM qiita.study_publication
                             GROUP BY study_id) sp USING (study_id)
                         JOIN qiita.study_portal USING (study_id)
                         JOIN qiita.portal_type USING (portal_type_id))
@@ -435,7 +432,7 @@ class Study(qdb.base.QiitaObject):
                      WHERE study_id = %s"""
             qdb.sql_connection.TRN.add(sql, args)
 
-            sql = "DELETE FROM qiita.study_pmid WHERE study_id = %s"
+            sql = "DELETE FROM qiita.study_publication WHERE study_id = %s"
             qdb.sql_connection.TRN.add(sql, args)
 
             sql = """DELETE FROM qiita.study_environmental_package
@@ -601,38 +598,42 @@ class Study(qdb.base.QiitaObject):
 
         Returns
         -------
-        list of User ids
+        list of qiita_db.user.User
             Users the study is shared with
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT email FROM qiita.{0}_users
                      WHERE study_id = %s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            return [qdb.user.User(uid)
+                    for uid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
-    def pmids(self):
-        """ Returns list of paper PMIDs from this study
+    def publications(self):
+        """ Returns list of publications from this study
 
         Returns
         -------
-        list of str
-            list of all the PMIDs
+        list of (str, str)
+            list of all the DOI and pubmed ids
         """
         with qdb.sql_connection.TRN:
-            sql = "SELECT pmid FROM qiita.{0}_pmid WHERE study_id = %s".format(
-                self._table)
+            sql = """SELECT doi, pubmed_id
+                     FROM qiita.publication p
+                        JOIN qiita.study_publication sp
+                            ON sp.publication_doi = p.doi
+                     WHERE sp.study_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            return qdb.sql_connection.TRN.execute_fetchindex()
 
-    @pmids.setter
-    def pmids(self, values):
+    @publications.setter
+    def publications(self, values):
         """Sets the pmids for the study
 
         Parameters
         ----------
-        values : list of str
-            The list of pmids to associate with the study
+        values : list of (str, str)
+            The list of (DOI, pubmed id) to associate with the study
 
         Raises
         ------
@@ -641,28 +642,55 @@ class Study(qdb.base.QiitaObject):
         """
         # Check that a list is actually passed
         if not isinstance(values, list):
-            raise TypeError('pmids should be a list')
+            raise TypeError('publications should be a list')
 
         with qdb.sql_connection.TRN:
             # Delete the previous pmids associated with the study
-            sql = "DELETE FROM qiita.study_pmid WHERE study_id=%s"
+            sql = "DELETE FROM qiita.study_publication WHERE study_id = %s"
             qdb.sql_connection.TRN.add(sql, [self._id])
 
             # Set the new ones
-            sql = """INSERT INTO qiita.study_pmid (study_id, pmid)
+            sql = """INSERT INTO qiita.publication (doi, pubmed_id)
                      VALUES (%s, %s)"""
-            sql_args = [[self._id, val] for val in values]
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.add(sql, values, many=True)
 
+            sql = """INSERT INTO qiita.study_publication
+                            (study_id, publication_doi)
+                     VALUES (%s, %s)"""
+            sql_args = [[self._id, doi] for doi, _ in values]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
+    def add_publications(self, publications):
+        """Add publications to study
+
+        Parameters
+        ----------
+        publications : list of (str, str)
+            A list with the (DOI, pubmed id) to associate with the study
+        """
+        with qdb.sql_connection.TRN:
+            sql = """INSERT INTO qiita.publication (doi, pubmed_id)
+                        VALUES (%s, %s)"""
+            qdb.sql_connection.TRN.add(sql, publications, many=True)
+
+            sql = """INSERT INTO qiita.study_publication
+                            (study_id, publication_doi)
+                        VALUES (%s, %s)"""
+            sql_args = [[self.id, doi] for doi, _ in publications]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
     @property
     def investigation(self):
         """ Returns Investigation this study is part of
 
+        If the study doesn't have an investigation associated with it, it will
+        return None
+
         Returns
         -------
-        Investigation id
+        qiita_db.investigation.Investigation or None
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT investigation_id FROM qiita.investigation_study
@@ -671,20 +699,18 @@ class Study(qdb.base.QiitaObject):
             inv = qdb.sql_connection.TRN.execute_fetchindex()
             # If this study belongs to an investigation it will be in
             # the first value of the first row [0][0]
-            return inv[0][0] if inv else None
+            return qdb.investigation.Investigation(inv[0][0]) if inv else None
 
     @property
     def sample_template(self):
-        """ Returns sample_template information id
+        """Returns sample_template information
+
+        If the study doesn't have a sample template associated with it, it will
+        return None
 
         Returns
         -------
-        SampleTemplate id
-
-        Note
-        ----
-        If the study doesn't have a sample template associated with it, it will
-        return `-1`.
+        qiita_db.metadata_template.sample_template.SampleTemplate or None
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT EXISTS(SELECT *
@@ -692,7 +718,8 @@ class Study(qdb.base.QiitaObject):
                                    WHERE study_id = %s)"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             exists = qdb.sql_connection.TRN.execute_fetchlast()
-        return self._id if exists else -1
+        return (qdb.metadata_template.sample_template.SampleTemplate(self._id)
+                if exists else None)
 
     @property
     def data_types(self):
@@ -717,14 +744,14 @@ class Study(qdb.base.QiitaObject):
 
         Returns
         -------
-        str
-            The email (id) of the user that owns this study
+        qiita_db.user.User
+            The user that owns this study
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT email FROM qiita.{} WHERE study_id = %s""".format(
                 self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.user.User(qdb.sql_connection.TRN.execute_fetchlast())
 
     @property
     def environmental_packages(self):
@@ -893,32 +920,36 @@ class Study(qdb.base.QiitaObject):
     ebi_submission_status.__doc__.format(', '.join(_VALID_EBI_STATUS))
 
     # --- methods ---
-    def raw_data(self, data_type=None):
-        """ Returns list of data ids for raw data info
+    def artifacts(self, dtype=None):
+        """Returns the list of artifacts associated with the study
 
         Parameters
         ----------
-        data_type : str, optional
-            If given, retrieve only raw_data for given datatype. Default None.
+        dtype : str, optional
+            If given, retrieve only artifacts for given data type. Default,
+            return all artifacts associated with the study.
 
         Returns
         -------
-        list of RawData ids
+        list of qiita_db.artifact.Artifact
         """
         with qdb.sql_connection.TRN:
-            spec_data = ""
-            args = [self._id]
-            if data_type:
-                spec_data = " AND data_type_id = %d"
-                args.append(qdb.util.convert_to_id(data_type, "data_type"))
-
-            sql = """SELECT raw_data_id
-                     FROM qiita.study_prep_template
-                        JOIN qiita.prep_template USING (prep_template_id)
-                        JOIN qiita.raw_data USING (raw_data_id)
-                     WHERE study_id = %s{0}""".format(spec_data)
-            qdb.sql_connection.TRN.add(sql, args)
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            if dtype:
+                sql = """SELECT artifact_id
+                         FROM qiita.artifact
+                            JOIN qiita.data_type USING (data_type_id)
+                            JOIN qiita.study_artifact USING (artifact_id)
+                         WHERE study_id = %s AND data_type = %s"""
+                sql_args = [self._id, dtype]
+            else:
+                sql = """SELECT artifact_id
+                         FROM qiita.artifact
+                            JOIN qiita.study_artifact USING (artifact_id)
+                         WHERE study_id = %s"""
+                sql_args = [self._id]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            return [qdb.artifact.Artifact(aid)
+                    for aid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     def prep_templates(self, data_type=None):
         """Return list of prep template ids
@@ -931,7 +962,7 @@ class Study(qdb.base.QiitaObject):
 
         Returns
         -------
-        list of PrepTemplate ids
+        list of qiita_db.metadata_template.prep_template.PrepTemplate
         """
         with qdb.sql_connection.TRN:
             spec_data = ""
@@ -945,73 +976,8 @@ class Study(qdb.base.QiitaObject):
                         JOIN qiita.prep_template USING (prep_template_id)
                      WHERE study_id = %s{0}""".format(spec_data)
             qdb.sql_connection.TRN.add(sql, args)
-            return qdb.sql_connection.TRN.execute_fetchflatten()
-
-    def preprocessed_data(self, data_type=None):
-        """ Returns list of data ids for preprocessed data info
-
-        Parameters
-        ----------
-        data_type : str, optional
-            If given, retrieve only raw_data for given datatype. Default None.
-
-        Returns
-        -------
-        list of PreprocessedData ids
-        """
-        with qdb.sql_connection.TRN:
-            spec_data = ""
-            args = [self._id]
-            if data_type:
-                spec_data = " AND data_type_id = %d"
-                args.append(qdb.util.convert_to_id(data_type, "data_type"))
-
-            sql = """SELECT preprocessed_data_id
-                     FROM qiita.study_preprocessed_data
-                     WHERE study_id = %s{0}""".format(spec_data)
-            qdb.sql_connection.TRN.add(sql, args)
-            return qdb.sql_connection.TRN.execute_fetchflatten()
-
-    def processed_data(self, data_type=None):
-        """ Returns list of data ids for processed data info
-
-        Parameters
-        ----------
-        data_type : str, optional
-            If given, retrieve only for given datatype. Default None.
-
-        Returns
-        -------
-        list of ProcessedData ids
-        """
-        with qdb.sql_connection.TRN:
-            spec_data = ""
-            args = [self._id]
-            if data_type:
-                spec_data = " AND p.data_type_id = %d"
-                args.append(qdb.util.convert_to_id(data_type, "data_type"))
-
-            sql = """SELECT p.processed_data_id
-                     FROM qiita.processed_data p
-                        JOIN qiita.study_processed_data sp
-                            ON p.processed_data_id = sp.processed_data_id
-                     WHERE sp.study_id = %s{0}""".format(spec_data)
-            qdb.sql_connection.TRN.add(sql, args)
-            return qdb.sql_connection.TRN.execute_fetchflatten()
-
-    def add_pmid(self, pmid):
-        """Adds PMID to study
-
-        Parameters
-        ----------
-        pmid : str
-            pmid to associate with study
-        """
-        with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.{0}_pmid (study_id, pmid)
-                     VALUES (%s, %s)""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [self._id, pmid])
-            qdb.sql_connection.TRN.execute()
+            return [qdb.metadata_template.prep_template.PrepTemplate(ptid)
+                    for ptid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     def has_access(self, user, no_public=False):
         """Returns whether the given user has access to the study
@@ -1035,10 +1001,12 @@ class Study(qdb.base.QiitaObject):
                 return True
 
             if no_public:
-                return self._id in user.user_studies | user.shared_studies
+                study_set = user.user_studies | user.shared_studies
             else:
-                return self._id in user.user_studies | user.shared_studies \
-                    | self.get_by_status('public')
+                study_set = user.user_studies | user.shared_studies | \
+                    self.get_by_status('public')
+
+            return self in study_set
 
     def share(self, user):
         """Share the study with another user
@@ -1050,10 +1018,10 @@ class Study(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             # Make sure the study is not already shared with the given user
-            if user.id in self.shared_with:
+            if user in self.shared_with:
                 return
             # Do not allow the study to be shared with the owner
-            if user.id == self.owner:
+            if user == self.owner:
                 return
 
             sql = """INSERT INTO qiita.study_users (study_id, email)

@@ -85,7 +85,7 @@ class Analysis(qdb.base.QiitaStatusObject):
 
     @classmethod
     def get_by_status(cls, status):
-        """Returns analysis ids for all Analyses with given status
+        """Returns all Analyses with given status
 
         Parameters
         ----------
@@ -94,7 +94,7 @@ class Analysis(qdb.base.QiitaStatusObject):
 
         Returns
         -------
-        set of int
+        set of Analysis
             All analyses in the database with the given status
         """
         with qdb.sql_connection.TRN:
@@ -105,7 +105,9 @@ class Analysis(qdb.base.QiitaStatusObject):
                         JOIN qiita.portal_type USING (portal_type_id)
                      WHERE status = %s AND portal = %s""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [status, qiita_config.portal])
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
+            return set(
+                cls(aid)
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten())
 
     @classmethod
     def create(cls, owner, name, description, parent=None, from_default=False):
@@ -133,7 +135,7 @@ class Analysis(qdb.base.QiitaStatusObject):
 
             if from_default:
                 # insert analysis and move samples into that new analysis
-                dflt_id = owner.default_analysis
+                dflt_id = owner.default_analysis.id
 
                 sql = """INSERT INTO qiita.{0}
                             (email, name, description, analysis_status_id)
@@ -265,14 +267,14 @@ class Analysis(qdb.base.QiitaStatusObject):
 
         Returns
         -------
-        str
-            Name of the Analysis
+        qiita_db.user.User
+            The owner of the Analysis
         """
         with qdb.sql_connection.TRN:
             sql = "SELECT email FROM qiita.{0} WHERE analysis_id = %s".format(
                 self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.user.User(qdb.sql_connection.TRN.execute_fetchlast())
 
     @property
     def name(self):
@@ -353,21 +355,21 @@ class Analysis(qdb.base.QiitaStatusObject):
 
     @property
     def samples(self):
-        """The processed data and samples attached to the analysis
+        """The artifact and samples attached to the analysis
 
         Returns
         -------
         dict
-            Format is {processed_data_id: [sample_id, sample_id, ...]}
+            Format is {artifact_id: [sample_id, sample_id, ...]}
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT processed_data_id, sample_id
+            sql = """SELECT artifact_id, sample_id
                      FROM qiita.analysis_sample
                      WHERE analysis_id = %s
-                     ORDER BY processed_data_id"""
+                     ORDER BY artifact_id"""
             ret_samples = defaultdict(list)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            # turn into dict of samples keyed to processed_data_id
+            # turn into dict of samples keyed to artifact
             for pid, sample in qdb.sql_connection.TRN.execute_fetchindex():
                 ret_samples[pid].append(sample)
             return ret_samples
@@ -379,7 +381,7 @@ class Analysis(qdb.base.QiitaStatusObject):
         Returns
         -------
         dict of sets
-            Format is {processed_data_id: {sample_id, sample_id, ...}, ...}
+            Format is {artifact_id: {sample_id, sample_id, ...}, ...}
         """
         with qdb.sql_connection.TRN:
             bioms = self.biom_tables
@@ -416,8 +418,8 @@ class Analysis(qdb.base.QiitaStatusObject):
         with qdb.sql_connection.TRN:
             sql = """SELECT DISTINCT data_type
                      FROM qiita.data_type
-                        JOIN qiita.processed_data USING (data_type_id)
-                        JOIN qiita.analysis_sample USING (processed_data_id)
+                        JOIN qiita.artifact USING (data_type_id)
+                        JOIN qiita.analysis_sample USING (artifact_id)
                      WHERE analysis_id = %s
                      ORDER BY data_type"""
             qdb.sql_connection.TRN.add(sql, [self._id])
@@ -436,7 +438,8 @@ class Analysis(qdb.base.QiitaStatusObject):
             sql = """SELECT email FROM qiita.analysis_users
                      WHERE analysis_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            return [qdb.user.User(uid)
+                    for uid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
     def all_associated_filepath_ids(self):
@@ -564,14 +567,15 @@ class Analysis(qdb.base.QiitaStatusObject):
 
         Returns
         -------
-        list of ints
+        list of qiita_db.job.Job
             Job ids for jobs in analysis. Empty list if no jobs attached.
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT job_id FROM qiita.analysis_job
                      WHERE analysis_id = %s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            return [qdb.job.Job(jid)
+                    for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
     def pmid(self):
@@ -641,11 +645,11 @@ class Analysis(qdb.base.QiitaStatusObject):
             if user.level in {'superuser', 'admin'}:
                 return True
 
-            return self._id in Analysis.get_by_status('public') | \
+            return self in Analysis.get_by_status('public') | \
                 user.private_analyses | user.shared_analyses
 
     def summary_data(self):
-        """Return number of studies, processed data, and samples selected
+        """Return number of studies, artifacts, and samples selected
 
         Returns
         -------
@@ -655,10 +659,10 @@ class Analysis(qdb.base.QiitaStatusObject):
         with qdb.sql_connection.TRN:
             sql = """SELECT
                         COUNT(DISTINCT study_id) as studies,
-                        COUNT(DISTINCT processed_data_id) as processed_data,
+                        COUNT(DISTINCT artifact_id) as artifacts,
                         COUNT(DISTINCT sample_id) as samples
-                    FROM qiita.study_processed_data
-                        JOIN qiita.analysis_sample USING (processed_data_id)
+                    FROM qiita.study_artifact
+                        JOIN qiita.analysis_sample USING (artifact_id)
                     WHERE analysis_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
             return dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
@@ -705,64 +709,62 @@ class Analysis(qdb.base.QiitaStatusObject):
         Parameters
         ----------
         samples : dictionary of lists
-            samples and the processed data id they come from in form
-            {processed_data_id: [sample1, sample2, ...], ...}
+            samples and the artifact id they come from in form
+            {artifact_id: [sample1, sample2, ...], ...}
         """
         with qdb.sql_connection.TRN:
             self._lock_check()
 
-            for pid, samps in viewitems(samples):
-                # get previously selected samples  for pid and filter them out
+            for aid, samps in viewitems(samples):
+                # get previously selected samples for aid and filter them out
                 sql = """SELECT sample_id
                          FROM qiita.analysis_sample
-                         WHERE processed_data_id = %s AND analysis_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [pid, self._id])
+                         WHERE artifact_id = %s AND analysis_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [aid, self._id])
                 prev_selected = qdb.sql_connection.TRN.execute_fetchflatten()
 
                 select = set(samps).difference(prev_selected)
                 sql = """INSERT INTO qiita.analysis_sample
-                            (analysis_id, processed_data_id, sample_id)
+                            (analysis_id, artifact_id, sample_id)
                          VALUES (%s, %s, %s)"""
-                args = [[self._id, pid, s] for s in select]
+                args = [[self._id, aid, s] for s in select]
                 qdb.sql_connection.TRN.add(sql, args, many=True)
                 qdb.sql_connection.TRN.execute()
 
-    def remove_samples(self, proc_data=None, samples=None):
+    def remove_samples(self, artifacts=None, samples=None):
         """Removes samples from the analysis
 
         Parameters
         ----------
-        proc_data : list, optional
-            processed data ids to remove, default None
+        artifacts : list, optional
+            Artifacts to remove, default None
         samples : list, optional
             sample ids to remove, default None
 
         Notes
         -----
-        When only a list of samples given, the samples will be removed from all
-        processed data ids it is associated with
-
-        When only a list of proc_data given, all samples associated with that
-        processed data are removed
-
-        If both are passed, the given samples are removed from the given
-        processed data ids
+         - When only a list of samples given, the samples will be removed from
+           all artifacts it is associated with
+        - When only a list of artifacts is given, all samples associated with
+          that artifact are removed
+        - If both are passed, the given samples are removed from the given
+          artifacts
         """
         with qdb.sql_connection.TRN:
             self._lock_check()
-            if proc_data and samples:
+            if artifacts and samples:
                 sql = """DELETE FROM qiita.analysis_sample
                          WHERE analysis_id = %s
-                            AND processed_data_id = %s
+                            AND artifact_id = %s
                             AND sample_id = %s"""
-                # build tuples for what samples to remove from what
-                # processed data
-                args = [[self._id, p, s]
-                        for p, s in product(proc_data, samples)]
-            elif proc_data:
+                # Build the SQL arguments to remove the samples of the
+                # given artifacts.
+                args = [[self._id, a.id, s]
+                        for a, s in product(artifacts, samples)]
+            elif artifacts:
                 sql = """DELETE FROM qiita.analysis_sample
-                         WHERE analysis_id = %s AND processed_data_id = %s"""
-                args = [[self._id, p] for p in proc_data]
+                         WHERE analysis_id = %s AND artifact_id = %s"""
+                args = [[self._id, a.id] for a in artifacts]
             elif samples:
                 sql = """DELETE FROM qiita.analysis_sample
                          WHERE analysis_id = %s AND sample_id = %s"""
@@ -809,13 +811,13 @@ class Analysis(qdb.base.QiitaStatusObject):
             self._build_biom_tables(samples, rarefaction_depth)
 
     def _get_samples(self):
-        """Retrieves dict of samples to proc_data_id for the analysis"""
+        """Retrieves dict of {artifact_id: [sample_ids]}"""
         with qdb.sql_connection.TRN:
-            sql = """SELECT processed_data_id, array_agg(
+            sql = """SELECT artifact_id, array_agg(
                         sample_id ORDER BY sample_id)
                      FROM qiita.analysis_sample
                      WHERE analysis_id = %s
-                     GROUP BY processed_data_id"""
+                     GROUP BY artifact_id"""
             qdb.sql_connection.TRN.add(sql, [self._id])
             return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
@@ -826,26 +828,26 @@ class Analysis(qdb.base.QiitaStatusObject):
             # each data type
             new_tables = {dt: None for dt in self.data_types}
             base_fp = qdb.util.get_work_base_dir()
-            for pid, samps in viewitems(samples):
-                # one biom table attached to each processed data object
-                proc_data = qdb.data.ProcessedData(pid)
-                proc_data_fp = proc_data.get_filepaths()[0][1]
-                table_fp = join(base_fp, proc_data_fp)
+            for a_id, samps in viewitems(samples):
+                # one biom table attached to each artifact object
+                artifact = qdb.artifact.Artifact(a_id)
+                artifact_fp = artifact.filepaths[0][1]
+                table_fp = join(base_fp, artifact_fp)
                 table = load_table(table_fp)
                 # HACKY WORKAROUND FOR DEMO. Issue # 246
                 # make sure samples not in biom table are not filtered for
                 table_samps = set(table.ids())
                 filter_samps = table_samps.intersection(samps)
                 # add the metadata column for study the samples come from
-                study_meta = {'Study': qdb.study.Study(proc_data.study).title,
-                              'Processed_id': proc_data.id}
+                study_meta = {'Study': artifact.study.title,
+                              'Processed_id': artifact.id}
                 samples_meta = {sid: study_meta for sid in filter_samps}
                 # filter for just the wanted samples and merge into new table
                 # this if/else setup avoids needing a blank table to
                 # start merges
                 table.filter(filter_samps, axis='sample', inplace=True)
                 table.add_metadata(samples_meta, axis='sample')
-                data_type = proc_data.data_type()
+                data_type = artifact.data_type
                 if new_tables[data_type] is None:
                     new_tables[data_type] = table
                 else:
@@ -873,13 +875,11 @@ class Analysis(qdb.base.QiitaStatusObject):
             sql = """SELECT filepath_id, filepath
                      FROM qiita.filepath
                         JOIN qiita.prep_template_filepath USING (filepath_id)
-                        JOIN qiita.prep_template_preprocessed_data
-                            USING (prep_template_id)
-                        JOIN qiita.preprocessed_processed_data
-                            USING (preprocessed_data_id)
+                        JOIN qiita.prep_template USING (prep_template_id)
                         JOIN qiita.filepath_type USING (filepath_type_id)
-                     WHERE processed_data_id = %s
-                        AND filepath_type = 'qiime_map'
+                     WHERE filepath_type = 'qiime_map'
+                        AND artifact_id IN (SELECT *
+                                            FROM qiita.find_artifact_roots(%s))
                      ORDER BY filepath_id DESC"""
             _id, fp = qdb.util.get_mountpoint('templates')[0]
             to_concat = []
@@ -1086,7 +1086,7 @@ class Collection(qdb.base.QiitaStatusObject):
             sql = """SELECT email FROM qiita.{0}
                      WHERE collection_id = %s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.user.User(qdb.sql_connection.TRN.execute_fetchlast())
 
     @property
     def analyses(self):
@@ -1094,7 +1094,8 @@ class Collection(qdb.base.QiitaStatusObject):
             sql = """SELECT analysis_id FROM qiita.{0}
                      WHERE collection_id = %s""".format(self._analysis_table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            return [Analysis(aid)
+                    for aid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
     def highlights(self):
@@ -1102,7 +1103,8 @@ class Collection(qdb.base.QiitaStatusObject):
             sql = """SELECT job_id FROM qiita.{0}
                      WHERE collection_id = %s""".format(self._highlight_table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            return [qdb.job.Job(jid)
+                    for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
     def shared_with(self):
@@ -1110,7 +1112,8 @@ class Collection(qdb.base.QiitaStatusObject):
             sql = """SELECT email FROM qiita.{0}
                      WHERE collection_id = %s""".format(self._share_table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            return [qdb.user.User(uid)
+                    for uid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     # --- Functions ---
     def add_analysis(self, analysis):
