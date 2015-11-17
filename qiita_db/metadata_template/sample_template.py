@@ -11,14 +11,9 @@ from os.path import join
 from time import strftime
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBError,
-                                 QiitaDBUnknownIDError)
-from qiita_db.sql_connection import TRN
-from qiita_db.util import get_mountpoint, convert_to_id
-from qiita_db.study import Study
+
+import qiita_db as qdb
 from .base_metadata_template import BaseSample, MetadataTemplate
-from .prep_template import PrepTemplate
-from .constants import SAMPLE_TEMPLATE_COLUMNS
 
 
 class Sample(BaseSample):
@@ -65,7 +60,7 @@ class SampleTemplate(MetadataTemplate):
     _column_table = "study_sample_columns"
     _id_column = "study_id"
     _sample_cls = Sample
-    _fp_id = convert_to_id("sample_template", "filepath_type")
+    _fp_id = qdb.util.convert_to_id("sample_template", "filepath_type")
     _filepath_table = 'sample_template_filepath'
 
     @staticmethod
@@ -77,11 +72,11 @@ class SampleTemplate(MetadataTemplate):
         list
             Alphabetical list of all metadata headers available
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT DISTINCT column_name
                      FROM qiita.study_sample_columns ORDER BY column_name"""
-            TRN.add(sql)
-            return TRN.execute_fetchflatten()
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchflatten()
 
     @classmethod
     def create(cls, md_template, study):
@@ -94,16 +89,18 @@ class SampleTemplate(MetadataTemplate):
         study : Study
             The study to which the sample template belongs to.
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             cls._check_subclass()
 
             # Check that we don't have a MetadataTemplate for study
             if cls.exists(study.id):
-                raise QiitaDBDuplicateError(cls.__name__, 'id: %d' % study.id)
+                raise qdb.exceptions.QiitaDBDuplicateError(
+                    cls.__name__, 'id: %d' % study.id)
 
             # Clean and validate the metadata template given
-            md_template = cls._clean_validate_template(md_template, study.id,
-                                                       SAMPLE_TEMPLATE_COLUMNS)
+            md_template = cls._clean_validate_template(
+                md_template, study.id,
+                qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
 
             cls._common_creation_steps(md_template, study.id)
 
@@ -128,20 +125,21 @@ class SampleTemplate(MetadataTemplate):
         QiitaDBError
             If the study that owns this sample template has raw datas
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             cls._check_subclass()
 
             if not cls.exists(id_):
-                raise QiitaDBUnknownIDError(id_, cls.__name__)
+                raise qdb.exceptions.QiitaDBUnknownIDError(id_, cls.__name__)
 
             # Check if there is any PrepTemplate
             sql = """SELECT EXISTS(SELECT * FROM qiita.study_prep_template
                                    WHERE study_id=%s)"""
-            TRN.add(sql, [id_])
-            has_prep_templates = TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [id_])
+            has_prep_templates = qdb.sql_connection.TRN.execute_fetchlast()
             if has_prep_templates:
-                raise QiitaDBError("Sample template can not be erased because "
-                                   "there are prep templates associated.")
+                raise qdb.exceptions.QiitaDBError(
+                    "Sample template can not be erased because there are prep "
+                    "templates associated.")
 
             table_name = cls._table_name(id_)
 
@@ -149,19 +147,20 @@ class SampleTemplate(MetadataTemplate):
             sql = """DELETE FROM qiita.sample_template_filepath
                      WHERE study_id = %s"""
             args = [id_]
-            TRN.add(sql, args)
+            qdb.sql_connection.TRN.add(sql, args)
 
-            TRN.add("DROP TABLE qiita.{0}".format(table_name))
+            sql = "DROP TABLE qiita.{0}".format(table_name)
+            qdb.sql_connection.TRN.add(sql)
 
             sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
                 cls._table, cls._id_column)
-            TRN.add(sql, args)
+            qdb.sql_connection.TRN.add(sql, args)
 
             sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
                 cls._column_table, cls._id_column)
-            TRN.add(sql, args)
+            qdb.sql_connection.TRN.add(sql, args)
 
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
 
     @property
     def study_id(self):
@@ -183,7 +182,7 @@ class SampleTemplate(MetadataTemplate):
         dict
             The dict of restictions
         """
-        return SAMPLE_TEMPLATE_COLUMNS
+        return qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS
 
     def can_be_updated(self, **kwargs):
         """Whether the template can be updated or not
@@ -239,9 +238,9 @@ class SampleTemplate(MetadataTemplate):
     def generate_files(self):
         r"""Generates all the files that contain data from this template
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             # figuring out the filepath of the sample template
-            _id, fp = get_mountpoint('templates')[0]
+            _id, fp = qdb.util.get_mountpoint('templates')[0]
             fp = join(fp, '%d_%s.txt' % (self.id, strftime("%Y%m%d-%H%M%S")))
             # storing the sample template
             self.to_file(fp)
@@ -250,8 +249,9 @@ class SampleTemplate(MetadataTemplate):
             self.add_filepath(fp)
 
             # generating all new QIIME mapping files
-            for pt_id in Study(self._id).prep_templates():
-                PrepTemplate(pt_id).generate_files()
+            for pt_id in qdb.study.Study(self._id).prep_templates():
+                qdb.metadata_template.prep_template.PrepTemplate(
+                    pt_id).generate_files()
 
     @property
     def ebi_sample_accessions(self):

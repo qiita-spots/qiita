@@ -54,8 +54,7 @@ from datetime import datetime
 from itertools import chain
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from .exceptions import QiitaDBColumnError, QiitaDBError, QiitaDBLookupError
-from .sql_connection import TRN
+import qiita_db as qdb
 
 
 def params_dict_to_json(options):
@@ -144,17 +143,17 @@ def get_filetypes(key='type'):
         If `key` is "type", dict is of the form {type: filetype_id}
         If `key` is "filetype_id", dict is of the form {filetype_id: type}
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         if key == 'type':
             cols = 'type, filetype_id'
         elif key == 'filetype_id':
             cols = 'filetype_id, type'
         else:
-            raise QiitaDBColumnError("Unknown key. Pass either 'type' or "
-                                     "'filetype_id'.")
+            raise qdb.exceptions.QiitaDBColumnError(
+                "Unknown key. Pass either 'type' or 'filetype_id'.")
         sql = 'SELECT {} FROM qiita.filetype'.format(cols)
-        TRN.add(sql)
-        return dict(TRN.execute_fetchindex())
+        qdb.sql_connection.TRN.add(sql)
+        return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
 
 def get_filepath_types(key='filepath_type'):
@@ -174,17 +173,18 @@ def get_filepath_types(key='filepath_type'):
         - If `key` is "filepath_type_id", dict is of the form
           {filepath_type_id: filepath_type}
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         if key == 'filepath_type':
             cols = 'filepath_type, filepath_type_id'
         elif key == 'filepath_type_id':
             cols = 'filepath_type_id, filepath_type'
         else:
-            raise QiitaDBColumnError("Unknown key. Pass either 'filepath_type'"
-                                     " or 'filepath_type_id'.")
+            raise qdb.exceptions.QiitaDBColumnError(
+                "Unknown key. Pass either 'filepath_type' or "
+                "'filepath_type_id'.")
         sql = 'SELECT {} FROM qiita.filepath_type'.format(cols)
-        TRN.add(sql)
-        return dict(TRN.execute_fetchindex())
+        qdb.sql_connection.TRN.add(sql)
+        return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
 
 def get_data_types(key='data_type'):
@@ -203,17 +203,17 @@ def get_data_types(key='data_type'):
         - If `key` is "data_type_id", dict is of the form
           {data_type_id: data_type}
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         if key == 'data_type':
             cols = 'data_type, data_type_id'
         elif key == 'data_type_id':
             cols = 'data_type_id, data_type'
         else:
-            raise QiitaDBColumnError("Unknown key. Pass either 'data_type_id' "
-                                     "or 'data_type'.")
+            raise qdb.exceptions.QiitaDBColumnError(
+                "Unknown key. Pass either 'data_type_id' or 'data_type'.")
         sql = 'SELECT {} FROM qiita.data_type'.format(cols)
-        TRN.add(sql)
-        return dict(TRN.execute_fetchindex())
+        qdb.sql_connection.TRN.add(sql)
+        return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
 
 def create_rand_string(length, punct=True):
@@ -283,11 +283,11 @@ def check_required_columns(keys, table):
     RuntimeError
         Unable to get columns from database
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT is_nullable, column_name, column_default
                  FROM information_schema.columns WHERE table_name = %s"""
-        TRN.add(sql, [table])
-        cols = TRN.execute_fetchindex()
+        qdb.sql_connection.TRN.add(sql, [table])
+        cols = qdb.sql_connection.TRN.execute_fetchindex()
         # Test needed because a user with certain permissions can query without
         # error but be unable to get the column names
         if len(cols) == 0:
@@ -295,8 +295,8 @@ def check_required_columns(keys, table):
                                % table)
         required = set(x[1] for x in cols if x[0] == 'NO' and x[2] is None)
         if len(required.difference(keys)) > 0:
-            raise QiitaDBColumnError("Required keys missing: %s" %
-                                     required.difference(keys))
+            raise qdb.exceptions.QiitaDBColumnError(
+                "Required keys missing: %s" % required.difference(keys))
 
 
 def check_table_cols(keys, table):
@@ -316,19 +316,19 @@ def check_table_cols(keys, table):
     RuntimeError
         Unable to get columns from database
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT column_name FROM information_schema.columns
                  WHERE table_name = %s"""
-        TRN.add(sql, [table])
-        cols = TRN.execute_fetchflatten()
+        qdb.sql_connection.TRN.add(sql, [table])
+        cols = qdb.sql_connection.TRN.execute_fetchflatten()
         # Test needed because a user with certain permissions can query without
         # error but be unable to get the column names
         if len(cols) == 0:
             raise RuntimeError("Unable to fetch column names for table %s"
                                % table)
         if len(set(keys).difference(cols)) > 0:
-            raise QiitaDBColumnError("Non-database keys found: %s" %
-                                     set(keys).difference(cols))
+            raise qdb.exceptions.QiitaDBColumnError(
+                "Non-database keys found: %s" % set(keys).difference(cols))
 
 
 def get_table_cols(table):
@@ -344,11 +344,11 @@ def get_table_cols(table):
     list of str
         The column headers of `table`
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT column_name FROM information_schema.columns
                  WHERE table_name=%s AND table_schema='qiita'"""
-        TRN.add(sql, [table])
-        return TRN.execute_fetchflatten()
+        qdb.sql_connection.TRN.add(sql, [table])
+        return qdb.sql_connection.TRN.execute_fetchflatten()
 
 
 def get_table_cols_w_type(table):
@@ -364,11 +364,11 @@ def get_table_cols_w_type(table):
     list of tuples of (str, str)
         The column headers and data type of `table`
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT column_name, data_type FROM information_schema.columns
                  WHERE table_name=%s"""
-        TRN.add(sql, [table])
-        return TRN.execute_fetchindex()
+        qdb.sql_connection.TRN.add(sql, [table])
+        return qdb.sql_connection.TRN.execute_fetchindex()
 
 
 def exists_table(table):
@@ -384,12 +384,12 @@ def exists_table(table):
     bool
         Whether `table` exists on the database or not
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT exists(
                     SELECT * FROM information_schema.tables
                     WHERE table_name=%s)"""
-        TRN.add(sql, [table])
-        return TRN.execute_fetchlast()
+        qdb.sql_connection.TRN.add(sql, [table])
+        return qdb.sql_connection.TRN.execute_fetchlast()
 
 
 def exists_dynamic_table(table, prefix, suffix):
@@ -423,9 +423,9 @@ def get_db_files_base_dir():
     str
         The path to the base directory of all db files
     """
-    with TRN:
-        TRN.add("SELECT base_data_dir FROM settings")
-        return TRN.execute_fetchlast()
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT base_data_dir FROM settings")
+        return qdb.sql_connection.TRN.execute_fetchlast()
 
 
 def get_work_base_dir():
@@ -436,9 +436,9 @@ def get_work_base_dir():
     str
         The path to the base directory of all db files
     """
-    with TRN:
-        TRN.add("SELECT base_work_dir FROM settings")
-        return TRN.execute_fetchlast()
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT base_work_dir FROM settings")
+        return qdb.sql_connection.TRN.execute_fetchlast()
 
 
 def compute_checksum(path):
@@ -521,17 +521,17 @@ def move_upload_files_to_trash(study_id, files_to_move):
 
     for fid, filename in files_to_move:
         if filename == trash_folder:
-            raise QiitaDBError("You can not erase the trash folder: %s"
-                               % trash_folder)
+            raise qdb.exceptions.QiitaDBError(
+                "You can not erase the trash folder: %s" % trash_folder)
 
         if fid not in folders:
-            raise QiitaDBError("The filepath id: %d doesn't exist in the "
-                               "database" % fid)
+            raise qdb.exceptions.QiitaDBError(
+                "The filepath id: %d doesn't exist in the database" % fid)
 
         foldername = join(folders[fid], str(study_id))
         if not exists(foldername):
-            raise QiitaDBError("The upload folder for study id: %d doesn't "
-                               "exist" % study_id)
+            raise qdb.exceptions.QiitaDBError(
+                "The upload folder for study id: %d doesn't exist" % study_id)
 
         trashpath = join(foldername, trash_folder)
         if not exists(trashpath):
@@ -541,8 +541,8 @@ def move_upload_files_to_trash(study_id, files_to_move):
         new_fullpath = join(foldername, trash_folder, filename)
 
         if not exists(fullpath):
-            raise QiitaDBError("The filepath %s doesn't exist in the system" %
-                               fullpath)
+            raise qdb.exceptions.QiitaDBError(
+                "The filepath %s doesn't exist in the system" % fullpath)
 
         rename(fullpath, new_fullpath)
 
@@ -565,7 +565,7 @@ def get_mountpoint(mount_type, retrieve_all=False, retrieve_subdir=False):
     list
         List of tuple, where: [(id_mountpoint, filepath_of_mountpoint)]
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         if retrieve_all:
             sql = """SELECT data_directory_id, mountpoint, subdirectory
                      FROM qiita.data_directory
@@ -574,8 +574,8 @@ def get_mountpoint(mount_type, retrieve_all=False, retrieve_subdir=False):
             sql = """SELECT data_directory_id, mountpoint, subdirectory
                      FROM qiita.data_directory
                      WHERE data_type=%s AND active=true"""
-        TRN.add(sql, [mount_type])
-        db_result = TRN.execute_fetchindex()
+        qdb.sql_connection.TRN.add(sql, [mount_type])
+        db_result = qdb.sql_connection.TRN.execute_fetchindex()
         basedir = get_db_files_base_dir()
         if retrieve_subdir:
             result = [(d, join(basedir, m), s) for d, m, s in db_result]
@@ -597,11 +597,11 @@ def get_mountpoint_path_by_id(mount_id):
     str
         The mountpoint path
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT mountpoint FROM qiita.data_directory
                  WHERE data_directory_id=%s"""
-        TRN.add(sql, [mount_id])
-        mountpoint = TRN.execute_fetchlast()
+        qdb.sql_connection.TRN.add(sql, [mount_id])
+        mountpoint = qdb.sql_connection.TRN.execute_fetchlast()
         return join(get_db_files_base_dir(), mountpoint)
 
 
@@ -633,7 +633,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
     list of int
         List of the filepath_id in the database for each added filepath
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         new_filepaths = filepaths
 
         dd_id, mp, subdir = get_mountpoint(table, retrieve_subdir=True)[0]
@@ -661,7 +661,8 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
                     move(old_fp[0], new_fp[0])
                     # In case the transaction executes a rollback, we need to
                     # make sure the files have not been moved
-                    TRN.add_post_rollback_func(move, new_fp[0], old_fp[0])
+                    qdb.sql_connection.TRN.add_post_rollback_func(
+                        move, new_fp[0], old_fp[0])
 
         def str_to_id(x):
             return (x if isinstance(x, (int, long))
@@ -678,12 +679,12 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
                      checksum_algorithm_id, data_directory_id)
                  VALUES (%s, %s, %s, %s, %s)
                  RETURNING filepath_id""".format(filepath_table)
-        idx = TRN.index
-        TRN.add(sql, values, many=True)
+        idx = qdb.sql_connection.TRN.index
+        qdb.sql_connection.TRN.add(sql, values, many=True)
         # Since we added the query with many=True, we've added len(values)
         # queries to the transaction, so the ids are in the last idx queries
         return list(chain.from_iterable(
-            chain.from_iterable(TRN.execute()[idx:])))
+            chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:])))
 
 
 def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
@@ -711,7 +712,7 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
         else:
             return join(db_dir, mountpoint, filepath)
 
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
                         subdirectory
                  FROM qiita.filepath
@@ -719,8 +720,8 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
                     JOIN qiita.data_directory USING (data_directory_id)
                     JOIN qiita.{0} USING (filepath_id)
                  WHERE {1} = %s""".format(obj_fp_table, obj_id_column)
-        TRN.add(sql, [obj_id])
-        results = TRN.execute_fetchindex()
+        qdb.sql_connection.TRN.add(sql, [obj_id])
+        results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
 
         return [(fpid, path_builder(db_dir, fp, m, s, obj_id), fp_type)
@@ -731,7 +732,7 @@ def purge_filepaths():
     r"""Goes over the filepath table and remove all the filepaths that are not
     used in any place
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         # Get all the (table, column) pairs that reference to the filepath
         # table. Adapted from http://stackoverflow.com/q/5347050/3746629
         sql = """SELECT R.TABLE_NAME, R.column_name
@@ -747,23 +748,24 @@ def purge_filepaths():
             WHERE U.COLUMN_NAME = 'filepath_id'
                 AND U.TABLE_SCHEMA = 'qiita'
                 AND U.TABLE_NAME = 'filepath'"""
-        TRN.add(sql)
+        qdb.sql_connection.TRN.add(sql)
 
         union_str = " UNION ".join(
             ["SELECT %s FROM qiita.%s WHERE %s IS NOT NULL" % (col, table, col)
-             for table, col in TRN.execute_fetchindex()])
+             for table, col in qdb.sql_connection.TRN.execute_fetchindex()])
         # Get all the filepaths from the filepath table that are not
         # referenced from any place in the database
         sql = """SELECT filepath_id, filepath, filepath_type, data_directory_id
             FROM qiita.filepath FP JOIN qiita.filepath_type FPT
                 ON FP.filepath_type_id = FPT.filepath_type_id
             WHERE filepath_id NOT IN (%s)""" % union_str
-        TRN.add(sql)
+        qdb.sql_connection.TRN.add(sql)
 
         # We can now go over and remove all the filepaths
         sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
-        for fp_id, fp, fp_type, dd_id in TRN.execute_fetchindex():
-            TRN.add(sql, [fp_id])
+        db_results = qdb.sql_connection.TRN.execute_fetchindex()
+        for fp_id, fp, fp_type, dd_id in db_results:
+            qdb.sql_connection.TRN.add(sql, [fp_id])
 
             # Remove the data
             fp = join(get_mountpoint_path_by_id(dd_id), fp)
@@ -772,9 +774,9 @@ def purge_filepaths():
                     func = rmtree
                 else:
                     func = remove
-                TRN.add_post_commit_func(func, fp)
+                qdb.sql_connection.TRN.add_post_commit_func(func, fp)
 
-        TRN.execute()
+        qdb.sql_connection.TRN.execute()
 
 
 def move_filepaths_to_upload_folder(study_id, filepaths):
@@ -788,23 +790,24 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
     filepaths : list
         List of filepaths to move to the upload folder
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
         path_builder = partial(join, uploads_fp)
 
         # We can now go over and remove all the filepaths
         sql = """DELETE FROM qiita.filepath WHERE filepath_id=%s"""
         for fp_id, fp, _ in filepaths:
-            TRN.add(sql, [fp_id])
+            qdb.sql_connection.TRN.add(sql, [fp_id])
 
             # removing id from the raw data filename
             filename = basename(fp).split('_', 1)[1]
             destination = path_builder(filename)
 
-            TRN.add_post_rollback_func(move, destination, fp)
+            qdb.sql_connection.TRN.add_post_rollback_func(
+                move, destination, fp)
             move(fp, destination)
 
-        TRN.execute()
+        qdb.sql_connection.TRN.execute()
 
 
 def get_filepath_id(table, fp):
@@ -827,17 +830,18 @@ def get_filepath_id(table, fp):
     QiitaDBError
         If fp is not stored in the DB.
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         _, mp = get_mountpoint(table)[0]
         base_fp = join(get_db_files_base_dir(), mp)
 
         sql = "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s"
-        TRN.add(sql, [relpath(fp, base_fp)])
-        fp_id = TRN.execute_fetchindex()
+        qdb.sql_connection.TRN.add(sql, [relpath(fp, base_fp)])
+        fp_id = qdb.sql_connection.TRN.execute_fetchindex()
 
         # check if the query has actually returned something
         if not fp_id:
-            raise QiitaDBError("Filepath not stored in the database")
+            raise qdb.exceptions.QiitaDBError(
+                "Filepath not stored in the database")
 
         # If there was a result it was a single row and and single value,
         # hence access to [0][0]
@@ -852,14 +856,14 @@ def filepath_id_to_rel_path(filepath_id):
     str
         The relative path for the given filepath id
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT mountpoint, filepath
                  FROM qiita.filepath
                  JOIN qiita.data_directory USING (data_directory_id)
                  WHERE filepath_id = %s"""
-        TRN.add(sql, [filepath_id])
+        qdb.sql_connection.TRN.add(sql, [filepath_id])
         # It should be only one row
-        return join(*TRN.execute_fetchindex()[0])
+        return join(*qdb.sql_connection.TRN.execute_fetchindex()[0])
 
 
 def filepath_ids_to_rel_paths(filepath_ids):
@@ -877,13 +881,14 @@ def filepath_ids_to_rel_paths(filepath_ids):
     if not filepath_ids:
         return {}
 
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, mountpoint, filepath
                  FROM qiita.filepath
                  JOIN qiita.data_directory USING (data_directory_id)
                  WHERE filepath_id IN %s"""
-        TRN.add(sql, [tuple(filepath_ids)])
-        return {row[0]: join(*row[1:]) for row in TRN.execute_fetchindex()}
+        qdb.sql_connection.TRN.add(sql, [tuple(filepath_ids)])
+        return {row[0]: join(*row[1:])
+                for row in qdb.sql_connection.TRN.execute_fetchindex()}
 
 
 def convert_to_id(value, table, text_col=None):
@@ -909,14 +914,14 @@ def convert_to_id(value, table, text_col=None):
         The passed string has no associated id
     """
     text_col = table if text_col is None else text_col
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = "SELECT {0}_id FROM qiita.{0} WHERE {1} = %s".format(
             table, text_col)
-        TRN.add(sql, [value])
-        _id = TRN.execute_fetchindex()
+        qdb.sql_connection.TRN.add(sql, [value])
+        _id = qdb.sql_connection.TRN.execute_fetchindex()
         if not _id:
-            raise QiitaDBLookupError("%s not valid for table %s"
-                                     % (value, table))
+            raise qdb.exceptions.QiitaDBLookupError(
+                "%s not valid for table %s" % (value, table))
         # If there was a result it was a single row and and single value,
         # hence access to [0][0]
         return _id[0][0]
@@ -942,13 +947,13 @@ def convert_from_id(value, table):
     QiitaDBLookupError
         The passed id has no associated string
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = "SELECT {0} FROM qiita.{0} WHERE {0}_id = %s".format(table)
-        TRN.add(sql, [value])
-        string = TRN.execute_fetchindex()
+        qdb.sql_connection.TRN.add(sql, [value])
+        string = qdb.sql_connection.TRN.execute_fetchindex()
         if not string:
-            raise QiitaDBLookupError("%s not valid for table %s"
-                                     % (value, table))
+            raise qdb.exceptions.QiitaDBLookupError(
+                "%s not valid for table %s" % (value, table))
         # If there was a result it was a single row and and single value,
         # hence access to [0][0]
         return string[0][0]
@@ -966,10 +971,10 @@ def get_count(table):
     -------
     int
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = "SELECT count(1) FROM %s" % table
-        TRN.add(sql)
-        return TRN.execute_fetchlast()
+        qdb.sql_connection.TRN.add(sql)
+        return qdb.sql_connection.TRN.execute_fetchlast()
 
 
 def check_count(table, exp_count):
@@ -997,7 +1002,7 @@ def get_preprocessed_params_tables():
     -------
     list or str
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT table_name FROM information_schema.tables
                  WHERE table_schema = 'qiita'
                     AND SUBSTR(table_name, 1, 13) = 'preprocessed_'
@@ -1005,8 +1010,8 @@ def get_preprocessed_params_tables():
                                            'preprocessed_filepath',
                                            'preprocessed_processed_data')
                  ORDER BY table_name"""
-        TRN.add(sql)
-        return TRN.execute_fetchflatten()
+        qdb.sql_connection.TRN.add(sql)
+        return qdb.sql_connection.TRN.execute_fetchflatten()
 
 
 def get_processed_params_tables():
@@ -1016,13 +1021,13 @@ def get_processed_params_tables():
     -------
     list of str
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """SELECT table_name FROM information_schema.tables
                  WHERE table_schema = 'qiita'
                     AND SUBSTR(table_name, 1, 17) = 'processed_params_'
                  ORDER BY table_name"""
-        TRN.add(sql)
-        return TRN.execute_fetchflatten()
+        qdb.sql_connection.TRN.add(sql)
+        return qdb.sql_connection.TRN.execute_fetchflatten()
 
 
 def get_environmental_packages():
@@ -1035,9 +1040,9 @@ def get_environmental_packages():
         environmental package name and the second string is the table where
         the metadata for the environmental package is stored
     """
-    with TRN:
-        TRN.add("SELECT * FROM qiita.environmental_package")
-        return TRN.execute_fetchindex()
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT * FROM qiita.environmental_package")
+        return qdb.sql_connection.TRN.execute_fetchindex()
 
 
 def get_timeseries_types():
@@ -1049,10 +1054,10 @@ def get_timeseries_types():
         The available timeseries types. Each timeseries type is defined by the
         tuple (timeseries_id, timeseries_type, intervention_type)
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id"
-        TRN.add(sql)
-        return TRN.execute_fetchindex()
+        qdb.sql_connection.TRN.add(sql)
+        return qdb.sql_connection.TRN.execute_fetchindex()
 
 
 def check_access_to_analysis_result(user_id, requested_path):
@@ -1072,7 +1077,7 @@ def check_access_to_analysis_result(user_id, requested_path):
     list of int
         The filepath IDs associated with the requested path
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         # Get all filepath ids associated with analyses that the user has
         # access to where the filepath is the base_requested_fp from above.
         # There should typically be only one matching filepath ID, but for
@@ -1093,9 +1098,9 @@ def check_access_to_analysis_result(user_id, requested_path):
                     aj.job_id = jrfp.job_id
                  JOIN qiita.filepath fp ON jrfp.filepath_id = fp.filepath_id
                  WHERE fp.filepath = %s"""
-        TRN.add(sql, [user_id, user_id, requested_path])
+        qdb.sql_connection.TRN.add(sql, [user_id, user_id, requested_path])
 
-        return TRN.execute_fetchflatten()
+        return qdb.sql_connection.TRN.execute_fetchflatten()
 
 
 def infer_status(statuses):
@@ -1143,16 +1148,16 @@ def add_message(message, users):
     users : list of User objects
         Users to connect the message to
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """INSERT INTO qiita.message (message) VALUES (%s)
                  RETURNING message_id"""
-        TRN.add(sql, [message])
-        msg_id = TRN.execute_fetchlast()
+        qdb.sql_connection.TRN.add(sql, [message])
+        msg_id = qdb.sql_connection.TRN.execute_fetchlast()
         sql = """INSERT INTO qiita.message_user (email, message_id)
                  VALUES (%s, %s)"""
         sql_args = [[user.id, msg_id] for user in users]
-        TRN.add(sql, sql_args, many=True)
-        TRN.execute()
+        qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+        qdb.sql_connection.TRN.execute()
 
 
 def add_system_message(message, expires):
@@ -1165,27 +1170,27 @@ def add_system_message(message, expires):
     expires : datetime object
         Expiration for the message
     """
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = """INSERT INTO qiita.message (message, expiration)
                  VALUES (%s, %s)
                  RETURNING message_id"""
-        TRN.add(sql, [message, expires])
-        msg_id = TRN.execute_fetchlast()
+        qdb.sql_connection.TRN.add(sql, [message, expires])
+        msg_id = qdb.sql_connection.TRN.execute_fetchlast()
         sql = """INSERT INTO qiita.message_user (email, message_id)
                  SELECT email, %s FROM qiita.qiita_user"""
-        TRN.add(sql, [msg_id])
-        TRN.execute()
+        qdb.sql_connection.TRN.add(sql, [msg_id])
+        qdb.sql_connection.TRN.execute()
 
 
 def clear_system_messages():
-    with TRN:
+    with qdb.sql_connection.TRN:
         sql = "SELECT message_id FROM qiita.message WHERE expiration < %s"
-        TRN.add(sql, [datetime.now()])
-        msg_ids = TRN.execute_fetchflatten()
+        qdb.sql_connection.TRN.add(sql, [datetime.now()])
+        msg_ids = qdb.sql_connection.TRN.execute_fetchflatten()
         if msg_ids:
             msg_ids = tuple(msg_ids)
             sql = "DELETE FROM qiita.message_user WHERE message_id IN %s"
-            TRN.add(sql, [msg_ids])
+            qdb.sql_connection.TRN.add(sql, [msg_ids])
             sql = "DELETE FROM qiita.message WHERE message_id IN %s"
-            TRN.add(sql, [msg_ids])
-            TRN.execute()
+            qdb.sql_connection.TRN.add(sql, [msg_ids])
+            qdb.sql_connection.TRN.execute()
