@@ -703,7 +703,7 @@ class Study(qdb.base.QiitaObject):
 
     @property
     def sample_template(self):
-        """ Returns sample_template information
+        """Returns sample_template information
 
         If the study doesn't have a sample template associated with it, it will
         return None
