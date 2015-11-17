@@ -745,10 +745,8 @@ class Analysis(qdb.base.QiitaStatusObject):
         -----
          - When only a list of samples given, the samples will be removed from
            all artifacts it is associated with
-
         - When only a list of artifacts is given, all samples associated with
           that artifact are removed
-
         - If both are passed, the given samples are removed from the given
           artifacts
         """
