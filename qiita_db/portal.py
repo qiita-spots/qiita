@@ -198,18 +198,21 @@ class Portal(qdb.base.QiitaObject):
             return True
 
     def get_studies(self):
-        """Returns study id for all Studies belonging to the portal
+        """Returns all studies belonging to the portal
 
         Returns
         -------
-        set of int
-            All study ids in the database that match the given portal
+        set of qiita_db.study.Study
+            All studies attached to the portal
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT study_id FROM qiita.study_portal
+            sql = """SELECT study_id
+                     FROM qiita.study_portal
                      WHERE portal_type_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
+            return set(
+                qdb.study.Study(sid)
+                for sid in qdb.sql_connection.TRN.execute_fetchflatten())
 
     def _check_studies(self, studies):
         with qdb.sql_connection.TRN:
@@ -289,8 +292,8 @@ class Portal(qdb.base.QiitaObject):
 
             # Make sure study not used in analysis in portal
             sql = """SELECT DISTINCT study_id
-                     FROM qiita.study_processed_data
-                        JOIN qiita.analysis_sample USING (processed_data_id)
+                     FROM qiita.study_artifact
+                        JOIN qiita.analysis_sample USING (artifact_id)
                         JOIN qiita.analysis_portal USING (analysis_id)
                      WHERE portal_type_id = %s AND study_id IN %s"""
             qdb.sql_connection.TRN.add(sql, [self.id, tuple(studies)])
@@ -322,19 +325,21 @@ class Portal(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.execute()
 
     def get_analyses(self):
-        """Returns analysis id for all Analyses belonging to a portal
+        """Returns all analyses belonging to a portal
 
         Returns
         -------
-        set of int
-            All analysis ids in the database that match the given portal
+        set of qiita_db.analysis.Analysis
+            All analyses belonging to the portal
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT analysis_id
                      FROM qiita.analysis_portal
                      WHERE portal_type_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
+            return set(
+                qdb.analysis.Analysis(aid)
+                for aid in qdb.sql_connection.TRN.execute_fetchflatten())
 
     def _check_analyses(self, analyses):
         with qdb.sql_connection.TRN:
@@ -385,8 +390,8 @@ class Portal(qdb.base.QiitaObject):
                 # Make sure new portal has access to all studies in analysis
                 sql = """SELECT DISTINCT analysis_id
                          FROM qiita.analysis_sample
-                            JOIN qiita.study_processed_data
-                                USING (processed_data_id)
+                            JOIN qiita.study_artifact
+                                USING (artifact_id)
                          WHERE study_id NOT IN (
                             SELECT study_id
                             FROM qiita.study_portal

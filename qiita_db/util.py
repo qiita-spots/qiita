@@ -129,29 +129,26 @@ def convert_type(obj):
     return item
 
 
-def get_filetypes(key='type'):
-    """Gets the list of possible filetypes from the filetype table
+def get_artifact_types(key_by_id=False):
+    """Gets the list of possible artifact types
 
     Parameters
     ----------
-    key : {'type', 'filetype_id'}, optional
-        Defaults to "type". Determines the format of the returned dict.
+    key : bool, optional
+        Determines the format of the returned dict. Defaults to false.
 
     Returns
     -------
     dict
-        If `key` is "type", dict is of the form {type: filetype_id}
-        If `key` is "filetype_id", dict is of the form {filetype_id: type}
+        If key_by_id is True, dict is of the form
+        {artifact_type_id: artifact_type}
+        If key_by_id is False, dict is of the form
+        {artifact_type: artifact_type_id}
     """
     with qdb.sql_connection.TRN:
-        if key == 'type':
-            cols = 'type, filetype_id'
-        elif key == 'filetype_id':
-            cols = 'filetype_id, type'
-        else:
-            raise qdb.exceptions.QiitaDBColumnError(
-                "Unknown key. Pass either 'type' or 'filetype_id'.")
-        sql = 'SELECT {} FROM qiita.filetype'.format(cols)
+        cols = ('artifact_type_id, artifact_type'
+                if key_by_id else 'artifact_type, artifact_type_id')
+        sql = "SELECT {} FROM qiita.artifact_type".format(cols)
         qdb.sql_connection.TRN.add(sql)
         return dict(qdb.sql_connection.TRN.execute_fetchindex())
 

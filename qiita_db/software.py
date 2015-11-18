@@ -282,15 +282,16 @@ class Software(qdb.base.QiitaObject):
 
         Returns
         -------
-        list of int
-            The command identifiers
+        list of qiita_db.software.Command
+            The commands attached to this software package
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT command_id
                      FROM qiita.software_command
                      WHERE software_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            return qdb.sql_connection.TRN.execute_fetchflatten()
+            return [Command(cid)
+                    for cid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
     def publications(self):
