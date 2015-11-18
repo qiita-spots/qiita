@@ -12,12 +12,7 @@ from sys import exit
 
 import click
 
-from qiita_db.environment_manager import (
-    make_environment, drop_environment, clean_test_environment,
-    patch as _patch)
-from qiita_db.portal import Portal
-from qiita_db.exceptions import (QiitaDBError, QiitaDBDuplicateError,
-                                 QiitaDBLookupError)
+import qiita_db as qdb
 from qiita_core.environment_manager import (
     start_cluster as _start_cluster, stop_cluster as _stop_cluster,
     test as _test, TEST_RUNNERS)
@@ -72,7 +67,8 @@ def make(load_ontologies, download_reference, add_demo_user):
     # Or figure out a way to use
     # http://click.pocoo.org/3/options/#password-prompts
     # and have it work with Travis...
-    make_environment(load_ontologies, download_reference, add_demo_user)
+    qdb.environment_manager.make_environment(
+        load_ontologies, download_reference, add_demo_user)
 
 
 @env.command()
@@ -86,7 +82,7 @@ def drop(ask_for_confirmation):
     # http://click.pocoo.org/3/options/#password-prompts
     # and have it work with Travis...
     try:
-        drop_environment(ask_for_confirmation)
+        qdb.environment_manager.drop_environment(ask_for_confirmation)
     except RuntimeError as e:
         raise click.ClickException(str(e))
 
@@ -99,7 +95,7 @@ def clean_test():
     present), this cleans it up by dropping the 'qiita' schema and rebuilding
     the test database.
     """
-    clean_test_environment()
+    qdb.environment_manager.clean_test_environment()
 
 
 @env.command()
@@ -109,7 +105,7 @@ def patch():
     Pulls the current patch from the settings table and applies all subsequent
     patches found in the patches directory.
     """
-    _patch()
+    qdb.environment_manager.patch()
 
 
 @env.command()
@@ -163,8 +159,8 @@ def job_details(job):
 def add_portal(portal, description):
     """Creates a new portal on the database"""
     try:
-        Portal.create(portal, description)
-    except QiitaDBDuplicateError:
+        qdb.portal.Portal.create(portal, description)
+    except qdb.exceptions.QiitaDBDuplicateError:
         raise click.BadParameter("Portal name already exists!")
 
 
@@ -173,10 +169,10 @@ def add_portal(portal, description):
 def rem_portal(portal):
     """Removes a portal from the database"""
     try:
-        Portal.delete(portal)
-    except QiitaDBError as e:
+        qdb.portal.Portal.delete(portal)
+    except qdb.exceptions.QiitaDBError as e:
         raise click.BadParameter(str(e))
-    except QiitaDBLookupError:
+    except qdb.exceptions.QiitaDBLookupError:
         raise click.BadParameter("Portal name does not exist!")
 
 if __name__ == '__main__':
