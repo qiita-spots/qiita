@@ -113,10 +113,10 @@ class SearchNot(UnaryOperation):
 
 
 class SearchTerm(object):
-    # column names from study table
-    study_cols = set(qdb.util.get_table_cols("study"))
 
     def __init__(self, tokens):
+        # column names from study table
+        self.study_cols = set(qdb.util.get_table_cols("study"))
         self.term = tokens[0]
         # clean all the inputs
         for pos, term in enumerate(self.term):
@@ -161,8 +161,9 @@ class SearchTerm(object):
 class QiitaStudySearch(object):
     """QiitaStudySearch object to parse and run searches on studies."""
 
-    # column names from study table
-    study_cols = set(qdb.util.get_table_cols("study"))
+    def __init__(self):
+        # column names from study table
+        self.study_cols = set(qdb.util.get_table_cols("study"))
 
     def __call__(self, searchstr, user):
         """Runs a Study query and returns matching studies and samples

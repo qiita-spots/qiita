@@ -67,7 +67,6 @@ class PrepTemplate(MetadataTemplate):
     _column_table = "prep_columns"
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
-    _fp_id = qdb.util.convert_to_id("prep_template", "filepath_type")
     _filepath_table = 'prep_template_filepath'
 
     @classmethod
@@ -463,7 +462,8 @@ class PrepTemplate(MetadataTemplate):
             self.to_file(fp)
 
             # adding the fp to the object
-            self.add_filepath(fp)
+            fp_id = qdb.util.convert_to_id("prep_template", "filepath_type")
+            self.add_filepath(fp, fp_id=fp_id)
 
             # creating QIIME mapping file
             self.create_qiime_mapping_file()

@@ -145,12 +145,6 @@ class Study(qdb.base.QiitaObject):
     # The following columns are considered not part of the study info
     _non_info = frozenset(["email", "study_title", "ebi_submission_status",
                            "ebi_study_accession"])
-    # The following tables are considered part of info
-    _info_cols = frozenset(chain(
-        qdb.util.get_table_cols('study'),
-        qdb.util.get_table_cols('study_status'),
-        qdb.util.get_table_cols('timeseries_type'),
-        qdb.util.get_table_cols('study_publication')))
 
     def _lock_non_sandbox(self):
         """Raises QiitaDBStatusError if study is non-sandboxed"""
@@ -229,13 +223,20 @@ class Study(qdb.base.QiitaObject):
             Table-like structure of metadata, one study per row. Can be
             accessed as a list of dictionaries, keyed on column name.
         """
-        if info_cols is None:
-            info_cols = cls._info_cols
-        elif not cls._info_cols.issuperset(info_cols):
-            warnings.warn("Non-info columns passed: %s" % ", ".join(
-                set(info_cols) - cls._info_cols))
+        # The following tables are considered part of info
+        _info_cols = frozenset(chain(
+            qdb.util.get_table_cols('study'),
+            qdb.util.get_table_cols('study_status'),
+            qdb.util.get_table_cols('timeseries_type'),
+            qdb.util.get_table_cols('study_publication')))
 
-        search_cols = ",".join(sorted(cls._info_cols.intersection(info_cols)))
+        if info_cols is None:
+            info_cols = _info_cols
+        elif not _info_cols.issuperset(info_cols):
+            warnings.warn("Non-info columns passed: %s" % ", ".join(
+                set(info_cols) - _info_cols))
+
+        search_cols = ",".join(sorted(_info_cols.intersection(info_cols)))
 
         with qdb.sql_connection.TRN:
             sql = """SELECT {0}

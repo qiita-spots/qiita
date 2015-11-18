@@ -60,7 +60,6 @@ class SampleTemplate(MetadataTemplate):
     _column_table = "study_sample_columns"
     _id_column = "study_id"
     _sample_cls = Sample
-    _fp_id = qdb.util.convert_to_id("sample_template", "filepath_type")
     _filepath_table = 'sample_template_filepath'
 
     @staticmethod
@@ -246,7 +245,8 @@ class SampleTemplate(MetadataTemplate):
             self.to_file(fp)
 
             # adding the fp to the object
-            self.add_filepath(fp)
+            fp_id = qdb.util.convert_to_id("sample_template", "filepath_type")
+            self.add_filepath(fp, fp_id=fp_id)
 
             # generating all new QIIME mapping files
             for pt_id in qdb.study.Study(self._id).prep_templates():
