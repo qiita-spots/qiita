@@ -79,6 +79,23 @@ class ArtifactTests(TestCase):
             if exists(f):
                 remove(f)
 
+    def test_iter_public(self):
+        obs = list(qdb.artifact.Artifact.iter_public())
+        exp = []
+        self.assertEqual(obs, exp)
+
+        a4 = qdb.artifact.Artifact(4)
+        a4.visibility = 'public'
+        obs = list(qdb.artifact.Artifact.iter_public())
+        exp = [a4]
+        self.assertEqual(obs, exp)
+
+        a1 = qdb.artifact.Artifact(1)
+        a1.visibility = 'public'
+        obs = list(qdb.artifact.Artifact.iter_public())
+        exp = [a1, a4]
+        self.assertEqual(obs, exp)
+
     def test_create_error_no_filepaths(self):
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactCreationError):
             qdb.artifact.Artifact.create(

@@ -45,6 +45,25 @@ class Artifact(qdb.base.QiitaObject):
     _table = "artifact"
 
     @classmethod
+    def iter_public(cls):
+        r"""Iterator over the public artifacts available in the system
+
+        Returns
+        -------
+        generator of qiita_db.artifact.Artifact
+            The public artifacts available in the system
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_id
+                     FROM qiita.artifact
+                        JOIN qiita.visibility USING (visibility_id)
+                     WHERE visibility = 'public'
+                     ORDER BY artifact_id"""
+            qdb.sql_connection.TRN.add(sql)
+            for a_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield cls(a_id)
+
+    @classmethod
     def create(cls, filepaths, artifact_type, prep_template=None,
                parents=None, processing_parameters=None,
                can_be_submitted_to_ebi=False, can_be_submitted_to_vamps=False):
