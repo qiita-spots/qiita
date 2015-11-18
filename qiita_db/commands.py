@@ -6,8 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from dateutil.parser import parse
-from os import listdir, remove
+from os import remove
 from os.path import join, exists
 from functools import partial
 from future import standard_library
@@ -93,40 +92,72 @@ def load_study_from_cmd(owner, title, info):
             qdb.user.User(owner), title, efo_ids, infodict)
 
 
-def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
-                                    filepath_type, params_id,
-                                    prep_template_id, data_type):
-    r"""Adds preprocessed data to the database
+def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
+                           prep_template=None, parents=None,
+                           processing_command_id=None,
+                           processing_parameters_id=None,
+                           can_be_submitted_to_ebi=False,
+                           can_be_submitted_to_vamps=False):
+    r"""Adds an artifact to the system
 
     Parameters
     ----------
-    study_id : int
-        The study id to which the preprocessed data belongs
-    params_table : str
-        The name of the table which contains the parameters of the
-        preprocessing
-    filedir : str
-        Directory path of the preprocessed data
-    filepath_type: str
-        The filepath_type of the preprecessed data
-    params_id : int
-        The id of parameters int the params_table
-    prep_template_id : int
-        Prep template id associated with data
-    data_type : str
-        The data type of the template
+    filepaths : iterable of str
+        Paths to the artifact files
+    filepath_types : iterable of str
+        Describes the contents of the files
+    artifact_type : str
+        The type of artifact
+    prep_template : int, optional
+        The prep template id
+    parents : list of int, optional
+        The list of artifacts id of the parent artifacts
+    processing_command_id : int, optional
+        The id of the command used to process the artifact
+    processing_parameters_id : int, optional
+        The id of the parameter set used to process the artifact
+    can_be_submitted_to_ebi : bool, optional
+        Whether the artifact can be submitted to EBI or not
+    can_be_submitted_to_vamps : bool, optional
+        Whether the artifact can be submitted to VAMPS or not
+
+    Returns
+    -------
+    qiita_db.artifact.Artifact
+        The newly created artifact
+
+    Raises
+    ------
+    ValueError
+        If the lists `filepaths` and `filepath_types` don't have the same
+        length
     """
+    if len(filepaths) != len(filepath_types):
+        raise ValueError("Please provide exactly one filepath_type for each "
+                         "and every filepath")
     with qdb.sql_connection.TRN:
         fp_types_dict = qdb.util.get_filepath_types()
-        fp_type = fp_types_dict[filepath_type]
-        filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
-        pt = (None if prep_template_id is None
-              else qdb.metadata_template.prep_template.PrepTemplate(
-                  prep_template_id))
-        return qdb.data.PreprocessedData.create(
-            qdb.study.Study(study_id), params_table, params_id, filepaths,
-            prep_template=pt,
-            data_type=data_type)
+        fps = [(fp, fp_types_dict[ftype])
+               for fp, ftype in zip(filepaths, filepath_types)]
+
+        if prep_template:
+            prep_template = qdb.metadata_template.prep_template.PrepTemplate(
+                prep_template)
+
+        if parents:
+            parents = [qdb.artifact.Artifact(pid) for pid in parents]
+
+        params = None
+        if processing_command_id:
+            params = qdb.software.Parameters(
+                processing_parameters_id,
+                qdb.software.Command(processing_command_id))
+
+        return qdb.artifact.Artifact.create(
+            fps, artifact_type, prep_template=prep_template, parents=parents,
+            processing_parameters=params,
+            can_be_submitted_to_ebi=can_be_submitted_to_ebi,
+            can_be_submitted_to_vamps=can_be_submitted_to_vamps)
 
 
 def load_sample_template_from_cmd(sample_temp_path, study_id):
@@ -161,93 +192,6 @@ def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
         prep_temp_path)
     return qdb.metadata_template.prep_template.PrepTemplate.create(
         prep_temp, qdb.study.Study(study_id), data_type)
-
-
-def load_raw_data_cmd(filepaths, filepath_types, filetype, prep_template_ids):
-    """Add new raw data by populating the relevant tables
-
-    Parameters
-    ----------
-    filepaths : iterable of str
-        Paths to the raw data files
-    filepath_types : iterable of str
-        Describes the contents of the files.
-    filetype : str
-        The type of file being loaded
-    prep_template_ids : iterable of int
-        The IDs of the prep templates with which to associate this raw data
-
-    Returns
-    -------
-    qiita_db.RawData
-        The newly created `qiita_db.RawData` object
-    """
-    if len(filepaths) != len(filepath_types):
-        raise ValueError("Please pass exactly one filepath_type for each "
-                         "and every filepath")
-
-    with qdb.sql_connection.TRN:
-        filetypes_dict = qdb.util.get_filetypes()
-        filetype_id = filetypes_dict[filetype]
-
-        filepath_types_dict = qdb.util.get_filepath_types()
-        filepath_types = [filepath_types_dict[x] for x in filepath_types]
-
-        prep_templates = [qdb.metadata_template.prep_template.PrepTemplate(x)
-                          for x in prep_template_ids]
-
-        return qdb.data.RawData.create(
-            filetype_id, prep_templates,
-            filepaths=list(zip(filepaths, filepath_types)))
-
-
-def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
-                            processed_params_id, preprocessed_data_id=None,
-                            study_id=None, processed_date=None):
-    """Add a new processed data entry
-
-    Parameters
-    ----------
-    fps : list of str
-        Paths to the processed data files to associate with the ProcessedData
-        object
-    fp_types: list of str
-        The types of files, one per fp
-    processed_params_table_name : str
-        The name of the processed_params_ table to use
-    processed_params_id : int
-        The ID of the row in the processed_params_ table
-    preprocessed_data_id : int, optional
-        Defaults to ``None``. The ID of the row in the preprocessed_data table.
-    processed_date : str, optional
-        Defaults to ``None``. The date and time to use as the processing date.
-        Must be interpretable as a datetime object
-
-    Returns
-    -------
-    qiita_db.ProcessedData
-        The newly created `qiita_db.ProcessedData` object
-    """
-    if len(fps) != len(fp_types):
-        raise ValueError("Please pass exactly one fp_type for each "
-                         "and every fp")
-
-    with qdb.sql_connection.TRN:
-        fp_types_dict = qdb.util.get_filepath_types()
-        fp_types = [fp_types_dict[x] for x in fp_types]
-
-        preprocessed_data = (
-            None if preprocessed_data_id is None
-            else qdb.data.PreprocessedData(preprocessed_data_id))
-
-        study = None if study_id is None else qdb.study.Study(study_id)
-
-        if processed_date is not None:
-            processed_date = parse(processed_date)
-
-        return qdb.data.ProcessedData.create(
-            processed_params_table_name, processed_params_id,
-            list(zip(fps, fp_types)), preprocessed_data, study, processed_date)
 
 
 def load_parameters_from_cmd(name, fp, table):
