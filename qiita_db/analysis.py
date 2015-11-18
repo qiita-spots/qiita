@@ -743,14 +743,12 @@ class Analysis(qdb.base.QiitaStatusObject):
 
         Notes
         -----
-        When only a list of samples given, the samples will be removed from all
-        artifacts it is associated with
-
-        When only a list of artifacts is given, all samples associated with
-        that artifact are removed
-
-        If both are passed, the given samples are removed from the given
-        artifacts
+         - When only a list of samples given, the samples will be removed from
+           all artifacts it is associated with
+        - When only a list of artifacts is given, all samples associated with
+          that artifact are removed
+        - If both are passed, the given samples are removed from the given
+          artifacts
         """
         with qdb.sql_connection.TRN:
             self._lock_check()
@@ -759,8 +757,8 @@ class Analysis(qdb.base.QiitaStatusObject):
                          WHERE analysis_id = %s
                             AND artifact_id = %s
                             AND sample_id = %s"""
-                # build tuples for what samples to remove from what
-                # artifact
+                # Build the SQL arguments to remove the samples of the
+                # given artifacts.
                 args = [[self._id, a.id, s]
                         for a, s in product(artifacts, samples)]
             elif artifacts:
@@ -813,7 +811,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             self._build_biom_tables(samples, rarefaction_depth)
 
     def _get_samples(self):
-        """Retrieves dict of samples to artifact_id for the analysis"""
+        """Retrieves dict of {artifact_id: [sample_ids]}"""
         with qdb.sql_connection.TRN:
             sql = """SELECT artifact_id, array_agg(
                         sample_id ORDER BY sample_id)
