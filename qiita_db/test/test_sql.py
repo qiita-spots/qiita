@@ -66,10 +66,13 @@ class TestSQL(TestCase):
         with open(fp, 'w') as f:
             f.write("test")
         fp = [(fp, 7)]
-        new = qdb.artifact.Artifact.create(fp, "BIOM", parents=[qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)],
-                              processing_parameters=qdb.software.Parameters(1, qdb.software.Command(1)),
-                              can_be_submitted_to_ebi=True,
-                              can_be_submitted_to_vamps=True)
+        params = qdb.software.Parameters(1, qdb.software.Command(1))
+        new = qdb.artifact.Artifact.create(
+            fp, "BIOM",
+            parents=[qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)],
+            processing_parameters=params,
+            can_be_submitted_to_ebi=True,
+            can_be_submitted_to_vamps=True)
         self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
         obs = self.conn_handler.execute_fetchall(sql, [new.id])
         exp = [[1]]
@@ -87,7 +90,8 @@ class TestSQL(TestCase):
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
             orient='index')
-        pt = qdb.metadata_template.prep_template.PrepTemplate.create(metadata, qdb.study.Study(1), "18S")
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, qdb.study.Study(1), "18S")
         fd, fp = mkstemp(suffix='_seqs.fastq')
         close(fd)
         self._files_to_remove.append(fp)
@@ -124,9 +128,10 @@ class TestSQL(TestCase):
         with open(fp, 'w') as f:
             f.write("test")
         fp = [(fp, 4)]
-        new = qdb.artifact.Artifact.create(fp, "Demultiplexed",
-                              parents=[qdb.artifact.Artifact(1), new_root],
-                              processing_parameters=qdb.software.Parameters(1, qdb.software.Command(1)))
+        params = qdb.software.Parameters(1, qdb.software.Command(1))
+        new = qdb.artifact.Artifact.create(
+            fp, "Demultiplexed", parents=[qdb.artifact.Artifact(1), new_root],
+            processing_parameters=params)
         self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
         obs = self.conn_handler.execute_fetchall(sql, [new.id])
         exp = [[1], [new_root.id]]

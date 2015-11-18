@@ -330,7 +330,7 @@ class Portal(qdb.base.QiitaObject):
         Returns
         -------
         set of qiita_db.analysis.Analysis
-            All analysis belonging to the portal
+            All analyses belonging to the portal
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT analysis_id
