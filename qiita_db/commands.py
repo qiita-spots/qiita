@@ -6,25 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from dateutil.parser import parse
-from os import listdir, remove
-from os.path import join, exists
 from functools import partial
 from future import standard_library
-from future.utils import viewitems
-from collections import defaultdict
-from shutil import move
 
-from .study import Study, StudyPerson
-from .user import User
-from .util import (get_filetypes, get_filepath_types, compute_checksum,
-                   convert_to_id, move_filepaths_to_upload_folder)
-from .data import RawData, PreprocessedData, ProcessedData
-from .metadata_template import (SampleTemplate, PrepTemplate,
-                                load_template_to_dataframe)
-from .parameters import (PreprocessedIlluminaParams, Preprocessed454Params,
-                         ProcessedSortmernaParams)
-from .sql_connection import TRN
+import qiita_db as qdb
 
 with standard_library.hooks():
     from configparser import ConfigParser
@@ -80,60 +65,94 @@ def load_study_from_cmd(owner, title, info):
         if optvalue is not None:
             infodict[value] = optvalue
 
-    with TRN:
+    with qdb.sql_connection.TRN:
         emp_person_name_email = get_optional('emp_person_name')
         if emp_person_name_email is not None:
             emp_name, emp_email, emp_affiliation = \
                 emp_person_name_email.split(',')
-            infodict['emp_person_id'] = StudyPerson.create(
+            infodict['emp_person_id'] = qdb.study.StudyPerson.create(
                 emp_name.strip(), emp_email.strip(), emp_affiliation.strip())
         lab_name_email = get_optional('lab_person')
         if lab_name_email is not None:
             lab_name, lab_email, lab_affiliation = lab_name_email.split(',')
-            infodict['lab_person_id'] = StudyPerson.create(
+            infodict['lab_person_id'] = qdb.study.StudyPerson.create(
                 lab_name.strip(), lab_email.strip(), lab_affiliation.strip())
 
         pi_name_email = infodict.pop('principal_investigator')
         pi_name, pi_email, pi_affiliation = pi_name_email.split(',', 2)
-        infodict['principal_investigator_id'] = StudyPerson.create(
+        infodict['principal_investigator_id'] = qdb.study.StudyPerson.create(
             pi_name.strip(), pi_email.strip(), pi_affiliation.strip())
 
-        return Study.create(User(owner), title, efo_ids, infodict)
+        return qdb.study.Study.create(
+            qdb.user.User(owner), title, efo_ids, infodict)
 
 
-def load_preprocessed_data_from_cmd(study_id, params_table, filedir,
-                                    filepath_type, params_id,
-                                    prep_template_id, data_type):
-    r"""Adds preprocessed data to the database
+def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
+                           prep_template=None, parents=None,
+                           processing_command_id=None,
+                           processing_parameters_id=None,
+                           can_be_submitted_to_ebi=False,
+                           can_be_submitted_to_vamps=False):
+    r"""Adds an artifact to the system
 
     Parameters
     ----------
-    study_id : int
-        The study id to which the preprocessed data belongs
-    params_table : str
-        The name of the table which contains the parameters of the
-        preprocessing
-    filedir : str
-        Directory path of the preprocessed data
-    filepath_type: str
-        The filepath_type of the preprecessed data
-    params_id : int
-        The id of parameters int the params_table
-    prep_template_id : int
-        Prep template id associated with data
-    data_type : str
-        The data type of the template
+    filepaths : iterable of str
+        Paths to the artifact files
+    filepath_types : iterable of str
+        Describes the contents of the files
+    artifact_type : str
+        The type of artifact
+    prep_template : int, optional
+        The prep template id
+    parents : list of int, optional
+        The list of artifacts id of the parent artifacts
+    processing_command_id : int, optional
+        The id of the command used to process the artifact
+    processing_parameters_id : int, optional
+        The id of the parameter set used to process the artifact
+    can_be_submitted_to_ebi : bool, optional
+        Whether the artifact can be submitted to EBI or not
+    can_be_submitted_to_vamps : bool, optional
+        Whether the artifact can be submitted to VAMPS or not
+
+    Returns
+    -------
+    qiita_db.artifact.Artifact
+        The newly created artifact
+
+    Raises
+    ------
+    ValueError
+        If the lists `filepaths` and `filepath_types` don't have the same
+        length
     """
-    with TRN:
-        fp_types_dict = get_filepath_types()
-        fp_type = fp_types_dict[filepath_type]
-        filepaths = [(join(filedir, fp), fp_type) for fp in listdir(filedir)]
-        pt = (None if prep_template_id is None
-              else PrepTemplate(prep_template_id))
-        return PreprocessedData.create(
-            Study(study_id), params_table, params_id, filepaths,
-            prep_template=pt,
-            data_type=data_type)
+    if len(filepaths) != len(filepath_types):
+        raise ValueError("Please provide exactly one filepath_type for each "
+                         "and every filepath")
+    with qdb.sql_connection.TRN:
+        fp_types_dict = qdb.util.get_filepath_types()
+        fps = [(fp, fp_types_dict[ftype])
+               for fp, ftype in zip(filepaths, filepath_types)]
+
+        if prep_template:
+            prep_template = qdb.metadata_template.prep_template.PrepTemplate(
+                prep_template)
+
+        if parents:
+            parents = [qdb.artifact.Artifact(pid) for pid in parents]
+
+        params = None
+        if processing_command_id:
+            params = qdb.software.Parameters(
+                processing_parameters_id,
+                qdb.software.Command(processing_command_id))
+
+        return qdb.artifact.Artifact.create(
+            fps, artifact_type, prep_template=prep_template, parents=parents,
+            processing_parameters=params,
+            can_be_submitted_to_ebi=can_be_submitted_to_ebi,
+            can_be_submitted_to_vamps=can_be_submitted_to_vamps)
 
 
 def load_sample_template_from_cmd(sample_temp_path, study_id):
@@ -146,8 +165,10 @@ def load_sample_template_from_cmd(sample_temp_path, study_id):
     study_id : int
         The study id to which the sample template belongs
     """
-    sample_temp = load_template_to_dataframe(sample_temp_path)
-    return SampleTemplate.create(sample_temp, Study(study_id))
+    sample_temp = qdb.metadata_template.util.load_template_to_dataframe(
+        sample_temp_path)
+    return qdb.metadata_template.sample_template.SampleTemplate.create(
+        sample_temp, qdb.study.Study(study_id))
 
 
 def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
@@ -162,92 +183,10 @@ def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
     data_type : str
         The data type of the prep template
     """
-    prep_temp = load_template_to_dataframe(prep_temp_path)
-    return PrepTemplate.create(prep_temp, Study(study_id), data_type)
-
-
-def load_raw_data_cmd(filepaths, filepath_types, filetype, prep_template_ids):
-    """Add new raw data by populating the relevant tables
-
-    Parameters
-    ----------
-    filepaths : iterable of str
-        Paths to the raw data files
-    filepath_types : iterable of str
-        Describes the contents of the files.
-    filetype : str
-        The type of file being loaded
-    prep_template_ids : iterable of int
-        The IDs of the prep templates with which to associate this raw data
-
-    Returns
-    -------
-    qiita_db.RawData
-        The newly created `qiita_db.RawData` object
-    """
-    if len(filepaths) != len(filepath_types):
-        raise ValueError("Please pass exactly one filepath_type for each "
-                         "and every filepath")
-
-    with TRN:
-        filetypes_dict = get_filetypes()
-        filetype_id = filetypes_dict[filetype]
-
-        filepath_types_dict = get_filepath_types()
-        filepath_types = [filepath_types_dict[x] for x in filepath_types]
-
-        prep_templates = [PrepTemplate(x) for x in prep_template_ids]
-
-        return RawData.create(filetype_id, prep_templates,
-                              filepaths=list(zip(filepaths, filepath_types)))
-
-
-def load_processed_data_cmd(fps, fp_types, processed_params_table_name,
-                            processed_params_id, preprocessed_data_id=None,
-                            study_id=None, processed_date=None):
-    """Add a new processed data entry
-
-    Parameters
-    ----------
-    fps : list of str
-        Paths to the processed data files to associate with the ProcessedData
-        object
-    fp_types: list of str
-        The types of files, one per fp
-    processed_params_table_name : str
-        The name of the processed_params_ table to use
-    processed_params_id : int
-        The ID of the row in the processed_params_ table
-    preprocessed_data_id : int, optional
-        Defaults to ``None``. The ID of the row in the preprocessed_data table.
-    processed_date : str, optional
-        Defaults to ``None``. The date and time to use as the processing date.
-        Must be interpretable as a datetime object
-
-    Returns
-    -------
-    qiita_db.ProcessedData
-        The newly created `qiita_db.ProcessedData` object
-    """
-    if len(fps) != len(fp_types):
-        raise ValueError("Please pass exactly one fp_type for each "
-                         "and every fp")
-
-    with TRN:
-        fp_types_dict = get_filepath_types()
-        fp_types = [fp_types_dict[x] for x in fp_types]
-
-        preprocessed_data = (None if preprocessed_data_id is None
-                             else PreprocessedData(preprocessed_data_id))
-
-        study = None if study_id is None else Study(study_id)
-
-        if processed_date is not None:
-            processed_date = parse(processed_date)
-
-        return ProcessedData.create(
-            processed_params_table_name, processed_params_id,
-            list(zip(fps, fp_types)), preprocessed_data, study, processed_date)
+    prep_temp = qdb.metadata_template.util.load_template_to_dataframe(
+        prep_temp_path)
+    return qdb.metadata_template.prep_template.PrepTemplate.create(
+        prep_temp, qdb.study.Study(study_id), data_type)
 
 
 def load_parameters_from_cmd(name, fp, table):
@@ -284,12 +223,12 @@ def load_parameters_from_cmd(name, fp, table):
 
     # Build the dictionary to get the parameter constructor
     constructor_dict = {}
-    constructor_dict[
-        'preprocessed_sequence_illumina_params'] = PreprocessedIlluminaParams
-    constructor_dict[
-        'preprocessed_sequence_454_params'] = Preprocessed454Params
-    constructor_dict[
-        'processed_params_sortmerna'] = ProcessedSortmernaParams
+    constructor_dict['preprocessed_sequence_illumina_params'] = \
+        qdb.parameters.PreprocessedIlluminaParams
+    constructor_dict['preprocessed_sequence_454_params'] = \
+        qdb.parameters.Preprocessed454Params
+    constructor_dict['processed_params_sortmerna'] = \
+        qdb.parameters.ProcessedSortmernaParams
 
     constructor = constructor_dict[table]
 
@@ -302,171 +241,46 @@ def load_parameters_from_cmd(name, fp, table):
     return constructor.create(name, **params)
 
 
-def update_raw_data_from_cmd(filepaths, filepath_types, study_id, rd_id=None):
-    """Updates the raw data of the study 'study_id'
+def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
+    """Updates the artifact `artifact_id` with the given files
 
     Parameters
     ----------
     filepaths : iterable of str
-        Paths to the raw data files
+        Paths to the artifact files
     filepath_types : iterable of str
         Describes the contents of the files
-    study_id : int
-        The study_id of the study to be updated
-    rd_id : int, optional
-        The id of the raw data to be updated. If not provided, the raw data
-        with lowest id in the study will be updated
+    artifact_id : int
+        The id of the artifact to be updated
 
     Returns
     -------
-    qiita_db.data.RawData
+    qiita_db.artifact.Artifact
 
     Raises
     ------
     ValueError
         If 'filepaths' and 'filepath_types' do not have the same length
-        If the study does not have any raw data
-        If rd_id is provided and it does not belong to the given study
     """
     if len(filepaths) != len(filepath_types):
         raise ValueError("Please provide exactly one filepath_type for each "
                          "and every filepath")
-    with TRN:
-        study = Study(study_id)
-        raw_data_ids = study.raw_data()
-        if not raw_data_ids:
-            raise ValueError("Study %d does not have any raw data" % study_id)
+    with qdb.sql_connection.TRN:
+        artifact = qdb.artifact.Artifact(artifact_id)
+        fp_types_dict = qdb.util.get_filepath_types()
+        fps = [(fp, fp_types_dict[ftype])
+               for fp, ftype in zip(filepaths, filepath_types)]
+        old_fps = artifact.filepaths
+        sql = "DELETE FROM qiita.artifact_filepath WHERE artifact_id = %s"
+        qdb.sql_connection.TRN.add(sql, [artifact.id])
+        qdb.sql_connection.TRN.execute()
+        qdb.util.move_filepaths_to_upload_folder(artifact.study.id, old_fps)
+        fp_ids = qdb.util.insert_filepaths(
+            fps, artifact.id, artifact.artifact_type, "filepath")
+        sql = """INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
+                 VALUES (%s, %s)"""
+        sql_args = [[artifact.id, fp_id] for fp_id in fp_ids]
+        qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+        qdb.sql_connection.TRN.execute()
 
-        if rd_id:
-            if rd_id not in raw_data_ids:
-                raise ValueError(
-                    "The raw data %d does not exist in the study %d. Available"
-                    " raw data: %s"
-                    % (rd_id, study_id, ', '.join(map(str, raw_data_ids))))
-            raw_data = RawData(rd_id)
-        else:
-            raw_data = RawData(sorted(raw_data_ids)[0])
-
-        filepath_types_dict = get_filepath_types()
-        try:
-            filepath_types = [filepath_types_dict[x] for x in filepath_types]
-        except KeyError:
-            supported_types = filepath_types_dict.keys()
-            unsupported_types = set(filepath_types).difference(supported_types)
-            raise ValueError(
-                "Some filepath types provided are not recognized (%s). "
-                "Please choose from: %s"
-                % (', '.join(unsupported_types), ', '.join(supported_types)))
-
-        fps = raw_data.get_filepaths()
-        sql = "DELETE FROM qiita.raw_filepath WHERE raw_data_id = %s"
-        TRN.add(sql, [raw_data.id])
-        TRN.execute()
-        move_filepaths_to_upload_folder(study_id, fps)
-
-        raw_data.add_filepaths(list(zip(filepaths, filepath_types)))
-
-    return raw_data
-
-
-def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
-    """Updates the preprocessed data of the study 'study_id'
-
-    Parameters
-    ----------
-    sl_out_dir : str
-        The path to the split libraries output directory
-    study_id : int
-        The study_id of the study to be updated
-    ppd_id : int, optional
-        The id of the preprocessed_data to be updated. If not provided, the
-        preprocessed data with the lowest id in the study will be updated.
-
-    Returns
-    -------
-    qiita_db.PreprocessedData
-        The updated preprocessed data
-
-    Raises
-    ------
-    IOError
-        If sl_out_dir does not contain all the required files
-    ValueError
-        If the study does not have any preprocessed data
-        If ppd_id is provided and it does not belong to the given study
-    """
-    # Check that we have all the required files
-    path_builder = partial(join, sl_out_dir)
-    new_fps = {'preprocessed_fasta': path_builder('seqs.fna'),
-               'preprocessed_fastq': path_builder('seqs.fastq'),
-               'preprocessed_demux': path_builder('seqs.demux'),
-               'log': path_builder('split_library_log.txt')}
-
-    missing_files = [key for key, val in viewitems(new_fps) if not exists(val)]
-    if missing_files:
-        raise IOError(
-            "The directory %s does not contain the following required files: "
-            "%s" % (sl_out_dir, ', '.join(missing_files)))
-
-    # Get the preprocessed data to be updated
-    with TRN:
-        study = Study(study_id)
-        ppds = study.preprocessed_data()
-        if not ppds:
-            raise ValueError("Study %s does not have any preprocessed data",
-                             study_id)
-
-        if ppd_id:
-            if ppd_id not in ppds:
-                raise ValueError(
-                    "The preprocessed data %d does not exist in "
-                    "study %d. Available preprocessed data: %s"
-                    % (ppd_id, study_id, ', '.join(map(str, ppds))))
-            ppd = PreprocessedData(ppd_id)
-        else:
-            ppd = PreprocessedData(sorted(ppds)[0])
-
-        # We need to loop through the fps list to get the db filepaths that we
-        # need to modify
-        fps = defaultdict(list)
-        for fp_id, fp, fp_type in sorted(ppd.get_filepaths()):
-            fps[fp_type].append((fp_id, fp))
-
-        fps_to_add = []
-        fps_to_modify = []
-        keys = ['preprocessed_fasta', 'preprocessed_fastq',
-                'preprocessed_demux', 'log']
-
-        for key in keys:
-            if key in fps:
-                db_id, db_fp = fps[key][0]
-                fp_checksum = compute_checksum(new_fps[key])
-                fps_to_modify.append((db_id, db_fp, new_fps[key], fp_checksum))
-            else:
-                fps_to_add.append(
-                    (new_fps[key], convert_to_id(key, 'filepath_type')))
-
-        # Insert the new files in the database, if any
-        if fps_to_add:
-            ppd.add_filepaths(fps_to_add)
-
-        sql = "UPDATE qiita.filepath SET checksum=%s WHERE filepath_id=%s"
-        for db_id, db_fp, new_fp, checksum in fps_to_modify:
-            # Move the db_file in case something goes wrong
-            bkp_fp = "%s.bkp" % db_fp
-            move(db_fp, bkp_fp)
-
-            # Start the update for the current file
-            # Move the file to the database location
-            move(new_fp, db_fp)
-            # Add the SQL instruction to the DB
-            TRN.add(sql, [checksum, db_id])
-
-            # In case that a rollback occurs, we need to restore the files
-            TRN.add_post_rollback_func(move, bkp_fp, db_fp)
-            # In case of commit, we can remove the backup files
-            TRN.add_post_commit_func(remove, bkp_fp)
-
-        TRN.execute()
-
-        return ppd
+    return artifact

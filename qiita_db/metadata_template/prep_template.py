@@ -17,17 +17,10 @@ import warnings
 import pandas as pd
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBUnknownIDError,
-                                 QiitaDBError, QiitaDBExecutionError,
-                                 QiitaDBWarning)
-from qiita_db.sql_connection import TRN
-from qiita_db.ontology import Ontology
-from qiita_db.util import (convert_to_id,
-                           convert_from_id, get_mountpoint, infer_status)
-from .base_metadata_template import BaseSample, MetadataTemplate
-from .util import load_template_to_dataframe
-from .constants import (TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS,
+import qiita_db as qdb
+from .constants import (PREP_TEMPLATE_COLUMNS, TARGET_GENE_DATA_TYPES,
                         PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+from .base_metadata_template import BaseSample, MetadataTemplate
 
 
 class PrepSample(BaseSample):
@@ -74,7 +67,6 @@ class PrepTemplate(MetadataTemplate):
     _column_table = "prep_columns"
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
-    _fp_id = convert_to_id("prep_template", "filepath_type")
     _filepath_table = 'prep_template_filepath'
 
     @classmethod
@@ -102,7 +94,7 @@ class PrepTemplate(MetadataTemplate):
             If the investigation_type is not valid
             If a required column is missing in md_template
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             # If the investigation_type is supplied, make sure it is one of
             # the recognized investigation types
             if investigation_type is not None:
@@ -111,9 +103,10 @@ class PrepTemplate(MetadataTemplate):
             # Check if the data_type is the id or the string
             if isinstance(data_type, (int, long)):
                 data_type_id = data_type
-                data_type_str = convert_from_id(data_type, "data_type")
+                data_type_str = qdb.util.convert_from_id(data_type,
+                                                         "data_type")
             else:
-                data_type_id = convert_to_id(data_type, "data_type")
+                data_type_id = qdb.util.convert_to_id(data_type, "data_type")
                 data_type_str = data_type
 
             pt_cols = PREP_TEMPLATE_COLUMNS
@@ -129,8 +122,8 @@ class PrepTemplate(MetadataTemplate):
                         (data_type_id, investigation_type)
                      VALUES (%s, %s)
                      RETURNING prep_template_id"""
-            TRN.add(sql, [data_type_id, investigation_type])
-            prep_id = TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [data_type_id, investigation_type])
+            prep_id = qdb.sql_connection.TRN.execute_fetchlast()
 
             try:
                 cls._common_creation_steps(md_template, prep_id)
@@ -140,12 +133,12 @@ class PrepTemplate(MetadataTemplate):
                          WHERE study_id = %s"""
                 # Get list of study sample IDs, prep template study IDs,
                 # and their intersection
-                TRN.add(sql, [study.id])
+                qdb.sql_connection.TRN.add(sql, [study.id])
                 prep_samples = set(md_template.index.values)
                 unknown_samples = prep_samples.difference(
-                    TRN.execute_fetchflatten())
+                    qdb.sql_connection.TRN.execute_fetchflatten())
                 if unknown_samples:
-                    raise QiitaDBExecutionError(
+                    raise qdb.exceptions.QiitaDBExecutionError(
                         'Samples found in prep template but not sample '
                         'template: %s' % ', '.join(unknown_samples))
 
@@ -156,9 +149,9 @@ class PrepTemplate(MetadataTemplate):
             sql = """INSERT INTO qiita.study_prep_template
                         (study_id, prep_template_id)
                      VALUES (%s, %s)"""
-            TRN.add(sql, [study.id, prep_id])
+            qdb.sql_connection.TRN.add(sql, [study.id, prep_id])
 
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
 
             pt = cls(prep_id)
             pt.generate_files()
@@ -179,11 +172,12 @@ class PrepTemplate(MetadataTemplate):
         QiitaDBColumnError
             The investigation type is not in the ENA ontology
         """
-        with TRN:
-            ontology = Ontology(convert_to_id('ENA', 'ontology'))
+        with qdb.sql_connection.TRN:
+            ontology = qdb.ontology.Ontology(
+                qdb.util.convert_to_id('ENA', 'ontology'))
             terms = ontology.terms + ontology.user_defined_terms
             if investigation_type not in terms:
-                raise QiitaDBColumnError(
+                raise qdb.exceptions.QiitaDBColumnError(
                     "'%s' is Not a valid investigation_type. Choose from: %s"
                     % (investigation_type, ', '.join(terms)))
 
@@ -199,70 +193,59 @@ class PrepTemplate(MetadataTemplate):
         Raises
         ------
         QiitaDBExecutionError
-            If the prep template already has a preprocessed data
-            If the prep template has a raw data attached
+            If the prep template already has an artifact attached
         QiitaDBUnknownIDError
             If no prep template with id = id_ exists
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             table_name = cls._table_name(id_)
 
             if not cls.exists(id_):
-                raise QiitaDBUnknownIDError(id_, cls.__name__)
-
-            sql = """SELECT EXISTS(
-                        SELECT * FROM qiita.prep_template_preprocessed_data
-                        WHERE prep_template_id=%s)"""
-            args = [id_]
-            TRN.add(sql, args)
-            preprocessed_data_exists = TRN.execute_fetchlast()
-
-            if preprocessed_data_exists:
-                raise QiitaDBExecutionError(
-                    "Cannot remove prep template %d because a preprocessed "
-                    "data has been already generated using it." % id_)
+                raise qdb.exceptions.QiitaDBUnknownIDError(id_, cls.__name__)
 
             sql = """SELECT (
-                        SELECT raw_data_id
+                        SELECT artifact_id
                         FROM qiita.prep_template
                         WHERE prep_template_id=%s)
                     IS NOT NULL"""
-            TRN.add(sql, args)
-            raw_data_attached = TRN.execute_fetchlast()
-            if raw_data_attached:
-                raise QiitaDBExecutionError(
-                    "Cannot remove prep template %d because it has raw data "
-                    "associated with it" % id_)
+            args = [id_]
+            qdb.sql_connection.TRN.add(sql, args)
+            artifact_attached = qdb.sql_connection.TRN.execute_fetchlast()
+            if artifact_attached:
+                raise qdb.exceptions.QiitaDBExecutionError(
+                    "Cannot remove prep template %d because it has an artifact"
+                    " associated with it" % id_)
 
             # Delete the prep template filepaths
             sql = """DELETE FROM qiita.prep_template_filepath
                      WHERE prep_template_id = %s"""
-            TRN.add(sql, args)
+            qdb.sql_connection.TRN.add(sql, args)
 
             # Drop the prep_X table
-            TRN.add("DROP TABLE qiita.{0}".format(table_name))
+            sql = "DROP TABLE qiita.{0}".format(table_name)
+            qdb.sql_connection.TRN.add(sql)
 
             # Remove the rows from prep_template_samples
             sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
                 cls._table, cls._id_column)
-            TRN.add(sql, args)
+            qdb.sql_connection.TRN.add(sql, args)
 
             # Remove the rows from prep_columns
             sql = "DELETE FROM qiita.{0} where {1} = %s".format(
                 cls._column_table, cls._id_column)
-            TRN.add(sql, args)
+            qdb.sql_connection.TRN.add(sql, args)
 
             # Remove the row from study_prep_template
             sql = """DELETE FROM qiita.study_prep_template
                      WHERE {0} = %s""".format(cls._id_column)
-            TRN.add(sql, args)
+            qdb.sql_connection.TRN.add(sql, args)
 
             # Remove the row from prep_template
             sql = "DELETE FROM qiita.prep_template WHERE {0} = %s".format(
                 cls._id_column)
-            TRN.add(sql, args)
+            qdb.sql_connection.TRN.add(sql, args)
 
-            TRN.execute()
+            qdb.sql_connection.TRN.execute()
 
     def data_type(self, ret_id=False):
         """Returns the data_type or the data_type id
@@ -277,15 +260,15 @@ class PrepTemplate(MetadataTemplate):
         str or int
             string value of data_type or data_type_id if ret_id is True
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             ret = "_id" if ret_id else ""
             sql = """SELECT d.data_type{0}
                      FROM qiita.data_type d
                         JOIN qiita.prep_template p
                             ON p.data_type_id = d.data_type_id
                      WHERE p.prep_template_id=%s""".format(ret)
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
     def columns_restrictions(self):
@@ -323,9 +306,19 @@ class PrepTemplate(MetadataTemplate):
         the columns being updated are not part of
         PREP_TEMPLATE_COLUMNS_TARGET_GENE
         """
-        with TRN:
-            if (not self.preprocessed_data or
-               self.data_type() not in TARGET_GENE_DATA_TYPES):
+        with qdb.sql_connection.TRN:
+            if self.data_type() not in TARGET_GENE_DATA_TYPES:
+                return True
+
+            artifact = self.artifact
+            if not artifact:
+                return True
+
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.parent_artifact
+                                   WHERE parent_id = %s)"""
+            qdb.sql_connection.TRN.add(sql, [artifact.id])
+            if not qdb.sql_connection.TRN.execute_fetchlast():
                 return True
 
             tg_columns = set(chain.from_iterable(
@@ -359,100 +352,58 @@ class PrepTemplate(MetadataTemplate):
         New samples can't be added to the prep template if a preprocessed
         data has been already generated.
         """
-        ppd_data = self.preprocessed_data
-        if new_samples and ppd_data:
-            return False, ("Preprocessed data have already been generated "
-                           "(%s). No new samples can be added to the prep "
-                           "template." % ', '.join(map(str, ppd_data)))
+        if new_samples:
+            with qdb.sql_connection.TRN:
+                artifact = self.artifact
+                if artifact:
+                    sql = """SELECT EXISTS(SELECT *
+                                           FROM qiita.parent_artifact
+                                           WHERE parent_id = %s)"""
+                    qdb.sql_connection.TRN.add(sql, [artifact.id])
+                    if qdb.sql_connection.TRN.execute_fetchlast():
+                        return False, ("The artifact attached to the prep "
+                                       "template has been already processed. "
+                                       "No new samples can be added to the "
+                                       "prep template")
         return True, ""
 
     @property
-    def raw_data(self):
-        with TRN:
-            sql = """SELECT raw_data_id FROM qiita.prep_template
-                     WHERE prep_template_id=%s"""
-            TRN.add(sql, [self.id])
-            result = TRN.execute_fetchindex()
+    def artifact(self):
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_id
+                     FROM qiita.prep_template
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            result = qdb.sql_connection.TRN.execute_fetchlast()
             if result:
-                # If there is any result, it will be in the first row
-                # and in the first element of that row, thus [0][0]
-                return result[0][0]
+                return qdb.artifact.Artifact(result)
             return None
 
-    @raw_data.setter
-    def raw_data(self, raw_data):
-        with TRN:
-            sql = """SELECT (
-                        SELECT raw_data_id
-                        FROM qiita.prep_template
-                        WHERE prep_template_id=%s)
-                    IS NOT NULL"""
-            TRN.add(sql, [self.id])
-            exists = TRN.execute_fetchlast()
-            if exists:
-                raise QiitaDBError(
-                    "Prep template %d already has a raw data associated"
+    @artifact.setter
+    def artifact(self, artifact):
+        with qdb.sql_connection.TRN:
+            sql = """SELECT (SELECT artifact_id
+                             FROM qiita.prep_template
+                             WHERE prep_template_id = %s)
+                     IS NOT NULL"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            if qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBError(
+                    "Prep template %d already has an artifact associated"
                     % self.id)
             sql = """UPDATE qiita.prep_template
-                     SET raw_data_id = %s
+                     SET artifact_id = %s
                      WHERE prep_template_id = %s"""
-            TRN.add(sql, [raw_data.id, self.id])
-            TRN.execute()
-
-    @property
-    def preprocessed_data(self):
-        with TRN:
-            sql = """SELECT preprocessed_data_id
-                     FROM qiita.prep_template_preprocessed_data
-                     WHERE prep_template_id=%s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchflatten()
-
-    @property
-    def preprocessing_status(self):
-        r"""Tells if the data has been preprocessed or not
-
-        Returns
-        -------
-        str
-            One of {'not_preprocessed', 'preprocessing', 'success', 'failed'}
-        """
-        with TRN:
-            sql = """SELECT preprocessing_status FROM qiita.prep_template
-                     WHERE {0}=%s""".format(self._id_column)
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
-
-    @preprocessing_status.setter
-    def preprocessing_status(self, state):
-        r"""Update the preprocessing status
-
-        Parameters
-        ----------
-        state : str, {'not_preprocessed', 'preprocessing', 'success', 'failed'}
-            The current status of preprocessing
-
-        Raises
-        ------
-        ValueError
-            If the state is not known.
-        """
-        if (state not in ('not_preprocessed', 'preprocessing', 'success') and
-                not state.startswith('failed:')):
-            raise ValueError('Unknown state: %s' % state)
-        with TRN:
-            sql = """UPDATE qiita.prep_template SET preprocessing_status = %s
-                     WHERE {0} = %s""".format(self._id_column)
-            TRN.add(sql, [state, self.id])
-            TRN.execute()
+            qdb.sql_connection.TRN.add(sql, [artifact.id, self.id])
+            qdb.sql_connection.TRN.execute()
 
     @property
     def investigation_type(self):
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT investigation_type FROM qiita.prep_template
                      WHERE {0} = %s""".format(self._id_column)
-            TRN.add(sql, [self._id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @investigation_type.setter
     def investigation_type(self, investigation_type):
@@ -468,14 +419,14 @@ class PrepTemplate(MetadataTemplate):
         QiitaDBColumnError
             If the investigation type is not a valid ENA ontology
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             if investigation_type is not None:
                 self.validate_investigation_type(investigation_type)
 
             sql = """UPDATE qiita.prep_template SET investigation_type = %s
                      WHERE {0} = %s""".format(self._id_column)
-            TRN.add(sql, [investigation_type, self.id])
-            TRN.execute()
+            qdb.sql_connection.TRN.add(sql, [investigation_type, self.id])
+            qdb.sql_connection.TRN.execute()
 
     @property
     def study_id(self):
@@ -486,25 +437,26 @@ class PrepTemplate(MetadataTemplate):
         int
             The ID of the study with which this prep template is associated
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT study_id FROM qiita.study_prep_template
                      WHERE prep_template_id=%s"""
-            TRN.add(sql, [self.id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     def generate_files(self):
         r"""Generates all the files that contain data from this template
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             # figuring out the filepath of the prep template
-            _id, fp = get_mountpoint('templates')[0]
+            _id, fp = qdb.util.get_mountpoint('templates')[0]
             fp = join(fp, '%d_prep_%d_%s.txt' % (self.study_id, self._id,
                       strftime("%Y%m%d-%H%M%S")))
             # storing the template
             self.to_file(fp)
 
             # adding the fp to the object
-            self.add_filepath(fp)
+            fp_id = qdb.util.convert_to_id("prep_template", "filepath_type")
+            self.add_filepath(fp, fp_id=fp_id)
 
             # creating QIIME mapping file
             self.create_qiime_mapping_file()
@@ -532,7 +484,7 @@ class PrepTemplate(MetadataTemplate):
         QIIME-required columns, we are going to create them and
         populate them with the value XXQIITAXX.
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             rename_cols = {
                 'barcode': 'BarcodeSequence',
                 'primer': 'LinkerPrimerSequence',
@@ -553,15 +505,17 @@ class PrepTemplate(MetadataTemplate):
                         USING (filepath_id)
                      WHERE study_id=%s
                      ORDER BY filepath_id DESC"""
-            TRN.add(sql, [self.study_id])
+            qdb.sql_connection.TRN.add(sql, [self.study_id])
             # We know that the good filepath is the one in the first row
             # because we sorted them in the SQL query
-            sample_template_fname = TRN.execute_fetchindex()[0][1]
-            _, fp = get_mountpoint('templates')[0]
+            sample_template_fname = \
+                qdb.sql_connection.TRN.execute_fetchindex()[0][1]
+            _, fp = qdb.util.get_mountpoint('templates')[0]
             sample_template_fp = join(fp, sample_template_fname)
 
             # reading files via pandas
-            st = load_template_to_dataframe(sample_template_fp)
+            st = qdb.metadata_template.util.load_template_to_dataframe(
+                sample_template_fp)
             pt = self.to_dataframe()
 
             st_sample_names = set(st.index)
@@ -592,7 +546,7 @@ class PrepTemplate(MetadataTemplate):
                     "mapping file are not present in the template. A "
                     "placeholder value (XXQIITAXX) has been used to populate "
                     "these columns. Missing columns: %s" % ', '.join(missing),
-                    QiitaDBWarning)
+                    qdb.exceptions.QiitaDBWarning)
 
             # Gets the orginal mapping columns and readjust the order to comply
             # with QIIME requirements
@@ -605,7 +559,7 @@ class PrepTemplate(MetadataTemplate):
             mapping = mapping[new_cols]
 
             # figuring out the filepath for the QIIME map file
-            _id, fp = get_mountpoint('templates')[0]
+            _id, fp = qdb.util.get_mountpoint('templates')[0]
             filepath = join(fp, '%d_prep_%d_qiime_%s.txt' % (self.study_id,
                             self.id, strftime("%Y%m%d-%H%M%S")))
 
@@ -616,7 +570,7 @@ class PrepTemplate(MetadataTemplate):
             # adding the fp to the object
             self.add_filepath(
                 filepath,
-                fp_id=convert_to_id("qiime_map", "filepath_type"))
+                fp_id=qdb.util.convert_to_id("qiime_map", "filepath_type"))
 
             return filepath
 
@@ -636,19 +590,16 @@ class PrepTemplate(MetadataTemplate):
         data has been generated with this prep template; then the status
         is 'sandbox'.
         """
-        with TRN:
-            sql = """SELECT processed_data_status
-                    FROM qiita.processed_data_status pds
-                      JOIN qiita.processed_data pd
-                        USING (processed_data_status_id)
-                      JOIN qiita.preprocessed_processed_data ppd_pd
-                        USING (processed_data_id)
-                      JOIN qiita.prep_template_preprocessed_data pt_ppd
-                        USING (preprocessed_data_id)
-                    WHERE pt_ppd.prep_template_id=%s"""
-            TRN.add(sql, [self._id])
+        with qdb.sql_connection.TRN:
+            sql = """SELECT visibility
+                     FROM qiita.prep_template
+                        JOIN qiita.artifact USING (artifact_id)
+                        JOIN qiita.visibility USING (visibility_id)
+                     WHERE prep_template_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self._id])
 
-            return infer_status(TRN.execute_fetchindex())
+            return qdb.util.infer_status(
+                qdb.sql_connection.TRN.execute_fetchindex())
 
     @property
     def qiime_map_fp(self):
@@ -659,7 +610,7 @@ class PrepTemplate(MetadataTemplate):
         str
             The filepath of the QIIME mapping file
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT filepath_id, filepath
                      FROM qiita.filepath
                         JOIN qiita.{0} USING (filepath_id)
@@ -667,11 +618,11 @@ class PrepTemplate(MetadataTemplate):
                      WHERE {1} = %s AND filepath_type = 'qiime_map'
                      ORDER BY filepath_id DESC""".format(self._filepath_table,
                                                          self._id_column)
-            TRN.add(sql, [self._id])
+            qdb.sql_connection.TRN.add(sql, [self._id])
             # We know that the good filepath is the one in the first row
             # because we sorted them in the SQL query
-            fn = TRN.execute_fetchindex()[0][1]
-            base_dir = get_mountpoint('templates')[0][1]
+            fn = qdb.sql_connection.TRN.execute_fetchindex()[0][1]
+            base_dir = qdb.util.get_mountpoint('templates')[0][1]
             return join(base_dir, fn)
 
     @property
@@ -711,13 +662,13 @@ class PrepTemplate(MetadataTemplate):
             True if the prep template has been submitted to EBI,
             false otherwise
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT EXISTS(
                         SELECT sample_id, ebi_experiment_accession
                         FROM qiita.{0}
                         WHERE {1}=%s
                             AND ebi_experiment_accession IS NOT NULL)
                   """.format(self._table, self._id_column)
-            TRN.add(sql, [self.id])
-            is_submitted = TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            is_submitted = qdb.sql_connection.TRN.execute_fetchlast()
         return is_submitted

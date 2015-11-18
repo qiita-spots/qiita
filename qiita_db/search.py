@@ -33,7 +33,7 @@ example, we will use the complex query::
 (sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere metagenome") AND
 NOT Description_duplicate includes Burmese
 
->>> from qiita_db.search import QiitaStudySearch # doctest: +SKIP
+>>> from qiita_db.search import Qiitaqdb.study.StudySearch # doctest: +SKIP
 >>> search = QiitaStudySearch() # doctest: +SKIP
 >>> res, meta = search('(sample_type = ENVO:soil AND COMMON_NAME = '
 ...                    '"rhizosphere metagenome") AND NOT '
@@ -70,12 +70,8 @@ from collections import defaultdict
 import pandas as pd
 from future.utils import viewitems
 
-from qiita_db.util import scrub_data, convert_type, get_table_cols
-from qiita_db.sql_connection import TRN
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.study import Study
-from qiita_db.data import ProcessedData
-from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
+import qiita_db as qdb
 
 
 # classes to be constructed at parse time, from intermediate ParseResults
@@ -117,27 +113,28 @@ class SearchNot(UnaryOperation):
 
 
 class SearchTerm(object):
-    # column names from study table
-    study_cols = set(get_table_cols("study"))
 
     def __init__(self, tokens):
+        # column names from study table
+        self.study_cols = set(qdb.util.get_table_cols("study"))
         self.term = tokens[0]
         # clean all the inputs
         for pos, term in enumerate(self.term):
-            self.term[pos] = scrub_data(term)
+            self.term[pos] = qdb.util.scrub_data(term)
 
     def generate_sql(self):
         # we can assume that the metadata is either in study_sample
         # or the study-specific table
         column_name, operator, argument = self.term
-        argument_type = type(convert_type(argument))
+        argument_type = type(qdb.util.convert_type(argument))
 
         allowable_types = {int: {'<', '<=', '=', '>=', '>'},
                            float: {'<', '<=', '=', '>=', '>'},
                            str: {'=', 'includes', 'startswith'}}
 
         if operator not in allowable_types[argument_type]:
-            raise QiitaDBIncompatibleDatatypeError(operator, argument_type)
+            raise qdb.exceptions.QiitaDBIncompatibleDatatypeError(
+                operator, argument_type)
 
         if column_name in self.study_cols:
             column_name = "st.%s" % column_name.lower()
@@ -164,8 +161,9 @@ class SearchTerm(object):
 class QiitaStudySearch(object):
     """QiitaStudySearch object to parse and run searches on studies."""
 
-    # column names from study table
-    study_cols = set(get_table_cols("study"))
+    def __init__(self):
+        # column names from study table
+        self.study_cols = set(qdb.util.get_table_cols("study"))
 
     def __call__(self, searchstr, user):
         """Runs a Study query and returns matching studies and samples
@@ -193,24 +191,24 @@ class QiitaStudySearch(object):
 
         Metadata column names and string searches are case-sensitive
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             study_sql, sample_sql, meta_headers = \
                 self._parse_study_search_string(searchstr, True)
 
             # get all studies containing the metadata headers requested
-            TRN.add(study_sql)
-            study_ids = set(TRN.execute_fetchflatten())
+            qdb.sql_connection.TRN.add(study_sql)
+            study_ids = set(qdb.sql_connection.TRN.execute_fetchflatten())
             # strip to only studies user has access to
             if user.level not in {'admin', 'dev', 'superuser'}:
-                study_ids = study_ids.intersection(
-                    Study.get_by_status('public') | user.user_studies |
-                    user.shared_studies)
+                studies = qdb.study.Study.get_by_status('public') | \
+                    user.user_studies | user.shared_studies
+                study_ids = study_ids.intersection([s.id for s in studies])
 
             results = {}
             # run search on each study to get out the matching samples
             for sid in study_ids:
-                TRN.add(sample_sql.format(sid))
-                study_res = TRN.execute_fetchindex()
+                qdb.sql_connection.TRN.add(sample_sql.format(sid))
+                study_res = qdb.sql_connection.TRN.execute_fetchindex()
                 if study_res:
                     # only add study to results if actually has samples
                     # in results
@@ -282,7 +280,8 @@ class QiitaStudySearch(object):
         meta_headers = set(all_headers)
         all_types = [c[0][0].term[2] for c in
                      (criterion + optional_seps).scanString(searchstr)]
-        all_types = [type_lookup[type(convert_type(s))] for s in all_types]
+        all_types = [type_lookup[type(qdb.util.convert_type(s))]
+                     for s in all_types]
 
         # sort headers and types so they return in same order every time.
         # Should be a relatively short list so very quick
@@ -326,14 +325,18 @@ class QiitaStudySearch(object):
                 sql.append("SELECT study_id FROM qiita.study_sample_columns "
                            "WHERE lower(column_name) = lower('%s') and "
                            "column_type in %s" %
-                           (scrub_data(meta), allowable_types))
+                           (qdb.util.scrub_data(meta), allowable_types))
         else:
             # no study-specific metadata, so need all studies
             sql.append("SELECT study_id FROM qiita.study_sample_columns")
 
         # combine the query
         if only_with_processed_data:
-            sql.append('SELECT study_id FROM qiita.study_processed_data')
+            sql.append("SELECT DISTINCT study_id "
+                       "FROM qiita.study_artifact "
+                       "JOIN qiita.artifact USING (artifact_id) "
+                       "JOIN qiita.artifact_type USING (artifact_type_id) "
+                       "WHERE artifact_type = 'BIOM'")
 
         # restrict to studies in portal
         sql.append("SELECT study_id from qiita.study_portal "
@@ -380,7 +383,7 @@ class QiitaStudySearch(object):
             sample_id, column headers are the metadata categories searched
             over
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             if datatypes is not None:
                 # convert to set for easy lookups
                 datatypes = set(datatypes)
@@ -395,19 +398,23 @@ class QiitaStudySearch(object):
                     {s[0]: s[1:] for s in study_meta}, orient='index')
                 samples_meta[study_id].rename(columns=headers, inplace=True)
                 # set up study-based data needed
-                study = Study(study_id)
+                study = qdb.study.Study(study_id)
                 study_sample_ids = {s[0] for s in study_meta}
                 study_proc_ids[study_id] = defaultdict(list)
-                for proc_data_id in study.processed_data():
-                    proc_data = ProcessedData(proc_data_id)
-                    datatype = proc_data.data_type()
+                for artifact in study.artifacts():
+                    if artifact.artifact_type != 'BIOM':
+                        continue
+                    datatype = artifact.data_type
                     # skip processed data if it doesn't fit the given datatypes
                     if datatypes is not None and datatype not in datatypes:
                         continue
-                    filter_samps = proc_data.samples.intersection(
+                    artifact_samples = set()
+                    for pt in artifact.prep_templates:
+                        artifact_samples.update(pt.keys())
+                    filter_samps = artifact_samples.intersection(
                         study_sample_ids)
                     if filter_samps:
-                        proc_data_samples[proc_data_id] = sorted(filter_samps)
-                        study_proc_ids[study_id][datatype].append(proc_data_id)
+                        proc_data_samples[artifact.id] = sorted(filter_samps)
+                        study_proc_ids[study_id][datatype].append(artifact.id)
 
             return study_proc_ids, proc_data_samples, samples_meta

@@ -1,19 +1,22 @@
 # Mar 27, 2015
 # Need to re-generate the files, given that some headers have changed
 
-from qiita_db.sql_connection import TRN
-from qiita_db.metadata_template import SampleTemplate, PrepTemplate
+import qiita_db as qdb
 
-with TRN:
+with qdb.sql_connection.TRN:
     # Get all the sample templates
-    TRN.add("SELECT DISTINCT study_id from qiita.study_sample")
-    study_ids = TRN.execute_fetchflatten()
+    qdb.sql_connection.TRN.add(
+        "SELECT DISTINCT study_id from qiita.study_sample")
+    study_ids = qdb.sql_connection.TRN.execute_fetchflatten()
 
     for s_id in study_ids:
-        SampleTemplate(s_id).generate_files()
+        st = qdb.metadata_template.sample_template.SampleTemplate(s_id)
+        st.generate_files()
 
     # Get all the prep templates
-    TRN.add("SELECT DISTINCT prep_template_id from qiita.prep_template")
-    prep_ids = TRN.execute_fetchflatten()
+    qdb.sql_connection.TRN.add(
+        "SELECT DISTINCT prep_template_id from qiita.prep_template")
+    prep_ids = qdb.sql_connection.TRN.execute_fetchflatten()
     for prep_id in prep_ids:
-        PrepTemplate(prep_id).generate_files()
+        pt = qdb.metadata_template.prep_template.PrepTemplate(prep_id)
+        pt.generate_files()

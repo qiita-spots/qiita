@@ -15,10 +15,7 @@ from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.util import hash_password, add_system_message, get_count
-from qiita_db.user import User, validate_password, validate_email
-from qiita_db.exceptions import (QiitaDBDuplicateError, QiitaDBColumnError,
-                                 QiitaDBUnknownIDError, QiitaDBError)
+import qiita_db as qdb
 
 
 class SupportTests(TestCase):
@@ -31,13 +28,13 @@ class SupportTests(TestCase):
         invalid2 = u'øabcdefghi'
         invalid3 = 'abcd   efgh'
 
-        self.assertTrue(validate_password(valid1))
-        self.assertTrue(validate_password(valid2))
-        self.assertTrue(validate_password(valid3))
-        self.assertTrue(validate_password(valid4))
-        self.assertFalse(validate_password(invalid1))
-        self.assertFalse(validate_password(invalid2))
-        self.assertFalse(validate_password(invalid3))
+        self.assertTrue(qdb.user.validate_password(valid1))
+        self.assertTrue(qdb.user.validate_password(valid2))
+        self.assertTrue(qdb.user.validate_password(valid3))
+        self.assertTrue(qdb.user.validate_password(valid4))
+        self.assertFalse(qdb.user.validate_password(invalid1))
+        self.assertFalse(qdb.user.validate_password(invalid2))
+        self.assertFalse(qdb.user.validate_password(invalid3))
 
     def test_validate_email(self):
         valid1 = 'foo@bar.com'
@@ -49,14 +46,14 @@ class SupportTests(TestCase):
         invalid3 = '.asdas@com'
         invalid4 = 'name@a.b-c.d-'
 
-        self.assertTrue(validate_email(valid1))
-        self.assertTrue(validate_email(valid2))
-        self.assertTrue(validate_email(valid3))
-        self.assertTrue(validate_email(valid4))
-        self.assertFalse(validate_email(invalid1))
-        self.assertFalse(validate_email(invalid2))
-        self.assertFalse(validate_email(invalid3))
-        self.assertFalse(validate_email(invalid4))
+        self.assertTrue(qdb.user.validate_email(valid1))
+        self.assertTrue(qdb.user.validate_email(valid2))
+        self.assertTrue(qdb.user.validate_email(valid3))
+        self.assertTrue(qdb.user.validate_email(valid4))
+        self.assertFalse(qdb.user.validate_email(invalid1))
+        self.assertFalse(qdb.user.validate_email(invalid2))
+        self.assertFalse(qdb.user.validate_email(invalid3))
+        self.assertFalse(qdb.user.validate_email(invalid4))
 
 
 @qiita_test_checker()
@@ -64,7 +61,7 @@ class UserTest(TestCase):
     """Tests the User object and all properties/methods"""
 
     def setUp(self):
-        self.user = User('admin@foo.bar')
+        self.user = qdb.user.User('admin@foo.bar')
         self.portal = qiita_config.portal
 
         self.userinfo = {
@@ -81,11 +78,11 @@ class UserTest(TestCase):
         qiita_config.portal = self.portal
 
     def test_instantiate_user(self):
-        User('admin@foo.bar')
+        qdb.user.User('admin@foo.bar')
 
     def test_instantiate_unknown_user(self):
-        with self.assertRaises(QiitaDBUnknownIDError):
-            User('FAIL@OMG.bar')
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.user.User('FAIL@OMG.bar')
 
     def _check_correct_info(self, obs, exp):
         self.assertEqual(set(exp.keys()), set(obs.keys()))
@@ -100,7 +97,7 @@ class UserTest(TestCase):
                 self.assertEqual(obs[key], exp[key])
 
     def test_create_user(self):
-        user = User.create('new@test.bar', 'password')
+        user = qdb.user.User.create('new@test.bar', 'password')
         self.assertEqual(user.id, 'new@test.bar')
         sql = "SELECT * from qiita.qiita_user WHERE email = 'new@test.bar'"
         obs = self.conn_handler.execute_fetchall(sql)
@@ -120,7 +117,7 @@ class UserTest(TestCase):
         self._check_correct_info(obs, exp)
 
     def test_create_user_info(self):
-        user = User.create('new@test.bar', 'password', self.userinfo)
+        user = qdb.user.User.create('new@test.bar', 'password', self.userinfo)
         self.assertEqual(user.id, 'new@test.bar')
         sql = "SELECT * from qiita.qiita_user WHERE email = 'new@test.bar'"
         obs = self.conn_handler.execute_fetchall(sql)
@@ -141,51 +138,51 @@ class UserTest(TestCase):
 
     def test_create_user_column_not_allowed(self):
         self.userinfo["email"] = "FAIL"
-        with self.assertRaises(QiitaDBColumnError):
-            User.create('new@test.bar', 'password', self.userinfo)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            qdb.user.User.create('new@test.bar', 'password', self.userinfo)
 
     def test_create_user_non_existent_column(self):
         self.userinfo["BADTHING"] = "FAIL"
-        with self.assertRaises(QiitaDBColumnError):
-            User.create('new@test.bar', 'password', self.userinfo)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            qdb.user.User.create('new@test.bar', 'password', self.userinfo)
 
     def test_create_user_duplicate(self):
-        with self.assertRaises(QiitaDBDuplicateError):
-            User.create('test@foo.bar', 'password')
+        with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
+            qdb.user.User.create('test@foo.bar', 'password')
 
     def test_create_user_bad_email(self):
         with self.assertRaises(IncorrectEmailError):
-            User.create('notanemail', 'password')
+            qdb.user.User.create('notanemail', 'password')
 
     def test_create_user_bad_password(self):
         with self.assertRaises(IncorrectPasswordError):
-            User.create('new@test.com', '')
+            qdb.user.User.create('new@test.com', '')
 
     def test_login(self):
-        self.assertEqual(User.login("test@foo.bar", "password"),
-                         User("test@foo.bar"))
+        self.assertEqual(qdb.user.User.login("test@foo.bar", "password"),
+                         qdb.user.User("test@foo.bar"))
 
     def test_login_incorrect_user(self):
         with self.assertRaises(IncorrectEmailError):
-            User.login("notexist@foo.bar", "password")
+            qdb.user.User.login("notexist@foo.bar", "password")
 
     def test_login_incorrect_password(self):
         with self.assertRaises(IncorrectPasswordError):
-            User.login("test@foo.bar", "WRONGPASSWORD")
+            qdb.user.User.login("test@foo.bar", "WRONGPASSWORD")
 
     def test_login_invalid_password(self):
         with self.assertRaises(IncorrectPasswordError):
-            User.login("test@foo.bar", "SHORT")
+            qdb.user.User.login("test@foo.bar", "SHORT")
 
     def test_exists(self):
-        self.assertTrue(User.exists("test@foo.bar"))
+        self.assertTrue(qdb.user.User.exists("test@foo.bar"))
 
     def test_exists_notindb(self):
-        self.assertFalse(User.exists("notexist@foo.bar"))
+        self.assertFalse(qdb.user.User.exists("notexist@foo.bar"))
 
     def test_exists_invalid_email(self):
         with self.assertRaises(IncorrectEmailError):
-            User.exists("notanemail.@badformat")
+            qdb.user.User.exists("notanemail.@badformat")
 
     def test_get_email(self):
         self.assertEqual(self.user.email, 'admin@foo.bar')
@@ -213,83 +210,84 @@ class UserTest(TestCase):
     def test_set_info_not_info(self):
         """Tests setting info with a non-allowed column"""
         self.userinfo["email"] = "FAIL"
-        with self.assertRaises(QiitaDBColumnError):
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             self.user.info = self.userinfo
 
     def test_set_info_bad_info(self):
         """Test setting info with a key not in the table"""
         self.userinfo["BADTHING"] = "FAIL"
-        with self.assertRaises(QiitaDBColumnError):
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             self.user.info = self.userinfo
 
     def test_default_analysis(self):
         qiita_config.portal = "QIITA"
         obs = self.user.default_analysis
-        self.assertEqual(obs, 4)
+        self.assertEqual(obs, qdb.analysis.Analysis(4))
 
         qiita_config.portal = "EMP"
         obs = self.user.default_analysis
-        self.assertEqual(obs, 8)
+        self.assertEqual(obs, qdb.analysis.Analysis(8))
 
     def test_get_user_studies(self):
-        user = User('test@foo.bar')
+        user = qdb.user.User('test@foo.bar')
         qiita_config.portal = "QIITA"
-        self.assertEqual(user.user_studies, {1})
+        self.assertEqual(user.user_studies, {qdb.study.Study(1)})
 
         qiita_config.portal = "EMP"
         self.assertEqual(user.user_studies, set())
 
     def test_get_shared_studies(self):
-        user = User('shared@foo.bar')
+        user = qdb.user.User('shared@foo.bar')
         qiita_config.portal = "QIITA"
-        self.assertEqual(user.shared_studies, {1})
+        self.assertEqual(user.shared_studies, {qdb.study.Study(1)})
 
         qiita_config.portal = "EMP"
         self.assertEqual(user.shared_studies, set())
 
     def test_get_private_analyses(self):
-        user = User('test@foo.bar')
+        user = qdb.user.User('test@foo.bar')
         qiita_config.portal = "QIITA"
-        self.assertEqual(user.private_analyses, set([1, 2]))
+        exp = {qdb.analysis.Analysis(1), qdb.analysis.Analysis(2)}
+        self.assertEqual(user.private_analyses, exp)
 
         qiita_config.portal = "EMP"
         self.assertEqual(user.private_analyses, set())
 
     def test_get_shared_analyses(self):
-        user = User('shared@foo.bar')
+        user = qdb.user.User('shared@foo.bar')
         qiita_config.portal = "QIITA"
-        self.assertEqual(user.shared_analyses, set([1]))
+        self.assertEqual(user.shared_analyses, {qdb.analysis.Analysis(1)})
 
         qiita_config.portal = "EMP"
         self.assertEqual(user.shared_analyses, set())
 
     def test_verify_code(self):
-        add_system_message("TESTMESSAGE_OLD", datetime.now())
-        add_system_message("TESTMESSAGE",
-                           datetime.now() + timedelta(seconds=59))
+        qdb.util.add_system_message("TESTMESSAGE_OLD", datetime.now())
+        qdb.util.add_system_message(
+            "TESTMESSAGE", datetime.now() + timedelta(seconds=59))
         sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
                "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
                ",null)")
         self.conn_handler.execute(sql)
 
-        self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
-                                          'create'))
-        self.assertFalse(User.verify_code('new@test.bar', 'wrongcode',
-                                          'reset'))
+        self.assertFalse(
+            qdb.user.User.verify_code('new@test.bar', 'wrongcode', 'create'))
+        self.assertFalse(
+            qdb.user.User.verify_code('new@test.bar', 'wrongcode', 'reset'))
 
-        self.assertTrue(User.verify_code('new@test.bar', 'verifycode',
-                                         'create'))
-        self.assertTrue(User.verify_code('new@test.bar', 'resetcode',
-                                         'reset'))
+        self.assertTrue(
+            qdb.user.User.verify_code('new@test.bar', 'verifycode', 'create'))
+        self.assertTrue(
+            qdb.user.User.verify_code('new@test.bar', 'resetcode', 'reset'))
 
         # make sure errors raised if code already used or wrong type
-        with self.assertRaises(QiitaDBError):
-            User.verify_code('new@test.bar', 'verifycode', 'create')
-        with self.assertRaises(QiitaDBError):
-            User.verify_code('new@test.bar', 'resetcode', 'reset')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.user.User.verify_code('new@test.bar', 'verifycode', 'create')
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.user.User.verify_code('new@test.bar', 'resetcode', 'reset')
 
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            User.verify_code('new@test.bar', 'fakecode', 'badtype')
+            qdb.user.User.verify_code('new@test.bar', 'fakecode', 'badtype')
 
         # make sure default analyses created
         sql = ("SELECT email, name, description, dflt FROM qiita.analysis "
@@ -310,14 +308,14 @@ class UserTest(TestCase):
         # Make sure new system messages are linked to user
         sql = """SELECT message_id FROM qiita.message_user
                  WHERE email = 'new@test.bar'"""
-        m_id = get_count('qiita.message')
+        m_id = qdb.util.get_count('qiita.message')
         self.assertEqual(self.conn_handler.execute_fetchall(sql), [[m_id]])
 
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(
             "SELECT password FROM qiita.qiita_user WHERE email = %s",
             (self.user.id, ))[0]
-        self.assertEqual(hash_password(passwd, obspass), obspass)
+        self.assertEqual(qdb.util.hash_password(passwd, obspass), obspass)
 
     def test_change_pass(self):
         self.user._change_pass("newpassword")
@@ -338,7 +336,7 @@ class UserTest(TestCase):
         self._check_pass("password")
 
     def test_generate_reset_code(self):
-        user = User.create('new@test.bar', 'password')
+        user = qdb.user.User.create('new@test.bar', 'password')
         sql = "SELECT LOCALTIMESTAMP"
         before = self.conn_handler.execute_fetchone(sql)[0]
         user.generate_reset_code()
@@ -365,8 +363,8 @@ class UserTest(TestCase):
         self._check_pass("password")
 
     def test_messages(self):
-        add_system_message('SYS MESSAGE', datetime.now())
-        user = User('test@foo.bar')
+        qdb.util.add_system_message('SYS MESSAGE', datetime.now())
+        user = qdb.user.User('test@foo.bar')
         obs = user.messages()
         exp_msg = [
             (4, 'SYS MESSAGE'),
@@ -393,7 +391,7 @@ class UserTest(TestCase):
         self.assertEqual([x[1] for x in obs], exp_msg)
 
     def test_mark_messages(self):
-        user = User('test@foo.bar')
+        user = qdb.user.User('test@foo.bar')
         user.mark_messages([1, 2])
         obs = user.messages()
         exp = [True, True, False]
@@ -410,7 +408,7 @@ class UserTest(TestCase):
                  SET expiration = '2015-08-05'
                  WHERE message_id = 1"""
         self.conn_handler.execute(sql)
-        user = User('test@foo.bar')
+        user = qdb.user.User('test@foo.bar')
         user.delete_messages([1, 2])
         obs = user.messages()
         exp_msg = [(3, 'message <a href="#">3</a>')]

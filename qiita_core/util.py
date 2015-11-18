@@ -10,8 +10,7 @@ from future import standard_library
 from functools import wraps
 
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.environment_manager import reset_test_database
+import qiita_db as qdb
 
 with standard_library.hooks():
     from email.mime.multipart import MIMEMultipart
@@ -63,7 +62,7 @@ def qiita_test_checker():
     """
     def class_modifier(cls):
         # First, we check that we are not in a production environment
-        conn_handler = SQLConnectionHandler()
+        conn_handler = qdb.sql_connection.SQLConnectionHandler()
         # It is possible that we are connecting to a production database
         test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
         # Or the loaded configuration file belongs to a production environment
@@ -76,9 +75,9 @@ def qiita_test_checker():
         class DecoratedClass(cls):
             def setUp(self):
                 super(DecoratedClass, self).setUp()
-                self.conn_handler = SQLConnectionHandler()
+                self.conn_handler = qdb.sql_connection.SQLConnectionHandler()
 
-            @reset_test_database
+            @qdb.environment_manager.reset_test_database
             def tearDown(self):
                 super(DecoratedClass, self).tearDown()
 

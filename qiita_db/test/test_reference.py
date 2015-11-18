@@ -12,8 +12,7 @@ from os.path import basename, join
 from tempfile import mkstemp
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.reference import Reference
-from qiita_db.util import get_mountpoint, get_count
+import qiita_db as qdb
 
 
 @qiita_test_checker()
@@ -29,7 +28,7 @@ class ReferenceTests(TestCase):
         fd, self.tree_fp = mkstemp(suffix="_tree.tre")
         close(fd)
 
-        _, self.db_dir = get_mountpoint('reference')[0]
+        _, self.db_dir = qdb.util.get_mountpoint('reference')[0]
 
         self._clean_up_files = []
 
@@ -39,10 +38,10 @@ class ReferenceTests(TestCase):
 
     def test_create(self):
         """Correctly creates the rows in the DB for the reference"""
-        fp_count = get_count('qiita.filepath')
+        fp_count = qdb.util.get_count('qiita.filepath')
         # Check that the returned object has the correct id
-        obs = Reference.create(self.name, self.version, self.seqs_fp,
-                               self.tax_fp, self.tree_fp)
+        obs = qdb.reference.Reference.create(
+            self.name, self.version, self.seqs_fp, self.tax_fp, self.tree_fp)
         self.assertEqual(obs.id, 2)
 
         seqs_id = fp_count + 1
@@ -71,17 +70,17 @@ class ReferenceTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_sequence_fp(self):
-        ref = Reference(1)
+        ref = qdb.reference.Reference(1)
         exp = join(self.db_dir, "GreenGenes_13_8_97_otus.fasta")
         self.assertEqual(ref.sequence_fp, exp)
 
     def test_taxonomy_fp(self):
-        ref = Reference(1)
+        ref = qdb.reference.Reference(1)
         exp = join(self.db_dir, "GreenGenes_13_8_97_otu_taxonomy.txt")
         self.assertEqual(ref.taxonomy_fp, exp)
 
     def test_tree_fp(self):
-        ref = Reference(1)
+        ref = qdb.reference.Reference(1)
         exp = join(self.db_dir, "GreenGenes_13_8_97_otus.tree")
         self.assertEqual(ref.tree_fp, exp)
 

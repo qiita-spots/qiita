@@ -11,11 +11,7 @@ from unittest import TestCase, main
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.base import QiitaObject, QiitaStatusObject
-from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_db.data import RawData
-from qiita_db.study import Study, StudyPerson
-from qiita_db.analysis import Analysis
+import qiita_db as qdb
 
 
 @qiita_test_checker()
@@ -24,7 +20,7 @@ class QiitaBaseTest(TestCase):
 
     def setUp(self):
         # We need an actual subclass in order to test the equality functions
-        self.tester = RawData(1)
+        self.tester = qdb.artifact.Artifact(1)
         self.portal = qiita_config.portal
 
     def tearDown(self):
@@ -33,12 +29,12 @@ class QiitaBaseTest(TestCase):
     def test_init_base_error(self):
         """Raises an error when instantiating a base class directly"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            QiitaObject(1)
+            qdb.base.QiitaObject(1)
 
     def test_init_error_inexistent(self):
         """Raises an error when instantiating an object that does not exists"""
-        with self.assertRaises(QiitaDBUnknownIDError):
-            RawData(10)
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.artifact.Artifact(10)
 
     def test_check_subclass(self):
         """Nothing happens if check_subclass called from a subclass"""
@@ -48,9 +44,9 @@ class QiitaBaseTest(TestCase):
         """check_subclass raises an error if called from a base class"""
         # Checked through the __init__ call
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            QiitaObject(1)
+            qdb.base.QiitaObject(1)
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            QiitaStatusObject(1)
+            qdb.base.QiitaStatusObject(1)
 
     def test_check_id(self):
         """Correctly checks if an id exists on the database"""
@@ -60,7 +56,7 @@ class QiitaBaseTest(TestCase):
     def test_check_portal(self):
         """Correctly checks if object is accessable in portal given"""
         qiita_config.portal = 'QIITA'
-        tester = Analysis(1)
+        tester = qdb.analysis.Analysis(1)
         self.assertTrue(tester._check_portal(1))
         qiita_config.portal = 'EMP'
         self.assertFalse(tester._check_portal(1))
@@ -73,18 +69,18 @@ class QiitaBaseTest(TestCase):
 
     def test_equal(self):
         """Equality works with two objects pointing to the same instance"""
-        new = RawData(1)
+        new = qdb.artifact.Artifact(1)
         self.assertEqual(self.tester, new)
 
     def test_not_equal(self):
         """Not equals works with object of the same type"""
-        sp1 = StudyPerson(1)
-        sp2 = StudyPerson(2)
+        sp1 = qdb.study.StudyPerson(1)
+        sp2 = qdb.study.StudyPerson(2)
         self.assertNotEqual(sp1, sp2)
 
     def test_not_equal_type(self):
         """Not equals works with object of different type"""
-        new = Study(1)
+        new = qdb.study.Study(1)
         self.assertNotEqual(self.tester, new)
 
 
@@ -94,7 +90,7 @@ class QiitaStatusObjectTest(TestCase):
 
     def setUp(self):
         # We need an actual subclass in order to test the equality functions
-        self.tester = Analysis(1)
+        self.tester = qdb.analysis.Analysis(1)
 
     def test_status(self):
         """Correctly returns the status of the object"""

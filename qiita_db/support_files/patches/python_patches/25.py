@@ -4,19 +4,20 @@
 # make the RawData to be effectively just a container for the raw files,
 # which is how it was acting previously.
 
-from qiita_db.sql_connection import TRN
-from qiita_db.data import RawData
-from qiita_db.util import move_filepaths_to_upload_folder
+from os.path import join
+from functools import partial
 
-with TRN:
+import qiita_db as qdb
+
+with qdb.sql_connection.TRN:
     # the system may contain raw data with no prep template associated to it.
     # Retrieve all those raw data ids
     sql = """SELECT raw_data_id
              FROM qiita.raw_data
              WHERE raw_data_id NOT IN (
                 SELECT DISTINCT raw_data_id FROM qiita.prep_template);"""
-    TRN.add(sql)
-    rd_ids = TRN.execute_fetchflatten()
+    qdb.sql_connection.TRN.add(sql)
+    rd_ids = qdb.sql_connection.TRN.execute_fetchflatten()
 
     # We will delete those RawData. However, if they have files attached, we
     # should move them to the uploads folder of the study
@@ -28,26 +29,38 @@ with TRN:
                      WHERE raw_data_id = %s"""
     move_files = []
     for rd_id in rd_ids:
-        rd = RawData(rd_id)
-        filepaths = rd.get_filepaths()
-        TRN.add(sql_studies, [rd_id])
-        studies = TRN.execute_fetchflatten()
+        sql = """SELECT filepath_id, filepath, filepath_type_id
+                 FROM qiita.filepath
+                 WHERE filepath_id IN (
+                    SELECT filepath_id
+                    FROM qiita.raw_filepath
+                    WHERE raw_data_id = %s)"""
+        qdb.sql_connection.TRN.add(sql, [rd_id])
+        db_paths = qdb.sql_connection.TRN.execute_fetchindex()
+        fb = qdb.util.get_mountpoint("raw_data")[0][1]
+        base_fp = partial(join, fb)
+        filepaths = [
+            (fpid, base_fp(fp), qdb.util.convert_from_id(fid, "filepath_type"))
+            for fpid, fp, fid in db_paths]
+
+        qdb.sql_connection.TRN.add(sql_studies, [rd_id])
+        studies = qdb.sql_connection.TRN.execute_fetchflatten()
         if filepaths:
             # we need to move the files to a study. We chose the one with lower
             # study id. Currently there is no case in the live database in
             # which a RawData with no prep templates is attached to more than
             # one study, but I think it is better to normalize this just
             # in case
-            move_filepaths_to_upload_folder(min(studies), filepaths)
+            qdb.util.move_filepaths_to_upload_folder(min(studies), filepaths)
 
         # To delete the RawData we first need to unlink all the files
-        TRN.add(sql_unlink, [rd_id])
+        qdb.sql_connection.TRN.add(sql_unlink, [rd_id])
 
         # Then, remove the raw data from all the studies
         for st_id in studies:
-            TRN.add(sql_detach, [rd_id, st_id])
+            qdb.sql_connection.TRN.add(sql_detach, [rd_id, st_id])
 
-        TRN.add(sql_delete, [rd_id])
+        qdb.sql_connection.TRN.add(sql_delete, [rd_id])
 
     # We can now perform all changes in the DB. Although these changes can be
     # done in an SQL patch, they are done here because we need to execute the
@@ -100,5 +113,5 @@ with TRN:
     ALTER TABLE qiita.prep_template
         ALTER COLUMN raw_data_id DROP NOT NULL;
     """
-    TRN.add(sql)
-    TRN.execute()
+    qdb.sql_connection.TRN.add(sql)
+    qdb.sql_connection.TRN.execute()
