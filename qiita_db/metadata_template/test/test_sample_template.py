@@ -25,9 +25,11 @@ import qiita_db as qdb
 
 class BaseTestSample(TestCase):
     def setUp(self):
-        self.sample_template = qdb.metadata_template.sample_template.SampleTemplate(1)
+        self.sample_template = \
+            qdb.metadata_template.sample_template.SampleTemplate(1)
         self.sample_id = '1.SKB8.640193'
-        self.tester = qdb.metadata_template.sample_template.Sample(self.sample_id, self.sample_template)
+        self.tester = qdb.metadata_template.sample_template.Sample(
+            self.sample_id, self.sample_template)
         self.exp_categories = {'physical_specimen_location',
                                'physical_specimen_remaining',
                                'dna_extracted', 'sample_type',
@@ -48,16 +50,20 @@ class TestSampleReadOnly(BaseTestSample):
         """Init raises an error if the sample id is not found in the template
         """
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.metadata_template.sample_template.Sample('Not_a_Sample', self.sample_template)
+            qdb.metadata_template.sample_template.Sample(
+                'Not_a_Sample', self.sample_template)
 
     def test_init_wrong_template(self):
         """Raises an error if using a PrepTemplate instead of SampleTemplate"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            qdb.metadata_template.sample_template.Sample('SKB8.640193', qdb.metadata_template.prep_template.PrepTemplate(1))
+            qdb.metadata_template.sample_template.Sample(
+                'SKB8.640193',
+                qdb.metadata_template.prep_template.PrepTemplate(1))
 
     def test_init(self):
         """Init correctly initializes the sample object"""
-        sample = qdb.metadata_template.sample_template.Sample(self.sample_id, self.sample_template)
+        sample = qdb.metadata_template.sample_template.Sample(
+            self.sample_id, self.sample_template)
         # Check that the internal id have been correctly set
         self.assertEqual(sample._id, '1.SKB8.640193')
         # Check that the internal template have been correctly set
@@ -67,26 +73,32 @@ class TestSampleReadOnly(BaseTestSample):
 
     def test_eq_true(self):
         """Equality correctly returns true"""
-        other = qdb.metadata_template.sample_template.Sample(self.sample_id, self.sample_template)
+        other = qdb.metadata_template.sample_template.Sample(
+            self.sample_id, self.sample_template)
         self.assertTrue(self.tester == other)
 
     def test_eq_false_type(self):
         """Equality returns false if types are not equal"""
-        other = qdb.metadata_template.prep_template.PrepSample(self.sample_id, qdb.metadata_template.prep_template.PrepTemplate(1))
+        other = qdb.metadata_template.prep_template.PrepSample(
+            self.sample_id,
+            qdb.metadata_template.prep_template.PrepTemplate(1))
         self.assertFalse(self.tester == other)
 
     def test_eq_false_id(self):
         """Equality returns false if ids are different"""
-        other = qdb.metadata_template.sample_template.Sample('1.SKD8.640184', self.sample_template)
+        other = qdb.metadata_template.sample_template.Sample(
+            '1.SKD8.640184', self.sample_template)
         self.assertFalse(self.tester == other)
 
     def test_exists_true(self):
         """Exists returns true if the sample exists"""
-        self.assertTrue(qdb.metadata_template.sample_template.Sample.exists(self.sample_id, self.sample_template))
+        self.assertTrue(qdb.metadata_template.sample_template.Sample.exists(
+            self.sample_id, self.sample_template))
 
     def test_exists_false(self):
         """Exists returns false if the sample does not exists"""
-        self.assertFalse(qdb.metadata_template.sample_template.Sample.exists('Not_a_Sample', self.sample_template))
+        self.assertFalse(qdb.metadata_template.sample_template.Sample.exists(
+            'Not_a_Sample', self.sample_template))
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
@@ -191,8 +203,9 @@ class TestSampleReadOnly(BaseTestSample):
 
     def test_columns_restrictions(self):
         """that it returns SAMPLE_TEMPLATE_COLUMNS"""
-        self.assertEqual(self.sample_template.columns_restrictions,
-                         qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+        self.assertEqual(
+            self.sample_template.columns_restrictions,
+            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
 
     def test_can_be_updated(self):
         """test if the template can be updated"""
@@ -477,7 +490,8 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         self._set_up()
 
     def test_metadata_headers(self):
-        obs = qdb.metadata_template.sample_template.SampleTemplate.metadata_headers()
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        obs = ST.metadata_headers()
         exp = ['physical_specimen_location', 'physical_specimen_remaining',
                'dna_extracted', 'sample_type', 'collection_timestamp',
                'host_subject_id', 'description', 'season_environment',
@@ -505,12 +519,15 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
 
     def test_table_name(self):
         """Table name return the correct string"""
-        obs = qdb.metadata_template.sample_template.SampleTemplate._table_name(self.test_study.id)
+        obs = qdb.metadata_template.sample_template.SampleTemplate._table_name(
+            self.test_study.id)
         self.assertEqual(obs, "sample_1")
 
     def test_exists_true(self):
         """Exists returns true when the SampleTemplate already exists"""
-        self.assertTrue(qdb.metadata_template.sample_template.SampleTemplate.exists(self.test_study.id))
+        self.assertTrue(
+            qdb.metadata_template.sample_template.SampleTemplate.exists(
+                self.test_study.id))
 
     def test_get_sample_ids(self):
         """get_sample_ids returns the correct set of sample ids"""
@@ -524,7 +541,8 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
     def test_getitem(self):
         """Get item returns the correct sample object"""
         obs = self.tester['1.SKM7.640188']
-        exp = qdb.metadata_template.sample_template.Sample('1.SKM7.640188', self.tester)
+        exp = qdb.metadata_template.sample_template.Sample(
+            '1.SKM7.640188', self.tester)
         self.assertEqual(obs, exp)
 
     def test_getitem_error(self):
@@ -570,33 +588,60 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {qdb.metadata_template.sample_template.Sample('1.SKB1.640202', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKB2.640194', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKB3.640195', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKB4.640189', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKB5.640181', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKB6.640176', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKB7.640196', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKB8.640193', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKB9.640200', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKD1.640179', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKD2.640178', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKD3.640198', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKD4.640185', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKD5.640186', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKD6.640190', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKD7.640191', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKD8.640184', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKD9.640182', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKM1.640183', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKM2.640199', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKM3.640197', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKM4.640180', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKM5.640177', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKM6.640187', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKM7.640188', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKM8.640201', self.tester),
-               qdb.metadata_template.sample_template.Sample('1.SKM9.640192', self.tester)}
+        exp = {qdb.metadata_template.sample_template.Sample('1.SKB1.640202',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKB2.640194',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKB3.640195',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKB4.640189',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKB5.640181',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKB6.640176',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKB7.640196',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKB8.640193',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKB9.640200',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKD1.640179',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKD2.640178',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKD3.640198',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKD4.640185',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKD5.640186',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKD6.640190',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKD7.640191',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKD8.640184',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKD9.640182',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKM1.640183',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKM2.640199',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKM3.640197',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKM4.640180',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKM5.640177',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKM6.640187',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKM7.640188',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKM8.640201',
+                                                            self.tester),
+               qdb.metadata_template.sample_template.Sample('1.SKM9.640192',
+                                                            self.tester)}
         # Creating a list and looping over it since unittest does not call
         # the __eq__ function on the objects
         for o, e in zip(sorted(list(obs), key=lambda x: x.id),
@@ -607,33 +652,61 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         """items returns an iterator over the (key, value) tuples"""
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = [('1.SKB1.640202', qdb.metadata_template.sample_template.Sample('1.SKB1.640202', self.tester)),
-               ('1.SKB2.640194', qdb.metadata_template.sample_template.Sample('1.SKB2.640194', self.tester)),
-               ('1.SKB3.640195', qdb.metadata_template.sample_template.Sample('1.SKB3.640195', self.tester)),
-               ('1.SKB4.640189', qdb.metadata_template.sample_template.Sample('1.SKB4.640189', self.tester)),
-               ('1.SKB5.640181', qdb.metadata_template.sample_template.Sample('1.SKB5.640181', self.tester)),
-               ('1.SKB6.640176', qdb.metadata_template.sample_template.Sample('1.SKB6.640176', self.tester)),
-               ('1.SKB7.640196', qdb.metadata_template.sample_template.Sample('1.SKB7.640196', self.tester)),
-               ('1.SKB8.640193', qdb.metadata_template.sample_template.Sample('1.SKB8.640193', self.tester)),
-               ('1.SKB9.640200', qdb.metadata_template.sample_template.Sample('1.SKB9.640200', self.tester)),
-               ('1.SKD1.640179', qdb.metadata_template.sample_template.Sample('1.SKD1.640179', self.tester)),
-               ('1.SKD2.640178', qdb.metadata_template.sample_template.Sample('1.SKD2.640178', self.tester)),
-               ('1.SKD3.640198', qdb.metadata_template.sample_template.Sample('1.SKD3.640198', self.tester)),
-               ('1.SKD4.640185', qdb.metadata_template.sample_template.Sample('1.SKD4.640185', self.tester)),
-               ('1.SKD5.640186', qdb.metadata_template.sample_template.Sample('1.SKD5.640186', self.tester)),
-               ('1.SKD6.640190', qdb.metadata_template.sample_template.Sample('1.SKD6.640190', self.tester)),
-               ('1.SKD7.640191', qdb.metadata_template.sample_template.Sample('1.SKD7.640191', self.tester)),
-               ('1.SKD8.640184', qdb.metadata_template.sample_template.Sample('1.SKD8.640184', self.tester)),
-               ('1.SKD9.640182', qdb.metadata_template.sample_template.Sample('1.SKD9.640182', self.tester)),
-               ('1.SKM1.640183', qdb.metadata_template.sample_template.Sample('1.SKM1.640183', self.tester)),
-               ('1.SKM2.640199', qdb.metadata_template.sample_template.Sample('1.SKM2.640199', self.tester)),
-               ('1.SKM3.640197', qdb.metadata_template.sample_template.Sample('1.SKM3.640197', self.tester)),
-               ('1.SKM4.640180', qdb.metadata_template.sample_template.Sample('1.SKM4.640180', self.tester)),
-               ('1.SKM5.640177', qdb.metadata_template.sample_template.Sample('1.SKM5.640177', self.tester)),
-               ('1.SKM6.640187', qdb.metadata_template.sample_template.Sample('1.SKM6.640187', self.tester)),
-               ('1.SKM7.640188', qdb.metadata_template.sample_template.Sample('1.SKM7.640188', self.tester)),
-               ('1.SKM8.640201', qdb.metadata_template.sample_template.Sample('1.SKM8.640201', self.tester)),
-               ('1.SKM9.640192', qdb.metadata_template.sample_template.Sample('1.SKM9.640192', self.tester))]
+        exp = [
+            ('1.SKB1.640202', qdb.metadata_template.sample_template.Sample(
+                '1.SKB1.640202', self.tester)),
+            ('1.SKB2.640194', qdb.metadata_template.sample_template.Sample(
+                '1.SKB2.640194', self.tester)),
+            ('1.SKB3.640195', qdb.metadata_template.sample_template.Sample(
+                '1.SKB3.640195', self.tester)),
+            ('1.SKB4.640189', qdb.metadata_template.sample_template.Sample(
+                '1.SKB4.640189', self.tester)),
+            ('1.SKB5.640181', qdb.metadata_template.sample_template.Sample(
+                '1.SKB5.640181', self.tester)),
+            ('1.SKB6.640176', qdb.metadata_template.sample_template.Sample(
+                '1.SKB6.640176', self.tester)),
+            ('1.SKB7.640196', qdb.metadata_template.sample_template.Sample(
+                '1.SKB7.640196', self.tester)),
+            ('1.SKB8.640193', qdb.metadata_template.sample_template.Sample(
+                '1.SKB8.640193', self.tester)),
+            ('1.SKB9.640200', qdb.metadata_template.sample_template.Sample(
+                '1.SKB9.640200', self.tester)),
+            ('1.SKD1.640179', qdb.metadata_template.sample_template.Sample(
+                '1.SKD1.640179', self.tester)),
+            ('1.SKD2.640178', qdb.metadata_template.sample_template.Sample(
+                '1.SKD2.640178', self.tester)),
+            ('1.SKD3.640198', qdb.metadata_template.sample_template.Sample(
+                '1.SKD3.640198', self.tester)),
+            ('1.SKD4.640185', qdb.metadata_template.sample_template.Sample(
+                '1.SKD4.640185', self.tester)),
+            ('1.SKD5.640186', qdb.metadata_template.sample_template.Sample(
+                '1.SKD5.640186', self.tester)),
+            ('1.SKD6.640190', qdb.metadata_template.sample_template.Sample(
+                '1.SKD6.640190', self.tester)),
+            ('1.SKD7.640191', qdb.metadata_template.sample_template.Sample(
+                '1.SKD7.640191', self.tester)),
+            ('1.SKD8.640184', qdb.metadata_template.sample_template.Sample(
+                '1.SKD8.640184', self.tester)),
+            ('1.SKD9.640182', qdb.metadata_template.sample_template.Sample(
+                '1.SKD9.640182', self.tester)),
+            ('1.SKM1.640183', qdb.metadata_template.sample_template.Sample(
+                '1.SKM1.640183', self.tester)),
+            ('1.SKM2.640199', qdb.metadata_template.sample_template.Sample(
+                '1.SKM2.640199', self.tester)),
+            ('1.SKM3.640197', qdb.metadata_template.sample_template.Sample(
+                '1.SKM3.640197', self.tester)),
+            ('1.SKM4.640180', qdb.metadata_template.sample_template.Sample(
+                '1.SKM4.640180', self.tester)),
+            ('1.SKM5.640177', qdb.metadata_template.sample_template.Sample(
+                '1.SKM5.640177', self.tester)),
+            ('1.SKM6.640187', qdb.metadata_template.sample_template.Sample(
+                '1.SKM6.640187', self.tester)),
+            ('1.SKM7.640188', qdb.metadata_template.sample_template.Sample(
+                '1.SKM7.640188', self.tester)),
+            ('1.SKM8.640201', qdb.metadata_template.sample_template.Sample(
+                '1.SKM8.640201', self.tester)),
+            ('1.SKM9.640192', qdb.metadata_template.sample_template.Sample(
+                '1.SKM9.640192', self.tester))]
         # Creating a list and looping over it since unittest does not call
         # the __eq__ function on the objects
         for o, e in zip(sorted(list(obs)), sorted(exp)):
@@ -642,7 +715,8 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
     def test_get(self):
         """get returns the correct sample object"""
         obs = self.tester.get('1.SKM7.640188')
-        exp = qdb.metadata_template.sample_template.Sample('1.SKM7.640188', self.tester)
+        exp = qdb.metadata_template.sample_template.Sample(
+            '1.SKM7.640188', self.tester)
         self.assertEqual(obs, exp)
 
     def test_get_none(self):
@@ -653,25 +727,31 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         """Raises an error if there are invalid characters in the sample names
         """
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
+        ST = qdb.metadata_template.sample_template.SampleTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            qdb.metadata_template.sample_template.SampleTemplate._clean_validate_template(self.metadata, 2,
-                                                    qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            ST._clean_validate_template(
+                self.metadata, 2,
+                qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
 
     def test_clean_validate_template_error_duplicate_cols(self):
         """Raises an error if there are duplicated columns in the template"""
         self.metadata['STR_COLUMN'] = pd.Series(['foo', 'bar', 'foobar'],
                                                 index=self.metadata.index)
 
+        ST = qdb.metadata_template.sample_template.SampleTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateHeaderError):
-            qdb.metadata_template.sample_template.SampleTemplate._clean_validate_template(self.metadata, 2,
-                                                    qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            ST._clean_validate_template(
+                self.metadata, 2,
+                qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
 
     def test_clean_validate_template_error_duplicate_samples(self):
         """Raises an error if there are duplicated samples in the template"""
         self.metadata.index = ['sample.1', 'sample.1', 'sample.3']
+        ST = qdb.metadata_template.sample_template.SampleTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateSamplesError):
-            qdb.metadata_template.sample_template.SampleTemplate._clean_validate_template(self.metadata, 2,
-                                                    qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            ST._clean_validate_template(
+                self.metadata, 2,
+                qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
 
     def test_clean_validate_template_warning_missing(self):
         """Warns if the template is missing a required column"""
@@ -686,9 +766,11 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                         'longitude': 41.41}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        obs = npt.assert_warns(qdb.exceptions.QiitaDBWarning,
-                               qdb.metadata_template.sample_template.SampleTemplate._clean_validate_template,
-                               metadata, 2, qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        obs = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, ST._clean_validate_template,
+            metadata, 2,
+            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': True,
@@ -719,8 +801,11 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         cols = ['collection_timestamp', 'taxon_id', 'scientific_name']
-        obs = qdb.metadata_template.sample_template.SampleTemplate._clean_validate_template(
-            metadata, 2, qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS, current_columns=cols)
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        obs = ST._clean_validate_template(
+            metadata, 2,
+            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS,
+            current_columns=cols)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': True,
@@ -739,8 +824,10 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         assert_frame_equal(obs, exp)
 
     def test_clean_validate_template(self):
-        obs = qdb.metadata_template.sample_template.SampleTemplate._clean_validate_template(self.metadata, 2,
-                                                      qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        obs = ST._clean_validate_template(
+            self.metadata, 2,
+            qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
         metadata_dict = {
             '2.Sample1': {'physical_specimen_location': 'location1',
                           'physical_specimen_remaining': True,
@@ -814,27 +901,31 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }
-        self.new_study = qdb.study.Study.create(qdb.user.User('test@foo.bar'),
-                                      "Fried Chicken Microbiome", [1], info)
+        self.new_study = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), "Fried Chicken Microbiome", [1],
+            info)
 
     def test_create_duplicate(self):
         """Create raises an error when creating a duplicated SampleTemplate"""
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
-            qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.test_study)
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                self.metadata, self.test_study)
 
     def test_create_duplicate_header(self):
         """Create raises an error when duplicate headers are present"""
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateHeaderError):
-            qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                self.metadata, self.new_study)
 
     def test_create_bad_sample_names(self):
         """Create raises an error when duplicate headers are present"""
         # set a horrible list of sample names
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                self.metadata, self.new_study)
 
     def test_create_error_cleanup(self):
         """Create does not modify the database if an error happens"""
@@ -855,7 +946,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         with self.assertRaises(ValueError):
-            qdb.metadata_template.sample_template.SampleTemplate.create(metadata, self.new_study)
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                metadata, self.new_study)
 
         sql = """SELECT EXISTS(
                     SELECT * FROM qiita.study_sample
@@ -875,12 +967,15 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_create(self):
         """Creates a new SampleTemplate"""
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         new_id = self.new_study.id
         # The returned object has the correct id
         self.assertEqual(st.id, new_id)
         self.assertEqual(st.study_id, self.new_study.id)
-        self.assertTrue(qdb.metadata_template.sample_template.SampleTemplate.exists(self.new_study.id))
+        self.assertTrue(
+            qdb.metadata_template.sample_template.SampleTemplate.exists(
+                self.new_study.id))
         exp_sample_ids = {"%s.Sample1" % new_id, "%s.Sample2" % new_id,
                           "%s.Sample3" % new_id}
         self.assertEqual(st._get_sample_ids(), exp_sample_ids)
@@ -945,12 +1040,15 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_create_int_prefix(self):
         """Creates a new SampleTemplate with sample names int prefixed"""
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata_int_pref, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata_int_pref, self.new_study)
         new_id = self.new_study.id
         # The returned object has the correct id
         self.assertEqual(st.id, new_id)
         self.assertEqual(st.study_id, self.new_study.id)
-        self.assertTrue(qdb.metadata_template.sample_template.SampleTemplate.exists(self.new_study.id))
+        self.assertTrue(
+            qdb.metadata_template.sample_template.SampleTemplate.exists(
+                self.new_study.id))
         exp_sample_ids = {"%s.12.Sample1" % new_id, "%s.12.Sample2" % new_id,
                           "%s.12.Sample3" % new_id}
         self.assertEqual(st._get_sample_ids(), exp_sample_ids)
@@ -1015,12 +1113,15 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_create_str_prefixes(self):
         """Creates a new SampleTemplate with sample names string prefixed"""
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata_str_prefix, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata_str_prefix, self.new_study)
         new_id = self.new_study.id
         # The returned object has the correct id
         self.assertEqual(st.id, new_id)
         self.assertEqual(st.study_id, self.new_study.id)
-        self.assertTrue(qdb.metadata_template.sample_template.SampleTemplate.exists(self.new_study.id))
+        self.assertTrue(
+            qdb.metadata_template.sample_template.SampleTemplate.exists(
+                self.new_study.id))
         exp_sample_ids = {"%s.foo.Sample1" % new_id, "%s.bar.Sample2" % new_id,
                           "%s.foo.Sample3" % new_id}
         self.assertEqual(st._get_sample_ids(), exp_sample_ids)
@@ -1085,13 +1186,17 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_create_already_prefixed_samples(self):
         """Creates a new SampleTemplate with the samples already prefixed"""
-        st = npt.assert_warns(qdb.exceptions.QiitaDBWarning, qdb.metadata_template.sample_template.SampleTemplate.create,
-                              self.metadata_prefixed, self.new_study)
+        st = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.sample_template.SampleTemplate.create,
+            self.metadata_prefixed, self.new_study)
         new_id = self.new_study.id
         # The returned object has the correct id
         self.assertEqual(st.id, new_id)
         self.assertEqual(st.study_id, self.new_study.id)
-        self.assertTrue(qdb.metadata_template.sample_template.SampleTemplate.exists(self.new_study.id))
+        self.assertTrue(
+            qdb.metadata_template.sample_template.SampleTemplate.exists(
+                self.new_study.id))
         exp_sample_ids = {"%s.Sample1" % new_id, "%s.Sample2" % new_id,
                           "%s.Sample3" % new_id}
         self.assertEqual(st._get_sample_ids(), exp_sample_ids)
@@ -1156,7 +1261,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_delete(self):
         """Deletes Sample template 1"""
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         st_id = st.id
         qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
 
@@ -1185,7 +1291,9 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_exists_false(self):
         """Exists returns false when the SampleTemplate does not exists"""
-        self.assertFalse(qdb.metadata_template.sample_template.SampleTemplate.exists(self.new_study.id))
+        self.assertFalse(
+            qdb.metadata_template.sample_template.SampleTemplate.exists(
+                self.new_study.id))
 
     def test_update_category(self):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
@@ -1210,7 +1318,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
         # testing that if fails when trying to change an int column value
         # to str
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
 
         sql = """SELECT * FROM qiita.sample_2 ORDER BY sample_id"""
         before = self.conn_handler.execute_fetchall(sql)
@@ -1226,10 +1335,12 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
     def test_update_equal(self):
         """It doesn't fail with the exact same template"""
         # Create a new sample tempalte
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         exp = {s_id: st[s_id]._to_dict() for s_id in st}
         # Try to update the sample template with the same values
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.update, self.metadata)
+        npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, st.update, self.metadata)
         # Check that no values have been changed
         obs = {s_id: st[s_id]._to_dict() for s_id in st}
         self.assertEqual(obs, exp)
@@ -1237,7 +1348,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
     def test_update(self):
         """Updates values in existing mapping file"""
         # creating a new sample template
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         # updating the sample template
         st.update(self.metadata_dict_updated)
 
@@ -1262,7 +1374,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_update_fewer_samples(self):
         """Updates using a dataframe with less samples that in the DB"""
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         new_metadata = pd.DataFrame.from_dict(
             {'Sample1': {'physical_specimen_location': 'CHANGE'}},
             orient='index')
@@ -1282,8 +1395,10 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                         'date_col': np.datetime64(datetime(2015, 8, 1))}
         }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        st = npt.assert_warns(qdb.exceptions.QiitaDBWarning, qdb.metadata_template.sample_template.SampleTemplate.create,
-                              metadata, self.new_study)
+        st = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.sample_template.SampleTemplate.create,
+            metadata, self.new_study)
         metadata_dict['Sample2']['date_col'] = np.datetime64(
             datetime(2015, 9, 1))
         metadata_dict['Sample1']['bool_col'] = np.bool_(False)
@@ -1308,7 +1423,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         """to file writes a tab delimited file with all the metadata"""
         fd, fp = mkstemp()
         close(fd)
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         st.to_file(fp)
         self._clean_up_files.append(fp)
         with open(fp, 'U') as f:
@@ -1330,19 +1446,22 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         # in data.py
         exp_id = self.conn_handler.execute_fetchone(
             "SELECT count(1) FROM qiita.filepath")[0] + 1
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
         # testing current functionaly, to add a new sample template
         # you need to erase it first
         qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
         exp_id += 1
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         self.assertEqual(st.get_filepaths()[0][0], exp_id)
 
     def test_extend_add_samples(self):
         """extend correctly works adding new samples"""
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
 
         md_dict = {
             'Sample4': {'physical_specimen_location': 'location1',
@@ -1467,7 +1586,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
     def test_extend_add_duplicate_samples(self):
         """extend correctly works adding new samples and warns for duplicates
         """
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
 
         self.metadata_dict['Sample4'] = {
             'physical_specimen_location': 'location1',
@@ -1568,7 +1688,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_extend_new_columns(self):
         """extend correctly adds a new column"""
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
 
         self.metadata['NEWCOL'] = pd.Series(['val1', 'val2', 'val3'],
                                             index=self.metadata.index)
@@ -1581,7 +1702,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
         # Make sure it raises a warning indicating that the new columns will
         # be added for the existing samples
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, self.metadata)
+        npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, st.extend, self.metadata)
 
         exp_sample_ids = {"%s.Sample1" % st.id, "%s.Sample2" % st.id,
                           "%s.Sample3" % st.id}
@@ -1649,7 +1771,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_extend_new_samples_and_columns(self):
         """extend correctly adds new samples and columns at the same time"""
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
 
         self.metadata_dict['Sample4'] = {
             'physical_specimen_location': 'location1',
@@ -1755,7 +1878,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_extend_update(self):
         """extend correctly adds new samples and columns at the same time"""
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
 
         self.metadata_dict['Sample4'] = {
             'physical_specimen_location': 'location1',
@@ -1859,7 +1983,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
 
     def test_to_dataframe(self):
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         obs = st.to_dataframe()
 
         exp_dict = {
@@ -1943,13 +2068,17 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             'env_feature', 'scientific_name'})
 
     def test_check_restrictions(self):
-        obs = self.tester.check_restrictions([qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS['EBI']])
+        obs = self.tester.check_restrictions(
+            [qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS['EBI']])
         self.assertEqual(obs, set([]))
 
         del self.metadata['collection_timestamp']
-        st = npt.assert_warns(qdb.exceptions.QiitaDBWarning, qdb.metadata_template.sample_template.SampleTemplate.create,
-                              self.metadata, self.new_study)
-        obs = st.check_restrictions([qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS['EBI']])
+        st = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.sample_template.SampleTemplate.create,
+            self.metadata, self.new_study)
+        obs = st.check_restrictions(
+            [qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS['EBI']])
         self.assertEqual(obs, {'collection_timestamp'})
 
     def test_ebi_sample_accessions(self):
@@ -1995,7 +2124,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             self.tester.ebi_sample_accessions = {'1.SKB8.640193': 'ERS000010',
                                                  '1.SKD8.640184': 'ERS000001'}
 
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         exp_acc = {"%s.Sample1" % self.new_study.id: 'ERS000100',
                    "%s.Sample2" % self.new_study.id: 'ERS000110'}
         st.ebi_sample_accessions = exp_acc
@@ -2054,7 +2184,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             self.tester.biosample_accessions = {'1.SKB8.640193': 'SAMEA110000',
                                                 '1.SKD8.640184': 'SAMEA110000'}
 
-        st = qdb.metadata_template.sample_template.SampleTemplate.create(self.metadata, self.new_study)
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
+            self.metadata, self.new_study)
         exp_acc = {"%s.Sample1" % self.new_study.id: 'SAMEA110000',
                    "%s.Sample2" % self.new_study.id: 'SAMEA120000'}
         st.biosample_accessions = exp_acc
