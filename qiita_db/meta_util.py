@@ -82,95 +82,43 @@ def get_accessible_filepath_ids(user):
 
         # First, the studies
         # There are private and shared studies
-        study_ids = user.user_studies | user.shared_studies
+        studies = user.user_studies | user.shared_studies
 
         filepath_ids = set()
-        for study_id in study_ids:
-            study = qdb.study.Study(study_id)
+        for study in studies:
+            # Add the sample template files
+            if study.sample_template:
+                filepath_ids.update(
+                    {fid for fid, _ in study.sample_template.get_filepaths()})
 
-            # For each study, there are raw, preprocessed, and
-            # processed filepaths
-            raw_data_ids = study.raw_data()
-            preprocessed_data_ids = study.preprocessed_data()
-            processed_data_ids = study.processed_data()
+            # Add the prep template filepaths
+            for pt in study.prep_templates():
+                filepath_ids.update({fid for fid, _ in pt.get_filepaths()})
 
-            constructor_data_ids = (
-                (qdb.data.RawData, raw_data_ids),
-                (qdb.data.PreprocessedData, preprocessed_data_ids),
-                (qdb.data.ProcessedData, processed_data_ids))
+            # Add the artifact filepaths
+            for artifact in study.artifacts():
+                filepath_ids.update({fid for fid, _, _ in artifact.filepaths})
 
-            for constructor, data_ids in constructor_data_ids:
-                for data_id in data_ids:
-                    filepath_ids.update(_get_data_fpids(constructor, data_id))
+        # Next, the public artifacts
+        for artifact in qdb.artifact.Artifact.iter_public():
+            # Add the filepaths of the artifact
+            filepath_ids.update({fid for fid, _, _ in artifact.filepaths})
 
-            # adding prep and sample templates
-            prep_fp_ids = []
-            for rdid in study.raw_data():
-                for pt_id in qdb.data.RawData(rdid).prep_templates:
-                    # related to https://github.com/biocore/qiita/issues/596
-                    if qdb.metadata_template.prep_template.PrepTemplate.exists(
-                            pt_id):
-                        pt = qdb.metadata_template.prep_template.PrepTemplate(
-                            pt_id)
-                        for _id, _ in pt.get_filepaths():
-                            prep_fp_ids.append(_id)
-            filepath_ids.update(prep_fp_ids)
+            # Then add the filepaths of the prep templates
+            for pt in artifact.prep_templates:
+                filepath_ids.update({fid for fid, _ in pt.get_filepaths()})
 
-            if qdb.metadata_template.sample_template.SampleTemplate.exists(
-                    study_id):
-                st = qdb.metadata_template.sample_template.SampleTemplate(
-                    study_id)
-                sample_fp_ids = [_id for _id, _
-                                 in st.get_filepaths()]
-                filepath_ids.update(sample_fp_ids)
-
-        # Next, the public processed data
-        processed_data_ids = qdb.data.ProcessedData.get_by_status('public')
-        for pd_id in processed_data_ids:
-            processed_data = qdb.data.ProcessedData(pd_id)
-
-            # Add the filepaths of the processed data
-            pd_fps = (fpid for fpid, _, _ in processed_data.get_filepaths())
-            filepath_ids.update(pd_fps)
-
-            # Each processed data has a preprocessed data
-            ppd = qdb.data.PreprocessedData(processed_data.preprocessed_data)
-            ppd_fps = (fpid for fpid, _, _ in ppd.get_filepaths())
-            filepath_ids.update(ppd_fps)
-
-            # Each preprocessed data has a prep template
-            pt_id = ppd.prep_template
-            # related to https://github.com/biocore/qiita/issues/596
-            if qdb.metadata_template.prep_template.PrepTemplate.exists(pt_id):
-                pt = qdb.metadata_template.prep_template.PrepTemplate(pt_id)
-                pt_fps = (fpid for fpid, _ in pt.get_filepaths())
-                filepath_ids.update(pt_fps)
-
-                # Each prep template has a raw data
-                rd = qdb.data.RawData(pt.raw_data)
-                rd_fps = (fpid for fpid, _, _ in rd.get_filepaths())
-                filepath_ids.update(rd_fps)
-
-            # And each processed data has a study, which has a sample template
-            st_id = processed_data.study
-            if qdb.metadata_template.sample_template.SampleTemplate.exists(
-                    st_id):
-                st = qdb.metadata_template.sample_template.SampleTemplate(
-                    st_id)
-                sample_fp_ids = (_id for _id, _
-                                 in st.get_filepaths())
-                filepath_ids.update(sample_fp_ids)
+            # Then add the filepaths of the sample template
+            filepath_ids.update(
+                {fid
+                 for fid, _ in artifact.study.sample_template.get_filepaths()})
 
         # Next, analyses
         # Same as before, there are public, private, and shared
-        analysis_ids = qdb.analysis.Analysis.get_by_status('public') | \
+        analyses = qdb.analysis.Analysis.get_by_status('public') | \
             user.private_analyses | user.shared_analyses
 
-        for analysis_id in analysis_ids:
-            analysis = qdb.analysis.Analysis(analysis_id)
-
-            # For each analysis, there are mapping, biom, and job result
-            # filepaths
+        for analysis in analyses:
             filepath_ids.update(analysis.all_associated_filepath_ids)
 
         return filepath_ids
@@ -184,7 +132,8 @@ def get_lat_longs():
     list of [float, float]
         The latitude and longitude for each sample in the database
     """
-    portal_table_ids = qdb.portal.Portal(qiita_config.portal).get_studies()
+    portal_table_ids = [
+        s.id for s in qdb.portal.Portal(qiita_config.portal).get_studies()]
 
     with qdb.sql_connection.TRN:
         sql = """SELECT DISTINCT table_name
