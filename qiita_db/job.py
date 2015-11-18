@@ -129,11 +129,11 @@ class Job(qdb.base.QiitaStatusObject):
                 return False
 
             # build the samples dict as list of samples keyed to
-            # their proc_data_id
-            sql = """SELECT processed_data_id, array_agg(
+            # their artifact_id
+            sql = """SELECT artifact_id, array_agg(
                         sample_id ORDER BY sample_id)
                      FROM qiita.analysis_sample
-                     WHERE analysis_id = %s GROUP BY processed_data_id"""
+                     WHERE analysis_id = %s GROUP BY artifact_id"""
             qdb.sql_connection.TRN.add(sql, [analysis.id])
             samples = dict(qdb.sql_connection.TRN.execute_fetchindex())
 

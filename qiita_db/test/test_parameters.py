@@ -11,16 +11,14 @@ from tempfile import mkstemp
 from os import close
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.parameters import (PreprocessedIlluminaParams,
-                                 ProcessedSortmernaParams)
-from qiita_db.exceptions import QiitaDBDuplicateError
+import qiita_db as qdb
 
 
 @qiita_test_checker()
 class PreprocessedIlluminaParamsTests(TestCase):
 
     def test_exists(self):
-        obs = PreprocessedIlluminaParams.exists(
+        obs = qdb.parameters.PreprocessedIlluminaParams.exists(
             max_bad_run_length=3,
             min_per_read_length_fraction=0.75,
             sequence_max_n=0,
@@ -32,7 +30,7 @@ class PreprocessedIlluminaParamsTests(TestCase):
             max_barcode_errors=1.5)
         self.assertTrue(obs)
 
-        obs = PreprocessedIlluminaParams.exists(
+        obs = qdb.parameters.PreprocessedIlluminaParams.exists(
             max_bad_run_length=3,
             min_per_read_length_fraction=0.75,
             sequence_max_n=0,
@@ -47,11 +45,12 @@ class PreprocessedIlluminaParamsTests(TestCase):
     def test_check_columns(self):
         # Check missing columns
         with self.assertRaises(ValueError):
-            PreprocessedIlluminaParams._check_columns(barcode_type=8)
+            qdb.parameters.PreprocessedIlluminaParams._check_columns(
+                barcode_type=8)
 
         # Check extra columns
         with self.assertRaises(ValueError):
-            PreprocessedIlluminaParams._check_columns(
+            qdb.parameters.PreprocessedIlluminaParams._check_columns(
                 max_bad_run_length=3,
                 min_per_read_length_fraction=0.75,
                 sequence_max_n=0,
@@ -64,7 +63,7 @@ class PreprocessedIlluminaParamsTests(TestCase):
                 extra_columns="Foo")
 
         # Does not raise any error
-        PreprocessedIlluminaParams._check_columns(
+        qdb.parameters.PreprocessedIlluminaParams._check_columns(
             max_bad_run_length=3,
             min_per_read_length_fraction=0.75,
             sequence_max_n=0,
@@ -76,7 +75,7 @@ class PreprocessedIlluminaParamsTests(TestCase):
             max_barcode_errors=1.5)
 
     def test_create(self):
-        obs_obj = PreprocessedIlluminaParams.create(
+        obs_obj = qdb.parameters.PreprocessedIlluminaParams.create(
             "test_create",
             max_bad_run_length="3",
             min_per_read_length_fraction="0.75",
@@ -95,8 +94,8 @@ class PreprocessedIlluminaParamsTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_create_duplicate(self):
-        with self.assertRaises(QiitaDBDuplicateError):
-            PreprocessedIlluminaParams.create(
+        with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
+            qdb.parameters.PreprocessedIlluminaParams.create(
                 "test_error",
                 max_bad_run_length=3,
                 min_per_read_length_fraction=0.75,
@@ -109,7 +108,7 @@ class PreprocessedIlluminaParamsTests(TestCase):
                 max_barcode_errors=1.5)
 
     def test_to_str(self):
-        params = PreprocessedIlluminaParams(1)
+        params = qdb.parameters.PreprocessedIlluminaParams(1)
         obs = params.to_str()
         exp = ("--barcode_type golay_12 --max_bad_run_length 3 "
                "--max_barcode_errors 1.5 --min_per_read_length_fraction 0.75 "
@@ -117,18 +116,18 @@ class PreprocessedIlluminaParamsTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_iter(self):
-        obs = list(PreprocessedIlluminaParams.iter())
-        exp = [PreprocessedIlluminaParams(1)]
+        obs = list(qdb.parameters.PreprocessedIlluminaParams.iter())
+        exp = [qdb.parameters.PreprocessedIlluminaParams(1)]
 
         for o, e in zip(obs, exp):
             self.assertEqual(o.id, e.id)
 
     def test_name(self):
-        obs = PreprocessedIlluminaParams(1).name
+        obs = qdb.parameters.PreprocessedIlluminaParams(1).name
         self.assertEqual(obs, "Defaults")
 
     def test_values(self):
-        obs = PreprocessedIlluminaParams(1).values
+        obs = qdb.parameters.PreprocessedIlluminaParams(1).values
         exp = {'max_barcode_errors': 1.5, 'sequence_max_n': 0,
                'max_bad_run_length': 3, 'rev_comp': False,
                'phred_quality_threshold': 3, 'rev_comp_barcode': False,
@@ -141,14 +140,14 @@ class PreprocessedIlluminaParamsTests(TestCase):
 @qiita_test_checker()
 class ProcessedSortmernaParamsTests(TestCase):
     def test_to_str(self):
-        params = ProcessedSortmernaParams(1)
+        params = qdb.parameters.ProcessedSortmernaParams(1)
         obs = params.to_str()
         exp = ("--similarity 0.97 --sortmerna_coverage 0.97 "
                "--sortmerna_e_value 1.0 --sortmerna_max_pos 10000 --threads 1")
         self.assertEqual(obs, exp)
 
     def test_to_file(self):
-        params = ProcessedSortmernaParams(1)
+        params = qdb.parameters.ProcessedSortmernaParams(1)
         fd, fp = mkstemp()
         close(fd)
         with open(fp, 'w') as f:
