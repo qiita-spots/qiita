@@ -6,13 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os import remove
-from os.path import join, exists
 from functools import partial
 from future import standard_library
-from future.utils import viewitems
-from collections import defaultdict
-from shutil import move
 
 import qiita_db as qdb
 
@@ -246,172 +241,46 @@ def load_parameters_from_cmd(name, fp, table):
     return constructor.create(name, **params)
 
 
-def update_raw_data_from_cmd(filepaths, filepath_types, study_id, rd_id=None):
-    """Updates the raw data of the study 'study_id'
+def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):
+    """Updates the artifact `artifact_id` with the given files
 
     Parameters
     ----------
     filepaths : iterable of str
-        Paths to the raw data files
+        Paths to the artifact files
     filepath_types : iterable of str
         Describes the contents of the files
-    study_id : int
-        The study_id of the study to be updated
-    rd_id : int, optional
-        The id of the raw data to be updated. If not provided, the raw data
-        with lowest id in the study will be updated
+    artifact_id : int
+        The id of the artifact to be updated
 
     Returns
     -------
-    qiita_db.data.RawData
+    qiita_db.artifact.Artifact
 
     Raises
     ------
     ValueError
         If 'filepaths' and 'filepath_types' do not have the same length
-        If the study does not have any raw data
-        If rd_id is provided and it does not belong to the given study
     """
     if len(filepaths) != len(filepath_types):
         raise ValueError("Please provide exactly one filepath_type for each "
                          "and every filepath")
     with qdb.sql_connection.TRN:
-        study = qdb.study.Study(study_id)
-        raw_data_ids = study.raw_data()
-        if not raw_data_ids:
-            raise ValueError("Study %d does not have any raw data" % study_id)
-
-        if rd_id:
-            if rd_id not in raw_data_ids:
-                raise ValueError(
-                    "The raw data %d does not exist in the study %d. Available"
-                    " raw data: %s"
-                    % (rd_id, study_id, ', '.join(map(str, raw_data_ids))))
-            raw_data = qdb.data.RawData(rd_id)
-        else:
-            raw_data = qdb.data.RawData(sorted(raw_data_ids)[0])
-
-        filepath_types_dict = qdb.util.get_filepath_types()
-        try:
-            filepath_types = [filepath_types_dict[x] for x in filepath_types]
-        except KeyError:
-            supported_types = filepath_types_dict.keys()
-            unsupported_types = set(filepath_types).difference(supported_types)
-            raise ValueError(
-                "Some filepath types provided are not recognized (%s). "
-                "Please choose from: %s"
-                % (', '.join(unsupported_types), ', '.join(supported_types)))
-
-        fps = raw_data.get_filepaths()
-        sql = "DELETE FROM qiita.raw_filepath WHERE raw_data_id = %s"
-        qdb.sql_connection.TRN.add(sql, [raw_data.id])
+        artifact = qdb.artifact.Artifact(artifact_id)
+        fp_types_dict = qdb.util.get_filepath_types()
+        fps = [(fp, fp_types_dict[ftype])
+               for fp, ftype in zip(filepaths, filepath_types)]
+        old_fps = artifact.filepaths
+        sql = "DELETE FROM qiita.artifact_filepath WHERE artifact_id = %s"
+        qdb.sql_connection.TRN.add(sql, [artifact.id])
         qdb.sql_connection.TRN.execute()
-        qdb.util.move_filepaths_to_upload_folder(study_id, fps)
-
-        raw_data.add_filepaths(list(zip(filepaths, filepath_types)))
-
-    return raw_data
-
-
-def update_preprocessed_data_from_cmd(sl_out_dir, study_id, ppd_id=None):
-    """Updates the preprocessed data of the study 'study_id'
-
-    Parameters
-    ----------
-    sl_out_dir : str
-        The path to the split libraries output directory
-    study_id : int
-        The study_id of the study to be updated
-    ppd_id : int, optional
-        The id of the preprocessed_data to be updated. If not provided, the
-        preprocessed data with the lowest id in the study will be updated.
-
-    Returns
-    -------
-    qiita_db.PreprocessedData
-        The updated preprocessed data
-
-    Raises
-    ------
-    IOError
-        If sl_out_dir does not contain all the required files
-    ValueError
-        If the study does not have any preprocessed data
-        If ppd_id is provided and it does not belong to the given study
-    """
-    # Check that we have all the required files
-    path_builder = partial(join, sl_out_dir)
-    new_fps = {'preprocessed_fasta': path_builder('seqs.fna'),
-               'preprocessed_fastq': path_builder('seqs.fastq'),
-               'preprocessed_demux': path_builder('seqs.demux'),
-               'log': path_builder('split_library_log.txt')}
-
-    missing_files = [key for key, val in viewitems(new_fps) if not exists(val)]
-    if missing_files:
-        raise IOError(
-            "The directory %s does not contain the following required files: "
-            "%s" % (sl_out_dir, ', '.join(missing_files)))
-
-    # Get the preprocessed data to be updated
-    with qdb.sql_connection.TRN:
-        study = qdb.study.Study(study_id)
-        ppds = study.preprocessed_data()
-        if not ppds:
-            raise ValueError("Study %s does not have any preprocessed data",
-                             study_id)
-
-        if ppd_id:
-            if ppd_id not in ppds:
-                raise ValueError(
-                    "The preprocessed data %d does not exist in "
-                    "study %d. Available preprocessed data: %s"
-                    % (ppd_id, study_id, ', '.join(map(str, ppds))))
-            ppd = qdb.data.PreprocessedData(ppd_id)
-        else:
-            ppd = qdb.data.PreprocessedData(sorted(ppds)[0])
-
-        # We need to loop through the fps list to get the db filepaths that we
-        # need to modify
-        fps = defaultdict(list)
-        for fp_id, fp, fp_type in sorted(ppd.get_filepaths()):
-            fps[fp_type].append((fp_id, fp))
-
-        fps_to_add = []
-        fps_to_modify = []
-        keys = ['preprocessed_fasta', 'preprocessed_fastq',
-                'preprocessed_demux', 'log']
-
-        for key in keys:
-            if key in fps:
-                db_id, db_fp = fps[key][0]
-                fp_checksum = qdb.util.compute_checksum(new_fps[key])
-                fps_to_modify.append((db_id, db_fp, new_fps[key], fp_checksum))
-            else:
-                fps_to_add.append(
-                    (new_fps[key],
-                     qdb.util.convert_to_id(key, 'filepath_type')))
-
-        # Insert the new files in the database, if any
-        if fps_to_add:
-            ppd.add_filepaths(fps_to_add)
-
-        sql = "UPDATE qiita.filepath SET checksum=%s WHERE filepath_id=%s"
-        for db_id, db_fp, new_fp, checksum in fps_to_modify:
-            # Move the db_file in case something goes wrong
-            bkp_fp = "%s.bkp" % db_fp
-            move(db_fp, bkp_fp)
-
-            # Start the update for the current file
-            # Move the file to the database location
-            move(new_fp, db_fp)
-            # Add the SQL instruction to the DB
-            qdb.sql_connection.TRN.add(sql, [checksum, db_id])
-
-            # In case that a rollback occurs, we need to restore the files
-            qdb.sql_connection.TRN.add_post_rollback_func(move, bkp_fp, db_fp)
-            # In case of commit, we can remove the backup files
-            qdb.sql_connection.TRN.add_post_commit_func(remove, bkp_fp)
-
+        qdb.util.move_filepaths_to_upload_folder(artifact.study.id, old_fps)
+        fp_ids = qdb.util.insert_filepaths(
+            fps, artifact.id, artifact.artifact_type, "filepath")
+        sql = """INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
+                 VALUES (%s, %s)"""
+        sql_args = [[artifact.id, fp_id] for fp_id in fp_ids]
+        qdb.sql_connection.TRN.add(sql, sql_args, many=True)
         qdb.sql_connection.TRN.execute()
 
-        return ppd
+    return artifact
