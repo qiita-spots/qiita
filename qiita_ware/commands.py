@@ -16,7 +16,8 @@ from moi.job import system_call
 
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
-from qiita_db.metadata_template import PrepTemplate, SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission

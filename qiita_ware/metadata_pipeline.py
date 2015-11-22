@@ -8,12 +8,12 @@
 
 from future.utils import viewvalues, viewkeys
 
-from qiita_db.metadata_template import (load_template_to_dataframe,
-                                        SampleTemplate, PrepTemplate,
-                                        PREP_TEMPLATE_COLUMNS,
-                                        PREP_TEMPLATE_COLUMNS_TARGET_GENE,
-                                        CONTROLLED_COLS,
-                                        TARGET_GENE_DATA_TYPES)
+from qiita_db.metadata_template.util import load_template_to_dataframe
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.constants import (
+    PREP_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS_TARGET_GENE, CONTROLLED_COLS,
+    TARGET_GENE_DATA_TYPES)
 from qiita_db.util import convert_from_id
 from qiita_ware.exceptions import QiitaWareError
 

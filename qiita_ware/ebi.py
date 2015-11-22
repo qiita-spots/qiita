@@ -20,7 +20,8 @@ from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id, get_mountpoint
 from qiita_db.study import Study
 from qiita_db.data import PreprocessedData
-from qiita_db.metadata_template import PrepTemplate, SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
 
 
 def clean_whitespace(text):

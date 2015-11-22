@@ -5,7 +5,7 @@ from qiita_ware.dispatchable import preprocessor
 from qiita_db.data import RawData
 from qiita_db.parameters import (PreprocessedIlluminaParams,
                                  Preprocessed454Params)
-from qiita_db.metadata_template import PrepTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_ware.context import submit
 from qiita_core.util import execute_as_transaction
 

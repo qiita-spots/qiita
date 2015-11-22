@@ -13,7 +13,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.util import get_mountpoint
-from qiita_db.metadata_template import PrepTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
 
 from os.path import join, exists
 

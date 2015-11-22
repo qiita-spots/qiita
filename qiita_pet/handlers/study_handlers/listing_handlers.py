@@ -17,7 +17,7 @@ from pyparsing import ParseException
 from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
 from qiita_db.search import QiitaStudySearch
-from qiita_db.metadata_template import SampleTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import get_table_cols

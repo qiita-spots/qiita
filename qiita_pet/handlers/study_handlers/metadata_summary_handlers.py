@@ -11,7 +11,8 @@ from tornado.web import authenticated, HTTPError
 
 from qiita_ware.util import stats_from_df
 from qiita_db.study import Study
-from qiita_db.metadata_template import SampleTemplate, PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import execute_as_transaction
