@@ -327,6 +327,16 @@ class ArtifactTests(TestCase):
         self.assertTrue(qdb.artifact.Artifact(3).can_be_submitted_to_ebi)
         self.assertFalse(qdb.artifact.Artifact(4).can_be_submitted_to_ebi)
 
+    def test_is_submitted_to_ebi(self):
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            qdb.artifact.Artifact(1).is_submitted_to_ebi
+        self.assertTrue(qdb.artifact.Artifact(2).is_submitted_to_ebi)
+        self.assertFalse(qdb.artifact.Artifact(3).is_submitted_to_ebi)
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            qdb.artifact.Artifact(4).is_submitted_to_ebi
+
     def test_ebi_run_accessions(self):
         exp = {'1.SKB1.640202': 'ERR0000001',
                '1.SKB2.640194': 'ERR0000002',
