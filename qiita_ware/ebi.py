@@ -18,10 +18,7 @@ from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id, get_mountpoint
-from qiita_db.study import Study
-from qiita_db.data import PreprocessedData
-from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.artifact import Artifact
 
 
 def clean_whitespace(text):
@@ -43,7 +40,7 @@ def clean_whitespace(text):
 class EBISubmission(object):
     """Define an EBI submission, generate submission files and submit
 
-    Submit a preprocessed data to EBI
+    Submit an artifact to EBI
 
     The steps for EBI submission are:
     1. Validate that we have all required info to submit
@@ -54,8 +51,8 @@ class EBISubmission(object):
 
     Parameters
     ----------
-    preprocessed_data_id : int
-        The preprocesssed data id to submit
+    artifact_id : int
+        The artifact id to submit
     action : str
         The action to perform. Valid options see
         EBISubmission.valid_ebi_actions
@@ -64,9 +61,11 @@ class EBISubmission(object):
     ------
     EBISubmissionError
         - If the action is not in EBISubmission.valid_ebi_actions
-        - If the preprocessed data has been already submitted to EBI
-        - If the status of the study attached to the preprocessed data is
-        submitting
+        - If the artifact cannot be submitted to EBI
+        - If the artifact has more than one prep template
+        - If the artifact has been already submitted to EBI and the action
+        is different from 'MODIFY'
+        - If the status of the study attached to the artifact is `submitting`
         - If the prep template investigation type is not in the
         ena_ontology.terms or not in the ena_ontology.user_defined_terms
         - If the submission is missing required EBI fields either in the sample
@@ -94,7 +93,7 @@ class EBISubmission(object):
     xsi_noNSL = "ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.%s.xsd"
     experiment_library_fields = ['library_strategy']
 
-    def __init__(self, preprocessed_data_id, action):
+    def __init__(self, artifact_id, action):
         error_msgs = []
 
         if action not in self.valid_ebi_actions:
@@ -106,14 +105,28 @@ class EBISubmission(object):
 
         ena_ontology = Ontology(convert_to_id('ENA', 'ontology'))
         self.action = action
-        self.preprocessed_data = PreprocessedData(preprocessed_data_id)
-        self.study = Study(self.preprocessed_data.study)
-        self.sample_template = SampleTemplate(self.study.sample_template)
-        self.prep_template = PrepTemplate(self.preprocessed_data.prep_template)
+        self.artifact = Artifact(artifact_id)
+        if not self.artifact.can_be_submitted_to_ebi:
+            error_msg = ("Artifact %d cannot be submitted to EBI"
+                         % self.artifact.id)
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
 
-        if self.preprocessed_data.is_submitted_to_ebi and action != 'MODIFY':
-            error_msg = ("Cannot resubmit! Preprocessed data %d has already "
-                         "been submitted to EBI.")
+        self.study = self.artifact.study
+        self.sample_template = self.study.sample_template
+        prep_templates = self.artifact.prep_templates
+        if len(prep_templates) > 1:
+            error_msg = ("Cannot submit Artifact %d to EBI - it has more than"
+                         " one prep template: %s"
+                         % (self.artifact.id,
+                            ', '.join([str(pt.id) for pt in prep_templates])))
+            LogEntry.create('Runtime', error_msg)
+            raise EBISubmissionError(error_msg)
+        self.prep_template = prep_templates[0]
+
+        if self.artifact.is_submitted_to_ebi and action != 'MODIFY':
+            error_msg = ("Cannot resubmit! Artifact %d has already "
+                         "been submitted to EBI." % artifact_id)
             LogEntry.create('Runtime', error_msg)
             raise EBISubmissionError(error_msg)
 
@@ -124,7 +137,7 @@ class EBISubmission(object):
             LogEntry.create('Runtime', error_msg)
             raise EBISubmissionError(error_msg)
 
-        self.preprocessed_data_id = preprocessed_data_id
+        self.artifact_id = artifact_id
         self.study_title = self.study.title
         self.study_abstract = self.study.info['study_abstract']
 
@@ -142,7 +155,7 @@ class EBISubmission(object):
                               "one of the user-defined terms in the ENA "
                               "ontology." % it)
         _, base_fp = get_mountpoint("preprocessed_data")[0]
-        self.ebi_dir = '%d_ebi_submission' % preprocessed_data_id
+        self.ebi_dir = '%d_ebi_submission' % artifact_id
         self.full_ebi_dir = join(base_fp, self.ebi_dir)
         self.ascp_reply = join(self.full_ebi_dir, 'ascp_reply.txt')
         self.curl_reply = join(self.full_ebi_dir, 'curl_reply.xml')
@@ -209,8 +222,8 @@ class EBISubmission(object):
                               "model: %s" % (', '.join(nvim)))
         if error_msgs:
             error_msgs = ("Errors found during EBI submission for study #%d, "
-                          "preprocessed data #%d and prep template #%d:\n%s"
-                          % (self.study.id, preprocessed_data_id,
+                          "artifact #%d and prep template #%d:\n%s"
+                          % (self.study.id, artifact_id,
                              self.prep_template.id, '\n'.join(error_msgs)))
             LogEntry.create('Runtime', error_msgs)
             raise EBISubmissionError(error_msgs)
@@ -225,21 +238,21 @@ class EBISubmission(object):
             self.prep_template.ebi_experiment_accessions
 
     def _get_study_alias(self):
-        """Format alias using ``self.preprocessed_data_id``"""
+        """Format alias using ``self.study_id``"""
         study_alias_format = '%s_sid_%s'
         return study_alias_format % (
             qiita_config.ebi_organization_prefix,
             escape(clean_whitespace(str(self.study.id))))
 
     def _get_sample_alias(self, sample_name):
-        """Format alias using ``self.preprocessed_data_id``, `sample_name`"""
+        """Format alias using ``self.study_id``, `sample_name`"""
         alias = "%s:%s" % (self._get_study_alias(),
                            escape(clean_whitespace(str(sample_name))))
         self._sample_aliases[alias] = sample_name
         return alias
 
     def _get_experiment_alias(self, sample_name):
-        """Format alias using ``self.preprocessed_data_id``, and `sample_name`
+        """Format alias using ``self.prep_template.id``, and `sample_name`
 
         Currently, this is identical to _get_sample_alias above, since we are
         only going to allow submission of one prep for each sample
@@ -253,19 +266,19 @@ class EBISubmission(object):
         return alias
 
     def _get_submission_alias(self):
-        """Format alias using ``self.preprocessed_data_id``"""
-        safe_preprocessed_data_id = escape(
-            clean_whitespace(str(self.preprocessed_data_id)))
+        """Format alias using ``self.artifact_id``"""
+        safe_artifact_id = escape(
+            clean_whitespace(str(self.artifact_id)))
         submission_alias_format = '%s_submission_%s'
         return submission_alias_format % (qiita_config.ebi_organization_prefix,
-                                          safe_preprocessed_data_id)
+                                          safe_artifact_id)
 
     def _get_run_alias(self, sample_name):
         """Format alias using `sample_name`
         """
         alias = '%s_ppdid_%s:%s' % (
             qiita_config.ebi_organization_prefix,
-            escape(clean_whitespace(str(self.preprocessed_data_id))),
+            escape(clean_whitespace(str(self.artifact_id))),
             sample_name)
         self._run_aliases[alias] = sample_name
         return alias
@@ -913,13 +926,13 @@ class EBISubmission(object):
             - The demux file couldn't be read
             - All samples are removed
         """
-        ppd = self.preprocessed_data
+        ar = self.artifact
 
         dir_not_exists = not isdir(self.full_ebi_dir)
         if dir_not_exists or rewrite_fastq:
             makedirs(self.full_ebi_dir)
 
-            demux = [path for _, path, ftype in ppd.get_filepaths()
+            demux = [path for _, path, ftype in ar.get_filepaths()
                      if ftype == 'preprocessed_demux'][0]
 
             demux_samples = set()
