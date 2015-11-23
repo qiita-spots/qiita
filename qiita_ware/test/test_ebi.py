@@ -421,6 +421,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         with File(demux_fp, 'w') as f:
             to_hdf5(fna_fp, f)
 
+        # Magic number 6: the id of the preprocessed_demux filepath_type
         artifact = Artifact.create(
             [(demux_fp, 6)], "Demultiplexed", prep_template=pt,
             can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
