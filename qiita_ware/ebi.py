@@ -156,7 +156,7 @@ class EBISubmission(object):
         self.experiment_xml_fp = None
         self.run_xml_fp = None
         self.submission_xml_fp = None
-        self.pmids = self.study.pmids
+        self.publications = self.study.publications
 
         # getting the restrictions
         st_missing = self.sample_template.check_restrictions(
@@ -292,12 +292,12 @@ class EBISubmission(object):
             value = ET.SubElement(attribute_element, 'VALUE')
             value.text = clean_whitespace(val)
 
-    def _get_pmid_element(self, study_links, pmid):
+    def _get_publication_element(self, study_links, pmid, db_name):
         study_link = ET.SubElement(study_links, 'STUDY_LINK')
         xref_link = ET.SubElement(study_link,  'XREF_LINK')
 
         db = ET.SubElement(xref_link, 'DB')
-        db.text = 'PUBMED'
+        db.text = db_name
 
         _id = ET.SubElement(xref_link, 'ID')
         _id.text = str(pmid)
@@ -339,10 +339,13 @@ class EBISubmission(object):
         study_abstract.text = clean_whitespace(escape(self.study_abstract))
 
         # Add pubmed IDs
-        if self.pmids:
+        if self.publications:
             study_links = ET.SubElement(study, 'STUDY_LINKS')
-            for pmid in self.pmids:
-                self._get_pmid_element(study_links, pmid)
+            for doi, pmid in self.publications:
+                if doi is not None:
+                    self._get_publication_element(study_links, doi, 'DOI')
+                if pmid is not None:
+                    self._get_publication_element(study_links, pmid, 'PUBMED')
 
         return study_set
 
@@ -933,7 +936,7 @@ class EBISubmission(object):
         if dir_not_exists or rewrite_fastq:
             makedirs(self.full_ebi_dir)
 
-            demux = [path for _, path, ftype in ar.get_filepaths()
+            demux = [path for _, path, ftype in ar.filepaths
                      if ftype == 'preprocessed_demux'][0]
 
             demux_samples = set()
