@@ -705,7 +705,8 @@ class EBISubmission(object):
             # (experiment.xml) template. The easiest is to generate both and
             # submit them. Note that we are assuming that Qiita is not
             # allowing to change preprocessing required information
-            samples = self.sample_template.ebi_sample_accessions
+            all_samples = self.sample_template.ebi_sample_accessions
+            samples = {k: all_samples[k] for k in self.samples}
 
             # finding unique name for sample xml
             i = 0
@@ -732,6 +733,15 @@ class EBISubmission(object):
             while True:
                 self.submission_xml_fp = get_output_fp('submission_%d.xml' % i)
                 if not exists(self.submission_xml_fp):
+                    break
+                i = i + 1
+
+            # just to keep all curl_reply-s we find a new name
+            i = 0
+            while True:
+                self.curl_reply = join(self.full_ebi_dir,
+                                       'curl_reply_%d.xml' % i)
+                if not exists(self.curl_reply):
                     break
                 i = i + 1
 
