@@ -82,14 +82,16 @@ class TestConnHandler(TestBase):
             qdb.sql_connection.SQLConnectionHandler(admin='not a valid value')
 
     def test_init_admin_with_database(self):
-        obs = qdb.sql_connection.SQLConnectionHandler(admin='admin_with_database')
+        obs = qdb.sql_connection.SQLConnectionHandler(
+            admin='admin_with_database')
         self.assertEqual(obs.admin, 'admin_with_database')
         self.assertEqual(obs.queues, {})
         self.assertTrue(isinstance(obs._connection, connection))
         self.assertEqual(self.conn_handler._user_conn.closed, 0)
 
     def test_init_admin_without_database(self):
-        obs = qdb.sql_connection.SQLConnectionHandler(admin='admin_without_database')
+        obs = qdb.sql_connection.SQLConnectionHandler(
+            admin='admin_without_database')
         self.assertEqual(obs.admin, 'admin_without_database')
         self.assertEqual(obs.queues, {})
         self.assertTrue(isinstance(obs._connection, connection))
@@ -255,7 +257,8 @@ class TestTransaction(TestBase):
                 qdb.sql_connection.TRN.add("SELECT 42", 1)
 
             with self.assertRaises(TypeError):
-                qdb.sql_connection.TRN.add("SELECT 42", {'foo': 'bar'}, many=True)
+                qdb.sql_connection.TRN.add("SELECT 42", {'foo': 'bar'},
+                                           many=True)
 
             with self.assertRaises(TypeError):
                 qdb.sql_connection.TRN.add("SELECT 42", [1, 1], many=True)
@@ -426,13 +429,15 @@ class TestTransaction(TestBase):
                      VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert1', 1], ['insert2', 2], ['insert3', 3]]
             qdb.sql_connection.TRN.add(sql, args, many=True)
-            self.assertEqual(qdb.sql_connection.TRN.execute_fetchindex(), [['insert3', 3]])
+            self.assertEqual(qdb.sql_connection.TRN.execute_fetchindex(),
+                             [['insert3', 3]])
 
             sql = """INSERT INTO qiita.test_table (str_column, int_column)
                      VALUES (%s, %s) RETURNING str_column, int_column"""
             args = [['insert4', 4], ['insert5', 5], ['insert6', 6]]
             qdb.sql_connection.TRN.add(sql, args, many=True)
-            self.assertEqual(qdb.sql_connection.TRN.execute_fetchindex(3), [['insert4', 4]])
+            self.assertEqual(qdb.sql_connection.TRN.execute_fetchindex(3),
+                             [['insert4', 4]])
 
     def test_execute_fetchflatten(self):
         with qdb.sql_connection.TRN:
