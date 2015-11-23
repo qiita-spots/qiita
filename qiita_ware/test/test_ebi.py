@@ -25,11 +25,12 @@ from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import EBISubmissionError
 from qiita_ware.demux import to_hdf5
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.data import PreprocessedData
 from qiita_db.util import get_mountpoint
 from qiita_db.study import Study, StudyPerson
-from qiita_db.metadata_template import PrepTemplate, SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.user import User
+from qiita_db.artifact import Artifact
 from qiita_core.util import qiita_test_checker
 
 
@@ -266,11 +267,11 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             raise ValueError('Wrong sequences values: %s. Valid values: '
                              'FASTA_EXAMPLE, WRONG-SEQS, EMPTY' % sequences)
 
-        ppd = PreprocessedData.create(Study(1),
-                                      "preprocessed_sequence_illumina_params",
-                                      1, [(demux_fp, 6)], prep_template)
+        artifact = Artifact.create(
+            [(demux_fp, 6)], "Demultiplexed", prep_template=prep_template,
+            can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
 
-        return ppd
+        return artifact
 
     def generate_new_prep_template_and_write_demux_files(self,
                                                          valid_metadata=False):
@@ -407,11 +408,12 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         with File(demux_fp, 'w') as f:
             to_hdf5(fna_fp, f)
 
-        ppd = PreprocessedData.create(
-            study, "preprocessed_sequence_illumina_params", 1,
-            [(demux_fp, 6)], pt)
+        # Magic number 6: the id of the preprocessed_demux filepath_type
+        artifact = Artifact.create(
+            [(demux_fp, 6)], "Demultiplexed", prep_template=pt,
+            can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
 
-        return ppd
+        return artifact
 
     def test_init_exceptions(self):
         # not a valid action

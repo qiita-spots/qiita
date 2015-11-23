@@ -16,7 +16,7 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_ware.wrapper import ParallelWrapper
 from qiita_db.logger import LogEntry
 from qiita_db.data import RawData
-from qiita_db.metadata_template import TARGET_GENE_DATA_TYPES
+from qiita_db.metadata_template.constants import TARGET_GENE_DATA_TYPES
 from qiita_db.reference import Reference
 
 

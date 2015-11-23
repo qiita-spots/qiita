@@ -450,6 +450,31 @@ class Artifact(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
+    def is_submitted_to_ebi(self):
+        """Whether the artifact has been submitted to EBI or not
+
+        Returns
+        -------
+        bool
+            True if the artifact has been submitted to EBI. False otherwise
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the artifact cannot be submitted to EBI
+        """
+        with qdb.sql_connection.TRN:
+            if not self.can_be_submitted_to_ebi:
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Artifact %s cannot be submitted to EBI" % self.id)
+            sql = """SELECT EXISTS(
+                        SELECT *
+                        FROM qiita.ebi_run_accession
+                        WHERE artifact_id = %s)"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
     def ebi_run_accessions(self):
         """The EBI run accessions attached to this artifact
 

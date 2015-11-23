@@ -14,7 +14,7 @@ from future.utils import viewitems
 from qiita_core.util import execute_as_transaction
 from qiita_db.util import get_files_from_uploads_folders, get_data_types
 from qiita_db.study import StudyPerson
-from qiita_db.metadata_template import SampleTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_pet.util import linkify, is_localhost, EBI_LINKIFIER
 from .base_uimodule import BaseUIModule
 

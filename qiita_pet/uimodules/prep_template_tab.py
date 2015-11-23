@@ -12,14 +12,15 @@ from collections import defaultdict
 
 from future.utils import viewitems
 
-from qiita_db.util import (get_filetypes, get_files_from_uploads_folders,
+from qiita_db.util import (get_artifact_types, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
 from qiita_pet.util import convert_text_html
 from qiita_db.study import Study
 from qiita_db.data import RawData
 from qiita_db.ontology import Ontology
-from qiita_db.metadata_template import (PrepTemplate, TARGET_GENE_DATA_TYPES,
-                                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.constants import (
+    TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 from qiita_db.parameters import (Preprocessed454Params,
                                  PreprocessedIlluminaParams)
 from qiita_pet.util import STATUS_STYLER, is_localhost, EBI_LINKIFIER
@@ -153,7 +154,7 @@ class PrepTemplateInfoTab(BaseUIModule):
 
         filetypes = sorted(
             ((ft, ft_id, fp_type_by_ft[ft])
-             for ft, ft_id in viewitems(get_filetypes())),
+             for ft, ft_id in viewitems(get_artifact_types())),
             key=itemgetter(1))
         files = [f for _, f in get_files_from_uploads_folders(str(study.id))]
 
