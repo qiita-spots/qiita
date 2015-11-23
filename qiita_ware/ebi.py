@@ -62,7 +62,6 @@ class EBISubmission(object):
     EBISubmissionError
         - If the action is not in EBISubmission.valid_ebi_actions
         - If the artifact cannot be submitted to EBI
-        - If the artifact has more than one prep template
         - If the artifact has been already submitted to EBI and the action
         is different from 'MODIFY'
         - If the status of the study attached to the artifact is `submitting`
@@ -114,15 +113,7 @@ class EBISubmission(object):
 
         self.study = self.artifact.study
         self.sample_template = self.study.sample_template
-        prep_templates = self.artifact.prep_templates
-        if len(prep_templates) > 1:
-            error_msg = ("Cannot submit Artifact %d to EBI - it has more than"
-                         " one prep template: %s"
-                         % (self.artifact.id,
-                            ', '.join([str(pt.id) for pt in prep_templates])))
-            LogEntry.create('Runtime', error_msg)
-            raise EBISubmissionError(error_msg)
-        self.prep_template = prep_templates[0]
+        self.prep_template = self.artifact.prep_templates[0]
 
         if self.artifact.is_submitted_to_ebi and action != 'MODIFY':
             error_msg = ("Cannot resubmit! Artifact %d has already "
