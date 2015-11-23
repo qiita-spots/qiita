@@ -249,9 +249,8 @@ class SampleTemplate(MetadataTemplate):
             self.add_filepath(fp, fp_id=fp_id)
 
             # generating all new QIIME mapping files
-            for pt_id in qdb.study.Study(self._id).prep_templates():
-                qdb.metadata_template.prep_template.PrepTemplate(
-                    pt_id).generate_files()
+            for pt in qdb.study.Study(self._id).prep_templates():
+                pt.generate_files()
 
     @property
     def ebi_sample_accessions(self):
