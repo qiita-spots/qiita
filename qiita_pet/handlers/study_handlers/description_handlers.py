@@ -20,7 +20,6 @@ from pandas.parser import CParserError
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study
-from qiita_db.data import RawData, PreprocessedData, ProcessedData
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate

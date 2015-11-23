@@ -8,7 +8,6 @@
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.data import ProcessedData
 from qiita_pet.util import STATUS_STYLER, is_localhost
 from .base_uimodule import BaseUIModule
 
