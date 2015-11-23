@@ -113,9 +113,9 @@ class EBISubmission(object):
 
         self.study = self.artifact.study
         self.sample_template = self.study.sample_template
-        # If reach this point, there should be only one prep template attached
-        # to the artifact. By design, each artifact has at least one prep
-        # template. Artifacts with more than one prep template cannot be
+        # If we reach this point, there should be only one prep template
+        # attached to the artifact. By design, each artifact has at least one
+        # prep template. Artifacts with more than one prep template cannot be
         # submitted to EBI, so the attribute 'can_be_submitted_to_ebi' should
         # be set to false, which is checked in the previous if statement
         self.prep_template = self.artifact.prep_templates[0]
@@ -938,6 +938,8 @@ class EBISubmission(object):
         if dir_not_exists or rewrite_fastq:
             makedirs(self.full_ebi_dir)
 
+            # An artifact will hold only one file of type `preprocessed_demux`
+            # Thus, we only use the first one (the only one present)
             demux = [path for _, path, ftype in ar.get_filepaths()
                      if ftype == 'preprocessed_demux'][0]
 
