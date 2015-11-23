@@ -193,8 +193,7 @@ class PrepTemplate(MetadataTemplate):
         Raises
         ------
         QiitaDBExecutionError
-            If the prep template already has a preprocessed data
-            If the prep template has a raw data attached
+            If the prep template already has an artifact attached
         QiitaDBUnknownIDError
             If no prep template with id = id_ exists
         """
@@ -204,30 +203,18 @@ class PrepTemplate(MetadataTemplate):
             if not cls.exists(id_):
                 raise qdb.exceptions.QiitaDBUnknownIDError(id_, cls.__name__)
 
-            sql = """SELECT EXISTS(
-                        SELECT * FROM qiita.prep_template_preprocessed_data
-                        WHERE prep_template_id=%s)"""
-            args = [id_]
-            qdb.sql_connection.TRN.add(sql, args)
-            preprocessed_data_exists = \
-                qdb.sql_connection.TRN.execute_fetchlast()
-
-            if preprocessed_data_exists:
-                raise qdb.exceptions.QiitaDBExecutionError(
-                    "Cannot remove prep template %d because a preprocessed "
-                    "data has been already generated using it." % id_)
-
             sql = """SELECT (
-                        SELECT raw_data_id
+                        SELECT artifact_id
                         FROM qiita.prep_template
                         WHERE prep_template_id=%s)
                     IS NOT NULL"""
+            args = [id_]
             qdb.sql_connection.TRN.add(sql, args)
-            raw_data_attached = qdb.sql_connection.TRN.execute_fetchlast()
-            if raw_data_attached:
+            artifact_attached = qdb.sql_connection.TRN.execute_fetchlast()
+            if artifact_attached:
                 raise qdb.exceptions.QiitaDBExecutionError(
-                    "Cannot remove prep template %d because it has raw data "
-                    "associated with it" % id_)
+                    "Cannot remove prep template %d because it has an artifact"
+                    " associated with it" % id_)
 
             # Delete the prep template filepaths
             sql = """DELETE FROM qiita.prep_template_filepath
@@ -320,12 +307,18 @@ class PrepTemplate(MetadataTemplate):
         PREP_TEMPLATE_COLUMNS_TARGET_GENE
         """
         with qdb.sql_connection.TRN:
+            if self.data_type() not in TARGET_GENE_DATA_TYPES:
+                return True
+
+            artifact = self.artifact
+            if not artifact:
+                return True
+
             sql = """SELECT EXISTS(SELECT *
                                    FROM qiita.parent_artifact
                                    WHERE parent_id = %s)"""
-            qdb.sql_connection.TRN.add(sql, [self.artifact])
-            if (not qdb.sql_connection.TRN.execute_fetchlast() or
-                    self.data_type() not in TARGET_GENE_DATA_TYPES):
+            qdb.sql_connection.TRN.add(sql, [artifact.id])
+            if not qdb.sql_connection.TRN.execute_fetchlast():
                 return True
 
             tg_columns = set(chain.from_iterable(
@@ -361,15 +354,17 @@ class PrepTemplate(MetadataTemplate):
         """
         if new_samples:
             with qdb.sql_connection.TRN:
-                sql = """SELECT EXISTS(SELECT *
-                                       FROM qiita.parent_artifact
-                                       WHERE parent_id = %s)"""
-                qdb.sql_connection.TRN.add(sql, [self.artifact])
-                if qdb.sql_connection.TRN.execute_fetchlast():
-                    return False, ("The artifact attached to the prep "
-                                   "template has been already processed. No "
-                                   "new samples can be added to the prep "
-                                   "template")
+                artifact = self.artifact
+                if artifact:
+                    sql = """SELECT EXISTS(SELECT *
+                                           FROM qiita.parent_artifact
+                                           WHERE parent_id = %s)"""
+                    qdb.sql_connection.TRN.add(sql, [artifact.id])
+                    if qdb.sql_connection.TRN.execute_fetchlast():
+                        return False, ("The artifact attached to the prep "
+                                       "template has already been processed. "
+                                       "No new samples can be added to the "
+                                       "prep template")
         return True, ""
 
     @property
@@ -379,11 +374,9 @@ class PrepTemplate(MetadataTemplate):
                      FROM qiita.prep_template
                      WHERE prep_template_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            result = qdb.sql_connection.TRN.execute_fetchindex()
+            result = qdb.sql_connection.TRN.execute_fetchlast()
             if result:
-                # If there is any result, it will be in the first row
-                # and in the first element of that row, thus [0][0]
-                return result[0][0]
+                return qdb.artifact.Artifact(result)
             return None
 
     @artifact.setter
