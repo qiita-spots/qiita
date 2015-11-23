@@ -29,10 +29,11 @@ import search
 import software
 import study
 import user
+import processing_job
 
 
 __all__ = ["analysis", "artifact", "base", "commands", "environment_manager",
            "exceptions", "investigation", "job", "logger", "meta_util",
            "ontology", "parameters", "portal", "reference", "search",
            "software", "sql_connection", "study", "user", "util",
-           "metadata_template"]
+           "metadata_template", "processing_job"]

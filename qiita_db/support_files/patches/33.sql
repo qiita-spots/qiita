@@ -503,3 +503,43 @@ BEGIN
     END IF;
 END
 $$ LANGUAGE plpgsql;
+
+-- Create tables to keep track of the processing jobs
+CREATE TABLE qiita.processing_job_status (
+	processing_job_status_id           bigserial  NOT NULL,
+	processing_job_status              varchar    NOT NULL,
+	processing_job_status_description  varchar    NOT NULL,
+	CONSTRAINT pk_processing_job_status PRIMARY KEY ( processing_job_status_id )
+ ) ;
+
+INSERT INTO qiita.processing_job_status
+        (processing_job_status, processing_job_status_description)
+    VALUES ('queued', 'The job is waiting to be run'),
+           ('running', 'The job is running'),
+           ('success', 'The job completed successfully'),
+           ('error', 'The job failed');
+
+CREATE TABLE qiita.processing_job (
+	processing_job_id          UUID     NOT NULL,
+	email                      varchar  NOT NULL,
+	command_id                 bigint   NOT NULL,
+	command_parameters_id      bigint   NOT NULL,
+	processing_job_status_id   bigint   NOT NULL,
+	logging_id                 bigint  ,
+	heartbeat                  timestamp  ,
+	step                       varchar  ,
+	CONSTRAINT pk_processing_job PRIMARY KEY ( processing_job_id )
+ ) ;
+CREATE INDEX idx_processing_job_email ON qiita.processing_job ( email ) ;
+CREATE INDEX idx_processing_job_command_id ON qiita.processing_job ( command_id ) ;
+CREATE INDEX idx_processing_job_status_id ON qiita.processing_job ( processing_job_status_id ) ;
+CREATE INDEX idx_processing_job_logging ON qiita.processing_job ( logging_id ) ;
+COMMENT ON COLUMN qiita.processing_job.email IS 'The user that launched the job';
+COMMENT ON COLUMN qiita.processing_job.command_id IS 'The command launched';
+COMMENT ON COLUMN qiita.processing_job.command_parameters_id IS 'The parameters used in the command';
+COMMENT ON COLUMN qiita.processing_job.logging_id IS 'In case of failure, point to the log entry that holds more information about the error';
+COMMENT ON COLUMN qiita.processing_job.heartbeat IS 'The last heartbeat received by this job';
+ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_qiita_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ;
+ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
+ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_status FOREIGN KEY ( processing_job_status_id ) REFERENCES qiita.processing_job_status( processing_job_status_id )    ;
+ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_logging FOREIGN KEY ( logging_id ) REFERENCES qiita.logging( logging_id )    ;
