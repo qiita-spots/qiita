@@ -113,6 +113,11 @@ class EBISubmission(object):
 
         self.study = self.artifact.study
         self.sample_template = self.study.sample_template
+        # If reach this point, there should be only one prep template attached
+        # to the artifact. By design, each artifact has at least one prep
+        # template. Artifacts with more than one prep template cannot be
+        # submitted to EBI, so the attribute 'can_be_submitted_to_ebi' should
+        # be set to false, which is checked in the previous if statement
         self.prep_template = self.artifact.prep_templates[0]
 
         if self.artifact.is_submitted_to_ebi and action != 'MODIFY':
