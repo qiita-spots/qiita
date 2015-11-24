@@ -577,7 +577,7 @@ class DefaultParameters(qdb.base.QiitaObject):
 
         Returns
         -------
-        dict
+        dict of {str: object}
             Dictionary with the parameters values keyed by parameter name
         """
         with qdb.sql_connection.TRN:
@@ -602,3 +602,74 @@ class DefaultParameters(qdb.base.QiitaObject):
                      WHERE default_parameter_set_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return Command(qdb.sql_connection.TRN.execute_fetchlast())
+
+
+class Parameters(object):
+    """Represents an instance of parameters used to process an artifact
+
+    Parameters
+    ----------
+    dflt_params : qiita_db.software.DefaultParameters
+        The DefaultParameters object in which this instance is based on
+    req_params : dict of {str: object}
+        The required parameters values, keyed by parameter name
+    opt_params : dict of {str: object}, optional
+        The optional parameters to change from the default set, keyed by
+        parameter name. Default: None, user the values in `dflt_params`
+
+    Raises
+    ------
+    QiitaDBError
+        - If there are missing requried parameters
+        - If there is an unknown required ot optional parameter
+    """
+
+    def __init__(self, dflt_params, req_params, opt_params=None):
+        with qdb.sql_connection.TRN:
+            self._command = dflt_params.command
+            cmd_req_params = self._command.required_parameters
+            cmd_opt_params = self._command.optional_parameters
+
+            missing_reqd = set(cmd_req_params) - set(req_params)
+            extra_reqd = set(req_params) - set(cmd_req_params)
+            if missing_reqd or extra_reqd:
+                raise qdb.exceptions.QiitaDBError(
+                    "Provided required parameters not expected.\n"
+                    "Missing required parameters: %s\n"
+                    "Extra required paramters: %s\n"
+                    % (', '.join(missing_reqd), ', '.join(extra_reqd)))
+
+            if opt_params:
+                extra_opts = set(opt_params) - set(cmd_opt_params)
+                if extra_opts:
+                    raise qdb.exceptions.QiitaDBError(
+                        "Extra optional parameters provded: %s"
+                        % ', '.join(extra_opts))
+
+            self._values = dflt_params.values
+            self._values.update(req_params)
+
+            if opt_params:
+                self._values.update(opt_params)
+
+    @property
+    def command(self):
+        """The command to which this parametr set belongs to
+
+        Returns
+        -------
+        qiita_db.software.Command
+            The command to which this parametr set belongs to
+        """
+        return self._command
+
+    @property
+    def values(self):
+        """The values of the parameters
+
+        Returns
+        -------
+        dict of {str: object}
+            The parameter values keyed by parameter name
+        """
+        return self._values

@@ -278,5 +278,64 @@ class DefaultParametersTests(TestCase):
         self.assertEqual(
             qdb.software.DefaultParameters(1).command, qdb.software.Command(1))
 
+
+@qiita_test_checker()
+class ParametersTests(TestCase):
+    def test_init(self):
+        obs = qdb.software.Parameters(qdb.software.DefaultParameters(1),
+                                      {'input_data': 1})
+        self.assertEqual(obs._command, qdb.software.Command(1))
+        exp = {'min_per_read_length_fraction': 0.75,
+               'max_barcode_errors': 1.5, 'max_bad_run_length': 3,
+               'rev_comp': False, 'phred_quality_threshold': 3,
+               'rev_comp_barcode': False, 'sequence_max_n': 0,
+               'barcode_type': 'golay_12', 'rev_comp_mapping_barcodes': False,
+               'input_data': 1}
+        self.assertEqual(obs._values, exp)
+
+        obs = qdb.software.Parameters(qdb.software.DefaultParameters(1),
+                                      {'input_data': 1},
+                                      opt_params={'max_bad_run_length': 5})
+        self.assertEqual(obs._command, qdb.software.Command(1))
+        exp = {'min_per_read_length_fraction': 0.75,
+               'max_barcode_errors': 1.5, 'max_bad_run_length': 5,
+               'rev_comp': False, 'phred_quality_threshold': 3,
+               'rev_comp_barcode': False, 'sequence_max_n': 0,
+               'barcode_type': 'golay_12', 'rev_comp_mapping_barcodes': False,
+               'input_data': 1}
+        self.assertEqual(obs._values, exp)
+
+    def test_init_error_missing_reqd(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Parameters(qdb.software.DefaultParameters(1), {})
+
+    def test_init_error_extra_reqd(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Parameters(qdb.software.DefaultParameters(1),
+                                    {'input_data': 1, 'another_one': 2})
+
+    def test_init_error_extra_opts(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Parameters(qdb.software.DefaultParameters(1),
+                                    {'input_data': 1},
+                                    opt_params={'Unknown': 'foo'})
+
+    def test_command(self):
+        obs = qdb.software.Parameters(qdb.software.DefaultParameters(1),
+                                      {'input_data': 1}).command
+        self.assertEqual(obs, qdb.software.Command(1))
+
+    def test_values(self):
+        obs = qdb.software.Parameters(qdb.software.DefaultParameters(1),
+                                      {'input_data': 1}).values
+        exp = {'min_per_read_length_fraction': 0.75,
+               'max_barcode_errors': 1.5, 'max_bad_run_length': 3,
+               'rev_comp': False, 'phred_quality_threshold': 3,
+               'rev_comp_barcode': False, 'sequence_max_n': 0,
+               'barcode_type': 'golay_12', 'rev_comp_mapping_barcodes': False,
+               'input_data': 1}
+        self.assertEqual(obs, exp)
+
+
 if __name__ == '__main__':
     main()
