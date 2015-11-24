@@ -281,6 +281,26 @@ class DefaultParametersTests(TestCase):
 
 @qiita_test_checker()
 class ParametersTests(TestCase):
+    def test_eq(self):
+        # Test difference due to type
+        a = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
+        b = qdb.software.DefaultParameters(1)
+        self.assertFalse(a == b)
+        # Test difference due to command
+        b = qdb.software.Parameters.from_default_params(
+            qdb.software.Command(2).default_parameter_sets.next(),
+            {'input_data': 1})
+        self.assertFalse(a == b)
+        # Test difference due to values
+        b = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 2})
+        self.assertFalse(a == b)
+        # Test equality
+        b = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
+        self.assertTrue(a == b)
+
     def test_load(self):
         json_str = ('{"barcode_type": "golay_12", "input_data": 1, '
                     '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '

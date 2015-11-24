@@ -612,6 +612,16 @@ class Parameters(object):
     'from_default_params'.
     """
 
+    def __eq__(self, other):
+        """Equality based on the paramter values and the command"""
+        if type(self) != type(other):
+            return False
+        if self.command != other.command:
+            return False
+        if self.values != other.values:
+            return False
+        return True
+
     @classmethod
     def load(cls, json_str, command):
         """Load the parameters set form a json str
