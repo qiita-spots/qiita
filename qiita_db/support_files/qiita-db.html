@@ -313,9 +313,9 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1045' y='133' width='760' height='2' />
 
 <!-- ============= Group 'Group_processing' ============= -->
-<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='1709' y='745' width='527' height='1175' />
-<text x='1720' y='760'>Group_processing</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1720' y='763' width='505' height='2' />
+<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='1709' y='715' width='527' height='1205' />
+<text x='1720' y='730'>Group_processing</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1720' y='733' width='505' height='2' />
 
 <!-- ============= Group 'Group_publication' ============= -->
 <rect class='grp' style='fill:#ffccff;stroke:#e0c5e0' x='2324' y='670' width='317' height='215' />
@@ -707,7 +707,7 @@ table {
 	study_artifact references artifact ( artifact_id )</title>
 </path>
 <text x='1538' y='700' transform='rotate(0 1538,700)' title='Foreign Key fk_study_artifact_artifact
-	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 795 L 2025,795' >
+	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 795 L 2145,795' >
 	<title>Foreign Key fk_software_publication
 	software_publication references software ( software_id )</title>
 </path>
@@ -727,12 +727,7 @@ table {
 	ebi_run_accession references artifact ( artifact_id )</title>
 </path>
 <text x='1283' y='955' transform='rotate(0 1283,955)' title='Foreign Key fk_ebi_run_accession_artifact
-	ebi_run_accession references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1875 795 L 1905,795' >
-	<title>Foreign Key fk_soft_command_software
-	software_command references software ( software_id )</title>
-</path>
-<text x='1882' y='790' transform='rotate(0 1882,790)' title='Foreign Key fk_soft_command_software
-	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 705 L 2107,705 Q 2100,705 2100,697 L 2100,630' >
+	ebi_run_accession references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 705 L 2107,705 Q 2100,705 2100,697 L 2100,630' >
 	<title>Foreign Key fk_study_publication_study
 	study_publication references study ( study_id )</title>
 </path>
@@ -742,27 +737,7 @@ table {
 	study_publication references publication ( publication_doi -> doi )</title>
 </path>
 <text x='2467' y='760' transform='rotate(0 2467,760)' title='Foreign Key fk_study_publication
-	study_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 915 L 1177,915 Q 1170,915 1170,922 L 1170,930' >
-	<title>Foreign Key fk_artifact_visibility
-	artifact references visibility ( visibility_id )</title>
-</path>
-<text x='1127' y='910' transform='rotate(0 1127,910)' title='Foreign Key fk_artifact_visibility
-	artifact references visibility ( visibility_id )' style='fill:#a1a0a0;'>visibility_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 840 L 1417,840 Q 1425,840 1425,832 L 1425,825' >
-	<title>Foreign Key fk_artifact_filetype
-	artifact references artifact_type ( artifact_type_id )</title>
-</path>
-<text x='1402' y='835' transform='rotate(0 1402,835)' title='Foreign Key fk_artifact_filetype
-	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 855 L 1725,855' >
-	<title>Foreign Key fk_artifact_soft_command
-	artifact references software_command ( command_id )</title>
-</path>
-<text x='1402' y='850' transform='rotate(0 1402,850)' title='Foreign Key fk_artifact_soft_command
-	artifact references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 945 L 1215,1132 Q 1215,1140 1207,1140 L 787,1140 Q 780,1140 780,1147 L 780,1155' >
-	<title>Foreign Key fk_artifact_data_type
-	artifact references data_type ( data_type_id )</title>
-</path>
-<text x='1228' y='945' transform='rotate(90 1228,945)' title='Foreign Key fk_artifact_data_type
-	artifact references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1455 L 1740,1425' >
+	study_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1740 1455 L 1740,1425' >
 	<title>Foreign Key fk_processed_params_uclust
 	processed_params_uclust references reference ( reference_id )</title>
 </path>
@@ -782,21 +757,16 @@ table {
 	reference references filepath ( tree_filepath -> filepath_id )</title>
 </path>
 <text x='1645' y='1315' transform='rotate(0 1645,1315)' title='Foreign Key fk_reference_tree_filepath
-	reference references filepath ( tree_filepath -> filepath_id )' style='fill:#a1a0a0;'>tree_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2010 1065 L 1942,1065 Q 1935,1065 1935,1057 L 1935,937 Q 1935,930 1927,930 L 1867,930 Q 1860,930 1860,922 L 1860,915' >
-	<title>Foreign Key fk_default_parameter_set
-	default_parameter_set references software_command ( command_id )</title>
-</path>
-<text x='1943' y='1060' transform='rotate(0 1943,1060)' title='Foreign Key fk_default_parameter_set
-	default_parameter_set references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1725 1050 L 1012,1050 Q 1005,1050 1005,1042 L 1005,412 Q 1005,405 997,405 L 480,405' >
+	reference references filepath ( tree_filepath -> filepath_id )' style='fill:#a1a0a0;'>tree_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1725 1050 L 1012,1050 Q 1005,1050 1005,1042 L 1005,412 Q 1005,405 997,405 L 480,405' >
 	<title>Foreign Key fk_processing_job_qiita_user
 	processing_job references qiita_user ( email )</title>
 </path>
 <text x='1699' y='1045' transform='rotate(0 1699,1045)' title='Foreign Key fk_processing_job_qiita_user
-	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1755 960 L 1755,915' >
+	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1860 960 L 1860,855' >
 	<title>Foreign Key fk_processing_job
 	processing_job references software_command ( command_id )</title>
 </path>
-<text x='1757' y='955' transform='rotate(270 1757,955)' title='Foreign Key fk_processing_job
+<text x='1862' y='955' transform='rotate(270 1862,955)' title='Foreign Key fk_processing_job
 	processing_job references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1755 1140 L 1755,1155' >
 	<title>Foreign Key fk_processing_job_status
 	processing_job references processing_job_status ( processing_job_status_id )</title>
@@ -812,12 +782,42 @@ table {
 	processed_params_sortmerna references reference ( reference_id )</title>
 </path>
 <text x='1900' y='1435' transform='rotate(0 1900,1435)' title='Foreign Key fk_processed_params_sortmerna
-	processed_params_sortmerna references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2040 900 L 1875,900' >
+	processed_params_sortmerna references reference ( reference_id )' style='fill:#a1a0a0;'>reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2040 870 L 1957,870 Q 1950,870 1950,862 L 1950,855' >
 	<title>Foreign Key fk_command_parameter
 	command_parameter references software_command ( command_id )</title>
 </path>
-<text x='1973' y='895' transform='rotate(0 1973,895)' title='Foreign Key fk_command_parameter
-	command_parameter references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+<text x='1973' y='865' transform='rotate(0 1973,865)' title='Foreign Key fk_command_parameter
+	command_parameter references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2010 1005 L 1942,1005 Q 1935,1005 1935,997 L 1935,855' >
+	<title>Foreign Key fk_default_parameter_set
+	default_parameter_set references software_command ( command_id )</title>
+</path>
+<text x='1943' y='1000' transform='rotate(0 1943,1000)' title='Foreign Key fk_default_parameter_set
+	default_parameter_set references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1965 765 L 2025,765' >
+	<title>Foreign Key fk_soft_command_software
+	software_command references software ( software_id )</title>
+</path>
+<text x='1972' y='760' transform='rotate(0 1972,760)' title='Foreign Key fk_soft_command_software
+	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 915 L 1177,915 Q 1170,915 1170,922 L 1170,930' >
+	<title>Foreign Key fk_artifact_visibility
+	artifact references visibility ( visibility_id )</title>
+</path>
+<text x='1127' y='910' transform='rotate(0 1127,910)' title='Foreign Key fk_artifact_visibility
+	artifact references visibility ( visibility_id )' style='fill:#a1a0a0;'>visibility_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 840 L 1417,840 Q 1425,840 1425,832 L 1425,825' >
+	<title>Foreign Key fk_artifact_filetype
+	artifact references artifact_type ( artifact_type_id )</title>
+</path>
+<text x='1402' y='835' transform='rotate(0 1402,835)' title='Foreign Key fk_artifact_filetype
+	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 870 L 1867,870 Q 1875,870 1875,862 L 1875,855' >
+	<title>Foreign Key fk_artifact_soft_command
+	artifact references software_command ( command_id )</title>
+</path>
+<text x='1402' y='865' transform='rotate(0 1402,865)' title='Foreign Key fk_artifact_soft_command
+	artifact references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 945 L 1215,1132 Q 1215,1140 1207,1140 L 787,1140 Q 780,1140 780,1147 L 780,1155' >
+	<title>Foreign Key fk_artifact_data_type
+	artifact references data_type ( data_type_id )</title>
+</path>
+<text x='1228' y='945' transform='rotate(90 1228,945)' title='Foreign Key fk_artifact_data_type
+	artifact references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1670,18 +1670,6 @@ Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a
 <a xlink:href='#study_artifact.artifact_id'><text x='1623' y='757'>artifact_id</text><title>artifact_id bigint not null</title></a>
 <a xlink:href='#study_artifact.artifact_id'><use id='fk' x='1683' y='746' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
 
-<!-- ============= Table 'software' ============= -->
-<rect class='table' x='1920' y='773' width='105' height='105' rx='7' ry='7' />
-<path d='M 1920.50 799.50 L 1920.50 780.50 Q 1920.50 773.50 1927.50 773.50 L 2017.50 773.50 Q 2024.50 773.50 2024.50 780.50 L 2024.50 799.50 L1920.50 799.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software'><text x='1949' y='787' class='tableTitle'>software</text><title>Table qiita.software</title></a>
-  <use id='nn' x='1922' y='807' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='1922' y='806' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
-<a xlink:href='#software.software_id'><text x='1938' y='817'>software_id</text><title>software_id bigserial not null</title></a>
-<a xlink:href='#software.software_id'><use id='ref' x='2013' y='806' xlink:href='#ref'/><title>Referred by software_command ( software_id ) 
-Referred by software_publication ( software_id ) </title></a>
-  <use id='nn' x='1922' y='822' xlink:href='#nn'/><a xlink:href='#software.name'><text x='1938' y='832'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='1922' y='837' xlink:href='#nn'/><a xlink:href='#software.version'><text x='1938' y='847'>version</text><title>version varchar not null</title></a>
-  <use id='nn' x='1922' y='852' xlink:href='#nn'/><a xlink:href='#software.description'><text x='1938' y='862'>description</text><title>description varchar not null</title></a>
-
 <!-- ============= Table 'software_publication' ============= -->
 <rect class='table' x='2340' y='788' width='135' height='75' rx='7' ry='7' />
 <path d='M 2340.50 814.50 L 2340.50 795.50 Q 2340.50 788.50 2347.50 788.50 L 2467.50 788.50 Q 2474.50 788.50 2474.50 795.50 L 2474.50 814.50 L2340.50 814.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -1744,26 +1732,6 @@ Type of artifact</title></a>
 <a xlink:href='#artifact_type.artifact_type'><text x='1428' y='787'>artifact_type</text><title>artifact_type varchar not null</title></a>
   <use id='nn' x='1412' y='792' xlink:href='#nn'/><a xlink:href='#artifact_type.description'><text x='1428' y='802'>description</text><title>description varchar not null</title></a>
 
-<!-- ============= Table 'software_command' ============= -->
-<rect class='table' x='1740' y='773' width='135' height='135' rx='7' ry='7' />
-<path d='M 1740.50 799.50 L 1740.50 780.50 Q 1740.50 773.50 1747.50 773.50 L 1867.50 773.50 Q 1874.50 773.50 1874.50 780.50 L 1874.50 799.50 L1740.50 799.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software_command'><text x='1755' y='787' class='tableTitle'>software_command</text><title>Table qiita.software_command</title></a>
-  <use id='nn' x='1742' y='807' xlink:href='#nn'/><a xlink:href='#software_command.command_id'><use id='pk' x='1742' y='806' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
-<a xlink:href='#software_command.command_id'><text x='1758' y='817'>command_id</text><title>command_id bigserial not null</title></a>
-<a xlink:href='#software_command.command_id'><use id='ref' x='1863' y='806' xlink:href='#ref'/><title>Referred by artifact ( command_id ) 
-Referred by processing_job ( command_id ) 
-Referred by command_parameter ( command_id ) 
-Referred by command_parameter ( command_id ) 
-Referred by default_parameter_set ( command_id ) 
-Referred by default_parameter_set ( command_id ) </title></a>
-  <use id='nn' x='1742' y='822' xlink:href='#nn'/><a xlink:href='#software_command.name'><text x='1758' y='832'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='1742' y='837' xlink:href='#nn'/><a xlink:href='#software_command.software_id'><use id='idx' x='1742' y='836' xlink:href='#idx'/><title>Index  ( software_id ) </title></a>
-<a xlink:href='#software_command.software_id'><text x='1758' y='847'>software_id</text><title>software_id bigint not null</title></a>
-<a xlink:href='#software_command.software_id'><use id='fk' x='1863' y='836' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
-  <use id='nn' x='1742' y='852' xlink:href='#nn'/><a xlink:href='#software_command.description'><text x='1758' y='862'>description</text><title>description varchar not null</title></a>
-  <a xlink:href='#software_command.cli_cmd'><text x='1758' y='877'>cli_cmd</text><title>cli_cmd varchar</title></a>
-  <use id='nn' x='1742' y='882' xlink:href='#nn'/><a xlink:href='#software_command.parameters_table'><text x='1758' y='892'>parameters_table</text><title>parameters_table varchar not null</title></a>
-
 <!-- ============= Table 'publication' ============= -->
 <rect class='table' x='2535' y='788' width='90' height='75' rx='7' ry='7' />
 <path d='M 2535.50 814.50 L 2535.50 795.50 Q 2535.50 788.50 2542.50 788.50 L 2617.50 788.50 Q 2624.50 788.50 2624.50 795.50 L 2624.50 814.50 L2535.50 814.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -1808,39 +1776,6 @@ Referred by study_publication ( publication_doi -> doi ) </title></a>
   <use id='nn' x='842' y='792' xlink:href='#nn'/><a xlink:href='#data_directory.mountpoint'><text x='858' y='802'>mountpoint</text><title>mountpoint varchar not null</title></a>
   <use id='nn' x='842' y='807' xlink:href='#nn'/><a xlink:href='#data_directory.subdirectory'><text x='858' y='817'>subdirectory</text><title>subdirectory bool not null default FALSE</title></a>
   <use id='nn' x='842' y='822' xlink:href='#nn'/><a xlink:href='#data_directory.active'><text x='858' y='832'>active</text><title>active bool not null</title></a>
-
-<!-- ============= Table 'artifact' ============= -->
-<rect class='table' x='1200' y='743' width='195' height='195' rx='7' ry='7' />
-<path d='M 1200.50 769.50 L 1200.50 750.50 Q 1200.50 743.50 1207.50 743.50 L 1387.50 743.50 Q 1394.50 743.50 1394.50 750.50 L 1394.50 769.50 L1200.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#artifact'><text x='1278' y='757' class='tableTitle'>artifact</text><title>Table qiita.artifact
-Represents data in the system</title></a>
-  <use id='nn' x='1202' y='777' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1202' y='776' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
-<a xlink:href='#artifact.artifact_id'><text x='1218' y='787'>artifact_id</text><title>artifact_id bigserial not null</title></a>
-<a xlink:href='#artifact.artifact_id'><use id='ref' x='1383' y='776' xlink:href='#ref'/><title>Referred by analysis_sample ( artifact_id ) 
-Referred by artifact_filepath ( artifact_id ) 
-Referred by ebi_run_accession ( artifact_id ) 
-Referred by parent_artifact ( artifact_id ) 
-Referred by parent_artifact ( parent_id -> artifact_id ) 
-Referred by prep_template ( artifact_id ) 
-Referred by study_artifact ( artifact_id ) </title></a>
-  <use id='nn' x='1202' y='792' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='802'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
-  <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='806' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
-<a xlink:href='#artifact.command_id'><text x='1218' y='817'>command_id</text><title>command_id bigint</title></a>
-<a xlink:href='#artifact.command_id'><use id='fk' x='1383' y='806' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
-  <a xlink:href='#artifact.command_parameters_id'><text x='1218' y='832'>command_parameters_id</text><title>command_parameters_id bigint</title></a>
-  <use id='nn' x='1202' y='837' xlink:href='#nn'/><a xlink:href='#artifact.visibility_id'><use id='idx' x='1202' y='836' xlink:href='#idx'/><title>Index  ( visibility_id ) </title></a>
-<a xlink:href='#artifact.visibility_id'><text x='1218' y='847'>visibility_id</text><title>visibility_id bigint not null
-If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public</title></a>
-<a xlink:href='#artifact.visibility_id'><use id='fk' x='1383' y='836' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
-  <a xlink:href='#artifact.artifact_type_id'><use id='idx' x='1202' y='851' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
-<a xlink:href='#artifact.artifact_type_id'><text x='1218' y='862'>artifact_type_id</text><title>artifact_type_id integer</title></a>
-<a xlink:href='#artifact.artifact_type_id'><use id='fk' x='1383' y='851' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
-  <use id='nn' x='1202' y='867' xlink:href='#nn'/><a xlink:href='#artifact.data_type_id'><use id='idx' x='1202' y='866' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
-<a xlink:href='#artifact.data_type_id'><text x='1218' y='877'>data_type_id</text><title>data_type_id bigint not null</title></a>
-<a xlink:href='#artifact.data_type_id'><use id='fk' x='1383' y='866' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
-  <use id='nn' x='1202' y='882' xlink:href='#nn'/><a xlink:href='#artifact.can_be_submitted_to_ebi'><text x='1218' y='892'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
-  <use id='nn' x='1202' y='897' xlink:href='#nn'/><a xlink:href='#artifact.can_be_submitted_to_vamps'><text x='1218' y='907'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
-  <use id='nn' x='1202' y='912' xlink:href='#nn'/><a xlink:href='#artifact.submitted_to_vamps'><text x='1218' y='922'>submitted_to_vamps</text><title>submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
 
 <!-- ============= Table 'preprocessed_spectra_params' ============= -->
 <rect class='table' x='1995' y='1823' width='180' height='75' rx='7' ry='7' />
@@ -1895,20 +1830,6 @@ Referred by processed_params_uclust ( reference_id ) </title></a>
 <a xlink:href='#processing_job_status.processing_job_status_id'><use id='ref' x='1953' y='1196' xlink:href='#ref'/><title>Referred by processing_job ( processing_job_status_id ) </title></a>
   <use id='nn' x='1742' y='1212' xlink:href='#nn'/><a xlink:href='#processing_job_status.processing_job_status'><text x='1758' y='1222'>processing_job_status</text><title>processing_job_status varchar not null</title></a>
   <use id='nn' x='1742' y='1227' xlink:href='#nn'/><a xlink:href='#processing_job_status.processing_job_status_description'><text x='1758' y='1237'>processing_job_status_description</text><title>processing_job_status_description varchar not null</title></a>
-
-<!-- ============= Table 'default_parameter_set' ============= -->
-<rect class='table' x='2025' y='1058' width='165' height='105' rx='7' ry='7' />
-<path d='M 2025.50 1084.50 L 2025.50 1065.50 Q 2025.50 1058.50 2032.50 1058.50 L 2182.50 1058.50 Q 2189.50 1058.50 2189.50 1065.50 L 2189.50 1084.50 L2025.50 1084.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#default_parameter_set'><text x='2047' y='1072' class='tableTitle'>default_parameter_set</text><title>Table qiita.default_parameter_set</title></a>
-  <use id='nn' x='2027' y='1092' xlink:href='#nn'/><a xlink:href='#default_parameter_set.default_parameter_set_id'><use id='pk' x='2027' y='1091' xlink:href='#pk'/><title>Primary Key  ( default_parameter_set_id ) </title></a>
-<a xlink:href='#default_parameter_set.default_parameter_set_id'><text x='2043' y='1102'>default_parameter_set_id</text><title>default_parameter_set_id bigserial not null</title></a>
-  <use id='nn' x='2027' y='1107' xlink:href='#nn'/><a xlink:href='#default_parameter_set.command_id'><use id='unq' x='2027' y='1106' xlink:href='#unq'/><title>Index  ( command_id ) Unique Index  ( command_id, parameter_set_name ) </title></a>
-<a xlink:href='#default_parameter_set.command_id'><text x='2043' y='1117'>command_id</text><title>command_id bigint not null</title></a>
-<a xlink:href='#default_parameter_set.command_id'><use id='fk' x='2178' y='1106' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
-  <use id='nn' x='2027' y='1122' xlink:href='#nn'/><a xlink:href='#default_parameter_set.parameter_set_name'><use id='unq' x='2027' y='1121' xlink:href='#unq'/><title>Unique Index  ( command_id, parameter_set_name ) </title></a>
-<a xlink:href='#default_parameter_set.parameter_set_name'><text x='2043' y='1132'>parameter_set_name</text><title>parameter_set_name varchar not null</title></a>
-  <use id='nn' x='2027' y='1137' xlink:href='#nn'/><a xlink:href='#default_parameter_set.parameter_set'><text x='2043' y='1147'>parameter_set</text><title>parameter_set varchar not null
-This is a varchar here &#045; but is of type JSON in postgresql&#046;</title></a>
 
 <!-- ============= Table 'processing_job' ============= -->
 <rect class='table' x='1740' y='968' width='180' height='165' rx='7' ry='7' />
@@ -1997,19 +1918,6 @@ What version of reference or type of reference used</title></a>
   <use id='nn' x='1982' y='1557' xlink:href='#nn'/><a xlink:href='#processed_params_sortmerna.param_set_name'><text x='1998' y='1567'>param_set_name</text><title>param_set_name varchar&#040;100&#041; not null default &#039;Default&#039;
 The name of the parameter set</title></a>
 
-<!-- ============= Table 'command_parameter' ============= -->
-<rect class='table' x='2055' y='893' width='135' height='120' rx='7' ry='7' />
-<path d='M 2055.50 919.50 L 2055.50 900.50 Q 2055.50 893.50 2062.50 893.50 L 2182.50 893.50 Q 2189.50 893.50 2189.50 900.50 L 2189.50 919.50 L2055.50 919.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#command_parameter'><text x='2065' y='907' class='tableTitle'>command_parameter</text><title>Table qiita.command_parameter</title></a>
-  <use id='nn' x='2057' y='927' xlink:href='#nn'/><a xlink:href='#command_parameter.command_id'><use id='pk' x='2057' y='926' xlink:href='#pk'/><title>Index  ( command_id ) Primary Key  ( command_id, parameter_name ) </title></a>
-<a xlink:href='#command_parameter.command_id'><text x='2073' y='937'>command_id</text><title>command_id bigint not null</title></a>
-<a xlink:href='#command_parameter.command_id'><use id='fk' x='2178' y='926' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
-  <use id='nn' x='2057' y='942' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_name'><use id='pk' x='2057' y='941' xlink:href='#pk'/><title>Primary Key  ( command_id, parameter_name ) </title></a>
-<a xlink:href='#command_parameter.parameter_name'><text x='2073' y='952'>parameter_name</text><title>parameter_name varchar not null</title></a>
-  <use id='nn' x='2057' y='957' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_type'><text x='2073' y='967'>parameter_type</text><title>parameter_type varchar not null</title></a>
-  <use id='nn' x='2057' y='972' xlink:href='#nn'/><a xlink:href='#command_parameter.required'><text x='2073' y='982'>required</text><title>required bool not null</title></a>
-  <a xlink:href='#command_parameter.default_value'><text x='2073' y='997'>default_value</text><title>default_value varchar</title></a>
-
 <!-- ============= Table 'preprocessed_sequence_illumina_params' ============= -->
 <rect class='table' x='1980' y='1598' width='240' height='210' rx='7' ry='7' />
 <path d='M 1980.50 1624.50 L 1980.50 1605.50 Q 1980.50 1598.50 1987.50 1598.50 L 2212.50 1598.50 Q 2219.50 1598.50 2219.50 1605.50 L 2219.50 1624.50 L1980.50 1624.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -2028,6 +1936,97 @@ Parameters used for processing illumina sequence data&#046;</title></a>
   <use id='nn' x='1982' y='1767' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.max_barcode_errors'><text x='1998' y='1777'>max_barcode_errors</text><title>max_barcode_errors real not null default 1&#046;5</title></a>
   <use id='nn' x='1982' y='1782' xlink:href='#nn'/><a xlink:href='#preprocessed_sequence_illumina_params.param_set_name'><text x='1998' y='1792'>param_set_name</text><title>param_set_name varchar&#040;100&#041; not null
 The name of the parameter set</title></a>
+
+<!-- ============= Table 'command_parameter' ============= -->
+<rect class='table' x='2055' y='863' width='135' height='120' rx='7' ry='7' />
+<path d='M 2055.50 889.50 L 2055.50 870.50 Q 2055.50 863.50 2062.50 863.50 L 2182.50 863.50 Q 2189.50 863.50 2189.50 870.50 L 2189.50 889.50 L2055.50 889.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#command_parameter'><text x='2065' y='877' class='tableTitle'>command_parameter</text><title>Table qiita.command_parameter</title></a>
+  <use id='nn' x='2057' y='897' xlink:href='#nn'/><a xlink:href='#command_parameter.command_id'><use id='pk' x='2057' y='896' xlink:href='#pk'/><title>Index  ( command_id ) Primary Key  ( command_id, parameter_name ) </title></a>
+<a xlink:href='#command_parameter.command_id'><text x='2073' y='907'>command_id</text><title>command_id bigint not null</title></a>
+<a xlink:href='#command_parameter.command_id'><use id='fk' x='2178' y='896' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <use id='nn' x='2057' y='912' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_name'><use id='pk' x='2057' y='911' xlink:href='#pk'/><title>Primary Key  ( command_id, parameter_name ) </title></a>
+<a xlink:href='#command_parameter.parameter_name'><text x='2073' y='922'>parameter_name</text><title>parameter_name varchar not null</title></a>
+  <use id='nn' x='2057' y='927' xlink:href='#nn'/><a xlink:href='#command_parameter.parameter_type'><text x='2073' y='937'>parameter_type</text><title>parameter_type varchar not null</title></a>
+  <use id='nn' x='2057' y='942' xlink:href='#nn'/><a xlink:href='#command_parameter.required'><text x='2073' y='952'>required</text><title>required bool not null</title></a>
+  <a xlink:href='#command_parameter.default_value'><text x='2073' y='967'>default_value</text><title>default_value varchar</title></a>
+
+<!-- ============= Table 'default_parameter_set' ============= -->
+<rect class='table' x='2025' y='998' width='165' height='105' rx='7' ry='7' />
+<path d='M 2025.50 1024.50 L 2025.50 1005.50 Q 2025.50 998.50 2032.50 998.50 L 2182.50 998.50 Q 2189.50 998.50 2189.50 1005.50 L 2189.50 1024.50 L2025.50 1024.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#default_parameter_set'><text x='2047' y='1012' class='tableTitle'>default_parameter_set</text><title>Table qiita.default_parameter_set</title></a>
+  <use id='nn' x='2027' y='1032' xlink:href='#nn'/><a xlink:href='#default_parameter_set.default_parameter_set_id'><use id='pk' x='2027' y='1031' xlink:href='#pk'/><title>Primary Key  ( default_parameter_set_id ) </title></a>
+<a xlink:href='#default_parameter_set.default_parameter_set_id'><text x='2043' y='1042'>default_parameter_set_id</text><title>default_parameter_set_id bigserial not null</title></a>
+  <use id='nn' x='2027' y='1047' xlink:href='#nn'/><a xlink:href='#default_parameter_set.command_id'><use id='unq' x='2027' y='1046' xlink:href='#unq'/><title>Index  ( command_id ) Unique Index  ( command_id, parameter_set_name ) </title></a>
+<a xlink:href='#default_parameter_set.command_id'><text x='2043' y='1057'>command_id</text><title>command_id bigint not null</title></a>
+<a xlink:href='#default_parameter_set.command_id'><use id='fk' x='2178' y='1046' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <use id='nn' x='2027' y='1062' xlink:href='#nn'/><a xlink:href='#default_parameter_set.parameter_set_name'><use id='unq' x='2027' y='1061' xlink:href='#unq'/><title>Unique Index  ( command_id, parameter_set_name ) </title></a>
+<a xlink:href='#default_parameter_set.parameter_set_name'><text x='2043' y='1072'>parameter_set_name</text><title>parameter_set_name varchar not null</title></a>
+  <use id='nn' x='2027' y='1077' xlink:href='#nn'/><a xlink:href='#default_parameter_set.parameter_set'><text x='2043' y='1087'>parameter_set</text><title>parameter_set varchar not null
+This is a varchar here &#045; but is of type JSON in postgresql&#046;</title></a>
+
+<!-- ============= Table 'software' ============= -->
+<rect class='table' x='2040' y='743' width='105' height='105' rx='7' ry='7' />
+<path d='M 2040.50 769.50 L 2040.50 750.50 Q 2040.50 743.50 2047.50 743.50 L 2137.50 743.50 Q 2144.50 743.50 2144.50 750.50 L 2144.50 769.50 L2040.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software'><text x='2069' y='757' class='tableTitle'>software</text><title>Table qiita.software</title></a>
+  <use id='nn' x='2042' y='777' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2042' y='776' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
+<a xlink:href='#software.software_id'><text x='2058' y='787'>software_id</text><title>software_id bigserial not null</title></a>
+<a xlink:href='#software.software_id'><use id='ref' x='2133' y='776' xlink:href='#ref'/><title>Referred by software_command ( software_id ) 
+Referred by software_publication ( software_id ) </title></a>
+  <use id='nn' x='2042' y='792' xlink:href='#nn'/><a xlink:href='#software.name'><text x='2058' y='802'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2042' y='807' xlink:href='#nn'/><a xlink:href='#software.version'><text x='2058' y='817'>version</text><title>version varchar not null</title></a>
+  <use id='nn' x='2042' y='822' xlink:href='#nn'/><a xlink:href='#software.description'><text x='2058' y='832'>description</text><title>description varchar not null</title></a>
+
+<!-- ============= Table 'software_command' ============= -->
+<rect class='table' x='1845' y='743' width='120' height='105' rx='7' ry='7' />
+<path d='M 1845.50 769.50 L 1845.50 750.50 Q 1845.50 743.50 1852.50 743.50 L 1957.50 743.50 Q 1964.50 743.50 1964.50 750.50 L 1964.50 769.50 L1845.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software_command'><text x='1852' y='757' class='tableTitle'>software_command</text><title>Table qiita.software_command</title></a>
+  <use id='nn' x='1847' y='777' xlink:href='#nn'/><a xlink:href='#software_command.command_id'><use id='pk' x='1847' y='776' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
+<a xlink:href='#software_command.command_id'><text x='1863' y='787'>command_id</text><title>command_id bigserial not null</title></a>
+<a xlink:href='#software_command.command_id'><use id='ref' x='1953' y='776' xlink:href='#ref'/><title>Referred by artifact ( command_id ) 
+Referred by processing_job ( command_id ) 
+Referred by command_parameter ( command_id ) 
+Referred by command_parameter ( command_id ) 
+Referred by default_parameter_set ( command_id ) 
+Referred by default_parameter_set ( command_id ) </title></a>
+  <use id='nn' x='1847' y='792' xlink:href='#nn'/><a xlink:href='#software_command.name'><text x='1863' y='802'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='1847' y='807' xlink:href='#nn'/><a xlink:href='#software_command.software_id'><use id='idx' x='1847' y='806' xlink:href='#idx'/><title>Index  ( software_id ) </title></a>
+<a xlink:href='#software_command.software_id'><text x='1863' y='817'>software_id</text><title>software_id bigint not null</title></a>
+<a xlink:href='#software_command.software_id'><use id='fk' x='1953' y='806' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
+  <use id='nn' x='1847' y='822' xlink:href='#nn'/><a xlink:href='#software_command.description'><text x='1863' y='832'>description</text><title>description varchar not null</title></a>
+
+<!-- ============= Table 'artifact' ============= -->
+<rect class='table' x='1200' y='743' width='195' height='195' rx='7' ry='7' />
+<path d='M 1200.50 769.50 L 1200.50 750.50 Q 1200.50 743.50 1207.50 743.50 L 1387.50 743.50 Q 1394.50 743.50 1394.50 750.50 L 1394.50 769.50 L1200.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#artifact'><text x='1278' y='757' class='tableTitle'>artifact</text><title>Table qiita.artifact
+Represents data in the system</title></a>
+  <use id='nn' x='1202' y='777' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1202' y='776' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
+<a xlink:href='#artifact.artifact_id'><text x='1218' y='787'>artifact_id</text><title>artifact_id bigserial not null</title></a>
+<a xlink:href='#artifact.artifact_id'><use id='ref' x='1383' y='776' xlink:href='#ref'/><title>Referred by analysis_sample ( artifact_id ) 
+Referred by artifact_filepath ( artifact_id ) 
+Referred by ebi_run_accession ( artifact_id ) 
+Referred by parent_artifact ( artifact_id ) 
+Referred by parent_artifact ( parent_id -> artifact_id ) 
+Referred by prep_template ( artifact_id ) 
+Referred by study_artifact ( artifact_id ) </title></a>
+  <use id='nn' x='1202' y='792' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='802'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
+  <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='806' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
+<a xlink:href='#artifact.command_id'><text x='1218' y='817'>command_id</text><title>command_id bigint</title></a>
+<a xlink:href='#artifact.command_id'><use id='fk' x='1383' y='806' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <a xlink:href='#artifact.command_parameters'><text x='1218' y='832'>command_parameters</text><title>command_parameters varchar
+Varchar in dbschema but is JSON in the postgresDB</title></a>
+  <use id='nn' x='1202' y='837' xlink:href='#nn'/><a xlink:href='#artifact.visibility_id'><use id='idx' x='1202' y='836' xlink:href='#idx'/><title>Index  ( visibility_id ) </title></a>
+<a xlink:href='#artifact.visibility_id'><text x='1218' y='847'>visibility_id</text><title>visibility_id bigint not null
+If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public</title></a>
+<a xlink:href='#artifact.visibility_id'><use id='fk' x='1383' y='836' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
+  <a xlink:href='#artifact.artifact_type_id'><use id='idx' x='1202' y='851' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
+<a xlink:href='#artifact.artifact_type_id'><text x='1218' y='862'>artifact_type_id</text><title>artifact_type_id integer</title></a>
+<a xlink:href='#artifact.artifact_type_id'><use id='fk' x='1383' y='851' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
+  <use id='nn' x='1202' y='867' xlink:href='#nn'/><a xlink:href='#artifact.data_type_id'><use id='idx' x='1202' y='866' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#artifact.data_type_id'><text x='1218' y='877'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#artifact.data_type_id'><use id='fk' x='1383' y='866' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
+  <use id='nn' x='1202' y='882' xlink:href='#nn'/><a xlink:href='#artifact.can_be_submitted_to_ebi'><text x='1218' y='892'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
+  <use id='nn' x='1202' y='897' xlink:href='#nn'/><a xlink:href='#artifact.can_be_submitted_to_vamps'><text x='1218' y='907'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+  <use id='nn' x='1202' y='912' xlink:href='#nn'/><a xlink:href='#artifact.submitted_to_vamps'><text x='1218' y='922'>submitted_to_vamps</text><title>submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
 
 </g></svg>
 
@@ -4723,40 +4722,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='software'>Table software</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='software.software_id'>software&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.name'>name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.version'>version</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.description'>description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;software primary key</td>
-		<td> ON software&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='software_publication'>Table software_publication</a></th></tr>
 </thead>
 <tbody>
@@ -4960,60 +4925,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='software_command'>Table software_command</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='software_command.command_id'>command&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_command.name'>name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_command.software_id'>software&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_command.description'>description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_command.cli_cmd'>cli&#095;cmd</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_command.parameters_table'>parameters&#095;table</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;soft&#095;command primary key</td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;soft&#095;command </td>
-		<td> ON software&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_soft_command_software</td>
-		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='publication'>Table publication</a></th></tr>
 </thead>
 <tbody>
@@ -5145,108 +5056,6 @@ Controlled Vocabulary </td>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;data&#095;directory primary key</td>
 		<td> ON data&#095;directory&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='artifact'>Table artifact</a></th></tr>
-<tr><td colspan='3'>Represents data in the system </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='artifact.artifact_id'>artifact&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.generated_timestamp'>generated&#095;timestamp</a></td>
-		<td> timestamp  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.command_parameters_id'>command&#095;parameters&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.visibility_id'>visibility&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.artifact_type_id'>artifact&#095;type&#095;id</a></td>
-		<td> integer   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.can_be_submitted_to_ebi'>can&#095;be&#095;submitted&#095;to&#095;ebi</a></td>
-		<td> bool  NOT NULL  DEFO 'FALSE' </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.can_be_submitted_to_vamps'>can&#095;be&#095;submitted&#095;to&#095;vamps</a></td>
-		<td> bool  NOT NULL  DEFO 'FALSE' </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.submitted_to_vamps'>submitted&#095;to&#095;vamps</a></td>
-		<td> bool  NOT NULL  DEFO 'FALSE' </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;artifact primary key</td>
-		<td> ON artifact&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact&#095;0 </td>
-		<td> ON visibility&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact&#095;1 </td>
-		<td> ON artifact&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact </td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact&#095;2 </td>
-		<td> ON data&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_artifact_visibility</td>
-		<td > ( visibility&#095;id ) ref <a href='#visibility'>visibility</a> (visibility&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_artifact_filetype</td>
-		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_artifact_soft_command</td>
-		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_artifact_data_type</td>
-		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5423,54 +5232,6 @@ Controlled Vocabulary </td>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;processing&#095;job&#095;status primary key</td>
 		<td> ON processing&#095;job&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='default_parameter_set'>Table default_parameter_set</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='default_parameter_set.default_parameter_set_id'>default&#095;parameter&#095;set&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='default_parameter_set.command_id'>command&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='default_parameter_set.parameter_set_name'>parameter&#095;set&#095;name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='default_parameter_set.parameter_set'>parameter&#095;set</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td> This is a varchar here &#045; but is of type JSON in postgresql&#046; </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;default&#095;parameter&#095;set primary key</td>
-		<td> ON default&#095;parameter&#095;set&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;default&#095;parameter&#095;set </td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;default&#095;parameter&#095;set&#095;0 unique</td>
-		<td> ON command&#095;id&#044; parameter&#095;set&#095;name</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_default_parameter_set</td>
-		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5735,55 +5496,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='command_parameter'>Table command_parameter</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='command_parameter.command_id'>command&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='command_parameter.parameter_name'>parameter&#095;name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='command_parameter.parameter_type'>parameter&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='command_parameter.required'>required</a></td>
-		<td> bool  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='command_parameter.default_value'>default&#095;value</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;command&#095;parameter </td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;command&#095;parameter&#095;0 primary key</td>
-		<td> ON command&#095;id&#044; parameter&#095;name</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_command_parameter</td>
-		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='preprocessed_sequence_illumina_params'>Table preprocessed_sequence_illumina_params</a></th></tr>
 <tr><td colspan='3'>Parameters used for processing illumina sequence data&#046; </td></tr>
 </thead>
@@ -5846,6 +5558,283 @@ Controlled Vocabulary </td>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;preprocessed&#095;sequence&#095;illumina&#095;params primary key</td>
 		<td> ON parameters&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='command_parameter'>Table command_parameter</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='command_parameter.command_id'>command&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.parameter_name'>parameter&#095;name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.parameter_type'>parameter&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.required'>required</a></td>
+		<td> bool  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='command_parameter.default_value'>default&#095;value</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;command&#095;parameter </td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;command&#095;parameter&#095;0 primary key</td>
+		<td> ON command&#095;id&#044; parameter&#095;name</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_command_parameter</td>
+		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='default_parameter_set'>Table default_parameter_set</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='default_parameter_set.default_parameter_set_id'>default&#095;parameter&#095;set&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='default_parameter_set.command_id'>command&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='default_parameter_set.parameter_set_name'>parameter&#095;set&#095;name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='default_parameter_set.parameter_set'>parameter&#095;set</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> This is a varchar here &#045; but is of type JSON in postgresql&#046; </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;default&#095;parameter&#095;set primary key</td>
+		<td> ON default&#095;parameter&#095;set&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;default&#095;parameter&#095;set </td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;default&#095;parameter&#095;set&#095;0 unique</td>
+		<td> ON command&#095;id&#044; parameter&#095;set&#095;name</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_default_parameter_set</td>
+		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='software'>Table software</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='software.software_id'>software&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.version'>version</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;software primary key</td>
+		<td> ON software&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='software_command'>Table software_command</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='software_command.command_id'>command&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software_command.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software_command.software_id'>software&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software_command.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;soft&#095;command primary key</td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;soft&#095;command </td>
+		<td> ON software&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_soft_command_software</td>
+		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='artifact'>Table artifact</a></th></tr>
+<tr><td colspan='3'>Represents data in the system </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='artifact.artifact_id'>artifact&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.generated_timestamp'>generated&#095;timestamp</a></td>
+		<td> timestamp  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.command_id'>command&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.command_parameters'>command&#095;parameters</a></td>
+		<td> varchar   </td>
+		<td> Varchar in dbschema but is JSON in the postgresDB </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.visibility_id'>visibility&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.artifact_type_id'>artifact&#095;type&#095;id</a></td>
+		<td> integer   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.data_type_id'>data&#095;type&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.can_be_submitted_to_ebi'>can&#095;be&#095;submitted&#095;to&#095;ebi</a></td>
+		<td> bool  NOT NULL  DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.can_be_submitted_to_vamps'>can&#095;be&#095;submitted&#095;to&#095;vamps</a></td>
+		<td> bool  NOT NULL  DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.submitted_to_vamps'>submitted&#095;to&#095;vamps</a></td>
+		<td> bool  NOT NULL  DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;artifact primary key</td>
+		<td> ON artifact&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;0 </td>
+		<td> ON visibility&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;1 </td>
+		<td> ON artifact&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact </td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;2 </td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_artifact_visibility</td>
+		<td > ( visibility&#095;id ) ref <a href='#visibility'>visibility</a> (visibility&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_artifact_filetype</td>
+		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_artifact_soft_command</td>
+		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_artifact_data_type</td>
+		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>

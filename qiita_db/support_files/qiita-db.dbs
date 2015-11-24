@@ -213,7 +213,9 @@
 			<column name="artifact_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="generated_timestamp" type="timestamp" jt="93" mandatory="y" />
 			<column name="command_id" type="bigint" jt="-5" />
-			<column name="command_parameters_id" type="bigint" jt="-5" />
+			<column name="command_parameters" type="varchar" jt="12" >
+				<comment><![CDATA[Varchar in dbschema but is JSON in the postgresDB]]></comment>
+			</column>
 			<column name="visibility_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[If the artifact is sandbox, awaiting_for_approval, private or public]]></comment>
 			</column>
@@ -1296,8 +1298,6 @@
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="software_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
-			<column name="cli_cmd" type="varchar" jt="12" />
-			<column name="parameters_table" type="varchar" jt="12" mandatory="y" />
 			<index name="pk_soft_command" unique="PRIMARY_KEY" >
 				<column name="command_id" />
 			</index>
@@ -1719,28 +1719,28 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_portal" color="a8c4ef" x="1995" y="45" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1170" />
 		<entity schema="qiita" name="study_artifact" color="b2cdf7" x="1605" y="705" />
-		<entity schema="qiita" name="software" color="b2cdf7" x="1920" y="780" />
 		<entity schema="qiita" name="software_publication" color="b2cdf7" x="2340" y="795" />
 		<entity schema="qiita" name="visibility" color="b2cdf7" x="1050" y="945" />
 		<entity schema="qiita" name="study_sample" color="d0def5" x="1455" y="150" />
 		<entity schema="qiita" name="ebi_run_accession" color="b2cdf7" x="1350" y="945" />
 		<entity schema="qiita" name="artifact_type" color="d0def5" x="1410" y="735" />
-		<entity schema="qiita" name="software_command" color="b2cdf7" x="1740" y="780" />
 		<entity schema="qiita" name="publication" color="b2cdf7" x="2535" y="795" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2235" y="555" />
 		<entity schema="qiita" name="study_publication" color="b2cdf7" x="2340" y="705" />
 		<entity schema="qiita" name="data_directory" color="b2cdf7" x="840" y="735" />
-		<entity schema="qiita" name="artifact" color="b2cdf7" x="1200" y="750" />
 		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="1995" y="1830" />
 		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="1725" y="1470" />
 		<entity schema="qiita" name="reference" color="c0d4f3" x="1725" y="1290" />
 		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="1740" y="1170" />
-		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2025" y="1065" />
 		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1740" y="975" />
 		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="1725" y="1605" />
 		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1980" y="1425" />
-		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2055" y="900" />
 		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="1980" y="1605" />
+		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2055" y="870" />
+		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2025" y="1005" />
+		<entity schema="qiita" name="software" color="b2cdf7" x="2040" y="750" />
+		<entity schema="qiita" name="software_command" color="b2cdf7" x="1845" y="750" />
+		<entity schema="qiita" name="artifact" color="b2cdf7" x="1200" y="750" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
