@@ -22,7 +22,6 @@ import job
 import logger
 import meta_util
 import ontology
-import parameters
 import portal
 import reference
 import search
@@ -34,6 +33,6 @@ import processing_job
 
 __all__ = ["analysis", "artifact", "base", "commands", "environment_manager",
            "exceptions", "investigation", "job", "logger", "meta_util",
-           "ontology", "parameters", "portal", "reference", "search",
+           "ontology", "portal", "reference", "search",
            "software", "sql_connection", "study", "user", "util",
            "metadata_template", "processing_job"]
