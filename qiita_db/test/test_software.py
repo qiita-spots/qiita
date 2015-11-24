@@ -281,6 +281,11 @@ class DefaultParametersTests(TestCase):
 
 @qiita_test_checker()
 class ParametersTests(TestCase):
+    def test_init_error(self):
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            qdb.software.Parameters({'a': 1}, None)
+
     def test_eq(self):
         # Test difference due to type
         a = qdb.software.Parameters.from_default_params(

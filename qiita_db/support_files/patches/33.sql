@@ -63,7 +63,7 @@ CREATE INDEX idx_command_parameter ON qiita.command_parameter ( command_id ) ;
 ALTER TABLE qiita.command_parameter ADD CONSTRAINT fk_command_parameter FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
 
 -- default_parameter_set tables - holds the default parameter sets defined by
--- the system. If no arbitrary parameters is allowed in the system only the
+-- the system. If no arbitrary parameters are allowed in the system only the
 -- ones listed here will be shown. Note that the only parameters that are listed
 -- here are the ones that are not required, since the ones required do not
 -- have a default
