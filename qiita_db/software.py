@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from json import dumps, loads
+from copy import deepcopy
 
 import qiita_db as qdb
 
@@ -609,7 +610,7 @@ class Parameters(object):
 
     This class should never be isntantiated using the __init__ method. The
     recommended procedure is using of the classmethods 'load' or
-    'from_default_params'.
+    'from_default_params'
     """
 
     def __eq__(self, other):
@@ -623,51 +624,78 @@ class Parameters(object):
         return True
 
     @classmethod
-    def load(cls, json_str, command):
-        """Load the parameters set form a json str
+    def load(cls, command, json_str=None, values_dict=None):
+        """Load the parameters set form a json str or from a dict of values
+
+        The parameters `json_str` and `values_dict` are mutually exclusive,
+        only one of them should be provided at a time. However, one of them
+        should always be provided.
 
         Paramters
         ---------
-        json_str : str
-            The json string encoding the parameters
         command : qiita_db.software.Command
             The command to which the parameter set belongs to
+        json_str : str, optional
+            The json string encoding the parameters
+        values_dict : dict of {str: object}, optinal
+            The dictionary witht the parameter values
 
         Returns
         -------
         qiita_db.software.Parameters
             The loaded parameter set
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBError
+            - If `json_str` and `values` are both provided
+            - If neither `json_str` or `values` are provided
+            - If the provided JSON or values do not encode a parameter set of
+            the provided command.
         """
-        parameters = loads(json_str)
-        cmd_reqd_params = command.required_parameters
-        cmd_opt_params = command.optional_parameters
-
-        values = {}
-        for key in cmd_reqd_params:
-            try:
-                values[key] = parameters.pop(key)
-            except KeyError:
-                raise qdb.exceptions.QiitaDBError(
-                    "The provided JSON string doesn't encode a parameter set "
-                    "for command %s. Missing required parameter: %s"
-                    % (command.id, key))
-
-        for key in cmd_opt_params:
-            try:
-                values[key] = parameters.pop(key)
-            except KeyError:
-                raise qdb.exceptions.QiitaDBError(
-                    "The provided JSON string doesn't encode a parameter set "
-                    "for command %s. Missing optional parameter: %s"
-                    % (command.id, key))
-
-        if parameters:
+        if json_str is None and values_dict is None:
             raise qdb.exceptions.QiitaDBError(
-                "The provided JSON string doesn't encode a parameter set "
-                "for command %s. Extra parameters: %s"
-                % (command.id, ', '.join(parameters.keys())))
+                "Either `json_str` or `values_dict` should be provided.")
+        elif json_str is not None and values_dict is not None:
+            raise qdb.exceptions.QiitaDBError(
+                "Either `json_str` or `values_dict` should be provided, "
+                "but not both")
+        elif json_str is not None:
+            parameters = loads(json_str)
+            error_msg = ("The provided JSON string doesn't encode a "
+                         "parameter set for command %s" % command.id)
+        else:
+            parameters = deepcopy(values_dict)
+            error_msg = ("The provided values dictionary doesn't encode a "
+                         "parameter set for command %s" % command.id)
 
-        return cls(values, command)
+        with qdb.sql_connection.TRN:
+            cmd_reqd_params = command.required_parameters
+            cmd_opt_params = command.optional_parameters
+
+            values = {}
+            for key in cmd_reqd_params:
+                try:
+                    values[key] = parameters.pop(key)
+                except KeyError:
+                    raise qdb.exceptions.QiitaDBError(
+                        "%s. Missing required parameter: %s"
+                        % (error_msg, key))
+
+            for key in cmd_opt_params:
+                try:
+                    values[key] = parameters.pop(key)
+                except KeyError:
+                    raise qdb.exceptions.QiitaDBError(
+                        "%s. Missing optional parameter: %s"
+                        % (error_msg, key))
+
+            if parameters:
+                raise qdb.exceptions.QiitaDBError(
+                    "%s. Extra parameters: %s"
+                    % (error_msg, ', '.join(parameters.keys())))
+
+            return cls(values, command)
 
     @classmethod
     def from_default_params(cls, dflt_params, req_params, opt_params=None):

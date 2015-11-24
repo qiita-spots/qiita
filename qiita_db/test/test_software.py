@@ -301,7 +301,7 @@ class ParametersTests(TestCase):
             qdb.software.DefaultParameters(1), {'input_data': 1})
         self.assertTrue(a == b)
 
-    def test_load(self):
+    def test_load_json(self):
         json_str = ('{"barcode_type": "golay_12", "input_data": 1, '
                     '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
                     '"min_per_read_length_fraction": 0.75, '
@@ -309,7 +309,7 @@ class ParametersTests(TestCase):
                     '"rev_comp_barcode": false, '
                     '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
         cmd = qdb.software.Command(1)
-        obs = qdb.software.Parameters.load(json_str, cmd)
+        obs = qdb.software.Parameters.load(cmd, json_str=json_str)
         exp_values = {
             "barcode_type": "golay_12", "input_data": 1,
             "max_bad_run_length": 3, "max_barcode_errors": 1.5,
@@ -317,6 +317,18 @@ class ParametersTests(TestCase):
             "phred_quality_threshold": 3, "rev_comp": False,
             "rev_comp_barcode": False, "rev_comp_mapping_barcodes": False,
             "sequence_max_n": 0}
+        self.assertEqual(obs.values, exp_values)
+
+    def test_load_dictionary(self):
+        exp_values = {
+            "barcode_type": "golay_12", "input_data": 1,
+            "max_bad_run_length": 3, "max_barcode_errors": 1.5,
+            "min_per_read_length_fraction": 0.75,
+            "phred_quality_threshold": 3, "rev_comp": False,
+            "rev_comp_barcode": False, "rev_comp_mapping_barcodes": False,
+            "sequence_max_n": 0}
+        cmd = qdb.software.Command(1)
+        obs = qdb.software.Parameters.load(cmd, values_dict=exp_values)
         self.assertEqual(obs.values, exp_values)
 
     def test_load_error_missing_required(self):
@@ -328,7 +340,7 @@ class ParametersTests(TestCase):
                     '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
         cmd = qdb.software.Command(1)
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.software.Parameters.load(json_str, cmd)
+            qdb.software.Parameters.load(cmd, json_str=json_str)
 
     def test_load_error_missing_optional(self):
         json_str = ('{"barcode_type": "golay_12", "input_data": 1, '
@@ -339,7 +351,7 @@ class ParametersTests(TestCase):
                     '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
         cmd = qdb.software.Command(1)
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.software.Parameters.load(json_str, cmd)
+            qdb.software.Parameters.load(cmd, json_str=json_str)
 
     def test_load_error_extra_parameters(self):
         json_str = ('{"barcode_type": "golay_12", "input_data": 1, '
@@ -351,7 +363,7 @@ class ParametersTests(TestCase):
                     '"extra_param": 1}')
         cmd = qdb.software.Command(1)
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.software.Parameters.load(json_str, cmd)
+            qdb.software.Parameters.load(cmd, json_str=json_str)
 
     def test_from_default_parameters(self):
         obs = qdb.software.Parameters.from_default_params(
