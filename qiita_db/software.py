@@ -265,6 +265,24 @@ class Command(qdb.base.QiitaObject):
             res = qdb.sql_connection.TRN.execute_fetchindex()
             return {pname: [ptype, dflt] for pname, ptype, dflt in res}
 
+    @property
+    def default_parameter_sets(self):
+        """Returns the list of default parameter sets
+
+        Returns
+        -------
+        generator of qiita_db.software.DefaultParameters
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT default_parameter_set_id
+                     FROM qiita.default_parameter_set
+                     WHERE command_id = %s
+                     ORDER BY default_parameter_set_id"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            res = qdb.sql_connection.TRN.execute_fetchflatten()
+            for pid in res:
+                yield DefaultParameters(pid)
+
 
 class Software(qdb.base.QiitaObject):
     r"""A software package available in the system

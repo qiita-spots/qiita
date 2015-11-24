@@ -153,6 +153,22 @@ class CommandTests(TestCase):
         self.assertEqual(qdb.software.Command(2).optional_parameters,
                          exp_params)
 
+    def test_default_parameter_sets(self):
+        obs = list(qdb.software.Command(1).default_parameter_sets)
+        exp = [qdb.software.DefaultParameters(1),
+               qdb.software.DefaultParameters(2),
+               qdb.software.DefaultParameters(3),
+               qdb.software.DefaultParameters(4),
+               qdb.software.DefaultParameters(5),
+               qdb.software.DefaultParameters(6),
+               qdb.software.DefaultParameters(7)]
+        self.assertEqual(obs, exp)
+
+        obs = list(qdb.software.Command(2).default_parameter_sets)
+        exp = [qdb.software.DefaultParameters(8),
+               qdb.software.DefaultParameters(9)]
+        self.assertEqual(obs, exp)
+
 
 @qiita_test_checker()
 class SoftwareTests(TestCase):
