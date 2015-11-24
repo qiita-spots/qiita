@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from json import dumps, loads
+
 import qiita_db as qdb
 
 
@@ -51,15 +53,15 @@ class Command(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def exists(cls, software, cli_cmd):
+    def exists(cls, software, name):
         """Checks if the command already exists in the system
 
         Parameters
         ----------
         qiita_db.software.Software
             The software to which this command belongs to.
-        cli_cmd : str
-            The CLI used to call this command
+        name : str
+            The name of the command
 
         Returns
         -------
@@ -70,13 +72,30 @@ class Command(qdb.base.QiitaObject):
             sql = """SELECT EXISTS(SELECT *
                                    FROM qiita.software_command
                                    WHERE software_id = %s
-                                        AND cli_cmd = %s)"""
-            qdb.sql_connection.TRN.add(sql, [software.id, cli_cmd])
+                                        AND name = %s)"""
+            qdb.sql_connection.TRN.add(sql, [software.id, name])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def create(cls, software, name, description, cli_cmd, parameters_table):
+    def create(cls, software, name, description, parameters):
         r"""Creates a new command in the system
+
+        The supported types for the parameters are:
+            - string: the parameter is a free text input
+            - integer: the parameter is an integer
+            - float: the parameter is a float
+            - artifact: the parameter is an artifact instance, the artifact id
+            will be stored
+            - reference: the parameter is a reference instance, the reference
+            id will be stored
+            - choice: the format of this should be `choice:<json-dump-of-list>`
+            in which json-dump-of-list is the JSON dump of a list containing
+            the acceptable values
+
+        If the default value for a parameter is NULL, then the parameter will
+        be required. On the other hand, if it is provided, the parameter will
+        be optional and the default value will be used when the user doesn't
+        overwrite it.
 
         Parameters
         ----------
@@ -86,31 +105,83 @@ class Command(qdb.base.QiitaObject):
             The name of the command
         description : str
             The description of the command
-        cli_cmd : str
-            The CLI used to call this command
-        parameters_table : str
-            The name of the table in which the parameters of the commands are
-            stored
+        parameters : dict
+            The description of the parameters that this command received. The
+            format is: {parameter_name: (paramter_type, default)},
+            where parameter_name, paramter_type and default are strings. If
+            default is None,
 
         Returns
         -------
         qiita_db.software.Command
             The newly created command
+
+        Raises
+        ------
+        QiitaDBError
+            - If the parameters dictionary is malformed
+            - If one of the parameter types is not supported
+            - If the default value of a choice parameter is not listed in
+            the available choices
+        QiitaDBDuplicateError
+            - If the command already exists
         """
+        # Perform some sanity checks in the parameters dictionary
+        sql_param_values = []
+        for pname, vals in parameters.items():
+            if len(vals) != 2:
+                raise qdb.exceptions.QiitaDBError(
+                    "Malformed parameters dictionary, the format should be "
+                    "{param_name: [paramter_type, default]}. Found: "
+                    "%s for parameter name %s" % (vals, pname))
+
+            ptype, dflt = vals
+            # Check that the type is one of the supported types
+            supported_types = ['string', 'integer', 'float', 'artifact',
+                               'reference']
+            if ptype not in supported_types and not ptype.startswith('choice'):
+                supported_types.append('choice')
+                raise qdb.exceptions.QiitaDBError(
+                    "Unsupported parameters type '%s' for parameter %s. "
+                    "Supported types are: %s"
+                    % (ptype, pname, ', '.join(supported_types)))
+
+            if ptype.startswith('choice') and dflt is not None:
+                choices = loads(ptype.split(':')[1])
+                if dflt not in choices:
+                    raise qdb.exceptions.QiitaDBError(
+                        "The default value '%s' for the parameter %s is not "
+                        "listed in the available choices: %s"
+                        % (dflt, pname, ', '.join(choices)))
+
+            if dflt is not None:
+                sql_param_values.append([pname, ptype, False, dflt])
+            else:
+                sql_param_values.append([pname, ptype, True, None])
+
         with qdb.sql_connection.TRN:
-            if cls.exists(software, cli_cmd):
+            if cls.exists(software, name):
                 raise qdb.exceptions.QiitaDBDuplicateError(
-                    "command", "software: %d, cli_cmd: %s"
-                               % (software.id, cli_cmd))
+                    "command", "software: %d, name: %s"
+                               % (software.id, name))
+            # Add the command to the DB
             sql = """INSERT INTO qiita.software_command
-                            (name, software_id, description, cli_cmd,
-                             parameters_table)
-                     VALUES (%s, %s, %s, %s, %s)
+                            (name, software_id, description)
+                     VALUES (%s, %s, %s)
                      RETURNING command_id"""
-            sql_params = [name, software.id, description, cli_cmd,
-                          parameters_table]
+            sql_params = [name, software.id, description]
             qdb.sql_connection.TRN.add(sql, sql_params)
             c_id = qdb.sql_connection.TRN.execute_fetchlast()
+
+            # Add the parameters to the DB
+            sql = """INSERT INTO qiita.command_parameter
+                        (command_id, parameter_name, parameter_type, required,
+                         default_value)
+                     VALUES (%s, %s, %s, %s, %s)"""
+            sql_params = [[c_id, pname, p_type, reqd, default]
+                          for pname, p_type, reqd, default in sql_param_values]
+            qdb.sql_connection.TRN.add(sql, sql_params, many=True)
+            qdb.sql_connection.TRN.execute()
 
         return cls(c_id)
 
@@ -147,36 +218,52 @@ class Command(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
-    def cli(self):
-        """The CLI used to call the command
+    def parameters(self):
+        """Returns the parameters that the command accepts
 
         Returns
         -------
-        str
-            The CLI used to call the command
+        dict of {parameter_name: [ptype, dflt]}
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT cli_cmd
-                     FROM qiita.software_command
+            sql = """SELECT parameter_name, parameter_type, default_value
+                     FROM qiita.command_parameter
                      WHERE command_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+            return {pname: [ptype, dflt] for pname, ptype, dflt in res}
 
     @property
-    def parameters_table(self):
-        """The table in which the parameters of th e command are stored
+    def required_parameters(self):
+        """Returns the required parameters that the command accepts
 
         Returns
         -------
-        str
-            The name of the table
+        dict of {parameter_name: ptype}
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT parameters_table
-                     FROM qiita.software_command
-                     WHERE command_id = %s"""
+            sql = """SELECT parameter_name, parameter_type
+                     FROM qiita.command_parameter
+                     WHERE command_id = %s AND required = true"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+            return {pname: ptype for pname, ptype in res}
+
+    @property
+    def optional_parameters(self):
+        """Returns the optional parameters that the command accepts
+
+        Returns
+        -------
+        dict of {parameter_name: [ptype, default]}
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT parameter_name, parameter_type, default_value
+                     FROM qiita.command_parameter
+                     WHERE command_id = %s AND required = false"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+            return {pname: [ptype, dflt] for pname, ptype, dflt in res}
 
 
 class Software(qdb.base.QiitaObject):
@@ -338,8 +425,8 @@ class Software(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.execute()
 
 
-class Parameters(object):
-    """Models a specific set of parameters of a command
+class DefaultParameters(qdb.base.QiitaObject):
+    """Models a default set of parameters of a command
 
     Attributes
     ----------
@@ -358,45 +445,7 @@ class Parameters(object):
     --------
     qiita_db.software.Command
     """
-
-    def __eq__(self, other):
-        """Self and other are equal based on type, database id and table"""
-        if type(self) != type(other):
-            return False
-        if other._table != self._table:
-            return False
-        if other.id != self.id:
-            return False
-        return True
-
-    def __init__(self, id_, command):
-        """Initializes the object
-
-        Parameters
-        ----------
-        id_: int
-            The parameter set identifier
-        command : qiita_db.software.Command
-            The command to which the parameter is requested
-
-        Raises
-        ------
-        QiitaDBUnknownIDError
-            If `id_` does not correspond to a parameter set for the given
-            command
-        """
-        with qdb.sql_connection.TRN:
-            self._table = command.parameters_table
-            self.id = id_
-            self._command = command
-            sql = """SELECT EXISTS(
-                        SELECT *
-                        FROM qiita.{0}
-                        WHERE parameters_id = %s)""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [self.id])
-            if not qdb.sql_connection.TRN.execute_fetchlast():
-                raise qdb.exceptions.QiitaDBUnknownIDError(
-                    self.id, self._table)
+    _table = 'default_parameter_set'
 
     @classmethod
     def exists(cls, command, **kwargs):
@@ -413,31 +462,37 @@ class Parameters(object):
         -------
         bool
             Whether if the parameter set exists in the given command
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBError
+            - If there are missing parameters for the given command
+            - If there are extra parameters in `kwargs` than for the given
+              command
         """
         with qdb.sql_connection.TRN:
-            table = command.parameters_table
+            command_params = set(command.optional_parameters)
+            user_params = set(kwargs)
 
-            db_cols = set(qdb.util.get_table_cols(table))
-            db_cols.remove("param_set_name")
-            db_cols.remove("parameters_id")
-            missing = db_cols.difference(kwargs)
+            missing_in_user = command_params - user_params
+            extra_in_user = user_params - command_params
 
-            if missing:
+            if missing_in_user or extra_in_user:
                 raise qdb.exceptions.QiitaDBError(
-                    "Missing parameters for command %s: %s"
-                    % (command.name, ', '.join(missing)))
+                    "The given set of parameters do not match the ones for "
+                    "the command.\nMissing parameters: %s\n"
+                    "Extra parameters: %s\n"
+                    % (', '.join(missing_in_user), ', '.join(extra_in_user)))
 
-            extra = set(kwargs).difference(db_cols)
-            if extra:
-                raise qdb.exceptions.QiitaDBError(
-                    "Extra parameters for command %s: %s"
-                    % (command.name, ', '.join(extra)))
+            sql = """SELECT parameter_set
+                     FROM qiita.deafult_parameter_set
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [command.id])
+            for p_set in qdb.sql_connection.TRN.execute_fetchflatten():
+                if p_set == kwargs:
+                    return True
 
-            cols = ["{} = %s".format(col) for col in kwargs]
-            sql = "SELECT EXISTS(SELECT * FROM qiita.{0} WHERE {1})".format(
-                table, ' AND '.join(cols))
-            qdb.sql_connection.TRN.add(sql, kwargs.values())
-            return qdb.sql_connection.TRN.execute_fetchlast()
+            return False
 
     @classmethod
     def create(cls, param_set_name, command, **kwargs):
@@ -456,42 +511,31 @@ class Parameters(object):
         -------
         qiita_db.software.Parameters
             The new parameter set instance
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBError
+            - If there are missing parameters for the given command
+            - If there are extra parameters in `kwargs` than for the given
+              command
+        qdb.exceptions.QiitaDBDuplicateError
+            - If the parameter set already exists
         """
         with qdb.sql_connection.TRN:
+            # If the columns in kwargs and command do not match, cls.exists
+            # will raise the error for us
             if cls.exists(command, **kwargs):
                 raise qdb.exceptions.QiitaDBDuplicateError(
-                    command.parameters_table, "Values: %s" % kwargs)
+                    cls._table, "Values: %s" % kwargs)
 
-            vals = kwargs.values()
-            vals.insert(0, param_set_name)
+            sql = """INSERT INTO qiita.default_parameter_set
+                        (command_id, parameter_set_name, parameter_set)
+                     VALUES (%s, %s, %s)
+                     RETURNING default_parameter_set_id"""
+            sql_args = [command.id, param_set_name, dumps(kwargs)]
+            qdb.sql_connection.TRN.add(sql, sql_args)
 
-            sql = """INSERT INTO qiita.{0} (param_set_name, {1})
-                     VALUES (%s, {2})
-                     RETURNING parameters_id""".format(
-                command.parameters_table,
-                ', '.join(kwargs),
-                ', '.join(['%s'] * len(kwargs)))
-            qdb.sql_connection.TRN.add(sql, vals)
-
-            return cls(qdb.sql_connection.TRN.execute_fetchlast(), command)
-
-    @classmethod
-    def iter(cls, command):
-        """Iterates over all parameter sets of the given command
-
-        Returns
-        -------
-        generator
-            Yields a parameter instance
-        """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT parameters_id
-                     FROM qiita.{0}
-                     ORDER BY parameters_id""".format(
-                command.parameters_table)
-            qdb.sql_connection.TRN.add(sql)
-            for result in qdb.sql_connection.TRN.execute_fetchflatten():
-                yield cls(result, command)
+            return cls(qdb.sql_connection.TRN.execute_fetchlast())
 
     @property
     def name(self):
@@ -504,8 +548,8 @@ class Parameters(object):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT param_set_name
-                     FROM qiita.{0}
-                     WHERE parameters_id = %s""".format(self._table)
+                     FROM qiita.default_parameter_set
+                     WHERE parameters_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -519,14 +563,11 @@ class Parameters(object):
             Dictionary with the parameters values keyed by parameter name
         """
         with qdb.sql_connection.TRN:
-            sql = "SELECT * FROM qiita.{0} WHERE parameters_id = %s".format(
-                self._table)
+            sql = """SELECT parameter_set
+                     FROM qiita.default_parameter_set
+                     WHERE parameters_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
-            # There should be only one row
-            result = dict(qdb.sql_connection.TRN.execute_fetchindex()[0])
-            del result["parameters_id"]
-            del result["param_set_name"]
-            return result
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     @property
     def command(self):
@@ -537,29 +578,9 @@ class Parameters(object):
         qiita_db.software.Command
             The command that this parameter set belongs to
         """
-        return self._command
-
-    def to_str(self):
-        """Generates a string with the parameter values
-
-        Returns
-        -------
-        str
-            The string with all the parameters
-        """
         with qdb.sql_connection.TRN:
-            table_cols = qdb.util.get_table_cols_w_type(self._table)
-            table_cols.remove(['parameters_id', 'bigint'])
-            table_cols.remove(['param_set_name', 'character varying'])
-
-            values = self.values
-
-            result = []
-            for p_name, p_type in sorted(table_cols):
-                if p_type == 'boolean':
-                    if values[p_name]:
-                        result.append("--%s" % p_name)
-                else:
-                    result.append("--%s '%s'" % (p_name, values[p_name]))
-
-            return " ".join(result)
+            sql = """SELECT command_id
+                     FROM qiita.default_parameter_set
+                     WHERE default_parameter_set_id = %s"""
+        qdb.sql_connection.TRN.add(sql, [self.id])
+        return Command(qdb.sql_connection.TRN.execute_fetchlast())
