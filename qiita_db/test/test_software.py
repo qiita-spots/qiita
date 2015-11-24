@@ -27,6 +27,15 @@ class CommandTests(TestCase):
         self.assertTrue(qdb.software.Command.exists(
             self.software, "Split libraries"))
 
+    def test_create_error_no_parameters(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.create(
+                self.software, "Test command", "Testing command", {})
+
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.create(
+                self.software, "Test command", "Testing command", None)
+
     def test_create_error_malformed_params(self):
         self.parameters['req_param'].append('breaking_the_format')
         with self.assertRaises(qdb.exceptions.QiitaDBError):
@@ -41,7 +50,7 @@ class CommandTests(TestCase):
                 self.software, "Test command", "Testing command",
                 self.parameters)
 
-    def test_create_error_bad_defalut_choice(self):
+    def test_create_error_bad_default_choice(self):
         self.parameters['opt_choice_param'][1] = 'unsupported_choice'
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.create(

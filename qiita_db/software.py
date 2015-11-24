@@ -106,7 +106,7 @@ class Command(qdb.base.QiitaObject):
             The description of the parameters that this command received. The
             format is: {parameter_name: (paramter_type, default)},
             where parameter_name, paramter_type and default are strings. If
-            default is None,
+            default is None.
 
         Returns
         -------
@@ -116,6 +116,7 @@ class Command(qdb.base.QiitaObject):
         Raises
         ------
         QiitaDBError
+            - If parameters is empty
             - If the parameters dictionary is malformed
             - If one of the parameter types is not supported
             - If the default value of a choice parameter is not listed in
@@ -131,6 +132,10 @@ class Command(qdb.base.QiitaObject):
         overwrite it.
         """
         # Perform some sanity checks in the parameters dictionary
+        if not parameters:
+            raise qdb.exceptions.QiitaDBError(
+                "Error creating command %s. At least one parameter should "
+                "be provided." % name)
         sql_param_values = []
         for pname, vals in parameters.items():
             if len(vals) != 2:
@@ -227,7 +232,8 @@ class Command(qdb.base.QiitaObject):
 
         Returns
         -------
-        dict of {parameter_name: [ptype, dflt]}
+        dict
+            Dictionary of {parameter_name: [ptype, dflt]}
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT parameter_name, parameter_type, default_value
@@ -243,7 +249,8 @@ class Command(qdb.base.QiitaObject):
 
         Returns
         -------
-        dict of {parameter_name: ptype}
+        dict
+            Dictionary of {parameter_name: ptype}
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT parameter_name, parameter_type
@@ -259,7 +266,8 @@ class Command(qdb.base.QiitaObject):
 
         Returns
         -------
-        dict of {parameter_name: [ptype, default]}
+        dict
+            Dictionary of {parameter_name: [ptype, default]}
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT parameter_name, parameter_type, default_value
@@ -275,7 +283,8 @@ class Command(qdb.base.QiitaObject):
 
         Returns
         -------
-        generator of qiita_db.software.DefaultParameters
+        generator
+            generator of qiita_db.software.DefaultParameters
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT default_parameter_set_id
@@ -477,7 +486,7 @@ class DefaultParameters(qdb.base.QiitaObject):
         ----------
         command : qiita_db.software.Command
             The command to which the parameter set belongs to
-        kwargs : dict
+        kwargs : dict of {str: str}
             The parameters and their values
 
         Returns
@@ -489,8 +498,8 @@ class DefaultParameters(qdb.base.QiitaObject):
         ------
         qiita_db.exceptions.QiitaDBError
             - If there are missing parameters for the given command
-            - If there are extra parameters in `kwargs` than for the given
-              command
+            - If `kwargs` contains parameters not originally defined in the
+            command
         """
         with qdb.sql_connection.TRN:
             command_params = set(command.optional_parameters)
@@ -639,8 +648,8 @@ class Parameters(object):
             The command to which the parameter set belongs to
         json_str : str, optional
             The json string encoding the parameters
-        values_dict : dict of {str: object}, optinal
-            The dictionary witht the parameter values
+        values_dict : dict of {str: object}, optional
+            The dictionary with the parameter values
 
         Returns
         -------
@@ -652,7 +661,7 @@ class Parameters(object):
         qiita_db.exceptions.QiitaDBError
             - If `json_str` and `values` are both provided
             - If neither `json_str` or `values` are provided
-            - If the provided JSON or values do not encode a parameter set of
+            - If `json_str` or `values` do not encode a parameter set of
             the provided command.
 
         Notes
@@ -707,7 +716,7 @@ class Parameters(object):
 
     @classmethod
     def from_default_params(cls, dflt_params, req_params, opt_params=None):
-        """Creates the parameter set from a dflt_parameter set
+        """Creates the parameter set from a `dflt_params` set
 
         Parameters
         ----------
@@ -717,7 +726,7 @@ class Parameters(object):
             The required parameters values, keyed by parameter name
         opt_params : dict of {str: object}, optional
             The optional parameters to change from the default set, keyed by
-            parameter name. Default: None, user the values in `dflt_params`
+            parameter name. Default: None, use the values in `dflt_params`
 
         Raises
         ------
@@ -757,13 +766,13 @@ class Parameters(object):
     def __init__(self, values, command):
         # Time for some python magic! The __init__ function should not be used
         # outside of this module, users should always be using one of the above
-        # classmethods to instantiate the object. Less test that it is the case
+        # classmethods to instantiate the object. Lets test that it is the case
         # First, we are going to get the current frame (i.e. this __init__)
         # function and the caller to the __init__
         current_frame = inspect.currentframe()
         caller_frame = current_frame.f_back
-        # The file names where the function is defines is stored in the
-        # f_code.co_filename attribute,and in this case it has to be the same
+        # The file names where the function is defined is stored in the
+        # f_code.co_filename attribute, and in this case it has to be the same
         # for both of them. Also, we are restricing that the name of the caller
         # should be either `load` or `from_default_params`, which are the two
         # classmethods defined above
@@ -782,12 +791,12 @@ class Parameters(object):
 
     @property
     def command(self):
-        """The command to which this parametr set belongs to
+        """The command to which this parameter set belongs to
 
         Returns
         -------
         qiita_db.software.Command
-            The command to which this parametr set belongs to
+            The command to which this parameter set belongs to
         """
         return self._command
 
@@ -808,6 +817,6 @@ class Parameters(object):
         Returns
         -------
         str
-            The parameter values as a json string
+            The parameter values as a JSON string
         """
         return dumps(self._values, sort_keys=True)
