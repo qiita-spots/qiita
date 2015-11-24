@@ -45,6 +45,34 @@ CREATE TABLE qiita.software_command (
 CREATE INDEX idx_software_command ON qiita.software_command ( software_id ) ;
 ALTER TABLE qiita.software_command ADD CONSTRAINT fk_software_command_software FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id );
 
+-- command_parameter table - holds the parameters that a command accepts
+CREATE TABLE qiita.command_parameter (
+	command_id           bigint    NOT NULL,
+	parameter_name       varchar   NOT NULL,
+	parameter_type       varchar   NOT NULL,
+	required             bool      NOT NULL,
+	default_value        varchar  ,
+	CONSTRAINT idx_command_parameter_0 PRIMARY KEY ( command_id, parameter_name )
+ ) ;
+CREATE INDEX idx_command_parameter ON qiita.command_parameter ( command_id ) ;
+ALTER TABLE qiita.command_parameter ADD CONSTRAINT fk_command_parameter FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
+
+-- default_parameter_set tables - holds the default parameter sets defined by
+-- the system. If no arbitrary parameters is allowed in the system only the
+-- ones listed here will be shown. Note that the only parameters that are listed
+-- here are the ones that are not required, since the ones required do not
+-- have a default
+CREATE TABLE qiita.default_parameter_set (
+	default_parameter_set_id   bigserial   NOT NULL,
+	command_id                 bigint      NOT NULL,
+	parameter_set_name         varchar     NOT NULL,
+	parameter_set              JSON        NOT NULL,
+	CONSTRAINT pk_default_parameter_set PRIMARY KEY ( default_parameter_set_id ),
+	CONSTRAINT idx_default_parameter_set_0 UNIQUE ( command_id, parameter_set_name )
+ ) ;
+CREATE INDEX idx_default_parameter_set ON qiita.default_parameter_set ( command_id ) ;
+ALTER TABLE qiita.default_parameter_set ADD CONSTRAINT fk_default_parameter_set FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
+
 -- Publication table - holds the minimum information for a given publication
 -- It is useful to keep track of the publication of the studies and the software
 -- used for processing artifacts
@@ -199,12 +227,112 @@ INSERT INTO qiita.software (name, version, description) VALUES
     ('QIIME', '1.9.1', 'Quantitative Insights Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data');
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1038/nmeth.f.303', '20383131');
 INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (1, '10.1038/nmeth.f.303');
--- Magic number 1: be just created the software table and inserted the QIIME
+-- Magic number 1: we just created the software table and inserted the QIIME
 -- software, which will receive the ID 1
 INSERT INTO qiita.software_command (software_id, name, description, cli_cmd, parameters_table) VALUES
     (1, 'Split libraries FASTQ', 'Demultiplexes and applies quality control to FASTQ data', 'split_libraries_fastq.py', 'preprocessed_sequence_illumina_params'),
     (1, 'Split libraries', 'Demultiplexes and applies quality control to FASTA data', 'split_libraries.py', 'preprocessed_sequence_454_params'),
     (1, 'Pick closed-reference OTUs', 'OTU picking using a closed reference approach', 'pick_closed_reference_otus.py', 'processed_params_sortmerna');
+-- Populate the command_parameter table
+-- Magic numbers: we just created the software command table and inserted 3 commands, so we know their ids
+--  1: Split libraries FASTQ - preprocessed_sequence_illumina_params
+--  2: Split libraries - preprocessed_sequence_454_params
+--  3: Pick closed-reference OTUs - processed_params_sortmerna
+INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type, required, default_value) VALUES
+    (1, 'max_bad_run_length', 'integer', False, '3'),
+    (1, 'min_per_read_length_fraction', 'float', False, '0.75'),
+    (1, 'sequence_max_n', 'integer', False, '0'),
+    (1, 'rev_comp_barcode', 'bool', False, 'False'),
+    (1, 'rev_comp_mapping_barcodes', 'bool', False, 'False'),
+    (1, 'rev_comp', 'bool', False, 'False'),
+    (1, 'phred_quality_threshold', 'integer', False, '3'),
+    (1, 'barcode_type', 'string', False, 'golay_12'),
+    (1, 'max_barcode_errors', 'float', False, '1.5'),
+
+    (2, 'min_seq_len', 'integer', False, '200'),
+    (2, 'max_seq_len', 'integer', False, '1000'),
+    (2, 'trim_seq_length', 'bool', False, 'False'),
+    (2, 'min_qual_score', 'integer', False, '25'),
+    (2, 'max_ambig', 'integer', False, '6'),
+    (2, 'max_homopolymer', 'integer', False, '6'),
+    (2, 'max_primer_mismatch', 'integer', False, '0'),
+    (2, 'barcode_type', 'string', False, 'golay_12'),
+    (2, 'max_barcode_errors', 'float', False, '1.5'),
+    (2, 'disable_bc_correction', 'bool', False, 'False'),
+    (2, 'qual_score_window', 'integer', False, '0'),
+    (2, 'disable_primers', 'bool', False, 'False'),
+    (2, 'reverse_primers', 'choice:["disable", "truncate_only", "truncate_remove"]', False, 'default_value'),
+    (2, 'reverse_primer_mismatches', 'integer', False, '0'),
+    (2, 'truncate_ambi_bases', 'bool', False, 'False'),
+
+    (3, 'reference', 'reference', False, '1'),
+    (3, 'sortmerna_e_value', 'float', False, '1'),
+    (3, 'sortmerna_max_pos', 'integer', False, '10000'),
+    (3, 'similarity', 'float', False, '0.97'),
+    (3, 'sortmerna_coverage', 'float', False, '0.97'),
+    (3, 'threads', 'integer', False, '1');
+
+-- Populate the default_parameter_set table
+DO $do$
+DECLARE
+    rec     RECORD;
+    val     JSON;
+BEGIN
+    -- Transfer the default parameters from the preprocessed_sequence_illumina_params table
+    FOR rec IN
+        SELECT * FROM qiita.preprocessed_sequence_illumina_params
+    LOOP
+        val := ('{"max_bad_run_length":' || rec.max_bad_run_length || ','
+                '"min_per_read_length_fraction":' || rec.min_per_read_length_fraction || ','
+                '"sequence_max_n":' || rec.sequence_max_n || ','
+                '"rev_comp_barcode":' || rec.rev_comp_barcode || ','
+                '"rev_comp_mapping_barcodes":' || rec.rev_comp_mapping_barcodes || ','
+                '"rev_comp":' || rec.rev_comp || ','
+                '"phred_quality_threshold":' || rec.phred_quality_threshold || ','
+                '"barcode_type":"' || rec.barcode_type || '",'
+                '"max_barcode_errors":' || rec.max_barcode_errors || '}')::json;
+        INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+            VALUES (1, rec.param_set_name, val);
+    END LOOP;
+
+    -- Transfer the default parameters from the preprocessed_sequence_454_params table
+    FOR rec IN
+        SELECT * FROM qiita.preprocessed_sequence_454_params
+    LOOP
+        val := ('{"min_seq_len":' || rec.min_seq_len || ','
+                '"max_seq_len":' || rec.max_seq_len || ','
+                '"trim_seq_length":' || rec.trim_seq_length || ','
+                '"min_qual_score":' || rec.min_qual_score || ','
+                '"max_ambig":' || rec.max_ambig || ','
+                '"max_homopolymer":' || rec.max_homopolymer || ','
+                '"max_primer_mismatch":' || rec.max_primer_mismatch || ','
+                '"barcode_type":"' || rec.barcode_type || '",'
+                '"max_barcode_errors":' || rec.max_barcode_errors || ','
+                '"disable_bc_correction":' || rec.disable_bc_correction || ','
+                '"qual_score_window":' || rec.qual_score_window || ','
+                '"disable_primers":' || rec.disable_primers || ','
+                '"reverse_primers":"' || rec.reverse_primers || '",'
+                '"reverse_primer_mismatches":' || rec.reverse_primer_mismatches || ','
+                '"truncate_ambi_bases":' || rec.truncate_ambig_bases || '}')::json;
+        INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+            VALUES (2, rec.param_set_name, val);
+    END LOOP;
+
+    -- Transfer the default parameters from the processed_params_sortmerna table
+    FOR rec IN
+        SELECT * FROM qiita.processed_params_sortmerna
+    LOOP
+        val := ('{"reference":' || rec.reference_id || ','
+                '"sortmerna_e_value":' || rec.sortmerna_e_value || ','
+                '"sortmerna_max_pos":' || rec.sortmerna_max_pos || ','
+                '"similarity":' || rec.similarity || ','
+                '"sortmerna_coverage":' || rec.sortmerna_coverage || ','
+                '"threads":' || rec.threads || '}')::json;
+        INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+            VALUES (3, rec.param_set_name, val);
+    END LOOP;
+END $do$;
+
 
 -- Create a function to correctly choose the commnad id for the preprocessed
 -- data
