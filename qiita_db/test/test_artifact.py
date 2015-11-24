@@ -118,16 +118,18 @@ class ArtifactTests(TestCase):
                 parents=[qdb.artifact.Artifact(1)])
 
     def test_create_error_prep_template_and_processing_parameters(self):
-        params = qdb.software.Parameters(1, qdb.software.Command(1))
+        parameters = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactCreationError):
             qdb.artifact.Artifact.create(
                 self.filepaths_root, "FASTQ", prep_template=self.prep_template,
-                processing_parameters=params)
+                processing_parameters=parameters)
 
     def test_create_error_different_data_types(self):
         new = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
-        parameters = qdb.software.Parameters(1, qdb.software.Command(1))
+        parameters = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactCreationError):
             qdb.artifact.Artifact.create(
                 self.filepaths_processed, "Demultiplexed",
@@ -248,7 +250,8 @@ class ArtifactTests(TestCase):
             qdb.artifact.Artifact.delete(4)
 
     def test_delete_error_ebi(self):
-        parameters = qdb.software.Parameters(1, qdb.software.Command(1))
+        parameters = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
         obs = qdb.artifact.Artifact.create(
             self.filepaths_processed, "Demultiplexed",
             parents=[qdb.artifact.Artifact(1)],
@@ -260,7 +263,8 @@ class ArtifactTests(TestCase):
             qdb.artifact.Artifact.delete(obs.id)
 
     def test_delete_error_vamps(self):
-        parameters = qdb.software.Parameters(1, qdb.software.Command(1))
+        parameters = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
         obs = qdb.artifact.Artifact.create(
             self.filepaths_processed, "Demultiplexed",
             parents=[qdb.artifact.Artifact(1)],
