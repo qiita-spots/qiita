@@ -8,6 +8,7 @@
 
 from functools import partial
 from future import standard_library
+from json import loads
 
 import qiita_db as qdb
 
@@ -89,9 +90,8 @@ def load_study_from_cmd(owner, title, info):
 
 def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
                            prep_template=None, parents=None,
-                           processing_command_id=None,
-                           processing_parameters_id=None,
-                           can_be_submitted_to_ebi=False,
+                           dflt_params_id=None, required_params=None,
+                           optional_params=None, can_be_submitted_to_ebi=False,
                            can_be_submitted_to_vamps=False):
     r"""Adds an artifact to the system
 
@@ -107,10 +107,12 @@ def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
         The prep template id
     parents : list of int, optional
         The list of artifacts id of the parent artifacts
-    processing_command_id : int, optional
-        The id of the command used to process the artifact
-    processing_parameters_id : int, optional
-        The id of the parameter set used to process the artifact
+    dflt_params_id : int, optional
+        The id of the default parameter set used to process the artifact
+    required_params : str, optional
+        JSON string with the required parameters used to process the artifact
+    optional_params : str, optional
+        JSON string with the optional parameters used to process the artifact
     can_be_submitted_to_ebi : bool, optional
         Whether the artifact can be submitted to EBI or not
     can_be_submitted_to_vamps : bool, optional
@@ -143,10 +145,12 @@ def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
             parents = [qdb.artifact.Artifact(pid) for pid in parents]
 
         params = None
-        if processing_command_id:
-            params = qdb.software.Parameters(
-                processing_parameters_id,
-                qdb.software.Command(processing_command_id))
+        if dflt_params_id:
+            required_dict = loads(required_params) if required_params else None
+            optional_dict = loads(optional_params) if optional_params else None
+            params = qdb.software.Parameters.from_default_params(
+                qdb.software.DefaultParameters(dflt_params_id),
+                required_dict, optional_dict)
 
         return qdb.artifact.Artifact.create(
             fps, artifact_type, prep_template=prep_template, parents=parents,

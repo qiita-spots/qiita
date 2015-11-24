@@ -66,8 +66,8 @@ class TestLoadArtifactFromCmd(TestCase):
         with self.assertRaises(ValueError):
             qdb.commands.load_artifact_from_cmd(
                 ["fp1", "fp2"], ["preprocessed_fasta"], "Demultiplexed",
-                parents=[1], processing_command_id=1,
-                processing_parameters_id=1)
+                parents=[1], dflt_params_id=10,
+                required_params='{"input_data": 1}')
 
     def test_load_artifact_from_cmd_root(self):
         fd, forward_fp = mkstemp(suffix='_forward.fastq.gz')
@@ -116,8 +116,10 @@ class TestLoadArtifactFromCmd(TestCase):
             with open(fp, 'w') as f:
                 f.write("\n")
         obs = qdb.commands.load_artifact_from_cmd(
-            fps, ftypes, 'Demultiplexed', parents=[1], processing_command_id=1,
-            processing_parameters_id=1, can_be_submitted_to_ebi=True,
+            fps, ftypes, 'Demultiplexed', parents=[1], dflt_params_id=1,
+            required_params='{"input_data": 1}',
+            optional_params='{"min_per_read_length_fraction": 0.80}',
+            can_be_submitted_to_ebi=True,
             can_be_submitted_to_vamps=True)
         self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
@@ -134,8 +136,8 @@ class TestLoadArtifactFromCmd(TestCase):
             with open(fp, 'w') as f:
                 f.write("\n")
         obs = qdb.commands.load_artifact_from_cmd(
-            fps, ftypes, 'BIOM', parents=[3], processing_command_id=3,
-            processing_parameters_id=1)
+            fps, ftypes, 'BIOM', parents=[3], dflt_params_id=10,
+            required_params='{"input_data": 3}')
         self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
         self.assertEqual(obs.id, self.artifact_count + 1)
         self.assertTrue(
