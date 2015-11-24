@@ -238,7 +238,7 @@ class QiitaConfig(TestCase):
         if not self.psql_version:
             self.assertTrue(False, 'PostgreSQL not running or configured')
 
-        acceptable_version = (9, 1, 14)
+        acceptable_version = (9, 3, 0)
         string_acceptable_version = '.'.join(map(str, acceptable_version))
         version = tuple(map(int, self.psql_version.split(' ')[1].split('.')))
 
