@@ -607,28 +607,82 @@ class DefaultParameters(qdb.base.QiitaObject):
 class Parameters(object):
     """Represents an instance of parameters used to process an artifact
 
-    Parameters
-    ----------
-    dflt_params : qiita_db.software.DefaultParameters
-        The DefaultParameters object in which this instance is based on
-    req_params : dict of {str: object}
-        The required parameters values, keyed by parameter name
-    opt_params : dict of {str: object}, optional
-        The optional parameters to change from the default set, keyed by
-        parameter name. Default: None, user the values in `dflt_params`
-
-    Raises
-    ------
-    QiitaDBError
-        - If there are missing requried parameters
-        - If there is an unknown required ot optional parameter
+    This class should never be isntantiated using the __init__ method. The
+    recommended procedure is using of the classmethods 'load' or
+    'from_default_params'.
     """
 
-    def __init__(self, dflt_params, req_params, opt_params=None):
+    @classmethod
+    def load(cls, json_str, command):
+        """Load the parameters set form a json str
+
+        Paramters
+        ---------
+        json_str : str
+            The json string encoding the parameters
+        command : qiita_db.software.Command
+            The command to which the parameter set belongs to
+
+        Returns
+        -------
+        qiita_db.software.Parameters
+            The loaded parameter set
+        """
+        parameters = loads(json_str)
+        cmd_reqd_params = command.required_parameters
+        cmd_opt_params = command.optional_parameters
+
+        values = {}
+        for key in cmd_reqd_params:
+            try:
+                values[key] = parameters.pop(key)
+            except KeyError:
+                raise qdb.exceptions.QiitaDBError(
+                    "The provided JSON string doesn't encode a parameter set "
+                    "for command %s. Missing required parameter: %s"
+                    % (command.id, key))
+
+        for key in cmd_opt_params:
+            try:
+                values[key] = parameters.pop(key)
+            except KeyError:
+                raise qdb.exceptions.QiitaDBError(
+                    "The provided JSON string doesn't encode a parameter set "
+                    "for command %s. Missing optional parameter: %s"
+                    % (command.id, key))
+
+        if parameters:
+            raise qdb.exceptions.QiitaDBError(
+                "The provided JSON string doesn't encode a parameter set "
+                "for command %s. Extra parameters: %s"
+                % (command.id, ', '.join(parameters.keys())))
+
+        return cls(values, command)
+
+    @classmethod
+    def from_default_params(cls, dflt_params, req_params, opt_params=None):
+        """Creates the parameter set from a dflt_parameter set
+
+        Parameters
+        ----------
+        dflt_params : qiita_db.software.DefaultParameters
+            The DefaultParameters object in which this instance is based on
+        req_params : dict of {str: object}
+            The required parameters values, keyed by parameter name
+        opt_params : dict of {str: object}, optional
+            The optional parameters to change from the default set, keyed by
+            parameter name. Default: None, user the values in `dflt_params`
+
+        Raises
+        ------
+        QiitaDBError
+            - If there are missing requried parameters
+            - If there is an unknown required ot optional parameter
+        """
         with qdb.sql_connection.TRN:
-            self._command = dflt_params.command
-            cmd_req_params = self._command.required_parameters
-            cmd_opt_params = self._command.optional_parameters
+            command = dflt_params.command
+            cmd_req_params = command.required_parameters
+            cmd_opt_params = command.optional_parameters
 
             missing_reqd = set(cmd_req_params) - set(req_params)
             extra_reqd = set(req_params) - set(cmd_req_params)
@@ -646,11 +700,17 @@ class Parameters(object):
                         "Extra optional parameters provded: %s"
                         % ', '.join(extra_opts))
 
-            self._values = dflt_params.values
-            self._values.update(req_params)
+            values = dflt_params.values
+            values.update(req_params)
 
             if opt_params:
-                self._values.update(opt_params)
+                values.update(opt_params)
+
+            return cls(values, command)
+
+    def __init__(self, values, command):
+        self._values = values
+        self._command = command
 
     @property
     def command(self):
@@ -673,3 +733,13 @@ class Parameters(object):
             The parameter values keyed by parameter name
         """
         return self._values
+
+    def dump(self):
+        """Return the values in the parameter as JSON
+
+        Returns
+        -------
+        str
+            The parameter values as a json string
+        """
+        return dumps(self._values, sort_keys=True)

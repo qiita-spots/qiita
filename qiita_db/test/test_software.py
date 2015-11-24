@@ -281,9 +281,61 @@ class DefaultParametersTests(TestCase):
 
 @qiita_test_checker()
 class ParametersTests(TestCase):
-    def test_init(self):
-        obs = qdb.software.Parameters(qdb.software.DefaultParameters(1),
-                                      {'input_data': 1})
+    def test_load(self):
+        json_str = ('{"barcode_type": "golay_12", "input_data": 1, '
+                    '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
+                    '"min_per_read_length_fraction": 0.75, '
+                    '"phred_quality_threshold": 3, "rev_comp": false, '
+                    '"rev_comp_barcode": false, '
+                    '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
+        cmd = qdb.software.Command(1)
+        obs = qdb.software.Parameters.load(json_str, cmd)
+        exp_values = {
+            "barcode_type": "golay_12", "input_data": 1,
+            "max_bad_run_length": 3, "max_barcode_errors": 1.5,
+            "min_per_read_length_fraction": 0.75,
+            "phred_quality_threshold": 3, "rev_comp": False,
+            "rev_comp_barcode": False, "rev_comp_mapping_barcodes": False,
+            "sequence_max_n": 0}
+        self.assertEqual(obs.values, exp_values)
+
+    def test_load_error_missing_required(self):
+        json_str = ('{"barcode_type": "golay_12",'
+                    '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
+                    '"min_per_read_length_fraction": 0.75, '
+                    '"phred_quality_threshold": 3, "rev_comp": false, '
+                    '"rev_comp_barcode": false, '
+                    '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
+        cmd = qdb.software.Command(1)
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Parameters.load(json_str, cmd)
+
+    def test_load_error_missing_optional(self):
+        json_str = ('{"barcode_type": "golay_12", "input_data": 1, '
+                    '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
+                    '"min_per_read_length_fraction": 0.75, '
+                    '"rev_comp": false, '
+                    '"rev_comp_barcode": false, '
+                    '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
+        cmd = qdb.software.Command(1)
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Parameters.load(json_str, cmd)
+
+    def test_load_error_extra_parameters(self):
+        json_str = ('{"barcode_type": "golay_12", "input_data": 1, '
+                    '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
+                    '"min_per_read_length_fraction": 0.75, '
+                    '"phred_quality_threshold": 3, "rev_comp": false, '
+                    '"rev_comp_barcode": false, '
+                    '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0,'
+                    '"extra_param": 1}')
+        cmd = qdb.software.Command(1)
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Parameters.load(json_str, cmd)
+
+    def test_from_default_parameters(self):
+        obs = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
         self.assertEqual(obs._command, qdb.software.Command(1))
         exp = {'min_per_read_length_fraction': 0.75,
                'max_barcode_errors': 1.5, 'max_bad_run_length': 3,
@@ -293,9 +345,9 @@ class ParametersTests(TestCase):
                'input_data': 1}
         self.assertEqual(obs._values, exp)
 
-        obs = qdb.software.Parameters(qdb.software.DefaultParameters(1),
-                                      {'input_data': 1},
-                                      opt_params={'max_bad_run_length': 5})
+        obs = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1},
+            opt_params={'max_bad_run_length': 5})
         self.assertEqual(obs._command, qdb.software.Command(1))
         exp = {'min_per_read_length_fraction': 0.75,
                'max_barcode_errors': 1.5, 'max_bad_run_length': 5,
@@ -305,29 +357,31 @@ class ParametersTests(TestCase):
                'input_data': 1}
         self.assertEqual(obs._values, exp)
 
-    def test_init_error_missing_reqd(self):
+    def test_from_default_params_error_missing_reqd(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.software.Parameters(qdb.software.DefaultParameters(1), {})
+            qdb.software.Parameters.from_default_params(
+                qdb.software.DefaultParameters(1), {})
 
-    def test_init_error_extra_reqd(self):
+    def test_from_default_params_error_extra_reqd(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.software.Parameters(qdb.software.DefaultParameters(1),
-                                    {'input_data': 1, 'another_one': 2})
+            qdb.software.Parameters.from_default_params(
+                qdb.software.DefaultParameters(1),
+                {'input_data': 1, 'another_one': 2})
 
-    def test_init_error_extra_opts(self):
+    def test_from_default_params_error_extra_opts(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.software.Parameters(qdb.software.DefaultParameters(1),
-                                    {'input_data': 1},
-                                    opt_params={'Unknown': 'foo'})
+            qdb.software.Parameters.from_default_params(
+                qdb.software.DefaultParameters(1), {'input_data': 1},
+                opt_params={'Unknown': 'foo'})
 
     def test_command(self):
-        obs = qdb.software.Parameters(qdb.software.DefaultParameters(1),
-                                      {'input_data': 1}).command
+        obs = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1}).command
         self.assertEqual(obs, qdb.software.Command(1))
 
     def test_values(self):
-        obs = qdb.software.Parameters(qdb.software.DefaultParameters(1),
-                                      {'input_data': 1}).values
+        obs = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1}).values
         exp = {'min_per_read_length_fraction': 0.75,
                'max_barcode_errors': 1.5, 'max_bad_run_length': 3,
                'rev_comp': False, 'phred_quality_threshold': 3,
@@ -336,6 +390,16 @@ class ParametersTests(TestCase):
                'input_data': 1}
         self.assertEqual(obs, exp)
 
+    def test_dumps(self):
+        obs = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1}).dump()
+        exp = ('{"barcode_type": "golay_12", "input_data": 1, '
+               '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
+               '"min_per_read_length_fraction": 0.75, '
+               '"phred_quality_threshold": 3, "rev_comp": false, '
+               '"rev_comp_barcode": false, '
+               '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
+        self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
     main()
