@@ -476,3 +476,16 @@ INSERT INTO qiita.prep_template_filepath VALUES (1, 15), (1, 16);
 -- Create some test messages
 INSERT INTO qiita.message (message) VALUES ('message 1'), ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque sed auctor ex, non placerat sapien. Vestibulum vestibulum massa ut sapien condimentum, cursus consequat diam sodales. Nulla aliquam arcu ut massa auctor, et vehicula mauris tempor. In lacinia viverra ante quis pellentesque. Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla ac nisi quis dui egestas malesuada vitae ut mauris. Morbi blandit non nisl a finibus. In erat velit, congue at ipsum sit amet, venenatis bibendum sem. Curabitur vel odio sed est rutrum rutrum. Quisque efficitur ut purus in ultrices. Pellentesque eu auctor justo.'), ('message <a href="#">3</a>');
 INSERT INTO qiita.message_user (message_id, email) VALUES (1, 'test@foo.bar'),(1, 'shared@foo.bar'),(2, 'test@foo.bar'),(3, 'test@foo.bar');
+
+-- Create a loggin entry
+INSERT INTO qiita.logging (time, severity_id, msg, information)
+    VALUES ('Sun Nov 22 21:29:30 2015', 2, 'Error message', NULL);
+
+-- Create some processing jobs
+INSERT INTO qiita.processing_job
+        (processing_job_id, email, command_id, command_parameters_id,
+         processing_job_status_id, logging_id, heartbeat, step)
+    VALUES ('063e553b-327c-4818-ab4a-adfe58e49860', 'test@foo.bar', 1, 1, 1, NULL, NULL, NULL),
+           ('bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'test@foo.bar', 2, 1, 2, NULL, 'Sun Nov 22 21:00:00 2015', 'demultiplexing'),
+           ('b72369f9-a886-4193-8d3d-f7b504168e75', 'shared@foo.bar', 1, 2, 3, NULL, 'Sun Nov 22 21:15:00 2015', NULL),
+           ('d19f76ee-274e-4c1b-b3a2-a12d73507c55', 'shared@foo.bar', 2, 1, 4, 1, 'Sun Nov 22 21:30:00 2015', 'generating demux file');
