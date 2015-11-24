@@ -104,8 +104,8 @@ class Command(qdb.base.QiitaObject):
             The description of the command
         parameters : dict
             The description of the parameters that this command received. The
-            format is: {parameter_name: (paramter_type, default)},
-            where parameter_name, paramter_type and default are strings. If
+            format is: {parameter_name: (parameter_type, default)},
+            where parameter_name, parameter_type and default are strings. If
             default is None.
 
         Returns
@@ -141,7 +141,7 @@ class Command(qdb.base.QiitaObject):
             if len(vals) != 2:
                 raise qdb.exceptions.QiitaDBError(
                     "Malformed parameters dictionary, the format should be "
-                    "{param_name: [paramter_type, default]}. Found: "
+                    "{param_name: [parameter_type, default]}. Found: "
                     "%s for parameter name %s" % (vals, pname))
 
             ptype, dflt = vals
@@ -629,7 +629,7 @@ class Parameters(object):
     """
 
     def __eq__(self, other):
-        """Equality based on the paramter values and the command"""
+        """Equality based on the parameter values and the command"""
         if type(self) != type(other):
             return False
         if self.command != other.command:
@@ -642,8 +642,8 @@ class Parameters(object):
     def load(cls, command, json_str=None, values_dict=None):
         """Load the parameters set form a json str or from a dict of values
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         command : qiita_db.software.Command
             The command to which the parameter set belongs to
         json_str : str, optional
@@ -745,7 +745,7 @@ class Parameters(object):
                 raise qdb.exceptions.QiitaDBError(
                     "Provided required parameters not expected.\n"
                     "Missing required parameters: %s\n"
-                    "Extra required paramters: %s\n"
+                    "Extra required parameters: %s\n"
                     % (', '.join(missing_reqd), ', '.join(extra_reqd)))
 
             if opt_params:
