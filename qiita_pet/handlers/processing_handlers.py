@@ -2,7 +2,6 @@ from tornado.web import authenticated
 
 from .base_handlers import BaseHandler
 from qiita_ware.dispatchable import processor
-from qiita_db.parameters import ProcessedSortmernaParams
 from qiita_ware.context import submit
 
 

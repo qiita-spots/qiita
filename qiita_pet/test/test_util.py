@@ -1,6 +1,5 @@
 from unittest import TestCase, main
 
-from qiita_db.parameters import ProcessedSortmernaParams
 from qiita_pet.util import (clean_str, generate_param_str, is_localhost,
                             convert_text_html)
 

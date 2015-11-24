@@ -20,8 +20,6 @@ from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.constants import (
     TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS_TARGET_GENE)
-from qiita_db.parameters import (Preprocessed454Params,
-                                 PreprocessedIlluminaParams)
 from qiita_pet.util import STATUS_STYLER, is_localhost, EBI_LINKIFIER
 from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
