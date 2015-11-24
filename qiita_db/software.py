@@ -8,6 +8,7 @@
 
 from json import dumps, loads
 from copy import deepcopy
+import inspect
 
 import qiita_db as qdb
 
@@ -93,11 +94,6 @@ class Command(qdb.base.QiitaObject):
             in which json-dump-of-list is the JSON dump of a list containing
             the acceptable values
 
-        If the default value for a parameter is NULL, then the parameter will
-        be required. On the other hand, if it is provided, the parameter will
-        be optional and the default value will be used when the user doesn't
-        overwrite it.
-
         Parameters
         ----------
         software : qiita_db.software.Software
@@ -126,6 +122,13 @@ class Command(qdb.base.QiitaObject):
             the available choices
         QiitaDBDuplicateError
             - If the command already exists
+
+        Notes
+        -----
+        If the default value for a parameter is NULL, then the parameter will
+        be required. On the other hand, if it is provided, the parameter will
+        be optional and the default value will be used when the user doesn't
+        overwrite it.
         """
         # Perform some sanity checks in the parameters dictionary
         sql_param_values = []
@@ -608,9 +611,12 @@ class DefaultParameters(qdb.base.QiitaObject):
 class Parameters(object):
     """Represents an instance of parameters used to process an artifact
 
-    This class should never be isntantiated using the __init__ method. The
-    recommended procedure is using of the classmethods 'load' or
-    'from_default_params'
+    Raises
+    ------
+    qiita_db.exceptions.QiitaDBOperationNotPermittedError
+        If trying to instantiate this class directly. In order to instantiate
+        this class, the classmethods `load` or `from_default_params` should
+        be used.
     """
 
     def __eq__(self, other):
@@ -626,10 +632,6 @@ class Parameters(object):
     @classmethod
     def load(cls, command, json_str=None, values_dict=None):
         """Load the parameters set form a json str or from a dict of values
-
-        The parameters `json_str` and `values_dict` are mutually exclusive,
-        only one of them should be provided at a time. However, one of them
-        should always be provided.
 
         Paramters
         ---------
@@ -652,6 +654,12 @@ class Parameters(object):
             - If neither `json_str` or `values` are provided
             - If the provided JSON or values do not encode a parameter set of
             the provided command.
+
+        Notes
+        -----
+        The parameters `json_str` and `values_dict` are mutually exclusive,
+        only one of them should be provided at a time. However, one of them
+        should always be provided.
         """
         if json_str is None and values_dict is None:
             raise qdb.exceptions.QiitaDBError(
@@ -747,6 +755,28 @@ class Parameters(object):
             return cls(values, command)
 
     def __init__(self, values, command):
+        # Time for some python magic! The __init__ function should not be used
+        # outside of this module, users should always be using one of the above
+        # classmethods to instantiate the object. Less test that it is the case
+        # First, we are going to get the current frame (i.e. this __init__)
+        # function and the caller to the __init__
+        current_frame = inspect.currentframe()
+        caller_frame = current_frame.f_back
+        # The file names where the function is defines is stored in the
+        # f_code.co_filename attribute,and in this case it has to be the same
+        # for both of them. Also, we are restricing that the name of the caller
+        # should be either `load` or `from_default_params`, which are the two
+        # classmethods defined above
+        current_file = current_frame.f_code.co_filename
+        caller_file = caller_frame.f_code.co_filename
+        caller_name = caller_frame.f_code.co_name
+        if current_file != caller_file or \
+                caller_name not in ['load', 'from_default_params']:
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "qiita_db.software.Parameters can't be instantiated directly. "
+                "Please use one of the classmethods: `load` or "
+                "`from_default_params`")
+
         self._values = values
         self._command = command
 
