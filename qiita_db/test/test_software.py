@@ -211,12 +211,6 @@ class SoftwareTests(TestCase):
 
 @qiita_test_checker()
 class DefaultParametersTests(TestCase):
-    def test_init(self):
-        obs = qdb.software.DefaultParameters(1, qdb.software.Command(1))
-        self.assertEqual(obs.id, 1)
-        self.assertEqual(obs._table, "preprocessed_sequence_illumina_params")
-        self.assertEqual(obs.command, qdb.software.Command(1))
-
     def test_exists(self):
         cmd = qdb.software.Command(1)
         obs = qdb.software.DefaultParameters.exists(
@@ -251,19 +245,10 @@ class DefaultParametersTests(TestCase):
                'phred_quality_threshold': 3, 'barcode_type': "hamming_8",
                'max_barcode_errors': 1.5}
         self.assertEqual(obs.values, exp)
-
         self.assertEqual(obs.command, cmd)
 
-    def test_iter(self):
-        cmd = qdb.software.Command(1)
-        obs = list(qdb.software.DefaultParameters.iter(cmd))
-        exp = [qdb.software.DefaultParameters(i, cmd) for i in range(1, 8)]
-        self.assertEqual(obs, exp)
-
     def test_name(self):
-        self.assertEqual(
-            qdb.software.DefaultParameters(1, qdb.software.Command(1)).name,
-            "Defaults")
+        self.assertEqual(qdb.software.DefaultParameters(1).name, "Defaults")
 
     def test_values(self):
         exp = {'min_per_read_length_fraction': 0.75,
@@ -271,22 +256,11 @@ class DefaultParametersTests(TestCase):
                'rev_comp': False, 'phred_quality_threshold': 3,
                'rev_comp_barcode': False, 'sequence_max_n': 0,
                'barcode_type': 'golay_12', 'rev_comp_mapping_barcodes': False}
-        self.assertEqual(
-            qdb.software.DefaultParameters(1, qdb.software.Command(1)).values,
-            exp)
-
-    def test_to_str(self):
-        exp = ("--barcode_type 'golay_12' --max_bad_run_length '3' "
-               "--max_barcode_errors '1.5' "
-               "--min_per_read_length_fraction '0.75' "
-               "--phred_quality_threshold '3' --sequence_max_n '0'")
-        self.assertEqual(
-            qdb.software.DefaultParameters(1, qdb.software.Command(1)).to_str(), exp)
+        self.assertEqual(qdb.software.DefaultParameters(1).values, exp)
 
     def test_command(self):
         self.assertEqual(
-            qdb.software.DefaultParameters(1, qdb.software.Command(1)).command,
-            qdb.software.Command(1))
+            qdb.software.DefaultParameters(1).command, qdb.software.Command(1))
 
 if __name__ == '__main__':
     main()

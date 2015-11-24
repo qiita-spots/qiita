@@ -485,7 +485,7 @@ class DefaultParameters(qdb.base.QiitaObject):
                     % (', '.join(missing_in_user), ', '.join(extra_in_user)))
 
             sql = """SELECT parameter_set
-                     FROM qiita.deafult_parameter_set
+                     FROM qiita.default_parameter_set
                      WHERE command_id = %s"""
             qdb.sql_connection.TRN.add(sql, [command.id])
             for p_set in qdb.sql_connection.TRN.execute_fetchflatten():
@@ -547,9 +547,9 @@ class DefaultParameters(qdb.base.QiitaObject):
             The name of the parameter set
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT param_set_name
+            sql = """SELECT parameter_set_name
                      FROM qiita.default_parameter_set
-                     WHERE parameters_id = %s"""
+                     WHERE default_parameter_set_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -565,7 +565,7 @@ class DefaultParameters(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             sql = """SELECT parameter_set
                      FROM qiita.default_parameter_set
-                     WHERE parameters_id = %s"""
+                     WHERE default_parameter_set_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -582,5 +582,5 @@ class DefaultParameters(qdb.base.QiitaObject):
             sql = """SELECT command_id
                      FROM qiita.default_parameter_set
                      WHERE default_parameter_set_id = %s"""
-        qdb.sql_connection.TRN.add(sql, [self.id])
-        return Command(qdb.sql_connection.TRN.execute_fetchlast())
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return Command(qdb.sql_connection.TRN.execute_fetchlast())
