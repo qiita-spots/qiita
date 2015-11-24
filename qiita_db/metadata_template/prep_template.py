@@ -362,7 +362,7 @@ class PrepTemplate(MetadataTemplate):
                     qdb.sql_connection.TRN.add(sql, [artifact.id])
                     if qdb.sql_connection.TRN.execute_fetchlast():
                         return False, ("The artifact attached to the prep "
-                                       "template has been already processed. "
+                                       "template has already been processed. "
                                        "No new samples can be added to the "
                                        "prep template")
         return True, ""

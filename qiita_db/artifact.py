@@ -458,7 +458,7 @@ class Artifact(qdb.base.QiitaObject):
         bool
             True if the artifact has been submitted to EBI. False otherwise
 
-        raises
+        Raises
         ------
         QiitaDBOperationNotPermittedError
             If the artifact cannot be submitted to EBI

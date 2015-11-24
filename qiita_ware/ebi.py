@@ -62,7 +62,6 @@ class EBISubmission(object):
     EBISubmissionError
         - If the action is not in EBISubmission.valid_ebi_actions
         - If the artifact cannot be submitted to EBI
-        - If the artifact has more than one prep template
         - If the artifact has been already submitted to EBI and the action
         is different from 'MODIFY'
         - If the status of the study attached to the artifact is `submitting`
@@ -114,15 +113,12 @@ class EBISubmission(object):
 
         self.study = self.artifact.study
         self.sample_template = self.study.sample_template
-        prep_templates = self.artifact.prep_templates
-        if len(prep_templates) > 1:
-            error_msg = ("Cannot submit Artifact %d to EBI - it has more than"
-                         " one prep template: %s"
-                         % (self.artifact.id,
-                            ', '.join([str(pt.id) for pt in prep_templates])))
-            LogEntry.create('Runtime', error_msg)
-            raise EBISubmissionError(error_msg)
-        self.prep_template = prep_templates[0]
+        # If we reach this point, there should be only one prep template
+        # attached to the artifact. By design, each artifact has at least one
+        # prep template. Artifacts with more than one prep template cannot be
+        # submitted to EBI, so the attribute 'can_be_submitted_to_ebi' should
+        # be set to false, which is checked in the previous if statement
+        self.prep_template = self.artifact.prep_templates[0]
 
         if self.artifact.is_submitted_to_ebi and action != 'MODIFY':
             error_msg = ("Cannot resubmit! Artifact %d has already "
@@ -165,7 +161,7 @@ class EBISubmission(object):
         self.experiment_xml_fp = None
         self.run_xml_fp = None
         self.submission_xml_fp = None
-        self.pmids = self.study.pmids
+        self.publications = self.study.publications
 
         # getting the restrictions
         st_missing = self.sample_template.check_restrictions(
@@ -301,12 +297,12 @@ class EBISubmission(object):
             value = ET.SubElement(attribute_element, 'VALUE')
             value.text = clean_whitespace(val)
 
-    def _get_pmid_element(self, study_links, pmid):
+    def _get_publication_element(self, study_links, pmid, db_name):
         study_link = ET.SubElement(study_links, 'STUDY_LINK')
         xref_link = ET.SubElement(study_link,  'XREF_LINK')
 
         db = ET.SubElement(xref_link, 'DB')
-        db.text = 'PUBMED'
+        db.text = db_name
 
         _id = ET.SubElement(xref_link, 'ID')
         _id.text = str(pmid)
@@ -348,10 +344,13 @@ class EBISubmission(object):
         study_abstract.text = clean_whitespace(escape(self.study_abstract))
 
         # Add pubmed IDs
-        if self.pmids:
+        if self.publications:
             study_links = ET.SubElement(study, 'STUDY_LINKS')
-            for pmid in self.pmids:
-                self._get_pmid_element(study_links, pmid)
+            for doi, pmid in self.publications:
+                if doi is not None:
+                    self._get_publication_element(study_links, doi, 'DOI')
+                if pmid is not None:
+                    self._get_publication_element(study_links, pmid, 'PUBMED')
 
         return study_set
 
@@ -705,7 +704,8 @@ class EBISubmission(object):
             # (experiment.xml) template. The easiest is to generate both and
             # submit them. Note that we are assuming that Qiita is not
             # allowing to change preprocessing required information
-            samples = self.sample_template.ebi_sample_accessions
+            all_samples = self.sample_template.ebi_sample_accessions
+            samples = {k: all_samples[k] for k in self.samples}
 
             # finding unique name for sample xml
             i = 0
@@ -732,6 +732,15 @@ class EBISubmission(object):
             while True:
                 self.submission_xml_fp = get_output_fp('submission_%d.xml' % i)
                 if not exists(self.submission_xml_fp):
+                    break
+                i = i + 1
+
+            # just to keep all curl_reply-s we find a new name
+            i = 0
+            while True:
+                self.curl_reply = join(self.full_ebi_dir,
+                                       'curl_reply_%d.xml' % i)
+                if not exists(self.curl_reply):
                     break
                 i = i + 1
 
@@ -932,7 +941,9 @@ class EBISubmission(object):
         if dir_not_exists or rewrite_fastq:
             makedirs(self.full_ebi_dir)
 
-            demux = [path for _, path, ftype in ar.get_filepaths()
+            # An artifact will hold only one file of type `preprocessed_demux`
+            # Thus, we only use the first one (the only one present)
+            demux = [path for _, path, ftype in ar.filepaths
                      if ftype == 'preprocessed_demux'][0]
 
             demux_samples = set()
