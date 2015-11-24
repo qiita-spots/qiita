@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-__version__ = "0.2.0-dev"
-
 import base
 import util
 import sql_connection
@@ -30,6 +28,7 @@ import software
 import study
 import user
 
+__version__ = "0.2.0-dev"
 
 __all__ = ["analysis", "artifact", "base", "commands", "environment_manager",
            "exceptions", "investigation", "job", "logger", "meta_util",

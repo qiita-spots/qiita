@@ -31,6 +31,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
+from qiita_db.software import Parameters, Command
 from qiita_core.util import qiita_test_checker
 
 
@@ -51,12 +52,12 @@ class TestEBISubmission(TestCase):
 
 class TestEBISubmissionReadOnly(TestEBISubmission):
     def test_init(self):
-        ppd_id = 2
+        artifact_id = 3
         action = 'ADD'
 
-        e = EBISubmission(ppd_id, action)
+        e = EBISubmission(artifact_id, action)
 
-        self.assertEqual(e.preprocessed_data_id, ppd_id)
+        self.assertEqual(e.artifact_id, artifact_id)
         self.assertEqual(e.study_title, 'Identification of the Microbiomes '
                                         'for Cannabis Soils')
         self.assertEqual(e.study_abstract,
@@ -74,7 +75,8 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertEqual(e.investigation_type, 'Metagenomics')
         self.assertIsNone(e.new_investigation_type)
         self.assertItemsEqual(e.sample_template, e.samples)
-        self.assertItemsEqual(e.pmids, ['123456', '7891011'])
+        self.assertItemsEqual(e.publications, [['10.100/123456', '123456'],
+                                               ['10.100/7891011', '7891011']])
         self.assertEqual(e.action, action)
 
         self.assertEqual(e.ascp_reply, join(e.full_ebi_dir, 'ascp_reply.txt'))
@@ -94,42 +96,46 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                              get_output_fp('%s.fastq.gz' % sample))
 
     def test_get_study_alias(self):
-        e = EBISubmission(2, 'ADD')
+        e = EBISubmission(3, 'ADD')
         exp = '%s_sid_1' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_study_alias(), exp)
 
     def test_get_sample_alias(self):
-        e = EBISubmission(2, 'ADD')
+        e = EBISubmission(3, 'ADD')
         exp = '%s_sid_1:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_sample_alias('foo'), exp)
         self.assertEqual(e._sample_aliases, {exp: 'foo'})
 
     def test_get_experiment_alias(self):
-        e = EBISubmission(2, 'ADD')
+        e = EBISubmission(3, 'ADD')
         exp = '%s_ptid_1:foo' % qiita_config.ebi_organization_prefix
         self.assertEqual(e._get_experiment_alias('foo'), exp)
         self.assertEqual(e._experiment_aliases, {exp: 'foo'})
 
     def test_get_submission_alias(self):
-        e = EBISubmission(2, 'ADD')
+        artifact_id = 3
+        e = EBISubmission(artifact_id, 'ADD')
         obs = e._get_submission_alias()
-        exp = '%s_submission_2' % qiita_config.ebi_organization_prefix
+        exp = '%s_submission_%d' % (qiita_config.ebi_organization_prefix,
+                                    artifact_id)
         self.assertEqual(obs, exp)
 
     def test_get_run_alias(self):
-        e = EBISubmission(2, 'ADD')
-        exp = '%s_ppdid_2:foo' % qiita_config.ebi_organization_prefix
+        artifact_id = 3
+        e = EBISubmission(artifact_id, 'ADD')
+        exp = '%s_ppdid_%d:foo' % (qiita_config.ebi_organization_prefix,
+                                   artifact_id)
         self.assertEqual(e._get_run_alias('foo'), exp)
         self.assertEqual(e._run_aliases, {exp: 'foo'})
 
     def test_get_library_name(self):
-        e = EBISubmission(2, 'ADD')
+        e = EBISubmission(3, 'ADD')
         obs = e._get_library_name("nasty<business>")
         exp = "nasty&lt;business&gt;"
         self.assertEqual(obs, exp)
 
     def test_add_dict_as_tags_and_values(self):
-        e = EBISubmission(2, 'ADD')
+        e = EBISubmission(3, 'ADD')
         elm = ET.Element('TESTING', {'foo': 'bar'})
 
         e._add_dict_as_tags_and_values(elm, 'foo', {'x': 'y',
@@ -140,13 +146,13 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertEqual(obs, exp)
 
     def test_generate_study_xml(self):
-        submission = EBISubmission(2, 'ADD')
+        submission = EBISubmission(3, 'ADD')
         obs = ET.tostring(submission.generate_study_xml())
         exp = ''.join([l.strip() for l in STUDYXML.splitlines()])
         self.assertEqual(obs, exp)
 
     def test_generate_sample_xml(self):
-        submission = EBISubmission(2, 'ADD')
+        submission = EBISubmission(3, 'ADD')
 
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_sample_xml(samples=samples))
@@ -174,7 +180,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertEqual(obs, exp)
 
     def test_generate_spot_descriptor(self):
-        e = EBISubmission(2, 'ADD')
+        e = EBISubmission(3, 'ADD')
         elm = ET.Element('design', {'foo': 'bar'})
 
         e._generate_spot_descriptor(elm, 'LS454')
@@ -183,7 +189,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertEqual(obs, exp)
 
     def test_generate_submission_xml(self):
-        submission = EBISubmission(2, 'ADD')
+        submission = EBISubmission(3, 'ADD')
         submission.experiment_xml_fp = "/some/path/experiment.xml"
         submission.run_xml_fp = "/some/path/run.xml"
         obs = ET.tostring(
@@ -210,7 +216,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
 
     def test_write_xml_file(self):
         element = ET.Element('TESTING', {'foo': 'bar'})
-        e = EBISubmission(2, 'ADD')
+        e = EBISubmission(3, 'ADD')
         e.write_xml_file(element, 'testfile')
         self.files_to_remove.append('testfile')
 
@@ -219,7 +225,7 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
         self.assertEqual(obs, exp)
 
     def test_generate_curl_command(self):
-        submission = EBISubmission(2, 'ADD')
+        submission = EBISubmission(3, 'ADD')
 
         test_ebi_seq_xfer_user = 'ebi_seq_xfer_user'
         test_ebi_seq_xfer_pass = 'ebi_seq_xfer_pass'
@@ -267,9 +273,16 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             raise ValueError('Wrong sequences values: %s. Valid values: '
                              'FASTA_EXAMPLE, WRONG-SEQS, EMPTY' % sequences)
 
-        artifact = Artifact.create(
-            [(demux_fp, 6)], "Demultiplexed", prep_template=prep_template,
-            can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
+        if prep_template.artifact is None:
+            artifact = Artifact.create(
+                [(demux_fp, 6)], "Demultiplexed", prep_template=prep_template,
+                can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
+        else:
+            artifact = Artifact.create(
+                [(demux_fp, 6)], "Demultiplexed",
+                parents=[prep_template.artifact],
+                processing_parameters=Parameters(1, Command(1)),
+                can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
 
         return artifact
 
@@ -335,9 +348,9 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         pt = PrepTemplate.create(metadata, Study(1), "18S",
                                  investigation_type=investigation_type)
-        ppd = self.write_demux_files(pt)
+        artifact = self.write_demux_files(pt)
 
-        return ppd
+        return artifact
 
     def generate_new_study_with_preprocessed_data(self):
         """Creates a new study up to the processed data for testing"""
@@ -408,6 +421,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         with File(demux_fp, 'w') as f:
             to_hdf5(fna_fp, f)
 
+        # Magic number 6: the id of the preprocessed_demux filepath_type
         artifact = Artifact.create(
             [(demux_fp, 6)], "Demultiplexed", prep_template=pt,
             can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
@@ -419,14 +433,18 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         with self.assertRaises(EBISubmissionError):
             EBISubmission(1, 'This is not a valid action')
 
-        # already submitted so can't continue
+        # artifact can't be submitted
         with self.assertRaises(EBISubmissionError):
             EBISubmission(1, 'ADD')
 
-        ppd = self.generate_new_prep_template_and_write_demux_files()
+        # artifact has been already submitted
+        with self.assertRaises(EBISubmissionError):
+            EBISubmission(2, 'ADD')
+
+        artifact = self.generate_new_prep_template_and_write_demux_files()
         # raise error as we are missing columns
         exp_text = ("Errors found during EBI submission for study #1, "
-                    "preprocessed data #3 and prep template #2:\nUnrecognized "
+                    "artifact #5 and prep template #2:\nUnrecognized "
                     "investigation type: 'None'. This term is neither one of "
                     "the official terms nor one of the user-defined terms in "
                     "the ENA ontology.\nThese samples do not have a valid "
@@ -434,34 +452,34 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                     "1.SKD6.640190\nThese samples do not have a valid "
                     "instrument model: 1.SKM6.640187")
         with self.assertRaises(EBISubmissionError) as e:
-            EBISubmission(ppd.id, 'ADD')
+            EBISubmission(artifact.id, 'ADD')
         self.assertEqual(exp_text, str(e.exception))
 
     def test_prep_with_less_samples_than_sample_template(self):
         # the next line generates a valid prep template with less samples than
         # the sample template and basically we want to test that
         # the EBISubmission can be generated
-        ppd = self.generate_new_prep_template_and_write_demux_files(True)
-        e = EBISubmission(ppd.id, 'ADD')
+        artifact = self.generate_new_prep_template_and_write_demux_files(True)
+        e = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(e.full_ebi_dir)
         exp = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182']
         self.assertItemsEqual(exp, e.samples)
 
     def test_generate_experiment_xml(self):
-        ppd = self.generate_new_study_with_preprocessed_data()
-        submission = EBISubmission(ppd.id, 'ADD')
+        artifact = self.generate_new_study_with_preprocessed_data()
+        submission = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(submission.full_ebi_dir)
         obs = ET.tostring(submission.generate_experiment_xml())
         exp = EXPERIMENTXML_NEWSTUDY % {
             'organization_prefix': qiita_config.ebi_organization_prefix,
             'center_name': qiita_config.ebi_center_name,
-            'study_id': ppd.study,
-            'pt_id': ppd.prep_template
+            'study_id': artifact.study.id,
+            'pt_id': artifact.prep_templates[0].id
         }
         exp = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs, exp)
 
-        submission = EBISubmission(2, 'ADD')
+        submission = EBISubmission(3, 'ADD')
         self.files_to_remove.append(submission.full_ebi_dir)
         samples = ['1.SKB2.640194', '1.SKB3.640195']
         obs = ET.tostring(submission.generate_experiment_xml(samples=samples))
@@ -487,8 +505,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertEqual(obs, exp)
 
     def test_generate_run_xml(self):
-        ppd = self.generate_new_study_with_preprocessed_data()
-        submission = EBISubmission(ppd.id, 'ADD')
+        artifact = self.generate_new_study_with_preprocessed_data()
+        submission = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(submission.full_ebi_dir)
         submission.generate_demultiplexed_fastq(mtime=1)
         obs = ET.tostring(submission.generate_run_xml())
@@ -497,15 +515,15 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             'ebi_dir': submission.ebi_dir,
             'organization_prefix': qiita_config.ebi_organization_prefix,
             'center_name': qiita_config.ebi_center_name,
-            'ppd_id': ppd.id,
-            'study_id': ppd.study,
-            'pt_id': ppd.prep_template
+            'artifact_id': artifact.id,
+            'study_id': artifact.study.id,
+            'pt_id': artifact.prep_templates[0].id
         }
         exp = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs, exp)
 
-        ppd = self.write_demux_files(PrepTemplate(1))
-        submission = EBISubmission(ppd.id, 'ADD')
+        artifact = self.write_demux_files(PrepTemplate(1))
+        submission = EBISubmission(artifact.id, 'ADD')
 
         # removing samples so test text is easier to read
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
@@ -523,13 +541,13 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             'ebi_dir': submission.ebi_dir,
             'organization_prefix': qiita_config.ebi_organization_prefix,
             'center_name': qiita_config.ebi_center_name,
-            'ppd_id': ppd.id}
+            'artifact_id': artifact.id}
         exp = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs, exp)
 
     def test_generate_xml_files(self):
-        ppd = self.generate_new_study_with_preprocessed_data()
-        e = EBISubmission(ppd.id, 'ADD')
+        artifact = self.generate_new_study_with_preprocessed_data()
+        e = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(e.full_ebi_dir)
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
@@ -544,8 +562,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertIsNotNone(e.study_xml_fp)
         self.assertIsNotNone(e.submission_xml_fp)
 
-        ppd = self.generate_new_prep_template_and_write_demux_files(True)
-        e = EBISubmission(ppd.id, 'ADD')
+        artifact = self.generate_new_prep_template_and_write_demux_files(True)
+        e = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(e.full_ebi_dir)
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
@@ -560,8 +578,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.assertIsNone(e.study_xml_fp)
         self.assertIsNotNone(e.submission_xml_fp)
 
-        ppd = self.write_demux_files(PrepTemplate(1))
-        e = EBISubmission(ppd.id, 'ADD')
+        artifact = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(e.full_ebi_dir)
         e.generate_demultiplexed_fastq()
         self.assertIsNone(e.run_xml_fp)
@@ -578,15 +596,15 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
     def test_generate_demultiplexed_fastq_failure(self):
         # generating demux file for testing
-        ppd = self.write_demux_files(PrepTemplate(1), 'EMPTY')
+        artifact = self.write_demux_files(PrepTemplate(1), 'EMPTY')
 
-        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        ebi_submission = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
         with self.assertRaises(EBISubmissionError):
             ebi_submission.generate_demultiplexed_fastq()
 
-        ppd = self.write_demux_files(PrepTemplate(1), 'WRONG-SEQS')
-        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        artifact = self.write_demux_files(PrepTemplate(1), 'WRONG-SEQS')
+        ebi_submission = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
         with self.assertRaises(EBISubmissionError):
             ebi_submission.generate_demultiplexed_fastq()
@@ -598,10 +616,10 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
              '1.SKB2.640194', '1.SKM8.640201', '1.SKM4.640180',
              '1.SKM2.640199', '1.SKB3.640195', '1.SKB6.640176'])
 
-        ppd = self.write_demux_files(PrepTemplate(1))
+        artifact = self.write_demux_files(PrepTemplate(1))
         # This is testing that only the samples with sequences are going to
         # be created
-        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
@@ -612,7 +630,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         # If the last test passed then we can test that the folder already
         # exists and that we have the same files and ignore not fastq.gz files
-        ebi_submission = EBISubmission(ppd.id, 'ADD')
+        ebi_submission = EBISubmission(artifact.id, 'ADD')
         obs_demux_samples = ebi_submission.generate_demultiplexed_fastq()
         self.files_to_remove.append(ebi_submission.full_ebi_dir)
         self.assertItemsEqual(obs_demux_samples, exp_demux_samples)
@@ -622,8 +640,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                               ebi_submission.samples_prep.keys())
 
     def test_generate_send_sequences_cmd(self):
-        ppd = self.write_demux_files(PrepTemplate(1))
-        e = EBISubmission(ppd.id, 'ADD')
+        artifact = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(artifact.id, 'ADD')
         e.generate_demultiplexed_fastq()
         self.files_to_remove.append(e.full_ebi_dir)
         e.generate_xml_files()
@@ -631,48 +649,48 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         _, base_fp = get_mountpoint("preprocessed_data")[0]
         exp = ('ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKB2.640194.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./5_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM4.640180.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./5_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKB3.640195.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./5_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKB6.640176.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./5_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKD6.640190.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./5_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM6.640187.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./5_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKD9.640182.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./5_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM8.640201.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./5_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM2.640199.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./3_ebi_submission/' % {
+               'Webin-41528@webin.ebi.ac.uk:./5_ebi_submission/' % {
                    'ebi_dir': e.full_ebi_dir}).split('\n')
         self.assertEqual(obs, exp)
 
     def test_parse_EBI_reply(self):
-        ppd = self.generate_new_study_with_preprocessed_data()
-        study_id = ppd.study
-        e = EBISubmission(ppd.id, 'ADD')
+        artifact = self.generate_new_study_with_preprocessed_data()
+        study_id = artifact.study.id
+        e = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(e.full_ebi_dir)
         e.generate_demultiplexed_fastq(mtime=1)
         e.generate_xml_files()
         curl_result = CURL_RESULT_FULL.format(
-            qiita_config.ebi_organization_prefix, ppd.id, study_id,
-            ppd.prep_template)
+            qiita_config.ebi_organization_prefix, artifact.id, study_id,
+            artifact.prep_templates[0].id)
         stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(curl_result)
 
         self.assertEqual(stacc, 'ERP000000')
-        study_id = ppd.study
+        study_id = artifact.study.id
         exp_saacc = {'%d.Sample1' % study_id: 'ERS000000',
                      '%d.Sample2' % study_id: 'ERS000001',
                      '%d.Sample3' % study_id: 'ERS000002'}
@@ -690,8 +708,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                       '%d.Sample3' % study_id: 'ERR0000002'}
         self.assertEqual(runacc, exp_runacc)
 
-        ppd = self.write_demux_files(PrepTemplate(1))
-        e = EBISubmission(ppd.id, 'ADD')
+        artifact = self.write_demux_files(PrepTemplate(1))
+        e = EBISubmission(artifact.id, 'ADD')
         self.files_to_remove.append(e.full_ebi_dir)
         # removing samples so test text is easier to read
         keys_to_del = ['1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182',
@@ -722,12 +740,12 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             e.parse_EBI_reply(curl_result)
 
         curl_result = CURL_RESULT_2_STUDY.format(
-            qiita_config.ebi_organization_prefix, ppd.id)
+            qiita_config.ebi_organization_prefix, artifact.id)
         with self.assertRaises(EBISubmissionError):
             e.parse_EBI_reply(curl_result)
 
         curl_result = CURL_RESULT.format(qiita_config.ebi_organization_prefix,
-                                         ppd.id)
+                                         artifact.id)
         stacc, saacc, bioacc, exacc, runacc = e.parse_EBI_reply(curl_result)
         self.assertEqual(stacc, None)
         self.assertEqual(saacc, {})
@@ -997,14 +1015,16 @@ from the same location at different time points in the plant lifecycle.
     </DESCRIPTOR>
     <STUDY_LINKS>
       <STUDY_LINK>
-        <XREF_LINK>
-          <DB>PUBMED</DB><ID>123456</ID>
-        </XREF_LINK>
+        <XREF_LINK><DB>DOI</DB><ID>10.100/123456</ID></XREF_LINK>
       </STUDY_LINK>
       <STUDY_LINK>
-        <XREF_LINK>
-          <DB>PUBMED</DB><ID>7891011</ID>
-        </XREF_LINK>
+        <XREF_LINK><DB>PUBMED</DB><ID>123456</ID></XREF_LINK>
+      </STUDY_LINK>
+      <STUDY_LINK>
+        <XREF_LINK><DB>DOI</DB><ID>10.100/7891011</ID></XREF_LINK>
+      </STUDY_LINK>
+      <STUDY_LINK>
+       <XREF_LINK><DB>PUBMED</DB><ID>7891011</ID></XREF_LINK>
       </STUDY_LINK>
     </STUDY_LINKS>
   </STUDY>
@@ -1308,7 +1328,7 @@ REV:GGACTACHVGGGTWTCTAAT</VALUE>
 RUNXML = """
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespace\
 SchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:1.SKB2.640194" \
+  <RUN alias="%(organization_prefix)s_ppdid_%(artifact_id)s:1.SKB2.640194" \
 center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000008" />
     <DATA_BLOCK>
@@ -1319,7 +1339,7 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:1.SKB3.640195" \
+  <RUN alias="%(organization_prefix)s_ppdid_%(artifact_id)s:1.SKB3.640195" \
 center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000024" />
     <DATA_BLOCK>
@@ -1330,7 +1350,7 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:1.SKB6.640176" \
+  <RUN alias="%(organization_prefix)s_ppdid_%(artifact_id)s:1.SKB6.640176" \
 center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000025" />
     <DATA_BLOCK>
@@ -1341,7 +1361,7 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:1.SKM4.640180" \
+  <RUN alias="%(organization_prefix)s_ppdid_%(artifact_id)s:1.SKM4.640180" \
 center_name="%(center_name)s">
     <EXPERIMENT_REF accession="ERX0000004" />
     <DATA_BLOCK>
@@ -1358,8 +1378,8 @@ filetype="fastq" quality_scoring_system="phred" />
 RUNXML_NEWSTUDY = """
 <RUN_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespace\
 SchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_3/SRA.run.xsd">
-  <RUN alias="%(organization_prefix)s_ppdid_%(ppd_id)s:%(study_id)s.Sample1" \
-center_name="%(center_name)s">
+  <RUN alias="%(organization_prefix)s_ppdid_%(artifact_id)s:%(study_id)s.\
+Sample1" center_name="%(center_name)s">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_%(pt_id)s:\
 %(study_id)s.Sample1" />
     <DATA_BLOCK>
@@ -1370,8 +1390,8 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(organization_prefix)s_ppdid_3:%(study_id)s.Sample2" \
-center_name="%(center_name)s">
+  <RUN alias="%(organization_prefix)s_ppdid_%(artifact_id)s:%(study_id)s.\
+Sample2" center_name="%(center_name)s">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_%(pt_id)s:\
 %(study_id)s.Sample2" />
     <DATA_BLOCK>
@@ -1382,8 +1402,8 @@ filetype="fastq" quality_scoring_system="phred" />
       </FILES>
     </DATA_BLOCK>
   </RUN>
-  <RUN alias="%(organization_prefix)s_ppdid_3:%(study_id)s.Sample3" \
-center_name="%(center_name)s">
+  <RUN alias="%(organization_prefix)s_ppdid_%(artifact_id)s:%(study_id)s.\
+Sample3" center_name="%(center_name)s">
     <EXPERIMENT_REF refname="%(organization_prefix)s_ptid_%(pt_id)s:\
 %(study_id)s.Sample3" />
     <DATA_BLOCK>
