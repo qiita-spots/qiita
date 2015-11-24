@@ -234,7 +234,7 @@ INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1038/nmeth.f.303', '2
 INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (1, '10.1038/nmeth.f.303');
 -- Magic number 1: we just created the software table and inserted the QIIME
 -- software, which will receive the ID 1
-INSERT INTO qiita.software_command (software_id, name, description, cli_cmd, parameters_table) VALUES
+INSERT INTO qiita.software_command (software_id, name, description) VALUES
     (1, 'Split libraries FASTQ', 'Demultiplexes and applies quality control to FASTQ data'),
     (1, 'Split libraries', 'Demultiplexes and applies quality control to FASTA data'),
     (1, 'Pick closed-reference OTUs', 'OTU picking using a closed reference approach');
@@ -370,46 +370,46 @@ CREATE FUNCTION generate_params(command_id bigint, params_id bigint, parent_id b
             SELECT * INTO c1_rec
             FROM qiita.preprocessed_sequence_illumina_params
             WHERE parameters_id = params_id;
-            val := ('{"max_bad_run_length":' || rec.max_bad_run_length || ','
-                    '"min_per_read_length_fraction":' || rec.min_per_read_length_fraction || ','
-                    '"sequence_max_n":' || rec.sequence_max_n || ','
-                    '"rev_comp_barcode":' || rec.rev_comp_barcode || ','
-                    '"rev_comp_mapping_barcodes":' || rec.rev_comp_mapping_barcodes || ','
-                    '"rev_comp":' || rec.rev_comp || ','
-                    '"phred_quality_threshold":' || rec.phred_quality_threshold || ','
-                    '"barcode_type":"' || rec.barcode_type || '",'
-                    '"max_barcode_errors":' || rec.max_barcode_errors || ','
+            val := ('{"max_bad_run_length":' || c1_rec.max_bad_run_length || ','
+                    '"min_per_read_length_fraction":' || c1_rec.min_per_read_length_fraction || ','
+                    '"sequence_max_n":' || c1_rec.sequence_max_n || ','
+                    '"rev_comp_barcode":' || c1_rec.rev_comp_barcode || ','
+                    '"rev_comp_mapping_barcodes":' || c1_rec.rev_comp_mapping_barcodes || ','
+                    '"rev_comp":' || c1_rec.rev_comp || ','
+                    '"phred_quality_threshold":' || c1_rec.phred_quality_threshold || ','
+                    '"barcode_type":"' || c1_rec.barcode_type || '",'
+                    '"max_barcode_errors":' || c1_rec.max_barcode_errors || ','
                     '"input_data":' || parent_id || '}')::json;
         ELSIF command_id = 2 THEN
             SELECT * INTO c2_rec
             FROM qiita.preprocessed_sequence_454_params
             WHERE parameters_id = params_id;
-            val := ('{"min_seq_len":' || rec.min_seq_len || ','
-                    '"max_seq_len":' || rec.max_seq_len || ','
-                    '"trim_seq_length":' || rec.trim_seq_length || ','
-                    '"min_qual_score":' || rec.min_qual_score || ','
-                    '"max_ambig":' || rec.max_ambig || ','
-                    '"max_homopolymer":' || rec.max_homopolymer || ','
-                    '"max_primer_mismatch":' || rec.max_primer_mismatch || ','
-                    '"barcode_type":"' || rec.barcode_type || '",'
-                    '"max_barcode_errors":' || rec.max_barcode_errors || ','
-                    '"disable_bc_correction":' || rec.disable_bc_correction || ','
-                    '"qual_score_window":' || rec.qual_score_window || ','
-                    '"disable_primers":' || rec.disable_primers || ','
-                    '"reverse_primers":"' || rec.reverse_primers || '",'
-                    '"reverse_primer_mismatches":' || rec.reverse_primer_mismatches || ','
-                    '"truncate_ambi_bases":' || rec.truncate_ambig_bases || ','
+            val := ('{"min_seq_len":' || c2_rec.min_seq_len || ','
+                    '"max_seq_len":' || c2_rec.max_seq_len || ','
+                    '"trim_seq_length":' || c2_rec.trim_seq_length || ','
+                    '"min_qual_score":' || c2_rec.min_qual_score || ','
+                    '"max_ambig":' || c2_rec.max_ambig || ','
+                    '"max_homopolymer":' || c2_rec.max_homopolymer || ','
+                    '"max_primer_mismatch":' || c2_rec.max_primer_mismatch || ','
+                    '"barcode_type":"' || c2_rec.barcode_type || '",'
+                    '"max_barcode_errors":' || c2_rec.max_barcode_errors || ','
+                    '"disable_bc_correction":' || c2_rec.disable_bc_correction || ','
+                    '"qual_score_window":' || c2_rec.qual_score_window || ','
+                    '"disable_primers":' || c2_rec.disable_primers || ','
+                    '"reverse_primers":"' || c2_rec.reverse_primers || '",'
+                    '"reverse_primer_mismatches":' || c2_rec.reverse_primer_mismatches || ','
+                    '"truncate_ambi_bases":' || c2_rec.truncate_ambig_bases || ','
                     '"input_data":' || parent_id || '}')::json;
         ELSE
             SELECT * INTO c3_rec
             FROM qiita.processed_params_sortmerna
             WHERE parameters_id = params_id;
-            val := ('{"reference":' || rec.reference_id || ','
-                    '"sortmerna_e_value":' || rec.sortmerna_e_value || ','
-                    '"sortmerna_max_pos":' || rec.sortmerna_max_pos || ','
-                    '"similarity":' || rec.similarity || ','
-                    '"sortmerna_coverage":' || rec.sortmerna_coverage || ','
-                    '"threads":' || rec.threads || ','
+            val := ('{"reference":' || c3_rec.reference_id || ','
+                    '"sortmerna_e_value":' || c3_rec.sortmerna_e_value || ','
+                    '"sortmerna_max_pos":' || c3_rec.sortmerna_max_pos || ','
+                    '"similarity":' || c3_rec.similarity || ','
+                    '"sortmerna_coverage":' || c3_rec.sortmerna_coverage || ','
+                    '"threads":' || c3_rec.threads || ','
                     '"input_data":' || parent_id || '}')::json;
         END IF;
         RETURN val;
@@ -529,7 +529,7 @@ BEGIN
             -- Insert the preprocessed data in the artifact table
             INSERT INTO qiita.artifact (generated_timestamp, visibility_id,
                                         artifact_type_id, data_type_id, command_id,
-                                        command_parameters_id, can_be_submitted_to_ebi,
+                                        command_parameters, can_be_submitted_to_ebi,
                                         can_be_submitted_to_vamps)
                 VALUES (now(), ppd_vis_id, demux_type_id, ppd_vals.data_type_id, ppd_cmd_id,
                         params, TRUE, TRUE)
@@ -584,7 +584,7 @@ BEGIN
                 -- OTU pickking command is the number 3
                 INSERT INTO qiita.artifact (generated_timestamp, visibility_id,
                                             artifact_type_id, data_type_id, command_id,
-                                            command_parameters_id)
+                                            command_parameters)
                     VALUES (pd_vals.processed_date, pd_vals.processed_data_status_id,
                             biom_type_id, ppd_vals.data_type_id, 3, params)
                     RETURNING artifact_id into pd_a_id;
@@ -662,6 +662,7 @@ ALTER TABLE qiita.analysis_sample ADD CONSTRAINT pk_analysis_sample PRIMARY KEY 
 DROP FUNCTION infer_rd_status(bigint, bigint);
 DROP FUNCTION infer_ppd_status(bigint);
 DROP FUNCTION choose_command_id(varchar);
+DROP FUNCTION generate_params(bigint, bigint, bigint);
 
 -- Drop the old SQL structure from the schema
 ALTER TABLE qiita.prep_template DROP COLUMN raw_data_id;
@@ -678,6 +679,11 @@ DROP TABLE qiita.preprocessed_data;
 DROP TABLE qiita.raw_filepath;
 DROP TABLE qiita.raw_data;
 DROP TABLE qiita.study_pmid;
+DROP TABLE qiita.processed_params_uclust;
+DROP TABLE qiita.processed_params_sortmerna;
+DROP TABLE qiita.preprocessed_sequence_454_params;
+DROP TABLE qiita.preprocessed_sequence_illumina_params;
+DROP TABLE qiita.preprocessed_spectra_params;
 
 -- Create a function to return the roots of an artifact, i.e. the source artifacts
 CREATE FUNCTION qiita.find_artifact_roots(a_id bigint) RETURNS SETOF bigint AS $$
@@ -721,7 +727,7 @@ CREATE TABLE qiita.processing_job (
 	processing_job_id          UUID     NOT NULL,
 	email                      varchar  NOT NULL,
 	command_id                 bigint   NOT NULL,
-	command_parameters_id      bigint   NOT NULL,
+	command_parameters         json     NOT NULL,
 	processing_job_status_id   bigint   NOT NULL,
 	logging_id                 bigint  ,
 	heartbeat                  timestamp  ,
@@ -734,7 +740,7 @@ CREATE INDEX idx_processing_job_status_id ON qiita.processing_job ( processing_j
 CREATE INDEX idx_processing_job_logging ON qiita.processing_job ( logging_id ) ;
 COMMENT ON COLUMN qiita.processing_job.email IS 'The user that launched the job';
 COMMENT ON COLUMN qiita.processing_job.command_id IS 'The command launched';
-COMMENT ON COLUMN qiita.processing_job.command_parameters_id IS 'The parameters used in the command';
+COMMENT ON COLUMN qiita.processing_job.command_parameters IS 'The parameters used in the command';
 COMMENT ON COLUMN qiita.processing_job.logging_id IS 'In case of failure, point to the log entry that holds more information about the error';
 COMMENT ON COLUMN qiita.processing_job.heartbeat IS 'The last heartbeat received by this job';
 ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_qiita_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ;

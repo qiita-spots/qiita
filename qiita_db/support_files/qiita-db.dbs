@@ -954,171 +954,6 @@
 				<column name="sample_id" />
 			</index>
 		</table>
-		<table name="preprocessed_sequence_454_params" >
-			<comment>Parameters used for processing sequence data.</comment>
-			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="param_set_name" type="varchar" length="100" jt="12" mandatory="y" >
-				<comment><![CDATA[The name of the parameter set]]></comment>
-			</column>
-			<column name="min_seq_len" type="integer" jt="4" mandatory="y" >
-				<defo>200</defo>
-				<comment><![CDATA[The minimum sequence length]]></comment>
-			</column>
-			<column name="max_seq_len" type="integer" jt="4" mandatory="y" >
-				<defo>1000</defo>
-				<comment><![CDATA[The maximum sequence length]]></comment>
-			</column>
-			<column name="trim_seq_length" type="bool" jt="-7" mandatory="y" >
-				<defo>f</defo>
-				<comment><![CDATA[Whether to trim the sequence length or not]]></comment>
-			</column>
-			<column name="min_qual_score" type="integer" jt="4" mandatory="y" >
-				<defo>25</defo>
-				<comment><![CDATA[The minimum phred quality score]]></comment>
-			</column>
-			<column name="max_ambig" type="integer" jt="4" mandatory="y" >
-				<defo>6</defo>
-				<comment><![CDATA[The maximum number of ambiguous characters]]></comment>
-			</column>
-			<column name="max_homopolymer" type="integer" jt="4" mandatory="y" >
-				<defo>6</defo>
-				<comment><![CDATA[The maximum homopolymer run]]></comment>
-			</column>
-			<column name="max_primer_mismatch" type="integer" jt="4" mandatory="y" >
-				<defo>0</defo>
-				<comment><![CDATA[Maximum number of mismatches to the primer allowed]]></comment>
-			</column>
-			<column name="barcode_type" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;golay_12&#039;</defo>
-				<comment><![CDATA[The barcode type used]]></comment>
-			</column>
-			<column name="max_barcode_errors" type="real" jt="7" mandatory="y" >
-				<defo>1.5</defo>
-				<comment><![CDATA[The maximum number of allowed barcode errors]]></comment>
-			</column>
-			<column name="disable_bc_correction" type="bool" jt="-7" mandatory="y" >
-				<defo>f</defo>
-				<comment><![CDATA[Disable barcode correction]]></comment>
-			</column>
-			<column name="qual_score_window" type="integer" jt="4" mandatory="y" >
-				<defo>0</defo>
-				<comment><![CDATA[Enable a sliding window quality score threshold, this is the size of the window]]></comment>
-			</column>
-			<column name="disable_primers" type="bool" jt="-7" mandatory="y" >
-				<defo>f</defo>
-				<comment><![CDATA[Disable primer checking]]></comment>
-			</column>
-			<column name="reverse_primers" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;disable&#039;</defo>
-				<comment><![CDATA[Check for reverse primers]]></comment>
-			</column>
-			<column name="reverse_primer_mismatches" type="integer" jt="4" mandatory="y" >
-				<defo>0</defo>
-				<comment><![CDATA[The number of allowed mismatches in the reverse primer]]></comment>
-			</column>
-			<column name="truncate_ambig_bases_bool" type="bool" jt="-7" mandatory="y" >
-				<defo>f</defo>
-				<comment><![CDATA[Truncate at the first ambiguous base]]></comment>
-			</column>
-			<index name="pk_preprocessed_sequence_454_params" unique="PRIMARY_KEY" >
-				<column name="parameters_id" />
-			</index>
-		</table>
-		<table name="preprocessed_sequence_illumina_params" >
-			<comment>Parameters used for processing illumina sequence data.</comment>
-			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="max_bad_run_length" type="integer" jt="4" mandatory="y" >
-				<defo>3</defo>
-			</column>
-			<column name="min_per_read_length_fraction" type="real" jt="7" mandatory="y" >
-				<defo>0.75</defo>
-			</column>
-			<column name="sequence_max_n" type="integer" jt="4" mandatory="y" >
-				<defo>0</defo>
-			</column>
-			<column name="rev_comp_barcode" type="bool" jt="-7" mandatory="y" >
-				<defo>FALSE</defo>
-			</column>
-			<column name="rev_comp_mapping_barcodes" type="bool" jt="-7" mandatory="y" >
-				<defo>FALSE</defo>
-			</column>
-			<column name="rev_comp" type="bool" jt="-7" mandatory="y" >
-				<defo>FALSE</defo>
-			</column>
-			<column name="phred_quality_threshold" type="integer" jt="4" mandatory="y" >
-				<defo>3</defo>
-			</column>
-			<column name="barcode_type" type="varchar" jt="12" mandatory="y" >
-				<defo>&#039;golay_12&#039;</defo>
-			</column>
-			<column name="max_barcode_errors" type="real" jt="7" mandatory="y" >
-				<defo>1.5</defo>
-			</column>
-			<column name="param_set_name" type="varchar" length="100" jt="12" mandatory="y" >
-				<comment><![CDATA[The name of the parameter set]]></comment>
-			</column>
-			<index name="pk_preprocessed_sequence_illumina_params" unique="PRIMARY_KEY" >
-				<column name="parameters_id" />
-			</index>
-		</table>
-		<table name="preprocessed_spectra_params" >
-			<comment>Parameters used for processing spectra data.</comment>
-			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="col" type="varchar" jt="12" />
-			<index name="pk_preprocessed_spectra_params" unique="PRIMARY_KEY" >
-				<column name="parameters_id" />
-			</index>
-		</table>
-		<table name="processed_params_sortmerna" >
-			<comment>Parameters used for processing data using method sortmerna</comment>
-			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="reference_id" type="bigint" jt="-5" mandatory="y" >
-				<comment><![CDATA[What version of reference or type of reference used]]></comment>
-			</column>
-			<column name="sortmerna_e_value" type="float8" jt="6" mandatory="y" />
-			<column name="sortmerna_max_pos" type="integer" jt="4" mandatory="y" />
-			<column name="similarity" type="float8" jt="6" mandatory="y" />
-			<column name="sortmerna_coverage" type="float8" jt="6" mandatory="y" />
-			<column name="threads" type="integer" jt="4" mandatory="y" />
-			<column name="param_set_name" type="varchar" length="100" jt="12" mandatory="y" >
-				<defo>&#039;Default&#039;</defo>
-				<comment><![CDATA[The name of the parameter set]]></comment>
-			</column>
-			<index name="pk_processed_params_sortmerna" unique="PRIMARY_KEY" >
-				<column name="parameters_id" />
-			</index>
-			<index name="idx_processed_params_sortmerna" unique="NORMAL" >
-				<column name="reference_id" />
-			</index>
-			<fk name="fk_processed_params_sortmerna" to_schema="qiita" to_table="reference" >
-				<fk_column name="reference_id" pk="reference_id" />
-			</fk>
-		</table>
-		<table name="processed_params_uclust" >
-			<comment>Parameters used for processing data using method uclust</comment>
-			<column name="parameters_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="reference_id" type="bigint" jt="-5" mandatory="y" >
-				<comment><![CDATA[What version of reference or type of reference used]]></comment>
-			</column>
-			<column name="similarity" type="float8" jt="6" mandatory="y" >
-				<defo>0.97</defo>
-			</column>
-			<column name="enable_rev_strand_match" type="bool" jt="-7" mandatory="y" >
-				<defo>TRUE</defo>
-			</column>
-			<column name="suppress_new_clusters" type="bool" jt="-7" mandatory="y" >
-				<defo>TRUE</defo>
-			</column>
-			<index name="pk_processed_params_uclust" unique="PRIMARY_KEY" >
-				<column name="parameters_id" />
-			</index>
-			<index name="idx_processed_params_uclust" unique="NORMAL" >
-				<column name="reference_id" />
-			</index>
-			<fk name="fk_processed_params_uclust" to_schema="qiita" to_table="reference" >
-				<fk_column name="reference_id" pk="reference_id" />
-			</fk>
-		</table>
 		<table name="processing_job" >
 			<column name="processing_job_id" type="bigserial" jt="-5" mandatory="y" >
 				<comment><![CDATA[Using bigserial in DBSchema - however in the postgres DB this column is of type UUID.]]></comment>
@@ -1129,8 +964,8 @@
 			<column name="command_id" type="bigint" jt="-5" mandatory="y" >
 				<comment><![CDATA[The command launched]]></comment>
 			</column>
-			<column name="command_parameters_id" type="bigint" jt="-5" mandatory="y" >
-				<comment><![CDATA[The parameters used in the command]]></comment>
+			<column name="command_parameters" type="varchar" jt="12" mandatory="y" >
+				<comment><![CDATA[The parameters used in the command in JSON format]]></comment>
 			</column>
 			<column name="processing_job_status_id" type="bigint" length="1" jt="-5" mandatory="y" />
 			<column name="logging_id" type="bigint" jt="-5" >
@@ -1728,19 +1563,14 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2235" y="555" />
 		<entity schema="qiita" name="study_publication" color="b2cdf7" x="2340" y="705" />
 		<entity schema="qiita" name="data_directory" color="b2cdf7" x="840" y="735" />
-		<entity schema="qiita" name="preprocessed_spectra_params" color="d0def5" x="1995" y="1830" />
-		<entity schema="qiita" name="processed_params_uclust" color="d0def5" x="1725" y="1470" />
-		<entity schema="qiita" name="reference" color="c0d4f3" x="1725" y="1290" />
-		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="1740" y="1170" />
-		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1740" y="975" />
-		<entity schema="qiita" name="preprocessed_sequence_454_params" color="c0d4f3" x="1725" y="1605" />
-		<entity schema="qiita" name="processed_params_sortmerna" color="a8c4ef" x="1980" y="1425" />
-		<entity schema="qiita" name="preprocessed_sequence_illumina_params" color="d0def5" x="1980" y="1605" />
-		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2055" y="870" />
-		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2025" y="1005" />
-		<entity schema="qiita" name="software" color="b2cdf7" x="2040" y="750" />
-		<entity schema="qiita" name="software_command" color="b2cdf7" x="1845" y="750" />
+		<entity schema="qiita" name="reference" color="c0d4f3" x="1785" y="1290" />
+		<entity schema="qiita" name="software" color="b2cdf7" x="2100" y="750" />
+		<entity schema="qiita" name="software_command" color="b2cdf7" x="1905" y="750" />
 		<entity schema="qiita" name="artifact" color="b2cdf7" x="1200" y="750" />
+		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="2025" y="1140" />
+		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1800" y="1095" />
+		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2100" y="930" />
+		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="1920" y="945" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1828,12 +1658,7 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="prep_template" />
 		</group>
 		<group name="Group_processing" color="c4e0f9" >
-			<entity schema="qiita" name="preprocessed_sequence_454_params" />
-			<entity schema="qiita" name="preprocessed_sequence_illumina_params" />
 			<entity schema="qiita" name="reference" />
-			<entity schema="qiita" name="processed_params_uclust" />
-			<entity schema="qiita" name="processed_params_sortmerna" />
-			<entity schema="qiita" name="preprocessed_spectra_params" />
 			<entity schema="qiita" name="software" />
 			<entity schema="qiita" name="software_command" />
 			<entity schema="qiita" name="processing_job" />
