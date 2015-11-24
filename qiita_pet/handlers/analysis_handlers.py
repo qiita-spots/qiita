@@ -27,7 +27,6 @@ from qiita_pet.handlers.util import download_link_or_path
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
 from qiita_db.analysis import Analysis
-from qiita_db.data import ProcessedData
 from qiita_db.job import Job, Command
 from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,

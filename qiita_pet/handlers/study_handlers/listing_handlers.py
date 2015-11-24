@@ -21,7 +21,6 @@ from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import get_table_cols
-from qiita_db.data import ProcessedData
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.base_handlers import BaseHandler

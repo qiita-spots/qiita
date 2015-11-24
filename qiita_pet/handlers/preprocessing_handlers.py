@@ -2,7 +2,6 @@ from tornado.web import authenticated
 
 from .base_handlers import BaseHandler
 from qiita_ware.dispatchable import preprocessor
-from qiita_db.data import RawData
 from qiita_db.parameters import (PreprocessedIlluminaParams,
                                  Preprocessed454Params)
 from qiita_db.metadata_template.prep_template import PrepTemplate

@@ -14,7 +14,6 @@ from qiita_ware.commands import submit_EBI, submit_VAMPS
 from qiita_db.study import Study
 from qiita_db.analysis import Analysis
 from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.data import RawData, PreprocessedData
 
 
 def processor(preprocessed_data_id, param_id, param_constructor):

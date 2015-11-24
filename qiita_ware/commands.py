@@ -15,7 +15,7 @@ from traceback import format_exc
 from moi.job import system_call
 
 from qiita_db.study import Study
-from qiita_db.data import PreprocessedData
+from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.logger import LogEntry
@@ -143,30 +143,42 @@ def submit_EBI(preprocessed_data_id, action, send):
     return st_acc, sa_acc, bio_acc, ex_acc, run_acc
 
 
-def submit_VAMPS(preprocessed_data_id):
-    """Submit preprocessed data to VAMPS
+def submit_VAMPS(artifact_id):
+    """Submit artifact to VAMPS
 
     Parameters
     ----------
-    preprocessed_data_id : int
-        The preprocesssed data id
+    artifact_id : int
+        The artifact id
+
+    Raises
+    ------
+    ComputeError
+        - If the artifact cannot be submitted to VAMPS
+        - If the artifact is associated with more than one prep template
     """
-    preprocessed_data = PreprocessedData(preprocessed_data_id)
-    study = Study(preprocessed_data.study)
-    sample_template = SampleTemplate(study.sample_template)
-    prep_template = PrepTemplate(preprocessed_data.prep_template)
+    artifact = Artifact(artifact_id)
+    if not artifact.can_be_submitted_to_vamps:
+        raise ComputeError("Artifact %d cannot be submitted to VAMPS"
+                           % artifact_id)
+    study = artifact.study
+    sample_template = study.sample_template
+    prep_templates = artifact.prep_templates
+    if len(prep_templates) > 1:
+        raise ComputeError(
+            "Multiple prep templates associated with the artifact: %s"
+            % artifact_id)
+    prep_template = prep_templates[0]
 
-    status = preprocessed_data.submitted_to_vamps_status()
-    if status in ('submitting', 'success'):
-        raise ValueError("Cannot resubmit! Current status is: %s" % status)
-
-        preprocessed_data.update_vamps_status('submitting')
+    # Also need to check that is not submitting (see item in #1523)
+    if artifact.is_submitted_to_vamps:
+        raise ValueError("Cannot resubmit artifact %s to VAMPS!" % artifact_id)
 
     # Generating a tgz
     targz_folder = mkdtemp(prefix=qiita_config.working_dir)
     targz_fp = join(targz_folder, '%d_%d_%d.tgz' % (study.id,
                                                     prep_template.id,
-                                                    preprocessed_data.id))
+                                                    artifact_id))
     targz = taropen(targz_fp, mode='w:gz')
 
     # adding sample/prep
@@ -178,7 +190,7 @@ def submit_VAMPS(preprocessed_data_id):
     targz.add(prep_fp, arcname='prep_metadata.txt')
 
     # adding preprocessed data
-    for _, fp, fp_type in preprocessed_data.get_filepaths():
+    for _, fp, fp_type in artifact.filepaths:
         if fp_type == 'preprocessed_fasta':
             targz.add(fp, arcname='preprocessed_fasta.fna')
 
@@ -196,8 +208,7 @@ def submit_VAMPS(preprocessed_data_id):
            "<body>\n</body>\n</html>")
 
     if obs != exp:
-        preprocessed_data.update_vamps_status('failure')
         return False
     else:
-        preprocessed_data.update_vamps_status('success')
+        artifact.is_submitted_to_vamps = True
         return True
