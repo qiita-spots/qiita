@@ -189,20 +189,20 @@ def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
         prep_temp, qdb.study.Study(study_id), data_type)
 
 
-def load_parameters_from_cmd(name, fp, table):
+def load_parameters_from_cmd(name, fp, cmd_id):
     """Add a new parameters entry on `table`
 
     Parameters
     ----------
     fp : str
         The filepath to the parameters file
-    table : str
-        The name of the table to add the parameters
+    cmd_id : int
+        The command to add the new default parameter set
 
     Returns
     -------
-    qiita_db.BaseParameters
-        The newly `qiita_db.BaseParameters` object
+    qiita_db.software.DefaultParameters
+        The newly parameter set object cretaed
 
     Raises
     ------
@@ -217,20 +217,7 @@ def load_parameters_from_cmd(name, fp, table):
         parameter_2<TAB>value
         ...
     """
-    if table not in SUPPORTED_PARAMS:
-        raise ValueError("Table %s not supported. Choose from: %s"
-                         % (table, ', '.join(SUPPORTED_PARAMS)))
-
-    # Build the dictionary to get the parameter constructor
-    constructor_dict = {}
-    constructor_dict['preprocessed_sequence_illumina_params'] = \
-        qdb.parameters.PreprocessedIlluminaParams
-    constructor_dict['preprocessed_sequence_454_params'] = \
-        qdb.parameters.Preprocessed454Params
-    constructor_dict['processed_params_sortmerna'] = \
-        qdb.parameters.ProcessedSortmernaParams
-
-    constructor = constructor_dict[table]
+    cmd = qdb.software.Command(cmd_id)
 
     try:
         params = dict(tuple(l.strip().split('\t')) for l in open(fp, 'U'))
@@ -238,7 +225,7 @@ def load_parameters_from_cmd(name, fp, table):
         raise ValueError("The format of the parameters files is not correct. "
                          "The format is PARAMETER_NAME<tab>VALUE")
 
-    return constructor.create(name, **params)
+    return qdb.software.DefaultParameters.create(name, cmd, **params)
 
 
 def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):

@@ -221,16 +221,16 @@ def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
 @db.command()
 @click.argument('fp', required=True,
                 type=click.Path(resolve_path=True, readable=True, exists=True))
-@click.option('--table', required=True,
-              type=click.Choice(qdb.commands.SUPPORTED_PARAMS),
-              help='The table to add the parameter set')
+@click.option('--cmd-id', required=True,
+              type=click.IntRange(1, None),
+              help='The command to add the parameter set')
 @click.option('--name', required=True, type=str,
               help='The name of the parameters set')
-def load_parameters(fp, table, name):
+def load_parameters(fp, cmd_id, name):
     """Loads a parameter set to the database"""
-    param = qdb.commands.load_parameters_from_cmd(name, fp, table)
-    click.echo("Parameters successfully added to table %s with id %s"
-               % (table, param.id))
+    param = qdb.commands.load_parameters_from_cmd(name, fp, cmd_id)
+    click.echo("Parameters successfully added to the command %s with id %s"
+               % (cmd_id, param.id))
 
 
 # #############################################################################
