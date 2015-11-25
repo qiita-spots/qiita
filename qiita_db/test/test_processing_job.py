@@ -58,6 +58,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(obs.log, None)
         self.assertEqual(obs.heartbeat, None)
         self.assertEqual(obs.step, None)
+        self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
 
     def test_user(self):
         exp_user = qdb.user.User('test@foo.bar')

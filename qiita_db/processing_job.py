@@ -74,16 +74,29 @@ class ProcessingJob(qdb.base.QiitaObject):
             The newly created job
         """
         with qdb.sql_connection.TRN:
+            command = parameters.command
             sql = """INSERT INTO qiita.processing_job
                         (email, command_id, command_parameters,
                          processing_job_status_id)
                      VALUES (%s, %s, %s, %s)
                      RETURNING processing_job_id"""
             status = qdb.util.convert_to_id("queued", "processing_job_status")
-            sql_args = [user.id, parameters.command.id,
+            sql_args = [user.id, command.id,
                         parameters.dump(), status]
             qdb.sql_connection.TRN.add(sql, sql_args)
-            return cls(qdb.sql_connection.TRN.execute_fetchlast())
+            job_id = qdb.sql_connection.TRN.execute_fetchlast()
+
+            # Link the job with the input artifacts
+            sql = """INSERT INTO qiita.artifact_processing_job
+                        (artifact_id, processing_job_id)
+                     VALUES (%s, %s)"""
+            for pname, vals in command.parameters.items():
+                if vals[0] == 'artifact':
+                    qdb.sql_connection.TRN.add(
+                        sql, [parameters.values[pname], job_id])
+            qdb.sql_connection.TRN.execute()
+
+            return cls(job_id)
 
     @property
     def user(self):
