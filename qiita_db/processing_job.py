@@ -12,7 +12,7 @@ import qiita_db as qdb
 
 
 class ProcessingJob(qdb.base.QiitaObject):
-    r"""A job sent for processing an artifact
+    r"""Models a job that executes a command in a set of artifacts
 
     Attributes
     ----------
@@ -35,10 +35,15 @@ class ProcessingJob(qdb.base.QiitaObject):
     def exists(cls, job_id):
         """Check if the job `job_id` exists
 
+        Parameters
+        ----------
+        job_id : str
+            The job id
+
         Returns
         -------
         bool
-            True if thejob `job_id` exists. False otherwise.
+            True if the job `job_id` exists. False otherwise.
         """
         try:
             UUID(job_id)
