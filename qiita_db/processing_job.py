@@ -76,11 +76,11 @@ class ProcessingJob(qdb.base.QiitaObject):
 
             sql = """INSERT INTO qiita.processing_job
                         (processing_job_id, email, command_id,
-                         command_parameters_id, processing_job_status_id)
+                         command_parameters, processing_job_status_id)
                      VALUES (%s, %s, %s, %s, %s)"""
             status = qdb.util.convert_to_id("queued", "processing_job_status")
             sql_args = [job_id, user.id, parameters.command.id,
-                        parameters.id, status]
+                        parameters.dump(), status]
             qdb.sql_connection.TRN.add(sql, sql_args)
             return cls(job_id)
 
@@ -128,13 +128,13 @@ class ProcessingJob(qdb.base.QiitaObject):
             The parameters used in the job's command
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT command_id, command_parameters_id
+            sql = """SELECT command_id, command_parameters
                      FROM qiita.processing_job
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()[0]
-            return qdb.software.Parameters(
-                res[1], qdb.software.Command(res[0]))
+            return qdb.software.Parameters.load(
+                qdb.software.Command(res[0]), values_dict=res[1])
 
     @property
     def status(self):
