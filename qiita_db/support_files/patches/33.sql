@@ -2,6 +2,13 @@
 -- Change the database structure to remove the RawData, PreprocessedData and
 -- ProcessedData division to unify it into the Artifact object
 
+-- Rename the id columns from the parameters tables
+ALTER TABLE qiita.processed_params_sortmerna RENAME COLUMN processed_params_id TO parameters_id;
+ALTER TABLE qiita.processed_params_uclust RENAME COLUMN processed_params_id TO parameters_id;
+ALTER TABLE qiita.preprocessed_sequence_454_params RENAME COLUMN preprocessed_params_id TO parameters_id;
+ALTER TABLE qiita.preprocessed_sequence_illumina_params RENAME COLUMN preprocessed_params_id TO parameters_id;
+ALTER TABLE qiita.preprocessed_spectra_params RENAME COLUMN preprocessed_params_id TO parameters_id;
+
 -- Rename the table filetype
 ALTER TABLE qiita.filetype RENAME TO artifact_type;
 ALTER TABLE qiita.artifact_type RENAME COLUMN filetype_id TO artifact_type_id;
@@ -38,12 +45,38 @@ CREATE TABLE qiita.software_command (
     name                 varchar  NOT NULL,
     software_id          bigint  NOT NULL,
     description          varchar  NOT NULL,
-    cli_cmd              varchar  ,
-    parameters_table     varchar  NOT NULL,
     CONSTRAINT pk_software_command PRIMARY KEY ( command_id )
  ) ;
 CREATE INDEX idx_software_command ON qiita.software_command ( software_id ) ;
 ALTER TABLE qiita.software_command ADD CONSTRAINT fk_software_command_software FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id );
+
+-- command_parameter table - holds the parameters that a command accepts
+CREATE TABLE qiita.command_parameter (
+	command_id           bigint    NOT NULL,
+	parameter_name       varchar   NOT NULL,
+	parameter_type       varchar   NOT NULL,
+	required             bool      NOT NULL,
+	default_value        varchar  ,
+	CONSTRAINT idx_command_parameter_0 PRIMARY KEY ( command_id, parameter_name )
+ ) ;
+CREATE INDEX idx_command_parameter ON qiita.command_parameter ( command_id ) ;
+ALTER TABLE qiita.command_parameter ADD CONSTRAINT fk_command_parameter FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
+
+-- default_parameter_set tables - holds the default parameter sets defined by
+-- the system. If no arbitrary parameters are allowed in the system only the
+-- ones listed here will be shown. Note that the only parameters that are listed
+-- here are the ones that are not required, since the ones required do not
+-- have a default
+CREATE TABLE qiita.default_parameter_set (
+	default_parameter_set_id   bigserial   NOT NULL,
+	command_id                 bigint      NOT NULL,
+	parameter_set_name         varchar     NOT NULL,
+	parameter_set              JSON        NOT NULL,
+	CONSTRAINT pk_default_parameter_set PRIMARY KEY ( default_parameter_set_id ),
+	CONSTRAINT idx_default_parameter_set_0 UNIQUE ( command_id, parameter_set_name )
+ ) ;
+CREATE INDEX idx_default_parameter_set ON qiita.default_parameter_set ( command_id ) ;
+ALTER TABLE qiita.default_parameter_set ADD CONSTRAINT fk_default_parameter_set FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
 
 -- Publication table - holds the minimum information for a given publication
 -- It is useful to keep track of the publication of the studies and the software
@@ -83,7 +116,7 @@ CREATE TABLE qiita.artifact (
     artifact_id                         bigserial  NOT NULL,
     generated_timestamp                 timestamp  NOT NULL,
     command_id                          bigint  ,
-    command_parameters_id               bigint  ,
+    command_parameters                  json  ,
     visibility_id                       bigint  NOT NULL,
     artifact_type_id                    integer  ,
     data_type_id                        bigint  NOT NULL,
@@ -199,12 +232,119 @@ INSERT INTO qiita.software (name, version, description) VALUES
     ('QIIME', '1.9.1', 'Quantitative Insights Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data');
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1038/nmeth.f.303', '20383131');
 INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (1, '10.1038/nmeth.f.303');
--- Magic number 1: be just created the software table and inserted the QIIME
+-- Magic number 1: we just created the software table and inserted the QIIME
 -- software, which will receive the ID 1
-INSERT INTO qiita.software_command (software_id, name, description, cli_cmd, parameters_table) VALUES
-    (1, 'Split libraries FASTQ', 'Demultiplexes and applies quality control to FASTQ data', 'split_libraries_fastq.py', 'preprocessed_sequence_illumina_params'),
-    (1, 'Split libraries', 'Demultiplexes and applies quality control to FASTA data', 'split_libraries.py', 'preprocessed_sequence_454_params'),
-    (1, 'Pick closed-reference OTUs', 'OTU picking using a closed reference approach', 'pick_closed_reference_otus.py', 'processed_params_sortmerna');
+INSERT INTO qiita.software_command (software_id, name, description) VALUES
+    (1, 'Split libraries FASTQ', 'Demultiplexes and applies quality control to FASTQ data'),
+    (1, 'Split libraries', 'Demultiplexes and applies quality control to FASTA data'),
+    (1, 'Pick closed-reference OTUs', 'OTU picking using a closed reference approach');
+-- Populate the command_parameter table
+-- Magic numbers: we just created the software command table and inserted 3 commands, so we know their ids
+--  1: Split libraries FASTQ - preprocessed_sequence_illumina_params
+--  2: Split libraries - preprocessed_sequence_454_params
+--  3: Pick closed-reference OTUs - processed_params_sortmerna
+INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type, required, default_value) VALUES
+    (1, 'input_data', 'artifact', True, NULL),
+    (1, 'max_bad_run_length', 'integer', False, '3'),
+    (1, 'min_per_read_length_fraction', 'float', False, '0.75'),
+    (1, 'sequence_max_n', 'integer', False, '0'),
+    (1, 'rev_comp_barcode', 'bool', False, 'False'),
+    (1, 'rev_comp_mapping_barcodes', 'bool', False, 'False'),
+    (1, 'rev_comp', 'bool', False, 'False'),
+    (1, 'phred_quality_threshold', 'integer', False, '3'),
+    (1, 'barcode_type', 'string', False, 'golay_12'),
+    (1, 'max_barcode_errors', 'float', False, '1.5'),
+    (2, 'input_data', 'artifact', True, NULL),
+    (2, 'min_seq_len', 'integer', False, '200'),
+    (2, 'max_seq_len', 'integer', False, '1000'),
+    (2, 'trim_seq_length', 'bool', False, 'False'),
+    (2, 'min_qual_score', 'integer', False, '25'),
+    (2, 'max_ambig', 'integer', False, '6'),
+    (2, 'max_homopolymer', 'integer', False, '6'),
+    (2, 'max_primer_mismatch', 'integer', False, '0'),
+    (2, 'barcode_type', 'string', False, 'golay_12'),
+    (2, 'max_barcode_errors', 'float', False, '1.5'),
+    (2, 'disable_bc_correction', 'bool', False, 'False'),
+    (2, 'qual_score_window', 'integer', False, '0'),
+    (2, 'disable_primers', 'bool', False, 'False'),
+    (2, 'reverse_primers', 'choice:["disable", "truncate_only", "truncate_remove"]', False, 'default_value'),
+    (2, 'reverse_primer_mismatches', 'integer', False, '0'),
+    (2, 'truncate_ambi_bases', 'bool', False, 'False'),
+    (3, 'input_data', 'artifact', True, NULL),
+    (3, 'reference', 'reference', False, '1'),
+    (3, 'sortmerna_e_value', 'float', False, '1'),
+    (3, 'sortmerna_max_pos', 'integer', False, '10000'),
+    (3, 'similarity', 'float', False, '0.97'),
+    (3, 'sortmerna_coverage', 'float', False, '0.97'),
+    (3, 'threads', 'integer', False, '1');
+
+-- Populate the default_parameter_set table
+DO $do$
+DECLARE
+    rec     RECORD;
+    val     JSON;
+BEGIN
+    -- Transfer the default parameters from the preprocessed_sequence_illumina_params table
+    FOR rec IN
+        SELECT *
+        FROM qiita.preprocessed_sequence_illumina_params
+        ORDER BY parameters_id
+    LOOP
+        val := ('{"max_bad_run_length":' || rec.max_bad_run_length || ','
+                '"min_per_read_length_fraction":' || rec.min_per_read_length_fraction || ','
+                '"sequence_max_n":' || rec.sequence_max_n || ','
+                '"rev_comp_barcode":' || rec.rev_comp_barcode || ','
+                '"rev_comp_mapping_barcodes":' || rec.rev_comp_mapping_barcodes || ','
+                '"rev_comp":' || rec.rev_comp || ','
+                '"phred_quality_threshold":' || rec.phred_quality_threshold || ','
+                '"barcode_type":"' || rec.barcode_type || '",'
+                '"max_barcode_errors":' || rec.max_barcode_errors || '}')::json;
+        INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+            VALUES (1, rec.param_set_name, val);
+    END LOOP;
+
+    -- Transfer the default parameters from the preprocessed_sequence_454_params table
+    FOR rec IN
+        SELECT *
+        FROM qiita.preprocessed_sequence_454_params
+        ORDER BY parameters_id
+    LOOP
+        val := ('{"min_seq_len":' || rec.min_seq_len || ','
+                '"max_seq_len":' || rec.max_seq_len || ','
+                '"trim_seq_length":' || rec.trim_seq_length || ','
+                '"min_qual_score":' || rec.min_qual_score || ','
+                '"max_ambig":' || rec.max_ambig || ','
+                '"max_homopolymer":' || rec.max_homopolymer || ','
+                '"max_primer_mismatch":' || rec.max_primer_mismatch || ','
+                '"barcode_type":"' || rec.barcode_type || '",'
+                '"max_barcode_errors":' || rec.max_barcode_errors || ','
+                '"disable_bc_correction":' || rec.disable_bc_correction || ','
+                '"qual_score_window":' || rec.qual_score_window || ','
+                '"disable_primers":' || rec.disable_primers || ','
+                '"reverse_primers":"' || rec.reverse_primers || '",'
+                '"reverse_primer_mismatches":' || rec.reverse_primer_mismatches || ','
+                '"truncate_ambi_bases":' || rec.truncate_ambig_bases || '}')::json;
+        INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+            VALUES (2, rec.param_set_name, val);
+    END LOOP;
+
+    -- Transfer the default parameters from the processed_params_sortmerna table
+    FOR rec IN
+        SELECT *
+        FROM qiita.processed_params_sortmerna
+        ORDER BY parameters_id
+    LOOP
+        val := ('{"reference":' || rec.reference_id || ','
+                '"sortmerna_e_value":' || rec.sortmerna_e_value || ','
+                '"sortmerna_max_pos":' || rec.sortmerna_max_pos || ','
+                '"similarity":' || rec.similarity || ','
+                '"sortmerna_coverage":' || rec.sortmerna_coverage || ','
+                '"threads":' || rec.threads || '}')::json;
+        INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+            VALUES (3, rec.param_set_name, val);
+    END LOOP;
+END $do$;
+
 
 -- Create a function to correctly choose the commnad id for the preprocessed
 -- data
@@ -215,6 +355,64 @@ CREATE FUNCTION choose_command_id(ppd_params_table varchar) RETURNS bigint AS $$
         ELSE
             RETURN 2;
         END IF;
+    END;
+$$ LANGUAGE plpgsql;
+
+-- Create a function to correctly generate the parameters used to generate the artifact
+CREATE FUNCTION generate_params(command_id bigint, params_id bigint, parent_id bigint) RETURNS json AS $$
+    DECLARE
+        c1_rec      qiita.preprocessed_sequence_illumina_params%ROWTYPE;
+        c2_rec      qiita.preprocessed_sequence_454_params%ROWTYPE;
+        c3_rec      qiita.processed_params_sortmerna%ROWTYPE;
+        val         json;
+    BEGIN
+        IF command_id = 1 THEN
+            SELECT * INTO c1_rec
+            FROM qiita.preprocessed_sequence_illumina_params
+            WHERE parameters_id = params_id;
+            val := ('{"max_bad_run_length":' || c1_rec.max_bad_run_length || ','
+                    '"min_per_read_length_fraction":' || c1_rec.min_per_read_length_fraction || ','
+                    '"sequence_max_n":' || c1_rec.sequence_max_n || ','
+                    '"rev_comp_barcode":' || c1_rec.rev_comp_barcode || ','
+                    '"rev_comp_mapping_barcodes":' || c1_rec.rev_comp_mapping_barcodes || ','
+                    '"rev_comp":' || c1_rec.rev_comp || ','
+                    '"phred_quality_threshold":' || c1_rec.phred_quality_threshold || ','
+                    '"barcode_type":"' || c1_rec.barcode_type || '",'
+                    '"max_barcode_errors":' || c1_rec.max_barcode_errors || ','
+                    '"input_data":' || parent_id || '}')::json;
+        ELSIF command_id = 2 THEN
+            SELECT * INTO c2_rec
+            FROM qiita.preprocessed_sequence_454_params
+            WHERE parameters_id = params_id;
+            val := ('{"min_seq_len":' || c2_rec.min_seq_len || ','
+                    '"max_seq_len":' || c2_rec.max_seq_len || ','
+                    '"trim_seq_length":' || c2_rec.trim_seq_length || ','
+                    '"min_qual_score":' || c2_rec.min_qual_score || ','
+                    '"max_ambig":' || c2_rec.max_ambig || ','
+                    '"max_homopolymer":' || c2_rec.max_homopolymer || ','
+                    '"max_primer_mismatch":' || c2_rec.max_primer_mismatch || ','
+                    '"barcode_type":"' || c2_rec.barcode_type || '",'
+                    '"max_barcode_errors":' || c2_rec.max_barcode_errors || ','
+                    '"disable_bc_correction":' || c2_rec.disable_bc_correction || ','
+                    '"qual_score_window":' || c2_rec.qual_score_window || ','
+                    '"disable_primers":' || c2_rec.disable_primers || ','
+                    '"reverse_primers":"' || c2_rec.reverse_primers || '",'
+                    '"reverse_primer_mismatches":' || c2_rec.reverse_primer_mismatches || ','
+                    '"truncate_ambi_bases":' || c2_rec.truncate_ambig_bases || ','
+                    '"input_data":' || parent_id || '}')::json;
+        ELSE
+            SELECT * INTO c3_rec
+            FROM qiita.processed_params_sortmerna
+            WHERE parameters_id = params_id;
+            val := ('{"reference":' || c3_rec.reference_id || ','
+                    '"sortmerna_e_value":' || c3_rec.sortmerna_e_value || ','
+                    '"sortmerna_max_pos":' || c3_rec.sortmerna_max_pos || ','
+                    '"similarity":' || c3_rec.similarity || ','
+                    '"sortmerna_coverage":' || c3_rec.sortmerna_coverage || ','
+                    '"threads":' || c3_rec.threads || ','
+                    '"input_data":' || parent_id || '}')::json;
+        END IF;
+        RETURN val;
     END;
 $$ LANGUAGE plpgsql;
 
@@ -257,6 +455,7 @@ DECLARE
     demux_type_id   bigint;
     biom_type_id    bigint;
     ppd_cmd_id      bigint;
+    params          json;
 BEGIN
     -- We need a new artifact type for representing demultiplexed data (the
     -- only type of preprocessed data that we have at this point) and
@@ -324,13 +523,16 @@ BEGIN
             -- Get the correct command id
             SELECT choose_command_id(ppd_vals.preprocessed_params_table) INTO ppd_cmd_id;
 
+            -- Get the correct parameters
+            SELECT generate_params(ppd_cmd_id, ppd_vals.preprocessed_params_id, rd_a_id) INTO params;
+
             -- Insert the preprocessed data in the artifact table
             INSERT INTO qiita.artifact (generated_timestamp, visibility_id,
                                         artifact_type_id, data_type_id, command_id,
-                                        command_parameters_id, can_be_submitted_to_ebi,
+                                        command_parameters, can_be_submitted_to_ebi,
                                         can_be_submitted_to_vamps)
                 VALUES (now(), ppd_vis_id, demux_type_id, ppd_vals.data_type_id, ppd_cmd_id,
-                        ppd_vals.preprocessed_params_id, TRUE, TRUE)
+                        params, TRUE, TRUE)
                 RETURNING artifact_id INTO ppd_a_id;
 
             -- Relate the artifact with the study
@@ -373,15 +575,18 @@ BEGIN
                     JOIN qiita.preprocessed_processed_data USING (processed_data_id)
                 WHERE preprocessed_data_id = ppd_vals.preprocessed_data_id
             LOOP
+                -- Get the correct parameters
+                SELECT generate_params(3, pd_vals.processed_params_id, ppd_a_id) INTO params;
+
                 -- Insert the processed data in the artifact table
                 -- Magic number 3: we've created the software_command table here
                 -- and we know the order that we inserted the commands. The
                 -- OTU pickking command is the number 3
                 INSERT INTO qiita.artifact (generated_timestamp, visibility_id,
                                             artifact_type_id, data_type_id, command_id,
-                                            command_parameters_id)
+                                            command_parameters)
                     VALUES (pd_vals.processed_date, pd_vals.processed_data_status_id,
-                            biom_type_id, ppd_vals.data_type_id, 3, pd_vals.processed_params_id)
+                            biom_type_id, ppd_vals.data_type_id, 3, params)
                     RETURNING artifact_id into pd_a_id;
 
                 -- Relate the artifact with the study
@@ -457,6 +662,7 @@ ALTER TABLE qiita.analysis_sample ADD CONSTRAINT pk_analysis_sample PRIMARY KEY 
 DROP FUNCTION infer_rd_status(bigint, bigint);
 DROP FUNCTION infer_ppd_status(bigint);
 DROP FUNCTION choose_command_id(varchar);
+DROP FUNCTION generate_params(bigint, bigint, bigint);
 
 -- Drop the old SQL structure from the schema
 ALTER TABLE qiita.prep_template DROP COLUMN raw_data_id;
@@ -473,13 +679,11 @@ DROP TABLE qiita.preprocessed_data;
 DROP TABLE qiita.raw_filepath;
 DROP TABLE qiita.raw_data;
 DROP TABLE qiita.study_pmid;
-
--- Rename the id columns from the parameters tables
-ALTER TABLE qiita.processed_params_sortmerna RENAME COLUMN processed_params_id TO parameters_id;
-ALTER TABLE qiita.processed_params_uclust RENAME COLUMN processed_params_id TO parameters_id;
-ALTER TABLE qiita.preprocessed_sequence_454_params RENAME COLUMN preprocessed_params_id TO parameters_id;
-ALTER TABLE qiita.preprocessed_sequence_illumina_params RENAME COLUMN preprocessed_params_id TO parameters_id;
-ALTER TABLE qiita.preprocessed_spectra_params RENAME COLUMN preprocessed_params_id TO parameters_id;
+DROP TABLE qiita.processed_params_uclust;
+DROP TABLE qiita.processed_params_sortmerna;
+DROP TABLE qiita.preprocessed_sequence_454_params;
+DROP TABLE qiita.preprocessed_sequence_illumina_params;
+DROP TABLE qiita.preprocessed_spectra_params;
 
 -- Create a function to return the roots of an artifact, i.e. the source artifacts
 CREATE FUNCTION qiita.find_artifact_roots(a_id bigint) RETURNS SETOF bigint AS $$
@@ -523,7 +727,7 @@ CREATE TABLE qiita.processing_job (
 	processing_job_id          UUID     NOT NULL,
 	email                      varchar  NOT NULL,
 	command_id                 bigint   NOT NULL,
-	command_parameters_id      bigint   NOT NULL,
+	command_parameters         json     NOT NULL,
 	processing_job_status_id   bigint   NOT NULL,
 	logging_id                 bigint  ,
 	heartbeat                  timestamp  ,
@@ -536,7 +740,7 @@ CREATE INDEX idx_processing_job_status_id ON qiita.processing_job ( processing_j
 CREATE INDEX idx_processing_job_logging ON qiita.processing_job ( logging_id ) ;
 COMMENT ON COLUMN qiita.processing_job.email IS 'The user that launched the job';
 COMMENT ON COLUMN qiita.processing_job.command_id IS 'The command launched';
-COMMENT ON COLUMN qiita.processing_job.command_parameters_id IS 'The parameters used in the command';
+COMMENT ON COLUMN qiita.processing_job.command_parameters IS 'The parameters used in the command';
 COMMENT ON COLUMN qiita.processing_job.logging_id IS 'In case of failure, point to the log entry that holds more information about the error';
 COMMENT ON COLUMN qiita.processing_job.heartbeat IS 'The last heartbeat received by this job';
 ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_qiita_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ;

@@ -170,7 +170,8 @@ class ArtifactTests(TestCase):
 
     def test_create_processed(self):
         fp_count = qdb.util.get_count('qiita.filepath')
-        exp_params = qdb.software.Parameters(1, qdb.software.Command(1))
+        exp_params = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
         before = datetime.now()
         obs = qdb.artifact.Artifact.create(
             self.filepaths_processed, "Demultiplexed",
@@ -201,7 +202,9 @@ class ArtifactTests(TestCase):
     def test_create_biom(self):
         fp_count = qdb.util.get_count('qiita.filepath')
         before = datetime.now()
-        exp_params = qdb.software.Parameters(1, qdb.software.Command(3))
+        cmd = qdb.software.Command(3)
+        exp_params = qdb.software.Parameters.from_default_params(
+            cmd.default_parameter_sets.next(), {'input_data': 1})
         obs = qdb.artifact.Artifact.create(
             self.filepaths_biom, "BIOM", parents=[qdb.artifact.Artifact(2)],
             processing_parameters=exp_params)
@@ -288,10 +291,28 @@ class ArtifactTests(TestCase):
 
     def test_processing_parameters(self):
         self.assertIsNone(qdb.artifact.Artifact(1).processing_parameters)
-        self.assertEqual(qdb.artifact.Artifact(2).processing_parameters,
-                         qdb.software.Parameters(1, qdb.software.Command(1)))
-        self.assertEqual(qdb.artifact.Artifact(3).processing_parameters,
-                         qdb.software.Parameters(2, qdb.software.Command(1)))
+        obs = qdb.artifact.Artifact(2).processing_parameters
+        exp = qdb.software.Parameters.load(
+            qdb.software.Command(1),
+            values_dict={'max_barcode_errors': 1.5, 'sequence_max_n': 0,
+                         'max_bad_run_length': 3, 'rev_comp': False,
+                         'phred_quality_threshold': 3, 'input_data': 1,
+                         'rev_comp_barcode': False,
+                         'rev_comp_mapping_barcodes': False,
+                         'min_per_read_length_fraction': 0.75,
+                         'barcode_type': 'golay_12'})
+        self.assertEqual(obs, exp)
+        obs = qdb.artifact.Artifact(3).processing_parameters
+        exp = qdb.software.Parameters.load(
+            qdb.software.Command(1),
+            values_dict={'max_barcode_errors': 1.5, 'sequence_max_n': 0,
+                         'max_bad_run_length': 3, 'rev_comp': False,
+                         'phred_quality_threshold': 3, 'input_data': 1,
+                         'rev_comp_barcode': False,
+                         'rev_comp_mapping_barcodes': True,
+                         'min_per_read_length_fraction': 0.75,
+                         'barcode_type': 'golay_12'})
+        self.assertEqual(obs, exp)
 
     def test_visibility(self):
         self.assertEqual(qdb.artifact.Artifact(1).visibility, "private")
