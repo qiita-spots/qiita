@@ -345,6 +345,55 @@ BEGIN
     END LOOP;
 END $do$;
 
+-- Create tables to keep track of the processing jobs
+CREATE TABLE qiita.processing_job_status (
+	processing_job_status_id           bigserial  NOT NULL,
+	processing_job_status              varchar    NOT NULL,
+	processing_job_status_description  varchar    NOT NULL,
+	CONSTRAINT pk_processing_job_status PRIMARY KEY ( processing_job_status_id )
+ ) ;
+
+INSERT INTO qiita.processing_job_status
+        (processing_job_status, processing_job_status_description)
+    VALUES ('queued', 'The job is waiting to be run'),
+           ('running', 'The job is running'),
+           ('success', 'The job completed successfully'),
+           ('error', 'The job failed');
+
+CREATE TABLE qiita.processing_job (
+	processing_job_id          UUID     NOT NULL,
+	email                      varchar  NOT NULL,
+	command_id                 bigint   NOT NULL,
+	command_parameters         json     NOT NULL,
+	processing_job_status_id   bigint   NOT NULL,
+	logging_id                 bigint  ,
+	heartbeat                  timestamp  ,
+	step                       varchar  ,
+	CONSTRAINT pk_processing_job PRIMARY KEY ( processing_job_id )
+ ) ;
+CREATE INDEX idx_processing_job_email ON qiita.processing_job ( email ) ;
+CREATE INDEX idx_processing_job_command_id ON qiita.processing_job ( command_id ) ;
+CREATE INDEX idx_processing_job_status_id ON qiita.processing_job ( processing_job_status_id ) ;
+CREATE INDEX idx_processing_job_logging ON qiita.processing_job ( logging_id ) ;
+COMMENT ON COLUMN qiita.processing_job.email IS 'The user that launched the job';
+COMMENT ON COLUMN qiita.processing_job.command_id IS 'The command launched';
+COMMENT ON COLUMN qiita.processing_job.command_parameters IS 'The parameters used in the command';
+COMMENT ON COLUMN qiita.processing_job.logging_id IS 'In case of failure, point to the log entry that holds more information about the error';
+COMMENT ON COLUMN qiita.processing_job.heartbeat IS 'The last heartbeat received by this job';
+ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_qiita_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ;
+ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
+ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_status FOREIGN KEY ( processing_job_status_id ) REFERENCES qiita.processing_job_status( processing_job_status_id )    ;
+ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_logging FOREIGN KEY ( logging_id ) REFERENCES qiita.logging( logging_id )    ;
+
+CREATE TABLE qiita.artifact_processing_job (
+	artifact_id          bigint  NOT NULL,
+	processing_job_id    bigint  NOT NULL,
+	CONSTRAINT idx_artifact_processing_job PRIMARY KEY ( artifact_id, processing_job_id )
+ ) ;
+CREATE INDEX idx_artifact_processing_job ON qiita.artifact_processing_job ( artifact_id ) ;
+CREATE INDEX idx_artifact_processing_job_0 ON qiita.artifact_processing_job ( processing_job_id ) ;
+ALTER TABLE qiita.artifact_processing_job ADD CONSTRAINT fk_artifact_processing_job FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact( artifact_id )    ;
+ALTER TABLE qiita.artifact_processing_job ADD CONSTRAINT fk_artifact_processing_job_0 FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
 
 -- Create a function to correctly choose the commnad id for the preprocessed
 -- data
@@ -455,6 +504,7 @@ DECLARE
     demux_type_id   bigint;
     biom_type_id    bigint;
     ppd_cmd_id      bigint;
+    job_id          bigint;
     params          json;
 BEGIN
     -- We need a new artifact type for representing demultiplexed data (the
@@ -474,10 +524,11 @@ BEGIN
     -- intentional as the raw data sharing should be done at filepath level rather
     -- than at raw data level. See issue #1459.
     FOR pt_vals IN
-        SELECT prep_template_id, raw_data_id, filetype_id, study_id, data_type_id
+        SELECT prep_template_id, raw_data_id, filetype_id, study_id, data_type_id, email
         FROM qiita.prep_template
             JOIN qiita.raw_data USING (raw_data_id)
             JOIN qiita.study_prep_template USING (prep_template_id)
+            JOIN qiita.study USING (study_id)
         WHERE raw_data_id IS NOT NULL
     LOOP
         -- Move the raw_data
@@ -535,6 +586,18 @@ BEGIN
                         params, TRUE, TRUE)
                 RETURNING artifact_id INTO ppd_a_id;
 
+            -- Insert the job that created this preprocessed data
+            -- Magic number 3: success status - if we have an artifact
+            -- is because the job completed successfully
+            INSERT INTO qiita.processing_job (email, command_id, command_parameters,
+                                              processing_job_satus_id)
+                VALUES (pt_vals.email, ppd_cmd_id, params, 3)
+                RETURNING processing_job_id INTO job_id;
+
+            -- Link the parent with the job
+            INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
+                VALUES (rd_a_id, job_id);
+
             -- Relate the artifact with the study
             INSERT INTO qiita.study_artifact (study_id, artifact_id)
                 VALUES (pt_vals.study_id, ppd_a_id);
@@ -588,6 +651,18 @@ BEGIN
                     VALUES (pd_vals.processed_date, pd_vals.processed_data_status_id,
                             biom_type_id, ppd_vals.data_type_id, 3, params)
                     RETURNING artifact_id into pd_a_id;
+
+                -- Insert the job that created this processed data
+                -- Magic number 3: success status - if we have an artifact
+                -- is because the job completed successfully
+                INSERT INTO qiita.processing_job (email, command_id, command_parameters,
+                                                  processing_job_satus_id)
+                    VALUES (pt_vals.email, 3, params, 3)
+                    RETURNING processing_job_id INTO job_id;
+
+                -- Link the parent with the job
+                INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
+                    VALUES (ppd_a_id, job_id);
 
                 -- Relate the artifact with the study
                 INSERT INTO qiita.study_artifact (study_id, artifact_id)
@@ -707,43 +782,3 @@ BEGIN
     END IF;
 END
 $$ LANGUAGE plpgsql;
-
--- Create tables to keep track of the processing jobs
-CREATE TABLE qiita.processing_job_status (
-	processing_job_status_id           bigserial  NOT NULL,
-	processing_job_status              varchar    NOT NULL,
-	processing_job_status_description  varchar    NOT NULL,
-	CONSTRAINT pk_processing_job_status PRIMARY KEY ( processing_job_status_id )
- ) ;
-
-INSERT INTO qiita.processing_job_status
-        (processing_job_status, processing_job_status_description)
-    VALUES ('queued', 'The job is waiting to be run'),
-           ('running', 'The job is running'),
-           ('success', 'The job completed successfully'),
-           ('error', 'The job failed');
-
-CREATE TABLE qiita.processing_job (
-	processing_job_id          UUID     NOT NULL,
-	email                      varchar  NOT NULL,
-	command_id                 bigint   NOT NULL,
-	command_parameters         json     NOT NULL,
-	processing_job_status_id   bigint   NOT NULL,
-	logging_id                 bigint  ,
-	heartbeat                  timestamp  ,
-	step                       varchar  ,
-	CONSTRAINT pk_processing_job PRIMARY KEY ( processing_job_id )
- ) ;
-CREATE INDEX idx_processing_job_email ON qiita.processing_job ( email ) ;
-CREATE INDEX idx_processing_job_command_id ON qiita.processing_job ( command_id ) ;
-CREATE INDEX idx_processing_job_status_id ON qiita.processing_job ( processing_job_status_id ) ;
-CREATE INDEX idx_processing_job_logging ON qiita.processing_job ( logging_id ) ;
-COMMENT ON COLUMN qiita.processing_job.email IS 'The user that launched the job';
-COMMENT ON COLUMN qiita.processing_job.command_id IS 'The command launched';
-COMMENT ON COLUMN qiita.processing_job.command_parameters IS 'The parameters used in the command';
-COMMENT ON COLUMN qiita.processing_job.logging_id IS 'In case of failure, point to the log entry that holds more information about the error';
-COMMENT ON COLUMN qiita.processing_job.heartbeat IS 'The last heartbeat received by this job';
-ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_qiita_user FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ;
-ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
-ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_status FOREIGN KEY ( processing_job_status_id ) REFERENCES qiita.processing_job_status( processing_job_status_id )    ;
-ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_logging FOREIGN KEY ( logging_id ) REFERENCES qiita.logging( logging_id )    ;
