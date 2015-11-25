@@ -136,11 +136,11 @@ def load_study(owner, title, info):
               type=click.IntRange(1))
 @click.option('--required_params', required=False,
               help="JSON string containing the required parameters used to "
-                   "processed the new artifact",
+                   "process the new artifact",
               type=str)
 @click.option('--optional_params', required=False,
               help="JSON string containing the optional parameters used to "
-                   "processed the new artifact, if different from the "
+                   "process the new artifact, if different from the "
                    "defaults",
               type=str)
 @click.option('--ebi', is_flag=True,

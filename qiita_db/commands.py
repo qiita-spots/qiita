@@ -206,7 +206,7 @@ def load_parameters_from_cmd(name, fp, cmd_id):
     Returns
     -------
     qiita_db.software.DefaultParameters
-        The newly parameter set object cretaed
+        The newly parameter set object created
 
     Raises
     ------
