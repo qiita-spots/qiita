@@ -238,14 +238,15 @@ class QiitaConfig(TestCase):
         if not self.psql_version:
             self.assertTrue(False, 'PostgreSQL not running or configured')
 
-        acceptable_version = (9, 1, 14)
+        acceptable_version = (9, 3, 0)
         string_acceptable_version = '.'.join(map(str, acceptable_version))
         version = tuple(map(int, self.psql_version.split(' ')[1].split('.')))
 
         self.assertTrue(acceptable_version <= version,
-                        'Unsupported PostgreSQL version. You have %s but %s '
-                        'is requiered' % ('.'.join(map(str, version)),
-                                          string_acceptable_version))
+                        'Unsupported PostgreSQL version. You have %s but the '
+                        'minimum required version is %s'
+                        % ('.'.join(map(str, version)),
+                           string_acceptable_version))
 
     def test_redis_version(self):
         if not self.redis_version:

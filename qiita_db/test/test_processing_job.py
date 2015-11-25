@@ -41,7 +41,14 @@ class ProcessingJobTest(TestCase):
 
     def test_create(self):
         exp_command = qdb.software.Command(1)
-        exp_params = qdb.software.Parameters(1, exp_command)
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        exp_params = qdb.software.Parameters.load(exp_command,
+                                                  json_str=json_str)
         exp_user = qdb.user.User('test@foo.bar')
         obs = qdb.processing_job.ProcessingJob.create(exp_user, exp_params)
         self.assertEqual(obs.user, exp_user)
@@ -63,19 +70,51 @@ class ProcessingJobTest(TestCase):
     def test_command(self):
         cmd1 = qdb.software.Command(1)
         cmd2 = qdb.software.Command(2)
+        cmd3 = qdb.software.Command(3)
         self.assertEqual(self.tester1.command, cmd1)
         self.assertEqual(self.tester2.command, cmd2)
         self.assertEqual(self.tester3.command, cmd1)
-        self.assertEqual(self.tester4.command, cmd2)
+        self.assertEqual(self.tester4.command, cmd3)
 
     def test_parameters(self):
-        exp_params = qdb.software.Parameters(1, qdb.software.Command(1))
+        json_str = (
+            '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,'
+            '"sequence_max_n":0,"rev_comp_barcode":false,'
+            '"rev_comp_mapping_barcodes":false,"rev_comp":false,'
+            '"phred_quality_threshold":3,"barcode_type":"golay_12",'
+            '"max_barcode_errors":1.5,"input_data":1}')
+        exp_params = qdb.software.Parameters.load(qdb.software.Command(1),
+                                                  json_str=json_str)
         self.assertEqual(self.tester1.parameters, exp_params)
-        exp_params = qdb.software.Parameters(1, qdb.software.Command(2))
+
+        json_str = (
+            '{"min_seq_len":100,"max_seq_len":1000,"trim_seq_length":false,'
+            '"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,'
+            '"max_primer_mismatch":0,"barcode_type":"golay_12",'
+            '"max_barcode_errors":1.5,"disable_bc_correction":false,'
+            '"qual_score_window":0,"disable_primers":false,'
+            '"reverse_primers":"disable","reverse_primer_mismatches":0,'
+            '"truncate_ambi_bases":false,"input_data":1}')
+        exp_params = qdb.software.Parameters.load(qdb.software.Command(2),
+                                                  json_str=json_str)
         self.assertEqual(self.tester2.parameters, exp_params)
-        exp_params = qdb.software.Parameters(2, qdb.software.Command(1))
+
+        json_str = (
+            '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,'
+            '"sequence_max_n":0,"rev_comp_barcode":false,'
+            '"rev_comp_mapping_barcodes":true,"rev_comp":false,'
+            '"phred_quality_threshold":3,"barcode_type":"golay_12",'
+            '"max_barcode_errors":1.5,"input_data":1}')
+        exp_params = qdb.software.Parameters.load(qdb.software.Command(1),
+                                                  json_str=json_str)
         self.assertEqual(self.tester3.parameters, exp_params)
-        exp_params = qdb.software.Parameters(1, qdb.software.Command(2))
+
+        json_str = (
+            '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,'
+            '"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,'
+            '"input_data":2}')
+        exp_params = qdb.software.Parameters.load(qdb.software.Command(3),
+                                                  json_str=json_str)
         self.assertEqual(self.tester4.parameters, exp_params)
 
     def test_status(self):

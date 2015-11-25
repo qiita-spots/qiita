@@ -6,7 +6,7 @@ Qiita is pip installable, but depends on some non-python packages that must be i
 Install the non-python dependencies
 -----------------------------------
 
-* [PostgreSQL](http://www.postgresql.org/download/) (we have tested most extensively with 9.3)
+* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.0, we have tested most extensively with 9.3)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
 
 Install both of these packages according to the instructions on their websites.

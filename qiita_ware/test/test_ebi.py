@@ -31,7 +31,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
-from qiita_db.software import Parameters, Command
+from qiita_db.software import Parameters, DefaultParameters
 from qiita_core.util import qiita_test_checker
 
 
@@ -278,10 +278,13 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                 [(demux_fp, 6)], "Demultiplexed", prep_template=prep_template,
                 can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
         else:
+            params = Parameters.from_default_params(
+                DefaultParameters(1),
+                {'input_data': prep_template.artifact.id})
             artifact = Artifact.create(
                 [(demux_fp, 6)], "Demultiplexed",
                 parents=[prep_template.artifact],
-                processing_parameters=Parameters(1, Command(1)),
+                processing_parameters=params,
                 can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
 
         return artifact
