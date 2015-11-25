@@ -680,3 +680,39 @@ class Artifact(qdb.base.QiitaObject):
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.study.Study(qdb.sql_connection.TRN.execute_fetchlast())
+
+    def jobs(self, cmd=None, status=None):
+        """Jobs that used this artifact as input
+
+        Parameters
+        ----------
+        cmd : qiita_db.software.Command, optional
+            If provided, only jobs that executed this command will be returned
+        status : str, optional
+            If provided, only jobs in this status will be returned
+
+        Returns
+        -------
+        list of qiita_db.processing_job.ProcessingJob
+            The list of jobs that used this artifact as input
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT processing_job_id
+                     FROM qiita.artifact_processing_job
+                        JOIN qiita.processing_job USING (processing_job_id)
+                        JOIN qiita.processing_job_status
+                            USING (processing_job_status_id)
+                     WHERE artifact_id = %s"""
+            sql_args = [self.id]
+
+            if cmd:
+                sql = "{} AND command_id = %s".format(sql)
+                sql_args.append(cmd.id)
+
+            if status:
+                sql = "{} AND processing_job_status = %s".format(sql)
+                sql_args.append(status)
+
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            return [qdb.processing_job.ProcessingJob(jid)
+                    for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
