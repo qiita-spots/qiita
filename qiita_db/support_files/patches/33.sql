@@ -2,6 +2,8 @@
 -- Change the database structure to remove the RawData, PreprocessedData and
 -- ProcessedData division to unify it into the Artifact object
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Rename the id columns from the parameters tables
 ALTER TABLE qiita.processed_params_sortmerna RENAME COLUMN processed_params_id TO parameters_id;
 ALTER TABLE qiita.processed_params_uclust RENAME COLUMN processed_params_id TO parameters_id;
@@ -361,7 +363,7 @@ INSERT INTO qiita.processing_job_status
            ('error', 'The job failed');
 
 CREATE TABLE qiita.processing_job (
-	processing_job_id          UUID     NOT NULL,
+	processing_job_id          UUID     DEFAULT uuid_generate_v4(),
 	email                      varchar  NOT NULL,
 	command_id                 bigint   NOT NULL,
 	command_parameters         json     NOT NULL,
@@ -387,11 +389,11 @@ ALTER TABLE qiita.processing_job ADD CONSTRAINT fk_processing_job_logging FOREIG
 
 CREATE TABLE qiita.artifact_processing_job (
 	artifact_id          bigint  NOT NULL,
-	processing_job_id    bigint  NOT NULL,
+	processing_job_id    UUID    NOT NULL,
 	CONSTRAINT idx_artifact_processing_job PRIMARY KEY ( artifact_id, processing_job_id )
  ) ;
-CREATE INDEX idx_artifact_processing_job ON qiita.artifact_processing_job ( artifact_id ) ;
-CREATE INDEX idx_artifact_processing_job_0 ON qiita.artifact_processing_job ( processing_job_id ) ;
+CREATE INDEX idx_artifact_processing_job_artifact ON qiita.artifact_processing_job ( artifact_id ) ;
+CREATE INDEX idx_artifact_processing_job_job ON qiita.artifact_processing_job ( processing_job_id ) ;
 ALTER TABLE qiita.artifact_processing_job ADD CONSTRAINT fk_artifact_processing_job FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact( artifact_id )    ;
 ALTER TABLE qiita.artifact_processing_job ADD CONSTRAINT fk_artifact_processing_job_0 FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
 
@@ -504,7 +506,7 @@ DECLARE
     demux_type_id   bigint;
     biom_type_id    bigint;
     ppd_cmd_id      bigint;
-    job_id          bigint;
+    job_id          UUID;
     params          json;
 BEGIN
     -- We need a new artifact type for representing demultiplexed data (the
@@ -590,7 +592,7 @@ BEGIN
             -- Magic number 3: success status - if we have an artifact
             -- is because the job completed successfully
             INSERT INTO qiita.processing_job (email, command_id, command_parameters,
-                                              processing_job_satus_id)
+                                              processing_job_status_id)
                 VALUES (pt_vals.email, ppd_cmd_id, params, 3)
                 RETURNING processing_job_id INTO job_id;
 
@@ -656,7 +658,7 @@ BEGIN
                 -- Magic number 3: success status - if we have an artifact
                 -- is because the job completed successfully
                 INSERT INTO qiita.processing_job (email, command_id, command_parameters,
-                                                  processing_job_satus_id)
+                                                  processing_job_status_id)
                     VALUES (pt_vals.email, 3, params, 3)
                     RETURNING processing_job_id INTO job_id;
 
