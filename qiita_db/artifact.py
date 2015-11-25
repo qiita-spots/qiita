@@ -97,7 +97,7 @@ class Artifact(qdb.base.QiitaObject):
         parents : iterable of qiita_db.artifact.Artifact, optional
             The list of artifacts from which the new artifact has been
             generated. If not provided, `prep_template` should be provided.
-        processing_parameters : qiita_db.software.Parameter, optional
+        processing_parameters : qiita_db.software.Parameters, optional
             The processing parameters used to generate the new artifact
             from `parents`. It is required if `parents` is provided. It should
             not be provided if `prep_template` is provided.
@@ -180,15 +180,16 @@ class Artifact(qdb.base.QiitaObject):
                 # Create the artifact
                 sql = """INSERT INTO qiita.artifact
                             (generated_timestamp, command_id, data_type_id,
-                             command_parameters_id, visibility_id,
+                             command_parameters, visibility_id,
                              artifact_type_id, can_be_submitted_to_ebi,
                              can_be_submitted_to_vamps, submitted_to_vamps)
                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                          RETURNING artifact_id"""
                 sql_args = [timestamp, processing_parameters.command.id,
-                            dtype_id, processing_parameters.id, visibility_id,
-                            artifact_type_id, can_be_submitted_to_ebi,
-                            can_be_submitted_to_vamps, False]
+                            dtype_id, processing_parameters.dump(),
+                            visibility_id, artifact_type_id,
+                            can_be_submitted_to_ebi, can_be_submitted_to_vamps,
+                            False]
                 qdb.sql_connection.TRN.add(sql, sql_args)
                 a_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -354,7 +355,7 @@ class Artifact(qdb.base.QiitaObject):
             None otherwise.
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT command_id, command_parameters_id
+            sql = """SELECT command_id, command_parameters
                      FROM qiita.artifact
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
@@ -362,8 +363,8 @@ class Artifact(qdb.base.QiitaObject):
             res = qdb.sql_connection.TRN.execute_fetchindex()[0]
             if res[0] is None:
                 return None
-            return qdb.software.Parameters(
-                res[1], qdb.software.Command(res[0]))
+            return qdb.software.Parameters.load(
+                qdb.software.Command(res[0]), values_dict=res[1])
 
     @property
     def visibility(self):
