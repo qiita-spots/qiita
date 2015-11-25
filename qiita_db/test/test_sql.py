@@ -66,7 +66,8 @@ class TestSQL(TestCase):
         with open(fp, 'w') as f:
             f.write("test")
         fp = [(fp, 7)]
-        params = qdb.software.Parameters(1, qdb.software.Command(1))
+        params = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(10), {'input_data': 2})
         new = qdb.artifact.Artifact.create(
             fp, "BIOM",
             parents=[qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)],
@@ -128,7 +129,8 @@ class TestSQL(TestCase):
         with open(fp, 'w') as f:
             f.write("test")
         fp = [(fp, 4)]
-        params = qdb.software.Parameters(1, qdb.software.Command(1))
+        params = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 2})
         new = qdb.artifact.Artifact.create(
             fp, "Demultiplexed", parents=[qdb.artifact.Artifact(1), new_root],
             processing_parameters=params)

@@ -65,15 +65,8 @@ class SetupTest(TestCase):
     def test_prep_1(self):
         self.assertEqual(get_count("qiita.prep_1"), 27)
 
-    def test_preprocessed_sequence_illumina_params(self):
-        self.assertEqual(
-            get_count("qiita.preprocessed_sequence_illumina_params"), 7)
-
     def test_reference(self):
         self.assertEqual(get_count("qiita.reference"), 1)
-
-    def test_processed_params_uclust(self):
-        self.assertEqual(get_count("qiita.processed_params_uclust"), 1)
 
     def test_job(self):
         self.assertEqual(get_count("qiita.job"), 3)

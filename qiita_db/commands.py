@@ -8,6 +8,7 @@
 
 from functools import partial
 from future import standard_library
+from json import loads
 
 import qiita_db as qdb
 
@@ -89,9 +90,8 @@ def load_study_from_cmd(owner, title, info):
 
 def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
                            prep_template=None, parents=None,
-                           processing_command_id=None,
-                           processing_parameters_id=None,
-                           can_be_submitted_to_ebi=False,
+                           dflt_params_id=None, required_params=None,
+                           optional_params=None, can_be_submitted_to_ebi=False,
                            can_be_submitted_to_vamps=False):
     r"""Adds an artifact to the system
 
@@ -107,10 +107,12 @@ def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
         The prep template id
     parents : list of int, optional
         The list of artifacts id of the parent artifacts
-    processing_command_id : int, optional
-        The id of the command used to process the artifact
-    processing_parameters_id : int, optional
-        The id of the parameter set used to process the artifact
+    dflt_params_id : int, optional
+        The id of the default parameter set used to process the artifact
+    required_params : str, optional
+        JSON string with the required parameters used to process the artifact
+    optional_params : str, optional
+        JSON string with the optional parameters used to process the artifact
     can_be_submitted_to_ebi : bool, optional
         Whether the artifact can be submitted to EBI or not
     can_be_submitted_to_vamps : bool, optional
@@ -143,10 +145,12 @@ def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
             parents = [qdb.artifact.Artifact(pid) for pid in parents]
 
         params = None
-        if processing_command_id:
-            params = qdb.software.Parameters(
-                processing_parameters_id,
-                qdb.software.Command(processing_command_id))
+        if dflt_params_id:
+            required_dict = loads(required_params) if required_params else None
+            optional_dict = loads(optional_params) if optional_params else None
+            params = qdb.software.Parameters.from_default_params(
+                qdb.software.DefaultParameters(dflt_params_id),
+                required_dict, optional_dict)
 
         return qdb.artifact.Artifact.create(
             fps, artifact_type, prep_template=prep_template, parents=parents,
@@ -189,20 +193,20 @@ def load_prep_template_from_cmd(prep_temp_path, study_id, data_type):
         prep_temp, qdb.study.Study(study_id), data_type)
 
 
-def load_parameters_from_cmd(name, fp, table):
+def load_parameters_from_cmd(name, fp, cmd_id):
     """Add a new parameters entry on `table`
 
     Parameters
     ----------
     fp : str
         The filepath to the parameters file
-    table : str
-        The name of the table to add the parameters
+    cmd_id : int
+        The command to add the new default parameter set
 
     Returns
     -------
-    qiita_db.BaseParameters
-        The newly `qiita_db.BaseParameters` object
+    qiita_db.software.DefaultParameters
+        The newly parameter set object created
 
     Raises
     ------
@@ -217,20 +221,7 @@ def load_parameters_from_cmd(name, fp, table):
         parameter_2<TAB>value
         ...
     """
-    if table not in SUPPORTED_PARAMS:
-        raise ValueError("Table %s not supported. Choose from: %s"
-                         % (table, ', '.join(SUPPORTED_PARAMS)))
-
-    # Build the dictionary to get the parameter constructor
-    constructor_dict = {}
-    constructor_dict['preprocessed_sequence_illumina_params'] = \
-        qdb.parameters.PreprocessedIlluminaParams
-    constructor_dict['preprocessed_sequence_454_params'] = \
-        qdb.parameters.Preprocessed454Params
-    constructor_dict['processed_params_sortmerna'] = \
-        qdb.parameters.ProcessedSortmernaParams
-
-    constructor = constructor_dict[table]
+    cmd = qdb.software.Command(cmd_id)
 
     try:
         params = dict(tuple(l.strip().split('\t')) for l in open(fp, 'U'))
@@ -238,7 +229,7 @@ def load_parameters_from_cmd(name, fp, table):
         raise ValueError("The format of the parameters files is not correct. "
                          "The format is PARAMETER_NAME<tab>VALUE")
 
-    return constructor.create(name, **params)
+    return qdb.software.DefaultParameters.create(name, cmd, **params)
 
 
 def update_artifact_from_cmd(filepaths, filepath_types, artifact_id):

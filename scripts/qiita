@@ -130,24 +130,31 @@ def load_study(owner, title, info):
               help="The parent artifacts from which the new artifact has been "
                    "processed",
               type=click.IntRange(1))
-@click.option('--command', required=False,
-              help="The command used to process the new artifact",
+@click.option('--dflt_params', required=False,
+              help="The default parameter set used to process the new "
+                   "artifact",
               type=click.IntRange(1))
-@click.option('--parameter_set', required=False,
-              help="The parameter set used to process the new artifact",
-              type=click.IntRange(1))
+@click.option('--required_params', required=False,
+              help="JSON string containing the required parameters used to "
+                   "process the new artifact",
+              type=str)
+@click.option('--optional_params', required=False,
+              help="JSON string containing the optional parameters used to "
+                   "process the new artifact, if different from the "
+                   "defaults",
+              type=str)
 @click.option('--ebi', is_flag=True,
               help="Pass this flag if the artifact can be submitted to EBI")
 @click.option('--vamps', is_flag=True,
               help="Pass this flag if the artifact can be submitted to VAMPS")
-def load_artifact(fp, fp_type, artifact_type, prep_template, parents, command,
-                  parameter_set, ebi, vamps):
+def load_artifact(fp, fp_type, artifact_type, prep_template, parents,
+                  dflt_params, required_params, optional_params, ebi, vamps):
     """Loads an artifact to the database"""
     artifact = qdb.commands.load_artifact_from_cmd(
         fp, fp_type, artifact_type, prep_template=prep_template,
-        parents=parents, processing_command_id=command,
-        processing_parameters_id=parameter_set, can_be_submitted_to_ebi=ebi,
-        can_be_submitted_to_vamps=vamps)
+        parents=parents, dflt_params_id=dflt_params,
+        required_params=required_params, optional_params=optional_params,
+        can_be_submitted_to_ebi=ebi, can_be_submitted_to_vamps=vamps)
     click.echo("Artifact %s successfully created" % artifact.id)
 
 
@@ -221,16 +228,16 @@ def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
 @db.command()
 @click.argument('fp', required=True,
                 type=click.Path(resolve_path=True, readable=True, exists=True))
-@click.option('--table', required=True,
-              type=click.Choice(qdb.commands.SUPPORTED_PARAMS),
-              help='The table to add the parameter set')
+@click.option('--cmd-id', required=True,
+              type=click.IntRange(1, None),
+              help='The command to add the parameter set')
 @click.option('--name', required=True, type=str,
               help='The name of the parameters set')
-def load_parameters(fp, table, name):
+def load_parameters(fp, cmd_id, name):
     """Loads a parameter set to the database"""
-    param = qdb.commands.load_parameters_from_cmd(name, fp, table)
-    click.echo("Parameters successfully added to table %s with id %s"
-               % (table, param.id))
+    param = qdb.commands.load_parameters_from_cmd(name, fp, cmd_id)
+    click.echo("Parameters successfully added to the command %s with id %s"
+               % (cmd_id, param.id))
 
 
 # #############################################################################

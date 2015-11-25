@@ -12,7 +12,6 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology
 from qiita_db.util import convert_to_id
 from qiita_pet.util import convert_text_html
-from qiita_db.parameters import ProcessedSortmernaParams
 from .base_uimodule import BaseUIModule
 from qiita_pet.util import (generate_param_str, STATUS_STYLER,
                             is_localhost, EBI_LINKIFIER)
