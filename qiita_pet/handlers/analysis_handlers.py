@@ -214,8 +214,7 @@ class ShowAnalysesHandler(BaseHandler):
         level = self.get_argument('level', '')
         user = self.current_user
 
-        analyses = [Analysis(a) for a in
-                    user.shared_analyses | user.private_analyses]
+        analyses = user.shared_analyses | user.private_analyses
 
         is_local_request = is_localhost(self.request.headers['host'])
         gfi = partial(get_filepath_id, 'analysis')
@@ -307,7 +306,7 @@ class SelectedSamplesHandler(BaseHandler):
         # Format sel_data to get study IDs for the processed data
         sel_data = defaultdict(dict)
         proc_data_info = {}
-        sel_samps = Analysis(self.current_user.default_analysis).samples
+        sel_samps = self.current_user.default_analysis.samples
         for pid, samps in viewitems(sel_samps):
             proc_data = ProcessedData(pid)
             sel_data[proc_data.study][pid] = samps
@@ -322,5 +321,5 @@ class AnalysisSummaryAJAX(BaseHandler):
     @authenticated
     @execute_as_transaction
     def get(self):
-        info = Analysis(self.current_user.default_analysis).summary_data()
+        info = self.current_user.default_analysis.summary_data()
         self.write(dumps(info))

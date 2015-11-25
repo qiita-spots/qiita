@@ -71,9 +71,7 @@ def _template_generator(study, full_access):
         the PrepTemplate object and a tuple with 3 strings for the style of
         the prep template status icons
     """
-
-    for pt_id in sorted(study.prep_templates()):
-        pt = PrepTemplate(pt_id)
+    for pt in sorted(study.prep_templates()):
         if full_access or pt.status == 'public':
             yield (pt.id, pt.data_type(), pt, STATUS_STYLER[pt.status],
                    pt.is_submitted_to_ebi)
@@ -85,6 +83,7 @@ class PrepTemplateTab(BaseUIModule):
         files = [f for _, f in get_files_from_uploads_folders(str(study.id))
                  if f.endswith(('txt', 'tsv'))]
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
+
         prep_templates_info = [
             res for res in _template_generator(study, full_access)]
         # Get all the ENA terms for the investigation type
@@ -163,29 +162,27 @@ class PrepTemplateInfoTab(BaseUIModule):
         # A prep template can be modified if its status is sandbox
         is_editable = prep_template.status == 'sandbox'
 
-        raw_data_id = prep_template.raw_data
+        raw_data = prep_template.artifact
         preprocess_options = []
         preprocessed_data = None
         show_preprocess_btn = True
         no_preprocess_msg = None
-        if raw_data_id:
-            rd = RawData(raw_data_id)
-            rd_ft = rd.filetype
-
+        if raw_data:
+            raw_data_ft = raw_data.artifact_type
             # If the prep template has a raw data associated, it can be
             # preprocessed. Retrieve the pre-processing parameters
-            if rd_ft in ('SFF', 'FASTA'):
+            if raw_data_ft in ('SFF', 'FASTA'):
                 param_iter = Preprocessed454Params.iter()
-            elif rd_ft == 'FASTQ':
+            elif raw_data_ft == 'FASTQ':
                 param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
                               if pip.values['barcode_type'] != 'not-barcoded']
-            elif rd_ft == 'per_sample_FASTQ':
+            elif raw_data_ft == 'per_sample_FASTQ':
                 param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
                               if pip.values['barcode_type'] == 'not-barcoded']
             else:
                 raise NotImplementedError(
                     "Pre-processing of %s files currently not supported."
-                    % rd_ft)
+                    % raw_data_ft)
 
             preprocess_options = []
             for param in param_iter:
@@ -194,11 +191,11 @@ class PrepTemplateInfoTab(BaseUIModule):
                 preprocess_options.append((param.id,
                                            param.name,
                                            '<br>'.join(text)))
-            preprocessed_data = prep_template.preprocessed_data
+            preprocessed_data = raw_data.children
 
             # Check if the template have all the required columns for
             # preprocessing
-            raw_data_files = rd.get_filepaths()
+            raw_data_files = raw_data.filepaths
             if len(raw_data_files) == 0:
                 show_preprocess_btn = False
                 no_preprocess_msg = (
@@ -213,7 +210,7 @@ class PrepTemplateInfoTab(BaseUIModule):
                     missing_cols = prep_template.check_restrictions(
                         [PREP_TEMPLATE_COLUMNS_TARGET_GENE[key]])
 
-                    if rd_ft == 'per_sample_FASTQ':
+                    if raw_data_ft == 'per_sample_FASTQ':
                         show_preprocess_btn = 'run_prefix' not in missing_cols
                     else:
                         show_preprocess_btn = len(missing_cols) == 0
@@ -223,8 +220,7 @@ class PrepTemplateInfoTab(BaseUIModule):
                         no_preprocess_msg = (
                             "Preprocessing disabled due to missing columns in "
                             "the prep template: %s" % ', '.join(missing_cols))
-
-        preprocessing_status = prep_template.preprocessing_status
+        preprocessing_status = 'TODO: plugin'
 
         ebi_link = None
         if prep_template.is_submitted_to_ebi:
@@ -232,9 +228,7 @@ class PrepTemplateInfoTab(BaseUIModule):
 
         return self.render_string(
             "study_description_templates/prep_template_info_tab.html",
-            pt_id=prep_template.id,
-            study_id=study.id,
-            raw_data=raw_data_id,
+            raw_data=raw_data,
             current_template_fp=current_template_fp,
             current_qiime_fp=current_qiime_fp,
             show_old_templates=show_old_templates,
@@ -260,38 +254,22 @@ class PrepTemplateInfoTab(BaseUIModule):
 
 class RawDataInfoDiv(BaseUIModule):
     @execute_as_transaction
-    def render(self, raw_data_id, prep_template, study, files):
-        rd = RawData(raw_data_id)
+    def render(self, rd, prep_template, study, files):
         raw_data_files = [(basename(fp), fp_type[4:])
-                          for _, fp, fp_type in rd.get_filepaths()]
-        filetype = rd.filetype
+                          for _, fp, fp_type in rd.filepaths]
+        filetype = rd.artifact_type
         fp_types = fp_type_by_ft[filetype]
-        raw_data_link_status = rd.link_filepaths_status
 
-        show_buttons = rd.status(study) == 'sandbox'
-        link_msg = ""
-        if show_buttons:
-            # Define the message for the link status
-            if raw_data_link_status == 'linking':
-                link_msg = "Linking files..."
-                show_buttons = False
-            elif raw_data_link_status == 'unlinking':
-                link_msg = "Unlinking files..."
-                show_buttons = False
-            elif raw_data_link_status.startswith('failed'):
-                link_msg = "Error (un)linking files: %s" % raw_data_link_status
+        show_buttons = rd.study.status == 'sandbox'
 
-        link_msg = convert_text_html(link_msg)
         return self.render_string(
             "study_description_templates/raw_data_info.html",
-            rd_id=raw_data_id,
-            rd_filetype=rd.filetype,
+            rd_id=rd.id,
+            rd_filetype=filetype,
             raw_data_files=raw_data_files,
             prep_template_id=prep_template.id,
             files=files,
             filepath_types=fp_types,
-            filetype=filetype,
-            link_msg=link_msg,
             show_buttons=show_buttons)
 
 
