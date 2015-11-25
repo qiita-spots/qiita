@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from uuid import uuid4, UUID
+from uuid import UUID
 
 import qiita_db as qdb
 
@@ -74,20 +74,16 @@ class ProcessingJob(qdb.base.QiitaObject):
             The newly created job
         """
         with qdb.sql_connection.TRN:
-            # Generate the job_id
-            job_id = str(uuid4())
-            while cls.exists(job_id):
-                job_id = str(uuid4())
-
             sql = """INSERT INTO qiita.processing_job
-                        (processing_job_id, email, command_id,
-                         command_parameters, processing_job_status_id)
-                     VALUES (%s, %s, %s, %s, %s)"""
+                        (email, command_id, command_parameters,
+                         processing_job_status_id)
+                     VALUES (%s, %s, %s, %s)
+                     RETURNING processing_job_id"""
             status = qdb.util.convert_to_id("queued", "processing_job_status")
-            sql_args = [job_id, user.id, parameters.command.id,
+            sql_args = [user.id, parameters.command.id,
                         parameters.dump(), status]
             qdb.sql_connection.TRN.add(sql, sql_args)
-            return cls(job_id)
+            return cls(qdb.sql_connection.TRN.execute_fetchlast())
 
     @property
     def user(self):
