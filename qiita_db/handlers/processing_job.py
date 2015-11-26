@@ -112,7 +112,7 @@ class StepHandler(RequestHandler):
                     step = payload['step']
                     job.step = step
 
-        response = {'success': success, 'error_msg': error_msg}
+        response = {'success': success, 'error': error_msg}
         self.write(response)
 
 
@@ -149,9 +149,9 @@ class CompleteHandler(RequestHandler):
                         job.status = 'success'
                     else:
                         log = qdb.logger.LogEntry.create(
-                            'Runtime', payload['error_msg'])
+                            'Runtime', payload['error'])
                         job.status = 'error'
                         job.log = log
 
-        response = {'success': success, 'error_msg': error_msg}
+        response = {'success': success, 'error': error_msg}
         self.write(response)
