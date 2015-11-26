@@ -497,5 +497,87 @@ class ArtifactTests(TestCase):
     def test_study(self):
         self.assertEqual(qdb.artifact.Artifact(1).study, qdb.study.Study(1))
 
+    def test_jobs(self):
+        obs = qdb.artifact.Artifact(1).jobs()
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                '063e553b-327c-4818-ab4a-adfe58e49860'),
+            qdb.processing_job.ProcessingJob(
+                'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')
+            ]
+        self.assertEqual(obs, exp)
+
+    def test_jobs_cmd(self):
+        cmd = qdb.software.Command(1)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                '063e553b-327c-4818-ab4a-adfe58e49860'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')
+            ]
+        self.assertEqual(obs, exp)
+
+        cmd = qdb.software.Command(2)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
+        exp = [qdb.processing_job.ProcessingJob(
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')]
+        self.assertEqual(obs, exp)
+
+    def test_jobs_status(self):
+        obs = qdb.artifact.Artifact(1).jobs(status='success')
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')
+            ]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.artifact.Artifact(1).jobs(status='running')
+        exp = [qdb.processing_job.ProcessingJob(
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.artifact.Artifact(1).jobs(status='queued')
+        exp = [qdb.processing_job.ProcessingJob(
+            '063e553b-327c-4818-ab4a-adfe58e49860')]
+        self.assertEqual(obs, exp)
+
+    def test_jobs_cmd_and_status(self):
+        cmd = qdb.software.Command(1)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='success')
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')
+            ]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')
+        exp = [qdb.processing_job.ProcessingJob(
+            '063e553b-327c-4818-ab4a-adfe58e49860')]
+        self.assertEqual(obs, exp)
+
+        cmd = qdb.software.Command(2)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')
+        exp = []
+        self.assertEqual(obs, exp)
+
 if __name__ == '__main__':
     main()
