@@ -15,7 +15,7 @@ import qiita_db as qdb
 
 
 def _get_job(job_id):
-    """Checks that the job exists and its status is ok_status
+    """Returns the job with the given id if it exists
 
     Parameters
     ----------
