@@ -151,6 +151,24 @@ class ProcessingJob(qdb.base.QiitaObject):
                 qdb.software.Command(res[0]), values_dict=res[1])
 
     @property
+    def input_artifacts(self):
+        """The artifacts used as input in the job
+
+        Returns
+        -------
+        list of qiita_db.artifact.Artifact
+            The artifacs used as input in the job
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_id
+                     FROM qiita.artifact_processing_job
+                     WHERE processing_job_id = %s
+                     ORDER BY artifact_id"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return [qdb.artifact.Artifact(aid)
+                    for aid in qdb.sql_connection.TRN.execute_fetchflatten()]
+
+    @property
     def status(self):
         """The status of the job
 
