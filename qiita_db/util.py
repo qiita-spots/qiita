@@ -30,6 +30,7 @@ Methods
     move_filepaths_to_upload_folder
     move_upload_files_to_trash
     add_message
+    get_pubmed_ids_from_dois
 """
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -1055,6 +1056,30 @@ def get_timeseries_types():
         sql = "SELECT * FROM qiita.timeseries_type ORDER BY timeseries_type_id"
         qdb.sql_connection.TRN.add(sql)
         return qdb.sql_connection.TRN.execute_fetchindex()
+
+
+def get_pubmed_ids_from_dois(doi_ids):
+    """Get the dict of pubmed ids from a list of doi ids
+
+    Parameters
+    ----------
+    doi_ids : list of str
+        The list of doi ids
+
+    Returns
+    -------
+    dict of {doi: pubmed_id}
+        Return dict of doi and pubmed ids
+
+    Notes
+    -----
+    If doi doesn't exist it will not return that {key: value} pair
+    """
+    with qdb.sql_connection.TRN:
+        sql = "SELECT doi, pubmed_id FROM qiita.publication WHERE doi IN %s"
+        qdb.sql_connection.TRN.add(sql, [tuple(doi_ids)])
+        return {row[0]: join(*row[1:])
+                for row in qdb.sql_connection.TRN.execute_fetchindex()}
 
 
 def check_access_to_analysis_result(user_id, requested_path):

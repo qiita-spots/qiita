@@ -688,5 +688,11 @@ class UtilTests(TestCase):
         obs = qdb.util.infer_status([['sandbox'], ['sandbox']])
         self.assertEqual(obs, 'sandbox')
 
+    def test_get_pubmed_ids_from_dois(self):
+        exp = {'10.100/123456': '123456'}
+        obs = get_pubmed_ids_from_dois(['', '10.100/123456'])
+        self.assertEqual(obs, exp)
+
+
 if __name__ == '__main__':
     main()
