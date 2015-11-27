@@ -58,6 +58,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(obs.log, None)
         self.assertEqual(obs.heartbeat, None)
         self.assertEqual(obs.step, None)
+        self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
 
     def test_user(self):
         exp_user = qdb.user.User('test@foo.bar')
@@ -116,6 +117,14 @@ class ProcessingJobTest(TestCase):
         exp_params = qdb.software.Parameters.load(qdb.software.Command(3),
                                                   json_str=json_str)
         self.assertEqual(self.tester4.parameters, exp_params)
+
+    def test_input_artifacts(self):
+        exp = [qdb.artifact.Artifact(1)]
+        self.assertEqual(self.tester1.input_artifacts, exp)
+        self.assertEqual(self.tester2.input_artifacts, exp)
+        self.assertEqual(self.tester3.input_artifacts, exp)
+        exp = [qdb.artifact.Artifact(2)]
+        self.assertEqual(self.tester4.input_artifacts, exp)
 
     def test_status(self):
         self.assertEqual(self.tester1.status, 'queued')

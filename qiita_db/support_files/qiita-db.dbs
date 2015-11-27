@@ -278,6 +278,26 @@
 				<fk_column name="filepath_id" pk="filepath_id" />
 			</fk>
 		</table>
+		<table name="artifact_processing_job" >
+			<column name="artifact_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="processing_job_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_artifact_processing_job" unique="PRIMARY_KEY" >
+				<column name="artifact_id" />
+				<column name="processing_job_id" />
+			</index>
+			<index name="idx_artifact_processing_job" unique="NORMAL" >
+				<column name="artifact_id" />
+			</index>
+			<index name="idx_artifact_processing_job" unique="NORMAL" >
+				<column name="processing_job_id" />
+			</index>
+			<fk name="fk_artifact_processing_job" to_schema="qiita" to_table="artifact" >
+				<fk_column name="artifact_id" pk="artifact_id" />
+			</fk>
+			<fk name="fk_artifact_processing_job_0" to_schema="qiita" to_table="processing_job" >
+				<fk_column name="processing_job_id" pk="processing_job_id" />
+			</fk>
+		</table>
 		<table name="artifact_type" >
 			<comment>Type of artifact</comment>
 			<column name="artifact_type_id" type="bigserial" jt="-5" mandatory="y" />
@@ -1569,8 +1589,9 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="artifact" color="b2cdf7" x="1200" y="750" />
 		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="2025" y="1140" />
 		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1800" y="1095" />
-		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2100" y="930" />
-		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="1920" y="945" />
+		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2115" y="900" />
+		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2130" y="1020" />
+		<entity schema="qiita" name="artifact_processing_job" color="b2cdf7" x="1785" y="930" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1665,40 +1686,27 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="processing_job_status" />
 			<entity schema="qiita" name="command_parameter" />
 			<entity schema="qiita" name="default_parameter_set" />
+			<entity schema="qiita" name="artifact_processing_job" />
 		</group>
 		<group name="Group_publication" color="ffccff" >
 			<entity schema="qiita" name="publication" />
 			<entity schema="qiita" name="software_publication" />
 			<entity schema="qiita" name="study_publication" />
 		</group>
-		<script name="Sql" id="SQL7779022" >
-			<string><![CDATA[CREATE TABLE qiita.command_parameter ( 
-	command_id           bigint  NOT NULL,
-	parameter_name       varchar  NOT NULL,
-	parameter_type       varchar  NOT NULL,
-	required             bool  NOT NULL,
-	deafult_value        varchar  ,
-	CONSTRAINT idx_command_parameter_0 PRIMARY KEY ( command_id, parameter_name )
+		<script name="Sql_001" id="SQL7268209" >
+			<string><![CDATA[CREATE TABLE qiita.artifact_processing_job ( 
+	artifact_id          bigint  NOT NULL,
+	processing_job_id    bigint  NOT NULL,
+	CONSTRAINT idx_artifact_processing_job PRIMARY KEY ( artifact_id, processing_job_id )
  ) ;
 
-CREATE INDEX idx_command_parameter ON qiita.command_parameter ( command_id ) ;
+CREATE INDEX idx_artifact_processing_job ON qiita.artifact_processing_job ( artifact_id ) ;
 
-CREATE TABLE qiita.default_parameter_set ( 
-	default_parameter_set_id bigserial  NOT NULL,
-	command_id           bigint  NOT NULL,
-	parameter_set_name   varchar  NOT NULL,
-	parameter_set        varchar  NOT NULL,
-	CONSTRAINT pk_default_parameter_set PRIMARY KEY ( default_parameter_set_id ),
-	CONSTRAINT idx_default_parameter_set_0 UNIQUE ( command_id, parameter_set_name ) 
- ) ;
+CREATE INDEX idx_artifact_processing_job ON qiita.artifact_processing_job ( processing_job_id ) ;
 
-CREATE INDEX idx_default_parameter_set ON qiita.default_parameter_set ( command_id ) ;
+ALTER TABLE qiita.artifact_processing_job ADD CONSTRAINT fk_artifact_processing_job FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact( artifact_id )    ;
 
-COMMENT ON COLUMN qiita.default_parameter_set.parameter_set IS 'This is a varchar here - but is of type JSON in postgresql.';
-
-ALTER TABLE qiita.command_parameter ADD CONSTRAINT fk_command_parameter FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
-
-ALTER TABLE qiita.default_parameter_set ADD CONSTRAINT fk_default_parameter_set FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
+ALTER TABLE qiita.artifact_processing_job ADD CONSTRAINT fk_artifact_processing_job_0 FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
 
 ]]></string>
 		</script>

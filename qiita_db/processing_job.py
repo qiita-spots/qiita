@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from uuid import uuid4, UUID
+from uuid import UUID
 
 import qiita_db as qdb
 
@@ -74,19 +74,28 @@ class ProcessingJob(qdb.base.QiitaObject):
             The newly created job
         """
         with qdb.sql_connection.TRN:
-            # Generate the job_id
-            job_id = str(uuid4())
-            while cls.exists(job_id):
-                job_id = str(uuid4())
-
+            command = parameters.command
             sql = """INSERT INTO qiita.processing_job
-                        (processing_job_id, email, command_id,
-                         command_parameters, processing_job_status_id)
-                     VALUES (%s, %s, %s, %s, %s)"""
+                        (email, command_id, command_parameters,
+                         processing_job_status_id)
+                     VALUES (%s, %s, %s, %s)
+                     RETURNING processing_job_id"""
             status = qdb.util.convert_to_id("queued", "processing_job_status")
-            sql_args = [job_id, user.id, parameters.command.id,
+            sql_args = [user.id, command.id,
                         parameters.dump(), status]
             qdb.sql_connection.TRN.add(sql, sql_args)
+            job_id = qdb.sql_connection.TRN.execute_fetchlast()
+
+            # Link the job with the input artifacts
+            sql = """INSERT INTO qiita.artifact_processing_job
+                        (artifact_id, processing_job_id)
+                     VALUES (%s, %s)"""
+            for pname, vals in command.parameters.items():
+                if vals[0] == 'artifact':
+                    qdb.sql_connection.TRN.add(
+                        sql, [parameters.values[pname], job_id])
+            qdb.sql_connection.TRN.execute()
+
             return cls(job_id)
 
     @property
@@ -140,6 +149,24 @@ class ProcessingJob(qdb.base.QiitaObject):
             res = qdb.sql_connection.TRN.execute_fetchindex()[0]
             return qdb.software.Parameters.load(
                 qdb.software.Command(res[0]), values_dict=res[1])
+
+    @property
+    def input_artifacts(self):
+        """The artifacts used as input in the job
+
+        Returns
+        -------
+        list of qiita_db.artifact.Artifact
+            The artifacs used as input in the job
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_id
+                     FROM qiita.artifact_processing_job
+                     WHERE processing_job_id = %s
+                     ORDER BY artifact_id"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return [qdb.artifact.Artifact(aid)
+                    for aid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
     def status(self):
