@@ -102,13 +102,13 @@ class HeartbeatHandlerTests(TestHandlerBase):
         self.assertEqual(job.status, 'running')
 
 
-class StepHandlerTests(TestHandlerBase):
+class ActiveStepHandlerTests(TestHandlerBase):
     database = True
 
     def test_post_job_does_not_exists(self):
         obs = self.post('/qiita_db/jobs/do-not-exist/step/', '')
         self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error_msg': 'Job does not exist'}
+        exp = {'success': False, 'error': 'Job does not exist'}
         self.assertEqual(loads(obs.body), exp)
 
     def test_post_non_running_job(self):
@@ -117,7 +117,7 @@ class StepHandlerTests(TestHandlerBase):
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/step/',
             payload)
         self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error_msg': 'Job in a non-running state'}
+        exp = {'success': False, 'error': 'Job in a non-running state'}
         self.assertEqual(loads(obs.body), exp)
 
     def test_post(self):
@@ -126,7 +126,7 @@ class StepHandlerTests(TestHandlerBase):
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/step/',
             payload)
         self.assertEqual(obs.code, 200)
-        exp = {'success': True, 'error_msg': ''}
+        exp = {'success': True, 'error': ''}
         self.assertEqual(loads(obs.body), exp)
         job = qdb.processing_job.ProcessingJob(
             'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')
@@ -148,25 +148,25 @@ class CompleteHandlerTests(TestHandlerBase):
     def test_post_job_does_not_exists(self):
         obs = self.post('/qiita_db/jobs/do-not-exist/complete/', '')
         self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error_msg': 'Job does not exist'}
+        exp = {'success': False, 'error': 'Job does not exist'}
         self.assertEqual(loads(obs.body), exp)
 
     def test_post_job_not_running(self):
-        payload = dumps({'sucess': False, 'error_msg': 'Job failure'})
+        payload = dumps({'sucess': False, 'error': 'Job failure'})
         obs = self.post(
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/complete/',
             payload)
         self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error_msg': "Job in a non-running state."}
+        exp = {'success': False, 'error': "Job in a non-running state."}
         self.assertEqual(loads(obs.body), exp)
 
     def test_post_job_failure(self):
-        payload = dumps({'success': False, 'error_msg': 'Job failure'})
+        payload = dumps({'success': False, 'error': 'Job failure'})
         obs = self.post(
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/complete/',
             payload)
         self.assertEqual(obs.code, 200)
-        exp = {'success': True, 'error_msg': ''}
+        exp = {'success': True, 'error': ''}
         self.assertEqual(loads(obs.body), exp)
         job = qdb.processing_job.ProcessingJob(
             'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')
@@ -183,7 +183,7 @@ class CompleteHandlerTests(TestHandlerBase):
 
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         payload = dumps(
-            {'success': True, 'error_msg': '',
+            {'success': True, 'error': '',
              'artifacts': [
                  {'filepaths': [(fp, 'biom')],
                   'artifact_type': 'BIOM',
@@ -194,7 +194,7 @@ class CompleteHandlerTests(TestHandlerBase):
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/complete/',
             payload)
         self.assertEqual(obs.code, 200)
-        exp = {'success': True, 'error_msg': ''}
+        exp = {'success': True, 'error': ''}
         self.assertEqual(loads(obs.body), exp)
         job = qdb.processing_job.ProcessingJob(
             'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')

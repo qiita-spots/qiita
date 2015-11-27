@@ -42,12 +42,29 @@ def _get_job(job_id):
 
 class JobHandler(RequestHandler):
     def get(self, job_id):
-        """Retrieves the work that need to be done for the job
+        """Get the job information
 
         Parameters
         ----------
         job_id : str
-            The job that the information needs to be returned
+            The job id
+
+        Returns
+        -------
+        dict
+            Format:
+            {'success': bool,
+             'error': str,
+             'command': str,
+             'parameters': dict of {str, obj},
+             'status': str}
+
+             - success: whether the request is successful or not
+             - error: in case that success is false, it contains the error msg
+             - command: the name of the command that the job executes
+             - parameters: the parameters of the command, keyed by parameter
+             name
+             - status: the status of the job
         """
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
@@ -67,12 +84,21 @@ class JobHandler(RequestHandler):
 
 class HeartbeatHandler(RequestHandler):
     def post(self, job_id):
-        """Perform a heartbeat against a job
+        """Update the heartbeat timestamp of the job
 
         Parameters
         ----------
         job_id : str
-            The job to perform the heartbeat
+            The job id
+
+        Returns
+        -------
+        dict
+            Format:
+            {'success': bool,
+             'error': str}
+            - success: whether the heartbeat was successful
+            - error: in case that success is false, it contains the error msg
         """
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
@@ -91,14 +117,23 @@ class HeartbeatHandler(RequestHandler):
         self.write(response)
 
 
-class StepHandler(RequestHandler):
+class ActiveStepHandler(RequestHandler):
     def post(self, job_id):
-        """Changes the step of the given job
+        """Changes the current exectuion step of the given job
 
         Parameters
         ----------
         job_id : str
-            The job to change the step
+            The job id
+
+        Returns
+        -------
+        dict
+            Format:
+            {'success': bool,
+             'error': str}
+            - success: whether the job's step was successfully updated
+            - error: in case that success is false, it contains the error msg
         """
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
@@ -112,18 +147,27 @@ class StepHandler(RequestHandler):
                     step = payload['step']
                     job.step = step
 
-        response = {'success': success, 'error_msg': error_msg}
+        response = {'success': success, 'error': error_msg}
         self.write(response)
 
 
 class CompleteHandler(RequestHandler):
     def post(self, job_id):
-        """Updates the job to one of the completed status ('success', 'error')
+        """Updates the job to one of the completed statuses: 'success', 'error'
 
         Parameters
         ----------
         job_id : str
             The job to complete
+
+        Returns
+        -------
+        dict
+            Format:
+            {'success': bool,
+             'error': str}
+            - success: whether the job information was successfuly updated
+            - error: in case that success is false, it contains the error msg
         """
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
@@ -149,9 +193,9 @@ class CompleteHandler(RequestHandler):
                         job.status = 'success'
                     else:
                         log = qdb.logger.LogEntry.create(
-                            'Runtime', payload['error_msg'])
+                            'Runtime', payload['error'])
                         job.status = 'error'
                         job.log = log
 
-        response = {'success': success, 'error_msg': error_msg}
+        response = {'success': success, 'error': error_msg}
         self.write(response)
