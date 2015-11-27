@@ -44,6 +44,18 @@ class ArtifactFilepathsHandler(RequestHandler):
         ----------
         artifact_id : str
             the id of the artifact that the information needs to be returned
+
+        Returns
+        -------
+        dict
+            Format:
+            {'success': bool,
+             'error': bool,
+             'filepaths': list of (str, str)}
+            - success: whether the request is successful or not
+            - error: in case that success is false, it contains the error msg
+            - filepaths: the filepaths attached to the artifact and their
+            filepath types
         """
         with qdb.sql_connection.TRN:
             artifact, success, error_msg = _get_artifact(artifact_id)
