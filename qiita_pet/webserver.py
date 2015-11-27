@@ -37,7 +37,9 @@ from qiita_pet.handlers.processing_handlers import ProcessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
 from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
-                                              StepHandler, CompleteHandler)
+                                              ActiveStepHandler,
+                                              CompleteHandler)
+from qiita_db.handlers.artifact import ArtifactFilepathsHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
@@ -110,9 +112,10 @@ class Application(tornado.web.Application):
             (r"/vamps/(.*)", VAMPSHandler),
             # Plugin handlers - the order matters here so do not change
             (r"/qiita_db/jobs/(.*)/heartbeat/", HeartbeatHandler),
-            (r"/qiita_db/jobs/(.*)/step/", StepHandler),
+            (r"/qiita_db/jobs/(.*)/step/", ActiveStepHandler),
             (r"/qiita_db/jobs/(.*)/complete/", CompleteHandler),
-            (r"/qiita_db/jobs/(.*)", JobHandler)
+            (r"/qiita_db/jobs/(.*)", JobHandler),
+            (r"/qiita_db/artifacts/(.*)/filepaths/", ArtifactFilepathsHandler)
         ]
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal
