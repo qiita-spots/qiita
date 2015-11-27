@@ -111,6 +111,10 @@ class Application(tornado.web.Application):
             (r"/download/(.*)", DownloadHandler),
             (r"/vamps/(.*)", VAMPSHandler),
             # Plugin handlers - the order matters here so do not change
+            # qiita_db/jobs/(.*) should go after any of the
+            # qiita_db/jobs/(.*)/XXXX because otherwise it will match the
+            # regular expression and the qiita_db/jobs/(.*)/XXXX will never
+            # be hit.
             (r"/qiita_db/jobs/(.*)/heartbeat/", HeartbeatHandler),
             (r"/qiita_db/jobs/(.*)/step/", ActiveStepHandler),
             (r"/qiita_db/jobs/(.*)/complete/", CompleteHandler),
