@@ -690,7 +690,7 @@ class UtilTests(TestCase):
 
     def test_get_pubmed_ids_from_dois(self):
         exp = {'10.100/123456': '123456'}
-        obs = get_pubmed_ids_from_dois(['', '10.100/123456'])
+        obs = qdb.util.get_pubmed_ids_from_dois(['', '10.100/123456'])
         self.assertEqual(obs, exp)
 
 

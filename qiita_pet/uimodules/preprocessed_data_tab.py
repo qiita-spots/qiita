@@ -61,10 +61,11 @@ class PreprocessedDataInfoTab(BaseUIModule):
         # this block might seem wrong but is here due to a possible
         # pathological case that we used to have in the system: preprocessed
         # data without valid prep_templates
-        if PrepTemplate.exists(prep_template.id):
+        prep_templates = preprocessed_data.prep_templates
+        if len(prep_templates == 1):
             prep_template_id = prep_template.id
             raw_data_id = prep_template.artifact.id
-            inv_type = prep_template.investigation_type or "None Selected"
+            inv_type = prep_template.investigation_type or "None selected"
         else:
             prep_template_id = None
             raw_data_id = None

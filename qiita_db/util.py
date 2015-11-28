@@ -1078,7 +1078,7 @@ def get_pubmed_ids_from_dois(doi_ids):
     with qdb.sql_connection.TRN:
         sql = "SELECT doi, pubmed_id FROM qiita.publication WHERE doi IN %s"
         qdb.sql_connection.TRN.add(sql, [tuple(doi_ids)])
-        return {row[0]: join(*row[1:])
+        return {row[0]: row [1]
                 for row in qdb.sql_connection.TRN.execute_fetchindex()}
 
 
