@@ -13,7 +13,7 @@ class PreprocessHandler(BaseHandler):
     def post(self):
         study_id = int(self.get_argument('study_id'))
         prep_template_id = int(self.get_argument('prep_template_id'))
-        raw_data = RawData(PrepTemplate(prep_template_id).raw_data)
+        raw_data = PrepTemplate(prep_template_id).artifacts
         param_id = int(self.get_argument('preprocessing_parameters_id'))
 
         # Get the preprocessing parameters

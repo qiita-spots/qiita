@@ -136,6 +136,6 @@ class Application(tornado.web.Application):
             "debug": DEBUG,
             "cookie_secret": COOKIE_SECRET,
             "login_url": "/auth/login/",
-            "ui_modules": uimodules
+            "ui_modules": uimodules,
         }
         tornado.web.Application.__init__(self, handlers, **settings)
