@@ -51,7 +51,7 @@ class ArtifactFilepathsHandler(RequestHandler):
         dict
             Format:
             {'success': bool,
-             'error': bool,
+             'error': str,
              'filepaths': list of (str, str)}
             - success: whether the request is successful or not
             - error: in case that success is false, it contains the error msg
@@ -66,5 +66,48 @@ class ArtifactFilepathsHandler(RequestHandler):
 
             response = {'success': success, 'error': error_msg,
                         'filepaths': fps}
+
+        self.write(response)
+
+
+class ArtifactMappingHandler(RequestHandler):
+    def get(self, artifact_id):
+        """Retrieves the mapping file information of the given artifact
+
+        Parameters
+        ----------
+        artifact_id : str
+            The id of the artifact whose mapping file information is being
+            retrieved
+
+        Returns
+        -------
+        dict
+            Format:
+            {'success': bool,
+             'error': str,
+             'mapping': str}
+             - success: whether the request is successful or not
+             - error: in case that success is false, it contains the error msg
+             - mapping: the filepath to the mapping file
+        """
+        with qdb.sql_connection.TRN:
+            artifact, success, error_msg = _get_artifact(artifact_id)
+            fp = None
+            if success:
+                # In the current system, we don't have any artifact that
+                # is the result of two other artifacts, and there is no way
+                # of generating such artifact. This operation will be
+                # eventually supported, but in interest of time we are not
+                # going to implement that here.
+                prep_templates = artifact.prep_templates
+                if len(prep_templates) > 1:
+                    raise NotImplementedError(
+                        "Artifact %d has more than one prep template")
+
+                fp = prep_templates[0].qiime_map_fp
+
+            response = {'success': success, 'error': error_msg,
+                        'mapping': fp}
 
         self.write(response)
