@@ -488,7 +488,7 @@ INSERT INTO qiita.message_user (message_id, email) VALUES (1, 'test@foo.bar'),(1
 
 -- Create a loggin entry
 INSERT INTO qiita.logging (time, severity_id, msg, information)
-    VALUES ('Sun Nov 22 21:29:30 2015', 2, 'Error message', NULL);
+    VALUES ('Sun Nov 22 21:29:30 2015', 2, 'Error message', '{}');
 
 -- Create some processing jobs
 INSERT INTO qiita.processing_job
