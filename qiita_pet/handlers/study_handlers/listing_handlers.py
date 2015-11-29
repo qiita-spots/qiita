@@ -14,24 +14,25 @@ from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 from pyparsing import ParseException
 
+from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
 from qiita_db.search import QiitaStudySearch
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
-from qiita_db.util import get_table_cols
+from qiita_db.util import get_table_cols, get_pubmed_ids_from_dois
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.handlers.util import study_person_linkifier, pubmed_linkifier
+from qiita_pet.handlers.util import (
+    study_person_linkifier, doi_linkifier, pubmed_linkifier)
 
 
 @execute_as_transaction
 def _get_shared_links_for_study(study):
     shared = []
     for person in study.shared_with:
-        person = User(person)
         name = person.info['name']
         email = person.email
         # Name is optional, so default to email if non existant
@@ -69,15 +70,23 @@ def _build_single_study_info(study, info, study_proc, proc_samples):
     """
     PI = StudyPerson(info['principal_investigator_id'])
     status = study.status
-    if info['pmid'] is not None:
-        info['pmid'] = ", ".join([pubmed_linkifier([p])
-                                  for p in info['pmid']])
+    if info['publication_doi'] is not None:
+        pmids = get_pubmed_ids_from_dois(info['publication_doi']).values()
+        info['pmid'] = ", ".join([pubmed_linkifier([p]) for p in pmids])
+        info['publication_doi'] = ", ".join([doi_linkifier([p])
+                                             for p in info['publication_doi']])
+
     else:
+        info['publication_doi'] = ""
         info['pmid'] = ""
     if info["number_samples_collected"] is None:
         info["number_samples_collected"] = 0
     info["shared"] = _get_shared_links_for_study(study)
-    info["num_raw_data"] = len(study.raw_data())
+    # raw data is any artifact that is not Demultiplexed or BIOM
+
+    info["num_raw_data"] = len([a for a in study.artifacts()
+                                if a.artifact_type not in ['Demultiplexed',
+                                                           'BIOM']])
     info["status"] = status
     info["study_id"] = study.id
     info["pi"] = study_person_linkifier((PI.email, PI.name))
@@ -112,11 +121,12 @@ def _build_single_proc_data_info(proc_data_id, data_type, samples):
     dict
         The information for the processed data, in the form {info: value, ...}
     """
-    proc_data = ProcessedData(proc_data_id)
-    proc_info = proc_data.processing_info
+    proc_data = Artifact(proc_data_id)
+    # TODO plugin:
+    # proc_info = proc_data.processing_info
+    proc_info = {'processed_date': '10/10/1981'}
     proc_info['pid'] = proc_data_id
     proc_info['data_type'] = data_type
-    proc_info['samples'] = sorted(samples)
     proc_info['processed_date'] = str(proc_info['processed_date'])
     return proc_info
 
@@ -166,30 +176,29 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         # No studies left so no need to continue
         return []
 
-    # get info for the studies
     cols = ['study_id', 'email', 'principal_investigator_id',
-            'pmid', 'study_title', 'metadata_complete',
+            'publication_doi', 'study_title', 'metadata_complete',
             'number_samples_collected', 'study_abstract']
-    study_info = Study.get_info(study_set, cols)
 
+    # get info for the studies
     infolist = []
-    for info in study_info:
-        # Convert DictCursor to proper dict
-        info = dict(info)
-        study = Study(info['study_id'])
+    for study in study_set:
         # Build the processed data info for the study if none passed
         if build_samples:
-            proc_data_list = study.processed_data()
+            proc_data_list = [ar for ar in study.artifacts()
+                              if ar.artifact_type == 'BIOM']
             proc_samples = {}
             study_proc = {study.id: defaultdict(list)}
-            for pid in proc_data_list:
-                proc_data = ProcessedData(pid)
-                study_proc[study.id][proc_data.data_type()].append(pid)
-                proc_samples[pid] = proc_data.samples
+            for proc_data in proc_data_list:
+                study_proc[study.id][proc_data.data_type].append(proc_data.id)
+                # there is only one prep template for each processed data
+                proc_samples[proc_data.id] = proc_data.prep_templates[0].keys()
 
+        info = dict(study.get_info(info_cols=cols)[0])
         study_info = _build_single_study_info(study, info, study_proc,
                                               proc_samples)
         infolist.append(study_info)
+
     return infolist
 
 

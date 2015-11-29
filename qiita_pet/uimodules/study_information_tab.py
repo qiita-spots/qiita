@@ -24,6 +24,8 @@ study_person_linkifier = partial(
 pubmed_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
     "pubmed/{0}\">{0}</a>")
+doi_linkifier = partial(
+    linkify, "<a target=\"_blank\" href=\"http://dx.doi.org/{0}\">{0}</a>")
 
 
 class StudyInformationTab(BaseUIModule):
@@ -33,12 +35,19 @@ class StudyInformationTab(BaseUIModule):
         id = study.id
         abstract = study_info['study_abstract']
         description = study_info['study_description']
-        pmids = ", ".join([pubmed_linkifier([pmid]) for pmid in study.pmids])
+        publications = []
+        for doi, pmid in study.publications:
+            if doi is not None:
+                publications.append(doi_linkifier(doi))
+            if pmid is not None:
+                publications.append(pubmed_linkifier(pmid))
+        publications = ", ".join(publications)
         princ_inv = StudyPerson(study_info['principal_investigator_id'])
         pi_link = study_person_linkifier((princ_inv.email, princ_inv.name))
         number_samples_promised = study_info['number_samples_promised']
         number_samples_collected = study_info['number_samples_collected']
         metadata_complete = study_info['metadata_complete']
+
         data_types = sorted(viewitems(get_data_types()), key=itemgetter(1))
 
         # Retrieve the files from the uploads folder, so the user can choose
@@ -73,7 +82,7 @@ class StudyInformationTab(BaseUIModule):
             abstract=abstract,
             description=description,
             id=id,
-            pmids=pmids,
+            publications=publications,
             principal_investigator=pi_link,
             number_samples_promised=number_samples_promised,
             number_samples_collected=number_samples_collected,

@@ -27,6 +27,7 @@ from qiita_pet.handlers.util import download_link_or_path
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
 from qiita_db.analysis import Analysis
+from qiita_db.artifact import Artifact
 from qiita_db.job import Job, Command
 from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,
@@ -163,7 +164,7 @@ class AnalysisResultsHandler(BaseHandler):
         for proc_data_id, samples in viewitems(dropped_samples):
             if not samples:
                 continue
-            proc_data = ProcessedData(proc_data_id)
+            proc_data = Artifact(proc_data_id)
             data_type = proc_data.data_type()
             study = proc_data.study
             dropped[data_type].append((Study(study).title, len(samples),
@@ -214,8 +215,7 @@ class ShowAnalysesHandler(BaseHandler):
         level = self.get_argument('level', '')
         user = self.current_user
 
-        analyses = [Analysis(a) for a in
-                    user.shared_analyses | user.private_analyses]
+        analyses = user.shared_analyses | user.private_analyses
 
         is_local_request = is_localhost(self.request.headers['host'])
         gfi = partial(get_filepath_id, 'analysis')
@@ -307,13 +307,21 @@ class SelectedSamplesHandler(BaseHandler):
         # Format sel_data to get study IDs for the processed data
         sel_data = defaultdict(dict)
         proc_data_info = {}
-        sel_samps = Analysis(self.current_user.default_analysis).samples
+        sel_samps = self.current_user.default_analysis.samples
         for pid, samps in viewitems(sel_samps):
-            proc_data = ProcessedData(pid)
+            proc_data = Artifact(pid)
             sel_data[proc_data.study][pid] = samps
             # Also get processed data info
-            proc_data_info[pid] = proc_data.processing_info
-            proc_data_info[pid]['data_type'] = proc_data.data_type()
+            # TODO plugin:
+            # proc_data_info[pid] = proc_data.processing_info
+            proc_data_info[pid] = {'processed_date': '10/10/1981',
+                                   'algorithm': 'My algorithm',
+                                   'reference_name': 'My reference name',
+                                   'reference_version': 'My reference version',
+                                   'sequence_filepath': 'My sequence filepath',
+                                   'taxonomy_filepath': 'My taxonomy filepath',
+                                   'tree_filepath': 'My taxonomy filepath'}
+            proc_data_info[pid]['data_type'] = proc_data.data_type
         self.render("analysis_selected.html", sel_data=sel_data,
                     proc_info=proc_data_info)
 
@@ -322,5 +330,5 @@ class AnalysisSummaryAJAX(BaseHandler):
     @authenticated
     @execute_as_transaction
     def get(self):
-        info = Analysis(self.current_user.default_analysis).summary_data()
+        info = self.current_user.default_analysis.summary_data()
         self.write(dumps(info))
