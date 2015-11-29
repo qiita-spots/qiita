@@ -111,3 +111,35 @@ class ArtifactMappingHandler(RequestHandler):
                         'mapping': fp}
 
         self.write(response)
+
+
+class ArtifactTypeHandler(RequestHandler):
+    def get(self, artifact_id):
+        """Retrieves the artifact type information of the given artifact
+
+        Parameters
+        ----------
+        artifact_id : str
+            The id of the artifact whose information is being retrieved
+
+        Returns
+        -------
+        dict
+            Format:
+            {'success': bool,
+             'error': str,
+             'type': str}
+            - success: whether the request is successful or not
+            - error: in case that success is false, it contains the error msg
+            - type: the artifact type
+        """
+        with qdb.sql_connection.TRN:
+            artifact, success, error_msg = _get_artifact(artifact_id)
+            atype = None
+            if success:
+                atype = artifact.artifact_type
+
+            response = {'success': success, 'error': error_msg,
+                        'type': atype}
+
+        self.write(response)
