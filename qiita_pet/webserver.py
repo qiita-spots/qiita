@@ -123,7 +123,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)", JobHandler),
             (r"/qiita_db/artifacts/(.*)/filepaths/", ArtifactFilepathsHandler),
             (r"/qiita_db/artifacts/(.*)/mapping/", ArtifactMappingHandler),
-            (r"/qiita_db/artifacts/(.*)/type/", ArtifactTypeHandler),
+            (r"/qiita_db/artifacts/(.*)/type/", ArtifactTypeHandler)
         ]
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal
