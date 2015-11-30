@@ -95,8 +95,8 @@ class UtilTests(TestCase):
             f.write(MAPPING_FILE_MULT)
 
         obs = split_mapping_file(fp, out_dir)
-        exp = [join(out_dir, 'prefix_1_minimal_mapping_file.txt'),
-               join(out_dir, 'prefix_2_minimal_mapping_file.txt')]
+        exp = [join(out_dir, 'prefix_1_mapping_file.txt'),
+               join(out_dir, 'prefix_2_mapping_file.txt')]
         self.assertItemsEqual(obs, exp)
 
         obs = sorted(obs)

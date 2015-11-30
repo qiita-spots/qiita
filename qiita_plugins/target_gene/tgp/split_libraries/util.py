@@ -6,9 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import join
+from os.path import join, exists
 from functools import partial
-from os.path import exists
+from os import makedirs
 
 import requests
 import pandas as pd
@@ -92,9 +92,11 @@ def split_mapping_file(mapping_file, out_dir):
 
     path_builder = partial(join, out_dir)
     if 'run_prefix' in mf:
+        if not exists(out_dir):
+            makedirs(out_dir)
         output_fps = []
         for prefix, df in mf.groupby('run_prefix'):
-            out_fp = path_builder('%s_minimal_mapping_file.txt' % prefix)
+            out_fp = path_builder('%s_mapping_file.txt' % prefix)
             output_fps.append(out_fp)
             df.to_csv(out_fp, index_label='#SampleID', sep='\t')
     else:
