@@ -48,15 +48,11 @@ def generate_parameters_string(parameters):
     return ' '.join(result)
 
 
-def run_process_sff_commands(server_url, job_id, sffs, out_dir):
+def generate_process_sff_commands(sffs, out_dir):
     """Processes the sff files in `sffs`
 
     Parameters
     ----------
-    server_url : str
-        The url of the server
-    job_id : str
-        The job id
     sffs : list of str
         The list of sff filepaths
     out_dir : str
@@ -64,39 +60,25 @@ def run_process_sff_commands(server_url, job_id, sffs, out_dir):
 
     Returns
     -------
-    list of str, list of str
+    list of str, list of str, list of str
+        The list of process_sff.py commands
         The list of fasta filepaths
         The list of qual filepaths
-
-    Raises
-    ------
-    ValueError
-        - If there is a problem processing an SFF file
     """
     sff_cmd_template = "process_sff.py -i %s -o %s"
     seqs = []
     quals = []
-    len_sffs = len(sffs)
-    for i, sff in enumerate(sffs):
-        update_job_step(
-            server_url, job_id,
-            "Step 2 of 4: preparing files (processing sff file %d of %d)"
-            % (i, len_sffs))
+    cmds = []
+    for sff in sffs:
         base = splitext(basename(sff))[0]
         if sff.endswith('.gz'):
             base = splitext(base)[0]
 
-        sff_cmd = sff_cmd_template % (sff, out_dir)
-        std_out, std_err, return_value = system_call(sff_cmd)
-
-        if return_value != 0:
-            raise ValueError(
-                "Error processing sff file %s:\nStd output: %s\n Std error:%s"
-                % (sff, std_out, std_err))
+        cmds.append(sff_cmd_template % (sff, out_dir))
         seqs.append(join(out_dir, '%s.fna' % base))
         quals.append(join(out_dir, '%s.qual' % base))
 
-    return seqs, quals
+    return cmds, seqs, quals
 
 
 def generate_split_libraries_cmd(seqs, quals, mapping_file, out_dir, params):
@@ -152,7 +134,7 @@ def generate_split_libraries_cmd(seqs, quals, mapping_file, out_dir, params):
         n = 1
         for i, (seq, mapping) in enumerate(zip(seqs, mapping_files)):
             qual_str = '-q %s -d' % quals[i] if quals else ''
-            split_dir = join(out_dir, basename(mapping))
+            split_dir = join(out_dir, splitext(basename(mapping))[0])
             out_dirs.append(split_dir)
             cmds.append("split_libraries.py -f %s -m %s %s -o %s -n %s %s"
                         % (seq, mapping, qual_str, split_dir, n, params_str))
@@ -212,7 +194,18 @@ def split_libraries(server_url, job_id, parameters, out_dir):
         seqs = sorted(seqs)
         quals = sorted(quals)
     else:
-        seqs, quals = run_process_sff_commands(sffs, out_dir)
+        cmds, seqs, quals = generate_process_sff_commands(sffs, out_dir)
+        len_cmds = len(cmds)
+        for i, cmd in enumerate(cmds):
+            update_job_step(
+                server_url, job_id,
+                "Step 2 of 4: preparing files (processing sff file %d of %d)"
+                % (i, len_cmds))
+            std_out, std_err, return_value = system_call(cmd)
+            if return_value != 0:
+                raise ValueError(
+                    "Error processing sff file:\nStd output: %s\n Std error:%s"
+                    % (std_out, std_err))
 
     output_dir = join(out_dir, 'sl_out')
 
