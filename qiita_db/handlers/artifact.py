@@ -43,7 +43,7 @@ class ArtifactFilepathsHandler(RequestHandler):
         Parameters
         ----------
         artifact_id : str
-            The id of the artifact whose file path information is being
+            The id of the artifact whose filepath information is being
             retrieved
 
         Returns
