@@ -504,7 +504,3 @@ INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
            (1, 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
            (1, 'b72369f9-a886-4193-8d3d-f7b504168e75'),
            (2, 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');
-
--- Add a default parameter set for sortemrna
-INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
-    VALUES (3, 'Defaults', '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1}'::json);

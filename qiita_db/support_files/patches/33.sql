@@ -269,7 +269,7 @@ INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type,
     (2, 'disable_bc_correction', 'bool', False, 'False'),
     (2, 'qual_score_window', 'integer', False, '0'),
     (2, 'disable_primers', 'bool', False, 'False'),
-    (2, 'reverse_primers', 'choice:["disable", "truncate_only", "truncate_remove"]', False, 'default_value'),
+    (2, 'reverse_primers', 'choice:["disable", "truncate_only", "truncate_remove"]', False, 'disable'),
     (2, 'reverse_primer_mismatches', 'integer', False, '0'),
     (2, 'truncate_ambi_bases', 'bool', False, 'False'),
     (3, 'input_data', 'artifact', True, NULL),
@@ -287,64 +287,79 @@ DECLARE
     val     JSON;
 BEGIN
     -- Transfer the default parameters from the preprocessed_sequence_illumina_params table
-    FOR rec IN
-        SELECT *
-        FROM qiita.preprocessed_sequence_illumina_params
-        ORDER BY parameters_id
-    LOOP
-        val := ('{"max_bad_run_length":' || rec.max_bad_run_length || ','
-                '"min_per_read_length_fraction":' || rec.min_per_read_length_fraction || ','
-                '"sequence_max_n":' || rec.sequence_max_n || ','
-                '"rev_comp_barcode":' || rec.rev_comp_barcode || ','
-                '"rev_comp_mapping_barcodes":' || rec.rev_comp_mapping_barcodes || ','
-                '"rev_comp":' || rec.rev_comp || ','
-                '"phred_quality_threshold":' || rec.phred_quality_threshold || ','
-                '"barcode_type":"' || rec.barcode_type || '",'
-                '"max_barcode_errors":' || rec.max_barcode_errors || '}')::json;
+    IF EXISTS(SELECT * FROM qiita.preprocessed_sequence_illumina_params) THEN
+        FOR rec IN
+            SELECT *
+            FROM qiita.preprocessed_sequence_illumina_params
+            ORDER BY parameters_id
+        LOOP
+            val := ('{"max_bad_run_length":' || rec.max_bad_run_length || ','
+                    '"min_per_read_length_fraction":' || rec.min_per_read_length_fraction || ','
+                    '"sequence_max_n":' || rec.sequence_max_n || ','
+                    '"rev_comp_barcode":' || rec.rev_comp_barcode || ','
+                    '"rev_comp_mapping_barcodes":' || rec.rev_comp_mapping_barcodes || ','
+                    '"rev_comp":' || rec.rev_comp || ','
+                    '"phred_quality_threshold":' || rec.phred_quality_threshold || ','
+                    '"barcode_type":"' || rec.barcode_type || '",'
+                    '"max_barcode_errors":' || rec.max_barcode_errors || '}')::json;
+            INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+                VALUES (1, rec.param_set_name, val);
+        END LOOP;
+    ELSE
         INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
-            VALUES (1, rec.param_set_name, val);
-    END LOOP;
+            VALUES (1, 'Defaults', '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5}'::json);
+    END IF;
 
     -- Transfer the default parameters from the preprocessed_sequence_454_params table
-    FOR rec IN
-        SELECT *
-        FROM qiita.preprocessed_sequence_454_params
-        ORDER BY parameters_id
-    LOOP
-        val := ('{"min_seq_len":' || rec.min_seq_len || ','
-                '"max_seq_len":' || rec.max_seq_len || ','
-                '"trim_seq_length":' || rec.trim_seq_length || ','
-                '"min_qual_score":' || rec.min_qual_score || ','
-                '"max_ambig":' || rec.max_ambig || ','
-                '"max_homopolymer":' || rec.max_homopolymer || ','
-                '"max_primer_mismatch":' || rec.max_primer_mismatch || ','
-                '"barcode_type":"' || rec.barcode_type || '",'
-                '"max_barcode_errors":' || rec.max_barcode_errors || ','
-                '"disable_bc_correction":' || rec.disable_bc_correction || ','
-                '"qual_score_window":' || rec.qual_score_window || ','
-                '"disable_primers":' || rec.disable_primers || ','
-                '"reverse_primers":"' || rec.reverse_primers || '",'
-                '"reverse_primer_mismatches":' || rec.reverse_primer_mismatches || ','
-                '"truncate_ambi_bases":' || rec.truncate_ambig_bases || '}')::json;
+    IF EXISTS(SELECT * FROM qiita.preprocessed_sequence_454_params) THEN
+        FOR rec IN
+            SELECT *
+            FROM qiita.preprocessed_sequence_454_params
+            ORDER BY parameters_id
+        LOOP
+            val := ('{"min_seq_len":' || rec.min_seq_len || ','
+                    '"max_seq_len":' || rec.max_seq_len || ','
+                    '"trim_seq_length":' || rec.trim_seq_length || ','
+                    '"min_qual_score":' || rec.min_qual_score || ','
+                    '"max_ambig":' || rec.max_ambig || ','
+                    '"max_homopolymer":' || rec.max_homopolymer || ','
+                    '"max_primer_mismatch":' || rec.max_primer_mismatch || ','
+                    '"barcode_type":"' || rec.barcode_type || '",'
+                    '"max_barcode_errors":' || rec.max_barcode_errors || ','
+                    '"disable_bc_correction":' || rec.disable_bc_correction || ','
+                    '"qual_score_window":' || rec.qual_score_window || ','
+                    '"disable_primers":' || rec.disable_primers || ','
+                    '"reverse_primers":"' || rec.reverse_primers || '",'
+                    '"reverse_primer_mismatches":' || rec.reverse_primer_mismatches || ','
+                    '"truncate_ambi_bases":' || rec.truncate_ambig_bases || '}')::json;
+            INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+                VALUES (2, rec.param_set_name, val);
+        END LOOP;
+    ELSE
         INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
-            VALUES (2, rec.param_set_name, val);
-    END LOOP;
+            VALUES (2, 'Defaults', '{"min_seq_len":200,"max_seq_len":1000,"trim_seq_length":false,"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,"max_primer_mismatch":0,"barcode_type":"golay_12","max_barcode_errors":1.5,"disable_bc_correction":false,"qual_score_window":0,"disable_primers":false,"reverse_primers":"disable","reverse_primer_mismatches":0,"truncate_ambi_bases":false}'::json);
+    END IF;
 
     -- Transfer the default parameters from the processed_params_sortmerna table
-    FOR rec IN
-        SELECT *
-        FROM qiita.processed_params_sortmerna
-        ORDER BY parameters_id
-    LOOP
-        val := ('{"reference":' || rec.reference_id || ','
-                '"sortmerna_e_value":' || rec.sortmerna_e_value || ','
-                '"sortmerna_max_pos":' || rec.sortmerna_max_pos || ','
-                '"similarity":' || rec.similarity || ','
-                '"sortmerna_coverage":' || rec.sortmerna_coverage || ','
-                '"threads":' || rec.threads || '}')::json;
+    IF EXISTS(SELECT * FROM qiita.processed_params_sortmerna) THEN
+        FOR rec IN
+            SELECT *
+            FROM qiita.processed_params_sortmerna
+            ORDER BY parameters_id
+        LOOP
+            val := ('{"reference":' || rec.reference_id || ','
+                    '"sortmerna_e_value":' || rec.sortmerna_e_value || ','
+                    '"sortmerna_max_pos":' || rec.sortmerna_max_pos || ','
+                    '"similarity":' || rec.similarity || ','
+                    '"sortmerna_coverage":' || rec.sortmerna_coverage || ','
+                    '"threads":' || rec.threads || '}')::json;
+            INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+                VALUES (3, rec.param_set_name, val);
+        END LOOP;
+    ELSE
         INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
-            VALUES (3, rec.param_set_name, val);
-    END LOOP;
+            VALUES (3, 'Defaults', '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1}'::json);
+    END IF;
 END $do$;
 
 -- Create tables to keep track of the processing jobs
