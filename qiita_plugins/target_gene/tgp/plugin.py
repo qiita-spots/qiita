@@ -8,7 +8,8 @@
 
 import requests
 
-from tgp.util import start_heartbeat, complete_job, execute_request_retry
+from tgp.util import (start_heartbeat, complete_job, execute_request_retry,
+                      format_payload)
 from tgp.split_libraries import split_libraries, split_libraries_fastq
 from tgp.pick_otus import pick_closed_reference_otus
 
@@ -37,7 +38,15 @@ def execute_job(server_url, job_id, output_dir):
         # Starting the heartbeat
         start_heartbeat(server_url, job_id)
         # Execute the given task
-        task = TASK_DICT[job_info['command']]
-        payload = task(server_url, job_id, job_info['parameters'], output_dir)
+        task_name = job_info['command']
+        task = TASK_DICT[task_name]
+        try:
+            payload = task(server_url, job_id, job_info['parameters'],
+                           output_dir)
+        except Exception as e:
+            error_msg = "Error executing %s:\n%s" % (task_name, str(e))
+            payload = format_payload(False, error_msg=error_msg)
         # The job completed
         complete_job(server_url, job_id, payload)
+    else:
+        raise RuntimeError("Can't get job (%s) information" % job_id)
