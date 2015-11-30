@@ -118,6 +118,12 @@ class UtilTests(TestCase):
         self.assertEqual(obs_fp, exp_fp)
         self.assertTrue(exists(exp_fp))
 
+    def test_generate_demux_file_error(self):
+        out_dir = mkdtemp()
+        self._clean_up_files.append(out_dir)
+        with self.assertRaises(ValueError):
+            generate_demux_file(out_dir)
+
 
 DEMUX_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0
 xyz
