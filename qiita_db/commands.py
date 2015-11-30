@@ -142,11 +142,18 @@ def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
                 prep_template)
 
         if parents:
+            if len(parents) > 1 and required_params is None:
+                raise ValueError("When you pass more than 1 parent you need "
+                                 "to also pass required_params")
             parents = [qdb.artifact.Artifact(pid) for pid in parents]
 
         params = None
         if dflt_params_id:
-            required_dict = loads(required_params) if required_params else None
+            if required_params:
+                required_dict = loads(required_params)
+            else:
+                # if we reach this point we know tha we only have one parent
+                required_dict = loads('{"input_data": %d}' % parents[0].id)
             optional_dict = loads(optional_params) if optional_params else None
             params = qdb.software.Parameters.from_default_params(
                 qdb.software.DefaultParameters(dflt_params_id),
