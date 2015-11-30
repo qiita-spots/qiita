@@ -88,7 +88,7 @@ def split_mapping_file(mapping_file, out_dir):
         The path to the output directory
     """
     mf = pd.read_csv(mapping_file, delimiter='\t', dtype=str, encoding='utf-8')
-    mf.set_index('#SampleID')
+    mf.set_index('#SampleID', inplace=True)
 
     path_builder = partial(join, out_dir)
     if 'run_prefix' in mf:
