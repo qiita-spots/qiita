@@ -102,7 +102,7 @@ class HeartbeatHandlerTests(TestHandlerBase):
         self.assertEqual(job.status, 'running')
 
 
-class StepHandlerTests(TestHandlerBase):
+class ActiveStepHandlerTests(TestHandlerBase):
     database = True
 
     def test_post_job_does_not_exists(self):

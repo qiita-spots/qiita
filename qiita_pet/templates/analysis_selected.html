@@ -69,7 +69,6 @@ $(document).ready(function() {
 {% end %}
 
 {% block content %}
-{% from qiita_db.study import Study %}
 {% set static_info = {'data_type', 'processed_date', 'algorithm', 'reference_name', 'reference_version', 'sequence_filepath', 'taxonomy_filepath', 'tree_filepath'}%}
 &nbsp;<br/>
 <h1>Selected Samples</h1>
@@ -91,13 +90,12 @@ $(document).ready(function() {
 </div>
 {% end %}
 
-{% for sid, proc_datas in viewitems(sel_data) %}
-  {% set study = Study(sid) %}
-<div class="row" id="study{{sid}}">
+{% for study, proc_datas in viewitems(sel_data) %}
+<div class="row" id="study{{study.id}}">
   <div class="col-md-12" style="border:2px solid #a1a1a1; border-radius: 15px;">
-    <h2><a href="/study/description/{{sid}}">{{study.title}}</a></h2>
+    <h2><a href="/study/description/{{study.id}}">{{study.title}}</a></h2>
     <h4>Processed Data</h4>
-    <table class='table table-striped' id='study{{sid}}-table'>
+    <table class='table table-striped' id='study{{study.id}}-table'>
     <tr>
       <th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Reference</th><th class="col-sm-1">Samples</th><th></th><th></th>
     </tr>
@@ -110,12 +108,12 @@ $(document).ready(function() {
       <td>{{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}</td>
       <td><span id="proc{{pid}}-sample-count">{% raw len(samples) %}</span></td>
       <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
-      <td><a href="#" onclick = 'remove_proc_data({{pid}}, {{sid}})'>Remove</a></td>
+      <td><a href="#" onclick = 'remove_proc_data({{pid}}, {{study.id}})'>Remove</a></td>
      </tr>
      <tr id="proc{{pid}}-samples" hidden><td colspan=7>
      <table class="table table-striped sample-table" id="proc{{pid}}-samples-table" style="width:50%">
     {% for samp in samples %}
-      <tr id="{{pid}}@{{samp}}"><td>{{samp}}</td><td><a href="#" onclick="remove_sample('{{sid}}', '{{pid}}', '{{samp}}')">Remove</a></td></tr>
+      <tr id="{{pid}}@{{samp}}"><td>{{samp}}</td><td><a href="#" onclick="remove_sample('{{study.id}}', '{{pid}}', '{{samp}}')">Remove</a></td></tr>
     {% end %}
     </table>
     </td></tr>

@@ -33,6 +33,7 @@ class ArtifactFilepathsHandlerTests(TestHandlerBase):
                'filepaths': None}
         self.assertEqual(loads(obs.body), exp)
 
+    def test_get_artifact(self):
         obs = self.get('/qiita_db/artifacts/1/filepaths/')
         self.assertEqual(obs.code, 200)
         db_test_raw_dir = qdb.util.get_mountpoint('raw_data')[0][1]

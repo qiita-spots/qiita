@@ -407,7 +407,7 @@ def start(port):
 
     if qiita_config.log_path:
         options.log_file_prefix = qiita_config.log_path
-        options.logging = 'warning'
+        options.logging = 'debug'
         parse_command_line()
     http_server = tornado.httpserver.HTTPServer(Application())
 

@@ -37,7 +37,8 @@ from qiita_pet.handlers.processing_handlers import ProcessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
 from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
-                                              StepHandler, CompleteHandler)
+                                              ActiveStepHandler,
+                                              CompleteHandler)
 from qiita_db.handlers.artifact import ArtifactFilepathsHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
@@ -110,8 +111,12 @@ class Application(tornado.web.Application):
             (r"/download/(.*)", DownloadHandler),
             (r"/vamps/(.*)", VAMPSHandler),
             # Plugin handlers - the order matters here so do not change
+            # qiita_db/jobs/(.*) should go after any of the
+            # qiita_db/jobs/(.*)/XXXX because otherwise it will match the
+            # regular expression and the qiita_db/jobs/(.*)/XXXX will never
+            # be hit.
             (r"/qiita_db/jobs/(.*)/heartbeat/", HeartbeatHandler),
-            (r"/qiita_db/jobs/(.*)/step/", StepHandler),
+            (r"/qiita_db/jobs/(.*)/step/", ActiveStepHandler),
             (r"/qiita_db/jobs/(.*)/complete/", CompleteHandler),
             (r"/qiita_db/jobs/(.*)", JobHandler),
             (r"/qiita_db/artifacts/(.*)/filepaths/", ArtifactFilepathsHandler)
@@ -131,6 +136,6 @@ class Application(tornado.web.Application):
             "debug": DEBUG,
             "cookie_secret": COOKIE_SECRET,
             "login_url": "/auth/login/",
-            "ui_modules": uimodules
+            "ui_modules": uimodules,
         }
         tornado.web.Application.__init__(self, handlers, **settings)

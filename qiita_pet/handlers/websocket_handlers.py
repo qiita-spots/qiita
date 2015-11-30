@@ -12,6 +12,7 @@ from future.utils import viewvalues
 from moi import r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.analysis import Analysis
+from qiita_db.artifact import Artifact
 from qiita_core.util import execute_as_transaction
 
 
@@ -85,17 +86,19 @@ class SelectedSocketHandler(WebSocketHandler, BaseHandler):
         # When the websocket receives a message from the javascript client,
         # parse into JSON
         msginfo = loads(msg)
-        default = Analysis(self.current_user.default_analysis)
+        default = self.current_user.default_analysis
 
         if 'remove_sample' in msginfo:
             data = msginfo['remove_sample']
-            default.remove_samples([data['proc_data']], data['samples'])
+            artifacts = [Artifact(_id) for _id in data['proc_data']]
+            default.remove_samples(artifacts, data['samples'])
         elif 'remove_pd' in msginfo:
             data = msginfo['remove_pd']
-            default.remove_samples([data['proc_data']])
+            default.remove_samples([Artifact(data['proc_data'])])
         elif 'clear' in msginfo:
             data = msginfo['clear']
-            default.remove_samples(data['pids'])
+            artifacts = [Artifact(_id) for _id in data['pids']]
+            default.remove_samples(artifacts)
         self.write_message(msg)
 
 
@@ -113,7 +116,7 @@ class SelectSamplesHandler(WebSocketHandler, BaseHandler):
             {proc_data_id': [s1, s2, ...], ...]}
         """
         msginfo = loads(msg)
-        default = Analysis(self.current_user.default_analysis)
+        default = self.current_user.default_analysis
         default.add_samples(msginfo['sel'])
         # Count total number of unique samples selected and return
         self.write_message(dumps({
