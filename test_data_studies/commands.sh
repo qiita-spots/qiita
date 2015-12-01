@@ -75,4 +75,3 @@ for i in ${studies[@]}; do
     echo "Ok"
     rm $conf_fp
 done
-rmdir temp
