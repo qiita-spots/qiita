@@ -87,8 +87,14 @@ def pick_closed_reference_otus(server_url, job_id, parameters, out_dir):
 
     Parameters
     ----------
+    server_url : str
+        The URL of the server
+    job_id : str
+        The job id
     parameters : dict
         The parameter values to run split libraries
+    out_dir : str
+        Yhe path to the job's output directory
 
     Returns
     -------

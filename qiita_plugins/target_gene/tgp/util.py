@@ -24,6 +24,13 @@ def system_call(cmd):
         The string containing the command to be run, or a sequence of strings
         that are the tokens of the command.
 
+    Returns
+    -------
+    str, str, int
+        - The stabdard output of the command
+        - The standard error of the command
+        - The exit status of the command
+
     Notes
     -----
     This function is ported from QIIME (http://www.qiime.org), previously named

@@ -99,8 +99,9 @@ def generate_split_libraries_cmd(seqs, quals, mapping_file, out_dir, params):
 
     Returns
     -------
-    list of str
+    list of str, list of str
         The list of split_libraries.py commands
+        The list of the split_libraries.py output directory filepaths
 
     Raises
     ------
@@ -150,8 +151,14 @@ def split_libraries(server_url, job_id, parameters, out_dir):
 
     Parameters
     ----------
+    server_url : str
+        The URL of the server
+    job_id : str
+        The job id
     parameters : dict
         The parameter values to run split libraries
+    out_dir : str
+        Yhe path to the job's output directory
 
     Returns
     -------

@@ -86,6 +86,11 @@ def split_mapping_file(mapping_file, out_dir):
         The mapping file filepath
     out_dir : str
         The path to the output directory
+
+    Returns
+    -------
+    list of str
+        The paths to the splitted mapping files
     """
     mf = pd.read_csv(mapping_file, delimiter='\t', dtype=str, encoding='utf-8')
     mf.set_index('#SampleID', inplace=True)
@@ -112,6 +117,11 @@ def generate_demux_file(sl_out):
     ----------
     sl_out : str
         Path to the output directory of split libraries
+
+    Returns
+    -------
+    str
+        The path of the demux file
 
     Raises
     ------
