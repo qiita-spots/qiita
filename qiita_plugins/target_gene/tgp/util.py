@@ -177,7 +177,7 @@ def format_payload(success, error_msg=None, artifacts_info=None):
              'filepaths': filepaths,
              'can_be_submitted_to_ebi': ebi,
              'can_be_submitted_to_vamps': vamps}
-            for filepaths, atype, ebi, vamps in artifacts_info]
+            for atype, filepaths, ebi, vamps in artifacts_info]
     else:
         artifacts = None
 

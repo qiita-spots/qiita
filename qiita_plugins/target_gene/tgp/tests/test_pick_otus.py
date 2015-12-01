@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os.path import isdir, exists, join
+from os.path import isdir, exists
 from os import remove, close
 from shutil import rmtree
 from tempfile import mkstemp, mkdtemp
