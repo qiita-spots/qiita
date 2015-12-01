@@ -30,7 +30,7 @@ def write_parameters_file(fp, parameters):
               'threads']
     with open(fp, 'w') as f:
         for p in params:
-            f.write("pick_otus:%s\t%s" % (p, parameters[p]))
+            f.write("pick_otus:%s\t%s\n" % (p, parameters[p]))
 
 
 def generate_pick_closed_reference_otus_cmd(filepaths, out_dir, parameters,
@@ -77,7 +77,7 @@ def generate_pick_closed_reference_otus_cmd(filepaths, out_dir, parameters,
 
     params_str = "-t %s" % taxonomy_fp if taxonomy_fp else ""
 
-    cmd = str("pick_closed_reference_otus.py -i %s-r %s -o %s -p %s %s"
+    cmd = str("pick_closed_reference_otus.py -i %s -r %s -o %s -p %s %s"
               % (seqs_fp, reference_fp, output_dir, param_fp, params_str))
     return cmd
 
