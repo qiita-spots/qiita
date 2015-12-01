@@ -14,8 +14,9 @@ echo "Ok"
 
 # Inserting all the information for each study
 echo "INSERTING STUDIES"
-mkdir -p temp
 for i in ${studies[@]}; do
+    mkdir -p temp
+
     # Get all needed filepaths for the study
     conf_fp=test_data_studies/studies/$i/study_config.txt
     sample_file=test_data_studies/studies/$i/sample_template_$i.txt
@@ -48,8 +49,8 @@ for i in ${studies[@]}; do
 
     # Loading raw data
     echo "\tloading raw data... "
-    echo -e ">seq\nAAAA" > seqs.fna
-    output="`qiita db load_artifact --fp seqs.fna --fp_type raw_forward_seqs --artifact_type FASTQ --prep_template $pt_id`"
+    echo -e ">seq\nAAAA" > temp/seqs.fna
+    output="`qiita db load_artifact --fp temp/seqs.fna --fp_type raw_forward_seqs --artifact_type FASTQ --prep_template $pt_id`"
     raw_id=`echo -e "${output}" | cut -d " " -f 2`
     echo "Ok"
 
