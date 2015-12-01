@@ -8,6 +8,7 @@
 
 from os.path import join, basename
 from functools import partial
+import re
 
 import pandas as pd
 
@@ -117,8 +118,10 @@ def generate_per_sample_fastq_command(forward_seqs, reverse_seqs, barcode_fps,
     sn_by_rp = get_sample_names_by_run_prefix(mapping_file)
     samples = []
     for f in forward_seqs:
-        # getting just the main filename
-        f = basename(f).split('_', 1)[1]
+        f = basename(f)
+        if re.match("^[0-9]+\_.*", f):
+            # getting just the main filename
+            f = basename(f).split('_', 1)[1]
         # removing extentions: fastq or fastq.gz
         if 'fastq' in f.lower().rsplit('.', 2):
             f = f[:f.lower().rindex('.fastq')]
@@ -193,7 +196,7 @@ def generate_split_libraries_fastq_cmd(filepaths, mapping_file, atype,
 
     output_dir = join(out_dir, "sl_out")
 
-    params_str = generate_parameters_string()
+    params_str = generate_parameters_string(parameters)
 
     if atype == "per_sample_FASTQ":
         cmd = generate_per_sample_fastq_command(
