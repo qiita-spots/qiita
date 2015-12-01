@@ -60,7 +60,7 @@ def get_sample_names_by_run_prefix(mapping_file):
     """
     qiime_map = pd.read_csv(mapping_file, delimiter='\t', dtype=str,
                             encoding='utf-8')
-    qiime_map.set_index('#SampleID')
+    qiime_map.set_index('#SampleID', inplace=True)
 
     samples = {}
     errors = []
