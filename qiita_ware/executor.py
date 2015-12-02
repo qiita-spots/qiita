@@ -16,7 +16,7 @@ from qiita_db.logger import LogEntry
 
 
 def system_call(cmd):
-    """Call command and return (stdout, stderr, return_value)
+    """Call cmd and return (stdout, stderr, return_value)
 
     Parameters
     ----------
