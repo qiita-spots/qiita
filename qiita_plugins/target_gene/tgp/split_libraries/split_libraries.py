@@ -26,6 +26,12 @@ def generate_parameters_string(parameters):
     -------
     str
         A string with the parameters to the CLI call
+
+    Raises
+    ------
+    ValueError
+        If the value for the 'reverse_primers' parameter is not one of
+        `["disable", "truncate_only", "truncate_remove"]`
     """
     accepted_vals = ["disable", "truncate_only", "truncate_remove"]
     if parameters['reverse_primers'] not in accepted_vals:
@@ -164,6 +170,19 @@ def split_libraries(server_url, job_id, parameters, out_dir):
     -------
     dict
         The results of the job
+
+    Raises
+    ------
+    NotImplementedError
+        If one of the filepath types attached to the artifact is not recognized
+    ValueError
+        If the artifact has SFF and fasta files
+        IF the artifact has qual files but not fasta files
+        If the artifact has fasta files but not quals
+    RuntimeError
+        If there is an error processing an sff file
+        If there is an error running split_libraries.py
+        If there is an error merging the results
     """
     # Step 1 get the rest of the information need to run split libraries
     update_job_step(server_url, job_id, "Step 1 of 4: Collecting information")
@@ -210,7 +229,7 @@ def split_libraries(server_url, job_id, parameters, out_dir):
                 % (i, len_cmds))
             std_out, std_err, return_value = system_call(cmd)
             if return_value != 0:
-                raise ValueError(
+                raise RuntimeError(
                     "Error processing sff file:\nStd output: %s\n Std error:%s"
                     % (std_out, std_err))
 
@@ -228,7 +247,7 @@ def split_libraries(server_url, job_id, parameters, out_dir):
             "(%d of %d)" % (i, cmd_len))
         std_out, std_err, return_value = system_call(cmd)
         if return_value != 0:
-            raise ValueError(
+            raise RuntimeError(
                 "Error running split libraries:\nStd output: %s\nStd error:%s"
                 % (std_out, std_err))
 
@@ -245,7 +264,7 @@ def split_libraries(server_url, job_id, parameters, out_dir):
             cmd = "cat %s > %s" % (' '.join(files), join(output_dir, tc))
             std_out, std_err, return_value = system_call(cmd)
             if return_value != 0:
-                raise ValueError(
+                raise RuntimeError(
                     "Error concatenating %s files:\nStd output: %s\n"
                     "Std error:%s" % (tc, std_out, std_err))
         if quals:

@@ -29,6 +29,11 @@ def execute_job(server_url, job_id, output_dir):
         The url of the server
     job_id : str
         The job id
+
+    Raises
+    ------
+    RuntimeError
+        If there is a problem gathering the job information
     """
     # Request job information
     url = "%s/qiita_db/jobs/%s" % (server_url, job_id)

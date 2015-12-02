@@ -37,6 +37,11 @@ def get_artifact_information(server_url, artifact_id):
         The artifact filepaths and their type
         The artifact mapping file
         The artifact type
+
+    Raises
+    ------
+    ValueError
+        If there is any problem gathering the information from the server
     """
     # Get the artifact filepath information
     url = "%s/qiita_db/artifacts/%s/filepaths/" % (server_url, artifact_id)
