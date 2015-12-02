@@ -12,12 +12,10 @@ class ProcessHandler(BaseHandler):
         preprocessed_data_id = int(self.get_argument('preprocessed_data_id'))
         param_id = self.get_argument('parameter-set-%s' % preprocessed_data_id)
 
-        # The only parameter type supported is the ProcessedSortmernaParams
-        # so we can hardcode the constructor here
-        param_constructor = ProcessedSortmernaParams
+        user_id = self.current_user.id
 
-        job_id = submit(self.current_user.id, processor, preprocessed_data_id,
-                        param_id, param_constructor)
+        job_id = submit(user_id, processor, user_id, preprocessed_data_id,
+                        param_id)
 
         self.render('compute_wait.html',
                     job_id=job_id, title='Processing',
