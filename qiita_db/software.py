@@ -195,6 +195,22 @@ class Command(qdb.base.QiitaObject):
         return cls(c_id)
 
     @property
+    def software(self):
+        """The software to which this command belongs to
+
+        Returns
+        -------
+        qiita_db.software.Software
+            the software to which this command belongs to
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT software_id
+                     FROM qiita.software_command
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return Software(qdb.sql_connection.TRN.execute_fetchlast())
+
+    @property
     def name(self):
         """The name of the command
 

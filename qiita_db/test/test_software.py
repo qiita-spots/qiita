@@ -77,6 +77,12 @@ class CommandTests(TestCase):
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
         self.assertEqual(obs.optional_parameters, exp_optional)
 
+    def test_software(self):
+        self.assertEqual(qdb.software.Command(1).software,
+                         qdb.software.Software(1))
+        self.assertEqual(qdb.software.Command(2).software,
+                         qdb.software.Software(1))
+
     def test_name(self):
         self.assertEqual(qdb.software.Command(1).name, "Split libraries FASTQ")
         self.assertEqual(qdb.software.Command(2).name, "Split libraries")
@@ -117,7 +123,7 @@ class CommandTests(TestCase):
             'reverse_primer_mismatches': ['integer', '0'],
             'reverse_primers':
                 ['choice:["disable", "truncate_only", "truncate_remove"]',
-                 'default_value'],
+                 'disable'],
             'trim_seq_length': ['bool', 'False'],
             'truncate_ambi_bases': ['bool', 'False']}
         self.assertEqual(qdb.software.Command(2).parameters, exp_params)
@@ -156,7 +162,7 @@ class CommandTests(TestCase):
             'reverse_primer_mismatches': ['integer', '0'],
             'reverse_primers':
                 ['choice:["disable", "truncate_only", "truncate_remove"]',
-                 'default_value'],
+                 'disable'],
             'trim_seq_length': ['bool', 'False'],
             'truncate_ambi_bases': ['bool', 'False']}
         self.assertEqual(qdb.software.Command(2).optional_parameters,
