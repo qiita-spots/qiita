@@ -36,6 +36,8 @@ CREATE TABLE qiita.software (
     name                 varchar  NOT NULL,
     version              varchar  NOT NULL,
     description          varchar  NOT NULL,
+    environment_name     varchar  NOT NULL,
+    start_script         varchar  NOT NULL,
     CONSTRAINT pk_software PRIMARY KEY ( software_id )
  ) ;
 
@@ -230,8 +232,8 @@ $$ LANGUAGE plpgsql;
 
 -- Populate the software and software_command tables so we can assignt the
 -- correct values to the preprocessed and processed tables
-INSERT INTO qiita.software (name, version, description) VALUES
-    ('QIIME', '1.9.1', 'Quantitative Insights Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data');
+INSERT INTO qiita.software (name, version, description, environment_name, start_script) VALUES
+    ('QIIME', '1.9.1', 'Quantitative Insights Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data', 'qiita', 'start_target_gene');
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1038/nmeth.f.303', '20383131');
 INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (1, '10.1038/nmeth.f.303');
 -- Magic number 1: we just created the software table and inserted the QIIME
