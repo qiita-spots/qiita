@@ -69,6 +69,11 @@ class TestLoadArtifactFromCmd(TestCase):
                 parents=[1], dflt_params_id=10,
                 required_params='{"input_data": 1}')
 
+        with self.assertRaises(ValueError):
+            qdb.commands.load_artifact_from_cmd(
+                ["fp1"], ["preprocessed_fasta"], "Demultiplexed",
+                parents=[1, 2], dflt_params_id=10)
+
     def test_load_artifact_from_cmd_root(self):
         fd, forward_fp = mkstemp(suffix='_forward.fastq.gz')
         close(fd)
