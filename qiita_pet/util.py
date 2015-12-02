@@ -92,11 +92,12 @@ def generate_param_str(param):
     str
         The html string with the parameter set values
     """
-    ref = Reference(param.reference)
+    values = param.values
+    ref = Reference(values['reference'])
     result = ["<b>Reference:</b> %s %s" % (ref.name, ref.version)]
     result.extend("<b>%s:</b> %s" % (name, value)
-                  for name, value in viewitems(param.values)
-                  if name != 'reference_id')
+                  for name, value in viewitems(values)
+                  if name != 'reference')
     return "<br/>".join(result)
 
 
