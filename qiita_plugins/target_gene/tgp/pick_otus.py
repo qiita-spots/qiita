@@ -52,6 +52,11 @@ def generate_pick_closed_reference_otus_cmd(filepaths, out_dir, parameters,
     -------
     str
         The pick_closed_reference_otus.py command
+
+    Raises
+    ------
+    ValueError
+        If there is no sequence file fount in the artifact
     """
     seqs_fp = None
     for fp, fp_type in filepaths:
@@ -100,6 +105,11 @@ def pick_closed_reference_otus(server_url, job_id, parameters, out_dir):
     -------
     dict
         The results of the job
+
+    Raises
+    ------
+    ValueError
+        If there is any error gathering the information from the server
     """
     update_job_step(server_url, job_id, "Step 1 of 3: Collecting information")
     artifact_id = parameters['input_data']
