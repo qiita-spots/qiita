@@ -339,8 +339,8 @@ class Software(qdb.base.QiitaObject):
     _table = "software"
 
     @classmethod
-    def create(cls, name, version, description, environment_name, start_script,
-               publications=None):
+    def create(cls, name, version, description, environment_script,
+               start_script, publications=None):
         r"""Creates a new software in the system
 
         Parameters
@@ -351,8 +351,8 @@ class Software(qdb.base.QiitaObject):
             The version of the software
         description : str
             The description of the software
-        environment_name : str
-            The name of the environment under which this software runs on
+        environment_script : str
+            The script used to start the environemnt in which the plugin runs
         start_script : str
             The script used to start the plugin
         publications : list of (str, str), optional
@@ -361,11 +361,11 @@ class Software(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.software
-                            (name, version, description, environment_name,
+                            (name, version, description, environment_script,
                              start_script)
                         VALUES (%s, %s, %s, %s, %s)
                         RETURNING software_id"""
-            sql_params = [name, version, description, environment_name,
+            sql_params = [name, version, description, environment_script,
                           start_script]
             qdb.sql_connection.TRN.add(sql, sql_params)
             s_id = qdb.sql_connection.TRN.execute_fetchlast()
@@ -483,16 +483,16 @@ class Software(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.execute()
 
     @property
-    def environment_name(self):
-        """The name of the software environment
+    def environment_script(self):
+        """The script used to start the plugin environment
 
         Returns
         -------
         str
-            The name of the environment
+            The script used to start the environemnt
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT environment_name
+            sql = """SELECT environment_script
                      FROM qiita.software
                      WHERE software_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])

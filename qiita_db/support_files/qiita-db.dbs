@@ -1144,7 +1144,7 @@
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="version" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
-			<column name="environment_name" type="varchar" jt="12" mandatory="y" />
+			<column name="environment_script" type="varchar" jt="12" mandatory="y" />
 			<column name="start_script" type="varchar" jt="12" mandatory="y" />
 			<index name="pk_software" unique="PRIMARY_KEY" >
 				<column name="software_id" />

@@ -198,7 +198,7 @@ class SoftwareTests(TestCase):
                          "This is adding a new software for testing")
         self.assertEqual(obs.commands, [])
         self.assertEqual(obs.publications, [])
-        self.assertEqual(obs.environment_name, 'env_name')
+        self.assertEqual(obs.environment_script, 'env_name')
         self.assertEqual(obs.start_script, 'start_plugin')
 
     def test_create_with_publications(self):
@@ -212,7 +212,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.description, "Another testing software")
         self.assertEqual(obs.commands, [])
         self.assertEqual(obs.publications, exp_publications)
-        self.assertEqual(obs.environment_name, 'env_name')
+        self.assertEqual(obs.environment_script, 'env_name')
         self.assertEqual(obs.start_script, 'start_plugin')
 
     def test_name(self):
@@ -245,9 +245,9 @@ class SoftwareTests(TestCase):
                ['10.1000/nmeth.f.101', '12345678']]
         self.assertItemsEqual(tester.publications, exp)
 
-    def test_environment_name(self):
+    def test_environment_script(self):
         tester = qdb.software.Software(1)
-        self.assertEqual(tester.environment_name, 'qiita')
+        self.assertEqual(tester.environment_script, 'source activate qiita')
 
     def test_start_script(self):
         tester = qdb.software.Software(1)
