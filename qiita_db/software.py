@@ -18,6 +18,7 @@ class Command(qdb.base.QiitaObject):
 
     Attributes
     ----------
+    software
     name
     description
     cli
@@ -323,6 +324,8 @@ class Software(qdb.base.QiitaObject):
     description
     commands
     publications
+    environment_name
+    start_script
 
     Methods
     -------
@@ -336,7 +339,8 @@ class Software(qdb.base.QiitaObject):
     _table = "software"
 
     @classmethod
-    def create(cls, name, version, description, publications=None):
+    def create(cls, name, version, description, environment_name, start_script,
+               publications=None):
         r"""Creates a new software in the system
 
         Parameters
@@ -347,15 +351,22 @@ class Software(qdb.base.QiitaObject):
             The version of the software
         description : str
             The description of the software
+        environment_name : str
+            The name of the environment under which this software runs on
+        start_script : str
+            The script used to start the plugin
         publications : list of (str, str), optional
             A list with the (DOI, pubmed_id) of the publications attached to
             the software
         """
         with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.software (name, version, description)
-                        VALUES (%s, %s, %s)
+            sql = """INSERT INTO qiita.software
+                            (name, version, description, environment_name,
+                             start_script)
+                        VALUES (%s, %s, %s, %s, %s)
                         RETURNING software_id"""
-            sql_params = [name, version, description]
+            sql_params = [name, version, description, environment_name,
+                          start_script]
             qdb.sql_connection.TRN.add(sql, sql_params)
             s_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -470,6 +481,38 @@ class Software(qdb.base.QiitaObject):
             sql_params = [[self.id, doi] for doi, _ in publications]
             qdb.sql_connection.TRN.add(sql, sql_params, many=True)
             qdb.sql_connection.TRN.execute()
+
+    @property
+    def environment_name(self):
+        """The name of the software environment
+
+        Returns
+        -------
+        str
+            The name of the environment
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT environment_name
+                     FROM qiita.software
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def start_script(self):
+        """The start_script used to start the plugin
+
+        Returns
+        -------
+        str
+            The plugin's start script
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT start_script
+                     FROM qiita.software
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
 
 class DefaultParameters(qdb.base.QiitaObject):
