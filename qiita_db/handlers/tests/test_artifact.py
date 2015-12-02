@@ -48,5 +48,39 @@ class ArtifactFilepathsHandlerTests(TestHandlerBase):
         self.assertEqual(loads(obs.body), exp)
 
 
+class ArtifactMappingHandlerTests(TestHandlerBase):
+    def test_get_artifact_does_not_exist(self):
+        obs = self.get('/qiita_db/artifacts/100/mapping/')
+        self.assertEqual(obs.code, 200)
+        exp = {'success': False, 'error': 'Artifact does not exist',
+               'mapping': None}
+        self.assertEqual(loads(obs.body), exp)
+
+    def test_get(self):
+        obs = self.get('/qiita_db/artifacts/1/mapping/')
+        self.assertEqual(obs.code, 200)
+        db_dir = qdb.util.get_mountpoint('templates')[0][1]
+        exp_fp = join(db_dir, "1_prep_1_qiime_19700101-000000.txt")
+        exp = {'success': True, 'error': '',
+               'mapping': exp_fp}
+        self.assertEqual(loads(obs.body), exp)
+
+
+class ArtifactTypeHandlerTests(TestHandlerBase):
+    def test_get_artifact_does_not_exist(self):
+        obs = self.get('/qiita_db/artifacts/100/type/')
+        self.assertEqual(obs.code, 200)
+        exp = {'success': False, 'error': 'Artifact does not exist',
+               'type': None}
+        self.assertEqual(loads(obs.body), exp)
+
+    def test_get(self):
+        obs = self.get('/qiita_db/artifacts/1/type/')
+        self.assertEqual(obs.code, 200)
+        exp = {'success': True, 'error': '',
+               'type': "FASTQ"}
+        self.assertEqual(loads(obs.body), exp)
+
+
 if __name__ == '__main__':
     main()
