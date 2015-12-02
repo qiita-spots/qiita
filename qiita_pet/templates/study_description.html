@@ -311,7 +311,7 @@ function delete_study() {
 }
 
 function delete_sample_template() {
-  sample_template_id = {{study.sample_template.id}};
+  sample_template_id = {{study.id}};
   if (confirm('Are you sure you want to delete sample template ID: ' + sample_template_id + '?')) {
     var form = $("<form>")
     .attr("action", window.location.href)
