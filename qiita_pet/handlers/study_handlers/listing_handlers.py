@@ -177,10 +177,15 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     cols = ['study_id', 'email', 'principal_investigator_id',
             'publication_doi', 'study_title', 'metadata_complete',
             'number_samples_collected', 'study_abstract']
+    study_ids = [s.id for s in study_set]
+    study_info = Study.get_info(study_ids, cols)
 
     # get info for the studies
     infolist = []
-    for study in study_set:
+    for info in study_info:
+        # Convert DictCursor to proper dict
+        info = dict(info)
+        study = Study(info['study_id'])
         # Build the processed data info for the study if none passed
         if build_samples:
             proc_data_list = [ar for ar in study.artifacts()
@@ -192,7 +197,6 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
                 # there is only one prep template for each processed data
                 proc_samples[proc_data.id] = proc_data.prep_templates[0].keys()
 
-        info = dict(study.get_info(info_cols=cols)[0])
         study_info = _build_single_study_info(study, info, study_proc,
                                               proc_samples)
         infolist.append(study_info)
