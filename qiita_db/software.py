@@ -352,7 +352,7 @@ class Software(qdb.base.QiitaObject):
         description : str
             The description of the software
         environment_script : str
-            The script used to start the environemnt in which the plugin runs
+            The script used to start the environment in which the plugin runs
         start_script : str
             The script used to start the plugin
         publications : list of (str, str), optional
@@ -489,7 +489,7 @@ class Software(qdb.base.QiitaObject):
         Returns
         -------
         str
-            The script used to start the environemnt
+            The script used to start the environment
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT environment_script
