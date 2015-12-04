@@ -62,7 +62,7 @@ class PreprocessedDataInfoTab(BaseUIModule):
         # pathological case that we used to have in the system: preprocessed
         # data without valid prep_templates
         prep_templates = preprocessed_data.prep_templates
-        if len(prep_templates == 1):
+        if len(prep_templates) == 1:
             prep_template_id = prep_template.id
             raw_data_id = prep_template.artifact.id
             inv_type = prep_template.investigation_type or "None selected"
@@ -75,7 +75,7 @@ class PreprocessedDataInfoTab(BaseUIModule):
                           for param in Command(3).default_parameter_sets}
         # We just need to provide an ID for the default parameters,
         # so we can initialize the interface
-        default_params = 1
+        default_params = min(process_params.keys())
 
         ebi_link = None
         if preprocessed_data.is_submitted_to_ebi:
