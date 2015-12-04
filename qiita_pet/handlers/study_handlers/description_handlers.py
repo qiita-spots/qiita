@@ -19,6 +19,7 @@ from pandas.parser import CParserError
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
+from qiita_db.artifact import Artifact
 from qiita_db.study import Study
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -307,10 +308,10 @@ class StudyDescriptionHandler(BaseHandler):
         raw_data_id = self.get_argument('raw_data_id')
 
         prep_template = PrepTemplate(pt_id)
-        raw_data = RawData(raw_data_id)
+        artifact = Artifact(raw_data_id)
 
         try:
-            prep_template.raw_data = raw_data
+            prep_template.artifact = artifact
         except QiitaDBError as e:
             msg = html_error_message % ("adding the raw data",
                                         str(raw_data_id), str(e))
@@ -466,8 +467,8 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         pd_id = int(self.get_argument('pd_id'))
-        pd = ProcessedData(pd_id)
-        pd.status = 'public'
+        pd = Artifact(pd_id)
+        pd.visibility = 'public'
         msg = "Processed data set to public"
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
@@ -488,8 +489,8 @@ class StudyDescriptionHandler(BaseHandler):
         """
         if _approve(user.level):
             pd_id = int(self.get_argument('pd_id'))
-            pd = ProcessedData(pd_id)
-            pd.status = 'private'
+            pd = Artifact(pd_id)
+            pd.visibility = 'private'
             msg = "Processed data approved"
             msg_level = "success"
         else:
@@ -513,8 +514,8 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         pd_id = int(self.get_argument('pd_id'))
-        pd = ProcessedData(pd_id)
-        pd.status = 'awaiting_approval'
+        pd = Artifact(pd_id)
+        pd.visibility = 'awaiting_approval'
         msg = "Processed data sent to admin for approval"
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
@@ -534,8 +535,8 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         pd_id = int(self.get_argument('pd_id'))
-        pd = ProcessedData(pd_id)
-        pd.status = 'sandbox'
+        pd = Artifact(pd_id)
+        pd.visibility = 'sandbox'
         msg = "Processed data reverted to sandbox"
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
@@ -740,7 +741,7 @@ class StudyDescriptionHandler(BaseHandler):
         prep_template_id = int(self.get_argument('prep_template_id'))
 
         try:
-            RawData.delete(raw_data_id, prep_template_id)
+            Artifact.delete(raw_data_id)
             msg = ("Raw data %d has been deleted from prep_template %d"
                    % (raw_data_id, prep_template_id))
             msg_level = "success"
@@ -793,7 +794,7 @@ class StudyDescriptionHandler(BaseHandler):
         ppd_id = int(self.get_argument('preprocessed_data_id'))
 
         try:
-            PreprocessedData.delete(ppd_id)
+            Artifact.delete(ppd_id)
             msg = ("Preprocessed data %d has been deleted" % ppd_id)
             msg_level = "success"
             ppd_id = None
@@ -820,7 +821,7 @@ class StudyDescriptionHandler(BaseHandler):
         pd_id = int(self.get_argument('processed_data_id'))
 
         try:
-            ProcessedData.delete(pd_id)
+            Artifact.delete(pd_id)
             msg = ("Processed data %d has been deleted" % pd_id)
             msg_level = "success"
             pd_id = None
@@ -901,7 +902,7 @@ class PreprocessingSummaryHandler(BaseHandler):
             If the preprocessed data does not have a log file
         """
         # Get the objects and check user privileges
-        ppd = PreprocessedData(preprocessed_data_id)
+        ppd = Artifact(preprocessed_data_id)
         study = Study(ppd.study)
         check_access(self.current_user, study, raise_error=True)
 
@@ -912,7 +913,7 @@ class PreprocessingSummaryHandler(BaseHandler):
             % (study.id, preprocessed_data_id))
 
         # Get all the filepaths attached to the preprocessed data
-        files_tuples = ppd.get_filepaths()
+        files_tuples = ppd.filepaths
 
         # Group the files by filepath type
         files = defaultdict(list)

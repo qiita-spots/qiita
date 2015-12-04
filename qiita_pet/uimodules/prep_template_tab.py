@@ -14,10 +14,9 @@ from future.utils import viewitems
 
 from qiita_db.util import (get_artifact_types, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
-from qiita_pet.util import convert_text_html
 from qiita_db.study import Study
+from qiita_db.software import Command
 from qiita_db.ontology import Ontology
-from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.constants import (
     TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 from qiita_pet.util import STATUS_STYLER, is_localhost, EBI_LINKIFIER
@@ -165,18 +164,20 @@ class PrepTemplateInfoTab(BaseUIModule):
         preprocessed_data = None
         show_preprocess_btn = True
         no_preprocess_msg = None
+        preprocessing_status = 'Not preprocessed'
         if raw_data:
             raw_data_ft = raw_data.artifact_type
             # If the prep template has a raw data associated, it can be
             # preprocessed. Retrieve the pre-processing parameters
+            # Hardcoding the command ids until the interface is refactored
             if raw_data_ft in ('SFF', 'FASTA'):
-                param_iter = Preprocessed454Params.iter()
+                param_iter = Command(2).default_parameter_sets
             elif raw_data_ft == 'FASTQ':
-                param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
-                              if pip.values['barcode_type'] != 'not-barcoded']
+                param_iter = [p for p in Command(1).default_parameter_sets
+                              if p.values['barcode_type'] != 'not-barcoded']
             elif raw_data_ft == 'per_sample_FASTQ':
-                param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
-                              if pip.values['barcode_type'] == 'not-barcoded']
+                param_iter = [p for p in Command(1).default_parameter_sets
+                              if p.values['barcode_type'] == 'not-barcoded']
             else:
                 raise NotImplementedError(
                     "Pre-processing of %s files currently not supported."
@@ -218,7 +219,19 @@ class PrepTemplateInfoTab(BaseUIModule):
                         no_preprocess_msg = (
                             "Preprocessing disabled due to missing columns in "
                             "the prep template: %s" % ', '.join(missing_cols))
-        preprocessing_status = 'TODO: plugin'
+
+            # Check the processing status
+            jobs = raw_data.jobs(status='running')
+            if len(jobs) > 0:
+                preprocessing_status = 'running'
+            else:
+                jobs = raw_data.jobs(status='success')
+                if len(jobs) > 0:
+                    preprocessing_status = 'success'
+                else:
+                    jobs = raw_data.jobs(status='error')
+                    if len(jobs) > 0:
+                        preprocessing_status = 'failed: %s' % jobs[0].log.msg
 
         ebi_link = None
         if prep_template.is_submitted_to_ebi:

@@ -8,8 +8,8 @@
 
 from qiita_core.util import execute_as_transaction
 from qiita_db.study import Study
-from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology
+from qiita_db.software import Command
 from qiita_db.util import convert_to_id
 from qiita_pet.util import convert_text_html
 from .base_uimodule import BaseUIModule
@@ -72,7 +72,7 @@ class PreprocessedDataInfoTab(BaseUIModule):
             inv_type = "None Selected"
 
         process_params = {param.id: (generate_param_str(param), param.name)
-                          for param in ProcessedSortmernaParams.iter()}
+                          for param in Command(3).default_parameter_sets}
         # We just need to provide an ID for the default parameters,
         # so we can initialize the interface
         default_params = 1

@@ -25,7 +25,6 @@ import qiita_db as qdb
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
-from qiita_ware.processing_pipeline import generate_demux_file
 from qiita_ware.context import system_call, ComputeError
 
 
@@ -424,19 +423,6 @@ def start(port):
     click.echo("Qiita started on port %d" % port)
     tornado.ioloop.IOLoop.instance().start()
 
-
-# #############################################################################
-# WARE COMMANDS
-# #############################################################################
-
-@ware.command()
-@click.argument('sl_out_dir', required=True,
-                type=click.Path(resolve_path=True, readable=True, exists=True,
-                                file_okay=False))
-def generate_demux(sl_out_dir):
-    """Generates the demux file for the split libraries output sl_out_dir"""
-    demux_fp = generate_demux_file(sl_out_dir)
-    click.echo("Demux file successfully generated: %s" % demux_fp)
 
 if __name__ == '__main__':
     qiita()

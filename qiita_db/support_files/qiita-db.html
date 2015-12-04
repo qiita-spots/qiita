@@ -707,7 +707,7 @@ table {
 	study_artifact references artifact ( artifact_id )</title>
 </path>
 <text x='1538' y='745' transform='rotate(0 1538,745)' title='Foreign Key fk_study_artifact_artifact
-	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 795 L 2205,795' >
+	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 795 L 2235,795' >
 	<title>Foreign Key fk_software_publication
 	software_publication references software ( software_id )</title>
 </path>
@@ -1794,18 +1794,6 @@ Referred by study_publication ( publication_doi -> doi ) </title></a>
 <a xlink:href='#reference.tree_filepath'><text x='1803' y='1402'>tree_filepath</text><title>tree_filepath bigint</title></a>
 <a xlink:href='#reference.tree_filepath'><use id='fk' x='1908' y='1391' xlink:href='#fk'/><title>References filepath ( tree_filepath -> filepath_id ) </title></a>
 
-<!-- ============= Table 'software' ============= -->
-<rect class='table' x='2100' y='743' width='105' height='105' rx='7' ry='7' />
-<path d='M 2100.50 769.50 L 2100.50 750.50 Q 2100.50 743.50 2107.50 743.50 L 2197.50 743.50 Q 2204.50 743.50 2204.50 750.50 L 2204.50 769.50 L2100.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software'><text x='2129' y='757' class='tableTitle'>software</text><title>Table qiita.software</title></a>
-  <use id='nn' x='2102' y='777' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2102' y='776' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
-<a xlink:href='#software.software_id'><text x='2118' y='787'>software_id</text><title>software_id bigserial not null</title></a>
-<a xlink:href='#software.software_id'><use id='ref' x='2193' y='776' xlink:href='#ref'/><title>Referred by software_command ( software_id ) 
-Referred by software_publication ( software_id ) </title></a>
-  <use id='nn' x='2102' y='792' xlink:href='#nn'/><a xlink:href='#software.name'><text x='2118' y='802'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='2102' y='807' xlink:href='#nn'/><a xlink:href='#software.version'><text x='2118' y='817'>version</text><title>version varchar not null</title></a>
-  <use id='nn' x='2102' y='822' xlink:href='#nn'/><a xlink:href='#software.description'><text x='2118' y='832'>description</text><title>description varchar not null</title></a>
-
 <!-- ============= Table 'software_command' ============= -->
 <rect class='table' x='1905' y='743' width='120' height='105' rx='7' ry='7' />
 <path d='M 1905.50 769.50 L 1905.50 750.50 Q 1905.50 743.50 1912.50 743.50 L 2017.50 743.50 Q 2024.50 743.50 2024.50 750.50 L 2024.50 769.50 L1905.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -1831,12 +1819,12 @@ Represents data in the system</title></a>
 <a xlink:href='#artifact.artifact_id'><text x='1218' y='787'>artifact_id</text><title>artifact_id bigserial not null</title></a>
 <a xlink:href='#artifact.artifact_id'><use id='ref' x='1383' y='776' xlink:href='#ref'/><title>Referred by analysis_sample ( artifact_id ) 
 Referred by artifact_filepath ( artifact_id ) 
+Referred by artifact_processing_job ( artifact_id ) 
 Referred by ebi_run_accession ( artifact_id ) 
 Referred by parent_artifact ( artifact_id ) 
 Referred by parent_artifact ( parent_id -> artifact_id ) 
 Referred by prep_template ( artifact_id ) 
-Referred by study_artifact ( artifact_id ) 
-Referred by artifact_processing_job ( artifact_id ) </title></a>
+Referred by study_artifact ( artifact_id ) </title></a>
   <use id='nn' x='1202' y='792' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='802'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
   <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='806' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
 <a xlink:href='#artifact.command_id'><text x='1218' y='817'>command_id</text><title>command_id bigint</title></a>
@@ -1933,6 +1921,20 @@ This is a varchar here &#045; but is of type JSON in postgresql&#046;</title></a
   <use id='nn' x='1787' y='972' xlink:href='#nn'/><a xlink:href='#artifact_processing_job.processing_job_id'><use id='pk' x='1787' y='971' xlink:href='#pk'/><title>Primary Key  ( artifact_id, processing_job_id ) Index  ( processing_job_id ) </title></a>
 <a xlink:href='#artifact_processing_job.processing_job_id'><text x='1803' y='982'>processing_job_id</text><title>processing_job_id bigint not null</title></a>
 <a xlink:href='#artifact_processing_job.processing_job_id'><use id='fk' x='1923' y='971' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
+
+<!-- ============= Table 'software' ============= -->
+<rect class='table' x='2100' y='743' width='135' height='135' rx='7' ry='7' />
+<path d='M 2100.50 769.50 L 2100.50 750.50 Q 2100.50 743.50 2107.50 743.50 L 2227.50 743.50 Q 2234.50 743.50 2234.50 750.50 L 2234.50 769.50 L2100.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software'><text x='2144' y='757' class='tableTitle'>software</text><title>Table qiita.software</title></a>
+  <use id='nn' x='2102' y='777' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2102' y='776' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
+<a xlink:href='#software.software_id'><text x='2118' y='787'>software_id</text><title>software_id bigserial not null</title></a>
+<a xlink:href='#software.software_id'><use id='ref' x='2223' y='776' xlink:href='#ref'/><title>Referred by software_command ( software_id ) 
+Referred by software_publication ( software_id ) </title></a>
+  <use id='nn' x='2102' y='792' xlink:href='#nn'/><a xlink:href='#software.name'><text x='2118' y='802'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2102' y='807' xlink:href='#nn'/><a xlink:href='#software.version'><text x='2118' y='817'>version</text><title>version varchar not null</title></a>
+  <use id='nn' x='2102' y='822' xlink:href='#nn'/><a xlink:href='#software.description'><text x='2118' y='832'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='2102' y='837' xlink:href='#nn'/><a xlink:href='#software.environment_script'><text x='2118' y='847'>environment_script</text><title>environment_script varchar not null</title></a>
+  <use id='nn' x='2102' y='852' xlink:href='#nn'/><a xlink:href='#software.start_script'><text x='2118' y='862'>start_script</text><title>start_script varchar not null</title></a>
 
 </g></svg>
 
@@ -5042,40 +5044,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='software'>Table software</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='software.software_id'>software&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.name'>name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.version'>version</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.description'>description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;software primary key</td>
-		<td> ON software&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='software_command'>Table software_command</a></th></tr>
 </thead>
 <tbody>
@@ -5474,6 +5442,50 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_artifact_processing_job_0</td>
 		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='software'>Table software</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='software.software_id'>software&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.version'>version</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.environment_script'>environment&#095;script</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.start_script'>start&#095;script</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;software primary key</td>
+		<td> ON software&#095;id</td>
 		<td>  </td>
 	</tr>
 </tbody>

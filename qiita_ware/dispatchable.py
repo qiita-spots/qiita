@@ -5,48 +5,29 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from traceback import format_exception_only
-from sys import exc_info
-
-from .processing_pipeline import StudyPreprocessor, StudyProcessor
 from .analysis_pipeline import RunAnalysis
 from qiita_ware.commands import submit_EBI, submit_VAMPS
-from qiita_db.study import Study
+from qiita_ware.executor import execute
+from qiita_db.user import User
+from qiita_db.software import Parameters, DefaultParameters
 from qiita_db.analysis import Analysis
-from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.artifact import Artifact
 
 
-def processor(preprocessed_data_id, param_id, param_constructor):
+def processor(user_id, preprocessed_data_id, param_id):
     """Dispatch the processor work"""
-    preprocessed_data = PreprocessedData(preprocessed_data_id)
-    params = param_constructor(param_id)
-
-    sp = StudyProcessor()
-    try:
-        process_out = sp(preprocessed_data, params)
-    except Exception as e:
-        error_msg = ''.join(format_exception_only(e, exc_info()))
-        preprocessed_data.processing_status = "failed: %s" % error_msg
-        process_out = None
-
-    return process_out
+    user = User(user_id)
+    parameters = Parameters.from_default_params(
+        DefaultParameters(param_id), {'input_data': preprocessed_data_id})
+    return execute(user, parameters)
 
 
-def preprocessor(study_id, prep_template_id, param_id, param_constructor):
+def preprocessor(user_id, artifact_id, param_id):
     """Dispatch for preprocessor work"""
-    study = Study(study_id)
-    prep_template = PrepTemplate(prep_template_id)
-    params = param_constructor(param_id)
-
-    sp = StudyPreprocessor()
-    try:
-        preprocess_out = sp(study, prep_template, params)
-    except Exception as e:
-        error_msg = ''.join(format_exception_only(e, exc_info()))
-        prep_template.preprocessing_status = "failed: %s" % error_msg
-        preprocess_out = None
-
-    return preprocess_out
+    user = User(user_id)
+    parameters = Parameters.from_default_params(
+        DefaultParameters(param_id), {'input_data': artifact_id})
+    return execute(user, parameters)
 
 
 def submit_to_ebi(preprocessed_data_id, submission_type):
@@ -72,7 +53,7 @@ def create_raw_data(filetype, prep_template, filepaths):
 
     Needs to be dispachable because it moves large files
     """
-    RawData.create(filetype, [prep_template], filepaths)
+    Artifact.create(filepaths, filetype, prep_template=prep_template)
 
 
 def add_files_to_raw_data(raw_data_id, filepaths):

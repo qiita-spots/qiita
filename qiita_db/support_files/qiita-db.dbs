@@ -1144,6 +1144,8 @@
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="version" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
+			<column name="environment_script" type="varchar" jt="12" mandatory="y" />
+			<column name="start_script" type="varchar" jt="12" mandatory="y" />
 			<index name="pk_software" unique="PRIMARY_KEY" >
 				<column name="software_id" />
 			</index>
@@ -1584,7 +1586,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_publication" color="b2cdf7" x="2340" y="705" />
 		<entity schema="qiita" name="data_directory" color="b2cdf7" x="840" y="735" />
 		<entity schema="qiita" name="reference" color="c0d4f3" x="1785" y="1290" />
-		<entity schema="qiita" name="software" color="b2cdf7" x="2100" y="750" />
 		<entity schema="qiita" name="software_command" color="b2cdf7" x="1905" y="750" />
 		<entity schema="qiita" name="artifact" color="b2cdf7" x="1200" y="750" />
 		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="2025" y="1140" />
@@ -1592,6 +1593,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2115" y="900" />
 		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2130" y="1020" />
 		<entity schema="qiita" name="artifact_processing_job" color="b2cdf7" x="1785" y="930" />
+		<entity schema="qiita" name="software" color="b2cdf7" x="2100" y="750" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1693,22 +1695,5 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="software_publication" />
 			<entity schema="qiita" name="study_publication" />
 		</group>
-		<script name="Sql_001" id="SQL7268209" >
-			<string><![CDATA[CREATE TABLE qiita.artifact_processing_job ( 
-	artifact_id          bigint  NOT NULL,
-	processing_job_id    bigint  NOT NULL,
-	CONSTRAINT idx_artifact_processing_job PRIMARY KEY ( artifact_id, processing_job_id )
- ) ;
-
-CREATE INDEX idx_artifact_processing_job ON qiita.artifact_processing_job ( artifact_id ) ;
-
-CREATE INDEX idx_artifact_processing_job ON qiita.artifact_processing_job ( processing_job_id ) ;
-
-ALTER TABLE qiita.artifact_processing_job ADD CONSTRAINT fk_artifact_processing_job FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact( artifact_id )    ;
-
-ALTER TABLE qiita.artifact_processing_job ADD CONSTRAINT fk_artifact_processing_job_0 FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
-
-]]></string>
-		</script>
 	</layout>
 </project>
