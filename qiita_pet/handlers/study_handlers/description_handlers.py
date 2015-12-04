@@ -118,7 +118,7 @@ class StudyDescriptionHandler(BaseHandler):
             check_access(user, study, raise_error=True)
 
         full_access = (user.level == 'admin' or
-                       study.id in user.user_studies | user.shared_studies)
+                       study in user.user_studies | user.shared_studies)
 
         return study, user, full_access
 
@@ -903,7 +903,7 @@ class PreprocessingSummaryHandler(BaseHandler):
         """
         # Get the objects and check user privileges
         ppd = Artifact(preprocessed_data_id)
-        study = Study(ppd.study)
+        study = ppd.study
         check_access(self.current_user, study, raise_error=True)
 
         # Get the return address
