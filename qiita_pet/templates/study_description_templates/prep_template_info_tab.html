@@ -127,12 +127,12 @@
                   <select id="filetype-{{prep_template.id}}" onchange="$('.filesgroup').hide(); $('#files-{{prep_template.id}}-'+$('#filetype-{{prep_template.id}}').val()).show();">
                     <option value="0">Not selected...</option>
                     {% for name, value, _ in filetypes %}
-                      <option value="{{value}}">{{name}}</option>
+                      <option value="{{name}}">{{name}}</option>
                     {% end %}
                   </select>
                   <div id="files-{{prep_template.id}}-0" class="filesgroup"></div>
                   {% for name, value, filepath_types in filetypes %}
-                    <div id="files-{{prep_template.id}}-{{value}}" class="filesgroup">
+                    <div id="files-{{prep_template.id}}-{{name}}" class="filesgroup">
                       <br/>
                       <b>Choose the files to link to the raw data</b>
                       <br/>
@@ -147,7 +147,7 @@
                             <td>{{f}}</td>
                             <td>&nbsp;</td>
                             <td>
-                              <select id="{{f}}" name="upload_file_{{prep_template.id}}_{{value}}">
+                              <select id="{{f}}" name="upload_file_{{prep_template.id}}_{{name}}">
                                 <option value="">Ignore ...</option>
                                 {% for fp_type in filepath_types %}
                                   {% if name == "per_sample_FASTQ" and fp_type == "forward seqs" %}
@@ -161,7 +161,7 @@
                           </tr>
                         {% end %}
                       </table>
-                      <a class="btn btn-primary" onclick="create_raw_data({{prep_template.id}}, {{value}});">Link</a>
+                      <a class="btn btn-primary" onclick="create_raw_data({{prep_template.id}}, '{{name}}');">Link</a>
                     </div>
                   {% end %}
                 </div>
