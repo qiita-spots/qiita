@@ -14,7 +14,6 @@ from future.utils import viewitems
 
 from qiita_db.util import (get_artifact_types, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
-from qiita_db.study import Study
 from qiita_db.software import Command
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.constants import (
@@ -42,11 +41,12 @@ def _get_accessible_raw_data(user):
     """
     d = {}
     accessible_studies = user.user_studies.union(user.shared_studies)
-    for sid in accessible_studies:
-        study = Study(sid)
+    for study in accessible_studies:
         study_title = study.title
-        for rdid in study.raw_data():
-            d[int(rdid)] = study_title
+        for artifact in study.artifacts():
+            if artifact.artifact_type in ['SFF', 'FASTQ', 'FASTA',
+                                          'FASTA_Sanger' 'per_sample_FASTQ']:
+                d[int(artifact.id)] = study_title
     return d
 
 
