@@ -9,9 +9,8 @@
 from datetime import datetime
 from json import loads
 
-from tornado.web import RequestHandler
-
 import qiita_db as qdb
+from .oauth2 import OauthBaseHandler
 
 
 def _get_job(job_id):
@@ -40,7 +39,7 @@ def _get_job(job_id):
     return job, True, ''
 
 
-class JobHandler(RequestHandler):
+class JobHandler(OauthBaseHandler):
     def get(self, job_id):
         """Get the job information
 
@@ -66,6 +65,7 @@ class JobHandler(RequestHandler):
              name
              - status: the status of the job
         """
+        self.authenticate_header()
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
             cmd = None
@@ -82,7 +82,7 @@ class JobHandler(RequestHandler):
         self.write(response)
 
 
-class HeartbeatHandler(RequestHandler):
+class HeartbeatHandler(OauthBaseHandler):
     def post(self, job_id):
         """Update the heartbeat timestamp of the job
 
@@ -100,6 +100,7 @@ class HeartbeatHandler(RequestHandler):
             - success: whether the heartbeat was successful
             - error: in case that success is false, it contains the error msg
         """
+        self.authenticate_header()
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
             if success:
@@ -117,8 +118,9 @@ class HeartbeatHandler(RequestHandler):
         self.write(response)
 
 
-class ActiveStepHandler(RequestHandler):
+class ActiveStepHandler(OauthBaseHandler):
     def post(self, job_id):
+        self.authenticate_header()
         """Changes the current exectuion step of the given job
 
         Parameters
@@ -151,8 +153,9 @@ class ActiveStepHandler(RequestHandler):
         self.write(response)
 
 
-class CompleteHandler(RequestHandler):
+class CompleteHandler(OauthBaseHandler):
     def post(self, job_id):
+        self.authenticate_header()
         """Updates the job to one of the completed statuses: 'success', 'error'
 
         Parameters
@@ -169,6 +172,7 @@ class CompleteHandler(RequestHandler):
             - success: whether the job information was successfuly updated
             - error: in case that success is false, it contains the error msg
         """
+        self.authenticate_header()
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
             if success:

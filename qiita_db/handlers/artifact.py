@@ -6,10 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from tornado.web import RequestHandler
-
 import qiita_db as qdb
-
+from .oauth2 import OauthBaseHandler
 
 def _get_artifact(a_id):
     """Returns the artifact with the given id if it exists
@@ -36,7 +34,7 @@ def _get_artifact(a_id):
     return artifact, True, ''
 
 
-class ArtifactFilepathsHandler(RequestHandler):
+class ArtifactFilepathsHandler(OauthBaseHandler):
     def get(self, artifact_id):
         """Retrieves the filepath information of the given artifact
 
@@ -58,6 +56,8 @@ class ArtifactFilepathsHandler(RequestHandler):
             - filepaths: the filepaths attached to the artifact and their
             filepath types
         """
+        if not self.authenticate_header():
+            return
         with qdb.sql_connection.TRN:
             artifact, success, error_msg = _get_artifact(artifact_id)
             fps = None
@@ -70,7 +70,7 @@ class ArtifactFilepathsHandler(RequestHandler):
         self.write(response)
 
 
-class ArtifactMappingHandler(RequestHandler):
+class ArtifactMappingHandler(OauthBaseHandler):
     def get(self, artifact_id):
         """Retrieves the mapping file information of the given artifact
 
@@ -91,6 +91,7 @@ class ArtifactMappingHandler(RequestHandler):
              - error: in case that success is false, it contains the error msg
              - mapping: the filepath to the mapping file
         """
+        self.authenticate_header()
         with qdb.sql_connection.TRN:
             artifact, success, error_msg = _get_artifact(artifact_id)
             fp = None
@@ -113,7 +114,7 @@ class ArtifactMappingHandler(RequestHandler):
         self.write(response)
 
 
-class ArtifactTypeHandler(RequestHandler):
+class ArtifactTypeHandler(OauthBaseHandler):
     def get(self, artifact_id):
         """Retrieves the artifact type information of the given artifact
 
@@ -133,6 +134,7 @@ class ArtifactTypeHandler(RequestHandler):
             - error: in case that success is false, it contains the error msg
             - type: the artifact type
         """
+        self.authenticate_header()
         with qdb.sql_connection.TRN:
             artifact, success, error_msg = _get_artifact(artifact_id)
             atype = None
