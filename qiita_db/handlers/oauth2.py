@@ -1,7 +1,11 @@
 from base64 import b64decode
 from string import ascii_letters, digits
+import datetime
 from random import SystemRandom
+
 from tornado.web import RequestHandler
+
+from moi import r_client
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
 import qiita_db as qdb
@@ -72,6 +76,8 @@ class OauthBaseHandler(RequestHandler):
         -------
         bool
             Whether authentication succeded or failed
+        user, optional
+            If this key is attached to a user, the User object for the user
         """
         token = self.request.headers('Authorization', None)
         if token is None:
@@ -79,7 +85,15 @@ class OauthBaseHandler(RequestHandler):
         token_info = token.split(token, maxsplit=1)
         if len(token_info) != 2 or token_info[0] != 'Bearer':
                 return False
-        raise NotImplementedError("validate the token!")
+        db_token = r_client.hget(token, 'timestamp')
+        if db_token is None:
+            # token has timed out
+            return False
+        user = r_client.hget(token, 'user')
+        if user:
+            return True, qdb.user.User(user)
+        else:
+            return True
 
 
 class TokenAuthHandler(OauthBaseHandler):
@@ -87,7 +101,13 @@ class TokenAuthHandler(OauthBaseHandler):
         pool = ascii_letters + digits
         return ''.join((SystemRandom().choice(pool) for _ in range(55)))
 
-    def validate_client(self, client_id, client_secret=None):
+    def set_token(self, token, user=None, timeout=3600):
+        r_client.hset(token, 'timestamp', datetime.datetime.now())
+        r_client.expire(token, timeout)
+        if user:
+            r_client.hset(token, 'user', user)
+
+    def validate_client(self, client_id, client_secret):
         if login_client(client_id, client_secret):
             token = self.generate_access_token()
             self.write({'access_token': token,
@@ -104,7 +124,14 @@ class TokenAuthHandler(OauthBaseHandler):
                 UnverifiedEmailError):
             self.write({'error': 'Invalid request'})
 
-        self.validate_client(client_id)
+        if login_client(client_id):
+            token = self.generate_access_token()
+            self.write({'access_token': token,
+                        'token_type': 'Bearer',
+                        'expires_in': '3600'})
+            self.set_token(token, user=username)
+        else:
+            self.write({'error': 'Invalid request'})
 
     def post(self):
         # first check for header version of sending auth, meaning client ID
