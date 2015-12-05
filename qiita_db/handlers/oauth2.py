@@ -181,11 +181,11 @@ class TokenAuthHandler(OauthBaseHandler):
         if grant_type == 'password':
             username = self.get_argument('username', None)
             password = self.get_argument('password', None)
-            if not all(username, password, client_id):
+            if not all([username, password, client_id]):
                 self.write({'error': 'Invalid request'})
                 self.finish()
             else:
-                self.validate_resource_owner(client_id, client_secret)
+                self.validate_resource_owner(username, password, client_id)
 
         elif grant_type == 'client':
             client_secret = self.get_argument('client_secret', None)
