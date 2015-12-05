@@ -100,7 +100,6 @@ class OauthBaseHandler(RequestHandler):
             return False
         token_info = header.split()
         if len(token_info) != 2 or token_info[0] != 'Bearer':
-            print(len(token_info) != 2, token_info[0] != 'Bearer')
             self.send_error()
             return False
         token = token_info[1]
