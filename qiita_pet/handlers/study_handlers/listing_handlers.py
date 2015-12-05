@@ -122,9 +122,7 @@ def _build_single_proc_data_info(proc_data_id, data_type, samples):
         The information for the processed data, in the form {info: value, ...}
     """
     proc_data = Artifact(proc_data_id)
-    # TODO plugin:
-    # proc_info = proc_data.processing_info
-    proc_info = {'processed_date': '10/10/1981'}
+    proc_info = {'processed_date': str(proc_data.timestamp)}
     proc_info['pid'] = proc_data_id
     proc_info['data_type'] = data_type
     proc_info['processed_date'] = str(proc_info['processed_date'])

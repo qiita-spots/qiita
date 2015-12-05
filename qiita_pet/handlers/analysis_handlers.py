@@ -35,6 +35,7 @@ from qiita_db.util import (get_db_files_base_dir,
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
 from qiita_db.logger import LogEntry
+from qiita_db.reference import Reference
 from qiita_core.util import execute_as_transaction
 
 SELECT_SAMPLES = 2
@@ -312,16 +313,19 @@ class SelectedSamplesHandler(BaseHandler):
             proc_data = Artifact(pid)
             sel_data[proc_data.study][pid] = samps
             # Also get processed data info
-            # TODO plugin:
-            # proc_data_info[pid] = proc_data.processing_info
-            proc_data_info[pid] = {'processed_date': '10/10/1981',
-                                   'algorithm': 'My algorithm',
-                                   'reference_name': 'My reference name',
-                                   'reference_version': 'My reference version',
-                                   'sequence_filepath': 'My sequence filepath',
-                                   'taxonomy_filepath': 'My taxonomy filepath',
-                                   'tree_filepath': 'My taxonomy filepath'}
-            proc_data_info[pid]['data_type'] = proc_data.data_type
+            parameters = proc_data.processing_parameters
+            reference = Reference(parameters.values['reference'])
+
+            proc_data_info[pid] = {
+                'processed_date': str(proc_data.timestamp),
+                'algorithm': parameters.command.name,
+                'reference_name': reference.name,
+                'reference_version': reference.version,
+                'sequence_filepath': reference.sequence_fp,
+                'taxonomy_filepath': reference.taxonomy_fp,
+                'tree_filepath': reference.tree_fp,
+                'data_type': proc_data.data_type}
+
         self.render("analysis_selected.html", sel_data=sel_data,
                     proc_info=proc_data_info)
 

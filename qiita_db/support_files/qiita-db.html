@@ -959,11 +959,11 @@ study_artifact ref artifact ( artifact_id )</title>
 <text x='1538' y='745' transform='rotate(0 1538,745)' title='Fk fk_study_artifact_artifact
 study_artifact ref artifact ( artifact_id )' style='fill:#cfc391;'>artifact_id</text>
 <!-- ============= Fk 'software_publication_fk_software_publication' ============= -->
-<path id='software_publication_fk_software_publication'  onmouseover="hghl(['software_publication_fk_software_publication','qiita.software_publication.software_id','qiita.software.software_id'])" onmouseout="uhghl(['software_publication_fk_software_publication','qiita.software_publication.software_id','qiita.software.software_id'])" transform='translate(7,0)' class='scene' d='M 2325 795 L 2205,795' >
+<path id='software_publication_fk_software_publication'  onmouseover="hghl(['software_publication_fk_software_publication','qiita.software_publication.software_id','qiita.software.software_id'])" onmouseout="uhghl(['software_publication_fk_software_publication','qiita.software_publication.software_id','qiita.software.software_id'])" transform='translate(7,0)' class='scene' d='M 2325 795 L 2235,795' >
 	<title>Fk fk_software_publication
 software_publication ref software ( software_id )</title>
 </path>
-<path class='defo' transform='translate(7,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 2325 795 L 2205,795' ></path>
+<path class='defo' transform='translate(7,0)' marker-start='url(#foot1p)' marker-end='url(#arrow1)'    d='M 2325 795 L 2235,795' ></path>
 <text x='2265' y='790' transform='rotate(0 2265,790)' title='Fk fk_software_publication
 software_publication ref software ( software_id )' style='fill:#cfc391;'>software_id</text>
 <!-- ============= Fk 'software_publication_fk_software_publication_0' ============= -->
@@ -2748,16 +2748,16 @@ varchar</title></a>
 <a xlink:href='#artifact_processing_job.processing_job_id'><use id='fk' x='1923' y='971' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
 
 <!-- ============= Table 'software' ============= -->
-<rect class='table' x='2100' y='743' width='105' height='105' rx='7' ry='7' />
-<line class='delim' x1='2100.500000' y1='769.500000' x2='2204.500000' y2='769.500000'/>
-<line class='delim' x1='2115.500000' y1='769.500000' x2='2115.500000' y2='847.500000'/>
-<line class='delim' x1='2193.500000' y1='769.500000' x2='2193.500000' y2='847.500000'/>
-<path d='M 2100.50 769.50 L 2100.50 750.50 Q 2100.50 743.50 2107.50 743.50 L 2197.50 743.50 Q 2204.50 743.50 2204.50 750.50 L 2204.50 769.50 L2100.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software'><text x='2126' y='761'>software</text><title>Table qiita.software</title></a>
+<rect class='table' x='2100' y='743' width='135' height='135' rx='7' ry='7' />
+<line class='delim' x1='2100.500000' y1='769.500000' x2='2234.500000' y2='769.500000'/>
+<line class='delim' x1='2115.500000' y1='769.500000' x2='2115.500000' y2='877.500000'/>
+<line class='delim' x1='2223.500000' y1='769.500000' x2='2223.500000' y2='877.500000'/>
+<path d='M 2100.50 769.50 L 2100.50 750.50 Q 2100.50 743.50 2107.50 743.50 L 2227.50 743.50 Q 2234.50 743.50 2234.50 750.50 L 2234.50 769.50 L2100.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software'><text x='2141' y='761'>software</text><title>Table qiita.software</title></a>
   <use id='nn' x='2102' y='777' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2102' y='776' xlink:href='#pk'/><title>Pk pk_software ( software_id ) </title></a>
 <a xlink:href='#software.software_id'><text id='qiita.software.software_id' x='2118' y='787' onmouseover="hghl(['software_command_fk_soft_command_software','software_publication_fk_software_publication'])" onmouseout="uhghl(['software_command_fk_soft_command_software','software_publication_fk_software_publication'])">software_id</text><title>software_id
 * bigserial</title></a>
-<a xlink:href='#software.software_id'><use id='ref' x='2193' y='776' xlink:href='#ref'/><title>Referred by software_command ( software_id ) 
+<a xlink:href='#software.software_id'><use id='ref' x='2223' y='776' xlink:href='#ref'/><title>Referred by software_command ( software_id ) 
 Referred by software_publication ( software_id ) </title></a>
   <use id='nn' x='2102' y='792' xlink:href='#nn'/><a xlink:href='#software.name'><text id='qiita.software.name' x='2118' y='802'>name</text><title>name
 * varchar</title></a>
@@ -2765,19 +2765,23 @@ Referred by software_publication ( software_id ) </title></a>
 * varchar</title></a>
   <use id='nn' x='2102' y='822' xlink:href='#nn'/><a xlink:href='#software.description'><text id='qiita.software.description' x='2118' y='832'>description</text><title>description
 * varchar</title></a>
+  <use id='nn' x='2102' y='837' xlink:href='#nn'/><a xlink:href='#software.environment_script'><text id='qiita.software.environment_script' x='2118' y='847'>environment_script</text><title>environment_script
+* varchar</title></a>
+  <use id='nn' x='2102' y='852' xlink:href='#nn'/><a xlink:href='#software.start_script'><text id='qiita.software.start_script' x='2118' y='862'>start_script</text><title>start_script
+* varchar</title></a>
 
 <!-- ============= Table 'oauth_identifiers' ============= -->
-<rect class='table' x='570' y='503' width='105' height='75' rx='7' ry='7' />
-<line class='delim' x1='570.500000' y1='529.500000' x2='674.500000' y2='529.500000'/>
-<line class='delim' x1='585.500000' y1='529.500000' x2='585.500000' y2='577.500000'/>
-<line class='delim' x1='663.500000' y1='529.500000' x2='663.500000' y2='577.500000'/>
-<path d='M 570.50 529.50 L 570.50 510.50 Q 570.50 503.50 577.50 503.50 L 667.50 503.50 Q 674.50 503.50 674.50 510.50 L 674.50 529.50 L570.50 529.50 ' style='fill:url(#tableHeaderGradient4); stroke:none;' />
-<a xlink:href='#oauth_identifiers'><text x='574' y='521'>oauth_identifiers</text><title>Table qiita.oauth_identifiers</title></a>
-  <use id='nn' x='572' y='537' xlink:href='#nn'/><a xlink:href='#oauth_identifiers.client_id'><use id='pk' x='572' y='536' xlink:href='#pk'/><title>Pk pk_oauth2 ( client_id ) </title></a>
-<a xlink:href='#oauth_identifiers.client_id'><text id='qiita.oauth_identifiers.client_id' x='588' y='547'>client_id</text><title>client_id
+<rect class='table' x='555' y='518' width='105' height='75' rx='7' ry='7' />
+<line class='delim' x1='555.500000' y1='544.500000' x2='659.500000' y2='544.500000'/>
+<line class='delim' x1='570.500000' y1='544.500000' x2='570.500000' y2='592.500000'/>
+<line class='delim' x1='648.500000' y1='544.500000' x2='648.500000' y2='592.500000'/>
+<path d='M 555.50 544.50 L 555.50 525.50 Q 555.50 518.50 562.50 518.50 L 652.50 518.50 Q 659.50 518.50 659.50 525.50 L 659.50 544.50 L555.50 544.50 ' style='fill:url(#tableHeaderGradient4); stroke:none;' />
+<a xlink:href='#oauth_identifiers'><text x='559' y='536'>oauth_identifiers</text><title>Table qiita.oauth_identifiers</title></a>
+  <use id='nn' x='557' y='552' xlink:href='#nn'/><a xlink:href='#oauth_identifiers.client_id'><use id='pk' x='557' y='551' xlink:href='#pk'/><title>Pk pk_oauth_identifiers ( client_id ) </title></a>
+<a xlink:href='#oauth_identifiers.client_id'><text id='qiita.oauth_identifiers.client_id' x='573' y='562'>client_id</text><title>client_id
 * varchar(50)</title></a>
-  <use id='nn' x='572' y='552' xlink:href='#nn'/><a xlink:href='#oauth_identifiers.client_secret'><text id='qiita.oauth_identifiers.client_secret' x='588' y='562'>client_secret</text><title>client_secret
-* varchar</title></a>
+  <a xlink:href='#oauth_identifiers.client_secret'><text id='qiita.oauth_identifiers.client_secret' x='573' y='577'>client_secret</text><title>client_secret
+varchar(255)</title></a>
 
 </g></svg>
 
@@ -6603,6 +6607,18 @@ Controlled Vocabulary </td>
 		<td> varchar   </td>
 		<td>  </td>
 	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.environment_script'>environment&#95;script</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='software.start_script'>start&#95;script</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
 	<tr>		<td>Pk</td><td>pk&#95;software</td>
 		<td> ON software&#95;id</td>
@@ -6624,13 +6640,13 @@ Controlled Vocabulary </td>
 		<td>  </td>
 	</tr>
 	<tr>
-		<td>*</td>
+		<td>&nbsp;</td>
 		<td><a name='oauth_identifiers.client_secret'>client&#95;secret</a></td>
-		<td> varchar   </td>
+		<td> varchar&#40; 255 &#41;   </td>
 		<td>  </td>
 	</tr>
 <tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#95;oauth2</td>
+	<tr>		<td>Pk</td><td>pk&#95;oauth&#95;identifiers</td>
 		<td> ON client&#95;id</td>
 		<td>  </td>
 	</tr>
