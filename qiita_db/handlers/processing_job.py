@@ -65,7 +65,8 @@ class JobHandler(OauthBaseHandler):
              name
              - status: the status of the job
         """
-        self.authenticate_header()
+        if not self.authenticate_header():
+            return
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
             cmd = None
@@ -100,7 +101,8 @@ class HeartbeatHandler(OauthBaseHandler):
             - success: whether the heartbeat was successful
             - error: in case that success is false, it contains the error msg
         """
-        self.authenticate_header()
+        if not self.authenticate_header():
+            return
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
             if success:
@@ -120,7 +122,8 @@ class HeartbeatHandler(OauthBaseHandler):
 
 class ActiveStepHandler(OauthBaseHandler):
     def post(self, job_id):
-        self.authenticate_header()
+        if not self.authenticate_header():
+            return
         """Changes the current exectuion step of the given job
 
         Parameters
@@ -155,7 +158,8 @@ class ActiveStepHandler(OauthBaseHandler):
 
 class CompleteHandler(OauthBaseHandler):
     def post(self, job_id):
-        self.authenticate_header()
+        if not self.authenticate_header():
+            return
         """Updates the job to one of the completed statuses: 'success', 'error'
 
         Parameters
@@ -172,7 +176,8 @@ class CompleteHandler(OauthBaseHandler):
             - success: whether the job information was successfuly updated
             - error: in case that success is false, it contains the error msg
         """
-        self.authenticate_header()
+        if not self.authenticate_header():
+            return
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
             if success:

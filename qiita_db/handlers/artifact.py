@@ -91,7 +91,8 @@ class ArtifactMappingHandler(OauthBaseHandler):
              - error: in case that success is false, it contains the error msg
              - mapping: the filepath to the mapping file
         """
-        self.authenticate_header()
+        if not self.authenticate_header():
+            return
         with qdb.sql_connection.TRN:
             artifact, success, error_msg = _get_artifact(artifact_id)
             fp = None
@@ -134,7 +135,8 @@ class ArtifactTypeHandler(OauthBaseHandler):
             - error: in case that success is false, it contains the error msg
             - type: the artifact type
         """
-        self.authenticate_header()
+        if not self.authenticate_header():
+            return
         with qdb.sql_connection.TRN:
             artifact, success, error_msg = _get_artifact(artifact_id)
             atype = None

@@ -77,6 +77,13 @@ class OauthBaseHandler(RequestHandler):
         """Adds proper response for head requests"""
         self.finish()
 
+    def send_error(self):
+        self.set_status(400)
+        self.write({'error': 'invalid_request',
+                    'error_description': 'Oauth2 error: '
+                                         'invalid access token'})
+        self.finish()
+
     def authenticate_header(self):
         """Authenticates the Authorization header token for a given call
 
@@ -87,19 +94,20 @@ class OauthBaseHandler(RequestHandler):
         user, optional
             If this key is attached to a user, the User object for the user
         """
-        token = self.request.headers.get('Authorization', None)
-        if token is None:
-            self.set_status(400)
-            self.write({'error': 'invalid_request',
-                        'error_description': 'Oauth2 error: '
-                                             'invalid access token'})
+        header = self.request.headers.get('Authorization', None)
+        if header is None:
+            self.send_error()
             return False
-        token_info = token.split(token)
+        token_info = header.split()
         if len(token_info) != 2 or token_info[0] != 'Bearer':
-                return False
+            print(len(token_info) != 2, token_info[0] != 'Bearer')
+            self.send_error()
+            return False
+        token = token_info[1]
         db_token = r_client.hget(token, 'timestamp')
         if db_token is None:
             # token has timed out
+            self.send_error()
             return False
         user = r_client.hget(token, 'user')
         if user:
@@ -113,7 +121,7 @@ class TokenAuthHandler(OauthBaseHandler):
         pool = ascii_letters + digits
         return ''.join((SystemRandom().choice(pool) for _ in range(55)))
 
-    def write_error(self, reason=''):
+    def send_error(self, reason=''):
         self.set_status(400)
         self.write({'error': 'Invalid request',
                     'error_description': reason})
@@ -134,14 +142,14 @@ class TokenAuthHandler(OauthBaseHandler):
             self.finish()
             self.set_token(token)
         else:
-            self.write_error('Oauth2 error: invalid client information')
+            self.send_error('Oauth2 error: invalid client information')
 
     def validate_resource_owner(self, username, password, client_id):
         try:
             qdb.user.User.login(username, password)
         except (IncorrectEmailError, IncorrectPasswordError,
                 UnverifiedEmailError):
-            self.write_error('Oauth2 error: invalid user information')
+            self.send_error('Oauth2 error: invalid user information')
             return
 
         if login_client(client_id):
@@ -152,7 +160,7 @@ class TokenAuthHandler(OauthBaseHandler):
             self.finish()
             self.set_token(token, user=username)
         else:
-            self.write_error('Oauth2 error: invalid client information')
+            self.send_error('Oauth2 error: invalid client information')
 
     def post(self):
         # first check for header version of sending auth, meaning client ID
@@ -161,20 +169,20 @@ class TokenAuthHandler(OauthBaseHandler):
             header_info = header.split()
             if header_info[0] != 'Basic':
                 # Invalid Authorization header type for this page
-                self.write_error('Oauth2 error: invalid token type')
+                self.send_error('Oauth2 error: invalid token type')
                 return
 
             # Get client information from the header and validate it
             grant_type = self.get_argument('grant_type', None)
             if grant_type != 'client':
-                self.write_error('Oauth2 error: invalid grant_type')
+                self.send_error('Oauth2 error: invalid grant_type')
                 return
             try:
                 client_id, client_secret = urlsafe_b64decode(
                     header_info[1]).split(':')
             except ValueError:
                 # Split didn't work, so invalid information sent
-                self.write_error('Oauth2 error: invalid base64 encoded info')
+                self.send_error('Oauth2 error: invalid base64 encoded info')
                 return
             self.validate_client(client_id, client_secret)
             return
@@ -186,16 +194,16 @@ class TokenAuthHandler(OauthBaseHandler):
             username = self.get_argument('username', None)
             password = self.get_argument('password', None)
             if not all([username, password, client_id]):
-                self.write_error('Oauth2 error: missing user information')
+                self.send_error('Oauth2 error: missing user information')
             else:
                 self.validate_resource_owner(username, password, client_id)
 
         elif grant_type == 'client':
             client_secret = self.get_argument('client_secret', None)
             if not all([client_id, client_secret]):
-                self.write_error('Oauth2 error: missing client information')
+                self.send_error('Oauth2 error: missing client information')
                 return
             self.validate_client(client_id, client_secret)
         else:
-            self.write_error('Oauth2 error: invalid grant_type')
+            self.send_error('Oauth2 error: invalid grant_type')
             return
