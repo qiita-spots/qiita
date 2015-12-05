@@ -18,7 +18,8 @@ from qiita_db.software import Command
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.constants import (
     TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS_TARGET_GENE)
-from qiita_pet.util import STATUS_STYLER, is_localhost, EBI_LINKIFIER
+from qiita_pet.util import (STATUS_STYLER, is_localhost, EBI_LINKIFIER,
+                            get_artifact_processing_status)
 from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
 from qiita_core.util import execute_as_transaction
@@ -164,8 +165,8 @@ class PrepTemplateInfoTab(BaseUIModule):
         preprocessed_data = None
         show_preprocess_btn = True
         no_preprocess_msg = None
-        preprocessing_status = 'Not preprocessed'
-        preprocessing_status_msg = []
+        preprocessing_status = 'Not processed'
+        preprocessing_status_msg = ""
         if raw_data:
             raw_data_ft = raw_data.artifact_type
             # If the prep template has a raw data associated, it can be
@@ -222,21 +223,9 @@ class PrepTemplateInfoTab(BaseUIModule):
                             "the prep template: %s" % ', '.join(missing_cols))
 
             # Check the processing status
-            for job in raw_data.jobs():
-                job_status = job.status
-                if job_status == 'error':
-                    if preprocessing_status != 'success':
-                        preprocessing_status = 'failed'
-                    preprocessing_status_msg.append(
-                        "<b>Job %s</b>: failed - %s"
-                        % (job.id, job.log.msg))
-                elif job_status == 'success':
-                    preprocessing_status = 'success'
-                else:
-                    preprocessing_status_msg.append(
-                        "<b>Job %s</b>: %s" % (job.id, job_status))
+            preprocessing_status, preprocessing_status_msg = \
+                get_artifact_processing_status(raw_data)
 
-        preprocessing_status_msg = '<br/>'.join(preprocessing_status_msg)
         ebi_link = None
         if prep_template.is_submitted_to_ebi:
             ebi_link = EBI_LINKIFIER.format(study.ebi_study_accession)

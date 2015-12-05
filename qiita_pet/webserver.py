@@ -42,6 +42,7 @@ from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
 from qiita_db.handlers.artifact import (ArtifactFilepathsHandler,
                                         ArtifactMappingHandler,
                                         ArtifactTypeHandler)
+from qiita_db.handlers.reference import ReferenceFilepathsHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
@@ -123,7 +124,9 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)", JobHandler),
             (r"/qiita_db/artifacts/(.*)/filepaths/", ArtifactFilepathsHandler),
             (r"/qiita_db/artifacts/(.*)/mapping/", ArtifactMappingHandler),
-            (r"/qiita_db/artifacts/(.*)/type/", ArtifactTypeHandler)
+            (r"/qiita_db/artifacts/(.*)/type/", ArtifactTypeHandler),
+            (r"/qiita_db/references/(.*)/filepaths/",
+             ReferenceFilepathsHandler)
         ]
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal
