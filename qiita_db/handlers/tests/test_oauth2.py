@@ -53,7 +53,50 @@ class OAuth2HandlerTests(TestHandlerBase):
         self.assertEqual(type(obs_info['access_token']), unicode)
 
     def test_authenticate_client_bad_info(self):
-        pass
+        # Authenticate using bad header
+        obs = self.post(
+            '/qiita_db/authenticate/', {'grant_type': 'client'}, {
+                'Authorization': 'Basic MTluZGtPM29NS3NvQ2hqVlZXbHVGN1FreEhSZl'
+                                 'loVEtTRmJBVnQ4SBADN2daZ0RhTzQ6SjdGZlE3Q1FkT3'
+                                 'h1S2hRQWYxZW9HZ0JBRTgxTnM4R3UzRUthV0ZtM0lPMk'
+                                 'pLaEFtbUNXWnVhYmUwTzVNcDI4czE='})
+        obs_info = loads(obs.body)
+        exp = {'error': 'Invalid request'}
+        self.assertEqual(obs_info, exp)
+
+        obs = self.post(
+            '/qiita_db/authenticate/', {'grant_type': 'client'}, {
+                'Authorization': 'WRONG MTluZGtPM29NS3NvQ2hqVlZXbHVGN1FreEhSZl'
+                                 'loVEtTRmJBVnQ4SWhLN2daZ0RhTzQ6SjdGZlE3Q1FkT3'
+                                 'h1S2hRQWYxZW9HZ0JBRTgxTnM4R3UzRUthV0ZtM0lPMk'
+                                 'pLaEFtbUNXWnVhYmUwTzVNcDI4czE='})
+        obs_info = loads(obs.body)
+        exp = {'error': 'Invalid request'}
+        self.assertEqual(obs_info, exp)
+
+        # Test with bad client ID
+        obs = self.post(
+            '/qiita_db/authenticate/', {
+                'grant_type': 'client',
+                'client_id': 'BADdkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDa'
+                             'O4',
+                'client_secret': 'J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2J'
+                                 'KhAmmCWZuabe0O5Mp28s1'})
+        obs_info = loads(obs.body)
+        exp = {'error': 'Invalid request'}
+        self.assertEqual(obs_info, exp)
+
+        # Test with bad client secret
+        obs = self.post(
+            '/qiita_db/authenticate/', {
+                'grant_type': 'client',
+                'client_id': '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDa'
+                             'O4',
+                'client_secret': 'BADfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2J'
+                                 'KhAmmCWZuabe0O5Mp28s1'})
+        obs_info = loads(obs.body)
+        exp = {'error': 'Invalid request'}
+        self.assertEqual(obs_info, exp)
 
     def test_authenticate_password(self):
         # Authenticate with client_id of a non-user
