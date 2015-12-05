@@ -8,6 +8,8 @@
 
 import traceback
 import sys
+from os.path import exists
+from os import makedirs
 
 import requests
 
@@ -48,6 +50,9 @@ def execute_job(server_url, job_id, output_dir):
         # Execute the given task
         task_name = job_info['command']
         task = TASK_DICT[task_name]
+
+        if not exists(output_dir):
+            makedirs(output_dir)
         try:
             payload = task(server_url, job_id, job_info['parameters'],
                            output_dir)

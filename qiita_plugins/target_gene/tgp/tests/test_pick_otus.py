@@ -7,12 +7,12 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from os.path import isdir, exists
+from os.path import isdir, exists, join
 from os import remove, close
 from shutil import rmtree
 from tempfile import mkstemp, mkdtemp
 
-from tgp.pick_otus import (write_parameters_file,
+from tgp.pick_otus import (write_parameters_file, generate_artifact_info,
                            generate_pick_closed_reference_otus_cmd)
 
 
@@ -58,12 +58,13 @@ class PickOTUsTests(TestCase):
                          ('/directory/reftax.txt', 'reference_tax'),
                          ('/directory/reftree.tre', 'reference_tree')]
 
-        obs = generate_pick_closed_reference_otus_cmd(
+        obs, obs_dir = generate_pick_closed_reference_otus_cmd(
             filepaths, output_dir, parameters, reference_fps)
         exp = ("pick_closed_reference_otus.py -i /directory/seqs.fna "
                "-r /directory/refseqs.fna -o {0}/cr_otus -p {0}/cr_params.txt "
                "-t /directory/reftax.txt".format(output_dir))
         self.assertEqual(obs, exp)
+        self.assertEqual(obs_dir, join(output_dir, 'cr_otus'))
 
     def test_generate_pick_closed_reference_otus_cmd_valueerror(self):
         filepaths = [('/directory/seqs.log', 'log'),
@@ -81,7 +82,23 @@ class PickOTUsTests(TestCase):
             generate_pick_closed_reference_otus_cmd(
                 filepaths, output_dir, parameters, reference_fps)
 
-EXP_PARAMS = """pick_otus:sortmerna_max_pos\t10000
+    def test_generate_artifact_info(self):
+        outdir = mkdtemp()
+        self._clean_up_files.append(outdir)
+        log_fp = join(outdir, "log_20151204223007.txt")
+        with open(log_fp, 'w') as f:
+            f.write("\n")
+        self._clean_up_files.append(log_fp)
+
+        obs = generate_artifact_info(outdir)
+        fps = [(join(outdir, "otu_table.biom"), "biom"),
+               (join(outdir, "sortmerna_picked_otus"), "directory"),
+               (log_fp, "log")]
+        exp = [['BIOM', fps, True, True]]
+        self.assertEqual(obs, exp)
+
+EXP_PARAMS = """pick_otus:otu_picking_method\tsortmerna
+pick_otus:sortmerna_max_pos\t10000
 pick_otus:similarity\t0.97
 pick_otus:sortmerna_coverage\t0.97
 pick_otus:threads\t1
