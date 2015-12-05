@@ -93,7 +93,7 @@
               {% end %}
             {% end %}
             <br>
-            <i>Status:</i> {{preprocessing_status}}
+            <i>Status:</i> {% raw preprocessing_status_message %}
             <br>
             {% if 'zero-size array' in preprocessing_status %}
               <b>Your barcodes do not seem to match your prep template info</b>

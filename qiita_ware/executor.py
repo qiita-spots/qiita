@@ -55,11 +55,12 @@ def execute(user, parameters):
     job_dir = join(get_work_base_dir(), job.id)
     software = parameters.command.software
     plugin_start_script = software.start_script
-    plugin_env_name = software.environment_name
+    plugin_env_script = software.environment_script
 
     # Get the command to start the plugin
-    cmd = [qiita_config.plugin_launcher, plugin_env_name, plugin_start_script,
-           qiita_config.base_url, job.id, job_dir]
+    cmd = '%s "%s" "%s" "%s" "%s" "%s"' % (
+        qiita_config.plugin_launcher, plugin_env_script, plugin_start_script,
+        qiita_config.base_url, job.id, job_dir)
 
     # Start the plugin
     std_out, std_err, return_value = system_call(cmd)

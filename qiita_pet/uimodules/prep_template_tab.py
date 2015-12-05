@@ -165,6 +165,7 @@ class PrepTemplateInfoTab(BaseUIModule):
         show_preprocess_btn = True
         no_preprocess_msg = None
         preprocessing_status = 'Not preprocessed'
+        preprocessing_status_msg = []
         if raw_data:
             raw_data_ft = raw_data.artifact_type
             # If the prep template has a raw data associated, it can be
@@ -221,18 +222,21 @@ class PrepTemplateInfoTab(BaseUIModule):
                             "the prep template: %s" % ', '.join(missing_cols))
 
             # Check the processing status
-            jobs = raw_data.jobs(status='running')
-            if len(jobs) > 0:
-                preprocessing_status = 'running'
-            else:
-                jobs = raw_data.jobs(status='success')
-                if len(jobs) > 0:
+            for job in raw_data.jobs():
+                job_status = job.status
+                if job_status == 'error':
+                    if preprocessing_status != 'success':
+                        preprocessing_status = 'failed'
+                    preprocessing_status_msg.append(
+                        "<b>Job %s</b>: failed - %s"
+                        % (job.id, job.log.msg))
+                elif job_status == 'success':
                     preprocessing_status = 'success'
                 else:
-                    jobs = raw_data.jobs(status='error')
-                    if len(jobs) > 0:
-                        preprocessing_status = 'failed: %s' % jobs[0].log.msg
+                    preprocessing_status_msg.append(
+                        "<b>Job %s</b>: %s" % (job.id, job_status))
 
+        preprocessing_status_msg = '<br/>'.join(preprocessing_status_msg)
         ebi_link = None
         if prep_template.is_submitted_to_ebi:
             ebi_link = EBI_LINKIFIER.format(study.ebi_study_accession)
@@ -258,6 +262,7 @@ class PrepTemplateInfoTab(BaseUIModule):
             preprocess_options=preprocess_options,
             preprocessed_data=preprocessed_data,
             preprocessing_status=preprocessing_status,
+            preprocessing_status_message=preprocessing_status_msg,
             show_preprocess_btn=show_preprocess_btn,
             no_preprocess_msg=no_preprocess_msg,
             ebi_link=ebi_link)
