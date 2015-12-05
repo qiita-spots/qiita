@@ -6,6 +6,7 @@ from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
 import qiita_db as qdb
 
+
 def login_client(client_id, client_secret=None):
     """Login client_id, optionally with client_secret
 
@@ -30,12 +31,13 @@ def login_client(client_id, client_secret=None):
                     WHERE client_id = %s{0})"""
         sql_info = [client_id]
         if client_secret is not None:
-             sql.format("AND client_secret = %s")
-             sql_info.append(client_secret)
+            sql.format("AND client_secret = %s")
+            sql_info.append(client_secret)
         else:
             sql.format("")
         qdb.sql_connection.TRN.add(sql, sql_info)
         return qdb.sql_connection.TRN.execute_fetchlast()
+
 
 class OauthBaseHandler(RequestHandler):
     def write_error(self, status_code, **kwargs):
