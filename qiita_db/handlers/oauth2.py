@@ -46,7 +46,7 @@ def login_client(client_id, client_secret=None):
             sql = sql.format("AND client_secret = %s")
             sql_info.append(client_secret)
         else:
-            sql = sql.format("")
+            sql = sql.format("AND client_secret IS NULL")
         qdb.sql_connection.TRN.add(sql, sql_info)
         return qdb.sql_connection.TRN.execute_fetchlast()
 

@@ -56,10 +56,66 @@ class OAuth2HandlerTests(TestHandlerBase):
         pass
 
     def test_authenticate_password(self):
-        pass
+        # Authenticate with client_id of a non-user
+        obs = self.post(
+            '/qiita_db/authenticate/', {
+                'grant_type': 'client',
+                'client_id': 'DWelYzEYJYcZ4wlqUp0bHGXojrvZVz0CNBJvOqUKcrPQ5p4U'
+                             'qE',
+                'username': 'test@foo.bar',
+                'password': 'password'})
+        obs_info = loads(obs.body)
+        exp = {'error': 'Invalid request'}
+        self.assertEqual(obs_info, exp)
 
     def test_authenticate_password_bad_info(self):
-        pass
+        # Authenticate with client_id of a non-user
+        obs = self.post(
+            '/qiita_db/authenticate/', {
+                'grant_type': 'client',
+                'client_id': '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDa'
+                             'O4',
+                'username': 'test@foo.bar',
+                'password': 'password'})
+        obs_info = loads(obs.body)
+        exp = {'error': 'Invalid request'}
+        self.assertEqual(obs_info, exp)
+
+        # Authenticate with bad client_id
+        # Authenticate with client_id of a non-user
+        obs = self.post(
+            '/qiita_db/authenticate/', {
+                'grant_type': 'client',
+                'client_id': 'WAAAAAAAAAARG',
+                'username': 'test@foo.bar',
+                'password': 'password'})
+        obs_info = loads(obs.body)
+        exp = {'error': 'Invalid request'}
+        self.assertEqual(obs_info, exp)
+
+        # Authenticate with bad username
+        obs = self.post(
+            '/qiita_db/authenticate/', {
+                'grant_type': 'client',
+                'client_id': 'DWelYzEYJYcZ4wlqUp0bHGXojrvZVz0CNBJvOqUKcrPQ5p4U'
+                             'qE',
+                'username': 'BROKEN@FAKE.COM',
+                'password': 'password'})
+        obs_info = loads(obs.body)
+        exp = {'error': 'Invalid request'}
+        self.assertEqual(obs_info, exp)
+
+        # Authenticate with bad password
+        obs = self.post(
+            '/qiita_db/authenticate/', {
+                'grant_type': 'client',
+                'client_id': 'DWelYzEYJYcZ4wlqUp0bHGXojrvZVz0CNBJvOqUKcrPQ5p4U'
+                             'qE',
+                'username': 'test@foo.bar',
+                'password': 'NOTAReALPASSworD'})
+        obs_info = loads(obs.body)
+        exp = {'error': 'Invalid request'}
+        self.assertEqual(obs_info, exp)
 
 if __name__ == "__main__":
     main()
