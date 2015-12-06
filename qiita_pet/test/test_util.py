@@ -2,6 +2,7 @@ from unittest import TestCase, main
 
 from qiita_pet.util import (clean_str, generate_param_str, is_localhost,
                             convert_text_html)
+from qiita_db.artifact import Artifact
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -18,11 +19,11 @@ class TestUtil(TestCase):
         self.assertEqual(obs, "Remove_Spaces_FromString")
 
     def test_generate_param_str(self):
-        params = ProcessedSortmernaParams(1)
+        params = Artifact(4).processing_parameters
         obs = generate_param_str(params)
         exp = ("<b>Reference:</b> Greengenes 13_8<br/>"
                "<b>similarity:</b> 0.97<br/>"
-               "<b>sortmerna_e_value:</b> 1.0<br/>"
+               "<b>sortmerna_e_value:</b> 1<br/>"
                "<b>sortmerna_max_pos:</b> 10000<br/>"
                "<b>threads:</b> 1<br/>"
                "<b>sortmerna_coverage:</b> 0.97")
