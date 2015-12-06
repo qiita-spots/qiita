@@ -48,6 +48,11 @@ class Artifact(qdb.base.QiitaObject):
     def iter_by_visibility(cls, visibility):
         r"""Iterator over the artifacts with the given visibility
 
+        Parameters
+        ----------
+        visibility : str
+            The visibility level
+
         Returns
         -------
         generator of qiita_db.artifact.Artifact

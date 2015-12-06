@@ -655,8 +655,6 @@ class Study(qdb.base.QiitaObject):
                      SELECT %s, %s
                      WHERE NOT EXISTS(
                         SELECT doi FROM qiita.publication WHERE doi = %s)"""
-            # sql = """INSERT INTO qiita.publication (doi, pubmed_id)
-            #          VALUES (%s, %s)"""
             sql_args = [(doi, pmid, doi) for doi, pmid in values]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
