@@ -239,9 +239,9 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         obs_bool, obs_msg = self.prep_template.can_be_extended(
             ["NEW_SAMPLE"], [])
         self.assertFalse(obs_bool)
-        exp_msg = ("The artifact attached to the prep template has been "
-                   "already processed. No new samples can be added to the "
-                   "prep template")
+        exp_msg = ("The artifact attached to the prep template has already "
+                   "been processed. No new samples can be added to the prep "
+                   "template")
         self.assertEqual(obs_msg, exp_msg)
 
 
