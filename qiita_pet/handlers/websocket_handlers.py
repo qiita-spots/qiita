@@ -11,7 +11,6 @@ from future.utils import viewvalues
 
 from moi import r_client
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_db.analysis import Analysis
 from qiita_db.artifact import Artifact
 from qiita_core.util import execute_as_transaction
 

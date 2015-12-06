@@ -79,6 +79,17 @@ class ArtifactTests(TestCase):
             if exists(f):
                 remove(f)
 
+    def test_iter(self):
+        obs = list(qdb.artifact.Artifact.iter_by_visibility('public'))
+        self.assertEqual(obs, [])
+
+        obs = list(qdb.artifact.Artifact.iter_by_visibility('private'))
+        exp = [qdb.artifact.Artifact(1),
+               qdb.artifact.Artifact(2),
+               qdb.artifact.Artifact(3),
+               qdb.artifact.Artifact(4)]
+        self.assertEqual(obs, exp)
+
     def test_iter_public(self):
         obs = list(qdb.artifact.Artifact.iter_public())
         exp = []

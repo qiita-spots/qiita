@@ -54,21 +54,3 @@ def create_raw_data(filetype, prep_template, filepaths):
     Needs to be dispachable because it moves large files
     """
     Artifact.create(filepaths, filetype, prep_template=prep_template)
-
-
-def add_files_to_raw_data(raw_data_id, filepaths):
-    """Add files to raw data
-
-    Needs to be dispachable because it moves large files
-    """
-    rd = RawData(raw_data_id)
-    rd.add_filepaths(filepaths)
-
-
-def unlink_all_files(raw_data_id):
-    """Removes all files from raw data
-
-    Needs to be dispachable because it does I/O and a lot of DB calls
-    """
-    rd = RawData(raw_data_id)
-    rd.clear_filepaths()

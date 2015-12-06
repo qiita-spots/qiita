@@ -253,11 +253,11 @@ class StudyApprovalList(BaseHandler):
         if user.level != 'admin':
             raise HTTPError(403, 'User %s is not admin' % self.current_user)
 
-        result_generator = viewitems(
-            ProcessedData.get_by_status_grouped_by_study('awaiting_approval'))
-        study_generator = ((Study(sid), pds) for sid, pds in result_generator)
+        studies = defaultdict(list)
+        for artifact in Artifact.iter_by_visibility('awaiting_approval'):
+            studies[artifact.study].append(artifact.id)
         parsed_studies = [(s.id, s.title, s.owner, pds)
-                          for s, pds in study_generator]
+                          for s, pds in viewitems(studies)]
 
         self.render('admin_approval.html',
                     study_info=parsed_studies)
