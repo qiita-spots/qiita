@@ -9,6 +9,7 @@ from __future__ import division
 from json import dumps
 from future.utils import viewitems
 from collections import defaultdict
+from os.path import basename
 
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
@@ -21,6 +22,7 @@ from qiita_db.search import QiitaStudySearch
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
+from qiita_db.reference import Reference
 from qiita_db.util import get_table_cols, get_pubmed_ids_from_dois
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
@@ -126,6 +128,18 @@ def _build_single_proc_data_info(proc_data_id, data_type, samples):
     proc_info['pid'] = proc_data_id
     proc_info['data_type'] = data_type
     proc_info['processed_date'] = str(proc_info['processed_date'])
+    params = proc_data.processing_parameters.values
+    del params['input_data']
+    ref = Reference(params.pop('reference'))
+    proc_info['reference_name'] = ref.name
+    proc_info['taxonomy_filepath'] = basename(ref.taxonomy_fp)
+    proc_info['sequence_filepath'] = basename(ref.sequence_fp)
+    proc_info['tree_filepath'] = basename(ref.tree_fp)
+    proc_info['reference_version'] = ref.version
+    proc_info['algorithm'] = 'sortmerna'
+    proc_info['samples'] = sorted(proc_data.prep_templates[0].keys())
+    proc_info.update(params)
+
     return proc_info
 
 

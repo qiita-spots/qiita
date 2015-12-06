@@ -18,18 +18,20 @@ class TestHelpers(TestHandlerBase):
 
     def setUp(self):
         self.proc_data_exp = {
-            'pid': 1,
-            'processed_date': '2012-10-01 09:30:27',
+            'pid': 4,
+            'processed_date': '2012-10-02 17:30:00',
             'data_type': '18S',
-            'algorithm': 'uclust',
+            'algorithm': 'sortmerna',
             'reference_name': 'Greengenes',
             'reference_version': '13_8',
             'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
             'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
             'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
             'similarity': 0.97,
-            'enable_rev_strand_match': True,
-            'suppress_new_clusters': True,
+            'sortmerna_max_pos': 10000,
+            'sortmerna_e_value': 1,
+            'sortmerna_coverage': 0.97,
+            'threads': 1,
             'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
                         '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
                         '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
@@ -84,7 +86,7 @@ class TestHelpers(TestHandlerBase):
             'study_id': 1,
             'email': 'test@foo.bar',
             'principal_investigator_id': 3,
-            'pmid': ['123456', '7891011'],
+            'publication_doi': ['10.100/123456', '10.100/7891011'],
             'study_title':
                 'Identification of the Microbiomes for Cannabis Soils',
             'metadata_complete': True,
@@ -107,7 +109,7 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, self.single_exp)
 
     def test_build_single_proc_data_info(self):
-        obs = _build_single_proc_data_info(1, '18S',
+        obs = _build_single_proc_data_info(4, '18S',
                                            self.proc_data_exp['samples'])
         self.assertEqual(obs, self.proc_data_exp)
 
