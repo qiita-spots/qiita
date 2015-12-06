@@ -93,7 +93,6 @@ def generate_param_str(param):
         The html string with the parameter set values
     """
     values = param.values
-    del values['input_data']
     ref = Reference(values['reference'])
     result = ["<b>Reference:</b> %s %s" % (ref.name, ref.version)]
     result.extend("<b>%s:</b> %s" % (name, value)

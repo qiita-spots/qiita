@@ -2,7 +2,7 @@ from unittest import TestCase, main
 
 from qiita_pet.util import (clean_str, generate_param_str, is_localhost,
                             convert_text_html)
-from qiita_db.artifact import Artifact
+from qiita_db.software import DefaultParameters
 
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
@@ -19,7 +19,7 @@ class TestUtil(TestCase):
         self.assertEqual(obs, "Remove_Spaces_FromString")
 
     def test_generate_param_str(self):
-        params = Artifact(4).processing_parameters
+        params = DefaultParameters(10)
         obs = generate_param_str(params)
         exp = ("<b>Reference:</b> Greengenes 13_8<br/>"
                "<b>similarity:</b> 0.97<br/>"
