@@ -753,9 +753,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
         for fp_id, fp, _ in filepaths:
             qdb.sql_connection.TRN.add(sql, [fp_id])
 
-            # removing id from the raw data filename
-            filename = basename(fp).split('_', 1)[1]
-            destination = path_builder(filename)
+            destination = path_builder(basename(fp))
 
             qdb.sql_connection.TRN.add_post_rollback_func(
                 move, destination, fp)

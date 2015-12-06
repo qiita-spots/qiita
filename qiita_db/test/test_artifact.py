@@ -278,6 +278,11 @@ class ArtifactTests(TestCase):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
 
+        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
+                          str(test.study.id))
+        self._clean_up_files.extend(
+            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+
         qdb.artifact.Artifact.delete(test.id)
 
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):

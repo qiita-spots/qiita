@@ -326,7 +326,7 @@ class DBUtilTests(TestCase):
                                 str(st.id))
         for _, fp, _ in filepaths:
             self.assertFalse(exists(fp))
-            new_fp = join(path_for_removal, basename(fp).split('_', 1)[1])
+            new_fp = join(path_for_removal, basename(fp))
             self.assertTrue(exists(new_fp))
 
             self.files_to_remove.append(new_fp)
