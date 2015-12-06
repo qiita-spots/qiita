@@ -64,9 +64,13 @@ class TestHelpers(TestHandlerBase):
             'number_samples_collected': 27,
             'shared':
                 '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
-            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-                    'pubmed/123456">123456</a>, <a target="_blank" href="http:'
-                    '//www.ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
+            'publication_doi':
+                '<a target="_blank" href="http://dx.doi.org/10.100/123456">'
+                '10.100/123456</a>, <a target="_blank" '
+                'href="http://dx.doi.org/10.100/7891011">10.100/7891011</a>',
+            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov'
+                    '/pubmed/7891011">7891011</a>, <a target="_blank" href='
+                    '"http://www.ncbi.nlm.nih.gov/pubmed/123456">123456</a>',
             'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">'
                   'PIDude</a>',
             'proc_data_info': [self.proc_data_exp]
@@ -80,8 +84,8 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_single_study_info(self):
-        study_proc = {1: {'18S': [1]}}
-        proc_samples = {1: self.proc_data_exp['samples']}
+        study_proc = {1: {'18S': [4]}}
+        proc_samples = {4: self.proc_data_exp['samples']}
         study_info = {
             'study_id': 1,
             'email': 'test@foo.bar',
