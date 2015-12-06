@@ -1,16 +1,13 @@
 from json import loads
 
-from tornado.web import authenticated, HTTPError
+from tornado.web import authenticated
 from moi import r_client
 
 from .base_handlers import BaseHandler
-from .util import check_access
 
 from qiita_ware.context import submit
 from qiita_ware.dispatchable import create_raw_data
 from qiita_core.util import execute_as_transaction
-from qiita_db.study import Study
-from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.util import get_mountpoint
 from qiita_db.metadata_template.prep_template import PrepTemplate
 
