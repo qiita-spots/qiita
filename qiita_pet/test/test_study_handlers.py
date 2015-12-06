@@ -285,7 +285,8 @@ class TestStudyEditHandler(TestHandlerBase):
             'new_people_phones': [],
             'study_title': 'dummy title',
             'study_alias': study_info['study_alias'],
-            'pubmed_id': ','.join(study.pmids),
+            'publications_doi': ','.join(
+                [doi for doi, _ in study.publications]),
             'study_abstract': study_info['study_abstract'],
             'study_description': study_info['study_description'],
             'principal_investigator': study_info['principal_investigator_id'],

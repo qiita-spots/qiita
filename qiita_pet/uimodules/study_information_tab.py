@@ -38,9 +38,9 @@ class StudyInformationTab(BaseUIModule):
         publications = []
         for doi, pmid in study.publications:
             if doi is not None:
-                publications.append(doi_linkifier(doi))
+                publications.append(doi_linkifier([doi]))
             if pmid is not None:
-                publications.append(pubmed_linkifier(pmid))
+                publications.append(pubmed_linkifier([pmid]))
         publications = ", ".join(publications)
         princ_inv = StudyPerson(study_info['principal_investigator_id'])
         pi_link = study_person_linkifier((princ_inv.email, princ_inv.name))
