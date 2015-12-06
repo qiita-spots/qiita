@@ -16,6 +16,11 @@ def _get_reference(r_id):
 
     Parameters
     ----------
+    r_id : int
+        The reference id
+
+    Returns
+    -------
     qiita_db.reference.Reference, bool, string
         The requested reference or None
         Whether if we could get the reference object or not

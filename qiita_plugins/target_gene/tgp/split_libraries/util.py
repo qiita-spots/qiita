@@ -155,8 +155,13 @@ def generate_artifact_info(sl_out):
 
     Returns
     -------
-    list
-        The artifacts information
+    list of [str, list of (str, str), bool, bool]
+        The artifacts information to include in the payload when the split
+        libraries job is completed.
+        - The artifact type
+        - The list of filepaths with their artifact type
+        - Whether the artifact can be submitted to ebi
+        - Whether the artifact can be submitted to vamps
     """
     path_builder = partial(join, sl_out)
     filepaths = [(path_builder('seqs.fna'), 'preprocessed_fasta'),

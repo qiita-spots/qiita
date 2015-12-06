@@ -128,7 +128,7 @@ def get_artifact_processing_status(artifact):
 
     Returns
     -------
-    tuple of (str, str)
+    str, str
         The processing status {'processing', 'failed', 'success',
             'Not processed'}
         A summary of the jobs attached to the artifact

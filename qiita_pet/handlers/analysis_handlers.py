@@ -271,9 +271,6 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
         len_prefix = len(commonprefix([root, absolute_path]))
         base_requested_fp = absolute_path[len_prefix:].split(sep, 1)[0]
 
-        print len_prefix, base_requested_fp, absolute_path
-        print root, absolute_path, commonprefix([root, absolute_path])
-
         current_user = self.current_user
 
         # If the user is an admin, then allow access

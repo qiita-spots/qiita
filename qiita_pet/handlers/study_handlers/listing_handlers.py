@@ -191,8 +191,7 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     cols = ['study_id', 'email', 'principal_investigator_id',
             'publication_doi', 'study_title', 'metadata_complete',
             'number_samples_collected', 'study_abstract']
-    study_ids = [s.id for s in study_set]
-    study_info = Study.get_info(study_ids, cols)
+    study_info = Study.get_info([s.id for s in study_set], cols)
 
     # get info for the studies
     infolist = []
