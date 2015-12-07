@@ -274,6 +274,10 @@ def split_libraries(server_url, job_id, parameters, out_dir):
                % (join(output_dir, 'seqs.fna'),
                   join(output_dir, 'seqs_filtered.qual'),
                   output_dir))
+        std_out, std_err, return_value = system_call(cmd)
+        if return_value != 0:
+            raise RuntimeError(
+                "Error converting the fasta/qual files to fastq")
     update_job_step(
         server_url, job_id,
         "Step 4 of 4: Merging results (generating demux file)")
