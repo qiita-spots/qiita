@@ -140,6 +140,8 @@ class ActiveStepHandler(OauthBaseHandler):
             - success: whether the job's step was successfully updated
             - error: in case that success is false, it contains the error msg
         """
+        if not self.authenticate_header():
+            return
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
             if success:
