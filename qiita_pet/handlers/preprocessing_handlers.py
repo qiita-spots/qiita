@@ -1,10 +1,10 @@
 from tornado.web import authenticated
 
 from .base_handlers import BaseHandler
-from qiita_ware.dispatchable import preprocessor
 from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_ware.context import submit
+from qiita_ware.executor import plugin_submit
 from qiita_core.util import execute_as_transaction
+from qiita_db.software import Parameters, DefaultParameters
 
 
 class PreprocessHandler(BaseHandler):
@@ -16,9 +16,10 @@ class PreprocessHandler(BaseHandler):
         raw_data = PrepTemplate(prep_template_id).artifact
         param_id = int(self.get_argument('preprocessing_parameters_id'))
 
-        user_id = self.current_user.id
+        parameters = Parameters.from_default_params(
+            DefaultParameters(param_id), {'input_data': raw_data.id})
 
-        job_id = submit(user_id, preprocessor, user_id, raw_data.id, param_id)
+        job_id = plugin_submit(self.current_user, parameters)
 
         self.render('compute_wait.html',
                     job_id=job_id, title='Preprocessing',
