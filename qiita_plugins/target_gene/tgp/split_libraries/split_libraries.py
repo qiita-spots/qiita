@@ -266,14 +266,14 @@ def split_libraries(server_url, job_id, parameters, out_dir):
                 raise RuntimeError(
                     "Error concatenating %s files:\nStd output: %s\n"
                     "Std error:%s" % (tc, std_out, std_err))
-        if quals:
-            update_job_step(
-                server_url, job_id,
-                "Step 4 of 4: Merging results (converting fastqual to fastq)")
-            cmd = ("convert_fastaqual_fastq.py -f %s -q %s -o %s -F"
-                   % (join(output_dir, 'seqs.fna'),
-                      join(output_dir, 'seqs_filtered.qual'),
-                      output_dir))
+    if quals:
+        update_job_step(
+            server_url, job_id,
+            "Step 4 of 4: Merging results (converting fastqual to fastq)")
+        cmd = ("convert_fastaqual_fastq.py -f %s -q %s -o %s -F"
+               % (join(output_dir, 'seqs.fna'),
+                  join(output_dir, 'seqs_filtered.qual'),
+                  output_dir))
     update_job_step(
         server_url, job_id,
         "Step 4 of 4: Merging results (generating demux file)")
