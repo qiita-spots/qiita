@@ -235,7 +235,7 @@ def split_libraries(server_url, job_id, parameters, out_dir):
     output_dir = join(out_dir, 'sl_out')
 
     commands, sl_outs = generate_split_libraries_cmd(
-        filepaths, mapping_file, atype, output_dir, parameters)
+        seqs, quals, mapping_file, output_dir, parameters)
 
     # Step 3 execute split libraries
     cmd_len = len(commands)
