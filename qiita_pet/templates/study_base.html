@@ -4,7 +4,6 @@
   function fill_base(sid) {
   $.get( "/study/description/baseinfo/", { study_id: sid} )
     .done(function( data ) {
-      console.log(data);
       $("#study-main").html(data);
       $("#study-prep-graph").hide();
       $("#study-file-breadcrumbs").hide();
@@ -33,9 +32,7 @@
       {% set cleaned_dt = dt.replace(' ', '_') %}
         <div class="panel-heading" role="tab" id="heading{{cleaned_dt}}">
           <h4 class="panel-title">
-            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{cleaned_dt}}" aria-expanded="true" aria-controls="collapse{{cleaned_dt}}">
-              {{dt}}
-            </a>
+            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{cleaned_dt}}" aria-expanded="true" aria-controls="collapse{{cleaned_dt}}">{{dt}}</a>
           </h4>
         </div>
         {% end %}
