@@ -25,7 +25,7 @@ from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX,
     StudyIndexHandler, MetadataSummaryHandler, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
-    VAMPSHandler)
+    VAMPSHandler, StudyBaseInfoAJAX)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
@@ -105,6 +105,8 @@ class Application(tornado.web.Application):
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/process", ProcessHandler),
             (r"/study/sharing/", ShareStudyAJAX),
+            # ORDER HERE MATTERS. Must have the (.*) at the end
+            (r"/study/description/baseinfo/", StudyBaseInfoAJAX),
             (r"/study/description/(.*)", StudyIndexHandler),
             (r"/study/upload/(.*)", StudyUploadFileHandler),
             (r"/upload/", UploadFileHandler),

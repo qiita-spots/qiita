@@ -1,4 +1,21 @@
 {% extends sitebase.html %}
+{% block head %}
+<script type="text/javascript">
+  function fill_base(sid) {
+  $.get( "/study/description/baseinfo/", { study_id: sid} )
+    .done(function( data ) {
+      console.log(data);
+      $("#study-main").html(data);
+      $("#study-prep-graph").hide();
+      $("#study-file-breadcrumbs").hide();
+    });
+  }
+
+  $(document).ready(function() {
+    fill_base({{study_info['study_id']}});
+  });
+</script>
+{% end %}
 {% block content %}
 <div class="row">
   <div class="col-md-3">
@@ -52,17 +69,7 @@
     {% end %}
     <div class="row"><div class="col-md-12" id="study-prep-graph"></div></div>
     <div class="row"><div class="col-md-12" id="study-file-breadcrumbs"></div></div>
-    <div class="row">
-      <div class="col-md-12" id="study-main">
-        <p style="font-weight:bold;">Abstract</p>
-        <p>{{study_info['study_abstract']}}</p>
-        Study ID:  {{study_info['study_id']}}<br />
-        Publications: {% for pub in study_info['publication_doi'] %}<a href="http://dx.doi.org/{{pub}}" target="_blank">{{pub}}</a> {% end %}<br />
-        PI: {{study_info['principal_investigator']}}<br />
-        Lab Contact: {{study_info['lab_person']}}<br />
-        Samples: {{study_info['num_samples']}}
-      </div>
-    </div>
+    <div class="row"><div class="col-md-12" id="study-main"></div></div>
   </div>
 </div>
 {% end %}

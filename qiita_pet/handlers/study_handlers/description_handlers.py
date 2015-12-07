@@ -110,3 +110,31 @@ class StudyIndexHandler(BaseHandler):
         study_info = self.study_info_proxy(study)
         self.render("study_base.html", prep_info=prep_info,
                     data_types=data_types, study_info=study_info)
+
+
+class StudyBaseInfoAJAX(BaseHandler):
+    def study_info_proxy(self, study):
+        """Proxies expected json from the API for base study info"""
+        study_info = Study.get_info([study.id])[0]
+
+        pi = StudyPerson(study_info["principal_investigator_id"])
+        study_info["principal_investigator"] = '%s (%s)' % (
+            pi.name, pi.affiliation)
+        del study_info["principal_investigator_id"]
+
+        lab_person = StudyPerson(study_info["lab_person_id"])
+        study_info["lab_person"] = '%s (%s)' % (
+            lab_person.name, lab_person.affiliation)
+        del study_info["lab_person_id"]
+        samples = study.sample_template.keys()
+        study_info['num_samples'] = 0 if samples is None else len(set(samples))
+        return study_info
+
+    @authenticated
+    def get(self):
+        sid = self.get_argument('study_id')
+        study = Study(_to_int(sid))
+        check_access(self.current_user, study, raise_error=True)
+        study_info = self.study_info_proxy(study)
+        self.render('study_description_templates/base_info.html',
+                    study_info=study_info)

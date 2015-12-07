@@ -1,0 +1,7 @@
+<p style="font-weight:bold;">Abstract</p>
+<p>{{study_info['study_abstract']}}</p>
+Study ID:  {{study_info['study_id']}}<br />
+Publications: {% for pub in study_info['publication_doi'] %}<a href="http://dx.doi.org/{{pub}}" target="_blank">{{pub}}</a> {% end %}<br />
+PI: {{study_info['principal_investigator']}}<br />
+Lab Contact: {{study_info['lab_person']}}<br />
+Samples: {{study_info['num_samples']}}
