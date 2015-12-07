@@ -504,3 +504,8 @@ INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
            (1, 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
            (1, 'b72369f9-a886-4193-8d3d-f7b504168e75'),
            (2, 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');
+
+-- Add client ids and secrets
+
+INSERT INTO qiita.oauth_identifiers (client_id) VALUES ('DWelYzEYJYcZ4wlqUp0bHGXojrvZVz0CNBJvOqUKcrPQ5p4UqE');
+INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4', 'J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKhAmmCWZuabe0O5Mp28s1');
