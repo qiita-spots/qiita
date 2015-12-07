@@ -1,0 +1,59 @@
+{% extends sitebase.html %}
+{% block content %}
+<div class="row">
+  <div class="col-md-3">
+  <h3>Study Information</h3>
+    <a href="#">Sample Template</a><br />
+    <a href="#">Sample Summary</a><br />
+    <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
+    <a href="#">Edit Study Information</a><br />
+    <a href="#">Delete Study</a>
+
+    <h3>Data Types</h3>
+    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+      <div class="panel panel-default">
+      {% for dt in prep_info %}
+      {% set cleaned_dt = dt.replace('', '_') %}
+        <div class="panel-heading" role="tab" id="heading{{cleaned_dt}}">
+          <h4 class="panel-title">
+            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{cleaned_dt}}" aria-expanded="true" aria-controls="collapse{{cleaned_dt}}">
+              {{dt}}
+            </a>
+          </h4>
+        </div>
+        {% end %}
+        {% for prep in prep_info[dt] %}
+        <div id="collapse{{cleaned_dt}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{cleaned_dt}}">
+          <div class="panel-body">
+            <a href="#" style="display:block;color:black;">
+            {{prep['name']}} - ID {{prep['id']}} - {{prep['status']}}<br/>
+            {{prep['start_artifact']}} - ID {{prep['start_artifact_id']}}<br/>
+            {{prep['last_artifact']}}
+            </a>
+          </div>
+        </div>
+        {% end %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-9">
+    <div class="row"><div class="col-md-12" id="study-base-info">
+      <h2>{{study_info['study_title']}} - ID {{study_info['study_id']}}</h2>
+      <h3>{{study_info['study_alias']}}</h3>
+    </div></div>
+    <div class="row"><div class="col-md-12" id="study-prep-graph"></div></div>
+    <div class="row"><div class="col-md-12" id="study-file-breadcrumbs"></div></div>
+    <div class="row">
+      <div class="col-md-12" id="study-main">
+        <p style="font-weight:bold;">Abstract</p>
+        <p>{{study_info['study_abstract']}}</p>
+        Study ID:  {{study_info['study_id']}}<br />
+        Publications: {% for pub in study_info['publication_doi'] %}<a href=" http://dx.doi.org/{{pub}}">{{pub}}</a> {% end %}<br />
+        PI: {{study_info['principal_investigator']}}<br />
+        Lab Contact: {{study_info['lab_person']}}<br />
+        Samples: {{study_info['num_samples']}}
+      </div>
+    </div>
+  </div>
+</div>
+{% end %}

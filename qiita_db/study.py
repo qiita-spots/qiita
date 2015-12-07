@@ -152,6 +152,19 @@ class Study(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBStatusError(
                 "Illegal operation on non-sandbox study!")
 
+    @staticmethod
+    def all_data_types():
+        """Returns list of all the data types available in the system
+
+        Returns
+        -------
+        list of str
+        """
+        with qdb.sql_connection.TRN:
+            sql = "SELECT DISTINCT data_type FROM qiita.data_type"
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchflatten()
+
     @property
     def status(self):
         r"""The status is inferred by the status of its artifacts"""
@@ -263,7 +276,7 @@ class Study(qdb.base.QiitaObject):
             if study_ids is not None and len(res) != len(study_ids):
                 raise qdb.exceptions.QiitaDBError(
                     'Non-portal-accessible studies asked for!')
-            return res
+            return [dict(r) for r in res]
 
     @classmethod
     def exists(cls, study_title):
