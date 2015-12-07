@@ -15,8 +15,6 @@ from qiita_db.study import Study, StudyPerson
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
-from qiita_pet.handlers.study_handlers.listing_handlers import (
-    ListStudiesHandler)
 
 html_error_message = "<b>An error occurred %s %s</b></br>%s"
 
@@ -105,8 +103,7 @@ class StudyIndexHandler(BaseHandler):
 
     @authenticated
     def get(self, study_id):
-        sid = _to_int(study_id)
-        study = Study(sid)
+        study = Study(_to_int(study_id))
         check_access(self.current_user, study, raise_error=True)
         prep_info = self.study_prep_proxy(study)
         data_types = self.study_data_types_proxy()
