@@ -91,7 +91,6 @@ class Application(tornado.web.Application):
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
             (r"/metadata_summary/(.*)", MetadataSummaryHandler),
-            #(r"/preprocessing_summary/(.*)", PreprocessingSummaryHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             (r"/compute_complete/(.*)", ComputeCompleteHandler),
             (r"/study/create/", StudyEditHandler),
@@ -105,7 +104,8 @@ class Application(tornado.web.Application):
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/process", ProcessHandler),
             (r"/study/sharing/", ShareStudyAJAX),
-            # ORDER HERE MATTERS. Must have the (.*) at the end
+            # /study/description/ PAGES ORDER MATTERS.
+            # Must have the "/study/description/(.*)" at the end of the block
             (r"/study/description/baseinfo/", StudyBaseInfoAJAX),
             (r"/study/description/(.*)", StudyIndexHandler),
             (r"/study/upload/(.*)", StudyUploadFileHandler),
