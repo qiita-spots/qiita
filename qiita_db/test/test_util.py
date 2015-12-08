@@ -67,22 +67,6 @@ class DBUtilTests(TestCase):
                "pass_reset_timestamp"}
         self.assertEqual(set(obs), exp)
 
-    def test_get_table_cols_w_type(self):
-        obs = qdb.util.get_table_cols_w_type(
-            "preprocessed_sequence_illumina_params")
-        exp = [['param_set_name', 'character varying'],
-               ['parameters_id', 'bigint'],
-               ['max_bad_run_length', 'integer'],
-               ['min_per_read_length_fraction', 'real'],
-               ['sequence_max_n', 'integer'],
-               ['rev_comp_barcode', 'boolean'],
-               ['rev_comp_mapping_barcodes', 'boolean'],
-               ['rev_comp', 'boolean'],
-               ['phred_quality_threshold', 'integer'],
-               ['barcode_type', 'character varying'],
-               ['max_barcode_errors', 'real']]
-        self.assertItemsEqual(obs, exp)
-
     def test_exists_table(self):
         """Correctly checks if a table exists"""
         # True cases
@@ -96,26 +80,6 @@ class DBUtilTests(TestCase):
         self.assertFalse(qdb.util.exists_table("prep_2"))
         self.assertFalse(qdb.util.exists_table("foo_table"))
         self.assertFalse(qdb.util.exists_table("bar_table"))
-
-    def test_exists_dynamic_table(self):
-        """Correctly checks if a dynamic table exists"""
-        # True cases
-        self.assertTrue(qdb.util.exists_dynamic_table(
-            "preprocessed_sequence_illumina_params", "preprocessed_",
-            "_params"))
-        self.assertTrue(qdb.util.exists_dynamic_table("prep_1", "prep_", ""))
-        self.assertTrue(qdb.util.exists_dynamic_table("filepath", "", ""))
-        # False cases
-        self.assertFalse(qdb.util.exists_dynamic_table(
-            "preprocessed_foo_params", "preprocessed_", "_params"))
-        self.assertFalse(qdb.util.exists_dynamic_table(
-            "preprocessed__params", "preprocessed_", "_params"))
-        self.assertFalse(qdb.util.exists_dynamic_table(
-            "foo_params", "preprocessed_", "_params"))
-        self.assertFalse(qdb.util.exists_dynamic_table(
-            "preprocessed_foo", "preprocessed_", "_params"))
-        self.assertFalse(qdb.util.exists_dynamic_table(
-            "foo", "preprocessed_", "_params"))
 
     def test_convert_to_id(self):
         """Tests that ids are returned correctly"""
@@ -183,18 +147,6 @@ class DBUtilTests(TestCase):
         """Checks that check_count returns True and False appropriately"""
         self.assertTrue(qdb.util.check_count('qiita.study_person', 3))
         self.assertFalse(qdb.util.check_count('qiita.study_person', 2))
-
-    def test_get_preprocessed_params_tables(self):
-        obs = qdb.util.get_preprocessed_params_tables()
-        exp = ['preprocessed_sequence_454_params',
-               'preprocessed_sequence_illumina_params',
-               'preprocessed_spectra_params']
-        self.assertEqual(obs, exp)
-
-    def test_get_processed_params_tables(self):
-        obs = qdb.util.get_processed_params_tables()
-        self.assertEqual(obs, ['processed_params_sortmerna',
-                               'processed_params_uclust'])
 
     def test_insert_filepaths(self):
         fd, fp = mkstemp()
@@ -374,7 +326,7 @@ class DBUtilTests(TestCase):
                                 str(st.id))
         for _, fp, _ in filepaths:
             self.assertFalse(exists(fp))
-            new_fp = join(path_for_removal, basename(fp).split('_', 1)[1])
+            new_fp = join(path_for_removal, basename(fp))
             self.assertTrue(exists(new_fp))
 
             self.files_to_remove.append(new_fp)

@@ -6,6 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import traceback
+import sys
+from os.path import exists
+from os import makedirs
+
 import requests
 
 from tgp.util import (start_heartbeat, complete_job, execute_request_retry,
@@ -45,11 +50,15 @@ def execute_job(server_url, job_id, output_dir):
         # Execute the given task
         task_name = job_info['command']
         task = TASK_DICT[task_name]
+
+        if not exists(output_dir):
+            makedirs(output_dir)
         try:
             payload = task(server_url, job_id, job_info['parameters'],
                            output_dir)
-        except Exception as e:
-            error_msg = "Error executing %s:\n%s" % (task_name, str(e))
+        except Exception:
+            exc_str = repr(traceback.format_exception(*sys.exc_info()))
+            error_msg = ("Error executing %s:\n%s" % (task_name, exc_str))
             payload = format_payload(False, error_msg=error_msg)
         # The job completed
         complete_job(server_url, job_id, payload)

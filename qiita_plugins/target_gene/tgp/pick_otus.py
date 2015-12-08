@@ -29,6 +29,7 @@ def write_parameters_file(fp, parameters):
     params = ['sortmerna_max_pos', 'similarity', 'sortmerna_coverage',
               'threads']
     with open(fp, 'w') as f:
+        f.write("pick_otus:otu_picking_method\tsortmerna\n")
         for p in params:
             f.write("pick_otus:%s\t%s\n" % (p, parameters[p]))
 
@@ -50,8 +51,9 @@ def generate_pick_closed_reference_otus_cmd(filepaths, out_dir, parameters,
 
     Returns
     -------
-    str
+    str, str
         The pick_closed_reference_otus.py command
+        The output directory
 
     Raises
     ------
@@ -84,7 +86,27 @@ def generate_pick_closed_reference_otus_cmd(filepaths, out_dir, parameters,
 
     cmd = str("pick_closed_reference_otus.py -i %s -r %s -o %s -p %s %s"
               % (seqs_fp, reference_fp, output_dir, param_fp, params_str))
-    return cmd
+    return cmd, output_dir
+
+
+def generate_artifact_info(pick_out):
+    """Creates the artifact information to attach to the payload
+
+    Parameters
+    ----------
+    pick_out : str
+        Path to the pick otus directory
+
+    Returns
+    -------
+    list
+        The artifacts information
+    """
+    path_builder = partial(join, pick_out)
+    filepaths = [(path_builder('otu_table.biom'), 'biom'),
+                 (path_builder('sortmerna_picked_otus'), 'directory'),
+                 (glob(path_builder('log_*.txt'))[0], 'log')]
+    return [['BIOM', filepaths, True, True]]
 
 
 def pick_closed_reference_otus(server_url, job_id, parameters, out_dir):
@@ -124,8 +146,8 @@ def pick_closed_reference_otus(server_url, job_id, parameters, out_dir):
         raise ValueError(error_msg)
     fps = fps_info['filepaths']
 
-    reference_id = parameters['reference_id']
-    url = "%s/qiita_db/reference/%s/filepaths/" % (server_url, reference_id)
+    reference_id = parameters['reference']
+    url = "%s/qiita_db/references/%s/filepaths/" % (server_url, reference_id)
     ref_info = execute_request_retry(requests.get, url)
     if not ref_info or not ref_info['success']:
         error_msg = "Could not get artifact filepath information: %s"
@@ -145,12 +167,8 @@ def pick_closed_reference_otus(server_url, job_id, parameters, out_dir):
     if return_value != 0:
         error_msg = ("Error running OTU picking:\nStd out: %s\nStd err: %s"
                      % (std_out, std_err))
-        return format_payload(True, error_msg=error_msg)
+        return format_payload(False, error_msg=error_msg)
 
-    path_builder = partial(join, pick_out)
-    filepaths = [(path_builder('otu_table.biom'), 'biom'),
-                 (path_builder('sortmerna_picked_otus'), 'directory'),
-                 (glob(path_builder('log_*.txt')), 'log')]
-    artifacts_info = ['BIOM', filepaths, True, True]
+    artifacts_info = generate_artifact_info(pick_out)
 
     return format_payload(True, artifacts_info=artifacts_info)

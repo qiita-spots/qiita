@@ -16,10 +16,6 @@
             {% for fname, ftype in raw_data_files %}
               <i>{{fname}}:</i> {{ftype}} <br/>
             {% end %}
-            {% if show_buttons %}
-              <br/>
-              <a class="btn btn-danger" onclick="unlink_all_files({{rd_id}}, {{prep_template_id}})">Unlink all files</a><br/>
-            {% end %}
           {% else %}
             <h4>There are no files currently linked to the raw data. Choose from the following list:</h4><br/>
             <table class="table table-striped">
@@ -45,10 +41,6 @@
                     </select>
                   </td>
                 </tr>
-              {% end %}
-              {% if show_buttons %}
-                <tr><td>&nbsp;</td></tr>
-                <tr><td><a class="btn btn-primary" onclick="link_files_to_raw_data({{rd_id}}, {{prep_template_id}}, '{{filetype}}');">Link files</a></td></tr>
               {% end %}
             </table>
           {% end %}

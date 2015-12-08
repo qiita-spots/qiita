@@ -717,7 +717,9 @@ BEGIN
         FROM qiita.study_pmid
     LOOP
         INSERT INTO qiita.publication (doi, pubmed_id)
-            VALUES (study_pmids.pmid, study_pmids.pmid);
+            SELECT study_pmids.pmid, study_pmids.pmid
+            WHERE NOT EXISTS(
+                SELECT doi FROM qiita.publication WHERE doi = study_pmids.pmid);
 
         INSERT INTO qiita.study_publication (study_id, publication_doi)
             VALUES (study_pmids.study_id, study_pmids.pmid);

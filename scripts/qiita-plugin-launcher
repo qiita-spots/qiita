@@ -26,7 +26,10 @@ def start(env_script, start_script, url, job_id, job_dir):
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
     cmd = "source ~/.bash_profile; %s; %s" % (env_script, ' '.join(cmd))
-    Popen(cmd, shell=True)
+    proc = Popen(cmd, shell=True)
+    if proc.returncode and proc.returncode != 0:
+        raise ValueError("Error launching the plugin.")
+
 
 if __name__ == '__main__':
     start()

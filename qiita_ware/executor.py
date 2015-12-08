@@ -8,7 +8,9 @@
 
 from subprocess import Popen, PIPE
 from os.path import join
+from functools import partial
 
+from qiita_ware.context import context, _redis_wrap
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.util import get_work_base_dir
@@ -40,26 +42,25 @@ def system_call(cmd):
     return stdout, stderr, return_value
 
 
-def execute(user, parameters):
+def execute(job_id):
     """Executes a job through the plugin system
 
     Parameters
     ----------
-    user : qiita_db.user.User
-        The user who launches the job
-    parameters : qiita_db.software.Parameters
-        The parameters of the job
+    job_id : str
+        The id of the job to execute
     """
     # Create the new job
-    job = ProcessingJob.create(user, parameters)
+    job = ProcessingJob(job_id)
     job_dir = join(get_work_base_dir(), job.id)
-    software = parameters.command.software
+    software = job.command.software
     plugin_start_script = software.start_script
-    plugin_env_name = software.environment_name
+    plugin_env_script = software.environment_script
 
     # Get the command to start the plugin
-    cmd = [qiita_config.plugin_launcher, plugin_env_name, plugin_start_script,
-           qiita_config.base_url, job.id, job_dir]
+    cmd = '%s "%s" "%s" "%s" "%s" "%s"' % (
+        qiita_config.plugin_launcher, plugin_env_script, plugin_start_script,
+        qiita_config.base_url, job.id, job_dir)
 
     # Start the plugin
     std_out, std_err, return_value = system_call(cmd)
@@ -71,3 +72,29 @@ def execute(user, parameters):
             "Error starting plugin '%s':\nStd output:%s\nStd error:%s"
             % (software.name, std_out, std_err))
         job.log = log
+
+
+def _submit(ctx, user, parameters):
+    """Submit a plugin job to a cluster
+
+    Parameters
+    ----------
+    ctx : qiita_db.ware.Dispatch
+        A Dispatch object to submit through
+    user : qiita_db.user.User
+        The user doing the submission
+    parameters : qiita_db.software.Parameters
+        The parameters of the job
+
+    Returns
+    -------
+    str
+        The job id
+    """
+    job = ProcessingJob.create(user, parameters)
+    redis_deets = {'job_id': job.id, 'pubsub': user.id,
+                   'messages': user.id + ':messages'}
+    ctx.submit_async(_redis_wrap, execute, redis_deets, job.id)
+    return job.id
+
+plugin_submit = partial(_submit, context)

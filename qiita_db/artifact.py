@@ -45,6 +45,30 @@ class Artifact(qdb.base.QiitaObject):
     _table = "artifact"
 
     @classmethod
+    def iter_by_visibility(cls, visibility):
+        r"""Iterator over the artifacts with the given visibility
+
+        Parameters
+        ----------
+        visibility : str
+            The visibility level
+
+        Returns
+        -------
+        generator of qiita_db.artifact.Artifact
+            The artifacts available in the system with the given visibility
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_id
+                     FROM qiita.artifact
+                        JOIN qiita.visibility USING (visibility_id)
+                     WHERE visibility = %s
+                     ORDER BY artifact_id"""
+            qdb.sql_connection.TRN.add(sql, [visibility])
+            for a_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield cls(a_id)
+
+    @classmethod
     def iter_public(cls):
         r"""Iterator over the public artifacts available in the system
 
@@ -53,15 +77,7 @@ class Artifact(qdb.base.QiitaObject):
         generator of qiita_db.artifact.Artifact
             The public artifacts available in the system
         """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT artifact_id
-                     FROM qiita.artifact
-                        JOIN qiita.visibility USING (visibility_id)
-                     WHERE visibility = 'public'
-                     ORDER BY artifact_id"""
-            qdb.sql_connection.TRN.add(sql)
-            for a_id in qdb.sql_connection.TRN.execute_fetchflatten():
-                yield cls(a_id)
+        return cls.iter_by_visibility('public')
 
     @classmethod
     def create(cls, filepaths, artifact_type, prep_template=None,

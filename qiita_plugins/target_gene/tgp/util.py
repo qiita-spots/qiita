@@ -107,7 +107,7 @@ def start_heartbeat(server_url, job_id):
         The job id
     """
     url = "%s/qiita_db/jobs/%s/heartbeat/" % (server_url, job_id)
-    heartbeat_thread = threading.Thread(target=heartbeat, args=(url, job_id))
+    heartbeat_thread = threading.Thread(target=heartbeat, args=(url,))
     heartbeat_thread.daemon = True
     heartbeat_thread.start()
 

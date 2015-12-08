@@ -7,27 +7,8 @@
 # -----------------------------------------------------------------------------
 from .analysis_pipeline import RunAnalysis
 from qiita_ware.commands import submit_EBI, submit_VAMPS
-from qiita_ware.executor import execute
-from qiita_db.user import User
-from qiita_db.software import Parameters, DefaultParameters
 from qiita_db.analysis import Analysis
 from qiita_db.artifact import Artifact
-
-
-def processor(user_id, preprocessed_data_id, param_id):
-    """Dispatch the processor work"""
-    user = User(user_id)
-    parameters = Parameters.from_default_params(
-        DefaultParameters(param_id), {'input_data': preprocessed_data_id})
-    return execute(user, parameters)
-
-
-def preprocessor(user_id, artifact_id, param_id):
-    """Dispatch for preprocessor work"""
-    user = User(user_id)
-    parameters = Parameters.from_default_params(
-        DefaultParameters(param_id), {'input_data': artifact_id})
-    return execute(user, parameters)
 
 
 def submit_to_ebi(preprocessed_data_id, submission_type):
@@ -54,21 +35,3 @@ def create_raw_data(filetype, prep_template, filepaths):
     Needs to be dispachable because it moves large files
     """
     Artifact.create(filepaths, filetype, prep_template=prep_template)
-
-
-def add_files_to_raw_data(raw_data_id, filepaths):
-    """Add files to raw data
-
-    Needs to be dispachable because it moves large files
-    """
-    rd = RawData(raw_data_id)
-    rd.add_filepaths(filepaths)
-
-
-def unlink_all_files(raw_data_id):
-    """Removes all files from raw data
-
-    Needs to be dispachable because it does I/O and a lot of DB calls
-    """
-    rd = RawData(raw_data_id)
-    rd.clear_filepaths()

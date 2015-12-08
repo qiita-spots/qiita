@@ -15,7 +15,6 @@ Methods
     quote_data_value
     scrub_data
     exists_table
-    exists_dynamic_table
     get_db_files_base_dir
     compute_checksum
     get_files_from_uploads_folders
@@ -349,26 +348,6 @@ def get_table_cols(table):
         return qdb.sql_connection.TRN.execute_fetchflatten()
 
 
-def get_table_cols_w_type(table):
-    """Returns the column headers and its type
-
-    Parameters
-    ----------
-    table : str
-        The table name
-
-    Returns
-    -------
-    list of tuples of (str, str)
-        The column headers and data type of `table`
-    """
-    with qdb.sql_connection.TRN:
-        sql = """SELECT column_name, data_type FROM information_schema.columns
-                 WHERE table_name=%s"""
-        qdb.sql_connection.TRN.add(sql, [table])
-        return qdb.sql_connection.TRN.execute_fetchindex()
-
-
 def exists_table(table):
     r"""Checks if `table` exists on the database
 
@@ -388,29 +367,6 @@ def exists_table(table):
                     WHERE table_name=%s)"""
         qdb.sql_connection.TRN.add(sql, [table])
         return qdb.sql_connection.TRN.execute_fetchlast()
-
-
-def exists_dynamic_table(table, prefix, suffix):
-    r"""Checks if the dynamic `table` exists on the database, and its name
-    starts with prefix and ends with suffix
-
-    Parameters
-    ----------
-    table : str
-        The table name to check if exists
-    prefix : str
-        The table name prefix
-    suffix : str
-        The table name suffix
-
-    Returns
-    -------
-    bool
-       Whether `table` exists on the database or not and its name
-        starts with prefix and ends with suffix
-    """
-    return (table.startswith(prefix) and table.endswith(suffix) and
-            exists_table(table))
 
 
 def get_db_files_base_dir():
@@ -797,9 +753,7 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
         for fp_id, fp, _ in filepaths:
             qdb.sql_connection.TRN.add(sql, [fp_id])
 
-            # removing id from the raw data filename
-            filename = basename(fp).split('_', 1)[1]
-            destination = path_builder(filename)
+            destination = path_builder(basename(fp))
 
             qdb.sql_connection.TRN.add_post_rollback_func(
                 move, destination, fp)
@@ -993,41 +947,6 @@ def check_count(table, exp_count):
     return obs_count == exp_count
 
 
-def get_preprocessed_params_tables():
-    """returns a list of preprocessed parmaeter tables
-
-    Returns
-    -------
-    list or str
-    """
-    with qdb.sql_connection.TRN:
-        sql = """SELECT table_name FROM information_schema.tables
-                 WHERE table_schema = 'qiita'
-                    AND SUBSTR(table_name, 1, 13) = 'preprocessed_'
-                    AND table_name NOT IN ('preprocessed_data',
-                                           'preprocessed_filepath',
-                                           'preprocessed_processed_data')
-                 ORDER BY table_name"""
-        qdb.sql_connection.TRN.add(sql)
-        return qdb.sql_connection.TRN.execute_fetchflatten()
-
-
-def get_processed_params_tables():
-    """Returns a list of all tables starting with "processed_params_"
-
-    Returns
-    -------
-    list of str
-    """
-    with qdb.sql_connection.TRN:
-        sql = """SELECT table_name FROM information_schema.tables
-                 WHERE table_schema = 'qiita'
-                    AND SUBSTR(table_name, 1, 17) = 'processed_params_'
-                 ORDER BY table_name"""
-        qdb.sql_connection.TRN.add(sql)
-        return qdb.sql_connection.TRN.execute_fetchflatten()
-
-
 def get_environmental_packages():
     """Get the list of available environmental packages
 
@@ -1078,7 +997,7 @@ def get_pubmed_ids_from_dois(doi_ids):
     with qdb.sql_connection.TRN:
         sql = "SELECT doi, pubmed_id FROM qiita.publication WHERE doi IN %s"
         qdb.sql_connection.TRN.add(sql, [tuple(doi_ids)])
-        return {row[0]: row [1]
+        return {row[0]: row[1]
                 for row in qdb.sql_connection.TRN.execute_fetchindex()}
 
 

@@ -7,14 +7,13 @@
 # -----------------------------------------------------------------------------
 
 from os.path import join, basename
-from functools import partial
 import re
 
 import pandas as pd
 
 from tgp.util import update_job_step, system_call, format_payload
 from .util import (get_artifact_information, split_mapping_file,
-                   generate_demux_file)
+                   generate_demux_file, generate_artifact_info)
 
 
 def generate_parameters_string(parameters):
@@ -259,11 +258,6 @@ def split_libraries_fastq(server_url, job_id, parameters, out_dir):
     update_job_step(server_url, job_id, "Step 4 of 4: Generating demux file")
     generate_demux_file(sl_out)
 
-    path_builder = partial(join, sl_out)
-    filepaths = [(path_builder('seqs.fna'), 'preprocessed_fasta'),
-                 (path_builder('seqs.fastq'), 'preprocessed_fastq'),
-                 (path_builder('seqs.demux'), 'preprocessed_demux'),
-                 (path_builder('split_library_log.txt'), 'log')]
-    artifacts_info = ['Demultiplexed', filepaths, True, True]
+    artifacts_info = generate_artifact_info(sl_out)
 
     return format_payload(True, artifacts_info=artifacts_info)
