@@ -18,7 +18,7 @@ before_install:
   - wget ftp://ftp.microbio.me/pub/qiita/ascp-install-3.5.4.102989-linux-64-qiita.sh -O ascp-install-3.5.4.102989-linux-64-qiita.sh
   - chmod +x ascp-install-3.5.4.102989-linux-64-qiita.sh
   - ./ascp-install-3.5.4.102989-linux-64-qiita.sh
-  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then openssl aes-256-cbc -K $encrypted_e698cf0e691c_key -iv $encrypted_e698cf0e691c_iv -in qiita_core/support_files/config_test_travis.cfg.enc -out qiita_core/support_files/config_test_travis.cfg -d; fi
+  - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then openssl aes-256-cbc -K $encrypted_a2e23aea5f14_key -iv $encrypted_a2e23aea5f14_iv -in config_test_travis.cfg.enc -out config_test_travis.cfg -d; fi
 install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
