@@ -53,6 +53,7 @@ def login_client(client_id, client_secret=None):
 
 class OauthBaseHandler(RequestHandler):
     def write_error(self, status_code, **kwargs):
+        """Overriding the default write error in tornado RequestHandler"""
         if status_code in {403, 404, 405}:
             # We don't need to log these failues in the logging table
             return
@@ -135,11 +136,30 @@ class OauthBaseHandler(RequestHandler):
 
 class TokenAuthHandler(OauthBaseHandler):
     def generate_access_token(self):
+        """Creates the random alphanumeric token
+
+        Returns
+        -------
+        str
+            55 character random alphanumeric string
+        """
         pool = ascii_letters + digits
         return ''.join((SystemRandom().choice(pool) for _ in range(55)))
 
     def set_token(self, token, client_id, user=None, timeout=3600):
-        # Create teh access token for the client
+        """Create the access token for the client on redis
+
+        Parameters
+        ----------
+        token: str
+            Random token string for authorization
+        client_id : str
+            Client that requested the token
+        user : str, optional
+            If password grant type requested, the user requesting the key.
+        timeout : int
+            The timeout, in seconds, for the token. Default 3600
+        """
         r_client.hset(token, 'timestamp', datetime.datetime.now())
         r_client.hset(token, 'client_id', client_id)
         r_client.expire(token, timeout)
@@ -153,6 +173,15 @@ class TokenAuthHandler(OauthBaseHandler):
                 r_client.setex(limit_key, 5000, 86400)
 
     def validate_client(self, client_id, client_secret):
+        """Make sure client exists, then set the token and send it
+
+        Parameters
+        ----------
+        client_id : str
+            The client making the request
+        client_secret : str
+            The secret key for the client
+        """
         if login_client(client_id, client_secret):
             token = self.generate_access_token()
             self.write({'access_token': token,
@@ -164,6 +193,17 @@ class TokenAuthHandler(OauthBaseHandler):
             self.oauth_error('Oauth2 error: invalid client information')
 
     def validate_resource_owner(self, username, password, client_id):
+        """Make sure user and client exist, then set the token and send it
+
+        Parameters
+        ----------
+        username : str
+            The username to validate
+        password : str
+            The password for the username
+        client_id : str
+            The client making the request
+        """
         try:
             qdb.user.User.login(username, password)
         except (IncorrectEmailError, IncorrectPasswordError,
