@@ -7,24 +7,51 @@
 # -----------------------------------------------------------------------------
 from unittest import main
 from json import loads
-import datetime
 from moi import r_client
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
 class OAuth2BaseHandlerTests(TestHandlerBase):
     def setUp(self):
-        self.token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.token, 'timestamp', '12/12/12 12:12:00')
-        r_client.expire(self.token, 2)
+        # Create client test authentication token
+        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
+        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
+        r_client.hset(self.client_token, 'client_id', 'test123123123')
+        r_client.expire(self.client_token, 5)
+        # Create username test authentication token
+        self.user_token = 'SOMEAUTHTESTINGTOKENHEREUSERNAME'
+        r_client.hset(self.user_token, 'timestamp', '12/12/12 12:12:00')
+        r_client.hset(self.user_token, 'client_id', 'testuser')
+        r_client.hset(self.user_token, 'user', 'test@foo.bar')
+        r_client.expire(self.user_token, 5)
+        # Create test access limit token
+        self.user_rate_key = 'testuser_test@foo.bar_daily_limit'
+        r_client.setex(self.user_rate_key, 2, 5)
         super(OAuth2BaseHandlerTests, self).setUp()
 
-    def test_authenticate_header(self):
+    def test_authenticate_header_client(self):
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
-            'Authorization': 'Bearer ' + self.token})
+            'Authorization': 'Bearer ' + self.client_token})
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Artifact does not exist',
                'mapping': None}
+        self.assertEqual(loads(obs.body), exp)
+
+    def test_authenticate_header_username(self):
+        obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
+            'Authorization': 'Bearer ' + self.user_token})
+        self.assertEqual(obs.code, 200)
+        exp = {'success': False, 'error': 'Artifact does not exist',
+               'mapping': None}
+        self.assertEqual(loads(obs.body), exp)
+        # Check rate limiting works
+        self.assertEqual(int(r_client.get(self.user_rate_key)), 1)
+        r_client.setex('testuser_test@foo.bar_daily_limit', 0, 2)
+        obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
+            'Authorization': 'Bearer ' + self.user_token})
+        exp = {'error': 'limit_error',
+               'error_description': 'Oauth2 error: daily request limit reached'
+               }
         self.assertEqual(loads(obs.body), exp)
 
     def test_authenticate_header_missing(self):
@@ -38,16 +65,17 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
             'Authorization': 'Bearer BADTOKEN'})
         self.assertEqual(obs.code, 400)
-        self.assertEqual(loads(obs.body), {
-            'error': 'invalid_request',
-            'error_description': 'Oauth2 error: invalid access token'})
+        exp = {'error': 'token_timeout',
+               'error_description': 'Oauth2 error: token has timed out'}
+        self.assertEqual(loads(obs.body), exp)
 
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
-            'Authorization': 'WRONG ' + self.token})
+            'Authorization': 'WRONG ' + self.client_token})
         self.assertEqual(obs.code, 400)
-        self.assertEqual(loads(obs.body), {
-            'error': 'invalid_request',
-            'error_description': 'Oauth2 error: invalid access token'})
+        exp ={'error': 'invalid_request',
+              'error_description': 'Oauth2 error: invalid access token'}
+        self.assertEqual(loads(obs.body), exp)
+
 
 class OAuth2HandlerTests(TestHandlerBase):
     def test_authenticate_client(self):
@@ -72,7 +100,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
         self.assertNotEqual(token, {})
-        self.assertItemsEqual(token.keys(), ['timestamp'])
+        self.assertItemsEqual(token.keys(), ['timestamp', 'client_id'])
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
         # Authenticate using post only
@@ -97,7 +125,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
         self.assertNotEqual(token, {})
-        self.assertItemsEqual(token.keys(), ['timestamp'])
+        self.assertItemsEqual(token.keys(), ['timestamp', 'client_id'])
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
     def test_authenticate_client_bad_info(self):
@@ -110,7 +138,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                                  'pLaEFtbUNXWnVhYmUwTzVNcDI4czE='})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -121,7 +149,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                                  'h1S2hRQWYxZW9HZ0JBRTgxTnM4R3UzRUthV0ZtM0lPMk'
                                  'pLaEFtbUNXWnVhYmUwTzVNcDI4czE='})
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: invalid token type'}
         self.assertEqual(obs_body, exp)
 
@@ -135,7 +163,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                                  'KhAmmCWZuabe0O5Mp28s1'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -149,7 +177,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                                  'KhAmmCWZuabe0O5Mp28s1'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -161,7 +189,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                              'O4'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: missing client information'}
         self.assertEqual(obs_body, exp)
 
@@ -188,7 +216,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
         self.assertNotEqual(token, {})
-        self.assertItemsEqual(token.keys(), ['timestamp', 'user'])
+        self.assertItemsEqual(token.keys(), ['timestamp', 'user', 'client_id'])
         self.assertEqual(token['user'], 'test@foo.bar')
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
@@ -203,7 +231,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'password': 'password'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -217,7 +245,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'password': 'password'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -231,7 +259,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'password': 'password'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: invalid user information'}
         self.assertEqual(obs_body, exp)
 
@@ -245,7 +273,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'password': 'NOTAReALPASSworD'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: invalid user information'}
         self.assertEqual(obs_body, exp)
 
@@ -258,7 +286,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'username': 'test@foo.bar'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'Invalid request',
+        exp = {'error': 'invalid_request',
                'error_description': 'Oauth2 error: missing user information'}
         self.assertEqual(obs_body, exp)
 
