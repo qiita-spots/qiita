@@ -141,11 +141,11 @@ ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_software_command FOREIGN K
 ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    ;
 
 -- We need to keep the old preprocessed data id for the artifact id due
--- to EBI reasons. In order to make sure that none of the raw data or processed
--- data taht we are going to transfer to the artifact table gets and id needed
--- by the preprocessed data, we are going to set the autoincrementing
+-- to EBI. In order to make sure that none of the raw data or processed
+-- data that we are going to transfer to the artifact table gets and id needed
+-- by the preprocessed data, we will set the autoincrementing
 -- artifact_id column to start at 10,000
-SELECT setval('qiita.artifact_artifact_id_seq', 10000, false);
+SELECT setval('qiita.artifact_artifact_id_seq', 2000, false);
 
 
 -- Artifact filepath table - relates an artifact with its files

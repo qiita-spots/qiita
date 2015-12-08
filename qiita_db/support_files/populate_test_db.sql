@@ -1,7 +1,7 @@
 -- Populate.sql sets the increment to begin at 10000, but all tests expect it to start at 1, so set it back to 1 for the test DB population
 SELECT setval('qiita.study_study_id_seq', 1, false);
 
--- Patch 33.sql sets the increment to begin at 10000, but all tests expect it to start at 1, so set it back to 1 for the test DB population
+-- Patch 33.sql sets the increment to begin at 2000, but all tests expect it to start at 1, so set it back to 1 for the test DB population
 SELECT setval('qiita.artifact_artifact_id_seq', 1, false);
 
 -- Insert some users in the system. Passwords are 'password' for all users
