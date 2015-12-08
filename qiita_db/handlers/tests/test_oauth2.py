@@ -49,7 +49,7 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         r_client.setex('testuser_test@foo.bar_daily_limit', 0, 2)
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
             'Authorization': 'Bearer ' + self.user_token})
-        exp = {'error': 'limit_error',
+        exp = {'error': 'invalid_grant',
                'error_description': 'Oauth2 error: daily request limit reached'
                }
         self.assertEqual(loads(obs.body), exp)
@@ -65,14 +65,14 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
             'Authorization': 'Bearer BADTOKEN'})
         self.assertEqual(obs.code, 400)
-        exp = {'error': 'token_timeout',
+        exp = {'error': 'invalid_grant',
                'error_description': 'Oauth2 error: token has timed out'}
         self.assertEqual(loads(obs.body), exp)
 
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
             'Authorization': 'WRONG ' + self.client_token})
         self.assertEqual(obs.code, 400)
-        exp ={'error': 'invalid_request',
+        exp ={'error': 'invalid_grant',
               'error_description': 'Oauth2 error: invalid access token'}
         self.assertEqual(loads(obs.body), exp)
 
@@ -138,7 +138,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                                  'pLaEFtbUNXWnVhYmUwTzVNcDI4czE='})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'invalid_request',
+        exp = {'error': 'invalid_client',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -163,7 +163,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                                  'KhAmmCWZuabe0O5Mp28s1'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'invalid_request',
+        exp = {'error': 'invalid_client',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -177,7 +177,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                                  'KhAmmCWZuabe0O5Mp28s1'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'invalid_request',
+        exp = {'error': 'invalid_client',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -231,7 +231,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'password': 'password'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'invalid_request',
+        exp = {'error': 'invalid_client',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -245,7 +245,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'password': 'password'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'invalid_request',
+        exp = {'error': 'invalid_client',
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
@@ -259,7 +259,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'password': 'password'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'invalid_request',
+        exp = {'error': 'invalid_client',
                'error_description': 'Oauth2 error: invalid user information'}
         self.assertEqual(obs_body, exp)
 
@@ -273,7 +273,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                 'password': 'NOTAReALPASSworD'})
         self.assertEqual(obs.code, 400)
         obs_body = loads(obs.body)
-        exp = {'error': 'invalid_request',
+        exp = {'error': 'invalid_client',
                'error_description': 'Oauth2 error: invalid user information'}
         self.assertEqual(obs_body, exp)
 
