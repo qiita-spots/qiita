@@ -14,10 +14,7 @@ from os import environ
 from traceback import format_exc
 from moi.job import system_call
 
-from qiita_db.study import Study
 from qiita_db.artifact import Artifact
-from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
@@ -99,10 +96,9 @@ def submit_EBI(preprocessed_data_id, action, send):
         except Exception as e:
             xml_content = ''
             stderr = str(e)
-            le = LogEntry.create('Fatal',
-                                 "Command: %s\nError: %s\n" % (
-                                    cmd, str(e)),
-                                 info={'ebi_submission': preprocessed_data_id})
+            le = LogEntry.create(
+                'Fatal', "Command: %s\nError: %s\n" % (cmd, str(e)),
+                info={'ebi_submission': preprocessed_data_id})
             ebi_submission.study.ebi_submission_status = (
                 "failed: XML submission, log id: %d" % le.id)
             raise ComputeError("EBI Submission failed! Log id: %d" % le.id)

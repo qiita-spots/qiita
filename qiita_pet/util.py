@@ -116,3 +116,45 @@ def is_localhost(host):
     """
     localhost = ('localhost', '127.0.0.1')
     return host.startswith(localhost)
+
+
+def get_artifact_processing_status(artifact):
+    """Gets the processing status of the artifact
+
+    Parameters
+    ----------
+    artifact : qiita_db.artifact.Artifact
+        The artifact to get the processing status
+
+    Returns
+    -------
+    str, str
+        The processing status {'processing', 'failed', 'success',
+            'Not processed'}
+        A summary of the jobs attached to the artifact
+    """
+    preprocessing_status = 'Not processed'
+    preprocessing_status_msg = []
+    for job in artifact.jobs():
+        job_status = job.status
+        if job_status == 'error':
+            if preprocessing_status != 'success':
+                preprocessing_status = 'failed'
+            preprocessing_status_msg.append(
+                "<b>Job %s</b>: failed - %s"
+                % (job.id, job.log.msg))
+        elif job_status == 'success':
+            preprocessing_status = 'success'
+        else:
+            if preprocessing_status != 'success':
+                preprocessing_status = 'processing'
+            preprocessing_status_msg.append(
+                "<b>Job %s</b>: %s" % (job.id, job_status))
+
+    if not preprocessing_status_msg:
+        preprocessing_status_msg = 'Not processed'
+    else:
+        preprocessing_status_msg = convert_text_html(
+            '<br/>'.join(preprocessing_status_msg))
+
+    return preprocessing_status, preprocessing_status_msg

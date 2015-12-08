@@ -43,8 +43,7 @@ def _build_analysis_files(analysis, r_depth=None, **kwargs):
     biom_tables = analysis.biom_tables
 
     # add files to existing jobs
-    for job_id in analysis.jobs:
-        job = Job(job_id)
+    for job in analysis.jobs:
         if job.status == 'queued':
             opts = {
                 "--otu_table_fp": biom_tables[job.datatype],
@@ -67,8 +66,8 @@ def _finish_analysis(analysis, **kwargs):
     """
     # check job exit statuses for analysis result status
     all_good = True
-    for job_id in analysis.jobs:
-        if Job(job_id).status == "error":
+    for job in analysis.jobs:
+        if job.status == "error":
             all_good = False
             break
 
@@ -136,14 +135,13 @@ class RunAnalysis(ParallelWrapper):
 
         # Add the jobs
         job_nodes = []
-        for job_id in analysis.jobs:
-            job = Job(job_id)
+        for job in analysis.jobs:
             node_name = "%d_JOB_%d" % (analysis.id, job.id)
             job_nodes.append(node_name)
             job_name = "%s: %s" % (job.datatype, job.command[0])
             self._job_graph.add_node(node_name,
                                      func=system_call_from_job,
-                                     args=(job_id,),
+                                     args=(job.id,),
                                      job_name=job_name,
                                      requires_deps=False)
 
@@ -171,8 +169,7 @@ class RunAnalysis(ParallelWrapper):
             self._update_status("Failed")
 
         # set any jobs to errored if they didn't execute
-        for job_id in self.analysis.jobs:
-            job = Job(job_id)
+        for job in self.analysis.jobs:
             if job.status not in {'error', 'completed'}:
                 job.status = 'error'
 

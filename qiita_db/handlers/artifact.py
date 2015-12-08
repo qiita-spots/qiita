@@ -21,8 +21,8 @@ def _get_artifact(a_id):
     -------
     qiita_db.artifact.Artifact, bool, string
         The requested artifact or None
-        Whether if we could get the job or not
-        Error message in case we couldn't get the job
+        Whether if we could get the artifact or not
+        Error message in case we couldn't get the artifact
     """
     try:
         artifact = qdb.artifact.Artifact(a_id)

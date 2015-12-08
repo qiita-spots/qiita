@@ -48,7 +48,7 @@ class StudyEditorForm(Form):
     """
     study_title = StringField('Study Title', [validators.Required()])
     study_alias = StringField('Study Alias', [validators.Required()])
-    pubmed_id = StringField('PubMed ID')
+    publication_doi = StringField('DOI')
     study_abstract = TextAreaField('Study Abstract', [validators.Required()])
     study_description = StringField('Study Description',
                                     [validators.Required()])
@@ -80,7 +80,8 @@ class StudyEditorForm(Form):
 
             self.study_title.data = study.title.decode('utf-8')
             self.study_alias.data = study_info['study_alias'].decode('utf-8')
-            self.pubmed_id.data = ",".join(study.pmids).decode('utf-8')
+            self.publication_doi.data = ",".join(
+                [doi for doi, _ in study.publications]).decode('utf-8')
             self.study_abstract.data = study_info[
                 'study_abstract'].decode('utf-8')
             self.study_description.data = study_info[
@@ -278,12 +279,12 @@ class StudyEditHandler(BaseHandler):
             the_study.environmental_packages = form_data.data[
                 'environmental_packages']
 
-        pubmed_ids = form_data.data['pubmed_id'][0]
-        if pubmed_ids:
+        dois = form_data.data['publication_doi']
+        if dois and dois[0]:
             # The user can provide a comma-seprated list
-            pmids = pubmed_ids.split(',')
+            dois = dois[0].split(',')
             # Make sure that we strip the spaces from the pubmed ids
-            the_study.pmids = [pmid.strip() for pmid in pmids]
+            the_study.publications = [(doi.strip(), None) for doi in dois]
 
         self.render('index.html', message=msg, level='success')
 

@@ -118,7 +118,7 @@ class StudyDescriptionHandler(BaseHandler):
             check_access(user, study, raise_error=True)
 
         full_access = (user.level == 'admin' or
-                       study.id in user.user_studies | user.shared_studies)
+                       study in user.user_studies | user.shared_studies)
 
         return study, user, full_access
 
@@ -765,7 +765,7 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         prep_template_id = int(self.get_argument('prep_template_id'))
-        prep_id = PrepTemplate(prep_template_id).raw_data
+        prep_id = PrepTemplate(prep_template_id).artifact.id
 
         try:
             PrepTemplate.delete(prep_template_id)
@@ -903,7 +903,7 @@ class PreprocessingSummaryHandler(BaseHandler):
         """
         # Get the objects and check user privileges
         ppd = Artifact(preprocessed_data_id)
-        study = Study(ppd.study)
+        study = ppd.study
         check_access(self.current_user, study, raise_error=True)
 
         # Get the return address

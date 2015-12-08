@@ -15,7 +15,8 @@ from tempfile import mkdtemp, mkstemp
 import httpretty
 
 from tgp.split_libraries.util import (
-    get_artifact_information, split_mapping_file, generate_demux_file)
+    get_artifact_information, split_mapping_file, generate_demux_file,
+    generate_artifact_info)
 
 
 class UtilTests(TestCase):
@@ -123,6 +124,15 @@ class UtilTests(TestCase):
         self._clean_up_files.append(out_dir)
         with self.assertRaises(ValueError):
             generate_demux_file(out_dir)
+
+    def test_generate_artifact_info(self):
+        obs = generate_artifact_info("/sl/output/")
+        fps = [("/sl/output/seqs.fna", "preprocessed_fasta"),
+               ("/sl/output/seqs.fastq", "preprocessed_fastq"),
+               ("/sl/output/seqs.demux", "preprocessed_demux"),
+               ("/sl/output/split_library_log.txt", "log")]
+        exp = [['Demultiplexed', fps, True, True]]
+        self.assertEqual(obs, exp)
 
 
 DEMUX_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0

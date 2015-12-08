@@ -500,7 +500,7 @@ class Software(qdb.base.QiitaObject):
 
     @property
     def start_script(self):
-        """The start_script used to start the plugin
+        """The script used to start the plugin
 
         Returns
         -------

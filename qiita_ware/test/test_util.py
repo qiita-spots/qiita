@@ -18,7 +18,8 @@ import h5py
 import numpy as np
 from six import StringIO, BytesIO
 
-from qiita_db.metadata_template import SampleTemplate, PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_ware.util import (per_sample_sequences, stats_from_df, open_file,
                              _is_string_or_bytes)
 

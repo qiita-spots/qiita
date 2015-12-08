@@ -16,6 +16,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.artifact import Artifact
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import execute_as_transaction
 
@@ -26,9 +27,9 @@ class VAMPSHandler(BaseHandler):
         """Simple function to avoid duplication of code"""
         preprocessed_data_id = int(preprocessed_data_id)
         try:
-            preprocessed_data = PreprocessedData(preprocessed_data_id)
+            preprocessed_data = Artifact(preprocessed_data_id)
         except QiitaDBUnknownIDError:
-            raise HTTPError(404, "PreprocessedData %d does not exist!" %
+            raise HTTPError(404, "Artifact %d does not exist!" %
                                  preprocessed_data_id)
         else:
             user = self.current_user
@@ -78,7 +79,7 @@ class VAMPSHandler(BaseHandler):
                             self.current_user.id)
         msg = ''
         msg_level = 'success'
-        preprocessed_data = PreprocessedData(preprocessed_data_id)
+        preprocessed_data = Artifact(preprocessed_data_id)
         state = preprocessed_data.submitted_to_vamps_status()
 
         demux = [path for _, path, ftype in preprocessed_data.get_filepaths()

@@ -134,7 +134,7 @@ def generate_demux_file(sl_out):
         If the split libraries output does not contain the demultiplexed fastq
         file
     """
-    fastq_fp = join(sl_out, 'seqs.fastq')
+    fastq_fp = str(join(sl_out, 'seqs.fastq'))
     if not exists(fastq_fp):
         raise ValueError("The split libraries output directory does not "
                          "contain the demultiplexed fastq file.")
@@ -142,5 +142,30 @@ def generate_demux_file(sl_out):
     demux_fp = join(sl_out, 'seqs.demux')
     with File(demux_fp, "w") as f:
         to_hdf5(fastq_fp, f)
-
     return demux_fp
+
+
+def generate_artifact_info(sl_out):
+    """Creates the artifact information to attach to the payload
+
+    Parameters
+    ----------
+    sl_out : str
+        Path to the split libraries output directory
+
+    Returns
+    -------
+    list of [str, list of (str, str), bool, bool]
+        The artifacts information to include in the payload when the split
+        libraries job is completed.
+        - The artifact type
+        - The list of filepaths with their artifact type
+        - Whether the artifact can be submitted to ebi
+        - Whether the artifact can be submitted to vamps
+    """
+    path_builder = partial(join, sl_out)
+    filepaths = [(path_builder('seqs.fna'), 'preprocessed_fasta'),
+                 (path_builder('seqs.fastq'), 'preprocessed_fastq'),
+                 (path_builder('seqs.demux'), 'preprocessed_demux'),
+                 (path_builder('split_library_log.txt'), 'log')]
+    return [['Demultiplexed', filepaths, True, True]]
