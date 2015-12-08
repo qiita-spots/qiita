@@ -144,7 +144,7 @@ ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_data_type FOREIGN KEY ( da
 -- to EBI. In order to make sure that none of the raw data or processed
 -- data that we are going to transfer to the artifact table gets and id needed
 -- by the preprocessed data, we will set the autoincrementing
--- artifact_id column to start at 10,000
+-- artifact_id column to start at 2,000
 SELECT setval('qiita.artifact_artifact_id_seq', 2000, false);
 
 
