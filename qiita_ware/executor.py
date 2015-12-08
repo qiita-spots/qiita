@@ -85,6 +85,11 @@ def _submit(ctx, user, parameters):
         The user doing the submission
     parameters : qiita_db.software.Parameters
         The parameters of the job
+
+    Returns
+    -------
+    str
+        The job id
     """
     job = ProcessingJob.create(user, parameters)
     redis_deets = {'job_id': job.id, 'pubsub': user.id,
