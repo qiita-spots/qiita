@@ -232,9 +232,9 @@ class Study(qdb.base.QiitaObject):
 
         Returns
         -------
-        list of DictCursor
-            Table-like structure of metadata, one study per row. Can be
-            accessed as a list of dictionaries, keyed on column name.
+        list of dict
+            Table-like structure of metadata, one study per row. List of
+            dictionaries, keyed on column name.
         """
         # The following tables are considered part of info
         _info_cols = frozenset(chain(

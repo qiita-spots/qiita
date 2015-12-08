@@ -59,10 +59,22 @@ def _to_int(value):
         raise HTTPError(500, "%s cannot be converted to an integer" % value)
     return res
 
-
-class StudyIndexHandler(BaseHandler):
+class StudyAPIProxy(BaseHandler):
+    """Adds API proxy functions to the handler. Can be removed once the restful
+       API is in place."""
     def study_prep_proxy(self, study):
-        """Proxies expected json from the API for existing prep templates"""
+        """Proxies expected json from the API for existing prep templates
+
+        Parameters
+        ----------
+        study : Study object
+            Study to get prep template info for
+
+        Returns:
+        dict of list of dict
+            prep template information seperated by data type, in the form
+            {data_type: [{prep 1 info dict}, ....], ...}
+        """
         prep_info = {}
         for dtype in study.data_types:
             prep_info[dtype] = []
@@ -80,12 +92,29 @@ class StudyIndexHandler(BaseHandler):
         return prep_info
 
     def study_data_types_proxy(self):
-        """Proxies expected json from the API for available data types"""
+        """Proxies expected json from the API for available data types
+
+        Returns
+        -------
+        list of str
+            Data types available on teh system
+        """
         data_types = Study.all_data_types()
         return data_types if data_types else []
 
     def study_info_proxy(self, study):
-        """Proxies expected json from the API for base study info"""
+        """Proxies expected json from the API for base study info
+
+        Parameters
+        ----------
+        study : Study object
+            Study to get prep template info for
+
+        Returns:
+        dict of list of dict
+            prep template information seperated by data type, in the form
+            {data_type: [{prep 1 info dict}, ....], ...}
+        """
         study_info = Study.get_info([study.id])[0]
 
         pi = StudyPerson(study_info["principal_investigator_id"])
@@ -101,6 +130,8 @@ class StudyIndexHandler(BaseHandler):
         study_info['num_samples'] = 0 if samples is None else len(set(samples))
         return study_info
 
+
+class StudyIndexHandler(StudyAPIProxy):
     @authenticated
     def get(self, study_id):
         study = Study(_to_int(study_id))
@@ -112,24 +143,7 @@ class StudyIndexHandler(BaseHandler):
                     data_types=data_types, study_info=study_info)
 
 
-class StudyBaseInfoAJAX(BaseHandler):
-    def study_info_proxy(self, study):
-        """Proxies expected json from the API for base study info"""
-        study_info = Study.get_info([study.id])[0]
-
-        pi = StudyPerson(study_info["principal_investigator_id"])
-        study_info["principal_investigator"] = '%s (%s)' % (
-            pi.name, pi.affiliation)
-        del study_info["principal_investigator_id"]
-
-        lab_person = StudyPerson(study_info["lab_person_id"])
-        study_info["lab_person"] = '%s (%s)' % (
-            lab_person.name, lab_person.affiliation)
-        del study_info["lab_person_id"]
-        samples = study.sample_template.keys()
-        study_info['num_samples'] = 0 if samples is None else len(set(samples))
-        return study_info
-
+class StudyBaseInfoAJAX(StudyAPIProxy):
     @authenticated
     def get(self):
         sid = self.get_argument('study_id')
