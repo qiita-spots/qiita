@@ -27,14 +27,14 @@ from qiita_pet.handlers.util import download_link_or_path
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
 from qiita_db.analysis import Analysis
-from qiita_db.data import ProcessedData
-from qiita_db.job import Job, Command
+from qiita_db.artifact import Artifact
+from qiita_db.job import Command
 from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,
                            filepath_ids_to_rel_paths, get_filepath_id)
 from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_db.study import Study
 from qiita_db.logger import LogEntry
+from qiita_db.reference import Reference
 from qiita_core.util import execute_as_transaction
 
 SELECT_SAMPLES = 2
@@ -148,8 +148,7 @@ class AnalysisResultsHandler(BaseHandler):
         check_analysis_access(self.current_user, analysis)
 
         jobres = defaultdict(list)
-        for job in analysis.jobs:
-            jobject = Job(job)
+        for jobject in analysis.jobs:
             results = []
             for res in jobject.results:
                 name = basename(res)
@@ -164,10 +163,9 @@ class AnalysisResultsHandler(BaseHandler):
         for proc_data_id, samples in viewitems(dropped_samples):
             if not samples:
                 continue
-            proc_data = ProcessedData(proc_data_id)
-            data_type = proc_data.data_type()
-            study = proc_data.study
-            dropped[data_type].append((Study(study).title, len(samples),
+            proc_data = Artifact(proc_data_id)
+            data_type = proc_data.data_type
+            dropped[data_type].append((proc_data.study.title, len(samples),
                                        ', '.join(samples)))
 
         self.render("analysis_results.html", analysis_id=analysis_id,
@@ -215,8 +213,7 @@ class ShowAnalysesHandler(BaseHandler):
         level = self.get_argument('level', '')
         user = self.current_user
 
-        analyses = [Analysis(a) for a in
-                    user.shared_analyses | user.private_analyses]
+        analyses = user.shared_analyses | user.private_analyses
 
         is_local_request = is_localhost(self.request.headers['host'])
         gfi = partial(get_filepath_id, 'analysis')
@@ -269,6 +266,8 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
         """Overrides StaticFileHandler's method to include authentication
         """
         # Get the filename (or the base directory) of the result
+        if root[-1] != '/':
+            root = "%s/" % root
         len_prefix = len(commonprefix([root, absolute_path]))
         base_requested_fp = absolute_path[len_prefix:].split(sep, 1)[0]
 
@@ -308,13 +307,24 @@ class SelectedSamplesHandler(BaseHandler):
         # Format sel_data to get study IDs for the processed data
         sel_data = defaultdict(dict)
         proc_data_info = {}
-        sel_samps = Analysis(self.current_user.default_analysis).samples
+        sel_samps = self.current_user.default_analysis.samples
         for pid, samps in viewitems(sel_samps):
-            proc_data = ProcessedData(pid)
+            proc_data = Artifact(pid)
             sel_data[proc_data.study][pid] = samps
             # Also get processed data info
-            proc_data_info[pid] = proc_data.processing_info
-            proc_data_info[pid]['data_type'] = proc_data.data_type()
+            parameters = proc_data.processing_parameters
+            reference = Reference(parameters.values['reference'])
+
+            proc_data_info[pid] = {
+                'processed_date': str(proc_data.timestamp),
+                'algorithm': parameters.command.name,
+                'reference_name': reference.name,
+                'reference_version': reference.version,
+                'sequence_filepath': reference.sequence_fp,
+                'taxonomy_filepath': reference.taxonomy_fp,
+                'tree_filepath': reference.tree_fp,
+                'data_type': proc_data.data_type}
+
         self.render("analysis_selected.html", sel_data=sel_data,
                     proc_info=proc_data_info)
 
@@ -323,5 +333,5 @@ class AnalysisSummaryAJAX(BaseHandler):
     @authenticated
     @execute_as_transaction
     def get(self):
-        info = Analysis(self.current_user.default_analysis).summary_data()
+        info = self.current_user.default_analysis.summary_data()
         self.write(dumps(info))

@@ -5,12 +5,12 @@
       <!-- Adding a preprocessed data -->
       <li class="active"><a href="#add_preprocessed_data_tab" role="tab" data-toggle="tab">Add preprocessed data</a></li>
       <!-- Create the tabs for each preprocessed data -->
-      {% for ppd_id, ppd, (class_icon1, class_icon2, color), ebi in available_preprocessed_data %}
-        <li><a href="#preprocessed_data_info_{{ppd_id}}" role="tab" data-toggle="tab">ID: {{ppd_id}}&nbsp;&nbsp;
+      {% for ppd, (class_icon1, class_icon2, color), ebi in available_preprocessed_data %}
+        <li><a href="#preprocessed_data_info_{{ppd.id}}" role="tab" data-toggle="tab">ID: {{ppd.id}}&nbsp;&nbsp;
           {% if ebi %} EBI {% end %}
           <div class="{{class_icon1}}" style="color: {{color}};"></div>
           <div class="{{class_icon2}}" style="color: {{color}};"></div>
-          <button class="close" title="Remove this preprocessed data" type="button" onclick="delete_preprocessed_data({{ppd_id}})">&nbsp; ×</button>
+          <button class="close" title="Remove this preprocessed data" type="button" onclick="delete_preprocessed_data({{ppd.id}})">&nbsp; ×</button>
           </a>
         </li>
       {% end %}
@@ -22,7 +22,7 @@
         <b>Not implemented! Coming soon...</b>
       </div>
       <!-- Create one tab pane for each preprocessed data -->
-      {% for ppd_id, ppd, _, _ in available_preprocessed_data %}
+      {% for ppd, _, _ in available_preprocessed_data %}
         {% module PreprocessedDataInfoTab(study_id, ppd) %}
       {% end %}
     </div>

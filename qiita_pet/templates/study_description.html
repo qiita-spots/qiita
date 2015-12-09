@@ -311,7 +311,7 @@ function delete_study() {
 }
 
 function delete_sample_template() {
-  sample_template_id = {{study.sample_template}};
+  sample_template_id = {{study.id}};
   if (confirm('Are you sure you want to delete sample template ID: ' + sample_template_id + '?')) {
     var form = $("<form>")
     .attr("action", window.location.href)
@@ -516,84 +516,6 @@ function update_investigation_type(old_value, prep_template_id, ppd_id) {
       form.submit();
   } else {
     $("#investigation_type_prep_" + prep_template_id).val(old_value);
-  }
-}
-
-function link_files_to_raw_data(raw_data_id, prep_template_id, filetype) {
-  var result = get_and_check_raw_data_files(prep_template_id, filetype);
-  var success = result[0];
-
-  if (success){
-    var barcodes = result[1];
-    var forward = result[2];
-    var reverse = result[3];
-    var sff = result[4];
-    var fasta = result[5];
-    var qual = result[6];
-
-    var form = $("<form>")
-    .attr("action", "/study/add_files_to_raw_data")
-    .attr("method", "post")
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "raw_data_id")
-      .attr("value", raw_data_id))
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "prep_template_id")
-      .attr("value", prep_template_id))
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "study_id")
-      .attr("value", {{study.id}}))
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "barcodes")
-      .attr("value", barcodes.join()))
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "forward")
-      .attr("value", forward.join()))
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "sff")
-      .attr("value", sff.join()))
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "fasta")
-      .attr("value", fasta.join()))
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "qual")
-      .attr("value", qual.join()))
-    .append($("<input>")
-      .attr("type", "hidden")
-      .attr("name", "reverse")
-      .attr("value", reverse.join()));
-    $("body").append(form);
-    form.submit();
-  }
-}
-
-function unlink_all_files(raw_data_id, prep_template_id) {
-  if (confirm("Are you sure you want to unlink all files?")){
-    var form = $("<form>")
-      .attr("action", "/study/unlink_all_files")
-      .attr("method", "post")
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "study_id")
-        .attr("value", {{study.id}}))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "raw_data_id")
-        .attr("value", raw_data_id))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "prep_template_id")
-        .attr("value", prep_template_id))
-    $("body").append(form);
-    form.submit();
   }
 }
 

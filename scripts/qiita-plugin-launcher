@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+from subprocess import Popen
+
+import click
+
+
+@click.command()
+@click.argument('env_script', required=True)
+@click.argument('start_script', required=True)
+@click.argument('url', required=True)
+@click.argument('job_id', required=True)
+@click.argument('job_dir', required=True)
+def start(env_script, start_script, url, job_id, job_dir):
+    """Starts the plugin environment"""
+    cmd = [start_script, url, job_id, job_dir]
+    # When Popen executes, the shell is not in interactive mode,
+    # so it is not sourcing any of the bash configuration files
+    # We need to source it so the env_script are available
+    cmd = "source ~/.bash_profile; %s; %s" % (env_script, ' '.join(cmd))
+    proc = Popen(cmd, shell=True)
+    if proc.returncode and proc.returncode != 0:
+        raise ValueError("Error launching the plugin.")
+
+
+if __name__ == '__main__':
+    start()

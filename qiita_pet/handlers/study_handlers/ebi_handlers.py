@@ -12,12 +12,13 @@ from tornado.web import authenticated, HTTPError
 from qiita_ware.context import submit
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
-from qiita_db.data import PreprocessedData
-from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
-                                        SAMPLE_TEMPLATE_COLUMNS,
-                                        PREP_TEMPLATE_COLUMNS)
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.constants import (SAMPLE_TEMPLATE_COLUMNS,
+                                                  PREP_TEMPLATE_COLUMNS)
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.artifact import Artifact
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import execute_as_transaction
 
@@ -28,9 +29,9 @@ class EBISubmitHandler(BaseHandler):
         """Simple function to avoid duplication of code"""
         preprocessed_data_id = int(preprocessed_data_id)
         try:
-            preprocessed_data = PreprocessedData(preprocessed_data_id)
+            preprocessed_data = Artifact(preprocessed_data_id)
         except QiitaDBUnknownIDError:
-            raise HTTPError(404, "PreprocessedData %d does not exist!" %
+            raise HTTPError(404, "Artifact %d does not exist!" %
                                  preprocessed_data_id)
         else:
             user = self.current_user
@@ -110,7 +111,7 @@ class EBISubmitHandler(BaseHandler):
 
         msg = ''
         msg_level = 'success'
-        study_id = PreprocessedData(preprocessed_data_id).study
+        study_id = Artifact(preprocessed_data_id).study
         study = Study(study_id)
         state = study.ebi_submission_status
         if state == 'submitting':

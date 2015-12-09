@@ -1,9 +1,8 @@
 from tornado.web import authenticated
 
 from .base_handlers import BaseHandler
-from qiita_ware.dispatchable import processor
-from qiita_db.parameters import ProcessedSortmernaParams
-from qiita_ware.context import submit
+from qiita_db.software import Parameters, DefaultParameters
+from qiita_ware.executor import plugin_submit
 
 
 class ProcessHandler(BaseHandler):
@@ -13,12 +12,9 @@ class ProcessHandler(BaseHandler):
         preprocessed_data_id = int(self.get_argument('preprocessed_data_id'))
         param_id = self.get_argument('parameter-set-%s' % preprocessed_data_id)
 
-        # The only parameter type supported is the ProcessedSortmernaParams
-        # so we can hardcode the constructor here
-        param_constructor = ProcessedSortmernaParams
-
-        job_id = submit(self.current_user.id, processor, preprocessed_data_id,
-                        param_id, param_constructor)
+        parameters = Parameters.from_default_params(
+            DefaultParameters(param_id), {'input_data': preprocessed_data_id})
+        job_id = plugin_submit(self.current_user, parameters)
 
         self.render('compute_wait.html',
                     job_id=job_id, title='Processing',

@@ -44,7 +44,10 @@ script:
     scripts/qiita-env scripts/qiita-test-install ; fi
   - ls -R /home/travis/miniconda3/envs/env_name/lib/python2.7/site-packages/qiita_pet/support_files/doc/
   - qiita pet webserver
+addons:
+  postgresql: "9.3"
 services:
   - redis-server
+  - postgresql
 after_success:
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then coveralls ; fi

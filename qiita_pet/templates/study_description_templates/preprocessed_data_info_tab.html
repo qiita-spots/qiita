@@ -120,7 +120,7 @@ function parameters_changed(obj, ppd_id){
       class="btn btn-primary glyphicon glyphicon-play" data-toggle="modal" data-target="#process-modal-view-{{ppd_id}}"
     {% end %}> Process</a>
     <br/>
-    <i>Status: </i> {{processing_status}}
+    <i>Status: </i> {% raw processing_status_msg %}
   {% else %}
     <b> Processed data generated: </b>
     <a href="#" onclick="display_tab('processed_data_tab', {{processed_data[0]}});">{{processed_data[0]}}</a>

@@ -14,8 +14,9 @@ echo "Ok"
 
 # Inserting all the information for each study
 echo "INSERTING STUDIES"
-mkdir -p temp
 for i in ${studies[@]}; do
+    mkdir -p temp
+
     # Get all needed filepaths for the study
     conf_fp=test_data_studies/studies/$i/study_config.txt
     sample_file=test_data_studies/studies/$i/sample_template_$i.txt
@@ -48,30 +49,29 @@ for i in ${studies[@]}; do
 
     # Loading raw data
     echo "\tloading raw data... "
-    echo -e ">seq\nAAAA" > seqs.fna
-    output="`qiita db load_raw --fp seqs.fna --fp_type raw_forward_seqs --filetype FASTQ --prep_template $pt_id`"
-    raw_id=`echo -e "${output}" | cut -d " " -f 10`
+    echo -e ">seq\nAAAA" > temp/seqs.fna
+    output="`qiita db load_artifact --fp temp/seqs.fna --fp_type raw_forward_seqs --artifact_type FASTQ --prep_template $pt_id`"
+    raw_id=`echo -e "${output}" | cut -d " " -f 2`
     echo "Ok"
 
     # Loading preprocessed data
     echo "\tloading preprocessed data... "
     echo -e ">seq\nAAAA" > temp/seqs.fna
-    output=`qiita db load_preprocessed --study_id $study_id --params_table preprocessed_sequence_454_params --filedir temp/ --filepathtype preprocessed_fasta --params_id 1 --prep_template_id $pt_id`
-    ppd_id=`echo -e "${output}" | cut -d " " -f 10`
+    output=`qiita db load_artifact --artifact_type FASTA_Sanger --dflt_params 1 --fp temp/ --fp_type preprocessed_fasta --parents ${raw_id}`
+    ppd_id=`echo -e "${output}" | cut -d " " -f 2`
     echo "Ok"
 
     # Loading processed data
     echo "\tloading processed data... "
     cp $otu_table ${otu_table}_backup
-    output="`qiita db load_processed --fp $otu_table --fp_type biom --processed_params_table processed_params_sortmerna --processed_params_id 1 --preprocessed_data_id ${ppd_id}`"
-    pd_id=`echo -e "${output}" | cut -d " " -f 10`
+    output="`qiita db load_artifact --artifact_type BIOM --fp $otu_table --fp_type biom --dflt_params 2 --parents ${ppd_id}`"
+    pd_id=`echo -e "${output}" | cut -d " " -f 2`
     mv ${otu_table}_backup $otu_table
     echo "Ok"
 
     # Making study public by making its processed data public
     echo "\tmaking study public... "
-    echo -e "from qiita_db.data import ProcessedData\nProcessedData(${pd_id}).status = 'public'\n\n" | python
+    echo -e "from qiita_db.artifact import Artifact\nArtifact(${pd_id}).status = 'public'\n\n" | python
     echo "Ok"
     rm $conf_fp
 done
-rmdir temp

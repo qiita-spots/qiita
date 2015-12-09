@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from os import remove, close, mkdir
-from os.path import exists, join, basename
+from os.path import exists, join
 from tempfile import mkstemp, mkdtemp
 from shutil import rmtree
 from unittest import TestCase, main
@@ -18,24 +18,9 @@ from operator import itemgetter
 
 import pandas as pd
 
-from qiita_db.commands import (load_study_from_cmd, load_raw_data_cmd,
-                               load_sample_template_from_cmd,
-                               load_prep_template_from_cmd,
-                               load_processed_data_cmd,
-                               load_preprocessed_data_from_cmd,
-                               load_parameters_from_cmd,
-                               update_raw_data_from_cmd,
-                               update_preprocessed_data_from_cmd)
-from qiita_db.environment_manager import patch
-from qiita_db.study import Study, StudyPerson
-from qiita_db.user import User
-from qiita_db.data import PreprocessedData, RawData
-from qiita_db.util import (get_count, check_count, get_db_files_base_dir,
-                           get_mountpoint, compute_checksum,
-                           get_files_from_uploads_folders)
-from qiita_db.metadata_template import PrepTemplate
 from qiita_core.util import qiita_test_checker
-from qiita_ware.processing_pipeline import generate_demux_file
+
+import qiita_db as qdb
 
 with standard_library.hooks():
     import configparser
@@ -44,15 +29,16 @@ with standard_library.hooks():
 @qiita_test_checker()
 class TestMakeStudyFromCmd(TestCase):
     def setUp(self):
-        StudyPerson.create('SomeDude', 'somedude@foo.bar', 'some',
-                           '111 fake street', '111-121-1313')
-        User.create('test@test.com', 'password')
+        qdb.study.StudyPerson.create(
+            'SomeDude', 'somedude@foo.bar', 'some',
+            '111 fake street', '111-121-1313')
+        qdb.user.User.create('test@test.com', 'password')
         self.config1 = CONFIG_1
         self.config2 = CONFIG_2
 
     def test_make_study_from_cmd(self):
         fh = StringIO(self.config1)
-        load_study_from_cmd('test@test.com', 'newstudy', fh)
+        qdb.commands.load_study_from_cmd('test@test.com', 'newstudy', fh)
         sql = ("select study_id from qiita.study where email = %s and "
                "study_title = %s")
         study_id = self.conn_handler.execute_fetchone(sql, ('test@test.com',
@@ -61,69 +47,106 @@ class TestMakeStudyFromCmd(TestCase):
 
         fh2 = StringIO(self.config2)
         with self.assertRaises(configparser.NoOptionError):
-            load_study_from_cmd('test@test.com', 'newstudy2', fh2)
+            qdb.commands.load_study_from_cmd('test@test.com', 'newstudy2', fh2)
 
 
 @qiita_test_checker()
-class TestImportPreprocessedData(TestCase):
+class TestLoadArtifactFromCmd(TestCase):
     def setUp(self):
-        self.tmpdir = mkdtemp()
-        fd, self.file1 = mkstemp(dir=self.tmpdir)
-        close(fd)
-        fd, self.file2 = mkstemp(dir=self.tmpdir)
-        close(fd)
-        with open(self.file1, "w") as f:
-            f.write("\n")
-        with open(self.file2, "w") as f:
-            f.write("\n")
-
-        self.files_to_remove = [self.file1, self.file2]
-        self.dirs_to_remove = [self.tmpdir]
-
-        self.db_test_ppd_dir = join(get_db_files_base_dir(),
-                                    'preprocessed_data')
+        self.artifact_count = qdb.util.get_count('qiita.artifact')
+        self.fp_count = qdb.util.get_count('qiita.filepath')
+        self.files_to_remove = []
 
     def tearDown(self):
         for fp in self.files_to_remove:
             if exists(fp):
                 remove(fp)
-        for dp in self.dirs_to_remove:
-            if exists(dp):
-                rmtree(dp)
 
-    def test_import_preprocessed_data(self):
-        initial_ppd_count = get_count('qiita.preprocessed_data')
-        initial_fp_count = get_count('qiita.filepath')
-        ppd = load_preprocessed_data_from_cmd(
-            1, 'preprocessed_sequence_illumina_params',
-            self.tmpdir, 'preprocessed_fasta', 1, 1, None)
-        self.files_to_remove.append(
-            join(self.db_test_ppd_dir,
-                 '%d_%s' % (ppd.id, basename(self.file1))))
-        self.files_to_remove.append(
-            join(self.db_test_ppd_dir,
-                 '%d_%s' % (ppd.id, basename(self.file2))))
-        self.assertEqual(ppd.id, 3)
-        self.assertTrue(check_count('qiita.preprocessed_data',
-                                    initial_ppd_count + 1))
-        self.assertTrue(check_count('qiita.filepath', initial_fp_count+2))
+    def test_load_artifact_from_cmd_error(self):
+        with self.assertRaises(ValueError):
+            qdb.commands.load_artifact_from_cmd(
+                ["fp1", "fp2"], ["preprocessed_fasta"], "Demultiplexed",
+                parents=[1], dflt_params_id=10,
+                required_params='{"input_data": 1}')
 
-    def test_import_preprocessed_data_data_type(self):
-        initial_ppd_count = get_count('qiita.preprocessed_data')
-        initial_fp_count = get_count('qiita.filepath')
-        ppd = load_preprocessed_data_from_cmd(
-            1, 'preprocessed_sequence_illumina_params',
-            self.tmpdir, 'preprocessed_fasta', 1, None, '16S')
-        self.files_to_remove.append(
-            join(self.db_test_ppd_dir,
-                 '%d_%s' % (ppd.id, basename(self.file1))))
-        self.files_to_remove.append(
-            join(self.db_test_ppd_dir,
-                 '%d_%s' % (ppd.id, basename(self.file2))))
-        self.assertEqual(ppd.id, 3)
-        self.assertTrue(check_count('qiita.preprocessed_data',
-                                    initial_ppd_count + 1))
-        self.assertTrue(check_count('qiita.filepath', initial_fp_count+2))
+        with self.assertRaises(ValueError):
+            qdb.commands.load_artifact_from_cmd(
+                ["fp1"], ["preprocessed_fasta"], "Demultiplexed",
+                parents=[1, 2], dflt_params_id=10)
+
+    def test_load_artifact_from_cmd_root(self):
+        fd, forward_fp = mkstemp(suffix='_forward.fastq.gz')
+        close(fd)
+        self.files_to_remove.append(forward_fp)
+        fd, reverse_fp = mkstemp(suffix='_reverse.fastq.gz')
+        close(fd)
+        self.files_to_remove.append(reverse_fp)
+        fd, barcodes_fp = mkstemp(suffix='_barcodes.fastq.gz')
+        close(fd)
+        self.files_to_remove.append(barcodes_fp)
+        fps = [forward_fp, reverse_fp, barcodes_fp]
+        for fp in fps:
+            with open(fp, 'w') as f:
+                f.write('\n')
+        ftypes = ['raw_forward_seqs', 'raw_reverse_seqs', 'raw_barcodes']
+        metadata = pd.DataFrame.from_dict(
+            {'SKB8.640193': {'center_name': 'ANL',
+                             'primer': 'GTGCCAGCMGCCGCGGTAA',
+                             'barcode': 'GTCCGCAAGTTA',
+                             'run_prefix': "s_G1_L001_sequences",
+                             'platform': 'ILLUMINA',
+                             'instrument_model': 'Illumina MiSeq',
+                             'library_construction_protocol': 'AAAA',
+                             'experiment_design_description': 'BBBB'}},
+            orient='index')
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, qdb.study.Study(1), "16S")
+        obs = qdb.commands.load_artifact_from_cmd(
+            fps, ftypes, 'FASTQ', prep_template=pt.id)
+        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.assertEqual(obs.id, self.artifact_count + 1)
+        self.assertTrue(
+            qdb.util.check_count('qiita.filepath', self.fp_count + 5))
+
+    def test_load_artifact_from_cmd_processed(self):
+        fd, file1 = mkstemp()
+        close(fd)
+        self.files_to_remove.append(file1)
+        fd, file2 = mkstemp()
+        close(fd)
+        self.files_to_remove.append(file2)
+        fps = [file1, file2]
+        ftypes = ['preprocessed_fasta', 'preprocessed_fastq']
+        for fp in fps:
+            with open(fp, 'w') as f:
+                f.write("\n")
+        obs = qdb.commands.load_artifact_from_cmd(
+            fps, ftypes, 'Demultiplexed', parents=[1], dflt_params_id=1,
+            required_params='{"input_data": 1}',
+            optional_params='{"min_per_read_length_fraction": 0.80}',
+            can_be_submitted_to_ebi=True,
+            can_be_submitted_to_vamps=True)
+        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.assertEqual(obs.id, self.artifact_count + 1)
+        self.assertTrue(
+            qdb.util.check_count('qiita.filepath', self.fp_count + 2))
+
+    def test_load_artifact_from_cmd_biom(self):
+        fd, otu_table_fp = mkstemp(suffix='_otu_table.biom')
+        close(fd)
+        self.files_to_remove.append(otu_table_fp)
+        fps = [otu_table_fp]
+        ftypes = ['biom']
+        for fp in fps:
+            with open(fp, 'w') as f:
+                f.write("\n")
+        obs = qdb.commands.load_artifact_from_cmd(
+            fps, ftypes, 'BIOM', parents=[3], dflt_params_id=10,
+            required_params='{"input_data": 3}')
+        self.files_to_remove.extend([fp for _, fp, _ in obs.filepaths])
+        self.assertEqual(obs.id, self.artifact_count + 1)
+        self.assertTrue(
+            qdb.util.check_count('qiita.filepath', self.fp_count + 1))
 
 
 @qiita_test_checker()
@@ -142,17 +165,17 @@ class TestLoadSampleTemplateFromCmd(TestCase):
             "study_alias": "TestStudy",
             "study_description": "Description of a test study",
             "study_abstract": "No abstract right now...",
-            "emp_person_id": StudyPerson(2),
-            "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
+            "emp_person_id": qdb.study.StudyPerson(2),
+            "principal_investigator_id": qdb.study.StudyPerson(3),
+            "lab_person_id": qdb.study.StudyPerson(1)
         }
-        self.study = Study.create(User('test@foo.bar'),
-                                  "Test study", [1], info)
+        self.study = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), "Test study", [1], info)
 
     def test_load_sample_template_from_cmd(self):
         """Correctly adds a sample template to the DB"""
         fh = StringIO(self.st_contents)
-        st = load_sample_template_from_cmd(fh, self.study.id)
+        st = qdb.commands.load_sample_template_from_cmd(fh, self.study.id)
         self.assertEqual(st.id, self.study.id)
 
 
@@ -164,144 +187,8 @@ class TestLoadPrepTemplateFromCmd(TestCase):
     def test_load_prep_template_from_cmd(self):
         """Correctly adds a prep template to the DB"""
         fh = StringIO(self.pt_contents)
-        st = load_prep_template_from_cmd(fh, 1, '18S')
+        st = qdb.commands.load_prep_template_from_cmd(fh, 1, '18S')
         self.assertEqual(st.id, 2)
-
-
-@qiita_test_checker()
-class TestLoadRawDataFromCmd(TestCase):
-    def setUp(self):
-        fd, self.forward_fp = mkstemp(suffix='_forward.fastq.gz')
-        close(fd)
-        fd, self.reverse_fp = mkstemp(suffix='_reverse.fastq.gz')
-        close(fd)
-        fd, self.barcodes_fp = mkstemp(suffix='_barcodes.fastq.gz')
-        close(fd)
-
-        with open(self.forward_fp, "w") as f:
-            f.write("\n")
-        with open(self.reverse_fp, "w") as f:
-            f.write("\n")
-        with open(self.barcodes_fp, "w") as f:
-            f.write("\n")
-
-        self.files_to_remove = []
-        self.files_to_remove.append(self.forward_fp)
-        self.files_to_remove.append(self.reverse_fp)
-        self.files_to_remove.append(self.barcodes_fp)
-
-        self.db_test_raw_dir = join(get_db_files_base_dir(), 'raw_data')
-
-    def tearDown(self):
-        for fp in self.files_to_remove:
-            if exists(fp):
-                remove(fp)
-
-    def test_load_data_from_cmd(self):
-        filepaths = [self.forward_fp, self.reverse_fp, self.barcodes_fp]
-        filepath_types = ['raw_forward_seqs', 'raw_reverse_seqs',
-                          'raw_barcodes']
-
-        filetype = 'FASTQ'
-        metadata_dict = {
-            'SKB8.640193': {'center_name': 'ANL',
-                            'primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcode': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
-                            'instrument_model': 'Illumina MiSeq',
-                            'library_construction_protocol': 'AAAA',
-                            'experiment_design_description': 'BBBB'}}
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        pt1 = PrepTemplate.create(metadata, Study(1), "16S")
-        prep_templates = [pt1.id]
-
-        initial_raw_count = get_count('qiita.raw_data')
-        initial_fp_count = get_count('qiita.filepath')
-        initial_raw_fp_count = get_count('qiita.raw_filepath')
-
-        new = load_raw_data_cmd(filepaths, filepath_types, filetype,
-                                prep_templates)
-        raw_data_id = new.id
-        self.files_to_remove.append(
-            join(self.db_test_raw_dir,
-                 '%d_%s' % (raw_data_id, basename(self.forward_fp))))
-        self.files_to_remove.append(
-            join(self.db_test_raw_dir,
-                 '%d_%s' % (raw_data_id, basename(self.reverse_fp))))
-        self.files_to_remove.append(
-            join(self.db_test_raw_dir,
-                 '%d_%s' % (raw_data_id, basename(self.barcodes_fp))))
-
-        self.assertTrue(check_count('qiita.raw_data', initial_raw_count + 1))
-        self.assertTrue(check_count('qiita.filepath',
-                                    initial_fp_count + 3))
-        self.assertTrue(check_count('qiita.raw_filepath',
-                                    initial_raw_fp_count + 3))
-
-        # Ensure that the ValueError is raised when a filepath_type is not
-        # provided for each and every filepath
-        with self.assertRaises(ValueError):
-            load_raw_data_cmd(filepaths, filepath_types[:-1], filetype,
-                              prep_templates)
-
-
-@qiita_test_checker()
-class TestLoadProcessedDataFromCmd(TestCase):
-    def setUp(self):
-        fd, self.otu_table_fp = mkstemp(suffix='_otu_table.biom')
-        close(fd)
-        fd, self.otu_table_2_fp = mkstemp(suffix='_otu_table2.biom')
-        close(fd)
-
-        with open(self.otu_table_fp, "w") as f:
-            f.write("\n")
-        with open(self.otu_table_2_fp, "w") as f:
-            f.write("\n")
-
-        self.files_to_remove = []
-        self.files_to_remove.append(self.otu_table_fp)
-        self.files_to_remove.append(self.otu_table_2_fp)
-
-        self.db_test_processed_data_dir = join(get_db_files_base_dir(),
-                                               'processed_data')
-
-    def tearDown(self):
-        for fp in self.files_to_remove:
-            if exists(fp):
-                remove(fp)
-
-    def test_load_processed_data_from_cmd(self):
-        filepaths = [self.otu_table_fp, self.otu_table_2_fp]
-        filepath_types = ['biom', 'biom']
-
-        initial_processed_data_count = get_count('qiita.processed_data')
-        initial_processed_fp_count = get_count('qiita.processed_filepath')
-        initial_fp_count = get_count('qiita.filepath')
-
-        new = load_processed_data_cmd(filepaths, filepath_types,
-                                      'processed_params_uclust', 1, 1, None)
-        processed_data_id = new.id
-        self.files_to_remove.append(
-            join(self.db_test_processed_data_dir,
-                 '%d_%s' % (processed_data_id, basename(self.otu_table_fp))))
-        self.files_to_remove.append(
-            join(self.db_test_processed_data_dir,
-                 '%d_%s' % (processed_data_id,
-                            basename(self.otu_table_2_fp))))
-
-        self.assertTrue(check_count('qiita.processed_data',
-                                    initial_processed_data_count + 1))
-        self.assertTrue(check_count('qiita.processed_filepath',
-                                    initial_processed_fp_count + 2))
-        self.assertTrue(check_count('qiita.filepath',
-                                    initial_fp_count + 2))
-
-        # Ensure that the ValueError is raised when a filepath_type is not
-        # provided for each and every filepath
-        with self.assertRaises(ValueError):
-            load_processed_data_cmd(filepaths, filepath_types[:-1],
-                                    'processed_params_uclust', 1, 1, None)
 
 
 @qiita_test_checker()
@@ -327,21 +214,26 @@ class TestLoadParametersFromCmd(TestCase):
                 remove(fp)
 
     def test_load_parameters_from_cmd_error(self):
-        with self.assertRaises(ValueError):
-            load_parameters_from_cmd("test", self.fp, "does_not_exist")
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.commands.load_parameters_from_cmd(
+                "test", self.fp, 20)
 
     def test_load_parameters_from_cmd_error_format(self):
         with self.assertRaises(ValueError):
-            load_parameters_from_cmd("test", self.fp_wrong,
-                                     "preprocessed_sequence_illumina_params")
+            qdb.commands.load_parameters_from_cmd(
+                "test", self.fp_wrong, 1)
 
     def test_load_parameters_from_cmd(self):
-        new = load_parameters_from_cmd(
-            "test", self.fp, "preprocessed_sequence_illumina_params")
-        obs = new.to_str()
-        exp = ("--barcode_type hamming_8 --max_bad_run_length 3 "
-               "--max_barcode_errors 1.5 --min_per_read_length_fraction 0.75 "
-               "--phred_quality_threshold 3 --sequence_max_n 0")
+        new = qdb.commands.load_parameters_from_cmd(
+            "test", self.fp, 1)
+        obs = new.values
+        exp = {"barcode_type": "hamming_8", "max_bad_run_length": "3",
+               "max_barcode_errors": "1.5",
+               "min_per_read_length_fraction": "0.75",
+               "phred_quality_threshold": "3", "sequence_max_n": "0",
+               "rev_comp": "False", "rev_comp_barcode": "False",
+               "rev_comp_mapping_barcodes": "False",
+               "sequence_max_n": "0"}
         self.assertEqual(obs, exp)
 
 
@@ -405,7 +297,7 @@ class TestPatch(TestCase):
             """UPDATE settings SET current_patch = 'unpatched'""")
 
         self._assert_current_patch('unpatched')
-        patch(self.patches_dir)
+        qdb.environment_manager.patch(self.patches_dir)
         self._check_patchtest2()
         self._check_patchtest10()
         self._assert_current_patch('10.sql')
@@ -417,7 +309,7 @@ class TestPatch(TestCase):
         self._assert_current_patch('2.sql')
 
         # If it tried to apply patch 2.sql again, this will error
-        patch(self.patches_dir)
+        qdb.environment_manager.patch(self.patches_dir)
 
         self._assert_current_patch('10.sql')
         self._check_patchtest10()
@@ -432,7 +324,7 @@ class TestPatch(TestCase):
         self._assert_current_patch('nope.sql')
 
         with self.assertRaises(RuntimeError):
-            patch(self.patches_dir)
+            qdb.environment_manager.patch(self.patches_dir)
 
     def test_python_patch(self):
         # Write a test python patch
@@ -446,7 +338,7 @@ class TestPatch(TestCase):
 
         self._assert_current_patch('unpatched')
 
-        patch(self.patches_dir)
+        qdb.environment_manager.patch(self.patches_dir)
 
         obs = self.conn_handler.execute_fetchall(
             """SELECT testing FROM qiita.patchtest10""")
@@ -457,7 +349,7 @@ class TestPatch(TestCase):
 
 
 @qiita_test_checker()
-class TestUpdateRawDataFromCmd(TestCase):
+class TestUpdateArtifactFromCmd(TestCase):
     def setUp(self):
         fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
         close(fd)
@@ -468,314 +360,45 @@ class TestUpdateRawDataFromCmd(TestCase):
         for fp in sorted(self.filepaths):
             with open(fp, 'w') as f:
                 f.write("%s\n" % fp)
-            self.checksums.append(compute_checksum(fp))
+            self.checksums.append(qdb.util.compute_checksum(fp))
         self.filepaths_types = ["raw_forward_seqs", "raw_barcodes"]
         self._clean_up_files = [seqs_fp, barcodes_fp]
+        self.uploaded_files = qdb.util.get_files_from_uploads_folders("1")
 
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "study_alias": "FCM",
-            "study_description": "Microbiome of people who eat nothing but "
-                                 "fried chicken",
-            "study_abstract": "Exploring how a high fat diet changes the "
-                              "gut microbiome",
-            "emp_person_id": StudyPerson(2),
-            "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
-        }
-        self.new_study = Study.create(User("test@foo.bar"),
-                                      "Update raw data test",
-                                      efo=[1], info=info)
-        self.study = Study(1)
-        # The files for the RawData object attached to study 1 does not exist.
-        # Create them so we can actually perform the tests
-        for _, fp, _ in RawData(1).get_filepaths():
+        # The files for the Artifact 1 doesn't exist, create them
+        for _, fp, _ in qdb.artifact.Artifact(1).filepaths:
             with open(fp, 'w') as f:
                 f.write('\n')
             self._clean_up_files.append(fp)
 
-        self.uploaded_files = get_files_from_uploads_folders(
-            str(self.study.id))
-
     def tearDown(self):
-        new_uploaded_files = get_files_from_uploads_folders(str(self.study.id))
+        new_uploaded_files = qdb.util.get_files_from_uploads_folders("1")
         new_files = set(new_uploaded_files).difference(self.uploaded_files)
-        path_builder = partial(join, get_mountpoint("uploads")[0][1], '1')
-        for _, fp in new_files:
-            self._clean_up_files.append(path_builder(fp))
+        path_builder = partial(
+            join, qdb.util.get_mountpoint("uploads")[0][1], '1')
+        self._clean_up_files.extend([path_builder(fp) for _, fp in new_files])
         for f in self._clean_up_files:
             if exists(f):
                 remove(f)
 
-    def test_update_raw_data_from_cmd_diff_length(self):
+    def test_update_artifact_from_cmd_error(self):
         with self.assertRaises(ValueError):
-            update_raw_data_from_cmd(self.filepaths[1:], self.filepaths_types,
-                                     self.study.id)
-        with self.assertRaises(ValueError):
-            update_raw_data_from_cmd(self.filepaths, self.filepaths_types[1:],
-                                     self.study.id)
+            qdb.commands.update_artifact_from_cmd(
+                self.filepaths[1:], self.filepaths_types, 1)
 
-    def test_update_raw_data_from_cmd_no_raw_data(self):
         with self.assertRaises(ValueError):
-            update_raw_data_from_cmd(self.filepaths, self.filepaths_types,
-                                     self.new_study.id)
+            qdb.commands.update_artifact_from_cmd(
+                self.filepaths, self.filepaths_types[1:], 1)
 
-    def test_update_raw_data_from_cmd_wrong_raw_data_id(self):
-        # Using max(raw_data_ids) + 1 to make sure that the raw data id
-        # passed does not belong to the study
-        with self.assertRaises(ValueError):
-            update_raw_data_from_cmd(self.filepaths, self.filepaths_types,
-                                     self.study.id,
-                                     max(self.study.raw_data()) + 1)
-
-    def test_update_raw_data_from_cmd(self):
-        rd = update_raw_data_from_cmd(self.filepaths, self.filepaths_types,
-                                      self.study.id)
-        # Make sure that we are cleaning the environment
-        for _, fp, _ in rd.get_filepaths():
+    def test_update_artifact_from_cmd(self):
+        artifact = qdb.commands.update_artifact_from_cmd(
+            self.filepaths, self.filepaths_types, 1)
+        for _, fp, _ in artifact.filepaths:
             self._clean_up_files.append(fp)
 
-        # The checkums are in filepath order. If we sort the rd.get_filepath()
-        # result by the filepath (itemgetter(1)) we will get them in the same
-        # order, so the checksums will not fail
-        for obs, exp in zip(sorted(rd.get_filepaths(), key=itemgetter(1)),
+        for obs, exp in zip(sorted(artifact.filepaths, key=itemgetter(1)),
                             self.checksums):
-            self.assertEqual(compute_checksum(obs[1]), exp)
-
-    def test_update_raw_data_from_cmd_rd_id(self):
-        rd = update_raw_data_from_cmd(self.filepaths, self.filepaths_types,
-                                      self.study.id, self.study.raw_data()[0])
-        # Make sure that we are cleaning the environment
-        for _, fp, _ in rd.get_filepaths():
-            self._clean_up_files.append(fp)
-
-        # The checkums are in filepath order. If we sort the rd.get_filepath()
-        # result by the filepath (itemgetter(1)) we will get them in the same
-        # order, so the checksums will not fail
-        for obs, exp in zip(sorted(rd.get_filepaths(), key=itemgetter(1)),
-                            self.checksums):
-            self.assertEqual(compute_checksum(obs[1]), exp)
-
-
-@qiita_test_checker()
-class TestUpdatePreprocessedDataFromCmd(TestCase):
-    def setUp(self):
-        # Create a directory with the test split libraries output
-        self.test_slo = mkdtemp(prefix='test_slo_')
-        path_builder = partial(join, self.test_slo)
-        fna_fp = path_builder('seqs.fna')
-        fastq_fp = path_builder('seqs.fastq')
-        log_fp = path_builder('split_library_log.txt')
-        demux_fp = path_builder('seqs.demux')
-
-        with open(fna_fp, 'w') as f:
-            f.write(FASTA_SEQS)
-
-        with open(fastq_fp, 'w') as f:
-            f.write(FASTQ_SEQS)
-
-        with open(log_fp, 'w') as f:
-            f.write("Test log\n")
-
-        generate_demux_file(self.test_slo)
-
-        self._filepaths_to_remove = [fna_fp, fastq_fp, demux_fp, log_fp]
-        self._dirpaths_to_remove = [self.test_slo]
-
-        # Generate a directory with test split libraries output missing files
-        self.missing_slo = mkdtemp(prefix='test_missing_')
-        path_builder = partial(join, self.test_slo)
-        fna_fp = path_builder('seqs.fna')
-        fastq_fp = path_builder('seqs.fastq')
-
-        with open(fna_fp, 'w') as f:
-            f.write(FASTA_SEQS)
-
-        with open(fastq_fp, 'w') as f:
-            f.write(FASTQ_SEQS)
-
-        self._filepaths_to_remove.append(fna_fp)
-        self._filepaths_to_remove.append(fastq_fp)
-        self._dirpaths_to_remove.append(self.missing_slo)
-
-        # Create a study with no preprocessed data
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "study_alias": "FCM",
-            "study_description": "Microbiome of people who eat nothing but "
-                                 "fried chicken",
-            "study_abstract": "Exploring how a high fat diet changes the "
-                              "gut microbiome",
-            "emp_person_id": StudyPerson(2),
-            "principal_investigator_id": StudyPerson(3),
-            "lab_person_id": StudyPerson(1)
-        }
-        self.no_ppd_study = Study.create(
-            User('test@foo.bar'), "Test study", [1], info)
-
-        # Get the directory where the preprocessed data is usually copied.
-        _, self.db_ppd_dir = get_mountpoint('preprocessed_data')[0]
-
-    def tearDown(self):
-        for fp in self._filepaths_to_remove:
-            if exists(fp):
-                remove(fp)
-        for dp in self._dirpaths_to_remove:
-            if exists(fp):
-                rmtree(dp)
-
-    def test_update_preprocessed_data_from_cmd_error_no_ppd(self):
-        with self.assertRaises(ValueError):
-            update_preprocessed_data_from_cmd(self.test_slo,
-                                              self.no_ppd_study.id)
-
-    def test_update_preprocessed_data_from_cmd_error_missing_files(self):
-        with self.assertRaises(IOError):
-            update_preprocessed_data_from_cmd(self.missing_slo, 1)
-
-    def test_update_preprocessed_data_from_cmd_error_wrong_ppd(self):
-        with self.assertRaises(ValueError):
-            update_preprocessed_data_from_cmd(self.test_slo, 1, 100)
-
-    def test_update_preprocessed_data_from_cmd(self):
-        exp_ppd = PreprocessedData(Study(1).preprocessed_data()[0])
-        exp_fps = exp_ppd.get_filepaths()
-
-        # The original paths mush exist, but they're not included in the test
-        # so create them here
-        for _, fp, _ in exp_fps:
-            with open(fp, 'w') as f:
-                f.write("")
-
-        next_fp_id = get_count('qiita.filepath') + 1
-        exp_fps.append(
-            (next_fp_id,
-             join(self.db_ppd_dir, "%s_split_library_log.txt" % exp_ppd.id),
-             'log'))
-
-        ppd = update_preprocessed_data_from_cmd(self.test_slo, 1)
-
-        # Check that the modified preprocessed data is the correct one
-        self.assertEqual(ppd.id, exp_ppd.id)
-
-        # Check that the filepaths returned are correct
-        # We need to sort the list returned from the db because the ordering
-        # on that list is based on db modification time, rather than id
-        obs_fps = sorted(ppd.get_filepaths())
-        self.assertEqual(obs_fps, sorted(exp_fps))
-
-        # Check that the checksums have been updated
-        sql = "SELECT checksum FROM qiita.filepath WHERE filepath_id=%s"
-
-        # Checksum of the fasta file
-        obs_checksum = self.conn_handler.execute_fetchone(
-            sql, (obs_fps[0][0],))[0]
-        self.assertEqual(obs_checksum, '3532748626')
-
-        # Checksum of the fastq file
-        obs_checksum = self.conn_handler.execute_fetchone(
-            sql, (obs_fps[1][0],))[0]
-        self.assertEqual(obs_checksum, '2958832064')
-
-        # Checksum of the demux file
-        # The checksum is generated dynamically, so the checksum changes
-        # We are going to test that the checksum is not the one that was
-        # before, which corresponds to an empty file
-        obs_checksum = self.conn_handler.execute_fetchone(
-            sql, (obs_fps[2][0],))[0]
-        self.assertTrue(isinstance(obs_checksum, str))
-        self.assertNotEqual(obs_checksum, '852952723')
-        self.assertTrue(len(obs_checksum) > 0)
-
-        # Checksum of the log file
-        obs_checksum = self.conn_handler.execute_fetchone(
-            sql, (obs_fps[3][0],))[0]
-        self.assertEqual(obs_checksum, '626839734')
-
-    def test_update_preprocessed_data_from_cmd_ppd(self):
-        exp_ppd = PreprocessedData(2)
-
-        next_fp_id = get_count('qiita.filepath') + 1
-        exp_fps = []
-        path_builder = partial(join, self.db_ppd_dir)
-        suffix_types = [("seqs.fna", "preprocessed_fasta"),
-                        ("seqs.fastq", "preprocessed_fastq"),
-                        ("seqs.demux", "preprocessed_demux"),
-                        ("split_library_log.txt", "log")]
-        for id_, vals in enumerate(suffix_types, start=next_fp_id):
-            suffix, fp_type = vals
-            exp_fps.append(
-                (id_, path_builder("%s_%s" % (exp_ppd.id, suffix)), fp_type))
-
-        ppd = update_preprocessed_data_from_cmd(self.test_slo, 1, 2)
-
-        # Check that the modified preprocessed data is the correct one
-        self.assertEqual(ppd.id, exp_ppd.id)
-
-        # Check that the filepaths returned are correct
-        # We need to sort the list returned from the db because the ordering
-        # on that list is based on db modification time, rather than id
-        obs_fps = sorted(ppd.get_filepaths())
-        self.assertEqual(obs_fps, exp_fps)
-
-        # Check that the checksums have been updated
-        sql = "SELECT checksum FROM qiita.filepath WHERE filepath_id=%s"
-
-        # Checksum of the fasta file
-        obs_checksum = self.conn_handler.execute_fetchone(
-            sql, (obs_fps[0][0],))[0]
-        self.assertEqual(obs_checksum, '3532748626')
-
-        # Checksum of the fastq file
-        obs_checksum = self.conn_handler.execute_fetchone(
-            sql, (obs_fps[1][0],))[0]
-        self.assertEqual(obs_checksum, '2958832064')
-
-        # Checksum of the demux file
-        # The checksum is generated dynamically, so the checksum changes
-        # We are going to test that the checksum is not the one that was
-        # before, which corresponds to an empty file
-        obs_checksum = self.conn_handler.execute_fetchone(
-            sql, (obs_fps[2][0],))[0]
-        self.assertTrue(isinstance(obs_checksum, str))
-        self.assertNotEqual(obs_checksum, '852952723')
-        self.assertTrue(len(obs_checksum) > 0)
-
-        # Checksum of the log file
-        obs_checksum = self.conn_handler.execute_fetchone(
-            sql, (obs_fps[3][0],))[0]
-        self.assertEqual(obs_checksum, '626839734')
-
-
-FASTA_SEQS = """>a_1 orig_bc=abc new_bc=abc bc_diffs=0
-xyz
->b_1 orig_bc=abw new_bc=wbc bc_diffs=4
-qwe
->b_2 orig_bc=abw new_bc=wbc bc_diffs=4
-qwe
-"""
-
-FASTQ_SEQS = """@a_1 orig_bc=abc new_bc=abc bc_diffs=0
-xyz
-+
-ABC
-@b_1 orig_bc=abw new_bc=wbc bc_diffs=4
-qwe
-+
-DFG
-@b_2 orig_bc=abw new_bc=wbc bc_diffs=4
-qwe
-+
-DEF
-"""
+            self.assertEqual(qdb.util.compute_checksum(obs[1]), exp)
 
 
 CONFIG_1 = """[required]

@@ -17,9 +17,7 @@ import warnings
 from skbio.io.util import open_file
 from skbio.util import find_duplicates
 
-from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBWarning,
-                                 QiitaDBError, QiitaDBDuplicateHeaderError)
-from .constants import CONTROLLED_COLS, NA_VALUES, TRUE_VALUES, FALSE_VALUES
+import qiita_db as qdb
 
 if PY3:
     from string import ascii_letters as letters, digits
@@ -138,7 +136,7 @@ def prefix_sample_names_with_id(md_template, study_id):
     if len(prefixes) == 1 and prefixes.pop() == str(study_id):
         # The samples were already prefixed with the study id
         warnings.warn("Sample names were already prefixed with the study id.",
-                      QiitaDBWarning)
+                      qdb.exceptions.QiitaDBWarning)
     else:
         # Create a new pandas series in which all the values are the study_id
         # and it is indexed as the metadata template
@@ -239,7 +237,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     # get and clean the controlled columns
     cols = holdfile[0].split('\t')
     controlled_cols = {'sample_name'}
-    controlled_cols.update(CONTROLLED_COLS)
+    controlled_cols.update(qdb.metadata_template.constants.CONTROLLED_COLS)
     holdfile[0] = '\t'.join(c.lower() if c.lower() in controlled_cols else c
                             for c in cols)
 
@@ -272,23 +270,24 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
     try:
-        template = pd.read_csv(StringIO(''.join(holdfile)), sep='\t',
-                               encoding='utf-8', infer_datetime_format=True,
-                               keep_default_na=False, na_values=NA_VALUES,
-                               true_values=TRUE_VALUES,
-                               false_values=FALSE_VALUES,
-                               parse_dates=True, index_col=False, comment='\t',
-                               mangle_dupe_cols=False, converters={
-                                   index: lambda x: str(x).strip(),
-                                   # required sample template information
-                                   'physical_location': str,
-                                   'sample_type': str,
-                                   # collection_timestamp is not added here
-                                   'host_subject_id': str,
-                                   'description': str,
-                                   # common prep template information
-                                   'center_name': str,
-                                   'center_projct_name': str})
+        template = pd.read_csv(
+            StringIO(''.join(holdfile)), sep='\t', encoding='utf-8',
+            infer_datetime_format=True, keep_default_na=False,
+            na_values=qdb.metadata_template.constants.NA_VALUES,
+            true_values=qdb.metadata_template.constants.TRUE_VALUES,
+            false_values=qdb.metadata_template.constants.FALSE_VALUES,
+            parse_dates=True, index_col=False, comment='\t',
+            mangle_dupe_cols=False,
+            converters={index: lambda x: str(x).strip(),
+                        # required sample template information
+                        'physical_location': str,
+                        'sample_type': str,
+                        # collection_timestamp is not added here
+                        'host_subject_id': str,
+                        'description': str,
+                        # common prep template information
+                        'center_name': str,
+                        'center_projct_name': str})
     except UnicodeDecodeError:
         # Find row number and col number for utf-8 encoding errors
         headers = holdfile[0].strip().split('\t')
@@ -301,12 +300,13 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
                     errors[headers[col]].append(row)
         lines = ['%s: row(s) %s' % (header, ', '.join(map(str, rows)))
                  for header, rows in viewitems(errors)]
-        raise QiitaDBError('Non UTF-8 characters found in columns:\n' +
-                           '\n'.join(lines))
+        raise qdb.exceptions.QiitaDBError(
+            'Non UTF-8 characters found in columns:\n' + '\n'.join(lines))
 
     # Check that we don't have duplicate columns
     if len(set(template.columns)) != len(template.columns):
-        raise QiitaDBDuplicateHeaderError(find_duplicates(template.columns))
+        raise qdb.exceptions.QiitaDBDuplicateHeaderError(
+            find_duplicates(template.columns))
 
     # let pandas infer the dtypes of these columns, if the inference is
     # not correct, then we have to raise an error
@@ -318,16 +318,16 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
         for n in columns:
             if n in template.columns and not all([isinstance(val, c_dtype)
                                                   for val in template[n]]):
-                raise QiitaDBColumnError("The '%s' column includes values "
-                                         "that cannot be cast into a %s "
-                                         "value " % (n, english_desc))
+                raise qdb.exceptions.QiitaDBColumnError(
+                    "The '%s' column includes values that cannot be cast "
+                    "into a %s value " % (n, english_desc))
 
     initial_columns = set(template.columns)
 
     if index not in template.columns:
-        raise QiitaDBColumnError("The '%s' column is missing from "
-                                 "your template, this file cannot be parsed."
-                                 % index)
+        raise qdb.exceptions.QiitaDBColumnError(
+            "The '%s' column is missing from your template, this file cannot "
+            "be parsed." % index)
 
     # remove rows that have no sample identifier but that may have other data
     # in the rest of the columns
@@ -342,9 +342,10 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     initial_columns.remove(index)
     dropped_cols = initial_columns - set(template.columns)
     if dropped_cols:
-        warnings.warn('The following column(s) were removed from the template '
-                      'because all their values are empty: '
-                      '%s' % ', '.join(dropped_cols), QiitaDBWarning)
+        warnings.warn(
+            'The following column(s) were removed from the template because '
+            'all their values are empty: %s'
+            % ', '.join(dropped_cols), qdb.exceptions.QiitaDBWarning)
 
     # Pandas represents data with np.nan rather than Nones, change it to None
     # because psycopg2 knows that a None is a Null in SQL, while it doesn't
@@ -493,8 +494,10 @@ def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
                 tmp_line.extend([''] * (len(header) - len(tmp_line)))
             mapping_data.append(tmp_line)
     if not header:
-        raise QiitaDBError("No header line was found in mapping file.")
+        raise qdb.exceptions.QiitaDBError(
+            "No header line was found in mapping file.")
     if not mapping_data:
-        raise QiitaDBError("No data found in mapping file.")
+        raise qdb.exceptions.QiitaDBError(
+            "No data found in mapping file.")
 
     return mapping_data, header, comments

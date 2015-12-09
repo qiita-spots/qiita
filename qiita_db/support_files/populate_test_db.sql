@@ -49,7 +49,8 @@ INSERT INTO qiita.study_environmental_package (study_id, environmental_package_n
 INSERT INTO qiita.study_users (study_id, email) VALUES (1, 'shared@foo.bar');
 
 -- Insert PMIDs for study
-INSERT INTO qiita.study_pmid (study_id, pmid) VALUES (1, '123456'), (1, '7891011');
+INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.100/123456', '123456'), ('10.100/7891011', '7891011');
+INSERT INTO qiita.study_publication (study_id, publication_doi) VALUES (1, '10.100/123456'), (1, '10.100/7891011');
 
 -- Insert an investigation
 INSERT INTO qiita.investigation (investigation_name, investigation_description, contact_person_id) VALUES
@@ -311,98 +312,94 @@ INSERT INTO qiita.prep_1 (sample_id, barcode, LIBRARY_CONSTRUCTION_PROTOCOL, pri
 -- Link the prep template to the study
 INSERT INTO qiita.study_prep_template (study_id, prep_template_id) VALUES (1, 1);
 
--- Insert the raw data information for prep_template 1
-INSERT INTO qiita.raw_data (filetype_id) VALUES (3);
+-- Insert some artifacts
+--   1 (Raw fastq) ---> 2 (demultiplexed) ---> 4 (otu table)
+--                  \-> 3 (demultiplexed)
+INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters,
+                            visibility_id, artifact_type_id, data_type_id,
+                            can_be_submitted_to_ebi, can_be_submitted_to_vamps)
+    VALUES ('Mon Oct 1 09:30:27 2012', NULL, NULL, 3, 3, 2, FALSE, FALSE),
+           ('Mon Oct 1 10:30:27 2012', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json,
+            3, 6, 2, TRUE, TRUE),
+           ('Mon Oct 1 11:30:27 2012', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json,
+            3, 6, 2, TRUE, TRUE),
+           ('Tue Oct 2 17:30:00 2012', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json,
+            3, 7, 2, FALSE, FALSE);
 
--- Insert the raw data filepaths for study 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
-('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5);
+-- Link the child artifacts with their parents artifacts
+INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
+    VALUES (1, 2), (1, 3),
+           (2, 4);
 
--- Insert (link) the raw data with the raw filepaths
-INSERT INTO qiita.raw_filepath (raw_data_id, filepath_id) VALUES (1, 1), (1, 2);
+-- Insert the jobs that processed the previous artifacts
+INSERT INTO qiita.processing_job (processing_job_id, email, command_id, command_parameters, processing_job_status_id)
+    VALUES ('6d368e16-2242-4cf8-87b4-a5dc40bb890b', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json, 3),
+           ('4c7115e8-4c8e-424c-bf25-96c292ca1931', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json, 3),
+           ('3c9991ab-6c14-4368-a48c-841e8837a79c', 'test@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json, 3);
 
--- Insert (link) the study with the raw data
-UPDATE qiita.prep_template SET raw_data_id = 1 WHERE prep_template_id = 1;
--- UPDATE qiita.prep_template SET raw_data_id = 2 WHERE prep_template_id = 2;
+-- Relate the above jobs with the artifacts
+INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
+    VALUES (1, '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+           (1, '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+           (2, '3c9991ab-6c14-4368-a48c-841e8837a79c');
 
--- Insert preprocessed information for prep template 1
-INSERT INTO qiita.preprocessed_data (preprocessed_params_table, preprocessed_params_id, data_type_id)
-    VALUES ('preprocessed_sequence_illumina_params', 1, 2),
-           ('preprocessed_sequence_illumina_params', 2, 2);
+-- Insert filepaths for the artifacts and reference
+INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id)
+    VALUES ('1_s_G1_L001_sequences.fastq.gz', 1, '852952723', 1, 5),
+           ('1_s_G1_L001_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
+           ('1_seqs.fna', 4, '852952723', 1, 3),
+           ('1_seqs.qual', 5, '852952723', 1, 3),
+           ('1_seqs.demux', 6, 852952723, 1, 3),
+           ('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6),
+           ('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6),
+           ('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6),
+           ('1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1, 4);
 
--- Insert EBI information for preprocessed data 1
-INSERT INTO qiita.ebi_run_accession (sample_id, preprocessed_data_id, ebi_run_accession)
-    VALUES ('1.SKB1.640202', 1, 'ERR0000001'),
-           ('1.SKB2.640194', 1, 'ERR0000002'),
-           ('1.SKB3.640195', 1, 'ERR0000003'),
-           ('1.SKB4.640189', 1, 'ERR0000004'),
-           ('1.SKB5.640181', 1, 'ERR0000005'),
-           ('1.SKB6.640176', 1, 'ERR0000006'),
-           ('1.SKB7.640196', 1, 'ERR0000007'),
-           ('1.SKB8.640193', 1, 'ERR0000008'),
-           ('1.SKB9.640200', 1, 'ERR0000009'),
-           ('1.SKD1.640179', 1, 'ERR0000010'),
-           ('1.SKD2.640178', 1, 'ERR0000011'),
-           ('1.SKD3.640198', 1, 'ERR0000012'),
-           ('1.SKD4.640185', 1, 'ERR0000013'),
-           ('1.SKD5.640186', 1, 'ERR0000014'),
-           ('1.SKD6.640190', 1, 'ERR0000015'),
-           ('1.SKD7.640191', 1, 'ERR0000016'),
-           ('1.SKD8.640184', 1, 'ERR0000017'),
-           ('1.SKD9.640182', 1, 'ERR0000018'),
-           ('1.SKM1.640183', 1, 'ERR0000019'),
-           ('1.SKM2.640199', 1, 'ERR0000020'),
-           ('1.SKM3.640197', 1, 'ERR0000021'),
-           ('1.SKM4.640180', 1, 'ERR0000022'),
-           ('1.SKM5.640177', 1, 'ERR0000023'),
-           ('1.SKM6.640187', 1, 'ERR0000024'),
-           ('1.SKM7.640188', 1, 'ERR0000025'),
-           ('1.SKM8.640201', 1, 'ERR0000026'),
-           ('1.SKM9.640192', 1, 'ERR0000027');
+-- Link the artifacts with the filepaths
+INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
+    VALUES (1, 1), (1, 2),
+           (2, 3), (2, 4), (2, 5),
+           (4, 9);
 
--- Link the new preprocessed data with the prep template
-INSERT INTO qiita.prep_template_preprocessed_data (prep_template_id, preprocessed_data_id) VALUES (1, 1), (1, 2);
+-- Link the artifact with the prep template
+UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
 
--- Insert (link) preprocessed information to study 1
-INSERT INTO qiita.study_preprocessed_data (preprocessed_data_id, study_id) VALUES (1, 1), (2, 1);
+-- Link the study with the artifacts
+INSERT INTO qiita.study_artifact (study_id, artifact_id)
+    VALUES (1, 1), (1, 2), (1, 3), (1, 4);
 
--- Insert the preprocessed filepath for raw data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('1_seqs.fna', 4, '852952723', 1, 3),
-('1_seqs.qual', 5, '852952723', 1, 3),
-('1_seqs.demux', 6, 852952723, 1, 3);
-
--- Insert (link) the preprocessed data with the preprocessed filepaths
-INSERT INTO qiita.preprocessed_filepath (preprocessed_data_id, filepath_id) VALUES (1, 3), (1, 4), (1, 5);
-
--- Insert processed information for study 0 and processed data 1
-INSERT INTO qiita.processed_data (processed_params_table, processed_params_id, processed_date, data_type_id, processed_data_status_id) VALUES ('processed_params_uclust', 1, 'Mon Oct 1 09:30:27 2012', 2, 3);
-
--- Insert (link) processed information to study 1
-INSERT INTO qiita.study_processed_data (processed_data_id, study_id) VALUES (1, 1);
-
--- Link the processed data with the preprocessed data
-INSERT INTO qiita.preprocessed_processed_data (preprocessed_data_id, processed_data_id) VALUES (1, 1);
-
--- Insert the reference files for reference 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('GreenGenes_13_8_97_otus.fasta', 10, '852952723', 1, 6),
-('GreenGenes_13_8_97_otu_taxonomy.txt', 11, '852952723', 1, 6),
-('GreenGenes_13_8_97_otus.tree', 12, '852952723', 1, 6);
+-- Insert EBI information for artifact 2
+INSERT INTO qiita.ebi_run_accession (sample_id, artifact_id, ebi_run_accession)
+    VALUES ('1.SKB1.640202', 2, 'ERR0000001'),
+           ('1.SKB2.640194', 2, 'ERR0000002'),
+           ('1.SKB3.640195', 2, 'ERR0000003'),
+           ('1.SKB4.640189', 2, 'ERR0000004'),
+           ('1.SKB5.640181', 2, 'ERR0000005'),
+           ('1.SKB6.640176', 2, 'ERR0000006'),
+           ('1.SKB7.640196', 2, 'ERR0000007'),
+           ('1.SKB8.640193', 2, 'ERR0000008'),
+           ('1.SKB9.640200', 2, 'ERR0000009'),
+           ('1.SKD1.640179', 2, 'ERR0000010'),
+           ('1.SKD2.640178', 2, 'ERR0000011'),
+           ('1.SKD3.640198', 2, 'ERR0000012'),
+           ('1.SKD4.640185', 2, 'ERR0000013'),
+           ('1.SKD5.640186', 2, 'ERR0000014'),
+           ('1.SKD6.640190', 2, 'ERR0000015'),
+           ('1.SKD7.640191', 2, 'ERR0000016'),
+           ('1.SKD8.640184', 2, 'ERR0000017'),
+           ('1.SKD9.640182', 2, 'ERR0000018'),
+           ('1.SKM1.640183', 2, 'ERR0000019'),
+           ('1.SKM2.640199', 2, 'ERR0000020'),
+           ('1.SKM3.640197', 2, 'ERR0000021'),
+           ('1.SKM4.640180', 2, 'ERR0000022'),
+           ('1.SKM5.640177', 2, 'ERR0000023'),
+           ('1.SKM6.640187', 2, 'ERR0000024'),
+           ('1.SKM7.640188', 2, 'ERR0000025'),
+           ('1.SKM8.640201', 2, 'ERR0000026'),
+           ('1.SKM9.640192', 2, 'ERR0000027');
 
 -- Populate the reference table
 INSERT INTO qiita.reference (reference_name, reference_version, sequence_filepath, taxonomy_filepath, tree_filepath) VALUES ('Greengenes', '13_8', 6, 7, 8);
-
--- Insert the processed params uclust used for preprocessed data 1
-INSERT INTO qiita.processed_params_uclust (similarity, enable_rev_strand_match, suppress_new_clusters, reference_id) VALUES (0.97, TRUE, TRUE, 1);
-
--- Insert the biom table filepath for processed data 1
-INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
-('1_study_1001_closed_reference_otu_table.biom', 7, '852952723', 1, 4);
-
--- Insert (link) the processed data with the processed filepath
-INSERT INTO qiita.processed_filepath (processed_data_id, filepath_id) VALUES (1, 9);
 
 -- Insert filepath for job results files
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES
@@ -432,7 +429,9 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VALUES (1, 12, 2), (1, 13, NULL);
 
 -- Attach samples to analysis
-INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (1,1,'1.SKB8.640193'), (1,1,'1.SKD8.640184'), (1,1,'1.SKB7.640196'), (1,1,'1.SKM9.640192'), (1,1,'1.SKM4.640180'), (2,1,'1.SKB8.640193'), (2,1,'1.SKD8.640184'), (2,1,'1.SKB7.640196'), (2,1,'1.SKM3.640197');
+INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id)
+    VALUES (1, 4, '1.SKB8.640193'), (1, 4, '1.SKD8.640184'), (1, 4, '1.SKB7.640196'), (1, 4, '1.SKM9.640192'), (1, 4, '1.SKM4.640180'),
+           (2, 4, '1.SKB8.640193'), (2, 4, '1.SKD8.640184'), (2, 4, '1.SKB7.640196'), (2, 4, '1.SKM3.640197');
 
 --Share analysis with shared user
 INSERT INTO qiita.analysis_users (analysis_id, email) VALUES (1, 'shared@foo.bar');
@@ -460,9 +459,6 @@ INSERT INTO qiita.term (term_id, ontology_id, term, identifier, definition, name
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_19700101-000000.txt', 14, '852952723', 1, 9);
 INSERT INTO qiita.sample_template_filepath VALUES (1, 14);
 
--- Add processing parameters for sortmerna
-INSERT INTO qiita.processed_params_sortmerna (reference_id, sortmerna_e_value, sortmerna_max_pos, similarity, sortmerna_coverage, threads) VALUES (1, 1, 10000, 0.97, 0.97, 1);
-
 --add collection to the database
 INSERT INTO qiita.collection (email, name, description) VALUES ('test@foo.bar', 'TEST_COLLECTION', 'collection for testing purposes');
 
@@ -478,7 +474,8 @@ INSERT INTO qiita.analysis (email, name, description, dflt, analysis_status_id) 
 INSERT INTO qiita.analysis_portal (analysis_id, portal_type_id) VALUES (3, 1), (4, 1), (5, 1), (6, 1), (7, 2), (8, 2), (9, 2), (10, 2);
 
 -- Attach samples to analysis
-INSERT INTO qiita.analysis_sample (analysis_id, processed_data_id, sample_id) VALUES (3,1,'1.SKD8.640184'), (3,1,'1.SKB7.640196'), (3,1,'1.SKM9.640192'), (3,1,'1.SKM4.640180');
+INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id)
+    VALUES (3, 4, '1.SKD8.640184'), (3, 4, '1.SKB7.640196'), (3, 4, '1.SKM9.640192'), (3, 4, '1.SKM4.640180');
 
 -- Create the new prep_template_filepath
 INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algorithm_id, data_directory_id) VALUES ('1_prep_1_19700101-000000.txt', 15, '3703494589', 1, 9);
@@ -488,3 +485,22 @@ INSERT INTO qiita.prep_template_filepath VALUES (1, 15), (1, 16);
 -- Create some test messages
 INSERT INTO qiita.message (message) VALUES ('message 1'), ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque sed auctor ex, non placerat sapien. Vestibulum vestibulum massa ut sapien condimentum, cursus consequat diam sodales. Nulla aliquam arcu ut massa auctor, et vehicula mauris tempor. In lacinia viverra ante quis pellentesque. Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla ac nisi quis dui egestas malesuada vitae ut mauris. Morbi blandit non nisl a finibus. In erat velit, congue at ipsum sit amet, venenatis bibendum sem. Curabitur vel odio sed est rutrum rutrum. Quisque efficitur ut purus in ultrices. Pellentesque eu auctor justo.'), ('message <a href="#">3</a>');
 INSERT INTO qiita.message_user (message_id, email) VALUES (1, 'test@foo.bar'),(1, 'shared@foo.bar'),(2, 'test@foo.bar'),(3, 'test@foo.bar');
+
+-- Create a loggin entry
+INSERT INTO qiita.logging (time, severity_id, msg, information)
+    VALUES ('Sun Nov 22 21:29:30 2015', 2, 'Error message', '{}');
+
+-- Create some processing jobs
+INSERT INTO qiita.processing_job
+        (processing_job_id, email, command_id, command_parameters,
+         processing_job_status_id, logging_id, heartbeat, step)
+    VALUES ('063e553b-327c-4818-ab4a-adfe58e49860', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json, 1, NULL, NULL, NULL),
+           ('bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'test@foo.bar', 2, '{"min_seq_len":100,"max_seq_len":1000,"trim_seq_length":false,"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,"max_primer_mismatch":0,"barcode_type":"golay_12","max_barcode_errors":1.5,"disable_bc_correction":false,"qual_score_window":0,"disable_primers":false,"reverse_primers":"disable","reverse_primer_mismatches":0,"truncate_ambi_bases":false,"input_data":1}'::json, 2, NULL, 'Sun Nov 22 21:00:00 2015', 'demultiplexing'),
+           ('b72369f9-a886-4193-8d3d-f7b504168e75', 'shared@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json, 3, NULL, 'Sun Nov 22 21:15:00 2015', NULL),
+           ('d19f76ee-274e-4c1b-b3a2-a12d73507c55', 'shared@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json, 4, 1, 'Sun Nov 22 21:30:00 2015', 'generating demux file');
+
+INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
+    VALUES (1, '063e553b-327c-4818-ab4a-adfe58e49860'),
+           (1, 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
+           (1, 'b72369f9-a886-4193-8d3d-f7b504168e75'),
+           (2, 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');

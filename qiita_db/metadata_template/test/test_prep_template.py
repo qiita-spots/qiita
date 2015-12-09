@@ -20,30 +20,16 @@ from pandas.util.testing import assert_frame_equal
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_db.exceptions import (QiitaDBUnknownIDError,
-                                 QiitaDBNotImplementedError,
-                                 QiitaDBDuplicateHeaderError,
-                                 QiitaDBExecutionError,
-                                 QiitaDBColumnError,
-                                 QiitaDBWarning,
-                                 QiitaDBError,
-                                 QiitaDBDuplicateSamplesError)
-from qiita_db.study import Study
-from qiita_db.data import RawData, ProcessedData
-from qiita_db.util import exists_table, get_mountpoint, get_count
-from qiita_db.metadata_template.prep_template import PrepTemplate, PrepSample
-from qiita_db.metadata_template.sample_template import SampleTemplate, Sample
-from qiita_db.metadata_template.constants import (FALSE_VALUES, TRUE_VALUES,
-                                                  NA_VALUES)
-from qiita_db.metadata_template import (PREP_TEMPLATE_COLUMNS,
-                                        PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+import qiita_db as qdb
 
 
 class BaseTestPrepSample(TestCase):
     def setUp(self):
-        self.prep_template = PrepTemplate(1)
+        self.prep_template = \
+            qdb.metadata_template.prep_template.PrepTemplate(1)
         self.sample_id = '1.SKB8.640193'
-        self.tester = PrepSample(self.sample_id, self.prep_template)
+        self.tester = qdb.metadata_template.prep_template.PrepSample(
+            self.sample_id, self.prep_template)
         self.exp_categories = {'center_name', 'center_project_name',
                                'emp_status', 'barcode', 'instrument_model',
                                'library_construction_protocol',
@@ -59,17 +45,21 @@ class BaseTestPrepSample(TestCase):
 class TestPrepSampleReadOnly(BaseTestPrepSample):
     def test_init_unknown_error(self):
         """Init errors if the PrepSample id is not found in the template"""
-        with self.assertRaises(QiitaDBUnknownIDError):
-            PrepSample('Not_a_Sample', self.prep_template)
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.metadata_template.prep_template.PrepSample(
+                'Not_a_Sample', self.prep_template)
 
     def test_init_wrong_template(self):
         """Raises an error if using a SampleTemplate instead of PrepTemplate"""
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            PrepSample('1.SKB8.640193', SampleTemplate(1))
+            qdb.metadata_template.prep_template.PrepSample(
+                '1.SKB8.640193',
+                qdb.metadata_template.sample_template.SampleTemplate(1))
 
     def test_init(self):
         """Init correctly initializes the PrepSample object"""
-        sample = PrepSample(self.sample_id, self.prep_template)
+        sample = qdb.metadata_template.prep_template.PrepSample(
+            self.sample_id, self.prep_template)
         # Check that the internal id have been correctly set
         self.assertEqual(sample._id, '1.SKB8.640193')
         # Check that the internal template have been correctly set
@@ -79,26 +69,32 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_eq_true(self):
         """Equality correctly returns true"""
-        other = PrepSample(self.sample_id, self.prep_template)
+        other = qdb.metadata_template.prep_template.PrepSample(
+            self.sample_id, self.prep_template)
         self.assertTrue(self.tester == other)
 
     def test_eq_false_type(self):
         """Equality returns false if types are not equal"""
-        other = Sample(self.sample_id, SampleTemplate(1))
+        other = qdb.metadata_template.sample_template.Sample(
+            self.sample_id,
+            qdb.metadata_template.sample_template.SampleTemplate(1))
         self.assertFalse(self.tester == other)
 
     def test_eq_false_id(self):
         """Equality returns false if ids are different"""
-        other = PrepSample('1.SKD8.640184', self.prep_template)
+        other = qdb.metadata_template.prep_template.PrepSample(
+            '1.SKD8.640184', self.prep_template)
         self.assertFalse(self.tester == other)
 
     def test_exists_true(self):
         """Exists returns true if the PrepSample exists"""
-        self.assertTrue(PrepSample.exists(self.sample_id, self.prep_template))
+        self.assertTrue(qdb.metadata_template.prep_template.PrepSample.exists(
+            self.sample_id, self.prep_template))
 
     def test_exists_false(self):
         """Exists returns false if the PrepSample does not exists"""
-        self.assertFalse(PrepSample.exists('Not_a_Sample', self.prep_template))
+        self.assertFalse(qdb.metadata_template.prep_template.PrepSample.exists(
+            'Not_a_Sample', self.prep_template))
 
     def test_get_categories(self):
         """Correctly returns the set of category headers"""
@@ -221,8 +217,9 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
 
     def test_columns_restrictions(self):
         """that it returns SAMPLE_TEMPLATE_COLUMNS"""
-        exp = deepcopy(PREP_TEMPLATE_COLUMNS)
-        exp.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
+        exp = deepcopy(qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
+        exp.update(
+            qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS_TARGET_GENE)
         self.assertEqual(self.prep_template.columns_restrictions, exp)
 
     def test_can_be_updated(self):
@@ -242,18 +239,17 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
         obs_bool, obs_msg = self.prep_template.can_be_extended(
             ["NEW_SAMPLE"], [])
         self.assertFalse(obs_bool)
-        self.assertEqual(obs_msg,
-                         "Preprocessed data have already been generated (%s). "
-                         "No new samples can be added to the prep template."
-                         % ', '.join(
-                             map(str, self.prep_template.preprocessed_data)))
+        exp_msg = ("The artifact attached to the prep template has already "
+                   "been processed. No new samples can be added to the prep "
+                   "template")
+        self.assertEqual(obs_msg, exp_msg)
 
 
 @qiita_test_checker()
 class TestPrepSampleReadWrite(BaseTestPrepSample):
     """Tests the PrepSample class"""
     def test_setitem(self):
-        with self.assertRaises(QiitaDBColumnError):
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             self.tester['column that does not exist'] = 0.3
 
         self.assertEqual(self.tester['center_name'], 'ANL')
@@ -262,7 +258,7 @@ class TestPrepSampleReadWrite(BaseTestPrepSample):
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
+        with self.assertRaises(qdb.exceptions.QiitaDBNotImplementedError):
             del self.tester['pcr_primers']
 
 
@@ -350,11 +346,11 @@ class BaseTestPrepTemplate(TestCase):
         self.metadata_prefixed = pd.DataFrame.from_dict(metadata_prefixed_dict,
                                                         orient='index')
 
-        self.test_study = Study(1)
+        self.test_study = qdb.study.Study(1)
         self.data_type = "18S"
         self.data_type_id = 2
 
-        self.tester = PrepTemplate(1)
+        self.tester = qdb.metadata_template.prep_template.PrepTemplate(1)
         self.exp_sample_ids = {
             '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
             '1.SKB5.640181', '1.SKB6.640176', '1.SKB7.640196', '1.SKB8.640193',
@@ -381,26 +377,28 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
 
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
-        with self.assertRaises(QiitaDBUnknownIDError):
-            PrepTemplate(2)
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.metadata_template.prep_template.PrepTemplate(2)
 
     def test_init(self):
         """Init successfully instantiates the object"""
-        st = PrepTemplate(1)
+        st = qdb.metadata_template.prep_template.PrepTemplate(1)
         self.assertTrue(st.id, 1)
 
     def test_table_name(self):
         """Table name return the correct string"""
-        obs = PrepTemplate._table_name(1)
+        obs = qdb.metadata_template.prep_template.PrepTemplate._table_name(1)
         self.assertEqual(obs, "prep_1")
 
     def test_exists_true(self):
         """Exists returns true when the PrepTemplate already exists"""
-        self.assertTrue(PrepTemplate.exists(1))
+        self.assertTrue(
+            qdb.metadata_template.prep_template.PrepTemplate.exists(1))
 
     def test_exists_false(self):
         """Exists returns false when the PrepTemplate does not exists"""
-        self.assertFalse(PrepTemplate.exists(2))
+        self.assertFalse(
+            qdb.metadata_template.prep_template.PrepTemplate.exists(2))
 
     def test_get_sample_ids(self):
         """get_sample_ids returns the correct set of sample ids"""
@@ -414,7 +412,8 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_getitem(self):
         """Get item returns the correct sample object"""
         obs = self.tester['1.SKM7.640188']
-        exp = PrepSample('1.SKM7.640188', self.tester)
+        exp = qdb.metadata_template.prep_template.PrepSample(
+            '1.SKM7.640188', self.tester)
         self.assertEqual(obs, exp)
 
     def test_getitem_error(self):
@@ -446,33 +445,60 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {PrepSample('1.SKB1.640202', self.tester),
-               PrepSample('1.SKB2.640194', self.tester),
-               PrepSample('1.SKB3.640195', self.tester),
-               PrepSample('1.SKB4.640189', self.tester),
-               PrepSample('1.SKB5.640181', self.tester),
-               PrepSample('1.SKB6.640176', self.tester),
-               PrepSample('1.SKB7.640196', self.tester),
-               PrepSample('1.SKB8.640193', self.tester),
-               PrepSample('1.SKB9.640200', self.tester),
-               PrepSample('1.SKD1.640179', self.tester),
-               PrepSample('1.SKD2.640178', self.tester),
-               PrepSample('1.SKD3.640198', self.tester),
-               PrepSample('1.SKD4.640185', self.tester),
-               PrepSample('1.SKD5.640186', self.tester),
-               PrepSample('1.SKD6.640190', self.tester),
-               PrepSample('1.SKD7.640191', self.tester),
-               PrepSample('1.SKD8.640184', self.tester),
-               PrepSample('1.SKD9.640182', self.tester),
-               PrepSample('1.SKM1.640183', self.tester),
-               PrepSample('1.SKM2.640199', self.tester),
-               PrepSample('1.SKM3.640197', self.tester),
-               PrepSample('1.SKM4.640180', self.tester),
-               PrepSample('1.SKM5.640177', self.tester),
-               PrepSample('1.SKM6.640187', self.tester),
-               PrepSample('1.SKM7.640188', self.tester),
-               PrepSample('1.SKM8.640201', self.tester),
-               PrepSample('1.SKM9.640192', self.tester)}
+        exp = {qdb.metadata_template.prep_template.PrepSample('1.SKB1.640202',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKB2.640194',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKB3.640195',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKB4.640189',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKB5.640181',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKB6.640176',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKB7.640196',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKB8.640193',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKB9.640200',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKD1.640179',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKD2.640178',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKD3.640198',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKD4.640185',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKD5.640186',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKD6.640190',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKD7.640191',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKD8.640184',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKD9.640182',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKM1.640183',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKM2.640199',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKM3.640197',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKM4.640180',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKM5.640177',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKM6.640187',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKM7.640188',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKM8.640201',
+                                                              self.tester),
+               qdb.metadata_template.prep_template.PrepSample('1.SKM9.640192',
+                                                              self.tester)}
         # Creating a list and looping over it since unittest does not call
         # the __eq__ function on the objects
         for o, e in zip(sorted(list(obs), key=lambda x: x.id),
@@ -483,33 +509,87 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         """items returns an iterator over the (key, value) tuples"""
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = [('1.SKB1.640202', PrepSample('1.SKB1.640202', self.tester)),
-               ('1.SKB2.640194', PrepSample('1.SKB2.640194', self.tester)),
-               ('1.SKB3.640195', PrepSample('1.SKB3.640195', self.tester)),
-               ('1.SKB4.640189', PrepSample('1.SKB4.640189', self.tester)),
-               ('1.SKB5.640181', PrepSample('1.SKB5.640181', self.tester)),
-               ('1.SKB6.640176', PrepSample('1.SKB6.640176', self.tester)),
-               ('1.SKB7.640196', PrepSample('1.SKB7.640196', self.tester)),
-               ('1.SKB8.640193', PrepSample('1.SKB8.640193', self.tester)),
-               ('1.SKB9.640200', PrepSample('1.SKB9.640200', self.tester)),
-               ('1.SKD1.640179', PrepSample('1.SKD1.640179', self.tester)),
-               ('1.SKD2.640178', PrepSample('1.SKD2.640178', self.tester)),
-               ('1.SKD3.640198', PrepSample('1.SKD3.640198', self.tester)),
-               ('1.SKD4.640185', PrepSample('1.SKD4.640185', self.tester)),
-               ('1.SKD5.640186', PrepSample('1.SKD5.640186', self.tester)),
-               ('1.SKD6.640190', PrepSample('1.SKD6.640190', self.tester)),
-               ('1.SKD7.640191', PrepSample('1.SKD7.640191', self.tester)),
-               ('1.SKD8.640184', PrepSample('1.SKD8.640184', self.tester)),
-               ('1.SKD9.640182', PrepSample('1.SKD9.640182', self.tester)),
-               ('1.SKM1.640183', PrepSample('1.SKM1.640183', self.tester)),
-               ('1.SKM2.640199', PrepSample('1.SKM2.640199', self.tester)),
-               ('1.SKM3.640197', PrepSample('1.SKM3.640197', self.tester)),
-               ('1.SKM4.640180', PrepSample('1.SKM4.640180', self.tester)),
-               ('1.SKM5.640177', PrepSample('1.SKM5.640177', self.tester)),
-               ('1.SKM6.640187', PrepSample('1.SKM6.640187', self.tester)),
-               ('1.SKM7.640188', PrepSample('1.SKM7.640188', self.tester)),
-               ('1.SKM8.640201', PrepSample('1.SKM8.640201', self.tester)),
-               ('1.SKM9.640192', PrepSample('1.SKM9.640192', self.tester))]
+        exp = [('1.SKB1.640202',
+                qdb.metadata_template.prep_template.PrepSample('1.SKB1.640202',
+                                                               self.tester)),
+               ('1.SKB2.640194',
+                qdb.metadata_template.prep_template.PrepSample('1.SKB2.640194',
+                                                               self.tester)),
+               ('1.SKB3.640195',
+                qdb.metadata_template.prep_template.PrepSample('1.SKB3.640195',
+                                                               self.tester)),
+               ('1.SKB4.640189',
+                qdb.metadata_template.prep_template.PrepSample('1.SKB4.640189',
+                                                               self.tester)),
+               ('1.SKB5.640181',
+                qdb.metadata_template.prep_template.PrepSample('1.SKB5.640181',
+                                                               self.tester)),
+               ('1.SKB6.640176',
+                qdb.metadata_template.prep_template.PrepSample('1.SKB6.640176',
+                                                               self.tester)),
+               ('1.SKB7.640196',
+                qdb.metadata_template.prep_template.PrepSample('1.SKB7.640196',
+                                                               self.tester)),
+               ('1.SKB8.640193',
+                qdb.metadata_template.prep_template.PrepSample('1.SKB8.640193',
+                                                               self.tester)),
+               ('1.SKB9.640200',
+                qdb.metadata_template.prep_template.PrepSample('1.SKB9.640200',
+                                                               self.tester)),
+               ('1.SKD1.640179',
+                qdb.metadata_template.prep_template.PrepSample('1.SKD1.640179',
+                                                               self.tester)),
+               ('1.SKD2.640178',
+                qdb.metadata_template.prep_template.PrepSample('1.SKD2.640178',
+                                                               self.tester)),
+               ('1.SKD3.640198',
+                qdb.metadata_template.prep_template.PrepSample('1.SKD3.640198',
+                                                               self.tester)),
+               ('1.SKD4.640185',
+                qdb.metadata_template.prep_template.PrepSample('1.SKD4.640185',
+                                                               self.tester)),
+               ('1.SKD5.640186',
+                qdb.metadata_template.prep_template.PrepSample('1.SKD5.640186',
+                                                               self.tester)),
+               ('1.SKD6.640190',
+                qdb.metadata_template.prep_template.PrepSample('1.SKD6.640190',
+                                                               self.tester)),
+               ('1.SKD7.640191',
+                qdb.metadata_template.prep_template.PrepSample('1.SKD7.640191',
+                                                               self.tester)),
+               ('1.SKD8.640184',
+                qdb.metadata_template.prep_template.PrepSample('1.SKD8.640184',
+                                                               self.tester)),
+               ('1.SKD9.640182',
+                qdb.metadata_template.prep_template.PrepSample('1.SKD9.640182',
+                                                               self.tester)),
+               ('1.SKM1.640183',
+                qdb.metadata_template.prep_template.PrepSample('1.SKM1.640183',
+                                                               self.tester)),
+               ('1.SKM2.640199',
+                qdb.metadata_template.prep_template.PrepSample('1.SKM2.640199',
+                                                               self.tester)),
+               ('1.SKM3.640197',
+                qdb.metadata_template.prep_template.PrepSample('1.SKM3.640197',
+                                                               self.tester)),
+               ('1.SKM4.640180',
+                qdb.metadata_template.prep_template.PrepSample('1.SKM4.640180',
+                                                               self.tester)),
+               ('1.SKM5.640177',
+                qdb.metadata_template.prep_template.PrepSample('1.SKM5.640177',
+                                                               self.tester)),
+               ('1.SKM6.640187',
+                qdb.metadata_template.prep_template.PrepSample('1.SKM6.640187',
+                                                               self.tester)),
+               ('1.SKM7.640188',
+                qdb.metadata_template.prep_template.PrepSample('1.SKM7.640188',
+                                                               self.tester)),
+               ('1.SKM8.640201',
+                qdb.metadata_template.prep_template.PrepSample('1.SKM8.640201',
+                                                               self.tester)),
+               ('1.SKM9.640192',
+                qdb.metadata_template.prep_template.PrepSample('1.SKM9.640192',
+                                                               self.tester))]
         # Creating a list and looping over it since unittest does not call
         # the __eq__ function on the objects
         for o, e in zip(sorted(list(obs)), sorted(exp)):
@@ -518,7 +598,8 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_get(self):
         """get returns the correct PrepSample object"""
         obs = self.tester.get('1.SKM7.640188')
-        exp = PrepSample('1.SKM7.640188', self.tester)
+        exp = qdb.metadata_template.prep_template.PrepSample(
+            '1.SKM7.640188', self.tester)
         self.assertEqual(obs, exp)
 
     def test_get_none(self):
@@ -532,10 +613,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_data_type_id(self):
         """data_type returns the int with the data_type_id"""
         self.assertTrue(self.tester.data_type(ret_id=True), 2)
-
-    def test_preprocessed_data(self):
-        """Returns the preprocessed data list generated from this template"""
-        self.assertEqual(self.tester.preprocessed_data, [1, 2])
 
     def test_investigation_type(self):
         """investigation_type works correctly"""
@@ -574,24 +651,30 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         """Raises an error if there are invalid characters in the sample names
         """
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
-        with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate._clean_validate_template(self.metadata, 2,
-                                                  PREP_TEMPLATE_COLUMNS)
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            PT._clean_validate_template(
+                self.metadata, 2,
+                qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
 
     def test_clean_validate_template_error_duplicate_cols(self):
         """Raises an error if there are duplicated columns in the template"""
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
-        with self.assertRaises(QiitaDBDuplicateHeaderError):
-            PrepTemplate._clean_validate_template(self.metadata, 2,
-                                                  PREP_TEMPLATE_COLUMNS)
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        with self.assertRaises(qdb.exceptions.QiitaDBDuplicateHeaderError):
+            PT._clean_validate_template(
+                self.metadata, 2,
+                qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
 
     def test_clean_validate_template_error_duplicate_samples(self):
         """Raises an error if there are duplicated samples in the templates"""
         self.metadata.index = ['sample.1', 'sample.1', 'sample.3']
-        with self.assertRaises(QiitaDBDuplicateSamplesError):
-            PrepTemplate._clean_validate_template(self.metadata, 2,
-                                                  PREP_TEMPLATE_COLUMNS)
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        with self.assertRaises(qdb.exceptions.QiitaDBDuplicateSamplesError):
+            PT._clean_validate_template(
+                self.metadata, 2,
+                qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
 
     def test_clean_validate_template_warning_missing(self):
         """Raises an error if the template is missing a required column"""
@@ -608,9 +691,10 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                             'experiment_design_description': 'BBBB'}
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        PT = qdb.metadata_template.prep_template.PrepTemplate
         obs = npt.assert_warns(
-            QiitaDBWarning, PrepTemplate._clean_validate_template, metadata, 2,
-            PREP_TEMPLATE_COLUMNS)
+            qdb.exceptions.QiitaDBWarning, PT._clean_validate_template,
+            metadata, 2, qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
 
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
@@ -632,8 +716,10 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         assert_frame_equal(obs, exp)
 
     def test_clean_validate_template(self):
-        obs = PrepTemplate._clean_validate_template(self.metadata, 2,
-                                                    PREP_TEMPLATE_COLUMNS)
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        obs = PT._clean_validate_template(
+            self.metadata, 2,
+            qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
@@ -692,14 +778,16 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         """Create raises an error when duplicate headers are present"""
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
                                                 index=self.metadata.index)
-        with self.assertRaises(QiitaDBDuplicateHeaderError):
-            PrepTemplate.create(self.metadata, self.test_study, self.data_type)
+        with self.assertRaises(qdb.exceptions.QiitaDBDuplicateHeaderError):
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                self.metadata, self.test_study, self.data_type)
 
     def test_create_bad_sample_names(self):
         # set a horrible list of sample names
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
-        with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(self.metadata, self.test_study, self.data_type)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                self.metadata, self.test_study, self.data_type)
 
     def test_create_unknown_sample_names(self):
         # set two real and one fake sample name
@@ -708,8 +796,9 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
                                                orient='index')
         # Test error raised and correct error given
-        with self.assertRaises(QiitaDBExecutionError) as err:
-            PrepTemplate.create(self.metadata, self.test_study, self.data_type)
+        with self.assertRaises(qdb.exceptions.QiitaDBExecutionError) as err:
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                self.metadata, self.test_study, self.data_type)
         self.assertEqual(
             str(err.exception),
             'Samples found in prep template but not sample template: 1.NOTREAL'
@@ -720,8 +809,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         del self.metadata_dict['SKB7.640196']
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
                                                orient='index')
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
 
         # make sure the two samples were added correctly
         self.assertEqual(pt.id, 2)
@@ -772,10 +861,11 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
-        exp_id = get_count("qiita.prep_template") + 1
+        exp_id = qdb.util.get_count("qiita.prep_template") + 1
 
         with self.assertRaises(ValueError):
-            PrepTemplate.create(metadata, self.test_study, self.data_type)
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                metadata, self.test_study, self.data_type)
 
         sql = """SELECT EXISTS(
                     SELECT * FROM qiita.prep_template
@@ -797,16 +887,14 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                     WHERE prep_template_id=%s)"""
         self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
 
-        self.assertFalse(exists_table("prep_%d" % exp_id))
+        self.assertFalse(qdb.util.exists_table("prep_%d" % exp_id))
 
     def _common_creation_checks(self, new_id, pt, fp_count):
         # The returned object has the correct id
         self.assertEqual(pt.id, new_id)
         self.assertEqual(pt.data_type(), self.data_type)
         self.assertEqual(pt.data_type(ret_id=True), self.data_type_id)
-        self.assertEqual(pt.raw_data, None)
-        self.assertEqual(pt.preprocessed_data, [])
-        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+        self.assertEqual(pt.artifact, None)
         self.assertEqual(pt.investigation_type, None)
         self.assertEqual(pt.study_id, self.test_study.id)
         self.assertEqual(pt.status, "sandbox")
@@ -873,70 +961,73 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_create(self):
         """Creates a new PrepTemplate"""
-        fp_count = get_count('qiita.filepath')
-        new_id = get_count('qiita.prep_template') + 1
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type)
+        fp_count = qdb.util.get_count('qiita.filepath')
+        new_id = qdb.util.get_count('qiita.prep_template') + 1
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
         self._common_creation_checks(new_id, pt, fp_count)
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
-        fp_count = get_count('qiita.filepath')
-        new_id = get_count('qiita.prep_template') + 1
-        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
-                              self.metadata_prefixed, self.test_study,
-                              self.data_type)
+        fp_count = qdb.util.get_count('qiita.filepath')
+        new_id = qdb.util.get_count('qiita.prep_template') + 1
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            self.metadata_prefixed, self.test_study, self.data_type)
         self._common_creation_checks(new_id, pt, fp_count)
 
     def test_generate_files(self):
-        fp_count = get_count("qiita.filepath")
+        fp_count = qdb.util.get_count("qiita.filepath")
         self.tester.generate_files()
-        obs = get_count("qiita.filepath")
+        obs = qdb.util.get_count("qiita.filepath")
         # We just make sure that the count has been increased by 2, since
         # the contents of the files have been tested elsewhere.
         self.assertEqual(obs, fp_count + 2)
 
     def test_create_qiime_mapping_file(self):
-        pt = PrepTemplate(1)
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
 
         # creating prep template file
-        _id, fp = get_mountpoint('templates')[0]
+        _id, fp = qdb.util.get_mountpoint('templates')[0]
 
         obs_fp = pt.create_qiime_mapping_file()
         exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
 
         obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=True,
                           parse_dates=True, index_col=False, comment='\t')
-        exp = pd.read_csv(exp_fp, sep='\t', infer_datetime_format=True,
-                          parse_dates=True, index_col=False, comment='\t',
-                          na_values=NA_VALUES, true_values=TRUE_VALUES,
-                          false_values=FALSE_VALUES)
+        exp = pd.read_csv(
+            exp_fp, sep='\t', infer_datetime_format=True,
+            parse_dates=True, index_col=False, comment='\t',
+            na_values=qdb.metadata_template.constants.NA_VALUES,
+            true_values=qdb.metadata_template.constants.TRUE_VALUES,
+            false_values=qdb.metadata_template.constants.FALSE_VALUES)
 
         assert_frame_equal(obs, exp)
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
-        fp_count = get_count('qiita.filepath')
-        new_id = get_count('qiita.prep_template') + 1
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
+        fp_count = qdb.util.get_count('qiita.filepath')
+        new_id = qdb.util.get_count('qiita.prep_template') + 1
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type_id)
         self._common_creation_checks(new_id, pt, fp_count)
 
     def test_create_warning(self):
         """Warns if a required columns is missing for a given functionality
         """
-        fp_count = get_count("qiita.filepath")
-        new_id = get_count('qiita.prep_template') + 1
+        fp_count = qdb.util.get_count("qiita.filepath")
+        new_id = qdb.util.get_count('qiita.prep_template') + 1
         del self.metadata['barcode']
-        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
-                              self.metadata, self.test_study, self.data_type)
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            self.metadata, self.test_study, self.data_type)
 
         self.assertEqual(pt.id, new_id)
         self.assertEqual(pt.data_type(), self.data_type)
         self.assertEqual(pt.data_type(ret_id=True), self.data_type_id)
-        self.assertEqual(pt.raw_data, None)
-        self.assertEqual(pt.preprocessed_data, [])
-        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
+        self.assertEqual(pt.artifact, None)
         self.assertEqual(pt.investigation_type, None)
         self.assertEqual(pt.study_id, self.test_study.id)
         self.assertEqual(pt.status, 'sandbox')
@@ -1000,33 +1091,34 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_create_investigation_type_error(self):
         """Create raises an error if the investigation_type does not exists"""
-        with self.assertRaises(QiitaDBColumnError):
-            PrepTemplate.create(self.metadata, self.test_study,
-                                self.data_type_id, 'Not a term')
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                self.metadata, self.test_study, self.data_type_id,
+                'Not a term')
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""
-        with self.assertRaises(QiitaDBExecutionError):
-            PrepTemplate.delete(1)
+        with self.assertRaises(qdb.exceptions.QiitaDBExecutionError):
+            qdb.metadata_template.prep_template.PrepTemplate.delete(1)
 
     def test_delete_unkonwn_id_error(self):
         """Try to delete a non existent prep template"""
-        with self.assertRaises(QiitaDBUnknownIDError):
-            PrepTemplate.delete(5)
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.metadata_template.prep_template.PrepTemplate.delete(5)
 
     def test_delete_error_raw_data(self):
         """Try to delete a prep template with a raw data attached to id"""
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
-        pt.raw_data = RawData(1)
-        with self.assertRaises(QiitaDBExecutionError):
-            PrepTemplate.delete(pt.id)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type_id)
+        pt.artifact = qdb.artifact.Artifact(1)
+        with self.assertRaises(qdb.exceptions.QiitaDBExecutionError):
+            qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_delete(self):
         """Deletes prep template 2"""
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
-        PrepTemplate.delete(pt.id)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type_id)
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_template WHERE prep_template_id=%s",
@@ -1056,98 +1148,64 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_setitem(self):
         """setitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
-            self.tester['1.SKM7.640188'] = PrepSample('1.SKM7.640188',
-                                                      self.tester)
+        with self.assertRaises(qdb.exceptions.QiitaDBNotImplementedError):
+            self.tester['1.SKM7.640188'] = \
+                qdb.metadata_template.prep_template.PrepSample('1.SKM7.640188',
+                                                               self.tester)
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
-        with self.assertRaises(QiitaDBNotImplementedError):
+        with self.assertRaises(qdb.exceptions.QiitaDBNotImplementedError):
             del self.tester['1.SKM7.640188']
 
     def test_to_file(self):
         """to file writes a tab delimited file with all the metadata"""
         fd, fp = mkstemp()
         close(fd)
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
         pt.to_file(fp)
         self._clean_up_files.append(fp)
         with open(fp, 'U') as f:
             obs = f.read()
         self.assertEqual(obs, EXP_PREP_TEMPLATE)
 
-    def test_preprocessing_status(self):
-        """preprocessing_status works correctly"""
-        # Success case
-        pt = PrepTemplate(1)
-        self.assertEqual(pt.preprocessing_status, 'success')
-
-        # not preprocessed case
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
-        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
-
-    def test_preprocessing_status_setter(self):
-        """Able to update the preprocessing status"""
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
-        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
-        pt.preprocessing_status = 'preprocessing'
-        self.assertEqual(pt.preprocessing_status, 'preprocessing')
-        pt.preprocessing_status = 'success'
-        self.assertEqual(pt.preprocessing_status, 'success')
-
-    def test_preprocessing_status_setter_failed(self):
-        """Able to update preprocessing_status with a failure message"""
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
-        state = 'failed: some error message'
-        self.assertEqual(pt.preprocessing_status, 'not_preprocessed')
-        pt.preprocessing_status = state
-        self.assertEqual(pt.preprocessing_status, state)
-
-    def test_preprocessing_status_setter_valueerror(self):
-        """Raises an error if the status is not recognized"""
-        with self.assertRaises(ValueError):
-            self.tester.preprocessing_status = 'not a valid state'
-
     def test_investigation_type_setter(self):
         """Able to update the investigation type"""
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type_id)
         self.assertEqual(pt.investigation_type, None)
         pt.investigation_type = "Other"
         self.assertEqual(pt.investigation_type, 'Other')
-        with self.assertRaises(QiitaDBColumnError):
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             pt.investigation_type = "should fail"
 
     def test_investigation_type_instance_setter(self):
-        pt = PrepTemplate(1)
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         pt.investigation_type = 'RNASeq'
         self.assertEqual(pt.investigation_type, 'RNASeq')
 
     def test_status(self):
-        pt = PrepTemplate(1)
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         self.assertEqual(pt.status, 'private')
 
         # Check that changing the status of the processed data, the status
         # of the prep template changes
-        pd = ProcessedData(1)
-        pd.status = 'public'
+        a = qdb.artifact.Artifact(1)
+        a.visibility = 'public'
         self.assertEqual(pt.status, 'public')
 
         # New prep templates have the status to sandbox because there is no
         # processed data associated with them
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type_id)
         self.assertEqual(pt.status, 'sandbox')
 
     def test_update_category(self):
-        with self.assertRaises(QiitaDBUnknownIDError):
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             self.tester.update_category('barcode', {"foo": "bar"})
 
-        with self.assertRaises(QiitaDBColumnError):
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             self.tester.update_category('missing column',
                                         {'1.SKB7.640196': 'bar'})
 
@@ -1175,58 +1233,64 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertEqual(self.tester['1.SKD8.640184']['center_name'], 'BAR')
 
     def test_qiime_map_fp(self):
-        pt = PrepTemplate(1)
-        exp = join(get_mountpoint('templates')[0][1],
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        exp = join(qdb.util.get_mountpoint('templates')[0][1],
                    '1_prep_1_qiime_19700101-000000.txt')
         self.assertEqual(pt.qiime_map_fp, exp)
 
     def test_check_restrictions(self):
-        obs = self.tester.check_restrictions([PREP_TEMPLATE_COLUMNS['EBI']])
+        obs = self.tester.check_restrictions(
+            [qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS['EBI']])
         self.assertEqual(obs, set())
 
         del self.metadata['primer']
-        pt = npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
-                              self.metadata, self.test_study, self.data_type)
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            self.metadata, self.test_study, self.data_type)
 
         obs = pt.check_restrictions(
-            [PREP_TEMPLATE_COLUMNS['EBI'],
-             PREP_TEMPLATE_COLUMNS_TARGET_GENE['demultiplex']])
+            [qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS['EBI'],
+             qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS_TARGET_GENE[
+                'demultiplex']])
         self.assertEqual(obs, {'primer'})
 
-    def test_raw_data(self):
-        """Returns the raw_data associated with the prep template"""
-        self.assertEqual(self.tester.raw_data, 1)
+    def test_artifact(self):
+        """Returns the artifact associated with the prep template"""
+        self.assertEqual(self.tester.artifact, qdb.artifact.Artifact(1))
 
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
-        self.assertEqual(pt.raw_data, None)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type_id)
+        self.assertEqual(pt.artifact, None)
 
-    def test_raw_data_setter_error(self):
-        rd = RawData(1)
-        with self.assertRaises(QiitaDBError):
-            self.tester.raw_data = rd
+    def test_artifact_setter_error(self):
+        a = qdb.artifact.Artifact(1)
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            self.tester.artifact = a
 
-    def test_raw_data_setter(self):
-        rd = RawData(1)
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type_id)
-        self.assertEqual(pt.raw_data, None)
-        pt.raw_data = rd
-        self.assertEqual(pt.raw_data, rd.id)
+    def test_artifact_setter(self):
+        a = qdb.artifact.Artifact(1)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type_id)
+        self.assertEqual(pt.artifact, None)
+        pt.artifact = a
+        self.assertEqual(pt.artifact, a)
 
     def test_can_be_updated_on_new(self):
         """test if the template can be updated"""
         # you can update a newly created pt
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
         self.assertTrue(pt.can_be_updated({'barcode'}))
 
     def test_extend_add_samples(self):
         """extend correctly works adding new samples"""
         md_2_samples = self.metadata.loc[('SKB8.640193', 'SKD8.640184'), :]
-        pt = PrepTemplate.create(md_2_samples, self.test_study, self.data_type)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            md_2_samples, self.test_study, self.data_type)
 
-        npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
+        npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, pt.extend, self.metadata)
 
         exp_sample_ids = {'%s.SKB8.640193' % self.test_study.id,
                           '%s.SKD8.640184' % self.test_study.id,
@@ -1238,17 +1302,18 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         df = pd.DataFrame.from_dict(
             {'new_sample': {'barcode': 'CCTCTGAGAGCT'}},
             orient='index')
-        with self.assertRaises(QiitaDBError):
-            PrepTemplate(1).extend(df)
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.metadata_template.prep_template.PrepTemplate(1).extend(df)
 
     def test_extend_add_cols(self):
         """extend correctly adds a new columns"""
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
         self.metadata['new_col'] = pd.Series(['val1', 'val2', 'val3'],
                                              index=self.metadata.index)
 
-        npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
+        npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, pt.extend, self.metadata)
 
         sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
         obs = [dict(o) for o in self.conn_handler.execute_fetchall(sql)]
@@ -1298,13 +1363,14 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.assertItemsEqual(obs, exp)
 
     def test_extend_update(self):
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
         self.metadata['new_col'] = pd.Series(['val1', 'val2', 'val3'],
                                              index=self.metadata.index)
         self.metadata['str_column']['SKB7.640196'] = 'NEW VAL'
 
-        npt.assert_warns(QiitaDBWarning, pt.extend, self.metadata)
+        npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, pt.extend, self.metadata)
         pt.update(self.metadata)
 
         sql = "SELECT * FROM qiita.prep_{0}".format(pt.id)
@@ -1385,20 +1451,21 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                '1.SKM1.640183': 'ERX0000026'}
         self.assertEqual(obs, exp)
 
-        obs = PrepTemplate.create(self.metadata, self.test_study,
-                                  self.data_type).ebi_experiment_accessions
+        obs = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study,
+            self.data_type).ebi_experiment_accessions
         exp = {'%s.SKB8.640193' % self.test_study.id: None,
                '%s.SKD8.640184' % self.test_study.id: None,
                '%s.SKB7.640196' % self.test_study.id: None}
         self.assertEqual(obs, exp)
 
     def test_ebi_experiment_accessions_setter(self):
-        with self.assertRaises(QiitaDBError):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
             self.tester.ebi_experiment_accessions = {
                 '1.SKB8.640193': 'ERX1000000', '1.SKD8.640184': 'ERX1000001'}
 
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
         exp_acc = {'%s.SKB8.640193' % self.test_study.id: 'ERX0000126',
                    '%s.SKD8.640184' % self.test_study.id: 'ERX0000127'}
         pt.ebi_experiment_accessions = exp_acc
@@ -1412,16 +1479,16 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         # npt.assert_warns
         def f():
             pt.ebi_experiment_accessions = exp_acc
-        npt.assert_warns(QiitaDBWarning, f)
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning, f)
 
     def test_ebi_experiment_accessions_setter_common_samples(self):
         # If 2 different prep templates have common samples, setting the
         # ebi_experiment_accession should affect only the prep template
         # that it was called to, not both prep templates
-        pt1 = PrepTemplate.create(self.metadata, self.test_study,
-                                  self.data_type)
-        pt2 = PrepTemplate.create(self.metadata, self.test_study,
-                                  self.data_type)
+        pt1 = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
+        pt2 = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
         exp_acc1 = {'%s.SKB8.640193' % self.test_study.id: 'ERX0000126',
                     '%s.SKD8.640184' % self.test_study.id: 'ERX0000127'}
         pt1.ebi_experiment_accessions = exp_acc1
@@ -1432,8 +1499,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_is_submitted_to_ebi(self):
         self.assertTrue(self.tester.is_submitted_to_ebi)
-        pt = PrepTemplate.create(self.metadata, self.test_study,
-                                 self.data_type)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
         self.assertFalse(pt.is_submitted_to_ebi)
 
 

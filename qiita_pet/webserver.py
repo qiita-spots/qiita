@@ -30,12 +30,18 @@ from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
-from qiita_pet.handlers.compute import (
-    ComputeCompleteHandler, AddFilesToRawData, UnlinkAllFiles, CreateRawData)
+from qiita_pet.handlers.compute import ComputeCompleteHandler, CreateRawData
 from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_pet.handlers.processing_handlers import ProcessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
+from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
+                                              ActiveStepHandler,
+                                              CompleteHandler)
+from qiita_db.handlers.artifact import (ArtifactFilepathsHandler,
+                                        ArtifactMappingHandler,
+                                        ArtifactTypeHandler)
+from qiita_db.handlers.reference import ReferenceFilepathsHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
@@ -93,9 +99,7 @@ class Application(tornado.web.Application):
             (r"/study/list/", ListStudiesHandler),
             (r"/study/list/socket/", SelectSamplesHandler),
             (r"/study/search/(.*)", SearchStudiesAJAX),
-            (r"/study/add_files_to_raw_data", AddFilesToRawData),
             (r"/study/create_raw_data", CreateRawData),
-            (r"/study/unlink_all_files", UnlinkAllFiles),
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/process", ProcessHandler),
             (r"/study/sharing/", ShareStudyAJAX),
@@ -106,6 +110,20 @@ class Application(tornado.web.Application):
             (r"/stats/", StatsHandler),
             (r"/download/(.*)", DownloadHandler),
             (r"/vamps/(.*)", VAMPSHandler),
+            # Plugin handlers - the order matters here so do not change
+            # qiita_db/jobs/(.*) should go after any of the
+            # qiita_db/jobs/(.*)/XXXX because otherwise it will match the
+            # regular expression and the qiita_db/jobs/(.*)/XXXX will never
+            # be hit.
+            (r"/qiita_db/jobs/(.*)/heartbeat/", HeartbeatHandler),
+            (r"/qiita_db/jobs/(.*)/step/", ActiveStepHandler),
+            (r"/qiita_db/jobs/(.*)/complete/", CompleteHandler),
+            (r"/qiita_db/jobs/(.*)", JobHandler),
+            (r"/qiita_db/artifacts/(.*)/filepaths/", ArtifactFilepathsHandler),
+            (r"/qiita_db/artifacts/(.*)/mapping/", ArtifactMappingHandler),
+            (r"/qiita_db/artifacts/(.*)/type/", ArtifactTypeHandler),
+            (r"/qiita_db/references/(.*)/filepaths/",
+             ReferenceFilepathsHandler)
         ]
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal
@@ -122,6 +140,6 @@ class Application(tornado.web.Application):
             "debug": DEBUG,
             "cookie_secret": COOKIE_SECRET,
             "login_url": "/auth/login/",
-            "ui_modules": uimodules
+            "ui_modules": uimodules,
         }
         tornado.web.Application.__init__(self, handlers, **settings)

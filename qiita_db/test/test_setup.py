@@ -35,20 +35,11 @@ class SetupTest(TestCase):
     def test_study_experimental_factor(self):
         self.assertEqual(get_count("qiita.study_experimental_factor"), 1)
 
-    def test_processed_data_status(self):
-        self.assertEqual(get_count("qiita.processed_data_status"), 4)
-
     def test_filepath(self):
         self.assertEqual(get_count("qiita.filepath"), 16)
 
     def test_filepath_type(self):
         self.assertEqual(get_count("qiita.filepath_type"), 19)
-
-    def test_raw_data(self):
-        self.assertEqual(get_count("qiita.raw_data"), 1)
-
-    def test_raw_filepath(self):
-        self.assertEqual(get_count("qiita.raw_filepath"), 2)
 
     def test_study_prep_template(self):
         self.assertEqual(get_count("qiita.study_prep_template"), 1)
@@ -74,36 +65,8 @@ class SetupTest(TestCase):
     def test_prep_1(self):
         self.assertEqual(get_count("qiita.prep_1"), 27)
 
-    def test_preprocessed_data(self):
-        self.assertEqual(get_count("qiita.preprocessed_data"), 2)
-
-    def test_prep_template_preprocessed_data(self):
-        self.assertEqual(get_count("qiita.prep_template_preprocessed_data"), 2)
-
-    def test_study_preprocessed_data(self):
-        self.assertEqual(get_count("qiita.study_preprocessed_data"), 2)
-
-    def test_preprocessed_filepath(self):
-        self.assertEqual(get_count("qiita.preprocessed_filepath"), 3)
-
-    def test_preprocessed_sequence_illumina_params(self):
-        self.assertEqual(
-            get_count("qiita.preprocessed_sequence_illumina_params"), 7)
-
-    def test_processed_data(self):
-        self.assertEqual(get_count("qiita.processed_data"), 1)
-
-    def test_preprocessed_processed_data(self):
-        self.assertEqual(get_count("qiita.preprocessed_processed_data"), 1)
-
     def test_reference(self):
         self.assertEqual(get_count("qiita.reference"), 1)
-
-    def test_processed_params_uclust(self):
-        self.assertEqual(get_count("qiita.processed_params_uclust"), 1)
-
-    def test_processed_filepath(self):
-        self.assertEqual(get_count("qiita.processed_filepath"), 1)
 
     def test_job(self):
         self.assertEqual(get_count("qiita.job"), 3)
