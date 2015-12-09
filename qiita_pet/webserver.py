@@ -23,9 +23,9 @@ from qiita_pet.handlers.analysis_handlers import (
     AnalysisSummaryAJAX)
 from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX,
-    StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
+    StudyIndexHandler, MetadataSummaryHandler, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
-    PreprocessingSummaryHandler, VAMPSHandler)
+    VAMPSHandler, StudyBaseInfoAJAX)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
@@ -91,7 +91,6 @@ class Application(tornado.web.Application):
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
             (r"/metadata_summary/(.*)", MetadataSummaryHandler),
-            (r"/preprocessing_summary/(.*)", PreprocessingSummaryHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             (r"/compute_complete/(.*)", ComputeCompleteHandler),
             (r"/study/create/", StudyEditHandler),
@@ -103,7 +102,10 @@ class Application(tornado.web.Application):
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/process", ProcessHandler),
             (r"/study/sharing/", ShareStudyAJAX),
-            (r"/study/description/(.*)", StudyDescriptionHandler),
+            # /study/description/ PAGES ORDER MATTERS.
+            # Must have the "/study/description/(.*)" at the end of the block
+            (r"/study/description/baseinfo/", StudyBaseInfoAJAX),
+            (r"/study/description/(.*)", StudyIndexHandler),
             (r"/study/upload/(.*)", StudyUploadFileHandler),
             (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),
