@@ -14,13 +14,12 @@ from future.utils import viewitems
 
 from qiita_db.util import (get_artifact_types, get_files_from_uploads_folders,
                            get_data_types, convert_to_id, get_filepath_types)
-from qiita_pet.util import convert_text_html
-from qiita_db.study import Study
+from qiita_db.software import Command
 from qiita_db.ontology import Ontology
-from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.constants import (
     TARGET_GENE_DATA_TYPES, PREP_TEMPLATE_COLUMNS_TARGET_GENE)
-from qiita_pet.util import STATUS_STYLER, is_localhost, EBI_LINKIFIER
+from qiita_pet.util import (STATUS_STYLER, is_localhost, EBI_LINKIFIER,
+                            get_artifact_processing_status)
 from qiita_pet.handlers.util import download_link_or_path
 from .base_uimodule import BaseUIModule
 from qiita_core.util import execute_as_transaction
@@ -43,11 +42,12 @@ def _get_accessible_raw_data(user):
     """
     d = {}
     accessible_studies = user.user_studies.union(user.shared_studies)
-    for sid in accessible_studies:
-        study = Study(sid)
+    for study in accessible_studies:
         study_title = study.title
-        for rdid in study.raw_data():
-            d[int(rdid)] = study_title
+        for artifact in study.artifacts():
+            if artifact.artifact_type in ['SFF', 'FASTQ', 'FASTA',
+                                          'FASTA_Sanger' 'per_sample_FASTQ']:
+                d[int(artifact.id)] = study_title
     return d
 
 
@@ -165,18 +165,21 @@ class PrepTemplateInfoTab(BaseUIModule):
         preprocessed_data = None
         show_preprocess_btn = True
         no_preprocess_msg = None
+        preprocessing_status = 'Not processed'
+        preprocessing_status_msg = ""
         if raw_data:
             raw_data_ft = raw_data.artifact_type
             # If the prep template has a raw data associated, it can be
             # preprocessed. Retrieve the pre-processing parameters
+            # Hardcoding the command ids until the interface is refactored
             if raw_data_ft in ('SFF', 'FASTA'):
-                param_iter = Preprocessed454Params.iter()
+                param_iter = Command(2).default_parameter_sets
             elif raw_data_ft == 'FASTQ':
-                param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
-                              if pip.values['barcode_type'] != 'not-barcoded']
+                param_iter = [p for p in Command(1).default_parameter_sets
+                              if p.values['barcode_type'] != 'not-barcoded']
             elif raw_data_ft == 'per_sample_FASTQ':
-                param_iter = [pip for pip in PreprocessedIlluminaParams.iter()
-                              if pip.values['barcode_type'] == 'not-barcoded']
+                param_iter = [p for p in Command(1).default_parameter_sets
+                              if p.values['barcode_type'] == 'not-barcoded']
             else:
                 raise NotImplementedError(
                     "Pre-processing of %s files currently not supported."
@@ -218,7 +221,10 @@ class PrepTemplateInfoTab(BaseUIModule):
                         no_preprocess_msg = (
                             "Preprocessing disabled due to missing columns in "
                             "the prep template: %s" % ', '.join(missing_cols))
-        preprocessing_status = 'TODO: plugin'
+
+            # Check the processing status
+            preprocessing_status, preprocessing_status_msg = \
+                get_artifact_processing_status(raw_data)
 
         ebi_link = None
         if prep_template.is_submitted_to_ebi:
@@ -245,6 +251,7 @@ class PrepTemplateInfoTab(BaseUIModule):
             preprocess_options=preprocess_options,
             preprocessed_data=preprocessed_data,
             preprocessing_status=preprocessing_status,
+            preprocessing_status_message=preprocessing_status_msg,
             show_preprocess_btn=show_preprocess_btn,
             no_preprocess_msg=no_preprocess_msg,
             ebi_link=ebi_link)

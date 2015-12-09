@@ -9,6 +9,7 @@ from __future__ import division
 from json import dumps
 from future.utils import viewitems
 from collections import defaultdict
+from os.path import basename
 
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
@@ -21,6 +22,7 @@ from qiita_db.search import QiitaStudySearch
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
+from qiita_db.reference import Reference
 from qiita_db.util import get_table_cols, get_pubmed_ids_from_dois
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
@@ -122,12 +124,22 @@ def _build_single_proc_data_info(proc_data_id, data_type, samples):
         The information for the processed data, in the form {info: value, ...}
     """
     proc_data = Artifact(proc_data_id)
-    # TODO plugin:
-    # proc_info = proc_data.processing_info
-    proc_info = {'processed_date': '10/10/1981'}
+    proc_info = {'processed_date': str(proc_data.timestamp)}
     proc_info['pid'] = proc_data_id
     proc_info['data_type'] = data_type
     proc_info['processed_date'] = str(proc_info['processed_date'])
+    params = proc_data.processing_parameters.values
+    del params['input_data']
+    ref = Reference(params.pop('reference'))
+    proc_info['reference_name'] = ref.name
+    proc_info['taxonomy_filepath'] = basename(ref.taxonomy_fp)
+    proc_info['sequence_filepath'] = basename(ref.sequence_fp)
+    proc_info['tree_filepath'] = basename(ref.tree_fp)
+    proc_info['reference_version'] = ref.version
+    proc_info['algorithm'] = 'sortmerna'
+    proc_info['samples'] = sorted(proc_data.prep_templates[0].keys())
+    proc_info.update(params)
+
     return proc_info
 
 
@@ -179,10 +191,14 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     cols = ['study_id', 'email', 'principal_investigator_id',
             'publication_doi', 'study_title', 'metadata_complete',
             'number_samples_collected', 'study_abstract']
+    study_info = Study.get_info([s.id for s in study_set], cols)
 
     # get info for the studies
     infolist = []
-    for study in study_set:
+    for info in study_info:
+        # Convert DictCursor to proper dict
+        info = dict(info)
+        study = Study(info['study_id'])
         # Build the processed data info for the study if none passed
         if build_samples:
             proc_data_list = [ar for ar in study.artifacts()
@@ -194,7 +210,6 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
                 # there is only one prep template for each processed data
                 proc_samples[proc_data.id] = proc_data.prep_templates[0].keys()
 
-        info = dict(study.get_info(info_cols=cols)[0])
         study_info = _build_single_study_info(study, info, study_proc,
                                               proc_samples)
         infolist.append(study_info)
@@ -237,11 +252,11 @@ class StudyApprovalList(BaseHandler):
         if user.level != 'admin':
             raise HTTPError(403, 'User %s is not admin' % self.current_user)
 
-        result_generator = viewitems(
-            ProcessedData.get_by_status_grouped_by_study('awaiting_approval'))
-        study_generator = ((Study(sid), pds) for sid, pds in result_generator)
+        studies = defaultdict(list)
+        for artifact in Artifact.iter_by_visibility('awaiting_approval'):
+            studies[artifact.study].append(artifact.id)
         parsed_studies = [(s.id, s.title, s.owner, pds)
-                          for s, pds in study_generator]
+                          for s, pds in viewitems(studies)]
 
         self.render('admin_approval.html',
                     study_info=parsed_studies)

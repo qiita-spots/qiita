@@ -135,7 +135,6 @@ class StudyIndexHandler(StudyAPIProxy):
     @authenticated
     def get(self, study_id):
         study = Study(_to_int(study_id))
-        check_access(self.current_user, study, raise_error=True)
         prep_info = self.study_prep_proxy(study)
         data_types = self.study_data_types_proxy()
         study_info = self.study_info_proxy(study)

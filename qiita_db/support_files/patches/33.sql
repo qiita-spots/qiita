@@ -36,6 +36,8 @@ CREATE TABLE qiita.software (
     name                 varchar  NOT NULL,
     version              varchar  NOT NULL,
     description          varchar  NOT NULL,
+    environment_script   varchar  NOT NULL,
+    start_script         varchar  NOT NULL,
     CONSTRAINT pk_software PRIMARY KEY ( software_id )
  ) ;
 
@@ -138,6 +140,13 @@ ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_visibility FOREIGN KEY ( v
 ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_software_command FOREIGN KEY ( command_id ) REFERENCES qiita.software_command( command_id )    ;
 ALTER TABLE qiita.artifact ADD CONSTRAINT fk_artifact_data_type FOREIGN KEY ( data_type_id ) REFERENCES qiita.data_type( data_type_id )    ;
 
+-- We need to keep the old preprocessed data id for the artifact id due
+-- to EBI. In order to make sure that none of the raw data or processed
+-- data that we are going to transfer to the artifact table gets and id needed
+-- by the preprocessed data, we will set the autoincrementing
+-- artifact_id column to start at 2,000
+SELECT setval('qiita.artifact_artifact_id_seq', 2000, false);
+
 
 -- Artifact filepath table - relates an artifact with its files
 CREATE TABLE qiita.artifact_filepath (
@@ -230,8 +239,8 @@ $$ LANGUAGE plpgsql;
 
 -- Populate the software and software_command tables so we can assignt the
 -- correct values to the preprocessed and processed tables
-INSERT INTO qiita.software (name, version, description) VALUES
-    ('QIIME', '1.9.1', 'Quantitative Insights Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data');
+INSERT INTO qiita.software (name, version, description, environment_script, start_script) VALUES
+    ('QIIME', '1.9.1', 'Quantitative Insights Into Microbial Ecology (QIIME) is an open-source bioinformatics pipeline for performing microbiome analysis from raw DNA sequencing data', 'source activate qiita', 'start_target_gene');
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1038/nmeth.f.303', '20383131');
 INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (1, '10.1038/nmeth.f.303');
 -- Magic number 1: we just created the software table and inserted the QIIME
@@ -595,11 +604,12 @@ BEGIN
             SELECT generate_params(ppd_cmd_id, ppd_vals.preprocessed_params_id, rd_a_id) INTO params;
 
             -- Insert the preprocessed data in the artifact table
-            INSERT INTO qiita.artifact (generated_timestamp, visibility_id,
+            INSERT INTO qiita.artifact (artifact_id, generated_timestamp, visibility_id,
                                         artifact_type_id, data_type_id, command_id,
                                         command_parameters, can_be_submitted_to_ebi,
                                         can_be_submitted_to_vamps)
-                VALUES (now(), ppd_vis_id, demux_type_id, ppd_vals.data_type_id, ppd_cmd_id,
+                VALUES (ppd_vals.preprocessed_data_id, now(), ppd_vis_id,
+                        demux_type_id, ppd_vals.data_type_id, ppd_cmd_id,
                         params, TRUE, TRUE)
                 RETURNING artifact_id INTO ppd_a_id;
 
@@ -715,7 +725,9 @@ BEGIN
         FROM qiita.study_pmid
     LOOP
         INSERT INTO qiita.publication (doi, pubmed_id)
-            VALUES (study_pmids.pmid, study_pmids.pmid);
+            SELECT study_pmids.pmid, study_pmids.pmid
+            WHERE NOT EXISTS(
+                SELECT doi FROM qiita.publication WHERE doi = study_pmids.pmid);
 
         INSERT INTO qiita.study_publication (study_id, publication_doi)
             VALUES (study_pmids.study_id, study_pmids.pmid);

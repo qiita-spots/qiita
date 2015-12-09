@@ -79,6 +79,17 @@ class ArtifactTests(TestCase):
             if exists(f):
                 remove(f)
 
+    def test_iter(self):
+        obs = list(qdb.artifact.Artifact.iter_by_visibility('public'))
+        self.assertEqual(obs, [])
+
+        obs = list(qdb.artifact.Artifact.iter_by_visibility('private'))
+        exp = [qdb.artifact.Artifact(1),
+               qdb.artifact.Artifact(2),
+               qdb.artifact.Artifact(3),
+               qdb.artifact.Artifact(4)]
+        self.assertEqual(obs, exp)
+
     def test_iter_public(self):
         obs = list(qdb.artifact.Artifact.iter_public())
         exp = []
@@ -277,6 +288,11 @@ class ArtifactTests(TestCase):
     def test_delete(self):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
+
+        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
+                          str(test.study.id))
+        self._clean_up_files.extend(
+            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
 
         qdb.artifact.Artifact.delete(test.id)
 

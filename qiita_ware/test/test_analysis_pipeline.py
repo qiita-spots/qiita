@@ -44,8 +44,8 @@ class TestRun(TestCase):
                               moi_parent_id=group)
             app(analysis, [], rarefaction_depth=100)
             self.assertEqual(analysis.status, 'error')
-            for job_id in analysis.jobs:
-                self.assertEqual(Job(job_id).status, 'error')
+            for job in analysis.jobs:
+                self.assertEqual(job.status, 'error')
         finally:
             rename(join(base, "processed_data", "1_study_1001.bak"),
                    join(base, "processed_data",
@@ -56,7 +56,7 @@ class TestRun(TestCase):
         RunAnalysis()._construct_job_graph(
             analysis, [('18S', 'Summarize Taxa')],
             comm_opts={'Summarize Taxa': {'opt1': 5}})
-        self.assertEqual(analysis.jobs, [3, 4])
+        self.assertEqual(analysis.jobs, [Job(3), Job(4)])
         job = Job(4)
         self.assertEqual(job.datatype, '18S')
         self.assertEqual(job.command,

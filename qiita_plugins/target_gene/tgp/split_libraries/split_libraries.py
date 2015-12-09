@@ -7,11 +7,10 @@
 # -----------------------------------------------------------------------------
 
 from os.path import join, basename, splitext
-from functools import partial
 
 from tgp.util import update_job_step, system_call, format_payload
 from .util import (get_artifact_information, split_mapping_file,
-                   generate_demux_file)
+                   generate_demux_file, generate_artifact_info)
 
 
 def generate_parameters_string(parameters):
@@ -236,7 +235,7 @@ def split_libraries(server_url, job_id, parameters, out_dir):
     output_dir = join(out_dir, 'sl_out')
 
     commands, sl_outs = generate_split_libraries_cmd(
-        filepaths, mapping_file, atype, output_dir, parameters)
+        seqs, quals, mapping_file, output_dir, parameters)
 
     # Step 3 execute split libraries
     cmd_len = len(commands)
@@ -267,25 +266,24 @@ def split_libraries(server_url, job_id, parameters, out_dir):
                 raise RuntimeError(
                     "Error concatenating %s files:\nStd output: %s\n"
                     "Std error:%s" % (tc, std_out, std_err))
-        if quals:
-            update_job_step(
-                server_url, job_id,
-                "Step 4 of 4: Merging results (converting fastqual to fastq)")
-            cmd = ("convert_fastaqual_fastq.py -f %s -q %s -o %s -F"
-                   % (join(output_dir, 'seqs.fna'),
-                      join(output_dir, 'seqs_filtered.qual'),
-                      output_dir))
+    if quals:
+        update_job_step(
+            server_url, job_id,
+            "Step 4 of 4: Merging results (converting fastqual to fastq)")
+        cmd = ("convert_fastaqual_fastq.py -f %s -q %s -o %s -F"
+               % (join(output_dir, 'seqs.fna'),
+                  join(output_dir, 'seqs_filtered.qual'),
+                  output_dir))
+        std_out, std_err, return_value = system_call(cmd)
+        if return_value != 0:
+            raise RuntimeError(
+                "Error converting the fasta/qual files to fastq")
     update_job_step(
         server_url, job_id,
         "Step 4 of 4: Merging results (generating demux file)")
 
     generate_demux_file(output_dir)
 
-    path_builder = partial(join, output_dir)
-    filepaths = [(path_builder('seqs.fna'), 'preprocessed_fasta'),
-                 (path_builder('seqs.fastq'), 'preprocessed_fastq'),
-                 (path_builder('seqs.demux'), 'preprocessed_demux'),
-                 (path_builder('split_library_log.txt'), 'log')]
-    artifacts_info = ['Demultiplexed', filepaths, True, True]
+    artifacts_info = generate_artifact_info(output_dir)
 
     return format_payload(True, artifacts_info=artifacts_info)

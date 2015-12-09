@@ -28,13 +28,13 @@ from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
 from qiita_db.analysis import Analysis
 from qiita_db.artifact import Artifact
-from qiita_db.job import Job, Command
+from qiita_db.job import Command
 from qiita_db.util import (get_db_files_base_dir,
                            check_access_to_analysis_result,
                            filepath_ids_to_rel_paths, get_filepath_id)
 from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_db.study import Study
 from qiita_db.logger import LogEntry
+from qiita_db.reference import Reference
 from qiita_core.util import execute_as_transaction
 
 SELECT_SAMPLES = 2
@@ -148,8 +148,7 @@ class AnalysisResultsHandler(BaseHandler):
         check_analysis_access(self.current_user, analysis)
 
         jobres = defaultdict(list)
-        for job in analysis.jobs:
-            jobject = Job(job)
+        for jobject in analysis.jobs:
             results = []
             for res in jobject.results:
                 name = basename(res)
@@ -165,9 +164,8 @@ class AnalysisResultsHandler(BaseHandler):
             if not samples:
                 continue
             proc_data = Artifact(proc_data_id)
-            data_type = proc_data.data_type()
-            study = proc_data.study
-            dropped[data_type].append((Study(study).title, len(samples),
+            data_type = proc_data.data_type
+            dropped[data_type].append((proc_data.study.title, len(samples),
                                        ', '.join(samples)))
 
         self.render("analysis_results.html", analysis_id=analysis_id,
@@ -268,6 +266,8 @@ class ResultsHandler(StaticFileHandler, BaseHandler):
         """Overrides StaticFileHandler's method to include authentication
         """
         # Get the filename (or the base directory) of the result
+        if root[-1] != '/':
+            root = "%s/" % root
         len_prefix = len(commonprefix([root, absolute_path]))
         base_requested_fp = absolute_path[len_prefix:].split(sep, 1)[0]
 
@@ -312,16 +312,19 @@ class SelectedSamplesHandler(BaseHandler):
             proc_data = Artifact(pid)
             sel_data[proc_data.study][pid] = samps
             # Also get processed data info
-            # TODO plugin:
-            # proc_data_info[pid] = proc_data.processing_info
-            proc_data_info[pid] = {'processed_date': '10/10/1981',
-                                   'algorithm': 'My algorithm',
-                                   'reference_name': 'My reference name',
-                                   'reference_version': 'My reference version',
-                                   'sequence_filepath': 'My sequence filepath',
-                                   'taxonomy_filepath': 'My taxonomy filepath',
-                                   'tree_filepath': 'My taxonomy filepath'}
-            proc_data_info[pid]['data_type'] = proc_data.data_type
+            parameters = proc_data.processing_parameters
+            reference = Reference(parameters.values['reference'])
+
+            proc_data_info[pid] = {
+                'processed_date': str(proc_data.timestamp),
+                'algorithm': parameters.command.name,
+                'reference_name': reference.name,
+                'reference_version': reference.version,
+                'sequence_filepath': reference.sequence_fp,
+                'taxonomy_filepath': reference.taxonomy_fp,
+                'tree_filepath': reference.tree_fp,
+                'data_type': proc_data.data_type}
+
         self.render("analysis_selected.html", sel_data=sel_data,
                     proc_info=proc_data_info)
 

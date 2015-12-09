@@ -77,6 +77,12 @@ class CommandTests(TestCase):
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
         self.assertEqual(obs.optional_parameters, exp_optional)
 
+    def test_software(self):
+        self.assertEqual(qdb.software.Command(1).software,
+                         qdb.software.Software(1))
+        self.assertEqual(qdb.software.Command(2).software,
+                         qdb.software.Software(1))
+
     def test_name(self):
         self.assertEqual(qdb.software.Command(1).name, "Split libraries FASTQ")
         self.assertEqual(qdb.software.Command(2).name, "Split libraries")
@@ -117,7 +123,7 @@ class CommandTests(TestCase):
             'reverse_primer_mismatches': ['integer', '0'],
             'reverse_primers':
                 ['choice:["disable", "truncate_only", "truncate_remove"]',
-                 'default_value'],
+                 'disable'],
             'trim_seq_length': ['bool', 'False'],
             'truncate_ambi_bases': ['bool', 'False']}
         self.assertEqual(qdb.software.Command(2).parameters, exp_params)
@@ -156,7 +162,7 @@ class CommandTests(TestCase):
             'reverse_primer_mismatches': ['integer', '0'],
             'reverse_primers':
                 ['choice:["disable", "truncate_only", "truncate_remove"]',
-                 'default_value'],
+                 'disable'],
             'trim_seq_length': ['bool', 'False'],
             'truncate_ambi_bases': ['bool', 'False']}
         self.assertEqual(qdb.software.Command(2).optional_parameters,
@@ -184,24 +190,30 @@ class SoftwareTests(TestCase):
     def test_create(self):
         obs = qdb.software.Software.create(
             "New Software", "0.1.0",
-            "This is adding a new software for testing")
+            "This is adding a new software for testing", "env_name",
+            "start_plugin")
         self.assertEqual(obs.name, "New Software")
         self.assertEqual(obs.version, "0.1.0")
         self.assertEqual(obs.description,
                          "This is adding a new software for testing")
         self.assertEqual(obs.commands, [])
         self.assertEqual(obs.publications, [])
+        self.assertEqual(obs.environment_script, 'env_name')
+        self.assertEqual(obs.start_script, 'start_plugin')
 
     def test_create_with_publications(self):
         exp_publications = [['10.1000/nmeth.f.101', '12345678']]
         obs = qdb.software.Software.create(
             "Published Software", "1.0.0", "Another testing software",
+            "env_name", "start_plugin",
             publications=exp_publications)
         self.assertEqual(obs.name, "Published Software")
         self.assertEqual(obs.version, "1.0.0")
         self.assertEqual(obs.description, "Another testing software")
         self.assertEqual(obs.commands, [])
         self.assertEqual(obs.publications, exp_publications)
+        self.assertEqual(obs.environment_script, 'env_name')
+        self.assertEqual(obs.start_script, 'start_plugin')
 
     def test_name(self):
         self.assertEqual(qdb.software.Software(1).name, "QIIME")
@@ -232,6 +244,14 @@ class SoftwareTests(TestCase):
         exp = [['10.1038/nmeth.f.303', '20383131'],
                ['10.1000/nmeth.f.101', '12345678']]
         self.assertItemsEqual(tester.publications, exp)
+
+    def test_environment_script(self):
+        tester = qdb.software.Software(1)
+        self.assertEqual(tester.environment_script, 'source activate qiita')
+
+    def test_start_script(self):
+        tester = qdb.software.Software(1)
+        self.assertEqual(tester.start_script, 'start_target_gene')
 
 
 @qiita_test_checker()

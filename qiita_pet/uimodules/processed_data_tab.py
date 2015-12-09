@@ -17,9 +17,9 @@ class ProcessedDataTab(BaseUIModule):
     def render(self, study, full_access, allow_approval, approval_deny_msg):
         # currently all process data are 'BIOM'
         pd_gen = [ar for ar in study.artifacts()
-                   if ar.artifact_type == 'BIOM']
+                  if ar.artifact_type == 'BIOM']
         avail_pd = [(pd, STATUS_STYLER[pd.visibility]) for pd in pd_gen
-                     if full_access or pd.visibility == 'public']
+                    if full_access or pd.visibility == 'public']
 
         return self.render_string(
             "study_description_templates/processed_data_tab.html",
@@ -58,11 +58,9 @@ class ProcessedDataInfoTab(BaseUIModule):
         # not sandboxed or public
         show_revert_btn = status not in {'sandbox', 'public'}
 
-        pd_id = processed_data.id
-
         # process data can only have one preprocess_data
         preprocessed_data_id = processed_data.parents[0].id
-        process_date = 'TODO plugin: process date'
+        process_date = str(processed_data.timestamp)
         filepaths = processed_data.filepaths
         is_local_request = is_localhost(self.request.headers['host'])
 
