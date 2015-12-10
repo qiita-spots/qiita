@@ -512,8 +512,7 @@ class Study(qdb.base.QiitaObject):
             # remove non-info items from info
             for item in self._non_info:
                 info.pop(item)
-            # This is an optional column, but should not be considered part
-            # of the info
+            # removed because redundant to the id already stored in the object
             info.pop('study_id')
 
             if info['principal_investigator_id']:

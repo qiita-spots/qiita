@@ -9,10 +9,10 @@ from __future__ import division
 
 from tornado.web import authenticated
 
-from qiita_pet.handlers.util import to_int
+from qiita_pet.handlers.util import to_int, doi_linkifier
 # ONLY IMPORT FROM qiita_pet HERE. All other imports must be made in
 # api_proxy.py so they will be removed when we get the API in place.
-from .api_proxy import StudyAPIProxy
+from qiita_pet.handlers.api_proxy import StudyAPIProxy
 
 
 class StudyIndexHandler(StudyAPIProxy):
@@ -34,6 +34,8 @@ class StudyBaseInfoAJAX(StudyAPIProxy):
         study = to_int(self.get_argument('study_id'))
         # Proxy for what will become API request
         study_info = self.study_info_proxy(study)
+        study_doi = ' '.join(
+            [doi_linkifier(p) for p in study_info['publications']])
 
         self.render('study_ajax/base_info.html',
-                    study_info=study_info)
+                    study_info=study_info, publications=study_doi)
