@@ -9,7 +9,8 @@ from __future__ import division
 
 # This is the only file in qiita_pet that should import from outside qiita_pet
 # The idea is that this proxies the call and response dicts we expect from the
-# QIITA API once we build it.
+# QIITA API once we build it. This will be removed and replaced with API calls
+# when the API is complete.
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study
 
@@ -65,7 +66,7 @@ class StudyAPIProxy(BaseHandler):
                     'status': prep.status,
                     'start_artifact': start_artifact.artifact_type,
                     'start_artifact_id': start_artifact.id,
-                    'last_artifact': 'TODO'
+                    'last_artifact': 'TODO new gui'
                 }
                 prep_info[dtype].append(info)
         return prep_info
@@ -99,7 +100,7 @@ class StudyAPIProxy(BaseHandler):
         check_access(self.current_user, study, raise_error=True)
         study_info = study.info
         # Add needed info that is not part of the initial info pull
-        study_info['publication_doi'] = [p[0] for p in study.publications]
+        study_info['publications'] = study.publications
         study_info['study_id'] = study.id
         study_info['study_title'] = study.title
 
