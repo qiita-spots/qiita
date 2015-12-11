@@ -11,6 +11,8 @@ from json import loads
 from functools import partial
 from os.path import join
 
+from moi import r_client
+
 from qiita_core.util import qiita_test_checker
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 import qiita_db as qdb
@@ -29,17 +31,28 @@ class UtilTests(TestCase):
         self.assertEqual(obs, exp)
 
 
-@qiita_test_checker()
 class ReferenceFilepathsHandler(TestHandlerBase):
+    def setUp(self):
+        self.token = 'SOMEAUTHTESTINGTOKENHEREREFERENCE'
+        r_client.hset(self.token, 'timestamp', '12/12/12 12:12:00')
+        r_client.expire(self.token, 2)
+        super(ReferenceFilepathsHandler, self).setUp()
+
+    def test_get_reference_no_header(self):
+        obs = self.get('/qiita_db/references/1/filepaths/')
+        self.assertEqual(obs.code, 400)
+
     def test_get_reference_does_not_exist(self):
-        obs = self.get('/qiita_db/references/100/filepaths/')
+        obs = self.get('/qiita_db/references/100/filepaths/',
+                       headers={'Authorization': 'Bearer ' + self.token})
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Reference does not exist',
                'filepaths': None}
         self.assertEqual(loads(obs.body), exp)
 
     def test_get(self):
-        obs = self.get('/qiita_db/references/1/filepaths/')
+        obs = self.get('/qiita_db/references/1/filepaths/',
+                       headers={'Authorization': 'Bearer ' + self.token})
         self.assertEqual(obs.code, 200)
         db_test_raw_dir = qdb.util.get_mountpoint('reference')[0][1]
         path_builder = partial(join, db_test_raw_dir)

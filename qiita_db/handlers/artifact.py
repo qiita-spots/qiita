@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 import qiita_db as qdb
-from .oauth2 import OauthBaseHandler
+from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 def _get_artifact(a_id):
     """Returns the artifact with the given id if it exists
@@ -35,6 +35,7 @@ def _get_artifact(a_id):
 
 
 class ArtifactFilepathsHandler(OauthBaseHandler):
+    @authenticate_oauth
     def get(self, artifact_id):
         """Retrieves the filepath information of the given artifact
 
@@ -56,8 +57,6 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
             - filepaths: the filepaths attached to the artifact and their
             filepath types
         """
-        if not self.authenticate_header():
-            return
         with qdb.sql_connection.TRN:
             artifact, success, error_msg = _get_artifact(artifact_id)
             fps = None
@@ -71,6 +70,7 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
 
 
 class ArtifactMappingHandler(OauthBaseHandler):
+    @authenticate_oauth
     def get(self, artifact_id):
         """Retrieves the mapping file information of the given artifact
 
@@ -91,8 +91,6 @@ class ArtifactMappingHandler(OauthBaseHandler):
              - error: in case that success is false, it contains the error msg
              - mapping: the filepath to the mapping file
         """
-        if not self.authenticate_header():
-            return
         with qdb.sql_connection.TRN:
             artifact, success, error_msg = _get_artifact(artifact_id)
             fp = None
@@ -116,6 +114,7 @@ class ArtifactMappingHandler(OauthBaseHandler):
 
 
 class ArtifactTypeHandler(OauthBaseHandler):
+    @authenticate_oauth
     def get(self, artifact_id):
         """Retrieves the artifact type information of the given artifact
 
@@ -135,8 +134,6 @@ class ArtifactTypeHandler(OauthBaseHandler):
             - error: in case that success is false, it contains the error msg
             - type: the artifact type
         """
-        if not self.authenticate_header():
-            return
         with qdb.sql_connection.TRN:
             artifact, success, error_msg = _get_artifact(artifact_id)
             atype = None
