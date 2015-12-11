@@ -72,8 +72,8 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
             'Authorization': 'WRONG ' + self.client_token})
         self.assertEqual(obs.code, 400)
-        exp ={'error': 'invalid_grant',
-              'error_description': 'Oauth2 error: invalid access token'}
+        exp = {'error': 'invalid_grant',
+               'error_description': 'Oauth2 error: invalid access token'}
         self.assertEqual(loads(obs.body), exp)
 
 

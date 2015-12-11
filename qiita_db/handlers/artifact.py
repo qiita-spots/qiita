@@ -9,6 +9,7 @@
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
+
 def _get_artifact(a_id):
     """Returns the artifact with the given id if it exists
 
