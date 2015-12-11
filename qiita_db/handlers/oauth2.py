@@ -10,6 +10,7 @@ from base64 import urlsafe_b64decode
 from string import ascii_letters, digits
 import datetime
 from random import SystemRandom
+import functools
 
 from tornado.web import RequestHandler
 
@@ -49,6 +50,50 @@ def login_client(client_id, client_secret=None):
             sql = sql.format("AND client_secret IS NULL")
         qdb.sql_connection.TRN.add(sql, sql_info)
         return qdb.sql_connection.TRN.execute_fetchlast()
+
+
+def authenticate_oauth(f):
+    """Decorate methods with this to require valid Oauth2 Authorization header
+
+    If a valid header is given, teh handof is odne and the page is rendered. If
+    an invalid header is given, the json error message is automatically sent.
+    """
+    @functools.wraps(f)
+    def wrapper(self, *args, **kwargs):
+        def oauth_error(self, error_msg, error):
+            self.set_status(400)
+            self.write({'error': error,
+                        'error_description': error_msg})
+            self.finish()
+
+        header = self.request.headers.get('Authorization', None)
+        if header is None:
+            oauth_error(self, 'Oauth2 error: invalid access token',
+                        'invalid_request')
+            return
+        token_info = header.split()
+        if len(token_info) != 2 or token_info[0] != 'Bearer':
+            oauth_error(self, 'Oauth2 error: invalid access token',
+                        'invalid_grant')
+            return
+
+        token = token_info[1]
+        db_token = r_client.hgetall(token)
+        if not db_token:
+            # token has timed out or never existed
+            oauth_error(self, 'Oauth2 error: token has timed out',
+                        'invalid_grant')
+            return
+        # Check daily rate limit for key if password style key
+        user = db_token.get('user', None)
+        if user:
+            if not self.check_rate_limit(db_token['client_id'], user):
+                oauth_error(self, 'Oauth2 error: daily request limit reached',
+                            'invalid_grant')
+                return
+
+        return f(self, *args, **kwargs)
+    return wrapper
 
 
 class OauthBaseHandler(RequestHandler):
@@ -95,44 +140,6 @@ class OauthBaseHandler(RequestHandler):
             if int(r_client.get(limit_key)) <= 0:
                 return False
         return True
-
-    def authenticate_header(self):
-        """Authenticates the Authorization header token for a given call
-
-        Returns
-        -------
-        bool
-            Whether authentication succeded or failed
-        user, optional
-            If this key is attached to a user, the User object for the user
-        """
-        header = self.request.headers.get('Authorization', None)
-        if header is None:
-            self.oauth_error('Oauth2 error: invalid access token')
-            return False
-        token_info = header.split()
-        if len(token_info) != 2 or token_info[0] != 'Bearer':
-            self.oauth_error('Oauth2 error: invalid access token',
-                             'invalid_grant')
-            return False
-        token = token_info[1]
-        db_token = r_client.hgetall(token)
-        if not db_token:
-            # token has timed out or never existed
-            self.oauth_error('Oauth2 error: token has timed out',
-                             'invalid_grant')
-            return False
-        # Check daily rate limit for key if password style key
-        user = db_token.get('user', None)
-        if user:
-            if self.check_rate_limit(db_token['client_id'], user):
-                return True, qdb.user.User(user)
-            else:
-                self.oauth_error('Oauth2 error: daily request limit reached',
-                                 'invalid_grant')
-                return False
-        else:
-            return True
 
 
 class TokenAuthHandler(OauthBaseHandler):
@@ -250,7 +257,7 @@ class TokenAuthHandler(OauthBaseHandler):
             self.validate_client(client_id, client_secret)
             return
 
-        # Otherwise, do eother password or client based authentication
+        # Otherwise, do either password or client based authentication
         client_id = self.get_argument('client_id', None)
         grant_type = self.get_argument('grant_type', None)
         if grant_type == 'password':
