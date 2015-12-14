@@ -109,7 +109,7 @@ class ArtifactTests(TestCase):
 
     def test_copy(self):
         src = qdb.artifact.Artifact(1)
-        # Craete the files to the first artifact
+        # Create the files to the first artifact
         for _, fp, _ in src.filepaths:
             with open(fp, 'w') as f:
                 f.write("\n")

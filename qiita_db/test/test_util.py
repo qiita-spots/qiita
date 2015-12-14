@@ -181,6 +181,8 @@ class DBUtilTests(TestCase):
             f.write("\n")
         self.files_to_remove.append(fp)
 
+        # The id's in the database are bigserials, i.e. they get
+        # autoincremented for each element introduced.
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
             "SELECT count(1) FROM qiita.filepath")[0]
         obs = qdb.util.insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",

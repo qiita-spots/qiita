@@ -96,7 +96,7 @@ class Artifact(qdb.base.QiitaObject):
             A new instance of Artifact
         """
         with qdb.sql_connection.TRN:
-            visibility = qdb.util.convert_to_id("sandbox", "visibility")
+            visibility_id = qdb.util.convert_to_id("sandbox", "visibility")
             atype = artifact.artifact_type
             atype_id = qdb.util.convert_to_id(atype, "artifact_type")
             dtype_id = qdb.util.convert_to_id(
@@ -107,7 +107,7 @@ class Artifact(qdb.base.QiitaObject):
                         can_be_submitted_to_vamps, submitted_to_vamps)
                      VALUES (%s, %s, %s, %s, %s, %s, %s)
                      RETURNING artifact_id"""
-            sql_args = [datetime.now(), visibility, atype_id, dtype_id,
+            sql_args = [datetime.now(), visibility_id, atype_id, dtype_id,
                         artifact.can_be_submitted_to_ebi,
                         artifact.can_be_submitted_to_vamps, False]
             qdb.sql_connection.TRN.add(sql, sql_args)

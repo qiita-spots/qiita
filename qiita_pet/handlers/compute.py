@@ -73,7 +73,6 @@ class CreateRawData(BaseHandler):
         study_id = pt.study_id
 
         artifact_id = self.get_argument('artifact_id', default=None)
-        print artifact_id
 
         if artifact_id is not None:
             job_id = self.create_from_artifact(pt, artifact_id)
