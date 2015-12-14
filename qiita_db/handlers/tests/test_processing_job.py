@@ -13,9 +13,8 @@ from datetime import datetime
 from os import close, remove
 from os.path import exists
 
-from moi import r_client
 from qiita_core.util import qiita_test_checker
-from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
 from qiita_db.handlers.processing_job import _get_job
 
@@ -35,16 +34,9 @@ class UtilTests(TestCase):
         self.assertEqual(obs, exp)
 
 
-class JobHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.token = 'SOMEAUTHTESTINGTOKENHEREJOB'
-        r_client.hset(self.token, 'timestamp', '12/12/12 12:12:00')
-        r_client.expire(self.token, 2)
-        super(JobHandlerTests, self).setUp()
-
+class JobHandlerTests(OauthTestingBase):
     def test_get_job_does_not_exists(self):
-        obs = self.get('/qiita_db/jobs/do-not-exist',
-                       headers={'Authorization': 'Bearer ' + self.token})
+        obs = self.get('/qiita_db/jobs/do-not-exist', headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Job does not exist',
                'command': None, 'parameters': None, 'status': None}
@@ -52,7 +44,7 @@ class JobHandlerTests(TestHandlerBase):
 
     def test_get(self):
         obs = self.get('/qiita_db/jobs/6d368e16-2242-4cf8-87b4-a5dc40bb890b',
-                       headers={'Authorization': 'Bearer ' + self.token})
+                       headers=self.header)
         self.assertEqual(obs.code, 200)
         cmd = 'Split libraries FASTQ'
         params = {"max_bad_run_length": 3,
@@ -70,18 +62,12 @@ class JobHandlerTests(TestHandlerBase):
         self.assertEqual(obs.code, 400)
 
 
-class HeartbeatHandlerTests(TestHandlerBase):
+class HeartbeatHandlerTests(OauthTestingBase):
     database = True
-
-    def setUp(self):
-        self.token = 'SOMEAUTHTESTINGTOKENHEREJOB'
-        r_client.hset(self.token, 'timestamp', '12/12/12 12:12:00')
-        r_client.expire(self.token, 2)
-        super(HeartbeatHandlerTests, self).setUp()
 
     def test_post_job_does_not_exists(self):
         obs = self.post('/qiita_db/jobs/do-not-exist/heartbeat/', '',
-                        headers={'Authorization': 'Bearer ' + self.token})
+                        headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Job does not exist'}
         self.assertEqual(loads(obs.body), exp)
@@ -89,7 +75,7 @@ class HeartbeatHandlerTests(TestHandlerBase):
     def test_post_job_already_finished(self):
         obs = self.post(
             '/qiita_db/jobs/6d368e16-2242-4cf8-87b4-a5dc40bb890b/heartbeat/',
-            '', headers={'Authorization': 'Bearer ' + self.token})
+            '', headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False,
                'error': 'Job already finished. Status: success'}
@@ -99,7 +85,7 @@ class HeartbeatHandlerTests(TestHandlerBase):
         before = datetime.now()
         obs = self.post(
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/heartbeat/',
-            '', headers={'Authorization': 'Bearer ' + self.token})
+            '', headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': True, 'error': ''}
         self.assertEqual(loads(obs.body), exp)
@@ -120,7 +106,7 @@ class HeartbeatHandlerTests(TestHandlerBase):
         self.assertEqual(job.status, 'queued')
         obs = self.post(
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/heartbeat/',
-            '', headers={'Authorization': 'Bearer ' + self.token})
+            '', headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': True, 'error': ''}
         self.assertEqual(loads(obs.body), exp)
@@ -128,14 +114,8 @@ class HeartbeatHandlerTests(TestHandlerBase):
         self.assertEqual(job.status, 'running')
 
 
-class ActiveStepHandlerTests(TestHandlerBase):
+class ActiveStepHandlerTests(OauthTestingBase):
     database = True
-
-    def setUp(self):
-        self.token = 'SOMEAUTHTESTINGTOKENHEREJOB'
-        r_client.hset(self.token, 'timestamp', '12/12/12 12:12:00')
-        r_client.expire(self.token, 2)
-        super(ActiveStepHandlerTests, self).setUp()
 
     def test_post_no_header(self):
         obs = self.post(
@@ -144,7 +124,7 @@ class ActiveStepHandlerTests(TestHandlerBase):
 
     def test_post_job_does_not_exists(self):
         obs = self.post('/qiita_db/jobs/do-not-exist/step/', '',
-                        headers={'Authorization': 'Bearer ' + self.token})
+                        headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Job does not exist'}
         self.assertEqual(loads(obs.body), exp)
@@ -153,7 +133,7 @@ class ActiveStepHandlerTests(TestHandlerBase):
         payload = dumps({'step': 'Step 1 of 4: demultiplexing'})
         obs = self.post(
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/step/',
-            payload, headers={'Authorization': 'Bearer ' + self.token})
+            payload, headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Job in a non-running state'}
         self.assertEqual(loads(obs.body), exp)
@@ -162,7 +142,7 @@ class ActiveStepHandlerTests(TestHandlerBase):
         payload = dumps({'step': 'Step 1 of 4: demultiplexing'})
         obs = self.post(
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/step/',
-            payload, headers={'Authorization': 'Bearer ' + self.token})
+            payload, headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': True, 'error': ''}
         self.assertEqual(loads(obs.body), exp)
@@ -171,15 +151,12 @@ class ActiveStepHandlerTests(TestHandlerBase):
         self.assertEqual(job.step, 'Step 1 of 4: demultiplexing')
 
 
-class CompleteHandlerTests(TestHandlerBase):
+class CompleteHandlerTests(OauthTestingBase):
     database = True
 
     def setUp(self):
-        super(CompleteHandlerTests, self).setUp()
-        self.token = 'SOMEAUTHTESTINGTOKENHEREJOB'
-        r_client.hset(self.token, 'timestamp', '12/12/12 12:12:00')
-        r_client.expire(self.token, 2)
         self._clean_up_files = []
+        super(CompleteHandlerTests, self).setUp()
 
     def tearDown(self):
         for fp in self._clean_up_files:
@@ -194,7 +171,7 @@ class CompleteHandlerTests(TestHandlerBase):
 
     def test_post_job_does_not_exists(self):
         obs = self.post('/qiita_db/jobs/do-not-exist/complete/', '',
-                        headers={'Authorization': 'Bearer ' + self.token})
+                        headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Job does not exist'}
         self.assertEqual(loads(obs.body), exp)
@@ -203,7 +180,7 @@ class CompleteHandlerTests(TestHandlerBase):
         payload = dumps({'sucess': False, 'error': 'Job failure'})
         obs = self.post(
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/complete/',
-            payload, headers={'Authorization': 'Bearer ' + self.token})
+            payload, headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': "Job in a non-running state."}
         self.assertEqual(loads(obs.body), exp)
@@ -212,7 +189,7 @@ class CompleteHandlerTests(TestHandlerBase):
         payload = dumps({'success': False, 'error': 'Job failure'})
         obs = self.post(
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/complete/',
-            payload, headers={'Authorization': 'Bearer ' + self.token})
+            payload, headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': True, 'error': ''}
         self.assertEqual(loads(obs.body), exp)
@@ -240,7 +217,7 @@ class CompleteHandlerTests(TestHandlerBase):
              ]})
         obs = self.post(
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/complete/',
-            payload, headers={'Authorization': 'Bearer ' + self.token})
+            payload, headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': True, 'error': ''}
         self.assertEqual(loads(obs.body), exp)

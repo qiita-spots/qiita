@@ -17,11 +17,13 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
         r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
         r_client.hset(self.client_token, 'client_id', 'test123123123')
+        r_client.hset(self.client_token, 'grant_type', 'client')
         r_client.expire(self.client_token, 5)
         # Create username test authentication token
         self.user_token = 'SOMEAUTHTESTINGTOKENHEREUSERNAME'
         r_client.hset(self.user_token, 'timestamp', '12/12/12 12:12:00')
         r_client.hset(self.user_token, 'client_id', 'testuser')
+        r_client.hset(self.user_token, 'grant_type', 'password')
         r_client.hset(self.user_token, 'user', 'test@foo.bar')
         r_client.expire(self.user_token, 5)
         # Create test access limit token
@@ -100,7 +102,8 @@ class OAuth2HandlerTests(TestHandlerBase):
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
         self.assertNotEqual(token, {})
-        self.assertItemsEqual(token.keys(), ['timestamp', 'client_id'])
+        self.assertItemsEqual(token.keys(), ['timestamp', 'client_id',
+                                             'grant_type'])
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
         # Authenticate using post only
@@ -125,7 +128,9 @@ class OAuth2HandlerTests(TestHandlerBase):
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
         self.assertNotEqual(token, {})
-        self.assertItemsEqual(token.keys(), ['timestamp', 'client_id'])
+        self.assertItemsEqual(token.keys(), ['timestamp', 'client_id',
+                                             'grant_type'])
+        self.assertEqual(token['grant_type'], 'client')
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
     def test_authenticate_client_bad_info(self):
@@ -216,8 +221,10 @@ class OAuth2HandlerTests(TestHandlerBase):
         # Make sure token in system with proper ttl
         token = r_client.hgetall(obs_body['access_token'])
         self.assertNotEqual(token, {})
-        self.assertItemsEqual(token.keys(), ['timestamp', 'user', 'client_id'])
+        self.assertItemsEqual(token.keys(), ['timestamp', 'user', 'client_id',
+                                             'grant_type'])
         self.assertEqual(token['user'], 'test@foo.bar')
+        self.assertEqual(token['grant_type'], 'password')
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
     def test_authenticate_password_bad_info(self):

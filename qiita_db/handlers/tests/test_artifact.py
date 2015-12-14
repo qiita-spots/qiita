@@ -12,8 +12,7 @@ from functools import partial
 from os.path import join
 
 from qiita_core.util import qiita_test_checker
-from moi import r_client
-from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
 from qiita_db.handlers.artifact import _get_artifact
 
@@ -26,24 +25,17 @@ class UtilTests(TestCase):
         self.assertEqual(obs, exp)
 
 
-class ArtifactFilepathsHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.token = 'SOMEAUTHTESTINGTOKENHEREARTIFACT'
-        r_client.hset(self.token, 'timestamp', '12/12/12 12:12:00')
-        r_client.expire(self.token, 2)
-        super(ArtifactFilepathsHandlerTests, self).setUp()
-
+class ArtifactFilepathsHandlerTests(OauthTestingBase):
     def test_get_artifact_does_not_exist(self):
         obs = self.get('/qiita_db/artifacts/100/filepaths/',
-                       headers={'Authorization': 'Bearer ' + self.token})
+                       headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Artifact does not exist',
                'filepaths': None}
         self.assertEqual(loads(obs.body), exp)
 
     def test_get_artifact(self):
-        obs = self.get('/qiita_db/artifacts/1/filepaths/',
-                       headers={'Authorization': 'Bearer ' + self.token})
+        obs = self.get('/qiita_db/artifacts/1/filepaths/', headers=self.header)
         self.assertEqual(obs.code, 200)
         db_test_raw_dir = qdb.util.get_mountpoint('raw_data')[0][1]
         path_builder = partial(join, db_test_raw_dir)
@@ -61,24 +53,16 @@ class ArtifactFilepathsHandlerTests(TestHandlerBase):
         self.assertEqual(obs.code, 400)
 
 
-class ArtifactMappingHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.token = 'SOMEAUTHTESTINGTOKENHEREARTIFACT'
-        r_client.hset(self.token, 'timestamp', '12/12/12 12:12:00')
-        r_client.expire(self.token, 2)
-        super(ArtifactMappingHandlerTests, self).setUp()
-
+class ArtifactMappingHandlerTests(OauthTestingBase):
     def test_get_artifact_does_not_exist(self):
-        obs = self.get('/qiita_db/artifacts/100/mapping/',
-                       headers={'Authorization': 'Bearer ' + self.token})
+        obs = self.get('/qiita_db/artifacts/100/mapping/', headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Artifact does not exist',
                'mapping': None}
         self.assertEqual(loads(obs.body), exp)
 
     def test_get(self):
-        obs = self.get('/qiita_db/artifacts/1/mapping/',
-                       headers={'Authorization': 'Bearer ' + self.token})
+        obs = self.get('/qiita_db/artifacts/1/mapping/', headers=self.header)
         self.assertEqual(obs.code, 200)
         db_dir = qdb.util.get_mountpoint('templates')[0][1]
         exp_fp = join(db_dir, "1_prep_1_qiime_19700101-000000.txt")
@@ -91,24 +75,16 @@ class ArtifactMappingHandlerTests(TestHandlerBase):
         self.assertEqual(obs.code, 400)
 
 
-class ArtifactTypeHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.token = 'SOMEAUTHTESTINGTOKENHEREARTIFACT'
-        r_client.hset(self.token, 'timestamp', '12/12/12 12:12:00')
-        r_client.expire(self.token, 2)
-        super(ArtifactTypeHandlerTests, self).setUp()
-
+class ArtifactTypeHandlerTests(OauthTestingBase):
     def test_get_artifact_does_not_exist(self):
-        obs = self.get('/qiita_db/artifacts/100/type/',
-                       headers={'Authorization': 'Bearer ' + self.token})
+        obs = self.get('/qiita_db/artifacts/100/type/', headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False, 'error': 'Artifact does not exist',
                'type': None}
         self.assertEqual(loads(obs.body), exp)
 
     def test_get(self):
-        obs = self.get('/qiita_db/artifacts/1/type/',
-                       headers={'Authorization': 'Bearer ' + self.token})
+        obs = self.get('/qiita_db/artifacts/1/type/', headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': True, 'error': '',
                'type': "FASTQ"}
