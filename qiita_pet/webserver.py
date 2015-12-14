@@ -24,7 +24,7 @@ from qiita_pet.handlers.analysis_handlers import (
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX,
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX,
-    StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
+    MetadataSummaryHandler, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
     PreprocessingSummaryHandler, VAMPSHandler)
 from qiita_pet.handlers.websocket_handlers import (

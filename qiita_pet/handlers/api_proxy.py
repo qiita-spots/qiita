@@ -9,7 +9,7 @@ from __future__ import division
 
 # This is the only file in qiita_pet that should import from outside qiita_pet
 # The idea is that this proxies the call and response dicts we expect from the
-# QIITA API once we build it. This will be removed and replaced with API calls
+# Qiita API once we build it. This will be removed and replaced with API calls
 # when the API is complete.
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study
@@ -37,7 +37,7 @@ def _approve(level):
 
 
 class StudyAPIProxy(BaseHandler):
-    """Adds API proxy functions to the handler. Can be removed once the restful
+    """Adds API proxy functions to the handler. Can be removed once the RESTful
        API is in place."""
     def study_prep_proxy(self, study_id):
         """Proxies expected json from the API for existing prep templates
@@ -47,10 +47,16 @@ class StudyAPIProxy(BaseHandler):
         study_id : int
             Study id to get prep template info for
 
-        Returns:
+        Returns
+        -------
         dict of list of dict
             prep template information seperated by data type, in the form
             {data_type: [{prep 1 info dict}, ....], ...}
+
+        Raises
+        ------
+        HTTPError
+            Raises code 403 if user does not have access to the study
         """
         # Can only pass ids over API, so need to instantiate object
         study = Study(study_id)
@@ -90,7 +96,8 @@ class StudyAPIProxy(BaseHandler):
         study_id : int
             Study id to get prep template info for
 
-        Returns:
+        Returns
+        -------
         dict of list of dict
             prep template information seperated by data type, in the form
             {data_type: [{prep 1 info dict}, ....], ...}

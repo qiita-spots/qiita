@@ -169,9 +169,11 @@ class Study(qdb.base.QiitaObject):
     @staticmethod
     def all_data_types():
         """Returns list of all the data types available in the system
+
         Returns
         -------
         list of str
+            All the data types available in the system
         """
         with qdb.sql_connection.TRN:
             sql = "SELECT DISTINCT data_type FROM qiita.data_type"
