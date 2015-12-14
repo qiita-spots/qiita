@@ -107,6 +107,42 @@ class ArtifactTests(TestCase):
         exp = [a1, a4]
         self.assertEqual(obs, exp)
 
+    def test_copy(self):
+        src = qdb.artifact.Artifact(1)
+        # Create the files to the first artifact
+        for _, fp, _ in src.filepaths:
+            with open(fp, 'w') as f:
+                f.write("\n")
+            self._clean_up_files.append(fp)
+        fp_count = qdb.util.get_count('qiita.filepath')
+        before = datetime.now()
+        obs = qdb.artifact.Artifact.copy(src, self.prep_template)
+
+        self.assertTrue(before < obs.timestamp < datetime.now())
+        self.assertIsNone(obs.processing_parameters)
+        self.assertEqual(obs.visibility, 'sandbox')
+        self.assertEqual(obs.artifact_type, src.artifact_type)
+        self.assertEqual(obs.data_type, self.prep_template.data_type())
+        self.assertEqual(obs.can_be_submitted_to_ebi,
+                         src.can_be_submitted_to_ebi)
+        self.assertEqual(obs.can_be_submitted_to_vamps,
+                         src.can_be_submitted_to_vamps)
+
+        db_dir = qdb.util.get_mountpoint(src.artifact_type)[0][1]
+        path_builder = partial(join, db_dir, str(obs.id))
+        exp_fps = []
+        for fp_id, fp, fp_type in src.filepaths:
+            fp_count += 1
+            new_fp = path_builder(basename(fp))
+            exp_fps.append((fp_count, new_fp, fp_type))
+            self._clean_up_files.append(new_fp)
+
+        self.assertEqual(obs.filepaths, exp_fps)
+        self.assertEqual(obs.parents, [])
+        self.assertEqual(obs.prep_templates, [self.prep_template])
+
+        self.assertEqual(obs.study, qdb.study.Study(1))
+
     def test_create_error_no_filepaths(self):
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactCreationError):
             qdb.artifact.Artifact.create(

@@ -80,6 +80,63 @@ class Artifact(qdb.base.QiitaObject):
         return cls.iter_by_visibility('public')
 
     @classmethod
+    def copy(cls, artifact, prep_template):
+        """Creates a copy of `artifact` and attaches it to `prep_template`
+
+        Parameters
+        ----------
+        artifact : qiita_db.artifact.Artifact
+            Artifact to copy from
+        prep_template : qiita_db.metadata_template.prep_template.PrepTemplate
+            The prep template to attach the new artifact to
+
+        Returns
+        -------
+        qiita_db.artifact.Artifact
+            A new instance of Artifact
+        """
+        with qdb.sql_connection.TRN:
+            visibility_id = qdb.util.convert_to_id("sandbox", "visibility")
+            atype = artifact.artifact_type
+            atype_id = qdb.util.convert_to_id(atype, "artifact_type")
+            dtype_id = qdb.util.convert_to_id(
+                prep_template.data_type(), "data_type")
+            sql = """INSERT INTO qiita.artifact (
+                        generated_timestamp, visibility_id, artifact_type_id,
+                        data_type_id, can_be_submitted_to_ebi,
+                        can_be_submitted_to_vamps, submitted_to_vamps)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s)
+                     RETURNING artifact_id"""
+            sql_args = [datetime.now(), visibility_id, atype_id, dtype_id,
+                        artifact.can_be_submitted_to_ebi,
+                        artifact.can_be_submitted_to_vamps, False]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            a_id = qdb.sql_connection.TRN.execute_fetchlast()
+
+            # Associate the artifact with the prep template
+            instance = cls(a_id)
+            prep_template.artifact = instance
+
+            # Associate the artifact with the study
+            sql = """INSERT INTO qiita.study_artifact (study_id, artifact_id)
+                     VALUES (%s, %s)"""
+            sql_args = [prep_template.study_id, a_id]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+
+            # Associate the artifact with its filepaths
+            filepaths = [(fp, f_type) for _, fp, f_type in artifact.filepaths]
+            fp_ids = qdb.util.insert_filepaths(
+                filepaths, a_id, atype, "filepath", copy=True)
+            sql = """INSERT INTO qiita.artifact_filepath
+                        (artifact_id, filepath_id)
+                     VALUES (%s, %s)"""
+            sql_args = [[a_id, fp_id] for fp_id in fp_ids]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
+        return instance
+
+    @classmethod
     def create(cls, filepaths, artifact_type, prep_template=None,
                parents=None, processing_parameters=None,
                can_be_submitted_to_ebi=False, can_be_submitted_to_vamps=False):

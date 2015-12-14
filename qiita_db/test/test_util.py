@@ -164,6 +164,36 @@ class DBUtilTests(TestCase):
         exp_fp = join(qdb.util.get_db_files_base_dir(), "raw_data",
                       "1_%s" % basename(fp))
         self.assertTrue(exists(exp_fp))
+        self.assertFalse(exists(fp))
+        self.files_to_remove.append(exp_fp)
+
+        # Check that the filepaths have been added to the DB
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
+        exp_fp = "1_%s" % basename(fp)
+        exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
+        self.assertEqual(obs, exp)
+
+    def test_insert_filepaths_copy(self):
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, "w") as f:
+            f.write("\n")
+        self.files_to_remove.append(fp)
+
+        # The id's in the database are bigserials, i.e. they get
+        # autoincremented for each element introduced.
+        exp_new_id = 1 + self.conn_handler.execute_fetchone(
+            "SELECT count(1) FROM qiita.filepath")[0]
+        obs = qdb.util.insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",
+                                        copy=True)
+        self.assertEqual(obs, [exp_new_id])
+
+        # Check that the files have been copied correctly
+        exp_fp = join(qdb.util.get_db_files_base_dir(), "raw_data",
+                      "1_%s" % basename(fp))
+        self.assertTrue(exists(exp_fp))
+        self.assertTrue(exists(fp))
         self.files_to_remove.append(exp_fp)
 
         # Check that the filepaths have been added to the DB
