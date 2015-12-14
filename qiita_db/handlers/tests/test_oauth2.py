@@ -63,7 +63,7 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
             'error': 'invalid_request',
             'error_description': 'Oauth2 error: invalid access token'})
 
-    def test_authenticate_header_bad_info(self):
+    def test_authenticate_header_bad_token(self):
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
             'Authorization': 'Bearer BADTOKEN'})
         self.assertEqual(obs.code, 400)
@@ -71,6 +71,7 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: token has timed out'}
         self.assertEqual(loads(obs.body), exp)
 
+    def test_authenticate_header_bad_header_type(self):
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
             'Authorization': 'WRONG ' + self.client_token})
         self.assertEqual(obs.code, 400)
@@ -133,7 +134,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         self.assertEqual(token['grant_type'], 'client')
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
-    def test_authenticate_client_bad_info(self):
+    def test_authenticate_client_bad_base64_hash(self):
         # Authenticate using bad header
         obs = self.post(
             '/qiita_db/authenticate/', {'grant_type': 'client'}, {
@@ -147,6 +148,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
+    def test_authenticate_client_bad_header_base64_hash(self):
         obs = self.post(
             '/qiita_db/authenticate/', {'grant_type': 'client'}, {
                 'Authorization': 'WRONG MTluZGtPM29NS3NvQ2hqVlZXbHVGN1FreEhSZl'
@@ -158,7 +160,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: invalid token type'}
         self.assertEqual(obs_body, exp)
 
-        # Test with bad client ID
+    def test_authenticate_client_bad_client_id(self):
         obs = self.post(
             '/qiita_db/authenticate/', {
                 'grant_type': 'client',
@@ -172,7 +174,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
-        # Test with bad client secret
+    def test_authenticate_client_bad_client_secret(self):
         obs = self.post(
             '/qiita_db/authenticate/', {
                 'grant_type': 'client',
@@ -186,7 +188,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
-        # Test with missing info
+    def test_authenticate_client_missing_info(self):
         obs = self.post(
             '/qiita_db/authenticate/', {
                 'grant_type': 'client',
@@ -199,7 +201,6 @@ class OAuth2HandlerTests(TestHandlerBase):
         self.assertEqual(obs_body, exp)
 
     def test_authenticate_password(self):
-        # Authenticate with client_id of a non-user
         obs = self.post(
             '/qiita_db/authenticate/', {
                 'grant_type': 'password',
@@ -227,8 +228,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         self.assertEqual(token['grant_type'], 'password')
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
-    def test_authenticate_password_bad_info(self):
-        # Authenticate with client_id of a non-user
+    def test_authenticate_password_non_user_client_id_header(self):
         obs = self.post(
             '/qiita_db/authenticate/', {
                 'grant_type': 'password',
@@ -242,8 +242,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
-        # Authenticate with bad client_id
-        # Authenticate with client_id of a non-user
+    def test_authenticate_password_non_user_client_id(self):
         obs = self.post(
             '/qiita_db/authenticate/', {
                 'grant_type': 'password',
@@ -256,7 +255,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: invalid client information'}
         self.assertEqual(obs_body, exp)
 
-        # Authenticate with bad username
+    def test_authenticate_password_bad_user_id(self):
         obs = self.post(
             '/qiita_db/authenticate/', {
                 'grant_type': 'password',
@@ -270,7 +269,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: invalid user information'}
         self.assertEqual(obs_body, exp)
 
-        # Authenticate with bad password
+    def test_authenticate_password_bad_password(self):
         obs = self.post(
             '/qiita_db/authenticate/', {
                 'grant_type': 'password',
@@ -284,7 +283,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: invalid user information'}
         self.assertEqual(obs_body, exp)
 
-        # Authenticate with missing info
+    def test_authenticate_password_missing_info(self):
         obs = self.post(
             '/qiita_db/authenticate/', {
                 'grant_type': 'password',
