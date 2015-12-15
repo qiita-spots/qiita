@@ -123,11 +123,17 @@ class StudyAPIProxy(BaseHandler):
 
         # Clean up StudyPerson objects to string for display
         pi = study_info["principal_investigator"]
-        study_info["principal_investigator"] = '%s (%s)' % (pi.name,
-                                                            pi.affiliation)
+        study_info["principal_investigator"] = {
+            'name': pi.name,
+            'email': pi.email,
+            'affiliation': pi.affiliation
+        }
         lab_person = study_info["lab_person"]
-        study_info["lab_person"] = '%s (%s)' % (lab_person.name,
-                                                lab_person.affiliation)
+        study_info["lab_person"] = {
+            'name': lab_person.name,
+            'email': lab_person.email,
+            'affiliation': lab_person.affiliation
+        }
 
         samples = study.sample_template.keys()
         study_info['num_samples'] = 0 if samples is None else len(set(samples))
