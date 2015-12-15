@@ -2,12 +2,12 @@
 {% block head %}
 <script type="text/javascript">
   function fill_base(sid) {
-  $.get( "/study/description/baseinfo/", { study_id: sid} )
-    .done(function( data ) {
-      $("#study-main").html(data);
-      $("#study-prep-graph").hide();
-      $("#study-file-breadcrumbs").hide();
-    });
+    $.get( "/study/description/baseinfo/", { study_id: sid} )
+      .done(function( data ) {
+        $("#study-main").html(data);
+        $("#study-prep-graph").hide();
+        $("#study-file-breadcrumbs").hide();
+      });
   }
 
   $(document).ready(function() {
@@ -21,9 +21,11 @@
   <h3>Study Information</h3>
     <a href="#">Sample Template</a><br />
     <a href="#">Sample Summary</a><br />
+    {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
     <a href="#">Edit Study Information</a><br />
     <a href="#">Delete Study</a>
+    {% end %}
 
     <h3>Data Types</h3>
     <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
@@ -35,8 +37,8 @@
             <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{cleaned_dt}}" aria-expanded="true" aria-controls="collapse{{cleaned_dt}}">{{dt}}</a>
           </h4>
         </div>
-        {% end %}
-        {% for prep in prep_info[dt] %}
+      {% end %}
+      {% for prep in prep_info[dt] %}
         <div id="collapse{{cleaned_dt}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{cleaned_dt}}">
           <div class="panel-body">
             <a href="#" style="display:block;color:black;">
@@ -46,7 +48,7 @@
             </a>
           </div>
         </div>
-        {% end %}
+      {% end %}
       </div>
     </div>
   </div>

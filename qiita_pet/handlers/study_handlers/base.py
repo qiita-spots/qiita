@@ -23,9 +23,11 @@ class StudyIndexHandler(StudyAPIProxy):
         prep_info = self.study_prep_proxy(study)
         data_types = self.study_data_types_proxy()
         study_info = self.study_info_proxy(study)
+        editable = study_info['status'] == 'sandbox'
 
         self.render("study_base.html", prep_info=prep_info,
-                    data_types=data_types, study_info=study_info)
+                    data_types=data_types, study_info=study_info,
+                    editable=editable)
 
 
 class StudyBaseInfoAJAX(StudyAPIProxy):

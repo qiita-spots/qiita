@@ -86,7 +86,7 @@ class StudyAPIProxy(BaseHandler):
             Data types available on the system
         """
         data_types = Study.all_data_types()
-        return data_types if data_types else []
+        return data_types
 
     def study_info_proxy(self, study_id):
         """Proxies expected json from the API for base study info
@@ -101,6 +101,11 @@ class StudyAPIProxy(BaseHandler):
         dict of list of dict
             prep template information seperated by data type, in the form
             {data_type: [{prep 1 info dict}, ....], ...}
+
+        Raises
+        ------
+        HTTPError
+            Raises code 403 if user does not have access to the study
         """
         # Can only pass ids over API, so need to instantiate object
         study = Study(study_id)
@@ -110,6 +115,8 @@ class StudyAPIProxy(BaseHandler):
         study_info['publications'] = study.publications
         study_info['study_id'] = study.id
         study_info['study_title'] = study.title
+        study_info['shared_with'] = [s.id for s in study.shared_with]
+        study_info['status'] = study.status
 
         # Clean up StudyPerson objects to string for display
         pi = study_info["principal_investigator"]

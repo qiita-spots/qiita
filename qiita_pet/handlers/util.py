@@ -87,5 +87,5 @@ def to_int(value):
     try:
         res = int(value)
     except ValueError:
-        raise HTTPError(500, "%s cannot be converted to an integer" % value)
+        raise HTTPError(400, "%s cannot be converted to an integer" % value)
     return res
