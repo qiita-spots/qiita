@@ -14,6 +14,7 @@ from os.path import exists, join, basename
 from functools import partial
 
 import pandas as pd
+import networkx as nx
 from biom import example_table as et
 from biom.util import biom_open
 
@@ -495,6 +496,79 @@ class ArtifactTests(TestCase):
 
         exp_parents = [qdb.artifact.Artifact(2)]
         self.assertEqual(qdb.artifact.Artifact(4).parents, exp_parents)
+
+    def test_ancestors(self):
+        obs = qdb.artifact.Artifact(1).ancestors
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        self.assertEqual(obs_nodes, [qdb.artifact.Artifact(1)])
+        obs_edges = obs.edges()
+        self.assertEqual(obs_edges, [])
+
+        obs = qdb.artifact.Artifact(2).ancestors
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+        obs = qdb.artifact.Artifact(3).ancestors
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(3))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+        obs = qdb.artifact.Artifact(4).ancestors
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
+                     qdb.artifact.Artifact(4)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+    def test_descendants(self):
+        obs = qdb.artifact.Artifact(1).descendants
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
+                     qdb.artifact.Artifact(3), qdb.artifact.Artifact(4)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
+                     (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+        obs = qdb.artifact.Artifact(2).descendants
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(2), qdb.artifact.Artifact(4))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+        obs = qdb.artifact.Artifact(3).descendants
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(3)])
+        obs_edges = obs.edges()
+        self.assertItemsEqual(obs_edges, [])
+
+        obs = qdb.artifact.Artifact(4).descendants
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(4)])
+        obs_edges = obs.edges()
+        self.assertItemsEqual(obs_edges, [])
 
     def test_children(self):
         exp = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)]

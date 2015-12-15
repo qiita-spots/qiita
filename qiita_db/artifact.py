@@ -8,7 +8,10 @@
 
 from __future__ import division
 from future.utils import viewitems
+from itertools import chain
 from datetime import datetime
+
+import networkx as nx
 
 import qiita_db as qdb
 
@@ -645,6 +648,62 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return [Artifact(p_id)
                     for p_id in qdb.sql_connection.TRN.execute_fetchflatten()]
+
+    def _create_lineage_graph_from_edge_list(self, edge_list):
+        """Generates an artifact graph from the given `edge_list`
+
+        Parameters
+        ----------
+        edge_list : list of (int, int)
+            List of (artifact_id, parent_artifact_id)
+
+        Returns
+        -------
+        networkx.DiGraph
+            The graph representing the artifact lineage stored in `edge_list`
+        """
+        lineage = nx.DiGraph()
+        if edge_list:
+            # By creating all the artifacts here we are saving DB calls
+            nodes = {a_id: Artifact(a_id)
+                     for a_id in set(chain.from_iterable(edge_list))}
+
+            for child, parent in edge_list:
+                lineage.add_edge(nodes[parent], nodes[child])
+        else:
+            lineage.add_node(self)
+
+        return lineage
+
+    @property
+    def ancestors(self):
+        """Returns the ancestors of the artifact
+
+        Returns
+        -------
+        networkx.DiGraph
+            The ancestors of the artifact
+        """
+        with qdb.sql_connection.TRN:
+            sql = "SELECT * FROM qiita.artifact_ancestry(%s)"
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            edges = qdb.sql_connection.TRN.execute_fetchindex()
+        return self._create_lineage_graph_from_edge_list(edges)
+
+    @property
+    def descendants(self):
+        """Returns the descendants of the artifact
+
+        Returns
+        -------
+        networkx.DiGraph
+            The descendants of the artifact
+        """
+        with qdb.sql_connection.TRN:
+            sql = "SELECT * FROM qiita.artifact_descendants(%s)"
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            edges = qdb.sql_connection.TRN.execute_fetchindex()
+        return self._create_lineage_graph_from_edge_list(edges)
 
     @property
     def children(self):
