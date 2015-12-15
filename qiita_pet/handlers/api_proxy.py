@@ -61,10 +61,13 @@ class StudyAPIProxy(BaseHandler):
         # Can only pass ids over API, so need to instantiate object
         study = Study(study_id)
         check_access(self.current_user, study, raise_error=True)
+        full_access = study.has_access(self.current_user, no_public=True)
         prep_info = {}
         for dtype in study.data_types:
             prep_info[dtype] = []
             for prep in study.prep_templates(dtype):
+                if not full_access and prep.status != 'public':
+                    continue
                 start_artifact = prep.artifact
                 info = {
                     'name': 'PREP %d NAME' % prep.id,
