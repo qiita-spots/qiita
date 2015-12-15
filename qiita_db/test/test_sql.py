@@ -139,6 +139,31 @@ class TestSQL(TestCase):
         exp = [[1], [new_root.id]]
         self.assertEqual(obs, exp)
 
+    def test_artifact_ancestry_root(self):
+        """Correctly returns the ancestry of a root artifact"""
+        sql = "SELECT * FROM qiita.artifact_ancestry(%s)"
+        obs = self.conn_handler.execute_fetchall(sql, [1])
+        exp = []
+        self.assertEqual(obs, exp)
+
+    def test_artifact_ancestry_child(self):
+        """Correctly returns the ancestry of a child node"""
+        sql = "SELECT * FROM qiita.artifact_ancestry(%s)"
+        obs = self.conn_handler.execute_fetchall(sql, [4])
+        exp = [[4, 2], [2, 1]]
+        self.assertItemsEqual(obs, exp)
+
+    def test_artifact_ancestry_child_multiple_parents(self):
+        """Correctly returns the ancestry of a child node with multiple parents
+        """
+        sql = """INSERT INTO qiita.parent_artifact (artifact_id, parent_id)
+                 VALUES (%s, %s)"""
+        self.conn_handler.execute(sql, [4, 3])
+        sql = "SELECT * FROM qiita.artifact_ancestry(%s)"
+        obs = self.conn_handler.execute_fetchall(sql, [4])
+        exp = [[4, 3], [3, 1], [4, 2], [2, 1]]
+        self.assertItemsEqual(obs, exp)
+
 
 if __name__ == '__main__':
     main()

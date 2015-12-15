@@ -811,3 +811,23 @@ BEGIN
     END IF;
 END
 $$ LANGUAGE plpgsql;
+
+
+-- Create a function to return the ancestors of an Artifact
+CREATE FUNCTION qiita.artifact_ancestry(a_id bigint) RETURNS SETOF qiita.parent_artifact AS $$
+BEGIN
+    IF EXISTS(SELECT * FROM qiita.parent_artifact WHERE artifact_id = a_id) THEN
+        RETURN QUERY WITH RECURSIVE root AS (
+            SELECT artifact_id, parent_id
+            FROM qiita.parent_artifact
+            WHERE artifact_id = a_id
+          UNION
+            SELECT p.artifact_id, p.parent_id
+            FROM qiita.parent_artifact p
+            JOIN root r ON (r.parent_id = p.artifact_id)
+        )
+        SELECT DISTINCT artifact_id, parent_id
+            FROM root;
+    END IF;
+END
+$$ LANGUAGE plpgsql;
