@@ -496,6 +496,14 @@ class ArtifactTests(TestCase):
         exp_parents = [qdb.artifact.Artifact(2)]
         self.assertEqual(qdb.artifact.Artifact(4).parents, exp_parents)
 
+    def test_children(self):
+        exp = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)]
+        self.assertEqual(qdb.artifact.Artifact(1).children, exp)
+        exp = [qdb.artifact.Artifact(4)]
+        self.assertEqual(qdb.artifact.Artifact(2).children, exp)
+        self.assertEqual(qdb.artifact.Artifact(3).children, [])
+        self.assertEqual(qdb.artifact.Artifact(4).children, [])
+
     def test_prep_templates(self):
         self.assertEqual(
             qdb.artifact.Artifact(1).prep_templates,
