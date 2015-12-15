@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+import networkx as nx
+
 # This is the only file in qiita_pet that should import from outside qiita_pet
 # The idea is that this proxies the call and response dicts we expect from the
 # Qiita API once we build it. This will be removed and replaced with API calls
@@ -76,6 +78,31 @@ class StudyAPIProxy(BaseHandler):
                 }
                 prep_info[dtype].append(info)
         return prep_info
+
+    def prep_graph_proxy(self, prep_id):
+        """Proxies expected API output for getting file creation DAG
+
+        Returns
+        -------
+        dict of lists of tuples
+            A dictionary containing the edge list representation of the graph,
+            and the node labels. Formatted as:
+            {'edge_list': [(0, 1), (0, 2)...],
+             'node_labels': [(0, 'label0'), (1, 'label1'), ...]}
+
+        Notes
+        -----
+        Nodes are identified by the corresponding Artifact ID.
+        """
+        # G = PrepTempate(prep_id).artifact.descendents
+        G = nx.DiGraph()
+        G.add_nodes_from([x for x in range(1, 14)])
+        G.add_edges_from([(1, 2), (2, 3), (2, 4), (3, 5), (3, 6), (4, 7),
+                          (5, 13), (5, 8), (6, 9), (7, 10), (8, 11), (8, 12),
+                          (10, 12)])
+        node_labels = [(n, 'longer descriptive name for %d' % n)
+                       for n in G.nodes()]
+        return {'edge_list': G.edges(), 'node_labels': node_labels}
 
     def study_data_types_proxy(self):
         """Proxies expected json from the API for available data types
