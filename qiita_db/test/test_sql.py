@@ -146,15 +146,15 @@ class TestSQL(TestCase):
         exp = []
         self.assertEqual(obs, exp)
 
-    def test_artifact_ancestry_child(self):
-        """Correctly returns the ancestry of a child node"""
+    def test_artifact_ancestry_leaf(self):
+        """Correctly returns the ancestry of a leaf artifact"""
         sql = "SELECT * FROM qiita.artifact_ancestry(%s)"
         obs = self.conn_handler.execute_fetchall(sql, [4])
         exp = [[4, 2], [2, 1]]
         self.assertItemsEqual(obs, exp)
 
-    def test_artifact_ancestry_child_multiple_parents(self):
-        """Correctly returns the ancestry of a child node with multiple parents
+    def test_artifact_ancestry_leaf_multiple_parents(self):
+        """Correctly returns the ancestry of a leaf artifact w multiple parents
         """
         sql = """INSERT INTO qiita.parent_artifact (artifact_id, parent_id)
                  VALUES (%s, %s)"""
@@ -163,6 +163,36 @@ class TestSQL(TestCase):
         obs = self.conn_handler.execute_fetchall(sql, [4])
         exp = [[4, 3], [3, 1], [4, 2], [2, 1]]
         self.assertItemsEqual(obs, exp)
+
+    def test_artifact_ancestry_middle(self):
+        """Correctly returns the ancestry of an artifact in the middle of the
+        DAG"""
+        sql = "SELECT * FROM qiita.artifact_ancestry(%s)"
+        obs = self.conn_handler.execute_fetchall(sql, [2])
+        exp = [[2, 1]]
+        self.assertEqual(obs, exp)
+
+    def test_artifact_descendants_leaf(self):
+        """Correctly returns the descendants of a leaf artifact"""
+        sql = "SELECT * FROM qiita.artifact_descendants(%s)"
+        obs = self.conn_handler.execute_fetchall(sql, [4])
+        exp = []
+        self.assertEqual(obs, exp)
+
+    def test_artifact_descendants_root(self):
+        """Correctly returns the descendants of a root artifact"""
+        sql = "SELECT * FROM qiita.artifact_descendants(%s)"
+        obs = self.conn_handler.execute_fetchall(sql, [1])
+        exp = [[2, 1], [3, 1], [4, 2]]
+        self.assertItemsEqual(obs, exp)
+
+    def test_artifact_descendants_middle(self):
+        """Correctly returns the descendants of an artifact in the middle of
+        the DAG"""
+        sql = "SELECT * FROM qiita.artifact_descendants(%s)"
+        obs = self.conn_handler.execute_fetchall(sql, [2])
+        exp = [[4, 2]]
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':

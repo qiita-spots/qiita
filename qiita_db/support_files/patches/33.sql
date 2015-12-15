@@ -831,3 +831,22 @@ BEGIN
     END IF;
 END
 $$ LANGUAGE plpgsql;
+
+-- Create a function to return the descendants of an artifact
+CREATE FUNCTION qiita.artifact_descendants(a_id bigint) RETURNS SETOF qiita.parent_artifact AS $$
+BEGIN
+    IF EXISTS(SELECT * FROM qiita.parent_artifact WHERE parent_id = a_id) THEN
+        RETURN QUERY WITH RECURSIVE root AS (
+            SELECT artifact_id, parent_id
+            FROM qiita.parent_artifact
+            WHERE parent_id = a_id
+          UNION
+            SELECT p.artifact_id, p.parent_id
+            FROM qiita.parent_artifact p
+            JOIN root r ON (r.artifact_id = p.parent_id)
+        )
+        SELECT DISTINCT artifact_id, parent_id
+            FROM root;
+    END IF;
+END
+$$ LANGUAGE plpgsql;
