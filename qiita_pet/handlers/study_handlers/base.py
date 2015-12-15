@@ -38,6 +38,10 @@ class StudyBaseInfoAJAX(StudyAPIProxy):
         study_info = self.study_info_proxy(study)
         study_doi = ' '.join(
             [doi_linkifier(p) for p in study_info['publications']])
+        email = '<a href="mailto:{email}">{name} ({affiliation})</a>'
+        pi = email.format(**study_info['principal_investigator'])
+        contact = email.format(**study_info['lab_person'])
 
         self.render('study_ajax/base_info.html',
-                    study_info=study_info, publications=study_doi)
+                    study_info=study_info, publications=study_doi, pi=pi,
+                    contact=contact)

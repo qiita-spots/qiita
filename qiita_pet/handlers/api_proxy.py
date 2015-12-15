@@ -63,10 +63,13 @@ class StudyAPIProxy(BaseHandler):
         # Can only pass ids over API, so need to instantiate object
         study = Study(study_id)
         check_access(self.current_user, study, raise_error=True)
+        full_access = study.has_access(self.current_user, no_public=True)
         prep_info = {}
         for dtype in study.data_types:
             prep_info[dtype] = []
             for prep in study.prep_templates(dtype):
+                if not full_access and prep.status != 'public':
+                    continue
                 start_artifact = prep.artifact
                 info = {
                     'name': 'PREP %d NAME' % prep.id,
@@ -147,11 +150,17 @@ class StudyAPIProxy(BaseHandler):
 
         # Clean up StudyPerson objects to string for display
         pi = study_info["principal_investigator"]
-        study_info["principal_investigator"] = '%s (%s)' % (pi.name,
-                                                            pi.affiliation)
+        study_info["principal_investigator"] = {
+            'name': pi.name,
+            'email': pi.email,
+            'affiliation': pi.affiliation
+        }
         lab_person = study_info["lab_person"]
-        study_info["lab_person"] = '%s (%s)' % (lab_person.name,
-                                                lab_person.affiliation)
+        study_info["lab_person"] = {
+            'name': lab_person.name,
+            'email': lab_person.email,
+            'affiliation': lab_person.affiliation
+        }
 
         samples = study.sample_template.keys()
         study_info['num_samples'] = 0 if samples is None else len(set(samples))
