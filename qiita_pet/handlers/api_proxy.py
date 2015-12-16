@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+from tornado.web import authenticated, HTTPError
 # This is the only file in qiita_pet that should import from outside qiita_pet
 # The idea is that this proxies the call and response dicts we expect from the
 # Qiita API once we build it. This will be removed and replaced with API calls
@@ -14,6 +15,7 @@ from __future__ import division
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study
 from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.artifact import Artifact
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
@@ -40,6 +42,7 @@ def _approve(level):
 class StudyAPIProxy(BaseHandler):
     """Adds API proxy functions to the handler. Can be removed once the RESTful
        API is in place."""
+    @authenticated
     def study_prep_proxy(self, study_id):
         """Proxies expected json from the API for existing prep templates
 
@@ -81,8 +84,14 @@ class StudyAPIProxy(BaseHandler):
                 prep_info[dtype].append(info)
         return prep_info
 
+    @authenticated
     def prep_graph_proxy(self, prep_id):
         """Proxies expected API output for getting file creation DAG
+
+        Parameters
+        ----------
+        prep_id : int
+            Prep template ID to get graph for
 
         Returns
         -------
@@ -92,16 +101,63 @@ class StudyAPIProxy(BaseHandler):
             {'edge_list': [(0, 1), (0, 2)...],
              'node_labels': [(0, 'label0'), (1, 'label1'), ...]}
 
+        Raises
+        ------
+        HTTPError
+            Raises code 400 if unknown direction passed
+
         Notes
         -----
         Nodes are identified by the corresponding Artifact ID.
         """
         G = PrepTemplate(int(prep_id)).artifact.descendants
+
         node_labels = [(n.id, 'longer descriptive name for %d' % n.id)
                        for n in G.nodes()]
         return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
                 'node_labels': node_labels}
 
+    @authenticated
+    def artifact_graph_proxy(self, artifact_id, direction):
+        """Proxies expected API output for getting file creation DAG
+
+        Parameters
+        ----------
+        artifact_id : int
+            Artifact ID to get graph for
+        direction : {'ancestors', 'descendants'}
+            What direction to get the graph in
+
+        Returns
+        -------
+        dict of lists of tuples
+            A dictionary containing the edge list representation of the graph,
+            and the node labels. Formatted as:
+            {'edge_list': [(0, 1), (0, 2)...],
+             'node_labels': [(0, 'label0'), (1, 'label1'), ...]}
+
+        Raises
+        ------
+        HTTPError
+            Raises code 400 if unknown direction passed
+
+        Notes
+        -----
+        Nodes are identified by the corresponding Artifact ID.
+        """
+        if direction == 'descendants':
+            G = Artifact(int(artifact_id)).descendants
+        elif direction == 'ancestors':
+            G = Artifact(int(artifact_id)).ancestors
+        else:
+            raise HTTPError(400, 'Unknown direction %s' % direction)
+
+        node_labels = [(n.id, 'longer descriptive name for %d' % n.id)
+                       for n in G.nodes()]
+        return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
+                'node_labels': node_labels}
+
+    @authenticated
     def study_data_types_proxy(self):
         """Proxies expected json from the API for available data types
 
@@ -113,6 +169,7 @@ class StudyAPIProxy(BaseHandler):
         data_types = Study.all_data_types()
         return data_types
 
+    @authenticated
     def study_info_proxy(self, study_id):
         """Proxies expected json from the API for base study info
 

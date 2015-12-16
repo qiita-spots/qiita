@@ -3,19 +3,41 @@
 <link rel="stylesheet" src="/static/vendor/css/vis.css" type="text/css">
 <script type="text/javascript" src="/static/vendor/js/vis.js"></script>
 <script type="text/javascript">
-  function showhide(id) {
-    $("#" + id).toggle();
+  function togglegraphs(id) {
+    if($("#study-prep-graph-row").css('display') == 'none' ) {
+      $("#study-prep-graph-row").show();
+      $("#study-file-breadcrumbs-row").hide();
+    } else {
+      $("#study-prep-graph-row").hide();
+      $("#study-file-breadcrumbs-row").show();
+    }
   }
 
   function fill_artifact(aid) {
     $("#study-main").empty();
-    $("#study-file-breadcrumbs").empty();
     $("#study-prep-graph-row").hide();
+
+    $.get( "/artifact/graph/", { artifact_id: +aid, direction: "ancestors" } )
+      .done(function( data ) {
+        var edges = [];
+        var nodes = [];
+        // format edge list data
+        for(i=0;i<data.edge_list.length;i++) {
+          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1],});
+        }
+        //format node depth data
+        for(i=0;i<data.node_labels.length;i++) {
+          nodes.push({id: data.node_labels[i][0], label: data.node_labels[i][1], shape: 'box'});
+        }
+        $("#study-file-breadcrumbs-row").show();
+        draw_graph(nodes, edges, "study-file-breadcrumbs");
+      });
+
     $("#study-main").html("ARTIFACT " + aid + " HTML STUFF");
   }
 
   function fill_prep(pid) {
-    $.get( "/prep/graph/", { prep_id: pid } )
+    $.get( "/prep/graph/", { prep_id: pid} )
       .done(function( data ) {
         var edges = [];
         var nodes = [];
@@ -30,9 +52,10 @@
         $("#study-prep-graph-row").show();
         draw_graph(nodes, edges, "study-prep-graph");
         // Copy existing formatted prep info to header position
-        $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="showhide(\'study-prep-graph-row\'); return false;">Toggle graph</a>');
+        $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="togglegraphs(); return false;">Toggle graph</a>');
         $("#study-main").empty();
         $("#study-file-breadcrumbs").empty();
+        $("#study-file-breadcrumbs-row").hide();
       });
   }
 
@@ -76,6 +99,7 @@
         $("#study-prep-graph").empty();
         $("#study-prep-graph-row").hide();
         $("#study-file-breadcrumbs").empty();
+        $("#study-file-breadcrumbs-row").hide();
         $("#study-prep-subheader").empty();
       });
   }
@@ -144,7 +168,7 @@
     {% end %}
     <div class="row"><div class="col-md-12" id="study-prep-subheader"></div></div>
     <div class="row graph" id="study-prep-graph-row"><div class="col-md-12 graph" id="study-prep-graph"></div></div>
-    <div class="row"><div class="col-md-12" id="study-file-breadcrumbs"></div></div>
+    <div class="row" id="study-file-breadcrumbs-row" style="height:50px"><div class="col-md-12" id="study-file-breadcrumbs" style="height:50px"></div></div>
     <div class="row"><div class="col-md-12" id="study-main"></div></div>
   </div>
 </div>
