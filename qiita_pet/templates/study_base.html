@@ -15,7 +15,7 @@
 
   function fill_artifact(aid) {
     $("#study-main").empty();
-    $("#study-prep-graph-row").hide();
+    $("#study-prep-graph-row").show();
 
     $.get( "/artifact/graph/", { artifact_id: +aid, direction: "ancestors" } )
       .done(function( data ) {
@@ -31,6 +31,7 @@
         }
         $("#study-file-breadcrumbs-row").show();
         draw_graph(nodes, edges, "study-file-breadcrumbs");
+        $("#study-file-breadcrumbs-row").hide();
       });
 
     $("#study-main").html("ARTIFACT " + aid + " HTML STUFF");

@@ -111,11 +111,12 @@ class StudyAPIProxy(BaseHandler):
         Nodes are identified by the corresponding Artifact ID.
         """
         G = PrepTemplate(int(prep_id)).artifact.descendants
-
-        node_labels = [(n.id, 'longer descriptive name for %d' % n.id)
+        node_labels = [(n.id, 'Artifact Name for %d - %s' % (n.id,
+                                                             n.artifact_type))
                        for n in G.nodes()]
         return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
                 'node_labels': node_labels}
+        return {'edge_list': G.edges(), 'node_labels': node_labels}
 
     @authenticated
     def artifact_graph_proxy(self, artifact_id, direction):
