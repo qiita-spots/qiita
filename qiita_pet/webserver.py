@@ -22,8 +22,9 @@ from qiita_pet.handlers.analysis_handlers import (
     ShowAnalysesHandler, ResultsHandler, SelectedSamplesHandler,
     AnalysisSummaryAJAX)
 from qiita_pet.handlers.study_handlers import (
+    StudyIndexHandler, StudyBaseInfoAJAX,
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX,
-    StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
+    MetadataSummaryHandler, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
     PreprocessingSummaryHandler, VAMPSHandler)
 from qiita_pet.handlers.websocket_handlers import (
@@ -103,7 +104,10 @@ class Application(tornado.web.Application):
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/process", ProcessHandler),
             (r"/study/sharing/", ShareStudyAJAX),
-            (r"/study/description/(.*)", StudyDescriptionHandler),
+            # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.
+            # Same reasoning as below. /study/description/(.*) should be last.
+            (r"/study/description/baseinfo/", StudyBaseInfoAJAX),
+            (r"/study/description/(.*)", StudyIndexHandler),
             (r"/study/upload/(.*)", StudyUploadFileHandler),
             (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),
