@@ -497,6 +497,27 @@ class ArtifactTests(TestCase):
         exp_parents = [qdb.artifact.Artifact(2)]
         self.assertEqual(qdb.artifact.Artifact(4).parents, exp_parents)
 
+    def test_create_lineage_graph_from_edge_list_empty(self):
+        tester = qdb.artifact.Artifact(1)
+        obs = tester._create_lineage_graph_from_edge_list([])
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        self.assertEqual(obs.nodes(), [tester])
+        self.assertEqual(obs.edges(), [])
+
+    def test_create_lineage_graph_from_edge_list(self):
+        tester = qdb.artifact.Artifact(1)
+        obs = tester._create_lineage_graph_from_edge_list(
+            [(2, 1), (4, 2), (3, 1), (4, 3)])
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        exp = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
+               qdb.artifact.Artifact(3), qdb.artifact.Artifact(4)]
+        self.assertItemsEqual(obs.nodes(), exp)
+        exp = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
+               (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
+               (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
+               (qdb.artifact.Artifact(3), qdb.artifact.Artifact(4))]
+        self.assertItemsEqual(obs.edges(), exp)
+
     def test_ancestors(self):
         obs = qdb.artifact.Artifact(1).ancestors
         self.assertTrue(isinstance(obs, nx.DiGraph))
