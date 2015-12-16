@@ -8,7 +8,10 @@
 
 from __future__ import division
 from future.utils import viewitems
+from itertools import chain
 from datetime import datetime
+
+import networkx as nx
 
 import qiita_db as qdb
 
@@ -78,6 +81,63 @@ class Artifact(qdb.base.QiitaObject):
             The public artifacts available in the system
         """
         return cls.iter_by_visibility('public')
+
+    @classmethod
+    def copy(cls, artifact, prep_template):
+        """Creates a copy of `artifact` and attaches it to `prep_template`
+
+        Parameters
+        ----------
+        artifact : qiita_db.artifact.Artifact
+            Artifact to copy from
+        prep_template : qiita_db.metadata_template.prep_template.PrepTemplate
+            The prep template to attach the new artifact to
+
+        Returns
+        -------
+        qiita_db.artifact.Artifact
+            A new instance of Artifact
+        """
+        with qdb.sql_connection.TRN:
+            visibility_id = qdb.util.convert_to_id("sandbox", "visibility")
+            atype = artifact.artifact_type
+            atype_id = qdb.util.convert_to_id(atype, "artifact_type")
+            dtype_id = qdb.util.convert_to_id(
+                prep_template.data_type(), "data_type")
+            sql = """INSERT INTO qiita.artifact (
+                        generated_timestamp, visibility_id, artifact_type_id,
+                        data_type_id, can_be_submitted_to_ebi,
+                        can_be_submitted_to_vamps, submitted_to_vamps)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s)
+                     RETURNING artifact_id"""
+            sql_args = [datetime.now(), visibility_id, atype_id, dtype_id,
+                        artifact.can_be_submitted_to_ebi,
+                        artifact.can_be_submitted_to_vamps, False]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            a_id = qdb.sql_connection.TRN.execute_fetchlast()
+
+            # Associate the artifact with the prep template
+            instance = cls(a_id)
+            prep_template.artifact = instance
+
+            # Associate the artifact with the study
+            sql = """INSERT INTO qiita.study_artifact (study_id, artifact_id)
+                     VALUES (%s, %s)"""
+            sql_args = [prep_template.study_id, a_id]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+
+            # Associate the artifact with its filepaths
+            filepaths = [(fp, f_type) for _, fp, f_type in artifact.filepaths]
+            fp_ids = qdb.util.insert_filepaths(
+                filepaths, a_id, atype, "filepath", copy=True)
+            sql = """INSERT INTO qiita.artifact_filepath
+                        (artifact_id, filepath_id)
+                     VALUES (%s, %s)"""
+            sql_args = [[a_id, fp_id] for fp_id in fp_ids]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
+        return instance
 
     @classmethod
     def create(cls, filepaths, artifact_type, prep_template=None,
@@ -645,6 +705,65 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return [Artifact(p_id)
                     for p_id in qdb.sql_connection.TRN.execute_fetchflatten()]
+
+    def _create_lineage_graph_from_edge_list(self, edge_list):
+        """Generates an artifact graph from the given `edge_list`
+
+        Parameters
+        ----------
+        edge_list : list of (int, int)
+            List of (parent_artifact_id, artifact_id)
+
+        Returns
+        -------
+        networkx.DiGraph
+            The graph representing the artifact lineage stored in `edge_list`
+        """
+        lineage = nx.DiGraph()
+        # In case the edge list is empty, only 'self' is present in the graph
+        if edge_list:
+            # By creating all the artifacts here we are saving DB calls
+            nodes = {a_id: Artifact(a_id)
+                     for a_id in set(chain.from_iterable(edge_list))}
+
+            for parent, child in edge_list:
+                lineage.add_edge(nodes[parent], nodes[child])
+        else:
+            lineage.add_node(self)
+
+        return lineage
+
+    @property
+    def ancestors(self):
+        """Returns the ancestors of the artifact
+
+        Returns
+        -------
+        networkx.DiGraph
+            The ancestors of the artifact
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT parent_id, artifact_id
+                     FROM qiita.artifact_ancestry(%s)"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            edges = qdb.sql_connection.TRN.execute_fetchindex()
+        return self._create_lineage_graph_from_edge_list(edges)
+
+    @property
+    def descendants(self):
+        """Returns the descendants of the artifact
+
+        Returns
+        -------
+        networkx.DiGraph
+            The descendants of the artifact
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT parent_id, artifact_id
+                     FROM qiita.artifact_descendants(%s)"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            edges = qdb.sql_connection.TRN.execute_fetchindex()
+        return self._create_lineage_graph_from_edge_list(edges)
 
     @property
     def children(self):

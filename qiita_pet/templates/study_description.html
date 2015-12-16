@@ -207,20 +207,16 @@ function add_raw_data(prep_id) {
     bootstrapAlert("You need to select a raw data used in a previous study");
   } else {
     var form = $("<form>")
-      .attr("action", window.location.href)
+      .attr("action", "/study/create_raw_data")
       .attr("method", "post")
       .append($("<input>")
         .attr("type", "hidden")
-        .attr("name", "raw_data_id")
+        .attr("name", "artifact_id")
         .attr("value", raw_data_id))
       .append($("<input>")
         .attr("type", "hidden")
         .attr("name", "prep_template_id")
-        .attr("value", prep_id))
-      .append($("<input>")
-        .attr("type", "hidden")
-        .attr("name", "action")
-        .attr("value", "add_raw_data"));
+        .attr("value", prep_id));
     $("body").append(form);
     form.submit();
   }
