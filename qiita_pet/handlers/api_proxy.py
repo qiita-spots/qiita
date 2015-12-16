@@ -7,14 +7,13 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-import networkx as nx
-
 # This is the only file in qiita_pet that should import from outside qiita_pet
 # The idea is that this proxies the call and response dicts we expect from the
 # Qiita API once we build it. This will be removed and replaced with API calls
 # when the API is complete.
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.study import Study
+from qiita_db.metadata_template.prep_template import PrepTemplate
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
@@ -97,15 +96,11 @@ class StudyAPIProxy(BaseHandler):
         -----
         Nodes are identified by the corresponding Artifact ID.
         """
-        # G = PrepTempate(prep_id).artifact.descendents
-        G = nx.DiGraph()
-        G.add_nodes_from([x for x in range(1, 14)])
-        G.add_edges_from([(1, 2), (2, 3), (2, 4), (3, 5), (3, 6), (4, 7),
-                          (5, 13), (5, 8), (6, 9), (7, 10), (8, 11), (8, 12),
-                          (10, 12)])
-        node_labels = [(n, 'longer descriptive name for %d' % n)
+        G = PrepTemplate(int(prep_id)).artifact.descendants
+        node_labels = [(n.id, 'longer descriptive name for %d' % n.id)
                        for n in G.nodes()]
-        return {'edge_list': G.edges(), 'node_labels': node_labels}
+        return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
+                'node_labels': node_labels}
 
     def study_data_types_proxy(self):
         """Proxies expected json from the API for available data types
