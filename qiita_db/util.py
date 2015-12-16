@@ -48,7 +48,7 @@ from bcrypt import hashpw, gensalt
 from functools import partial
 from os.path import join, basename, isdir, relpath, exists
 from os import walk, remove, listdir, makedirs, rename
-from shutil import move, rmtree
+from shutil import move, rmtree, copy as shutil_copy
 from json import dumps
 from datetime import datetime
 from itertools import chain
@@ -560,7 +560,7 @@ def get_mountpoint_path_by_id(mount_id):
 
 
 def insert_filepaths(filepaths, obj_id, table, filepath_table,
-                     move_files=True):
+                     move_files=True, copy=False):
     r"""Inserts `filepaths` in the database.
 
     Since the files live outside the database, the directory in which the files
@@ -579,8 +579,11 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
     filepath_table : str
         Table that holds the filepath information
     move_files : bool, optional
-        Whether or not to copy from the given filepaths to the db filepaths
+        Whether or not to move the given filepaths to the db filepaths
         default: True
+    copy : bool, optional
+        If `move_files` is true, whether to actually move the files or just
+        copy them
 
     Returns
     -------
@@ -611,8 +614,9 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
                     (db_path("%s_%s" % (obj_id, basename(path))), id_)
                     for path, id_ in filepaths]
             # Move the original files to the controlled DB directory
+            transfer_function = shutil_copy if copy else move
             for old_fp, new_fp in zip(filepaths, new_filepaths):
-                    move(old_fp[0], new_fp[0])
+                    transfer_function(old_fp[0], new_fp[0])
                     # In case the transaction executes a rollback, we need to
                     # make sure the files have not been moved
                     qdb.sql_connection.TRN.add_post_rollback_func(

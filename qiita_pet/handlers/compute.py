@@ -6,7 +6,7 @@ from moi import r_client
 from .base_handlers import BaseHandler
 
 from qiita_ware.context import submit
-from qiita_ware.dispatchable import create_raw_data
+from qiita_ware.dispatchable import create_raw_data, copy_raw_data
 from qiita_core.util import execute_as_transaction
 from qiita_db.util import get_mountpoint
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -27,10 +27,7 @@ class ComputeCompleteHandler(BaseHandler):
 
 
 class CreateRawData(BaseHandler):
-    @authenticated
-    @execute_as_transaction
-    def post(self):
-        pt_id = self.get_argument('prep_template_id')
+    def create_from_scratch(self, prep_template, study_id):
         raw_data_filetype = self.get_argument('filetype')
         barcodes_str = self.get_argument('barcodes')
         forward_reads_str = self.get_argument('forward')
@@ -38,9 +35,6 @@ class CreateRawData(BaseHandler):
         fasta_str = self.get_argument('fasta')
         qual_str = self.get_argument('qual')
         reverse_reads_str = self.get_argument('reverse')
-
-        pt = PrepTemplate(pt_id)
-        study_id = pt.study_id
 
         def _split(x):
             return x.split(',') if x else []
@@ -64,8 +58,26 @@ class CreateRawData(BaseHandler):
                     if exists(ft):
                         filepaths.append((ft, filetype))
 
-        job_id = submit(self.current_user.id, create_raw_data,
-                        raw_data_filetype, pt, filepaths)
+        return submit(self.current_user.id, create_raw_data, raw_data_filetype,
+                      prep_template, filepaths)
+
+    def create_from_artifact(self, prep_template, artifact_id):
+        return submit(self.current_user.id, copy_raw_data,
+                      prep_template, artifact_id)
+
+    @authenticated
+    @execute_as_transaction
+    def post(self):
+        pt_id = self.get_argument('prep_template_id')
+        pt = PrepTemplate(pt_id)
+        study_id = pt.study_id
+
+        artifact_id = self.get_argument('artifact_id', default=None)
+
+        if artifact_id is not None:
+            job_id = self.create_from_artifact(pt, artifact_id)
+        else:
+            job_id = self.create_from_scratch(pt, study_id)
 
         self.render('compute_wait.html',
                     job_id=job_id, title='Adding raw data',

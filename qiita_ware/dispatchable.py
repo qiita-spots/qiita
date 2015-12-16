@@ -35,3 +35,8 @@ def create_raw_data(filetype, prep_template, filepaths):
     Needs to be dispachable because it moves large files
     """
     Artifact.create(filepaths, filetype, prep_template=prep_template)
+
+
+def copy_raw_data(prep_template, artifact_id):
+    """Creates a new raw data by copying from artifact_id"""
+    Artifact.copy(Artifact(artifact_id), prep_template)
