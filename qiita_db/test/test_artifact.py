@@ -507,7 +507,7 @@ class ArtifactTests(TestCase):
     def test_create_lineage_graph_from_edge_list(self):
         tester = qdb.artifact.Artifact(1)
         obs = tester._create_lineage_graph_from_edge_list(
-            [(2, 1), (4, 2), (3, 1), (4, 3)])
+            [(1, 2), (2, 4), (1, 3), (3, 4)])
         self.assertTrue(isinstance(obs, nx.DiGraph))
         exp = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
                qdb.artifact.Artifact(3), qdb.artifact.Artifact(4)]
