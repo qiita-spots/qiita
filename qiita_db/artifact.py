@@ -663,6 +663,7 @@ class Artifact(qdb.base.QiitaObject):
             The graph representing the artifact lineage stored in `edge_list`
         """
         lineage = nx.DiGraph()
+        # In case the edge list is empty, only 'self' is present in the graph
         if edge_list:
             # By creating all the artifacts here we are saving DB calls
             nodes = {a_id: Artifact(a_id)
