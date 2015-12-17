@@ -8,6 +8,7 @@ The following is a full list of the available tutorials:
 
    account-creation
    prepare-templates
+   ebi-submission
    getting-started
    analyze-data
    no-raw-sequences

@@ -1,0 +1,27 @@
+.. _ebi-submission:
+
+.. index:: ebi-submission
+
+EBI submission via Qiita
+========================
+
+Qiita allows users to deposit their study, sample, experiment and sequence data to the
+`European Nucleotide Archive (ENA) <https://www.ebi.ac.uk/ena>`__, which is a permanent repository
+part of the `European Bioinformatics Institute (EBI) <https://www.ebi.ac.uk/>`__. Submitting to
+this repository will provide you with a unique identifier for your study, which is generally a
+requirement for publication.
+
+EBI/ENA requires a give set of column fields to describe your samples and experiments, for more
+information visit :doc:`prepare-templates` and pay most attention to EBI required fields,
+without these Qiita Admins will not be able to submit. If you want to submit your data or need
+help send an email to `qiita.help@gmail.com <qiita.help@gmail.com>`__.
+
+Note that this kind of submissions are time intensive and need full collaboration from the user.
+Thus, do not wait until the last minute to request help. In general, the best time to request a submission
+is when you are writing your paper. Remember that the data can be submitted to EBI and can be
+kept private and simply make public when the paper is accepted. EBI/ENA takes around 2 days to
+change the status from private to public.
+
+For convenience Qiita allows you to upload a QIIME mapping file to process your data. However,
+the QIIME mapping file, in general, doesn't have all the EBI/ENA fields. Thus, you will need to
+update your templates directly in the system to add/modify these fields.
