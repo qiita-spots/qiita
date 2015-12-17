@@ -173,6 +173,13 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(Artifact(2).visibility, 'private')
         self.assertEqual(Artifact(4).visibility, 'private')
 
+        a = Artifact(2)
+        a.visibility = 'public'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'private')
+        self.assertEqual(Artifact(2).visibility, 'private')
+        self.assertEqual(Artifact(4).visibility, 'private')
+
 
 class TestStudyEditorForm(TestHandlerBase):
     # TODO: add proper test for this once figure out how. Issue 567

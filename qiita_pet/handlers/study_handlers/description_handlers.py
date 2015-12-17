@@ -94,7 +94,7 @@ def _propagate_visibility(artifact):
 
     Notes
     -----
-    This is emulating the previous functionlity, in which the status of the
+    This is emulating the previous functionality, in which the status of the
     processed data was propagated to the preprocessed/raw data that was used
     to generate such processed data. In the current interface, only the status
     of the BIOM artifacts (processed data) can be changed, so this works as
