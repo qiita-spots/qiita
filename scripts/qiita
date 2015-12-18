@@ -408,7 +408,11 @@ def start(port):
         options.log_file_prefix = qiita_config.log_path
         options.logging = 'debug'
         parse_command_line()
-    http_server = tornado.httpserver.HTTPServer(Application())
+    ssl_options = {"certfile": qiita_config.certificate_file,
+                   "keyfile": qiita_config.key_file}
+    print(ssl_options)
+    http_server = tornado.httpserver.HTTPServer(
+        Application(), ssl_options=ssl_options)
 
     try:
         http_server.listen(port)
