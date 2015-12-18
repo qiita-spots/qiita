@@ -11,7 +11,7 @@ part of the `European Bioinformatics Institute (EBI) <https://www.ebi.ac.uk/>`__
 this repository will provide you with a unique identifier for your study, which is generally a
 requirement for publication.
 
-EBI/ENA requires a give set of column fields to describe your samples and experiments, for more
+EBI/ENA requires a given set of column fields to describe your samples and experiments, for more
 information visit :doc:`prepare-templates` and pay most attention to EBI required fields,
 without these Qiita Admins will not be able to submit. If you want to submit your data or need
 help send an email to `qiita.help@gmail.com <qiita.help@gmail.com>`__.
@@ -24,4 +24,5 @@ change the status from private to public, so consider this when submitting data 
 
 For convenience Qiita allows you to upload a QIIME mapping file to process your data. However,
 the QIIME mapping file, in general, doesn't have all the EBI/ENA fields. Thus, you will need to
-update your templates directly in the system to add/modify these fields.
+update your information files (sample or preparation) via the update option. To simplify this process,
+you can download the system generated files and add and/or modify these fields for each file.
