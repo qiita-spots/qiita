@@ -13,16 +13,17 @@ requirement for publication.
 
 EBI/ENA requires a given set of column fields to describe your samples and experiments, for more
 information visit :doc:`prepare-templates` and pay most attention to EBI required fields,
-without these Qiita Admins will not be able to submit. If you want to submit your data or need
+without these **Qiita Admins** will not be able to submit. If you want to submit your data or need
 help send an email to `qiita.help@gmail.com <qiita.help@gmail.com>`__.
 
-Note that this kind of submissions are time intensive and need full collaboration from the user.
+Note that this kind of submissions are time consuming and need full collaboration from the user.
 Thus, do not wait until the last minute to request help. In general, the best time to request a submission
 is when you are writing your paper. Remember that the data can be submitted to EBI and can be
 kept private and simply make public when the paper is accepted. Note that EBI/ENA takes up to 15 days to
 change the status from private to public, so consider this when submitting data and your manuscript.
 
-For convenience Qiita allows you to upload a QIIME mapping file to process your data. However,
-the QIIME mapping file, in general, doesn't have all the EBI/ENA fields. Thus, you will need to
-update your information files (sample or preparation) via the update option. To simplify this process,
-you can download the system generated files and add and/or modify these fields for each file.
+.. note::
+   For convenience Qiita allows you to upload a QIIME mapping file to process your data. However,
+   the QIIME mapping file, in general, doesn't have all the EBI/ENA fields. Thus, you will need to
+   update your information files (sample or preparation) via the update option. To simplify this process,
+   you can download the system generated files and add/modify these fields for each file.
