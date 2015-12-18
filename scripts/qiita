@@ -410,7 +410,6 @@ def start(port):
         parse_command_line()
     ssl_options = {"certfile": qiita_config.certificate_file,
                    "keyfile": qiita_config.key_file}
-    print(ssl_options)
     http_server = tornado.httpserver.HTTPServer(
         Application(), ssl_options=ssl_options)
 
