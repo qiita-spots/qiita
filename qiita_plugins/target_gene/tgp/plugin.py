@@ -59,6 +59,6 @@ def execute_job(server_url, job_id, output_dir):
             error_msg = ("Error executing %s:\n%s" % (task_name, exc_str))
             payload = format_payload(False, error_msg=error_msg)
         # The job completed
-        complete_job(server_url, job_id, payload)
+        complete_job(qclient, job_id, payload)
     else:
         raise RuntimeError("Can't get job (%s) information" % job_id)
