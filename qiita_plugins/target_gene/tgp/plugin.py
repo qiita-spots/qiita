@@ -11,10 +11,8 @@ import sys
 from os.path import exists
 from os import makedirs
 
-import requests
-
-from tgp.util import (start_heartbeat, complete_job, execute_request_retry,
-                      format_payload)
+from tgp.qiita_client import QiitaClient
+from tgp.util import start_heartbeat, complete_job, format_payload
 from tgp.split_libraries import split_libraries, split_libraries_fastq
 from tgp.pick_otus import pick_closed_reference_otus
 
@@ -40,13 +38,13 @@ def execute_job(server_url, job_id, output_dir):
     RuntimeError
         If there is a problem gathering the job information
     """
+    qclient = QiitaClient(server_url)
     # Request job information
-    url = "%s/qiita_db/jobs/%s" % (server_url, job_id)
-    job_info = execute_request_retry(requests.get, url)
+    job_info = qclient.get("/qiita_db/jobs/%s" % job_id)
     # Check if we have received the job information so we can start it
-    if job_info['success']:
+    if job_info and job_info['success']:
         # Starting the heartbeat
-        start_heartbeat(server_url, job_id)
+        start_heartbeat(qclient, job_id)
         # Execute the given task
         task_name = job_info['command']
         task = TASK_DICT[task_name]
@@ -54,7 +52,7 @@ def execute_job(server_url, job_id, output_dir):
         if not exists(output_dir):
             makedirs(output_dir)
         try:
-            payload = task(server_url, job_id, job_info['parameters'],
+            payload = task(qclient, job_id, job_info['parameters'],
                            output_dir)
         except Exception:
             exc_str = repr(traceback.format_exception(*sys.exc_info()))
