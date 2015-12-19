@@ -70,10 +70,9 @@ class QiitaClient(object):
             The JSON information in the request reply
         """
         url = self._server_url + url
-        success = False
         retries = 3
         json_reply = None
-        while not success and retries > 0:
+        while retries > 0:
             retries -= 1
             r = req(url, verify=self._verify, **kwargs)
             r.close()
