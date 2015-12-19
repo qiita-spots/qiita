@@ -85,7 +85,7 @@ def _to_int(value):
 
 
 def _propagate_visibility(artifact):
-    """Propagates the visibility of artifact to all its ancestors
+    """Propagates the visibility of an artifact to all its ancestors
 
     Parameters
     ----------
