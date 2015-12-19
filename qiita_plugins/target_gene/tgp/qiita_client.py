@@ -17,6 +17,18 @@ with standard_library.hooks():
 
 
 class QiitaClient(object):
+    """Client of the Qiita RESTapi
+
+    Parameters
+    ----------
+    server_url : str
+        The url of the Qiita server
+
+    Methods
+    -------
+    get
+    post
+    """
     def __init__(self, server_url):
         self._server_url = server_url
 
@@ -47,8 +59,8 @@ class QiitaClient(object):
         ----------
         req : function
             The request to execute
-        args : tuple
-            The request arguments
+        url : str
+            The url to access in the server
         kwargs : dict
             The request kwargs
 
@@ -71,9 +83,35 @@ class QiitaClient(object):
         return json_reply
 
     def get(self, url, **kwargs):
-        """"""
+        """Execute a get against the Qiita server
+
+        Parameters
+        ----------
+        url : str
+            The url to access in the server
+        kwargs : dict
+            The request kwargs
+
+        Returns
+        -------
+        dict
+            The JSON response from the server
+        """
         return self._request_retry(requests.get, url, **kwargs)
 
     def post(self, url, **kwargs):
-        """"""
+        """Execute a post against the Qiita server
+
+        Parameters
+        ----------
+        url : str
+            The url to access in the server
+        kwargs : dict
+            The request kwargs
+
+        Returns
+        -------
+        dict
+            The JSON response from the server
+        """
         return self._request_retry(requests.post, url, **kwargs)
