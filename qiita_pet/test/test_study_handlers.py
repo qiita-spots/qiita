@@ -5,12 +5,15 @@ from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_db.artifact import Artifact
 from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
 from qiita_db.user import User
 from qiita_pet.handlers.study_handlers.listing_handlers import (
     _get_shared_links_for_study, _build_study_info, _build_single_study_info,
     _build_single_proc_data_info)
+from qiita_pet.handlers.study_handlers.description_handlers import (
+    _propagate_visibility)
 
 
 class TestHelpers(TestHandlerBase):
@@ -155,6 +158,27 @@ class TestHelpers(TestHandlerBase):
                 '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
             'proc_data_info': []})
         self.assertEqual(obs, self.exp)
+
+    def test_propagate_visibility(self):
+        a = Artifact(4)
+        a.visibility = 'public'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'public')
+        self.assertEqual(Artifact(2).visibility, 'public')
+        self.assertEqual(Artifact(4).visibility, 'public')
+
+        a.visibility = 'private'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'private')
+        self.assertEqual(Artifact(2).visibility, 'private')
+        self.assertEqual(Artifact(4).visibility, 'private')
+
+        a = Artifact(2)
+        a.visibility = 'public'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'private')
+        self.assertEqual(Artifact(2).visibility, 'private')
+        self.assertEqual(Artifact(4).visibility, 'private')
 
 
 class TestStudyEditorForm(TestHandlerBase):
