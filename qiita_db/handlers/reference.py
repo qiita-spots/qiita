@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from tornado.web import RequestHandler
+from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 import qiita_db as qdb
 
@@ -36,7 +36,8 @@ def _get_reference(r_id):
     return reference, True, ''
 
 
-class ReferenceFilepathsHandler(RequestHandler):
+class ReferenceFilepathsHandler(OauthBaseHandler):
+    @authenticate_oauth
     def get(self, reference_id):
         """Retrieves the filepath information of the given reference
 
