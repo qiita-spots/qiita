@@ -10,6 +10,17 @@
       });
   }
 
+  function fill_sample(sid) {
+    $.get( "/study/description/sample_template/", { study_id: sid } )
+      .done(function( data ) {
+        $("#study-main").html(data);
+        $("#study-prep-graph").empty();
+        $("#study-prep-graph").hide();
+        $("#study-file-breadcrumbs").empty();
+        $("#study-file-breadcrumbs").hide();
+      });
+  }
+
   $(document).ready(function() {
     fill_base({{study_info['study_id']}});
   });
