@@ -30,7 +30,7 @@
 <div class="row">
   <div class="col-md-3">
   <h3>Study Information</h3>
-    <a href="#">Sample Template</a><br />
+    <a href="#" onclick="fill_sample({{study_info['study_id']}}); return false;">Sample Template</a><br />
     <a href="#">Sample Summary</a><br />
     {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />

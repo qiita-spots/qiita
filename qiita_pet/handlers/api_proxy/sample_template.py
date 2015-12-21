@@ -196,8 +196,9 @@ def update_sample_template(study_id, user_id, sample_template):
     except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
             QiitaDBDuplicateError, IOError, ValueError, KeyError,
             CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
+            from traceback import format_exc
             status = 'error'
-            msg = str(e)
+            msg = format_exc(e)  # str(e)
     return {'status': status,
             'message': msg,
             'file': sample_template}
@@ -214,11 +215,11 @@ def delete_sample_template(study_id, user_id):
     user_id : int
         The current user object id
     """
-    access_error = check_access(study_id, user_id)
+    access_error = check_access(int(study_id), user_id)
     if access_error:
         return access_error
     try:
-        SampleTemplate.delete(study_id)
+        SampleTemplate.delete(int(study_id))
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
     return {'status': 'success'}
