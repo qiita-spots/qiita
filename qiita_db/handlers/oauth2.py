@@ -166,6 +166,11 @@ class TokenAuthHandler(OauthBaseHandler):
         -------
         str
             Random alphanumeric string of passed length
+
+        Raises
+        ------
+        ValueError
+            length is not between 1 and 255, inclusive
         """
         if not 0 < length < 256:
             raise ValueError("Invalid token length: %d" % length)
