@@ -20,11 +20,16 @@ class QiitaClientTests(TestCase):
     def setUp(self):
         self.tester = QiitaClient("https://test_server.com")
         self._clean_up_files = []
+        self._old_fp = environ.get('QP_TARGET_GENE_CONFIG_FP')
 
     def tearDown(self):
         for fp in self._clean_up_files:
             if exists(fp):
                 remove(fp)
+        if self._old_fp:
+            environ['QP_TARGET_GENE_CONFIG_FP'] = self._old_fp
+        else:
+            del environ['QP_TARGET_GENE_CONFIG_FP']
 
     def test_init(self):
         obs = QiitaClient("https://test_server.com")
@@ -38,15 +43,9 @@ class QiitaClientTests(TestCase):
             f.write(CONF_FP)
 
         self._clean_up_files.append(conf_fp)
-        old_fp = environ.get('QP_TARGET_GENE_CONFIG_FP')
+
         environ['QP_TARGET_GENE_CONFIG_FP'] = conf_fp
-        try:
-            obs = QiitaClient("https://test_server.com")
-        finally:
-            if old_fp:
-                environ['QP_TARGET_GENE_CONFIG_FP'] = old_fp
-            else:
-                del environ['QP_TARGET_GENE_CONFIG_FP']
+        obs = QiitaClient("https://test_server.com")
 
         self.assertEqual(obs._server_url, "https://test_server.com")
         self.assertEqual(obs._verify, "/path/to/test_certificate.crt")
