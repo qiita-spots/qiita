@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 __version__ = "0.2.0-dev"
-
 from .prep_template import study_prep_proxy
 from .sample_template import (
     process_sample_template, update_sample_template, sample_template_info,

@@ -11,8 +11,8 @@ from __future__ import division
 # The idea is that this proxies the call and response dicts we expect from the
 # Qiita API once we build it. This will be removed and replaced with API calls
 # when the API is complete.
+from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
-from qiita_db.user import User
 
 
 def study_prep_proxy(study_id, user_id):
@@ -31,11 +31,11 @@ def study_prep_proxy(study_id, user_id):
         prep template information seperated by data type, in the form
         {data_type: [{prep 1 info dict}, ....], ...}
     """
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
     # Can only pass ids over API, so need to instantiate object
-    study = Study(study_id)
-    if not study.has_access(User(user_id)):
-        return {'status': 'error', 'message':
-                'User does not have access to study'}
+    study = Study(int(study_id))
     prep_info = {}
     for dtype in study.data_types:
         prep_info[dtype] = []

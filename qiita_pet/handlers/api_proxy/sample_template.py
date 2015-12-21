@@ -2,7 +2,7 @@ from __future__ import division
 import warnings
 
 from os import remove
-from os.path import exists, join, basename
+from os.path import exists, join
 
 from natsort import natsorted
 # This is the only folder in qiita_pet that should import from outside
@@ -11,9 +11,9 @@ from natsort import natsorted
 #  API calls when the API is complete.
 from pandas.parser import CParserError
 from qiita_db.metadata_template.sample_template import SampleTemplate
-from qiita_core.util import execute_as_transaction
 from qiita_db.study import Study
-from qiita_db.user import User
+from qiita_core.util import execute_as_transaction
+
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
                                              looks_like_qiime_mapping_file)
 from qiita_db.util import get_mountpoint
@@ -24,6 +24,7 @@ from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
 from qiita_ware.exceptions import QiitaWareError
 from qiita_pet.util import convert_text_html
+from qiita_pet.handlers.api_proxy.util import check_access
 
 
 def sample_template_info(samp_id, user_id):
@@ -45,9 +46,9 @@ def sample_template_info(samp_id, user_id):
         Format {num_samples: value,
                 category: [(val1, count1), (val2, count2), ...], ...}
     """
-    if not Study(samp_id).has_access(User(user_id)):
-        return {'status': 'error', 'message':
-                'User does not have access to study'}
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
     template = SampleTemplate(int(samp_id))
     df = template.to_dataframe()
     out = {'num_samples': df.shape[0],
@@ -85,10 +86,9 @@ def process_sample_template(study_id, user_id, data_type, sample_template):
     HTTPError
         If the sample template file does not exists
     """
-    study = Study(study_id)
-    if not study.has_access(User(user_id)):
-        return {'status': 'error', 'message':
-                'User does not have access to study'}
+    access_error = check_access(int(study_id), user_id)
+    if access_error:
+        return access_error
     # Get the uploads folder
     _, base_fp = get_mountpoint("uploads")[0]
     # Get the path of the sample template in the uploads folder
@@ -104,7 +104,7 @@ def process_sample_template(study_id, user_id, data_type, sample_template):
     msg = ''
     status = 'success'
     is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
-
+    study = Study(int(study_id))
     try:
         if is_mapping_file and not data_type:
             return {'status': 'error',
@@ -135,13 +135,8 @@ def process_sample_template(study_id, user_id, data_type, sample_template):
             QiitaDBError, QiitaWareError) as e:
         # Some error occurred while processing the sample template
         # Show the error to the user so they can fix the template
-        error_msg = ('parsing the QIIME mapping file'
-                     if is_mapping_file
-                     else 'parsing the sample template')
-        html_error_message = "<b>An error occurred %s %s</b></br>%s"
-        msg = html_error_message % (error_msg, basename(fp_rsp),
-                                    str(e))
-        msg = convert_text_html(msg)
+        status = 'error'
+        msg = str(e)
         status = "error"
         return {'status': status,
                 'message': msg,
@@ -166,10 +161,9 @@ def update_sample_template(study_id, user_id, sample_template):
     HTTPError
         If the sample template file does not exists
     """
-    study = Study(int(study_id))
-    if not study.has_access(User(user_id)):
-        return {'status': 'error', 'message':
-                'User does not have access to study'}
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
     # Define here the message and message level in case of success
     status = "success"
     # Get the uploads folder
@@ -203,7 +197,7 @@ def update_sample_template(study_id, user_id, sample_template):
             QiitaDBDuplicateError, IOError, ValueError, KeyError,
             CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
             status = 'error'
-            msg = '\n'.join([msg, str(e)]),
+            msg = str(e)
     return {'status': status,
             'message': msg,
             'file': sample_template}
@@ -220,9 +214,9 @@ def delete_sample_template(study_id, user_id):
     user_id : int
         The current user object id
     """
-    if not Study(int(study_id)).has_access(User(user_id)):
-        return {'status': 'error', 'message':
-                'User does not have access to study'}
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
     try:
         SampleTemplate.delete(study_id)
     except Exception as e:
@@ -241,7 +235,7 @@ def get_sample_template_filepaths(study_id, user_id):
     user_id : int
         The current user object id
     """
-    if not Study(int(study_id)).has_access(User(user_id)):
-        return {'status': 'error', 'message':
-                'User does not have access to study'}
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
     return SampleTemplate(int(study_id)).get_filepaths()

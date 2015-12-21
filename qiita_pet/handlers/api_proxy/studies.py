@@ -12,7 +12,7 @@ from __future__ import division
 # Qiita API once we build it. This will be removed and replaced with API calls
 # when the API is complete.
 from qiita_db.study import Study
-from qiita_db.user import User
+from qiita_pet.handlers.api_proxy.util import check_access
 
 
 def study_data_types_proxy():
@@ -48,11 +48,11 @@ def study_info_proxy(study_id, user_id):
     HTTPError
         Raises code 403 if user does not have access to the study
     """
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
     # Can only pass ids over API, so need to instantiate object
     study = Study(study_id)
-    if not Study(int(study_id)).has_access(User(user_id)):
-        return {'status': 'error', 'message':
-                'User does not have access to study'}
     study_info = study.info
     # Add needed info that is not part of the initial info pull
     study_info['publications'] = study.publications
