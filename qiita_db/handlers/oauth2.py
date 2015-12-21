@@ -233,6 +233,15 @@ class TokenAuthHandler(OauthBaseHandler):
             The client making the request
         client_secret : str
             The secret key for the client
+
+        Returns
+        -------
+        Writes out Oauth2 formatted error JSON if error occured
+            {error: error,
+             error_description: error_msg}
+
+        error: RFC6750 controlled vocabulary of errors
+         error_description: Human readable explanation of error
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT EXISTS(
@@ -257,6 +266,15 @@ class TokenAuthHandler(OauthBaseHandler):
             The password for the username
         client_id : str
             The client making the request
+
+        Returns
+        -------
+        Writes out Oauth2 formatted error JSON if error occured
+            {error: error,
+             error_description: error_msg}
+
+        error: RFC6750 controlled vocabulary of errors
+         error_description: Human readable explanation of error
         """
         try:
             qdb.user.User.login(username, password)

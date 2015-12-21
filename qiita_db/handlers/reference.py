@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from .oauth2 import OauthBaseHandler, authenticate_oauth
-
 import qiita_db as qdb
 
 
