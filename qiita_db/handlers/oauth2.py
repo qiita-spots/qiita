@@ -279,7 +279,29 @@ class TokenAuthHandler(OauthBaseHandler):
                              'invalid_client')
 
     def post(self):
-        """ Authenticate given information
+        """ Authenticate given information as per RFC6750
+
+        Parameters
+        ----------
+        grant_type : {'client', 'password'}
+            What type of token to grant
+        client_id : str
+            Client requesting the token
+
+        One of the following, if password grant type:
+        HTTP Header in the form
+            Authorization: Bearer [base64encode of username:password]
+
+        OR
+
+        username : str
+            Username to authenticate
+        password : str
+            Password for the username
+
+        If client grant type:
+        client_secret : str
+            client authentication secret
 
         Returns
         -------
