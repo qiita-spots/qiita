@@ -10,11 +10,12 @@ from __future__ import division
 from tornado.web import authenticated
 
 from qiita_pet.handlers.util import to_int
-from qiita_pet.handlers.api_proxy import StudyAPIProxy
+from qiita_pet.handlers.base_handlers import BaseHandler
 
 
-class PrepTemplateGraphAJAX(StudyAPIProxy):
+class ArtifactGraphAJAX(BaseHandler):
     @authenticated
     def get(self):
-        prep = to_int(self.get_argument('prep_id'))
-        self.write(self.prep_graph_proxy(prep))
+        direction = self.get_argument('direction')
+        artifact = to_int(self.get_argument('artifact_id'))
+        self.write(self.artifact_graph_proxy(artifact, direction))
