@@ -52,6 +52,62 @@ class QiitaClient(object):
             # of the server
             self._verify = server_cert
 
+        # Set up oauth2
+        self._client_id = config.get('main', 'CLIENT_ID')
+        self._client_secret = config.get('main', 'CLIENT_SECRET')
+        self._authenticate_url = "%s/qiita_db/authenticate/" % self._server_url
+
+        # Fetch the access token
+        self._fetch_token()
+
+    def _fetch_token(self):
+        """Retrieves an access token from the Qiita server
+
+        Raises
+        ------
+        ValueError
+            If the authentication with the Qiita server fails
+        """
+        data = {'client_id': self._client_id,
+                'client_secret': self._client_secret,
+                'grant_type': 'client'}
+        r = requests.post(self._authenticate_url, verify=self._verify,
+                          data=data)
+        if r.status_code != 200:
+            raise ValueError("Can't authenticate with the Qiita server")
+        self._token = r.json()['access_token']
+
+    def _request_oauth2(self, req, *args, **kwargs):
+        """Executes a request using OAuth2 authorization
+
+        Parameters
+        ----------
+        req : function
+            The request to execute
+        args : tuple
+            The request args
+        kwargs : dict
+            The request kwargs
+
+        Returns
+        -------
+        requests.Response
+            The request response
+        """
+        if 'headers' in kwargs:
+            kwargs['headers']['Authorization'] = 'Bearer %s' % self._token
+        else:
+            kwargs['headers'] = {'Authorization': 'Bearer %s' % self._token}
+        r = req(*args, **kwargs)
+        r.close()
+        if r.status_code == 400:
+            if r.json()['error_description'] == \
+                    'Oauth2 error: token has timed out':
+                # The token expired - get a new one and re-try the request
+                self._fetch_token()
+                r = req(*args, **kwargs)
+        return r
+
     def _request_retry(self, req, url, **kwargs):
         """Executes a request retrying it 3 times in case of failure
 
@@ -67,14 +123,14 @@ class QiitaClient(object):
         Returns
         -------
         dict
-            The JSON information in the request reply
+            The JSON information in the request response
         """
         url = self._server_url + url
         retries = 3
         json_reply = None
         while retries > 0:
             retries -= 1
-            r = req(url, verify=self._verify, **kwargs)
+            r = self._request_oauth2(req, url, verify=self._verify, **kwargs)
             r.close()
             if r.status_code == 200:
                 json_reply = r.json()
