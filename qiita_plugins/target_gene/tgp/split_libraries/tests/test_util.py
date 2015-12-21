@@ -14,6 +14,7 @@ from tempfile import mkdtemp, mkstemp
 
 import httpretty
 
+from tgp.qiita_client import QiitaClient
 from tgp.split_libraries.util import (
     get_artifact_information, split_mapping_file, generate_demux_file,
     generate_artifact_info)
@@ -21,6 +22,7 @@ from tgp.split_libraries.util import (
 
 class UtilTests(TestCase):
     def setUp(self):
+        self.qclient = QiitaClient("https://test_server.com")
         self._clean_up_files = []
 
     def tearDown(self):
@@ -36,22 +38,21 @@ class UtilTests(TestCase):
         # Mock the URIs
         httpretty.register_uri(
             httpretty.GET,
-            "http://test_server.com/qiita_db/artifacts/1/filepaths/",
+            "https://test_server.com/qiita_db/artifacts/1/filepaths/",
             body='{"filepaths": [["forward_seqs.fastq.gz", "raw_forward_seqs"]'
                  ', ["barcodes.fastq.gz", "raw_barcodes"]], "success": true, '
                  '"error": ""}')
         httpretty.register_uri(
             httpretty.GET,
-            "http://test_server.com/qiita_db/artifacts/1/mapping/",
+            "https://test_server.com/qiita_db/artifacts/1/mapping/",
             body='{"mapping": "mapping_file.txt", "success": true, '
                  '"error": ""}')
         httpretty.register_uri(
             httpretty.GET,
-            "http://test_server.com/qiita_db/artifacts/1/type/",
+            "https://test_server.com/qiita_db/artifacts/1/type/",
             body='{"type": "FASTQ", "success": true, "error": ""}')
 
-        obs_fps, obs_mf, obs_at = get_artifact_information(
-            'http://test_server.com', 1)
+        obs_fps, obs_mf, obs_at = get_artifact_information(self.qclient, 1)
 
         exp_fps = [["forward_seqs.fastq.gz", "raw_forward_seqs"],
                    ["barcodes.fastq.gz", "raw_barcodes"]]
@@ -64,11 +65,11 @@ class UtilTests(TestCase):
         # Mock the URIs
         httpretty.register_uri(
             httpretty.GET,
-            "http://test_server.com/qiita_db/artifacts/1/filepaths/",
+            "https://test_server.com/qiita_db/artifacts/1/filepaths/",
             body='{"filepaths": '', "success": false, "error": "some error"}')
 
         with self.assertRaises(ValueError):
-            get_artifact_information('http://test_server.com', 1)
+            get_artifact_information(self.qclient, 1)
 
     def test_split_mapping_file_single(self):
         out_dir = mkdtemp()
