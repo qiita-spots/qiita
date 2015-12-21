@@ -186,6 +186,17 @@ class TokenAuthHandler(OauthBaseHandler):
             If password grant type requested, the user requesting the key.
         timeout : int, optional
             The timeout, in seconds, for the token. Default 3600
+
+        Returns
+        -------
+        Writes token information JSON in the form expected by RFC6750:
+        {'access_token': token,
+         'token_type': 'Bearer',
+         'expires_in': timeout}
+
+         access_token: the actual token to use
+         token_type: 'Bearer', which is the expected token type for Oauth2
+         expires_in: time to token expiration, in seconds.
         """
         token = self.generate_access_token()
 
@@ -205,7 +216,7 @@ class TokenAuthHandler(OauthBaseHandler):
 
         self.write({'access_token': token,
                     'token_type': 'Bearer',
-                    'expires_in': '3600'})
+                    'expires_in': timeout})
         self.finish()
 
     def validate_client(self, client_id, client_secret):
@@ -263,14 +274,34 @@ class TokenAuthHandler(OauthBaseHandler):
                              'invalid_client')
 
     def post(self):
+        """ Authenticate given information
+
+        Returns
+        -------
+        Writes token information JSON in the form expected by RFC6750:
+        {'access_token': token,
+         'token_type': 'Bearer',
+         'expires_in': timeout}
+
+         access_token: the actual token to use
+         token_type: 'Bearer', which is the expected token type for Oauth2
+         expires_in: time to token expiration, in seconds.
+
+         or an error message in the form
+         {error: error,
+         error_description: error_msg}
+
+         error: RFC6750 controlled vocabulary of errors
+         error_description: Human readable explanation of error
+         """
         # first check for header version of sending auth, meaning client ID
         header = self.request.headers.get('Authorization', None)
         if header is not None:
             header_info = header.split()
-            # As per RFC6750, a Basic Auth header tag must be sent when
-            # requesting an authentication token using Base64-encoded header
-            # information.
-            if header_info[0] != 'Basic':
+            # Based on RFC6750 if reply is not 2 elements in the format of:
+            # ['Basic', base64 encoded username:password] we assume the header
+            # is invalid
+            if len(header_info) != 2 or header_info[0] != 'Basic':
                 # Invalid Authorization header type for this page
                 _oauth_error(self, 'Oauth2 error: invalid token type',
                              'invalid_request')
