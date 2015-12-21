@@ -43,6 +43,15 @@ class QiitaClient(object):
             config.readfp(conf_file)
 
         server_cert = config.get('main', 'SERVER_CERT')
+        # The attribute self._verify is used to provide the parameter `verify`
+        # to the get/post requests. According to their documentation (link:
+        # http://docs.python-requests.org/en/latest/user/
+        # advanced/#ssl-cert-verification ) verify can be a boolean indicating
+        # if certificate verification should be performed or not, or a
+        # string with the path to the certificate file that needs to be used
+        # to verify the identity of the server.
+        # We are setting this attribute at __init__ time so we can avoid
+        # executing this if statement for each request issued.
         if not server_cert:
             # The server certificate is not provided, use standard certificate
             # verification methods
