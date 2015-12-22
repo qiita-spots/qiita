@@ -65,5 +65,5 @@ def study_get_req(study_id, user_id):
                                             lab_person.affiliation)
 
     samples = study.sample_template.keys()
-    study_info['num_samples'] = 0 if samples is None else len(set(samples))
+    study_info['num_samples'] = 0 if samples is None else len(list(samples))
     return study_info

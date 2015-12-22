@@ -144,8 +144,8 @@ class TestSampleAPI(TestCase):
     def test_sample_template_filepaths_get_req(self):
         obs = sample_template_filepaths_get_req(1, 'test@foo.bar')
 
-        exp = [(14, join(qiita_config.base_data_dir,
-                         'templates/1_19700101-000000.txt'))]
+        exp = [(14, join(qiita_config.base_url,
+                         'download/templates/1_19700101-000000.txt'))]
         self.assertEqual(obs, exp)
 
     def test_sample_template_filepaths_get_req_no_access(self):

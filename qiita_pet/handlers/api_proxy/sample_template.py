@@ -9,20 +9,16 @@ from natsort import natsorted
 # qiita_pet. The idea is this proxies the call and response dicts we expect
 # from the Qiita API once we build it. This will be removed and replaced with
 #  API calls when the API is complete.
-from pandas.parser import CParserError
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.study import Study
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config
 
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
                                              looks_like_qiime_mapping_file)
 from qiita_db.util import get_mountpoint
-from qiita_db.exceptions import (QiitaDBColumnError, QiitaDBExecutionError,
-                                 QiitaDBDuplicateError, QiitaDBError,
-                                 QiitaDBDuplicateHeaderError)
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
-from qiita_ware.exceptions import QiitaWareError
 from qiita_pet.util import convert_text_html
 from qiita_pet.handlers.api_proxy.util import check_access
 
@@ -112,15 +108,14 @@ def sample_template_post_req(study_id, user_id, data_type,
     msg = ''
     status = 'success'
     is_mapping_file = looks_like_qiime_mapping_file(fp_rsp)
+    if is_mapping_file and not data_type:
+        return {'status': 'error',
+                'message': 'Please, choose a data type if uploading a '
+                           'QIIME mapping file',
+                'file': sample_template}
+
     study = Study(int(study_id))
     try:
-        if is_mapping_file and not data_type:
-            return {'status': 'error',
-                    'message': 'Please, choose a data type if uploading a '
-                               'QIIME mapping file',
-                    'file': sample_template
-                    }
-
         with warnings.catch_warnings(record=True) as warns:
             if is_mapping_file:
                 create_templates_from_qiime_mapping_file(fp_rsp, study,
@@ -137,15 +132,11 @@ def sample_template_post_req(study_id, user_id, data_type,
                                  for w in warns])
                 status = 'warning'
 
-    except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-            QiitaDBDuplicateError, IOError, ValueError, KeyError,
-            CParserError, QiitaDBDuplicateHeaderError,
-            QiitaDBError, QiitaWareError) as e:
+    except Exception as e:
         # Some error occurred while processing the sample template
         # Show the error to the user so they can fix the template
         status = 'error'
         msg = str(e)
-        status = "error"
     return {'status': status,
             'message': msg,
             'file': sample_template}
@@ -208,9 +199,7 @@ def sample_template_put_req(study_id, user_id, sample_template):
                 msg = '\n'.join(set(str(w.message) for w in warns))
                 status = 'warning'
 
-    except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
-            QiitaDBDuplicateError, IOError, ValueError, KeyError,
-            CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
+    except Exception as e:
             status = 'error'
             msg = str(e)
     return {'status': status,
@@ -263,9 +252,15 @@ def sample_template_filepaths_get_req(study_id, user_id):
     Returns
     -------
     list of tuple of int and str
-        All filepaths in the sample template, as [(id, filepath), ...]
+        All files in the sample template, as [(id, URL), ...]
     """
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
-    return SampleTemplate(int(study_id)).get_filepaths()
+    filepaths = []
+    for id_, fp in SampleTemplate(int(study_id)).get_filepaths():
+        # Convert filepaths to downloadable URL
+        url = join(qiita_config.base_url, 'download',
+                   fp[len(qiita_config.base_data_dir):].strip('/'))
+        filepaths.append((id_, url))
+    return filepaths
