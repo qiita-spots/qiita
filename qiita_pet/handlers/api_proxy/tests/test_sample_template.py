@@ -1,14 +1,14 @@
 from unittest import TestCase, main
 
 from qiita_pet.handlers.api_proxy.sample_template import (
-    sample_template_info, process_sample_template, update_sample_template,
+    sample_template_info_proxy, process_sample_template_proxy,
+    update_sample_template_proxy,
     delete_sample_template, get_sample_template_filepaths)
 
 
 class TestSampleAPI(TestCase):
-    def test_sample_template_info(self):
-        obs = sample_template_info(1, 'test@foo.bar')
-        print obs
+    def test_sample_template_info_proxy(self):
+        obs = sample_template_info_proxy(1, 'test@foo.bar')
         exp = {'summary': {
             'physical_specimen_location': [('ANL', 27)],
             'texture': [('63.1 sand, 17.7 silt, 19.2 clay', 9),
@@ -91,35 +91,37 @@ class TestSampleAPI(TestCase):
                'num_samples': 27}
         self.assertEqual(obs, exp)
 
-    def test_sample_template_info_no_access(self):
-        obs = sample_template_info(1, 'demo@microbio.me')
+    def test_sample_template_info_proxy_no_access(self):
+        obs = sample_template_info_proxy(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_process_sample_template(self):
-        obs = process_sample_template(1, 'test@foo.bar', '16S',
-                                      'uploaded_file.txt')
+    def test_process_sample_template_proxy(self):
+        obs = process_sample_template_proxy(1, 'test@foo.bar', '16S',
+                                            'uploaded_file.txt')
         exp = {'status': 'error',
                'message': 'Empty file passed!',
                'file': 'uploaded_file.txt'}
         self.assertEqual(obs, exp)
 
-    def test_process_sample_template_no_access(self):
-        obs = process_sample_template(1, 'demo@microbio.me', '16S', 'filepath')
+    def test_process_sample_template_proxy_no_access(self):
+        obs = process_sample_template_proxy(1, 'demo@microbio.me', '16S',
+                                            'filepath')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_update_sample_template(self):
-        obs = update_sample_template(1, 'test@foo.bar', 'uploaded_file.txt')
+    def test_update_sample_template_proxy(self):
+        obs = update_sample_template_proxy(1, 'test@foo.bar',
+                                           'uploaded_file.txt')
         exp = {'status': 'error',
                'message': 'Empty file passed!',
                'file': 'uploaded_file.txt'}
         self.assertEqual(obs, exp)
 
-    def test_update_sample_template_no_access(self):
-        obs = update_sample_template(1, 'demo@microbio.me', 'filepath')
+    def test_update_sample_template_proxy_no_access(self):
+        obs = update_sample_template_proxy(1, 'demo@microbio.me', 'filepath')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)

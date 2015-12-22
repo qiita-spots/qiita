@@ -42,11 +42,6 @@ def study_info_proxy(study_id, user_id):
     dict of info
         Study information seperated by data type, in the form
         {col_name: value, ...}
-
-    Raises
-    ------
-    HTTPError
-        Raises code 403 if user does not have access to the study
     """
     access_error = check_access(study_id, user_id)
     if access_error:
@@ -70,5 +65,5 @@ def study_info_proxy(study_id, user_id):
                                             lab_person.affiliation)
 
     samples = study.sample_template.keys()
-    study_info['num_samples'] = 0 if samples is None else len(set(samples))
+    study_info['num_samples'] = 0 if samples is None else len(samples)
     return study_info

@@ -27,8 +27,8 @@ from qiita_pet.util import convert_text_html
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
-def sample_template_info(samp_id, user_id):
-    """Equivalent to GET request to `/study/(ID)/sample_template'
+def sample_template_info_proxy(samp_id, user_id):
+    """Equivalent to GET request to '/study/(ID)/sample_template'
 
     Parameters
     ----------
@@ -67,24 +67,32 @@ def sample_template_info(samp_id, user_id):
 
 
 @execute_as_transaction
-def process_sample_template(study_id, user_id, data_type, sample_template):
-    """Equivalent to POST request to `/study/(ID)/sample_template'
+def process_sample_template_proxy(study_id, user_id, data_type,
+                                  sample_template):
+    """Equivalent to POST request to '/study/(ID)/sample_template'
 
     Parameters
     ----------
     study_id : int
         The current study object id
-    user_id : int
+    user_id : str
         The current user object id
     data_type : str
         Data type for the sample template
     sample_template : str
         filepath to use for creation
 
-    Raises
-    ------
-    HTTPError
-        If the sample template file does not exists
+    Returns
+    -------
+    dict
+        results dictonary in the format
+        {'status': status,
+         'message': msg,
+         'file': sample_template}
+
+    status can be success, warning, or error depending on result
+    message has the warnings or errors
+    file has the file name
     """
     access_error = check_access(int(study_id), user_id)
     if access_error:
@@ -97,8 +105,8 @@ def process_sample_template(study_id, user_id, data_type, sample_template):
     if not exists(fp_rsp):
         # The file does not exist, fail nicely
         return {'status': 'error',
-                'error': 'filepath does not exist',
-                'filepath': sample_template}
+                'message': 'filepath does not exist',
+                'file': sample_template}
 
     # Define here the message and message level in case of success
     msg = ''
@@ -108,8 +116,8 @@ def process_sample_template(study_id, user_id, data_type, sample_template):
     try:
         if is_mapping_file and not data_type:
             return {'status': 'error',
-                    'msg': 'Please, choose a data type if uploading a '
-                           'QIIME mapping file',
+                    'message': 'Please, choose a data type if uploading a '
+                               'QIIME mapping file',
                     'file': sample_template
                     }
 
@@ -138,14 +146,14 @@ def process_sample_template(study_id, user_id, data_type, sample_template):
         status = 'error'
         msg = str(e)
         status = "error"
-        return {'status': status,
-                'message': msg,
-                'file': sample_template}
+    return {'status': status,
+            'message': msg,
+            'file': sample_template}
 
 
 @execute_as_transaction
-def update_sample_template(study_id, user_id, sample_template):
-    """Equivalent to PUT request to `/study/(ID)/sample_template'
+def update_sample_template_proxy(study_id, user_id, sample_template):
+    """Equivalent to PUT request to '/study/(ID)/sample_template'
 
     Parameters
     ----------
@@ -156,10 +164,17 @@ def update_sample_template(study_id, user_id, sample_template):
     sample_template : str
         filepath to use for updating
 
-    Raises
-    ------
-    HTTPError
-        If the sample template file does not exists
+    Returns
+    -------
+    dict
+        results dictonary in the format
+        {'status': status,
+         'message': msg,
+         'file': sample_template}
+
+    status can be success, warning, or error depending on result
+    message has the warnings or errors
+    file has the file name
     """
     access_error = check_access(study_id, user_id)
     if access_error:
@@ -205,15 +220,25 @@ def update_sample_template(study_id, user_id, sample_template):
 
 
 @execute_as_transaction
-def delete_sample_template(study_id, user_id):
-    """Equivalent to DELETE request to `/study/(ID)/sample_template'
+def delete_sample_template_proxy(study_id, user_id):
+    """Equivalent to DELETE request to '/study/(ID)/sample_template'
 
     Parameters
     ----------
     study_id : int
         The current study object id
-    user_id : int
+    user_id : str
         The current user object id
+
+    Returns
+    -------
+    dict
+        results dictonary in the format
+        {'status': status,
+         'message': msg}
+
+    status can be success, warning, or error depending on result
+    message has the warnings or errors
     """
     access_error = check_access(int(study_id), user_id)
     if access_error:
@@ -226,15 +251,20 @@ def delete_sample_template(study_id, user_id):
 
 
 @execute_as_transaction
-def get_sample_template_filepaths(study_id, user_id):
-    """Equivalent to GET request to `/study/(ID)/sample_template/filepaths'
+def get_sample_template_filepaths_proxy(study_id, user_id):
+    """Equivalent to GET request to '/study/(ID)/sample_template/filepaths'
 
     Parameters
     ----------
     study_id : int
         The current study object id
-    user_id : int
+    user_id : str
         The current user object id
+
+    Returns
+    -------
+    list of tuple of int and str
+        All filepaths in the sample template, as [(id, filepath), ...]
     """
     access_error = check_access(study_id, user_id)
     if access_error:
