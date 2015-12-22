@@ -2,17 +2,17 @@ from unittest import TestCase, main
 import datetime
 
 from qiita_pet.handlers.api_proxy.studies import (
-    study_data_types_proxy, study_info_proxy)
+    data_types_get_req, study_get_req)
 
 
 class TestStudyAPI(TestCase):
-    def test_study_data_types_proxy(self):
-        obs = study_data_types_proxy()
+    def test_data_types_get_req(self):
+        obs = data_types_get_req()
         exp = ['16S', '18S', 'ITS', 'Proteomic', 'Metagenomic', 'Metabolomic']
         self.assertItemsEqual(obs, exp)
 
-    def test_study_info_proxy(self):
-        obs = study_info_proxy(1, 'test@foo.bar')
+    def test_study_get_req(self):
+        obs = study_get_req(1, 'test@foo.bar')
         exp = {
             'number_samples_collected': 27,
             'mixs_compliant': True,
@@ -53,14 +53,14 @@ class TestStudyAPI(TestCase):
             }
         self.assertEqual(obs, exp)
 
-    def test_study_info_proxy_no_access(self):
-        obs = study_info_proxy(1, 'demo@microbio.me')
+    def test_study_get_req_no_access(self):
+        obs = study_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_study_info_proxy_no_exists(self):
-        obs = study_info_proxy(4, 'test@foo.bar')
+    def test_study_get_req_no_exists(self):
+        obs = study_get_req(4, 'test@foo.bar')
         exp = {'status': 'error',
                'message': 'Study does not exist'}
         self.assertEqual(obs, exp)

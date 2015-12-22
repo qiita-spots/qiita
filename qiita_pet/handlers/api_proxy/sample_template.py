@@ -27,7 +27,7 @@ from qiita_pet.util import convert_text_html
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
-def sample_template_info_proxy(samp_id, user_id):
+def sample_template_get_req(samp_id, user_id):
     """Equivalent to GET request to '/study/(ID)/sample_template'
 
     Parameters
@@ -67,8 +67,8 @@ def sample_template_info_proxy(samp_id, user_id):
 
 
 @execute_as_transaction
-def process_sample_template_proxy(study_id, user_id, data_type,
-                                  sample_template):
+def sample_template_post_req(study_id, user_id, data_type,
+                             sample_template):
     """Equivalent to POST request to '/study/(ID)/sample_template'
 
     Parameters
@@ -152,7 +152,7 @@ def process_sample_template_proxy(study_id, user_id, data_type,
 
 
 @execute_as_transaction
-def update_sample_template_proxy(study_id, user_id, sample_template):
+def sample_template_put_req(study_id, user_id, sample_template):
     """Equivalent to PUT request to '/study/(ID)/sample_template'
 
     Parameters
@@ -211,16 +211,15 @@ def update_sample_template_proxy(study_id, user_id, sample_template):
     except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
             QiitaDBDuplicateError, IOError, ValueError, KeyError,
             CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
-            from traceback import format_exc
             status = 'error'
-            msg = format_exc(e)  # str(e)
+            msg = str(e)
     return {'status': status,
             'message': msg,
             'file': sample_template}
 
 
 @execute_as_transaction
-def delete_sample_template_proxy(study_id, user_id):
+def sample_template_delete_req(study_id, user_id):
     """Equivalent to DELETE request to '/study/(ID)/sample_template'
 
     Parameters
@@ -251,7 +250,7 @@ def delete_sample_template_proxy(study_id, user_id):
 
 
 @execute_as_transaction
-def get_sample_template_filepaths_proxy(study_id, user_id):
+def sample_template_filepaths_get_req(study_id, user_id):
     """Equivalent to GET request to '/study/(ID)/sample_template/filepaths'
 
     Parameters

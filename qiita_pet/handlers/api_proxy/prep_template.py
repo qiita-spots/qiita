@@ -15,7 +15,7 @@ from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
 
 
-def study_prep_proxy(study_id, user_id):
+def prep_template_get_req(study_id, user_id):
     """Equivalent to GET request to '/study/(ID)/prep_template'
 
     Parameters
