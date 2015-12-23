@@ -9,7 +9,8 @@ Version 0.2.0-dev (Changes since version 0.2.0 go here)
 * PostgreSQL 9.3.0 is now the minimum required version because we are using the SQL type JSON, included for first time in 9.3.0.
 * The objects `RawData`, `PreprocessedData` and `ProcessedData` have been removed from the system and substituted by a general `Artifact` object.
 * The CLI commands `load_raw`, `load_preprocessed` and `load_processed` have been removed from the system and substituted by `load_artifact`.
-* The processing of the artifacts have been moved to a new `target_gene` plugin using the new plugin system.
+* We incorporated the idea of plugins into the system. Now, all processing could be plugins.
+* QIIME workflows for splitting libraries (SFF/FASTA-QUAL and FASTQ/per-sample-FASTQ) and for picking OTUs has been moved to a new target gene plugin.
 * An initial RESTapi has been introduced as a result of the plugin system, in which OAuth2 authentication is required to access the data.
 * The system has been ported to use HTTPS instead of HTTP.
 
