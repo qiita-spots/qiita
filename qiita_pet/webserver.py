@@ -41,6 +41,7 @@ from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
 from qiita_db.handlers.artifact import (ArtifactFilepathsHandler,
                                         ArtifactMappingHandler,
                                         ArtifactTypeHandler)
+from qiita_db.handlers.oauth2 import TokenAuthHandler
 from qiita_db.handlers.reference import ReferenceFilepathsHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
@@ -115,6 +116,7 @@ class Application(tornado.web.Application):
             # qiita_db/jobs/(.*)/XXXX because otherwise it will match the
             # regular expression and the qiita_db/jobs/(.*)/XXXX will never
             # be hit.
+            (r"/qiita_db/authenticate/", TokenAuthHandler),
             (r"/qiita_db/jobs/(.*)/heartbeat/", HeartbeatHandler),
             (r"/qiita_db/jobs/(.*)/step/", ActiveStepHandler),
             (r"/qiita_db/jobs/(.*)/complete/", CompleteHandler),

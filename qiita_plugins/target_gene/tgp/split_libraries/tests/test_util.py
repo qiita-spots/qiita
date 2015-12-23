@@ -21,7 +21,14 @@ from tgp.split_libraries.util import (
 
 
 class UtilTests(TestCase):
+    @httpretty.activate
     def setUp(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/authenticate/",
+            body='{"access_token": "token", "token_type": "Bearer", '
+                 '"expires_in": "3600"}')
+
         self.qclient = QiitaClient("https://test_server.com")
         self._clean_up_files = []
 
@@ -51,6 +58,11 @@ class UtilTests(TestCase):
             httpretty.GET,
             "https://test_server.com/qiita_db/artifacts/1/type/",
             body='{"type": "FASTQ", "success": true, "error": ""}')
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/authenticate/",
+            body='{"access_token": "token", "token_type": "Bearer", '
+                 '"expires_in": "3600"}')
 
         obs_fps, obs_mf, obs_at = get_artifact_information(self.qclient, 1)
 
@@ -67,6 +79,11 @@ class UtilTests(TestCase):
             httpretty.GET,
             "https://test_server.com/qiita_db/artifacts/1/filepaths/",
             body='{"filepaths": '', "success": false, "error": "some error"}')
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/authenticate/",
+            body='{"access_token": "token", "token_type": "Bearer", '
+                 '"expires_in": "3600"}')
 
         with self.assertRaises(ValueError):
             get_artifact_information(self.qclient, 1)

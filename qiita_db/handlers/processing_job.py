@@ -9,9 +9,8 @@
 from datetime import datetime
 from json import loads
 
-from tornado.web import RequestHandler
-
 import qiita_db as qdb
+from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
 def _get_job(job_id):
@@ -40,7 +39,8 @@ def _get_job(job_id):
     return job, True, ''
 
 
-class JobHandler(RequestHandler):
+class JobHandler(OauthBaseHandler):
+    @authenticate_oauth
     def get(self, job_id):
         """Get the job information
 
@@ -82,7 +82,8 @@ class JobHandler(RequestHandler):
         self.write(response)
 
 
-class HeartbeatHandler(RequestHandler):
+class HeartbeatHandler(OauthBaseHandler):
+    @authenticate_oauth
     def post(self, job_id):
         """Update the heartbeat timestamp of the job
 
@@ -117,7 +118,8 @@ class HeartbeatHandler(RequestHandler):
         self.write(response)
 
 
-class ActiveStepHandler(RequestHandler):
+class ActiveStepHandler(OauthBaseHandler):
+    @authenticate_oauth
     def post(self, job_id):
         """Changes the current exectuion step of the given job
 
@@ -151,7 +153,8 @@ class ActiveStepHandler(RequestHandler):
         self.write(response)
 
 
-class CompleteHandler(RequestHandler):
+class CompleteHandler(OauthBaseHandler):
+    @authenticate_oauth
     def post(self, job_id):
         """Updates the job to one of the completed statuses: 'success', 'error'
 
