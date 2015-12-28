@@ -155,11 +155,6 @@ def update_sample_template(study_id, user_id, sample_template):
         The current user object id
     sample_template : str
         filepath to use for updating
-
-    Raises
-    ------
-    HTTPError
-        If the sample template file does not exists
     """
     access_error = check_access(study_id, user_id)
     if access_error:
@@ -196,9 +191,8 @@ def update_sample_template(study_id, user_id, sample_template):
     except (TypeError, QiitaDBColumnError, QiitaDBExecutionError,
             QiitaDBDuplicateError, IOError, ValueError, KeyError,
             CParserError, QiitaDBDuplicateHeaderError, QiitaDBError) as e:
-            from traceback import format_exc
             status = 'error'
-            msg = format_exc(e)  # str(e)
+            msg = str(e)
     return {'status': status,
             'message': msg,
             'file': sample_template}
