@@ -132,10 +132,10 @@ def prep_template_summary_get_req(samp_id, user_id):
 
 
 @execute_as_transaction
-def prep_template_get_req(study_id, user_id, prep_template, data_type,
-                          investigation_type=None,
-                          user_defined_investigation_type=None,
-                          new_investigation_type=None):
+def prep_template_post_req(study_id, user_id, prep_template, data_type,
+                           investigation_type=None,
+                           user_defined_investigation_type=None,
+                           new_investigation_type=None):
     """Adds a prep template to the system
 
     Parameters
@@ -276,6 +276,24 @@ def prep_template_delete_req(prep_id, user_id):
 
     return {'status': status,
             'message': msg}
+
+
+@execute_as_transaction
+def get_prep_template_filepaths(prep_id, user_id):
+    """Returns all filepaths attached to a prep template
+
+    Parameters
+    ----------
+    prep_id : int
+        The current prep template id
+    user_id : int
+        The current user object id
+    """
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
+    return prep.get_filepaths()
 
 
 def prep_graph_proxy(prep_id, user_id):

@@ -4,28 +4,34 @@
 </div>
 
 <div>
-<h3>Update Prep Information</h3>
+<h3>Update Sample Information</h3>
     <p><select id="filepath" value="filepath">
     {% for f in files %}
       <option value="{{f}}">{{f}}</option>
     {% end %}
     </select>
-    <button class="btn btn-info btn-sm" onclick="prep_action('create')">Create or reset</button>
+    <button class="btn btn-info btn-sm" onclick="sample_action('create')">Create or reset</button>
     {% if stats %}
-    <button class="btn btn-info btn-sm" onclick="prep_action('update')">Update</button>
-    <button class="btn btn-danger btn-sm" onclick="prep_action('delete')"></p>Delete</button>
+    <button class="btn btn-info btn-sm" onclick="sample_action('update')">Update</button>
+    <button class="btn btn-danger btn-sm" onclick="sample_action('delete')"></p>Delete</button>
     {% end %}
     </p>
+    <p> <select id="data_types" value="data_types">
+      <option value=""></option>
+    {% for d in data_types %}
+      <option value="{{d}}">{{d}}</option>
+    {% end %}
+    </select> If uploading a qiime mapping file, select data type</p>
 </div>
 
 <div>
-    <h3>Prep information summary</h3>
+    <h3>Sample information summary</h3>
     <p>There are <strong>{{num_samples}}</strong> samples in this study.</p>
 </div>
 
 <div class="panel panel-default" id="summary">
     <div class="panel-heading">
-        A summary of the prep information is below.
+        A summary of the sample information is below.
     </div>
 
     <table class="table">
@@ -58,11 +64,11 @@
 </div>
 
 <script type="text/javascript">
-  function prep_action(act) {
-    $.post('/study/description/prep_template/', { study_id: {{study_id}}, action: act, filepath: $("#filepath").val() })
+  function sample_action(act) {
+    $.post('/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#filepath").val(), data_type: $("#data_types").val() })
       .done(function ( data ) {
         if(data.status == "error") {
-          bootstrapAlert("<p>Error updating prep template</p>" + data.message, "danger", 4000);
+          bootstrapAlert("<p>Error updating sample template</p>" + data.message, "danger", 4000);
         } else if(data.status == "warning") {
           bootstrapAlert(data.message.replace("\n", "<br/>"), "warning", 4000);
         } else {
