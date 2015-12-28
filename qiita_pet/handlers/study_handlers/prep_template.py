@@ -16,14 +16,15 @@ from qiita_db.util import get_files_from_uploads_folders
 from qiita_pet.handlers.api_proxy import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req,
-    get_prep_template_filepaths, study_data_types_proxy, prep_graph_proxy)
+    get_prep_template_filepaths, data_types_get_req,
+    prep_template_graph_get_req)
 
 
 class PrepTemplateGraphAJAX(BaseHandler):
     @authenticated
     def get(self):
         prep = to_int(self.get_argument('prep_id'))
-        self.write(prep_graph_proxy(prep, self.current_user.id))
+        self.write(prep_template_graph_get_req(prep, self.current_user.id))
 
 
 class PrepTemplateAJAX(BaseHandler):
@@ -33,7 +34,7 @@ class PrepTemplateAJAX(BaseHandler):
         study_id = self.get_argument('study_id')
         files = [f for _, f in get_files_from_uploads_folders(study_id)
                  if f.endswith(('txt', 'tsv'))]
-        data_types = sorted(study_data_types_proxy())
+        data_types = sorted(data_types_get_req())
         is_local = is_localhost(self.request.headers['host'])
         # Get the most recent version for download and build the link
         download = get_prep_template_filepaths(study_id,

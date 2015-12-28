@@ -2,8 +2,8 @@ from qiita_db.artifact import Artifact
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
-def artifact_graph_proxy(self, artifact_id, direction, user_id):
-    """Equivalent to GET request to '/artifact/(ID)/graph'
+def artifact_get_graph(self, artifact_id, direction, user_id):
+    """Creates graphs of ancestor or descendant artifacts from given one
 
     Parameters
     ----------

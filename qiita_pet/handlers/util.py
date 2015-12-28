@@ -50,7 +50,7 @@ def download_link_or_path(is_local_request, filepath, fp_id, label):
         resp = "<b>%s:</b> %s" % (label, filepath)
     else:
         resp = ('<a class="btn btn-default glyphicon glyphicon-download-alt" '
-                'href="/download/%s" style="word-spacing: -10px;"> %s</a>'
+                'href="%s" style="word-spacing: -10px;"> %s</a>'
                 % (fp_id, label))
     return resp
 

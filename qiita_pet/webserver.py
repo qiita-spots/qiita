@@ -22,10 +22,9 @@ from qiita_pet.handlers.analysis_handlers import (
     ShowAnalysesHandler, ResultsHandler, SelectedSamplesHandler,
     AnalysisSummaryAJAX)
 from qiita_pet.handlers.study_handlers import (
-    StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX,
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateAJAX,
-    EBISubmitHandler, ArtifactGraphAJAX,
-    CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
+    StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
+    CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
     PreprocessingSummaryHandler, VAMPSHandler, PrepTemplateGraphAJAX)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)

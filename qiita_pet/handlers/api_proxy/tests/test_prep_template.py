@@ -1,11 +1,10 @@
 from unittest import TestCase, main
-
-from qiita_pet.handlers.api_proxy.prep_template import study_prep_proxy
+from qiita_pet.handlers.api_proxy.prep_template import prep_template_get_req
 
 
 class TestPrepAPI(TestCase):
-    def test_study_prep_proxy(self):
-        obs = study_prep_proxy(1, 'test@foo.bar')
+    def test_prep_template_get_req(self):
+        obs = prep_template_get_req(1, 'test@foo.bar')
         exp = {'18S': [
             {'id': 1,
              'name': 'PREP 1 NAME',
@@ -16,8 +15,8 @@ class TestPrepAPI(TestCase):
              }]}
         self.assertEqual(obs, exp)
 
-    def test_study_prep_proxy_no_access(self):
-        obs = study_prep_proxy(1, 'demo@microbio.me')
+    def test_prep_template_get_req_no_access(self):
+        obs = prep_template_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)

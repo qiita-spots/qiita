@@ -11,6 +11,7 @@ import warnings
 from os import remove
 from os.path import exists, join
 from natsort import natsorted
+
 # This is the only folder in qiita_pet that should import outside qiita_pet
 # The idea is that this proxies the call and response dicts we expect from the
 # Qiita API once we build it. This will be removed and replaced with API calls
@@ -54,8 +55,8 @@ def _process_investigation_type(self, inv_type, user_def_type, new_type):
     return inv_type
 
 
-def study_prep_proxy(study_id, user_id):
-    """Equivalent to GET request to '/study/(ID)/prep_template'
+def prep_template_get_req(study_id, user_id):
+    """Gives a summary of each prep template attached to the study
 
     Parameters
     ----------
@@ -296,8 +297,8 @@ def get_prep_template_filepaths(prep_id, user_id):
     return prep.get_filepaths()
 
 
-def prep_graph_proxy(prep_id, user_id):
-    """Equivalent to GET request to '/study/(ID)/prep_template/graph'
+def prep_template_graph_get_req(prep_id, user_id):
+    """Returns graph of all artifacts created from the prep base artifact
 
     Parameters
     ----------

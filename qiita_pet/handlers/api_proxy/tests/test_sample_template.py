@@ -1,14 +1,16 @@
 from unittest import TestCase, main
+from os.path import join
 
+from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.sample_template import (
-    sample_template_info, process_sample_template, update_sample_template,
-    delete_sample_template, get_sample_template_filepaths)
+    sample_template_get_req, sample_template_post_req,
+    sample_template_put_req, sample_template_delete_req,
+    sample_template_filepaths_get_req)
 
 
 class TestSampleAPI(TestCase):
-    def test_sample_template_info(self):
-        obs = sample_template_info(1, 'test@foo.bar')
-        print obs
+    def test_sample_template_get_req(self):
+        obs = sample_template_get_req(1, 'test@foo.bar')
         exp = {'summary': {
             'physical_specimen_location': [('ANL', 27)],
             'texture': [('63.1 sand, 17.7 silt, 19.2 clay', 9),
@@ -91,60 +93,63 @@ class TestSampleAPI(TestCase):
                'num_samples': 27}
         self.assertEqual(obs, exp)
 
-    def test_sample_template_info_no_access(self):
-        obs = sample_template_info(1, 'demo@microbio.me')
+    def test_sample_template_get_req_no_access(self):
+        obs = sample_template_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_process_sample_template(self):
-        obs = process_sample_template(1, 'test@foo.bar', '16S',
+    def test_sample_template_post_req(self):
+        obs = sample_template_post_req(1, 'test@foo.bar', '16S',
+                                       'uploaded_file.txt')
+        exp = {'status': 'error',
+               'message': 'Empty file passed!',
+               'file': 'uploaded_file.txt'}
+        self.assertEqual(obs, exp)
+
+    def test_sample_template_post_req_no_access(self):
+        obs = sample_template_post_req(1, 'demo@microbio.me', '16S',
+                                       'filepath')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_sample_template_put_req(self):
+        obs = sample_template_put_req(1, 'test@foo.bar',
                                       'uploaded_file.txt')
         exp = {'status': 'error',
                'message': 'Empty file passed!',
                'file': 'uploaded_file.txt'}
         self.assertEqual(obs, exp)
 
-    def test_process_sample_template_no_access(self):
-        obs = process_sample_template(1, 'demo@microbio.me', '16S', 'filepath')
+    def test_sample_template_put_req_no_access(self):
+        obs = sample_template_put_req(1, 'demo@microbio.me', 'filepath')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_update_sample_template(self):
-        obs = update_sample_template(1, 'test@foo.bar', 'uploaded_file.txt')
-        exp = {'status': 'error',
-               'message': 'Empty file passed!',
-               'file': 'uploaded_file.txt'}
-        self.assertEqual(obs, exp)
-
-    def test_update_sample_template_no_access(self):
-        obs = update_sample_template(1, 'demo@microbio.me', 'filepath')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-    def test_delete_sample_template(self):
-        obs = delete_sample_template(1, 'test@foo.bar')
+    def test_sample_template_delete_req(self):
+        obs = sample_template_delete_req(1, 'test@foo.bar')
         exp = {'status': 'error',
                'message': 'Sample template can not be erased because there are'
                           ' prep templates associated.'}
         self.assertEqual(obs, exp)
 
-    def test_delete_sample_template_no_access(self):
-        obs = delete_sample_template(1, 'demo@microbio.me')
+    def test_sample_template_delete_req_no_access(self):
+        obs = sample_template_delete_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_get_sample_template_filepaths(self):
-        obs = get_sample_template_filepaths(1, 'test@foo.bar')
-        exp = [(14, '/Users/jshorens/Repositories/qiita/qiita_db/support_'
-                'files/test_data/templates/1_19700101-000000.txt')]
+    def test_sample_template_filepaths_get_req(self):
+        obs = sample_template_filepaths_get_req(1, 'test@foo.bar')
+
+        exp = [(14, join(qiita_config.base_url,
+                         'download/templates/1_19700101-000000.txt'))]
         self.assertEqual(obs, exp)
 
-    def test_get_sample_template_filepaths_no_access(self):
-        obs = get_sample_template_filepaths(1, 'demo@microbio.me')
+    def test_sample_template_filepaths_get_req_no_access(self):
+        obs = sample_template_filepaths_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)

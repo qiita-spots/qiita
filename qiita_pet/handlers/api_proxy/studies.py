@@ -15,8 +15,8 @@ from qiita_db.study import Study
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
-def study_data_types_proxy():
-    """Equivalent to GET request to '/api/data_types/'
+def data_types_get_req():
+    """Returns data types available in the system
 
     Returns
     -------
@@ -27,8 +27,8 @@ def study_data_types_proxy():
     return data_types
 
 
-def study_info_proxy(study_id, user_id):
-    """Equivalent to GET request to '/study/(ID)/'
+def study_get_req(study_id, user_id):
+    """Returns information available for the given study
 
     Parameters
     ----------
