@@ -32,6 +32,7 @@ class PrepTemplateAJAX(BaseHandler):
     def get(self):
         """Send formatted summary page of prep template"""
         study_id = self.get_argument('study_id')
+        prep_id = self.get_argument('prep_id')
         files = [f for _, f in get_files_from_uploads_folders(study_id)
                  if f.endswith(('txt', 'tsv'))]
         data_types = sorted(data_types_get_req())
@@ -42,27 +43,27 @@ class PrepTemplateAJAX(BaseHandler):
         dl_path = download_link_or_path(
             is_local, download[0], download[1], "Download prep information")
 
-        stats = prep_template_summary_get_req(study_id, self.current_user.id)
+        stats = prep_template_summary_get_req(prep_id, self.current_user.id)
         self.render('study_ajax/prep_summary.html', stats=stats['summary'],
                     num_samples=stats['num_samples'], dl_path=dl_path,
-                    files=files, study_id=study_id, data_types=data_types)
+                    files=files, prep_id=prep_id, data_types=data_types)
 
     @authenticated
     def post(self):
         """Edit/delete/recreate prep template"""
         action = self.get_argument('action')
-        study_id = self.get_argument('study_id')
+        prep_id = self.get_argument('prep_id')
         if action == 'create':
             filepath = self.get_argument('filepath')
             data_type = self.get_argument('data_type')
-            result = prep_template_post_req(study_id, self.current_user.id,
+            result = prep_template_post_req(prep_id, self.current_user.id,
                                             data_type, filepath)
         elif action == 'update':
             filepath = self.get_argument('filepath')
-            result = prep_template_put_req(study_id, self.current_user.id,
+            result = prep_template_put_req(prep_id, self.current_user.id,
                                            filepath)
         elif action == 'delete':
-            result = prep_template_delete_req(study_id, self.current_user.id)
+            result = prep_template_delete_req(prep_id, self.current_user.id)
         else:
             raise HTTPError(400, 'Unknown prep template action: %s' % action)
         self.write(result)

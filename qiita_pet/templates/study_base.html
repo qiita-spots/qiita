@@ -18,6 +18,7 @@
   }
 
   function fill_prep(pid) {
+    $("#study-main").empty();
     $.get( "/prep/graph/", { prep_id: pid} )
       .done(function( data ) {
         var edges = [];
@@ -33,10 +34,13 @@
         $("#study-prep-graph-row").show();
         draw_graph(nodes, edges, "study-prep-graph");
         // Copy existing formatted prep info to header position
-        $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="togglegraphs(); return false;" id="graph-toggle-link">Collapse files</a>');
-        $("#study-main").empty();
+        $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="togglegraphs(); return false;" id="graph-toggle-link">Hide files</a>');
       });
-  }
+    $.get( "/study/description/prep_template/", { prep_id: pid, study_id: {{study_info['study_id']}}} )
+      .done(function( data ) {
+        $("#study-main").html(data);
+      });
+    }
 
   function draw_graph(nodes, edges, target) {
     var container = document.getElementById(target);
