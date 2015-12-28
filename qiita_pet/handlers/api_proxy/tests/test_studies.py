@@ -65,7 +65,7 @@ class TestStudyAPI(TestCase):
                'message': 'Study does not exist'}
         self.assertEqual(obs, exp)
 
-    def test_study_prep_get_request(self):
+    def test_study_prep_get_req(self):
         obs = study_prep_get_request(1, 'test@foo.bar')
         exp = {'18S': [
             {'id': 1,
@@ -77,7 +77,7 @@ class TestStudyAPI(TestCase):
              }]}
         self.assertEqual(obs, exp)
 
-    def test_study_prep_get_request_no_access(self):
+    def test_study_prep_get_req_no_access(self):
         obs = study_prep_get_request(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}

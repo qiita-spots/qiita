@@ -15,7 +15,7 @@ from .prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req, prep_template_get_req,
     prep_template_graph_get_req, prep_template_filepaths_get_req)
-from .studies import data_types_get_req, study_get_req, study_prep_get_request
+from .studies import data_types_get_req, study_get_req, study_prep_get_req
 from .artifact import artifact_get_graph
 
 __all__ = ['prep_template_summary_get_req', 'sample_template_post_req',
@@ -26,4 +26,4 @@ __all__ = ['prep_template_summary_get_req', 'sample_template_post_req',
            'prep_template_put_req', 'prep_template_delete_req',
            'prep_template_graph_get_req', 'prep_template_filepaths_get_req',
            'artifact_get_graph', 'prep_template_get_req',
-           'study_prep_get_request']
+           'study_prep_get_req']

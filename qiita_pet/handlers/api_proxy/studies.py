@@ -79,7 +79,7 @@ def study_get_req(study_id, user_id):
     return study_info
 
 
-def study_prep_get_request(study_id, user_id):
+def study_prep_get_req(study_id, user_id):
     """Gives a summary of each prep template attached to the study
 
     Parameters

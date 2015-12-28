@@ -14,7 +14,7 @@ from qiita_pet.handlers.util import to_int, doi_linkifier
 # api_proxy.py so they will be removed when we get the API in place.
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    prep_template_get_req, data_types_get_req, study_get_req)
+    study_prep_get_req, data_types_get_req, study_get_req)
 
 
 class StudyIndexHandler(BaseHandler):
@@ -22,7 +22,7 @@ class StudyIndexHandler(BaseHandler):
     def get(self, study_id):
         study = to_int(study_id)
         # Proxies for what will become API requests
-        prep_info = prep_template_get_req(study, self.current_user.id)
+        prep_info = study_prep_get_req(study, self.current_user.id)
         data_types = data_types_get_req()
         study_info = study_get_req(study, self.current_user.id)
         editable = study_info['status'] == 'sandbox'
