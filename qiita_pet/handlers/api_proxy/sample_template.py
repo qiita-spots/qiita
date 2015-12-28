@@ -24,6 +24,31 @@ from qiita_pet.util import convert_text_html
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
+def sample_template_get_req(samp_id, user_id):
+    """Gets the json of the full sample template
+
+    Parameters
+    ----------
+    samp_id : int
+        SampleTemplate id to get info for
+    user_id : str
+        User requesting the sample template info
+
+    Returns
+    -------
+    dict of dictionaries
+        Dictionary object where the keys are the metadata samples
+        and the values are a dictionary of column and value.
+        Format {sample: {column: value, ...}, ...}
+    """
+    template = SampleTemplate(int(samp_id))
+    access_error = check_access(template.study_id, user_id)
+    if access_error:
+        return access_error
+    df = template.to_dataframe()
+    return df.to_dict(orient='index')
+
+
 def sample_template_summary_get_req(samp_id, user_id):
     """Returns a summary of the sample template metadata columns
 

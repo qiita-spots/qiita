@@ -5,12 +5,57 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_get_req, sample_template_post_req,
     sample_template_put_req, sample_template_delete_req,
-    sample_template_filepaths_get_req)
+    sample_template_filepaths_get_req, sample_template_summary_get_req)
 
 
 class TestSampleAPI(TestCase):
     def test_sample_template_get_req(self):
         obs = sample_template_get_req(1, 'test@foo.bar')
+        self.assertEqual(len(obs), 27)
+        self.assertIn('1.SKB2.640194', obs.keys())
+        self.assertEqual(str(obs['1.SKB2.640194']['collection_timestamp']),
+                         '2011-11-11 13:00:00')
+        del obs['1.SKB2.640194']['collection_timestamp']
+        self.assertEqual(obs['1.SKB2.640194'], {
+            'physical_specimen_location': 'ANL',
+            'texture': '64.6 sand, 17.6 silt, 17.8 clay',
+            'common_name': 'soil metagenome',
+            'water_content_soil': 0.164,
+            'env_feature': 'ENVO:plant-associated habitat',
+            'assigned_from_geo': 'n',
+            'altitude': 0.0,
+            'tot_org_carb': 5.0,
+            'env_biome': 'ENVO:Temperate grasslands, savannas, and shrubland '
+                         'biome',
+            'sample_type': 'ENVO:soil',
+            'scientific_name': '1118232',
+            'host_taxid': '3483',
+            'latitude': 35.2374368957,
+            'ph': 6.94,
+            'description_duplicate': 'Burmese bulk',
+            'elevation': 114.0,
+            'description': 'Cannabis Soil Microbiome',
+            'physical_specimen_remaining': True,
+            'dna_extracted': True,
+            'taxon_id': '410658',
+            'samp_salinity': 7.15,
+            'host_subject_id': '1001:B4',
+            'season_environment': 'winter',
+            'temp': 15.0,
+            'country': 'GAZ:United States of America',
+            'longitude': 68.5041623253,
+            'tot_nitro': 1.41,
+            'depth': 0.15,
+            'anonymized_name': 'SKB2'})
+
+    def test_sample_template_get_req_no_access(self):
+        obs = sample_template_get_req(1, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_sample_template_summary_get_req(self):
+        obs = sample_template_summary_get_req(1, 'test@foo.bar')
         exp = {'summary': {
             'physical_specimen_location': [('ANL', 27)],
             'texture': [('63.1 sand, 17.7 silt, 19.2 clay', 9),
@@ -93,8 +138,8 @@ class TestSampleAPI(TestCase):
                'num_samples': 27}
         self.assertEqual(obs, exp)
 
-    def test_sample_template_get_req_no_access(self):
-        obs = sample_template_get_req(1, 'demo@microbio.me')
+    def test_sample_template_summary_get_req_no_access(self):
+        obs = sample_template_summary_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)

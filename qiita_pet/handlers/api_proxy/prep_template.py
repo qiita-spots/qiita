@@ -77,7 +77,7 @@ def prep_template_get_req(prep_id, user_id):
     if access_error:
         return access_error
     df = prep.to_dataframe()
-    return df.to_json(orient='index', force_ascii=False).read()
+    return df.to_dict(orient='index')
 
 
 def prep_template_summary_get_req(prep_id, user_id):
