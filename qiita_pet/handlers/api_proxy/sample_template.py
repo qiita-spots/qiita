@@ -23,8 +23,8 @@ from qiita_pet.util import convert_text_html
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
-def sample_template_get_req(samp_id, user_id):
-    """Equivalent to GET request to '/study/(ID)/sample_template'
+def sample_template_summary_get_req(samp_id, user_id):
+    """Returns a summary of the sample template metadata columns
 
     Parameters
     ----------
@@ -65,7 +65,7 @@ def sample_template_get_req(samp_id, user_id):
 @execute_as_transaction
 def sample_template_post_req(study_id, user_id, data_type,
                              sample_template):
-    """Equivalent to POST request to '/study/(ID)/sample_template'
+    """Creates the sample template from the given file
 
     Parameters
     ----------
@@ -144,7 +144,7 @@ def sample_template_post_req(study_id, user_id, data_type,
 
 @execute_as_transaction
 def sample_template_put_req(study_id, user_id, sample_template):
-    """Equivalent to PUT request to '/study/(ID)/sample_template'
+    """Updates a sample template using the given file
 
     Parameters
     ----------
@@ -209,7 +209,7 @@ def sample_template_put_req(study_id, user_id, sample_template):
 
 @execute_as_transaction
 def sample_template_delete_req(study_id, user_id):
-    """Equivalent to DELETE request to '/study/(ID)/sample_template'
+    """Deletes the sample template attached to the study
 
     Parameters
     ----------
@@ -240,7 +240,7 @@ def sample_template_delete_req(study_id, user_id):
 
 @execute_as_transaction
 def sample_template_filepaths_get_req(study_id, user_id):
-    """Equivalent to GET request to '/study/(ID)/sample_template/filepaths'
+    """Returns all the filepaths attached to the sample template
 
     Parameters
     ----------

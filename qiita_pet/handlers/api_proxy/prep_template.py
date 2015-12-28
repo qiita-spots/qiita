@@ -16,7 +16,7 @@ from qiita_db.study import Study
 
 
 def prep_template_get_req(study_id, user_id):
-    """Equivalent to GET request to '/study/(ID)/prep_template'
+    """Gives a summary of each prep template attached to the study
 
     Parameters
     ----------

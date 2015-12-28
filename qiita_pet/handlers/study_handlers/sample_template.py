@@ -5,7 +5,7 @@ from qiita_pet.util import is_localhost
 from qiita_pet.handlers.util import download_link_or_path
 from qiita_db.util import get_files_from_uploads_folders
 from qiita_pet.handlers.api_proxy import (
-    sample_template_get_req, sample_template_put_req,
+    sample_template_summary_get_req, sample_template_put_req,
     sample_template_delete_req, sample_template_filepaths_get_req,
     data_types_get_req)
 
@@ -25,7 +25,7 @@ class SampleTemplateAJAX(BaseHandler):
         dl_path = download_link_or_path(
             is_local, download[0], download[1], "Download sample information")
 
-        stats = sample_template_get_req(study_id, self.current_user.id)
+        stats = sample_template_summary_get_req(study_id, self.current_user.id)
         self.render('study_ajax/sample_summary.html', stats=stats['summary'],
                     num_samples=stats['num_samples'], dl_path=dl_path,
                     files=files, study_id=study_id, data_types=data_types)
