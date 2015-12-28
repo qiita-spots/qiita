@@ -2,7 +2,7 @@ from unittest import TestCase, main
 import datetime
 
 from qiita_pet.handlers.api_proxy.studies import (
-    data_types_get_req, study_get_req)
+    data_types_get_req, study_get_req, study_prep_get_request)
 
 
 class TestStudyAPI(TestCase):
@@ -63,6 +63,24 @@ class TestStudyAPI(TestCase):
         obs = study_get_req(4, 'test@foo.bar')
         exp = {'status': 'error',
                'message': 'Study does not exist'}
+        self.assertEqual(obs, exp)
+
+    def test_study_prep_get_request(self):
+        obs = study_prep_get_request(1, 'test@foo.bar')
+        exp = {'18S': [
+            {'id': 1,
+             'name': 'PREP 1 NAME',
+             'status': 'private',
+             'start_artifact_id': 1,
+             'start_artifact': 'FASTQ',
+             'last_artifact': 'TODO new gui'
+             }]}
+        self.assertEqual(obs, exp)
+
+    def test_study_prep_get_request_no_access(self):
+        obs = study_prep_get_request(1, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
 if __name__ == '__main__':

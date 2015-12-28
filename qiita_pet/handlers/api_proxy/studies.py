@@ -77,3 +77,41 @@ def study_get_req(study_id, user_id):
     samples = study.sample_template.keys()
     study_info['num_samples'] = 0 if samples is None else len(set(samples))
     return study_info
+
+
+def study_prep_get_request(study_id, user_id):
+    """Gives a summary of each prep template attached to the study
+
+    Parameters
+    ----------
+    study_id : int
+        Study id to get prep template info for
+    user_id : str
+        User id requesting the prep templates
+
+    Returns
+    -------
+    dict of list of dict
+        prep template information seperated by data type, in the form
+        {data_type: [{prep 1 info dict}, ....], ...}
+    """
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
+    # Can only pass ids over API, so need to instantiate object
+    study = Study(int(study_id))
+    prep_info = {}
+    for dtype in study.data_types:
+        prep_info[dtype] = []
+        for prep in study.prep_templates(dtype):
+            start_artifact = prep.artifact
+            info = {
+                'name': 'PREP %d NAME' % prep.id,
+                'id': prep.id,
+                'status': prep.status,
+                'start_artifact': start_artifact.artifact_type,
+                'start_artifact_id': start_artifact.id,
+                'last_artifact': 'TODO new gui'
+            }
+            prep_info[dtype].append(info)
+    return prep_info

@@ -26,7 +26,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 
 
 @execute_as_transaction
-def _process_investigation_type(self, inv_type, user_def_type, new_type):
+def _process_investigation_type(inv_type, user_def_type, new_type):
     """Return the investigation_type and add it to the ontology if needed
 
     Parameters
@@ -55,50 +55,37 @@ def _process_investigation_type(self, inv_type, user_def_type, new_type):
     return inv_type
 
 
-def prep_template_get_req(study_id, user_id):
-    """Gives a summary of each prep template attached to the study
+def prep_template_get_req(prep_id, user_id):
+    """Gets the json of the full prep template
 
     Parameters
     ----------
-    study_id : int
-        Study id to get prep template info for
+    prep_id : int
+        PrepTemplate id to get info for
     user_id : str
-        User id requesting the prep templates
+        User requesting the sample template info
 
     Returns
     -------
-    dict of list of dict
-        prep template information seperated by data type, in the form
-        {data_type: [{prep 1 info dict}, ....], ...}
+    dict of dictionaries
+        Dictionary object where the keys are the metadata samples
+        and the values are a dictionary of column and value.
+        Format {sample: {column: value, ...}, ...}
     """
-    access_error = check_access(study_id, user_id)
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    # Can only pass ids over API, so need to instantiate object
-    study = Study(int(study_id))
-    prep_info = {}
-    for dtype in study.data_types:
-        prep_info[dtype] = []
-        for prep in study.prep_templates(dtype):
-            start_artifact = prep.artifact
-            info = {
-                'name': 'PREP %d NAME' % prep.id,
-                'id': prep.id,
-                'status': prep.status,
-                'start_artifact': start_artifact.artifact_type,
-                'start_artifact_id': start_artifact.id,
-                'last_artifact': 'TODO new gui'
-            }
-            prep_info[dtype].append(info)
-    return prep_info
+    df = prep.to_dataframe()
+    return df.to_json(orient='index', force_ascii=False).read()
 
 
-def prep_template_summary_get_req(samp_id, user_id):
+def prep_template_summary_get_req(prep_id, user_id):
     """Get the summarized prep template data for each metadata column
 
     Parameters
     ----------
-    samp_id : int
+    prep_id : int
         PrepTemplate id to get info for
     user_id : str
         User requesting the sample template info
@@ -112,15 +99,15 @@ def prep_template_summary_get_req(samp_id, user_id):
         Format {num_samples: value,
                 category: [(val1, count1), (val2, count2), ...], ...}
     """
-    access_error = check_access(samp_id, user_id)
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    template = PrepTemplate(int(samp_id))
-    df = template.to_dataframe()
+    df = prep.to_dataframe()
     out = {'num_samples': df.shape[0],
            'summary': {}}
 
-    # drop the samp_id column if it exists
+    # drop the prep_id column if it exists
     if 'study_id' in df.columns:
         df.drop('study_id', axis=1, inplace=True)
     cols = list(df.columns)
@@ -218,9 +205,13 @@ def prep_template_put_req(prep_id, user_id, prep_template):
         filepath to use for updating
     """
     # Get the uploads folder
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
     _, base_fp = get_mountpoint("uploads")[0]
     # Get the path of the prep template in the uploads folder
-    fp = join(base_fp, str(PrepTemplate(prep_id).study_id), prep_template)
+    fp = join(base_fp, str(prep.study_id), prep_template)
 
     if not exists(fp):
         # The file does not exist, fail nicely
@@ -264,13 +255,15 @@ def prep_template_delete_req(prep_id, user_id):
     user_id : str
         The current user object id
     """
-    prep_template_id = int(prep_id)
-    prep_id = PrepTemplate(prep_template_id).artifact.id
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
 
     msg = ''
     status = 'success'
     try:
-        PrepTemplate.delete(prep_template_id)
+        PrepTemplate.delete(prep.id)
     except Exception as e:
         msg = ("Couldn't remove prep template: %s" % str(e))
         status = 'error'
@@ -280,7 +273,7 @@ def prep_template_delete_req(prep_id, user_id):
 
 
 @execute_as_transaction
-def get_prep_template_filepaths(prep_id, user_id):
+def prep_template_filepaths_get_req(prep_id, user_id):
     """Returns all filepaths attached to a prep template
 
     Parameters
