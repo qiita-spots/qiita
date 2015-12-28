@@ -1,0 +1,20 @@
+<p><table style='width:100%'><tr><td><h3>Sample Summary</h3></td><td style="text-align: right">
+Add sample column information to table 
+<select id="meta_col" name="meta_col">
+  <option value=""></option>
+{% for col in cols %}
+  <option value="{{col}}">{{col}}</option>
+{% end %}
+</select>
+<button class="btn btn-info btn-sm" onclick="update_meta()">Add column</button>
+</td></tr></table></p>
+{% raw table %}
+
+<script type="text/javascript">
+  function update_meta() {
+    $.get("/study/description/sample_summary/", {study_id: {{study_id}}, meta_visible: '{% raw meta_visible %}', meta_col: $("#meta_col").val()})
+      .done( function ( data ) {
+        $("#study-main").html(data);
+      });
+  }
+</script>

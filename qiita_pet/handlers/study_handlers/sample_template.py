@@ -1,4 +1,7 @@
+from json import dumps, loads
+
 from tornado.web import authenticated, HTTPError
+import pandas as pd
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.util import is_localhost
@@ -8,7 +11,8 @@ from qiita_pet.handlers.api_proxy import (
     sample_template_summary_get_req,
     sample_template_post_req, sample_template_put_req,
     sample_template_delete_req, sample_template_filepaths_get_req,
-    data_types_get_req)
+    data_types_get_req, sample_template_get_req, prep_template_get_req,
+    study_prep_get_req)
 
 
 class SampleTemplateAJAX(BaseHandler):
@@ -50,3 +54,41 @@ class SampleTemplateAJAX(BaseHandler):
         else:
             raise HTTPError(400, 'Unknown sample template action: %s' % action)
         self.write(result)
+
+
+class SampleAJAX(BaseHandler):
+    def get(self):
+        """Show the sample summary page"""
+        study_id = self.get_argument('study_id')
+        meta_col = self.get_argument('meta_col', None)
+        visible = self.get_argument('meta_visible', [])
+        # Load sample template into dataframe and filter to wanted columns
+        df = pd.DataFrame.from_dict(
+            sample_template_get_req(int(study_id), self.current_user.id),
+            orient='index', dtype=str)
+        meta_available = set(df.columns)
+        if visible:
+            visible = loads(visible)
+        if meta_col:
+            visible.append(meta_col)
+
+        # Add one column per prep template highlighting what samples exist
+        prep_cols = []
+        preps = study_prep_get_req(study_id, self.current_user.id)
+        for dt in preps:
+            for prep in preps[dt]:
+                prep_samples = prep_template_get_req(
+                    prep['id'], self.current_user.id).keys()
+                prep_df = pd.Series(['X'] * len(prep_samples),
+                                    index=prep_samples, dtype=str)
+                col_name = ' - '.join([prep['name'], str(prep['id'])])
+                prep_cols.append(col_name)
+                df[col_name] = prep_df
+
+        # Format the dataframe to html table
+        meta_available = meta_available.difference(prep_cols)
+        table = df.to_html(classes='table table-striped', na_rep='',
+                           columns=prep_cols + visible)
+        self.render('study_ajax/sample_prep_summary.html',
+                    table=table, cols=sorted(meta_available),
+                    meta_visible=dumps(visible), study_id=study_id)
