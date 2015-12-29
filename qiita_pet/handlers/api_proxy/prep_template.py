@@ -43,7 +43,7 @@ def _process_investigation_type(inv_type, user_def_type, new_type):
     str
         The investigation type chosen by the user
     """
-    if inv_type == 'None Selected':
+    if inv_type == '':
         inv_type = None
     elif inv_type == 'Other' and user_def_type == 'New Type':
         # This is a nre user defined investigation type so store it
@@ -192,7 +192,10 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
 
 
 @execute_as_transaction
-def prep_template_put_req(prep_id, user_id, prep_template):
+def prep_template_put_req(prep_id, user_id, prep_template=None,
+                          investigation_type=None,
+                          user_defined_investigation_type=None,
+                          new_investigation_type=None):
     """Updates the prep template with the changes in the given file
 
     Parameters
@@ -201,45 +204,58 @@ def prep_template_put_req(prep_id, user_id, prep_template):
         The prep template to update
     user_id : str
         The current user object id
-    prep_template : str
+    prep_template : str, optional
         filepath to use for updating
+    investigation_type: str, optional
+        Existing investigation type to attach to the prep template
+    user_defined_investigation_type: str, optional
+        Existing user added investigation type to attach to the prep template
+    new_investigation_type: str, optional
+        Investigation type to add to the system
     """
     # Get the uploads folder
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    _, base_fp = get_mountpoint("uploads")[0]
-    # Get the path of the prep template in the uploads folder
-    fp = join(base_fp, str(prep.study_id), prep_template)
 
-    if not exists(fp):
-        # The file does not exist, fail nicely
-        return {'status': 'error',
-                'message': 'file does not exist',
-                'file': prep_template}
+    if investigation_type:
+        investigation_type = _process_investigation_type(
+            investigation_type, user_defined_investigation_type,
+            new_investigation_type)
+        prep.investigation_type = investigation_type
 
     msg = ''
     status = 'success'
-    try:
-        with warnings.catch_warnings(record=True) as warns:
-            pt = PrepTemplate(int(prep_id))
-            df = load_template_to_dataframe(fp)
-            pt.extend(df)
-            pt.update(df)
-            remove(fp)
+    if prep_template:
+        _, base_fp = get_mountpoint("uploads")[0]
+        # Get the path of the prep template in the uploads folder
+        fp = join(base_fp, str(prep.study_id), prep_template)
 
-            # join all the warning messages into one. Note that this info
-            # will be ignored if an exception is raised
-            if warns:
-                msg = '\n'.join(set(str(w.message) for w in warns))
-                status = 'warning'
+        if not exists(fp):
+            # The file does not exist, fail nicely
+            return {'status': 'error',
+                    'message': 'file does not exist',
+                    'file': prep_template}
+        try:
+            with warnings.catch_warnings(record=True) as warns:
+                pt = PrepTemplate(int(prep_id))
+                df = load_template_to_dataframe(fp)
+                pt.extend(df)
+                pt.update(df)
+                remove(fp)
 
-    except Exception as e:
-        # Some error occurred while processing the sample template
-        # Show the error to the user so they can fix the template
-        status = 'error'
-        msg = str(e)
+                # join all the warning messages into one. Note that this info
+                # will be ignored if an exception is raised
+                if warns:
+                    msg = '\n'.join(set(str(w.message) for w in warns))
+                    status = 'warning'
+
+        except Exception as e:
+            # Some error occurred while processing the sample template
+            # Show the error to the user so they can fix the template
+            status = 'error'
+            msg = str(e)
     return {'status': status,
             'message': msg,
             'file': prep_template}
