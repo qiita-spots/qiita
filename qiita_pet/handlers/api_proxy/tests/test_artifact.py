@@ -49,9 +49,15 @@ class TestArtifactAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_artifact_status_put_req_private(self):
-        obs = artifact_status_put_req(1, 'test@foo.bar', 'private')
+        obs = artifact_status_put_req(1, 'admin@foo.bar', 'private')
         exp = {'status': 'success',
                'message': 'Artifact visibility changed to private'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_status_put_req_private_bad_permissions(self):
+        obs = artifact_status_put_req(1, 'test@foo.bar', 'private')
+        exp = {'status': 'error',
+               'message': 'User does not have permissions to approve change'}
         self.assertEqual(obs, exp)
 
     def test_artifact_status_put_req_no_access(self):
