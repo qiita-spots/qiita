@@ -129,10 +129,10 @@ function delete_study() {
   if (confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
     $.post('/study/delete/', {study_id: {{study_info['study_id']}}})
       .done(function ( data ) {
-        if(data["status"] == "error") {
+        if(data["status"] == "error" {
           bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
         } else {
-          window.location.replace = '/';
+          window.location.replace = '/'
         }
       });
   }
@@ -151,11 +151,11 @@ function delete_study() {
   <h3><a href="#" onclick="fill_base({{study_info['study_id']}})">Study Information</a></h3>
     <a href="#" onclick="fill_sample({{study_info['study_id']}}); return false;">Sample Template</a><br />
     <a href="#" onclick="fill_sample_summary({{study_info['study_id']}}); return false;">Sample Summary</a><br />
-    {% if editable %}
+    {# if editable #}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
-    <a href="#">Edit Study Information</a><br />
+    <a href="/study/edit/{{study_info['study_id']}}">Edit Study Information</a><br />
     <a href="#" data-toggle="modal" data-target="#delete-study">Delete Study</a>
-    {% end %}
+    {# end #}
 
     <h3>Data Types</h3>
     <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
