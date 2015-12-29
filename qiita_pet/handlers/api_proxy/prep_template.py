@@ -290,6 +290,18 @@ def prep_template_filepaths_get_req(prep_id, user_id):
     return prep.get_filepaths()
 
 
+def prep_ontology_get_req():
+    # Get all the ENA terms for the investigation type
+    ontology = Ontology(convert_to_id('ENA', 'ontology'))
+    # make "Other" last on the list
+    ena_terms = sorted(ontology.terms)
+    ena_terms.remove('Other')
+    ena_terms + ['Other']
+
+    return {'ENA': ena_terms,
+            'User': sorted(ontology.user_defined_terms)}
+
+
 def prep_template_graph_get_req(prep_id, user_id):
     """Returns graph of all artifacts created from the prep base artifact
 

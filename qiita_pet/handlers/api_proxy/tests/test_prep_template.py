@@ -5,7 +5,8 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req, prep_template_get_req,
-    prep_template_graph_get_req, prep_template_filepaths_get_req)
+    prep_template_graph_get_req, prep_template_filepaths_get_req,
+    prep_ontology_get_req)
 
 
 class TestPrepAPI(TestCase):
@@ -14,6 +15,17 @@ class TestPrepAPI(TestCase):
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
+
+    def test_prep_ontology_get_req(self):
+        obs = prep_ontology_get_req()
+        exp = {'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
+                       'Forensic or Paleo-genomics', 'Gene Regulation Study',
+                       'Metagenomics', 'Pooled Clone Sequencing',
+                       'Population Genomics', 'RNASeq', 'Resequencing',
+                       'Synthetic Genomics', 'Transcriptome Analysis',
+                       'Whole Genome Sequencing'],
+               'User': []}
+        self.assertEqual(obs, exp)
 
     def test_prep_template_get_req_no_access(self):
         obs = prep_template_get_req(1, 'demo@microbio.me')
