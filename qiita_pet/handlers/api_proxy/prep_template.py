@@ -291,6 +291,14 @@ def prep_template_filepaths_get_req(prep_id, user_id):
 
 
 def prep_ontology_get_req():
+    """Returns all system and user defined terms for prep template type
+
+    Returns
+    -------
+    dict of list of str
+        {'ENA': [term1, term2, ...],
+         'User': [userterm1, userterm2, ...]}
+    """
     # Get all the ENA terms for the investigation type
     ontology = Ontology(convert_to_id('ENA', 'ontology'))
     # make "Other" last on the list
