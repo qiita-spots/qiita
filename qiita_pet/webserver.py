@@ -43,7 +43,6 @@ from qiita_db.handlers.artifact import (ArtifactFilepathsHandler,
                                         ArtifactMappingHandler,
                                         ArtifactTypeHandler)
 from qiita_db.handlers.reference import ReferenceFilepathsHandler
-from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
     from qiita_pet.handlers.portal import (
@@ -149,6 +148,5 @@ class Application(tornado.web.Application):
             "debug": DEBUG,
             "cookie_secret": COOKIE_SECRET,
             "login_url": "/auth/login/",
-            "ui_modules": uimodules,
         }
         tornado.web.Application.__init__(self, handlers, **settings)
