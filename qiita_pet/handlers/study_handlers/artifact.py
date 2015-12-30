@@ -54,6 +54,17 @@ class ArtifactAdminAJAX(BaseHandler):
         # not sandboxed or public
         if status not in {'sandbox', 'public'}:
             buttons += btn_base % ('sandbox', 'Revert to sandbox')
+
+        if all([not info['ebi_run_accessions'],
+                info['can_be_submitted_to_ebi']]):
+            buttons += ('<a class="btn btn-primary glyphicon '
+                        'glyphicon-export" href="/ebi_submission/{{ppd_id}}" '
+                        'style="word-spacing: -10px;"> Submit to EBI</a>')
+        if all([not info['is_submitted_to_vamps'],
+                info['can_be_submitted_to_vamps']]):
+            buttons += ('<a class="btn btn-primary glyphicon glyphicon-export"'
+                        ' href="/vamps/{{ppd_id}}" style="word-spacing: '
+                        '-10px;"> Submit to VAMPS</a>')
         self.write(buttons)
 
     def post(self):
