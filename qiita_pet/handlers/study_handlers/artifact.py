@@ -32,7 +32,7 @@ class ArtifactAJAX(BaseHandler):
 
     def post(self):
         artifact_id = to_int(self.get_argument('artifact_id'))
-        artifact_delete_req(artifact_id, self.current_user.id)
+        self.write(artifact_delete_req(artifact_id, self.current_user.id))
 
 
 class ArtifactAdminAJAX(BaseHandler):

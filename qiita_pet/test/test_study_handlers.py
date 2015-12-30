@@ -494,6 +494,15 @@ class TestDelete(TestHandlerBase):
         # checking that the action was sent
         self.assertIn("Couldn't remove raw data", response.body)
 
+    def test_delete_artifact(self):
+        response = self.post('/artifact/',
+                             {'artifact_id': 2})
+        self.assertEqual(response.code, 200)
+
+        # checking that the action was sent
+        self.assertIn("Cannot delete artifact 2: it has children: 4",
+                      response.body)
+
     def test_delete_prep_template(self):
         response = self.post('/study/description/1',
                              {'prep_template_id': 1,
