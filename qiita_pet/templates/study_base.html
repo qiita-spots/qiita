@@ -15,10 +15,15 @@
 
   function fill_artifact(aid) {
     $("#study-main").html("ARTIFACT " + aid + " HTML STUFF");
+    $.get("/admin/artifact/", {artifact_id: +aid })
+      .done(function ( data ) {
+        $("#study-admin").html(data);
+      });
   }
 
   function fill_prep(pid) {
     $("#study-main").empty();
+    $("#study-admin").empty();
     $.get( "/prep/graph/", { prep_id: pid} )
       .done(function( data ) {
         var edges = [];
@@ -80,6 +85,7 @@
       .done(function( data ) {
         $("#study-main").html(data).show();
         $("#study-prep-graph").empty();
+        $("#study-admin").empty();
         $("#study-prep-graph-row").hide();
         $("#study-prep-subheader").empty();
       });
@@ -89,6 +95,7 @@
     $.get( "/study/description/sample_template/", { study_id: sid } )
       .done(function( data ) {
         $("#study-main").html(data);
+        $("#study-admin").empty();
         $("#study-prep-graph").empty();
         $("#study-prep-graph-row").hide();
         $("#study-file-breadcrumbs").empty();
@@ -101,6 +108,7 @@
     $.get( "/study/description/sample_summary/", { study_id: sid } )
       .done(function( data ) {
         $("#study-main").html(data);
+        $("#study-admin").empty();
         $("#study-prep-graph").empty();
         $("#study-prep-graph-row").hide();
         $("#study-file-breadcrumbs").empty();
@@ -121,6 +129,22 @@
     }
   }
 
+  function set_admin_visibility(visibility, aid) {
+    $.post('/admin/artifact/', {artifact_id: +aid, visibility: visibility})
+      .done(function ( data ) {
+        if(data["status"] == "error") {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+        } else {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "info", 4000);
+        }
+        //update buttons to match new status
+        $.get("/admin/artifact/", {artifact_id: +aid })
+          .done(function ( data ) {
+            $("#study-admin").html(data);
+          });
+      });
+  }
+
 function delete_study() {
   if ($("#study-alias").val() != "{{study_info['study_alias']}}") {
     alert("The added name doesn't match the study alias");
@@ -129,7 +153,7 @@ function delete_study() {
   if (confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
     $.post('/study/delete/', {study_id: {{study_info['study_id']}}})
       .done(function ( data ) {
-        if(data["status"] == "error" {
+        if(data["status"] == "error") {
           bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
         } else {
           window.location.replace = '/'
@@ -189,15 +213,9 @@ function delete_study() {
         <h3>{{study_info['study_alias']}}</h3>
       </div>
     </div>
-    {% if user_level == 'admin' %}
-    <div class="row">
-      <div class="col-md-12" id="study-admin">
-        ADMIN STUFF HERE
-      </div>
-    </div>
-    {% end %}
     <div class="row"><div class="col-md-12" id="study-prep-subheader"></div></div>
     <div class="row graph" id="study-prep-graph-row"><div class="col-md-12 graph" id="study-prep-graph"></div></div>
+    <div class="row"><div class="col-md-12" id="study-admin"></div></div>
     <div class="row"><div class="col-md-12" id="study-main"></div></div>
   </div>
 </div>
