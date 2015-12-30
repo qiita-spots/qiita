@@ -20,8 +20,8 @@ class SampleTemplateAJAX(BaseHandler):
         data_types = sorted(data_types_get_req())
         is_local = is_localhost(self.request.headers['host'])
         # Get the most recent version for download and build the link
-        download = sample_template_filepaths_get_req(study_id,
-                                                     self.current_user.id)[-1]
+        download = sample_template_filepaths_get_req(
+            study_id, self.current_user.id)['filepaths'][-1]
         dl_path = download_link_or_path(
             is_local, download[0], download[1], "Download sample information")
 

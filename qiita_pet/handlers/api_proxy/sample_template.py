@@ -251,7 +251,10 @@ def sample_template_filepaths_get_req(study_id, user_id):
 
     Returns
     -------
-    list of tuple of int and str
+    dict
+        Filepaths in the form
+        {'status': status, message: msg, filepaths: filepaths}
+        Where filepaths is a list of tuple of int and str
         All files in the sample template, as [(id, URL), ...]
     """
     access_error = check_access(study_id, user_id)
@@ -263,4 +266,4 @@ def sample_template_filepaths_get_req(study_id, user_id):
         url = join(qiita_config.base_url, 'download',
                    fp[len(qiita_config.base_data_dir):].strip('/'))
         filepaths.append((id_, url))
-    return filepaths
+    return {'status': 'success', 'message': '', 'filepaths': filepaths}
