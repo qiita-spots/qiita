@@ -420,9 +420,6 @@ class TestDelete(TestHandlerBase):
                       "prep templates", response.body)
 
     def test_delete_artifact(self):
-        pass
-
-    def test_delete_artifact(self):
         response = self.post('/artifact/',
                              {'artifact_id': 2})
         self.assertEqual(response.code, 200)
