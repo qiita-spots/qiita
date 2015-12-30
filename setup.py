@@ -44,7 +44,6 @@ setup(name='qiita-spots',
                 'qiita_db',
                 'qiita_db/metadata_template/',
                 'qiita_pet',
-                'qiita_pet/uimodules',
                 'qiita_pet/handlers',
                 'qiita_pet/handlers/study_handlers',
                 'qiita_ware'
