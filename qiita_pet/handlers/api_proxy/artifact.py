@@ -103,6 +103,14 @@ def artifact_get_req(artifact_id, user_id):
         'study': pd.study.id}
 
 
+def artifact_delete_req(artifact_id, user_id):
+    pd = Artifact(int(artifact_id))
+    access_error = check_access(pd.study.id, user_id)
+    if access_error:
+        return access_error
+    Artifact.delete(int(artifact_id))
+
+
 def artifact_status_put_req(artifact_id, user_id, visibility):
     """Set the status of the artifact given
 
