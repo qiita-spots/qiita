@@ -25,7 +25,8 @@
   function delete_artifact(aid, pid) {
     $.post("/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
-        if( curr_prep != -1 ) { fill_prep(curr_prep); }
+        if( data.status == "success"  && curr_prep != -1 ) { fill_prep(curr_prep); }
+        if( data.status == "error") { bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000); }
       });
   }
 

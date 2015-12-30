@@ -1,6 +1,7 @@
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBOperationNotPermittedError
+from qiita_db.exceptions import (QiitaDBOperationNotPermittedError,
+                                 QiitaDBArtifactDeletionError)
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.util import check_access
 
@@ -108,7 +109,13 @@ def artifact_delete_req(artifact_id, user_id):
     access_error = check_access(pd.study.id, user_id)
     if access_error:
         return access_error
-    Artifact.delete(int(artifact_id))
+    try:
+        Artifact.delete(int(artifact_id))
+    except QiitaDBArtifactDeletionError as e:
+        return {'status': 'error',
+                'message': str(e)}
+    return {'status': 'success',
+            'message': ''}
 
 
 def artifact_status_put_req(artifact_id, user_id, visibility):
