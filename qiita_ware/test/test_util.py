@@ -18,9 +18,8 @@ import h5py
 import numpy as np
 from six import StringIO, BytesIO
 
-from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_ware.util import (per_sample_sequences, stats_from_df, open_file,
+from qiita_ware.util import (per_sample_sequences, open_file,
                              _is_string_or_bytes)
 
 
@@ -77,11 +76,6 @@ class UtilTests(TestCase):
                       ('c_2', 'AATTGGCC-c2')])
         obs = per_sample_sequences(mock_sequence_iter(sequences), max_seqs)
         self.assertEqual(sorted(obs), exp)
-
-    def test_stats_from_df(self):
-        obs = stats_from_df(SampleTemplate(1).to_dataframe())
-        for k in obs:
-            self.assertItemsEqual(obs[k], SUMMARY_STATS[k])
 
     def test_dataframe_from_template(self):
         template = PrepTemplate(1)
