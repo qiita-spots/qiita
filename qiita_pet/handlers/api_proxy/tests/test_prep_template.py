@@ -22,8 +22,8 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_prep_template_post_req(self):
-        obs = prep_template_post_req(1, 'test@foo.bar', '16S',
-                                     'uploaded_file.txt')
+        obs = prep_template_post_req(1, 'test@foo.bar', 'uploaded_file.txt',
+                                     '16S')
         exp = {'status': 'error',
                'message': 'Empty file passed!',
                'file': 'uploaded_file.txt'}
