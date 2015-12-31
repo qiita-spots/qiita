@@ -9,15 +9,16 @@
 from .listing_handlers import (ListStudiesHandler, StudyApprovalList,
                                ShareStudyAJAX, SearchStudiesAJAX)
 from .edit_handlers import StudyEditHandler, CreateStudyAJAX
-from .description_handlers import (StudyDescriptionHandler,
-                                   PreprocessingSummaryHandler)
 from .ebi_handlers import EBISubmitHandler
-from .metadata_summary_handlers import MetadataSummaryHandler
 from .vamps_handlers import VAMPSHandler
-from .base import StudyIndexHandler, StudyBaseInfoAJAX
+from .base import StudyIndexHandler, StudyBaseInfoAJAX, StudyDeleteAjax
+from .prep_template import PrepTemplateGraphAJAX, PrepTemplateAJAX
+from .artifact import ArtifactGraphAJAX, ArtifactAdminAJAX, ArtifactAJAX
+from .sample_template import SampleTemplateAJAX, SampleAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
-           'StudyEditHandler', 'CreateStudyAJAX', 'StudyDescriptionHandler',
-           'PreprocessingSummaryHandler', 'EBISubmitHandler',
+           'StudyEditHandler', 'CreateStudyAJAX', 'EBISubmitHandler',
            'MetadataSummaryHandler', 'VAMPSHandler', 'SearchStudiesAJAX',
-           'StudyIndexHandler', 'StudyBaseInfoAJAX']
+           'PrepTemplateGraphAJAX', 'ArtifactGraphAJAX', 'ArtifactAdminAJAX',
+           'StudyIndexHandler', 'StudyBaseInfoAJAX', 'SampleTemplateAJAX',
+           'PrepTemplateAJAX', 'SampleAJAX', 'StudyDeleteAjax', 'ArtifactAJAX']

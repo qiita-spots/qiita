@@ -12,17 +12,19 @@ from tornado.web import authenticated
 from qiita_pet.handlers.util import to_int, doi_linkifier
 # ONLY IMPORT FROM qiita_pet HERE. All other imports must be made in
 # api_proxy.py so they will be removed when we get the API in place.
-from qiita_pet.handlers.api_proxy import StudyAPIProxy
+from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.handlers.api_proxy import (
+    study_prep_get_req, data_types_get_req, study_get_req, study_delete_req)
 
 
-class StudyIndexHandler(StudyAPIProxy):
+class StudyIndexHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
         study = to_int(study_id)
         # Proxies for what will become API requests
-        prep_info = self.study_prep_proxy(study)
-        data_types = self.study_data_types_proxy()
-        study_info = self.study_info_proxy(study)
+        prep_info = study_prep_get_req(study, self.current_user.id)
+        data_types = data_types_get_req()
+        study_info = study_get_req(study, self.current_user.id)
         editable = study_info['status'] == 'sandbox'
 
         self.render("study_base.html", prep_info=prep_info,
@@ -30,14 +32,26 @@ class StudyIndexHandler(StudyAPIProxy):
                     editable=editable)
 
 
-class StudyBaseInfoAJAX(StudyAPIProxy):
+class StudyBaseInfoAJAX(BaseHandler):
     @authenticated
     def get(self):
-        study = to_int(self.get_argument('study_id'))
+        study_id = self.get_argument('study_id')
+        study = to_int(study_id)
         # Proxy for what will become API request
-        study_info = self.study_info_proxy(study)
+
+        study_info = study_get_req(study, self.current_user.id)
         study_doi = ' '.join(
             [doi_linkifier(p) for p in study_info['publications']])
+        email = '<a href="mailto:{email}">{name} ({affiliation})</a>'
+        pi = email.format(**study_info['principal_investigator'])
+        contact = email.format(**study_info['lab_person'])
 
         self.render('study_ajax/base_info.html',
-                    study_info=study_info, publications=study_doi)
+                    study_info=study_info, publications=study_doi, pi=pi,
+                    contact=contact)
+
+
+class StudyDeleteAjax(BaseHandler):
+    def post(self):
+        study_id = self.get_argument('study_id')
+        self.write(study_delete_req(int(study_id), self.current_user.id))

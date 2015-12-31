@@ -17,7 +17,6 @@ import h5py
 import numpy as np
 from skbio.io.util import _is_string_or_bytes
 from future.utils import viewitems
-from natsort import natsorted
 
 
 def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
@@ -95,38 +94,6 @@ def per_sample_sequences(iter_, max_seqs, min_seqs=1, random_buf_size=100000):
 
         for _, sequence_id, sequence in heap:
             yield (sequence_id, sequence)
-
-
-def stats_from_df(df):
-    """Create a dictionary of summary statistics for a sample or prep template
-
-    Parameters
-    ----------
-    t : SampleTemplate or PrepTemplate
-        Sample or prep template object to summarize
-
-    Returns
-    -------
-    dict of list of tuples
-        Dictionary object where the keys are the metadata categories
-        and the values are list of tuples. Each tuple is an observed value in
-        the category and the number of times its seen.
-        Format {category: [(val1, count1), (val2, count2), ...], ...}
-    """
-    out = {}
-
-    # drop the study_id column if it exists
-    if 'study_id' in df.columns:
-        df.drop('study_id', axis=1, inplace=True)
-    cols = list(df.columns)
-    for column in cols:
-        counts = df[column].value_counts()
-
-        # get a pandas series of the value-count pairs
-        out[str(column)] = [(str(key), counts[key])
-                            for key in natsorted(counts.index)]
-
-    return out
 
 
 def _get_filehandle(filepath_or, *args, **kwargs):

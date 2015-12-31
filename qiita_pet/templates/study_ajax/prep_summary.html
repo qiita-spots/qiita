@@ -1,0 +1,76 @@
+{% from future.utils import viewitems %}
+<div>
+    {% raw dl_path %}
+</div>
+
+<div>
+<h3>Update Prep Information</h3>
+    <p><select id="filepath" value="filepath">
+    {% for f in files %}
+      <option value="{{f}}">{{f}}</option>
+    {% end %}
+    </select>
+    {% if not stats %}
+    <button class="btn btn-info btn-sm" onclick="prep_action('create')">Create</button>
+    {% else %}
+    <button class="btn btn-info btn-sm" onclick="prep_action('update')">Update</button>
+    <button class="btn btn-danger btn-sm" onclick="prep_action('delete')">Delete</button>
+    {% end %}
+    </p>
+</div>
+
+<div>
+    <h3>Prep information summary</h3>
+    <p>There are <strong>{{num_samples}}</strong> samples in this study.</p>
+</div>
+
+<div class="panel panel-default" id="summary">
+    <div class="panel-heading">
+        A summary of the prep information is below.
+    </div>
+
+    <table class="table">
+    {% for category, summary in viewitems(stats) %}
+        {% if len(summary) == 1 %}
+            <tr>
+                <td colspan="2">
+                    <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
+                </td>
+            </tr>
+        {% elif len(set([row[1] for row in summary])) == 1 %}
+            <tr>
+                <td colspan="2">
+                    <b>{{category}}</b>: All the values in this category are different.
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <th colspan="2" align="center">{{category}}</th>
+            </tr>
+            {% for row in summary %}
+            <tr>
+                <td>{{row[0]}}</td>
+                <td>{{row[1]}}</td>
+            </tr>
+            {% end %}
+        {% end %}
+    {% end %}
+    </table>
+</div>
+
+<script type="text/javascript">
+  function prep_action(act) {
+    $.post('/study/description/prep_template/', { prep_id: {{prep_id}}, action: act, filepath: $("#filepath").val() })
+      .done(function ( data ) {
+        if(data.status == "error") {
+          bootstrapAlert("<p>Error updating prep template</p>" + data.message, "danger", 4000);
+        } else if(data.status == "warning") {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "warning", 4000);
+        } else {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "info", 4000);
+        }
+        //reload section of the page with new info
+         fill_prep({{prep_id}})
+      })
+  }
+</script>
