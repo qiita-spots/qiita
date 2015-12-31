@@ -3,15 +3,13 @@ from datetime import datetime
 from os.path import join
 
 from qiita_core.qiita_settings import qiita_config
-from qiita_db.artifact import Artifact
+from qiita_core.util import qiita_test_checker
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req)
 
 
+@qiita_test_checker()
 class TestArtifactAPI(TestCase):
-    def tearDown(self):
-        Artifact(1).visibility = 'private'
-
     def test_artifact_get_req(self):
         obs = artifact_get_req(1, 'test@foo.bar')
         exp = {'is_submitted_to_vamps': False,

@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from os.path import join, exists
 
+from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
@@ -8,6 +9,7 @@ from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_graph_get_req, prep_template_filepaths_get_req)
 
 
+@qiita_test_checker()
 class TestPrepAPI(TestCase):
     def setUp(self):
         fp = join(qiita_config.base_data_dir, 'uploads/1', 'uploaded_file.txt')

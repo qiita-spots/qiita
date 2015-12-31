@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from os.path import join
 
+from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_get_req, sample_template_post_req,
@@ -8,6 +9,7 @@ from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_filepaths_get_req, sample_template_summary_get_req)
 
 
+@qiita_test_checker()
 class TestSampleAPI(TestCase):
     def test_sample_template_get_req(self):
         obs = sample_template_get_req(1, 'test@foo.bar')
