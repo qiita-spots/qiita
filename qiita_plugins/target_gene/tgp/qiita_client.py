@@ -43,6 +43,15 @@ class QiitaClient(object):
             config.readfp(conf_file)
 
         server_cert = config.get('main', 'SERVER_CERT')
+        # The attribute self._verify is used to provide the parameter `verify`
+        # to the get/post requests. According to their documentation (link:
+        # http://docs.python-requests.org/en/latest/user/
+        # advanced/#ssl-cert-verification ) verify can be a boolean indicating
+        # if certificate verification should be performed or not, or a
+        # string with the path to the certificate file that needs to be used
+        # to verify the identity of the server.
+        # We are setting this attribute at __init__ time so we can avoid
+        # executing this if statement for each request issued.
         if not server_cert:
             # The server certificate is not provided, use standard certificate
             # verification methods
@@ -109,7 +118,7 @@ class QiitaClient(object):
         return r
 
     def _request_retry(self, req, url, **kwargs):
-        """Executes a request retrying it 3 times in case of failure
+        """Executes a request retrying it 2 times in case of failure
 
         Parameters
         ----------
@@ -124,9 +133,25 @@ class QiitaClient(object):
         -------
         dict
             The JSON information in the request response
+
+        Notes
+        -----
+        After doing some research on the topic, there are multiple ways of
+        engineering the number of times a request should be retried (multiple
+        sources - most of them on RPC systems). A short summary of those are:
+          1. Keep retrying indefinitely
+          2. The probability of retrying a request is based on the number of
+          retries already done, as well as the cost of a retry
+          3. Retry just once
+
+        Number 1 could create an infinite loop. Number 2 is too complex and
+        the cost of retrying depends on the actual work that we are currently
+        doing (which is unknown to the current function). We thus decided to
+        implement 3, which is simple and allows to overcome simple
+        communication problems.
         """
         url = self._server_url + url
-        retries = 3
+        retries = 2
         json_reply = None
         while retries > 0:
             retries -= 1
