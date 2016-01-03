@@ -171,6 +171,15 @@ class ConfigurationManager(object):
             self.valid_upload_extension = []
             print 'No files will be allowed to be uploaded.'
 
+        self.certificate_file = config.get('main', 'CERTIFICATE_FILE')
+        if not self.certificate_file:
+            self.certificate_file = join(install_dir, 'qiita_core',
+                                         'support_files', 'server.crt')
+        self.key_file = config.get('main', 'KEY_FILE')
+        if not self.key_file:
+            self.key_file = join(install_dir, 'qiita_core', 'support_files',
+                                 'server.key')
+
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""
         self.user = config.get('postgres', 'USER')

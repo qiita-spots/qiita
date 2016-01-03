@@ -10,10 +10,7 @@ from os.path import join
 from functools import partial
 from glob import glob
 
-import requests
-
-from tgp.util import (update_job_step, execute_request_retry, system_call,
-                      format_payload)
+from tgp.util import update_job_step, system_call, format_payload
 
 
 def write_parameters_file(fp, parameters):
@@ -109,13 +106,13 @@ def generate_artifact_info(pick_out):
     return [['BIOM', filepaths, True, True]]
 
 
-def pick_closed_reference_otus(server_url, job_id, parameters, out_dir):
+def pick_closed_reference_otus(qclient, job_id, parameters, out_dir):
     """Run split libraries fastq with the given parameters
 
     Parameters
     ----------
-    server_url : str
-        The URL of the server
+    qclient : tgp.qiita_client.QiitaClient
+        The Qiita server client
     job_id : str
         The job id
     parameters : dict
@@ -133,10 +130,9 @@ def pick_closed_reference_otus(server_url, job_id, parameters, out_dir):
     ValueError
         If there is any error gathering the information from the server
     """
-    update_job_step(server_url, job_id, "Step 1 of 3: Collecting information")
+    update_job_step(qclient, job_id, "Step 1 of 3: Collecting information")
     artifact_id = parameters['input_data']
-    url = "%s/qiita_db/artifacts/%s/filepaths/" % (server_url, artifact_id)
-    fps_info = execute_request_retry(requests.get, url)
+    fps_info = qclient.get("/qiita_db/artifacts/%s/filepaths/" % artifact_id)
     if not fps_info or not fps_info['success']:
         error_msg = "Could not get artifact filepath information: %s"
         if fps_info:
@@ -147,8 +143,7 @@ def pick_closed_reference_otus(server_url, job_id, parameters, out_dir):
     fps = fps_info['filepaths']
 
     reference_id = parameters['reference']
-    url = "%s/qiita_db/references/%s/filepaths/" % (server_url, reference_id)
-    ref_info = execute_request_retry(requests.get, url)
+    ref_info = qclient.get("/qiita_db/references/%s/filepaths/" % reference_id)
     if not ref_info or not ref_info['success']:
         error_msg = "Could not get artifact filepath information: %s"
         if ref_info:
@@ -158,11 +153,11 @@ def pick_closed_reference_otus(server_url, job_id, parameters, out_dir):
         raise ValueError(error_msg)
     reference_fps = ref_info['filepaths']
 
-    update_job_step(server_url, job_id, "Step 2 of 3: Generating command")
+    update_job_step(qclient, job_id, "Step 2 of 3: Generating command")
     command, pick_out = generate_pick_closed_reference_otus_cmd(
         fps, out_dir, parameters, reference_fps)
 
-    update_job_step(server_url, job_id, "Step 3 of 3: Executing OTU picking")
+    update_job_step(qclient, job_id, "Step 3 of 3: Executing OTU picking")
     std_out, std_err, return_value = system_call(command)
     if return_value != 0:
         error_msg = ("Error running OTU picking:\nStd out: %s\nStd err: %s"

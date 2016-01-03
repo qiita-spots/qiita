@@ -4,7 +4,8 @@
 <script type="text/javascript">
     $(document).ready(function() {
 
-        var host = 'ws://' + window.location.host + '/consumer/';
+        var socket_protocol = window.location.protocol == "https:" ? 'wss://' : 'ws://'
+        var host = socket_protocol + window.location.host + '/consumer/';
         var websocket = new WebSocket(host);
 
         // When the socket is opened, send a message from the client to the
