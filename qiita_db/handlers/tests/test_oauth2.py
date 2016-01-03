@@ -7,7 +7,9 @@
 # -----------------------------------------------------------------------------
 from unittest import main
 from json import loads
+
 from moi import r_client
+
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
@@ -81,7 +83,7 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
 
 
 class OAuth2HandlerTests(TestHandlerBase):
-    def test_authenticate_client(self):
+    def test_authenticate_client_header(self):
         # Authenticate using header
         obs = self.post(
             '/qiita_db/authenticate/', {'grant_type': 'client'}, {
@@ -107,6 +109,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                                              'grant_type'])
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
+    def test_authenticate_client_post(self):
         # Authenticate using post only
         obs = self.post(
             '/qiita_db/authenticate/', {
