@@ -17,7 +17,7 @@ class SampleTemplateAJAX(BaseHandler):
         study_id = self.get_argument('study_id')
         files = [f for _, f in get_files_from_uploads_folders(study_id)
                  if f.endswith(('txt', 'tsv'))]
-        data_types = sorted(data_types_get_req())
+        data_types = sorted(data_types_get_req()['data_types'])
         is_local = is_localhost(self.request.headers['host'])
         # Get the most recent version for download and build the link
         download = sample_template_filepaths_get_req(

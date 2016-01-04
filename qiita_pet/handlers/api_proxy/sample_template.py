@@ -47,7 +47,9 @@ def sample_template_summary_get_req(samp_id, user_id):
         return access_error
     template = SampleTemplate(int(samp_id))
     df = template.to_dataframe()
-    out = {'num_samples': df.shape[0],
+    out = {'status': 'success',
+           'message': '',
+           'num_samples': df.shape[0],
            'summary': {}}
 
     # drop the samp_id column if it exists

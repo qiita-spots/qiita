@@ -23,8 +23,10 @@ def data_types_get_req():
     list of str
         Data types available on the system
     """
-    data_types = Study.all_data_types()
-    return data_types
+    return {'status': 'success',
+            'message': '',
+            'data_types': Study.all_data_types()
+            }
 
 
 def study_get_req(study_id, user_id):
@@ -66,4 +68,7 @@ def study_get_req(study_id, user_id):
 
     samples = study.sample_template.keys()
     study_info['num_samples'] = 0 if samples is None else len(list(samples))
-    return study_info
+    return {'status': 'success',
+            'message': '',
+            'info': study_info
+            }

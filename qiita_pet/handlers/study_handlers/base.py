@@ -23,8 +23,8 @@ class StudyIndexHandler(BaseHandler):
         study = to_int(study_id)
         # Proxies for what will become API requests
         prep_info = prep_template_get_req(study, self.current_user.id)['info']
-        data_types = data_types_get_req()
-        study_info = study_get_req(study, self.current_user.id)
+        data_types = data_types_get_req()['data_types']
+        study_info = study_get_req(study, self.current_user.id)['info']
         editable = study_info['status'] == 'sandbox'
 
         self.render("study_base.html", prep_info=prep_info,
@@ -38,7 +38,7 @@ class StudyBaseInfoAJAX(BaseHandler):
         study_id = self.get_argument('study_id')
         study = to_int(study_id)
         # Proxy for what will become API request
-        study_info = study_get_req(study, self.current_user.id)
+        study_info = study_get_req(study, self.current_user.id)['info']
         study_doi = ' '.join(
             [doi_linkifier(p) for p in study_info['publications']])
 

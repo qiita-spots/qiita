@@ -3,14 +3,14 @@ from os.path import join
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.sample_template import (
-    sample_template_get_req, sample_template_post_req,
+    sample_template_summary_get_req, sample_template_post_req,
     sample_template_put_req, sample_template_delete_req,
     sample_template_filepaths_get_req)
 
 
 class TestSampleAPI(TestCase):
-    def test_sample_template_get_req(self):
-        obs = sample_template_get_req(1, 'test@foo.bar')
+    def test_sample_template_summary_get_req(self):
+        obs = sample_template_summary_get_req(1, 'test@foo.bar')
         exp = {'summary': {
             'physical_specimen_location': [('ANL', 27)],
             'texture': [('63.1 sand, 17.7 silt, 19.2 clay', 9),
@@ -90,11 +90,13 @@ class TestSampleAPI(TestCase):
                                 ('SKM1', 1), ('SKM2', 1), ('SKM3', 1),
                                 ('SKM4', 1), ('SKM5', 1), ('SKM6', 1),
                                 ('SKM7', 1), ('SKM8', 1), ('SKM9', 1)]},
-               'num_samples': 27}
+               'num_samples': 27,
+               'status': 'success',
+               'message': ''}
         self.assertEqual(obs, exp)
 
-    def test_sample_template_get_req_no_access(self):
-        obs = sample_template_get_req(1, 'demo@microbio.me')
+    def test_sample_template_summary_get_req_no_access(self):
+        obs = sample_template_summary_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
