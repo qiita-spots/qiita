@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from __future__ import division
 import warnings
 
@@ -12,7 +19,6 @@ from natsort import natsorted
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.study import Study
 from qiita_core.util import execute_as_transaction
-from qiita_core.qiita_settings import qiita_config
 
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
                                              looks_like_qiime_mapping_file)
@@ -55,14 +61,39 @@ def sample_template_summary_get_req(samp_id, user_id):
     # drop the samp_id column if it exists
     if 'study_id' in df.columns:
         df.drop('study_id', axis=1, inplace=True)
-    cols = list(df.columns)
-    for column in cols:
+    for column in df.columns:
         counts = df[column].value_counts()
         out['summary'][str(column)] = [(str(key), counts[key])
                                        for key in natsorted(counts.index)]
 
     return out
 
+def _check_fp(study_id, filename):
+    """Check whether an uploaded file exists
+
+    Parameters
+    ----------
+    study_id : int
+        Study file uploaded to
+    filename : str
+        name of the uploaded file
+
+    Returns
+    -------
+    dict or str
+        dict if error, filepath as string if filepath exists
+    """
+    # Get the uploads folder
+    _, base_fp = get_mountpoint("uploads")[0]
+    # Get the path of the sample template in the uploads folder
+    fp_rsp = join(base_fp, str(study_id), filename)
+
+    if not exists(fp_rsp):
+        # The file does not exist, fail nicely
+        return {'status': 'error',
+                'message': 'file does not exist',
+                'file': filename}
+    return fp_rsp
 
 @execute_as_transaction
 def sample_template_post_req(study_id, user_id, data_type,
@@ -78,7 +109,7 @@ def sample_template_post_req(study_id, user_id, data_type,
     data_type : str
         Data type for the sample template
     sample_template : str
-        filepath to use for creation
+        filename to use for creation
 
     Returns
     -------
@@ -95,16 +126,10 @@ def sample_template_post_req(study_id, user_id, data_type,
     access_error = check_access(int(study_id), user_id)
     if access_error:
         return access_error
-    # Get the uploads folder
-    _, base_fp = get_mountpoint("uploads")[0]
-    # Get the path of the sample template in the uploads folder
-    fp_rsp = join(base_fp, str(study_id), sample_template)
-
-    if not exists(fp_rsp):
-        # The file does not exist, fail nicely
-        return {'status': 'error',
-                'message': 'filepath does not exist',
-                'file': sample_template}
+    fp_rsp = _check_fp(study_id, sample_template)
+    if isinstance(fp_rsp, dict):
+        # Unknown filepath, so return the error message
+        return fp_rsp
 
     # Define here the message and message level in case of success
     msg = ''
@@ -155,7 +180,7 @@ def sample_template_put_req(study_id, user_id, sample_template):
     user_id : str
         The current user object id
     sample_template : str
-        filepath to use for updating
+        filename to use for updating
 
     Returns
     -------
@@ -169,23 +194,16 @@ def sample_template_put_req(study_id, user_id, sample_template):
     message has the warnings or errors
     file has the file name
     """
-    access_error = check_access(study_id, user_id)
+    access_error = check_access(int(study_id), user_id)
     if access_error:
         return access_error
-    # Define here the message and message level in case of success
-    status = "success"
-    # Get the uploads folder
-    _, base_fp = get_mountpoint("uploads")[0]
-    # Get the path of the sample template in the uploads folder
-    fp_rsp = join(base_fp, str(study_id), sample_template)
-
-    if not exists(fp_rsp):
-        # The file does not exist, fail nicely
-        return {'status': 'error',
-                'message': 'file does not exist',
-                'file': sample_template}
+    fp_rsp = _check_fp(study_id, sample_template)
+    if isinstance(fp_rsp, dict):
+        # Unknown filepath, so return the error message
+        return fp_rsp
 
     msg = ''
+    status = 'success'
     try:
         with warnings.catch_warnings(record=True) as warns:
             # deleting previous uploads and inserting new one
@@ -262,10 +280,7 @@ def sample_template_filepaths_get_req(study_id, user_id):
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
-    filepaths = []
-    for id_, fp in SampleTemplate(int(study_id)).get_filepaths():
-        # Convert filepaths to downloadable URL
-        url = join(qiita_config.base_url, 'download',
-                   fp[len(qiita_config.base_data_dir):].strip('/'))
-        filepaths.append((id_, url))
-    return {'status': 'success', 'message': '', 'filepaths': filepaths}
+    return {'status': 'success',
+            'message': '',
+            'filepaths': SampleTemplate(int(study_id)).get_filepaths()
+            }

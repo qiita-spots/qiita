@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from os.path import join
 
@@ -148,8 +155,8 @@ class TestSampleAPI(TestCase):
 
         exp = {'status': 'success',
                'message': '',
-               'filepaths': [(14, join(qiita_config.base_url,
-                             'download/templates/1_19700101-000000.txt'))]}
+               'filepaths': [(14, join(qiita_config.base_work_dir,
+                             'templates/1_19700101-000000.txt'))]}
         self.assertEqual(obs, exp)
 
     def test_sample_template_filepaths_get_req_no_access(self):

@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from tornado.web import authenticated, HTTPError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -23,7 +30,7 @@ class SampleTemplateAJAX(BaseHandler):
         download = sample_template_filepaths_get_req(
             study_id, self.current_user.id)['filepaths'][-1]
         dl_path = download_link_or_path(
-            is_local, download[0], download[1], "Download sample information")
+            is_local, download[1], download[0], "Download sample information")
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
         self.render('study_ajax/sample_summary.html', stats=stats['summary'],
