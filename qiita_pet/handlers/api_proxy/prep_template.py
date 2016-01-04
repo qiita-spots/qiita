@@ -50,4 +50,6 @@ def prep_template_get_req(study_id, user_id):
                 'last_artifact': 'TODO new gui'
             }
             prep_info[dtype].append(info)
-    return prep_info
+    return {'status': 'success',
+            'message': '',
+            'info': prep_info}

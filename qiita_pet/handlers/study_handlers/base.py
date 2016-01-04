@@ -22,7 +22,7 @@ class StudyIndexHandler(BaseHandler):
     def get(self, study_id):
         study = to_int(study_id)
         # Proxies for what will become API requests
-        prep_info = prep_template_get_req(study, self.current_user.id)
+        prep_info = prep_template_get_req(study, self.current_user.id)['info']
         data_types = data_types_get_req()
         study_info = study_get_req(study, self.current_user.id)
         editable = study_info['status'] == 'sandbox'
