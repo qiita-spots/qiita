@@ -7,10 +7,6 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-# This is the only folder in qiita_pet that should import outside qiita_pet
-# The idea is that this proxies the call and response dicts we expect from the
-# Qiita API once we build it. This will be removed and replaced with API calls
-# when the API is complete.
 from qiita_pet.handlers.api_proxy.util import check_access
 from qiita_db.study import Study
 

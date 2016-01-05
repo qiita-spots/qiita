@@ -12,10 +12,6 @@ from os import remove
 from os.path import exists, join
 
 from natsort import natsorted
-# This is the only folder in qiita_pet that should import from outside
-# qiita_pet. The idea is this proxies the call and response dicts we expect
-# from the Qiita API once we build it. This will be removed and replaced with
-#  API calls when the API is complete.
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.study import Study
 from qiita_core.util import execute_as_transaction
@@ -68,6 +64,7 @@ def sample_template_summary_get_req(samp_id, user_id):
 
     return out
 
+
 def _check_fp(study_id, filename):
     """Check whether an uploaded file exists
 
@@ -94,6 +91,7 @@ def _check_fp(study_id, filename):
                 'message': 'file does not exist',
                 'file': filename}
     return fp_rsp
+
 
 @execute_as_transaction
 def sample_template_post_req(study_id, user_id, data_type,
