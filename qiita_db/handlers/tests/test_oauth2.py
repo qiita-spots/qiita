@@ -7,7 +7,9 @@
 # -----------------------------------------------------------------------------
 from unittest import main
 from json import loads
+
 from moi import r_client
+
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
@@ -81,7 +83,7 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
 
 
 class OAuth2HandlerTests(TestHandlerBase):
-    def test_authenticate_client(self):
+    def test_authenticate_client_header(self):
         # Authenticate using header
         obs = self.post(
             '/qiita_db/authenticate/', {'grant_type': 'client'}, {
@@ -93,7 +95,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         obs_body = loads(obs.body)
         exp = {'access_token': 'token',
                'token_type': 'Bearer',
-               'expires_in': '3600'}
+               'expires_in': 3600}
         self.assertItemsEqual(obs_body.keys(), exp.keys())
         self.assertEqual(obs_body['token_type'], exp['token_type'])
         self.assertEqual(obs_body['expires_in'], exp['expires_in'])
@@ -107,6 +109,7 @@ class OAuth2HandlerTests(TestHandlerBase):
                                              'grant_type'])
         self.assertEqual(r_client.ttl(obs_body['access_token']), 3600)
 
+    def test_authenticate_client_post(self):
         # Authenticate using post only
         obs = self.post(
             '/qiita_db/authenticate/', {
@@ -119,7 +122,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         obs_body = loads(obs.body)
         exp = {'access_token': 'placeholder',
                'token_type': 'Bearer',
-               'expires_in': '3600'}
+               'expires_in': 3600}
         self.assertItemsEqual(obs_body.keys(), exp.keys())
         self.assertEqual(obs_body['token_type'], exp['token_type'])
         self.assertEqual(obs_body['expires_in'], exp['expires_in'])
@@ -212,7 +215,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         obs_body = loads(obs.body)
         exp = {'access_token': 'placeholder',
                'token_type': 'Bearer',
-               'expires_in': '3600'}
+               'expires_in': 3600}
         self.assertItemsEqual(obs_body.keys(), exp.keys())
         self.assertEqual(obs_body['token_type'], exp['token_type'])
         self.assertEqual(obs_body['expires_in'], exp['expires_in'])

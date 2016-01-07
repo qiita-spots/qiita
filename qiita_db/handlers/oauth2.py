@@ -14,50 +14,37 @@ import functools
 from traceback import format_exception
 
 from tornado.web import RequestHandler
-
 from moi import r_client
+
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
 import qiita_db as qdb
 
 
-def login_client(client_id, client_secret=None):
-    """Login client_id, optionally with client_secret
+def _oauth_error(handler, error_msg, error):
+    """Set expected status and error formatting for Oauth2 style error
 
-    Parameters
-    ----------
-    client_id : str
-        The client ID to validate
-    client_secret : str, optional
-        The client secret code. If not given, will only validate if client_id
-        exists
+   Parameters
+   ----------
+   error_msg : str
+        Human parsable error message
+    error : str
+        Oauth2 controlled vocab error
 
     Returns
     -------
-    bool
-        Whether client_id exists and, if client_secret given, the secret
-        matches the id
+    Writes out Oauth2 formatted error JSON of
+        {error: error,
+         error_description: error_msg}
+
+    Notes
+    -----
+    Expects handler to be a tornado RequestHandler or subclass
     """
-    with qdb.sql_connection.TRN:
-        sql = """SELECT EXISTS(
-                    SELECT *
-                    FROM qiita.oauth_identifiers
-                    WHERE client_id = %s {0})"""
-        sql_info = [client_id]
-        if client_secret is not None:
-            sql = sql.format("AND client_secret = %s")
-            sql_info.append(client_secret)
-        else:
-            sql = sql.format("AND client_secret IS NULL")
-        qdb.sql_connection.TRN.add(sql, sql_info)
-        return qdb.sql_connection.TRN.execute_fetchlast()
-
-
-def _oauth_error(self, error_msg, error):
-            self.set_status(400)
-            self.write({'error': error,
-                        'error_description': error_msg})
-            self.finish()
+    handler.set_status(400)
+    handler.write({'error': error,
+                   'error_description': error_msg})
+    handler.finish()
 
 
 def authenticate_oauth(f):
@@ -67,21 +54,31 @@ def authenticate_oauth(f):
     If an invalid header is given, a 400 error code is returned and the json
     error message is automatically sent.
 
+    Returns
+    -------
+    Sends oauth2 formatted error JSON if authorizaton fails
+
+    Notes
+    -----
+    Expects handler to be a tornado RequestHandler or subclass
+
     References
-    ---------
+    ----------
     [1] The OAuth 2.0 Authorization Framework.
     http://tools.ietf.org/html/rfc6749
     """
     @functools.wraps(f)
-    def wrapper(self, *args, **kwargs):
-        header = self.request.headers.get('Authorization', None)
+    def wrapper(handler, *args, **kwargs):
+        header = handler.request.headers.get('Authorization', None)
         if header is None:
-            _oauth_error(self, 'Oauth2 error: invalid access token',
+            _oauth_error(handler, 'Oauth2 error: invalid access token',
                          'invalid_request')
             return
         token_info = header.split()
+        # Based on RFC6750 if reply is not 2 elements in the format of:
+        # ['Bearer', token] we assume a wrong reply
         if len(token_info) != 2 or token_info[0] != 'Bearer':
-            _oauth_error(self, 'Oauth2 error: invalid access token',
+            _oauth_error(handler, 'Oauth2 error: invalid access token',
                          'invalid_grant')
             return
 
@@ -89,7 +86,7 @@ def authenticate_oauth(f):
         db_token = r_client.hgetall(token)
         if not db_token:
             # token has timed out or never existed
-            _oauth_error(self, 'Oauth2 error: token has timed out',
+            _oauth_error(handler, 'Oauth2 error: token has timed out',
                          'invalid_grant')
             return
         # Check daily rate limit for key if password style key
@@ -104,11 +101,11 @@ def authenticate_oauth(f):
                 r_client.decr(limit_key)
                 if int(r_client.get(limit_key)) <= 0:
                     _oauth_error(
-                        self, 'Oauth2 error: daily request limit reached',
+                        handler, 'Oauth2 error: daily request limit reached',
                         'invalid_grant')
                     return
 
-        return f(self, *args, **kwargs)
+        return f(handler, *args, **kwargs)
     return wrapper
 
 
@@ -150,31 +147,36 @@ class OauthBaseHandler(RequestHandler):
             'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
             (error, trace_info, request_info))
 
-    # Allow call to oauth_error function as part of the class
-    oauth_error = _oauth_error
-
     def head(self):
         """Adds proper response for head requests"""
         self.finish()
 
 
 class TokenAuthHandler(OauthBaseHandler):
-    def generate_access_token(self):
+    def generate_access_token(self, length=55):
         """Creates the random alphanumeric token
+
+        Parameters
+        ----------
+        length : int, optional
+            Length of token to generate. Default 55 characters.
+            Can be a max of 255 characters, which is a hard HTTP transfer limit
 
         Returns
         -------
         str
-            55 character random alphanumeric string
+            Random alphanumeric string of passed length
 
-        Notes
-        -----
-        55 was chosen as a cryptographically secure limit that needs to be
-        hard coded so we can set the same varchar length for the postgres
-        column storing the key.
+        Raises
+        ------
+        ValueError
+            length is not between 1 and 255, inclusive
         """
+        if not 0 < length < 256:
+            raise ValueError("Invalid token length: %d" % length)
+
         pool = ascii_letters + digits
-        return ''.join((SystemRandom().choice(pool) for _ in range(55)))
+        return ''.join((SystemRandom().choice(pool) for _ in range(length)))
 
     def set_token(self, client_id, grant_type, user=None, timeout=3600):
         """Create access token for the client on redis and send json response
@@ -189,6 +191,17 @@ class TokenAuthHandler(OauthBaseHandler):
             If password grant type requested, the user requesting the key.
         timeout : int, optional
             The timeout, in seconds, for the token. Default 3600
+
+        Returns
+        -------
+        Writes token information JSON in the form expected by RFC6750:
+        {'access_token': token,
+         'token_type': 'Bearer',
+         'expires_in': timeout}
+
+         access_token: the actual token to use
+         token_type: 'Bearer', which is the expected token type for Oauth2
+         expires_in: time to token expiration, in seconds.
         """
         token = self.generate_access_token()
 
@@ -208,7 +221,7 @@ class TokenAuthHandler(OauthBaseHandler):
 
         self.write({'access_token': token,
                     'token_type': 'Bearer',
-                    'expires_in': '3600'})
+                    'expires_in': timeout})
         self.finish()
 
     def validate_client(self, client_id, client_secret):
@@ -220,11 +233,26 @@ class TokenAuthHandler(OauthBaseHandler):
             The client making the request
         client_secret : str
             The secret key for the client
+
+        Returns
+        -------
+        Writes out Oauth2 formatted error JSON if error occured
+            {error: error,
+             error_description: error_msg}
+
+        error: RFC6750 controlled vocabulary of errors
+         error_description: Human readable explanation of error
         """
-        if login_client(client_id, client_secret):
-            self.set_token(client_id, 'client')
-        else:
-            self.oauth_error('Oauth2 error: invalid client information',
+        with qdb.sql_connection.TRN:
+            sql = """SELECT EXISTS(
+                        SELECT *
+                        FROM qiita.oauth_identifiers
+                        WHERE client_id = %s AND client_secret = %s)"""
+            qdb.sql_connection.TRN.add(sql, [client_id, client_secret])
+            if qdb.sql_connection.TRN.execute_fetchlast():
+                self.set_token(client_id, 'client')
+            else:
+                _oauth_error(self, 'Oauth2 error: invalid client information',
                              'invalid_client')
 
     def validate_resource_owner(self, username, password, client_id):
@@ -238,45 +266,105 @@ class TokenAuthHandler(OauthBaseHandler):
             The password for the username
         client_id : str
             The client making the request
+
+        Returns
+        -------
+        Writes out Oauth2 formatted error JSON if error occured
+            {error: error,
+             error_description: error_msg}
+
+        error: RFC6750 controlled vocabulary of errors
+         error_description: Human readable explanation of error
         """
         try:
             qdb.user.User.login(username, password)
         except (IncorrectEmailError, IncorrectPasswordError,
                 UnverifiedEmailError):
-            self.oauth_error('Oauth2 error: invalid user information',
-                             'invalid_client')
+            _oauth_error(self, 'Oauth2 error: invalid user information',
+                         'invalid_client')
             return
 
-        if login_client(client_id):
-            self.set_token(client_id, 'password', user=username)
-        else:
-            self.oauth_error('Oauth2 error: invalid client information',
+        with qdb.sql_connection.TRN:
+            sql = """SELECT EXISTS(
+                        SELECT *
+                        FROM qiita.oauth_identifiers
+                        WHERE client_id = %s AND client_secret IS NULL)"""
+            qdb.sql_connection.TRN.add(sql, [client_id])
+            if qdb.sql_connection.TRN.execute_fetchlast():
+                self.set_token(client_id, 'password', user=username)
+            else:
+                _oauth_error(self, 'Oauth2 error: invalid client information',
                              'invalid_client')
 
     def post(self):
+        """ Authenticate given information as per RFC6750
+
+        Parameters
+        ----------
+        grant_type : {'client', 'password'}
+            What type of token to grant
+        client_id : str
+            Client requesting the token
+
+        One of the following, if password grant type:
+        HTTP Header in the form
+            Authorization: Bearer [base64encode of username:password]
+
+        OR
+
+        username : str
+            Username to authenticate
+        password : str
+            Password for the username
+
+        If client grant type:
+        client_secret : str
+            client authentication secret
+
+        Returns
+        -------
+        Writes token information JSON in the form expected by RFC6750:
+        {'access_token': token,
+         'token_type': 'Bearer',
+         'expires_in': timeout}
+
+         access_token: the actual token to use
+         token_type: 'Bearer', which is the expected token type for Oauth2
+         expires_in: time to token expiration, in seconds.
+
+         or an error message in the form
+         {error: error,
+         error_description: error_msg}
+
+         error: RFC6750 controlled vocabulary of errors
+         error_description: Human readable explanation of error
+         """
         # first check for header version of sending auth, meaning client ID
         header = self.request.headers.get('Authorization', None)
         if header is not None:
             header_info = header.split()
-            if header_info[0] != 'Basic':
+            # Based on RFC6750 if reply is not 2 elements in the format of:
+            # ['Basic', base64 encoded username:password] we assume the header
+            # is invalid
+            if len(header_info) != 2 or header_info[0] != 'Basic':
                 # Invalid Authorization header type for this page
-                self.oauth_error('Oauth2 error: invalid token type',
-                                 'invalid_request')
+                _oauth_error(self, 'Oauth2 error: invalid token type',
+                             'invalid_request')
                 return
 
             # Get client information from the header and validate it
             grant_type = self.get_argument('grant_type', None)
             if grant_type != 'client':
-                self.oauth_error('Oauth2 error: invalid grant_type',
-                                 'invalid_request')
+                _oauth_error(self, 'Oauth2 error: invalid grant_type',
+                             'invalid_request')
                 return
             try:
                 client_id, client_secret = urlsafe_b64decode(
                     header_info[1]).split(':')
             except ValueError:
                 # Split didn't work, so invalid information sent
-                self.oauth_error('Oauth2 error: invalid base64 encoded info',
-                                 'invalid_request')
+                _oauth_error(self, 'Oauth2 error: invalid base64 encoded info',
+                             'invalid_request')
                 return
             self.validate_client(client_id, client_secret)
             return
@@ -288,19 +376,19 @@ class TokenAuthHandler(OauthBaseHandler):
             username = self.get_argument('username', None)
             password = self.get_argument('password', None)
             if not all([username, password, client_id]):
-                self.oauth_error('Oauth2 error: missing user information',
-                                 'invalid_request')
+                _oauth_error(self, 'Oauth2 error: missing user information',
+                             'invalid_request')
             else:
                 self.validate_resource_owner(username, password, client_id)
 
         elif grant_type == 'client':
             client_secret = self.get_argument('client_secret', None)
             if not all([client_id, client_secret]):
-                self.oauth_error('Oauth2 error: missing client information',
-                                 'invalid_request')
+                _oauth_error(self, 'Oauth2 error: missing client information',
+                             'invalid_request')
                 return
             self.validate_client(client_id, client_secret)
         else:
-            self.oauth_error('Oauth2 error: invalid grant_type',
-                             'unsupported_grant_type')
+            _oauth_error(self, 'Oauth2 error: invalid grant_type',
+                         'unsupported_grant_type')
             return
