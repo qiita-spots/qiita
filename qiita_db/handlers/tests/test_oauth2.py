@@ -95,7 +95,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         obs_body = loads(obs.body)
         exp = {'access_token': 'token',
                'token_type': 'Bearer',
-               'expires_in': '3600'}
+               'expires_in': 3600}
         self.assertItemsEqual(obs_body.keys(), exp.keys())
         self.assertEqual(obs_body['token_type'], exp['token_type'])
         self.assertEqual(obs_body['expires_in'], exp['expires_in'])
@@ -122,7 +122,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         obs_body = loads(obs.body)
         exp = {'access_token': 'placeholder',
                'token_type': 'Bearer',
-               'expires_in': '3600'}
+               'expires_in': 3600}
         self.assertItemsEqual(obs_body.keys(), exp.keys())
         self.assertEqual(obs_body['token_type'], exp['token_type'])
         self.assertEqual(obs_body['expires_in'], exp['expires_in'])
@@ -215,7 +215,7 @@ class OAuth2HandlerTests(TestHandlerBase):
         obs_body = loads(obs.body)
         exp = {'access_token': 'placeholder',
                'token_type': 'Bearer',
-               'expires_in': '3600'}
+               'expires_in': 3600}
         self.assertItemsEqual(obs_body.keys(), exp.keys())
         self.assertEqual(obs_body['token_type'], exp['token_type'])
         self.assertEqual(obs_body['expires_in'], exp['expires_in'])
