@@ -140,7 +140,7 @@ class Artifact(qdb.base.QiitaObject):
         return instance
 
     @classmethod
-    def create(cls, filepaths, artifact_type, prep_template=None,
+    def create(cls, filepaths, artifact_type, name=None, prep_template=None,
                parents=None, processing_parameters=None,
                can_be_submitted_to_ebi=False, can_be_submitted_to_vamps=False):
         r"""Creates a new artifact in the system
@@ -166,6 +166,8 @@ class Artifact(qdb.base.QiitaObject):
             file path and the second one is the file path type id
         artifact_type : str
             The type of the artifact
+        name : str, optional
+            The artifact's name
         prep_template : qiita_db.metadata_template.PrepTemplate, optional
             If the artifact is being uploaded by the user, the prep template
             to which the artifact should be linked to. If not provided,
@@ -255,8 +257,8 @@ class Artifact(qdb.base.QiitaObject):
 
                 # Create the artifact
                 sql = """INSERT INTO qiita.artifact
-                            (generated_timestamp, command_id, data_type_id,
-                             command_parameters, visibility_id,
+                            (generated_timestamp, command_id,
+                             data_type_id, command_parameters, visibility_id,
                              artifact_type_id, can_be_submitted_to_ebi,
                              can_be_submitted_to_vamps, submitted_to_vamps)
                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -314,6 +316,9 @@ class Artifact(qdb.base.QiitaObject):
             sql_args = [[a_id, fp_id] for fp_id in fp_ids]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
+
+            if name:
+                instance.name = name
 
         return instance
 

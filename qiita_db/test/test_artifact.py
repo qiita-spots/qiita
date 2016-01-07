@@ -188,7 +188,9 @@ class ArtifactTests(TestCase):
         fp_count = qdb.util.get_count('qiita.filepath')
         before = datetime.now()
         obs = qdb.artifact.Artifact.create(
-            self.filepaths_root, "FASTQ", prep_template=self.prep_template)
+            self.filepaths_root, "FASTQ", prep_template=self.prep_template,
+            name='Test artifact')
+        self.assertEqual(obs.name, 'Test artifact')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertIsNone(obs.processing_parameters)
         self.assertEqual(obs.visibility, 'sandbox')
@@ -228,6 +230,7 @@ class ArtifactTests(TestCase):
             parents=[qdb.artifact.Artifact(1)],
             processing_parameters=exp_params, can_be_submitted_to_ebi=True,
             can_be_submitted_to_vamps=True)
+        self.assertEqual(obs.name, 'dflt_name')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
@@ -258,6 +261,7 @@ class ArtifactTests(TestCase):
         obs = qdb.artifact.Artifact.create(
             self.filepaths_biom, "BIOM", parents=[qdb.artifact.Artifact(2)],
             processing_parameters=exp_params)
+        self.assertEqual(obs.name, 'dflt_name')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
