@@ -336,6 +336,23 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(test.id)
 
+    def test_name(self):
+        self.assertEqual(qdb.artifact.Artifact(1).name, "Raw data 1")
+        self.assertEqual(qdb.artifact.Artifact(2).name, "Demultiplexed 1")
+        self.assertEqual(qdb.artifact.Artifact(3).name, "Demultiplexed 2")
+        self.assertEqual(qdb.artifact.Artifact(4).name, "BIOM")
+
+    def test_name_setter(self):
+        a = qdb.artifact.Artifact(1)
+        self.assertEqual(a.name, "Raw data 1")
+        a.name = "new name"
+        self.assertEqual(a.name, "new name")
+
+    def test_name_setter_error(self):
+        with self.assertRaises(ValueError):
+            qdb.artifact.Artifact(1).name = (
+                "Some very large name to force the error to be raised")
+
     def test_timestamp(self):
         self.assertEqual(qdb.artifact.Artifact(1).timestamp,
                          datetime(2012, 10, 1, 9, 30, 27))

@@ -405,6 +405,46 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [artifact_id])
 
     @property
+    def name(self):
+        """The name of the artifact
+
+        Returns
+        -------
+        str
+            The artifact name
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name
+                     FROM qiita.artifact
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @name.setter
+    def name(self, value):
+        """Set the name of the artifact
+
+        Parameters
+        ----------
+        value : str
+            The new artifact's name
+
+        Raises
+        ------
+        ValueError
+            If `value` contains more than 35 chars
+        """
+        if len(value) > 35:
+            raise ValueError("The name of an artifact cannot exceed 35 chars. "
+                             "Current lengths: %d" % len(value))
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.artifact
+                     SET name = %s
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [value, self.id])
+            qdb.sql_connection.TRN.execute()
+
+    @property
     def timestamp(self):
         """The timestamp when the artifact was generated
 
