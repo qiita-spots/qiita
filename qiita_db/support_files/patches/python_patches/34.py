@@ -11,8 +11,8 @@ with TRN:
     sql = """INSERT INTO qiita.oauth_identifiers (client_id, client_secret)
              VALUES (%s, %s)"""
     TRN.add(sql, [client_id, client_secret])
-    TRN.execute()
 
-print "Please, add these values to your target gene plugin configuration file:"
-print "CLIENT_ID = %s" % client_id
-print "CLIENT_SECRET = %s" % client_secret
+    sql = """INSERT INTO qiita.oauth_software (software_id, client_id)
+             VALUES (%s, %s)"""
+    TRN.add(sql, [1, client_id])
+    TRN.execute()
