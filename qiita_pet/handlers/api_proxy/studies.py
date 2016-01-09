@@ -7,10 +7,6 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-# This is the only folder in qiita_pet that should import outside qiita_pet
-# The idea is that this proxies the call and response dicts we expect from the
-# Qiita API once we build it. This will be removed and replaced with API calls
-# when the API is complete.
 from qiita_db.study import Study
 from qiita_pet.handlers.api_proxy.util import check_access
 
@@ -23,8 +19,10 @@ def data_types_get_req():
     list of str
         Data types available on the system
     """
-    data_types = Study.all_data_types()
-    return data_types
+    return {'status': 'success',
+            'message': '',
+            'data_types': Study.all_data_types()
+            }
 
 
 def study_get_req(study_id, user_id):
@@ -39,14 +37,10 @@ def study_get_req(study_id, user_id):
 
     Returns
     -------
-    dict of info
+    dict of {str: object}
         Study information seperated by data type, in the form
-        {col_name: value, ...}
-
-    Raises
-    ------
-    HTTPError
-        Raises code 403 if user does not have access to the study
+        {col_name: value, ...} with value being a string, int, or list of
+        strings or ints
     """
     access_error = check_access(study_id, user_id)
     if access_error:
@@ -75,8 +69,11 @@ def study_get_req(study_id, user_id):
         'affiliation': lab_person.affiliation}
 
     samples = study.sample_template.keys()
-    study_info['num_samples'] = 0 if samples is None else len(set(samples))
-    return study_info
+    study_info['num_samples'] = 0 if samples is None else len(list(samples))
+    return {'status': 'success',
+            'message': '',
+            'info': study_info
+            }
 
 
 def study_prep_get_req(study_id, user_id):
@@ -114,4 +111,7 @@ def study_prep_get_req(study_id, user_id):
                 'last_artifact': 'TODO new gui'
             }
             prep_info[dtype].append(info)
-    return prep_info
+    return {'status': 'success',
+            'message': '',
+            'info': prep_info
+            }

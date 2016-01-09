@@ -6,6 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+# This is the only folder in qiita_pet that should import outside qiita_pet
+# The idea is that this proxies the call and response dicts we expect from the
+# Qiita API once we build it. This will be removed and replaced with API calls
+# when the API is complete.
 __version__ = "0.2.0-dev"
 from .sample_template import (
     sample_template_post_req, sample_template_put_req,

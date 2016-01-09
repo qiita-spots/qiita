@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from os.path import join, exists
 
@@ -24,8 +31,53 @@ class TestPrepAPI(TestCase):
                        'Population Genomics', 'RNASeq', 'Resequencing',
                        'Synthetic Genomics', 'Transcriptome Analysis',
                        'Whole Genome Sequencing'],
-               'User': []}
+               'User': [],
+               'status': 'success',
+               'message': ''}
         self.assertEqual(obs, exp)
+
+    def test_prep_template_get_req(self):
+        obs = prep_template_get_req(1, 'test@foo.bar')
+        self.assertItemsEqual(obs.keys(), ['status', 'message', 'template'])
+        self.assertEqual(obs['status'], 'success')
+        self.assertEqual(obs['message'], '')
+        self.assertEqual(obs['template']['1.SKD7.640191'], {
+            'experiment_center': 'ANL',
+            'center_name': 'ANL',
+            'run_center': 'ANL',
+            'run_prefix': 's_G1_L001_sequences',
+            'primer': 'GTGCCAGCMGCCGCGGTAA',
+            'target_gene': '16S rRNA',
+            'sequencing_meth': 'Sequencing by synthesis',
+            'run_date': '8/1/12',
+            'platform': 'Illumina',
+            'pcr_primers': 'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT',
+            'library_construction_protocol':
+                'This analysis was done as in Caporaso et al 2011 Genome '
+                'research. The PCR primers (F515/R806) were developed against '
+                'the V4 region of the 16S rRNA (both bacteria and archaea), '
+                'which we determined would yield optimal community clustering '
+                'with reads of this length using a procedure similar to that '
+                'of ref. 15. [For reference, this primer pair amplifies the '
+                'region 533_786 in the Escherichia coli strain 83972 sequence '
+                '(greengenes accession no. prokMSA_id:470367).] The reverse '
+                'PCR primer is barcoded with a 12-base error-correcting Golay '
+                'code to facilitate multiplexing of up to 1,500 samples per '
+                'lane, and both PCR primers contain sequencer adapter '
+                'regions.',
+                'experiment_design_description':
+                    'micro biome of soil and rhizosphere of cannabis plants '
+                    'from CA',
+            'study_center': 'CCME',
+            'center_project_name': None,
+            'sample_center': 'ANL',
+            'samp_size': '.25,g',
+            'barcode': 'ACGCACATACAA',
+            'emp_status': 'EMP',
+            'illumina_technology': 'MiSeq',
+            'experiment_title': 'Cannabis Soil Microbiome',
+            'target_subfragment': 'V4',
+            'instrument_model': 'Illumina MiSeq'})
 
     def test_prep_template_get_req_no_access(self):
         obs = prep_template_get_req(1, 'demo@microbio.me')
@@ -78,10 +130,13 @@ class TestPrepAPI(TestCase):
 
     def test_prep_template_filepaths_get_req(self):
         obs = prep_template_filepaths_get_req(1, 'test@foo.bar')
-        exp = [(15, join(qiita_config.base_data_dir,
-                         'templates/1_prep_1_19700101-000000.txt')),
-               (16, join(qiita_config.base_data_dir,
-                         'templates/1_prep_1_qiime_19700101-000000.txt'))]
+        exp = {'status': 'success',
+               'message': '',
+               'filepaths': [
+                   (15, join(qiita_config.base_data_dir,
+                             'templates/1_prep_1_19700101-000000.txt')),
+                   (16, join(qiita_config.base_data_dir,
+                             'templates/1_prep_1_qiime_19700101-000000.txt'))]}
         self.assertItemsEqual(obs, exp)
 
     def test_prep_template_filepaths_get_req_no_access(self):
@@ -96,7 +151,9 @@ class TestPrepAPI(TestCase):
                'node_labels': [(1, 'Artifact Name for 1 - FASTQ'),
                                (2, 'Artifact Name for 2 - Demultiplexed'),
                                (3, 'Artifact Name for 3 - Demultiplexed'),
-                               (4, 'Artifact Name for 4 - BIOM')]}
+                               (4, 'Artifact Name for 4 - BIOM')],
+               'status': 'success',
+               'message': ''}
 
         self.assertItemsEqual(obs.keys(), exp.keys())
         self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
@@ -157,7 +214,9 @@ class TestPrepAPI(TestCase):
             'experiment_title': [('Cannabis Soil Microbiome', 27)],
             'target_subfragment': [('V4', 27)],
             'instrument_model': [('Illumina MiSeq', 27)]},
-            'num_samples': 27}
+            'num_samples': 27,
+            'status': 'success',
+            'message': ''}
         self.assertEqual(obs, exp)
 
     def test_prep_template_summary_get_req_no_access(self):

@@ -9,17 +9,12 @@ from __future__ import division
 import warnings
 
 from os import remove
-from os.path import exists, join
 from natsort import natsorted
 
-# This is the only folder in qiita_pet that should import outside qiita_pet
-# The idea is that this proxies the call and response dicts we expect from the
-# Qiita API once we build it. This will be removed and replaced with API calls
-# when the API is complete.
 from qiita_core.util import execute_as_transaction
-from qiita_pet.handlers.api_proxy.util import check_access
+from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.metadata_template.util import load_template_to_dataframe
-from qiita_db.util import convert_to_id, get_mountpoint
+from qiita_db.util import convert_to_id
 from qiita_db.study import Study
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -77,7 +72,9 @@ def prep_template_get_req(prep_id, user_id):
     if access_error:
         return access_error
     df = prep.to_dataframe()
-    return df.to_json(orient='index', force_ascii=False).read()
+    return {'status': 'success',
+            'message': '',
+            'template': df.to_dict(orient='index')}
 
 
 def prep_template_summary_get_req(prep_id, user_id):
@@ -92,11 +89,13 @@ def prep_template_summary_get_req(prep_id, user_id):
 
     Returns
     -------
-    dict of list of tuples
+    dict of objects
         Dictionary object where the keys are the metadata categories
         and the values are list of tuples. Each tuple is an observed value in
         the category and the number of times its seen.
-        Format {num_samples: value,
+        Format {status: status,
+                message: message,
+                num_samples: value,
                 category: [(val1, count1), (val2, count2), ...], ...}
     """
     prep = PrepTemplate(int(prep_id))
@@ -115,7 +114,8 @@ def prep_template_summary_get_req(prep_id, user_id):
         counts = df[column].value_counts()
         out['summary'][str(column)] = [(str(key), counts[key])
                                        for key in natsorted(counts.index)]
-
+    # Add expected messaging and status info
+    out.update({'status': 'success', 'message': ''})
     return out
 
 
@@ -146,22 +146,15 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
-    msg = "Your prep template was added"
-    status = "success"
+    fp_rpt = check_fp(study_id, prep_template)
+    if isinstance(fp_rpt, dict):
+        # Unknown filepath, so return the error message
+        return fp_rpt
 
+    # Add new investigation type if needed
     investigation_type = _process_investigation_type(
         investigation_type, user_defined_investigation_type,
         new_investigation_type)
-
-    # Get the upload base directory
-    _, base_path = get_mountpoint("uploads")[0]
-    # Get the path to the prep template
-    fp_rpt = join(base_path, str(study_id), prep_template)
-    if not exists(fp_rpt):
-        # The file does not exist, fail nicely
-        return {'status': 'error',
-                'error': 'filepath does not exist',
-                'filepath': prep_template}
 
     msg = ''
     status = 'success'
@@ -215,7 +208,8 @@ def prep_template_put_req(prep_id, user_id, prep_template=None,
     """
     # Get the uploads folder
     prep = PrepTemplate(int(prep_id))
-    access_error = check_access(prep.study_id, user_id)
+    study_id = prep.study_id
+    access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
 
@@ -228,15 +222,10 @@ def prep_template_put_req(prep_id, user_id, prep_template=None,
     msg = ''
     status = 'success'
     if prep_template:
-        _, base_fp = get_mountpoint("uploads")[0]
-        # Get the path of the prep template in the uploads folder
-        fp = join(base_fp, str(prep.study_id), prep_template)
-
-        if not exists(fp):
-            # The file does not exist, fail nicely
-            return {'status': 'error',
-                    'message': 'file does not exist',
-                    'file': prep_template}
+        fp = check_fp(study_id, prep_template)
+        if isinstance(fp, dict):
+            # Unknown filepath, so return the error message
+            return fp
         try:
             with warnings.catch_warnings(record=True) as warns:
                 pt = PrepTemplate(int(prep_id))
@@ -303,7 +292,10 @@ def prep_template_filepaths_get_req(prep_id, user_id):
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    return prep.get_filepaths()
+    return {'status': 'success',
+            'message': '',
+            'filepaths': prep.get_filepaths()
+            }
 
 
 def prep_ontology_get_req():
@@ -322,8 +314,11 @@ def prep_ontology_get_req():
     ena_terms.remove('Other')
     ena_terms + ['Other']
 
-    return {'ENA': ena_terms,
-            'User': sorted(ontology.user_defined_terms)}
+    return {'status': 'success',
+            'message': '',
+            'ENA': ena_terms,
+            'User': sorted(ontology.user_defined_terms)
+            }
 
 
 def prep_template_graph_get_req(prep_id, user_id):
@@ -363,6 +358,7 @@ def prep_template_graph_get_req(prep_id, user_id):
     node_labels = [(n.id, 'Artifact Name for %d - %s' % (n.id,
                                                          n.artifact_type))
                    for n in G.nodes()]
-    return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
+    return {'status': 'success',
+            'message': '',
+            'edge_list': [(n.id, m.id) for n, m in G.edges()],
             'node_labels': node_labels}
-    return {'edge_list': G.edges(), 'node_labels': node_labels}
