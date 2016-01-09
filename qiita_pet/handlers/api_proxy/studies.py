@@ -16,8 +16,14 @@ def data_types_get_req():
 
     Returns
     -------
-    list of str
-        Data types available on the system
+    dict
+        Data types information in the form
+        {'status': status,
+         'message': message,
+         'data_types': list of str}
+        status can be success, warning, or error depending on result
+        message has the warnings or errors
+        data_types is the list of available data types in the system
     """
     return {'status': 'success',
             'message': '',
@@ -37,8 +43,14 @@ def study_get_req(study_id, user_id):
 
     Returns
     -------
-    dict of {str: object}
-        Study information seperated by data type, in the form
+    dict
+        Data types information in the form
+        {'status': status,
+         'message': message,
+         'info': dict of objects
+        status can be success, warning, or error depending on result
+        message has the warnings or errors
+        info contains study information seperated by data type, in the form
         {col_name: value, ...} with value being a string, int, or list of
         strings or ints
     """

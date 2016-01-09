@@ -15,7 +15,6 @@ from natsort import natsorted
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.study import Study
 from qiita_core.util import execute_as_transaction
-
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
                                              looks_like_qiime_mapping_file)
 from qiita_db.util import get_mountpoint
@@ -37,8 +36,14 @@ def sample_template_summary_get_req(samp_id, user_id):
 
     Returns
     -------
-    dict of list of tuples
-        Dictionary object where the keys are the metadata categories
+    dict
+        Returns summary information in the form
+        {'status': str,
+         'message': str,
+         'info': dict of {str: object}
+        status can be success, warning, or error depending on result
+        message has the warnings or errors
+        info dictionary contains the keys as the metadata categories
         and the values are list of tuples. Each tuple is an observed value in
         the category and the number of times its seen.
         Format {num_samples: value,
@@ -271,8 +276,12 @@ def sample_template_filepaths_get_req(study_id, user_id):
     -------
     dict
         Filepaths in the form
-        {'status': status, message: msg, filepaths: filepaths}
-        Where filepaths is a list of tuple of int and str
+        {'status': status,
+         'message': msg,
+         'filepaths': filepaths}
+        status can be success, warning, or error depending on result
+        message has the warnings or errors
+        filepaths is a list of tuple of int and str
         All files in the sample template, as [(id, URL), ...]
     """
     access_error = check_access(study_id, user_id)

@@ -23,9 +23,15 @@ def prep_template_get_req(study_id, user_id):
 
     Returns
     -------
-    dict of list of dict
-        prep template information seperated by data type, in the form
-        {data_type: [{prep 1 info dict}, ....], ...}
+    dict
+        Prep template information in the form
+        {'status': status,
+         'message': msg,
+         'info': dict of list of dict}
+        status can be success, warning, or error depending on result
+        message has the warnings or errors
+        info contains prep template information seperated by data type, in the
+        form {data_type: [{prep 1 info dict}, ....], ...}
     """
     access_error = check_access(study_id, user_id)
     if access_error:
