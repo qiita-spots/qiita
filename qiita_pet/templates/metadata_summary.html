@@ -1,13 +1,9 @@
-{% extends sitebase.html %}
-{% block content %}
 {% from future.utils import viewitems %}
 
-<h1>Metadata Summary for Study {{study_title}}</h1>
+<h1>{{type}} Information Summary</h1>
 
 <div>
-    <a class="btn btn-default" href="{{back_button_path}}">
-        <span class="glyphicon glyphicon-arrow-left"></span> Back
-    </a>
+    <a href="{{dl_path}}"><button class="btn btn-primary btn-sm">Download</button>
 </div>
 
 <div>
@@ -16,8 +12,7 @@
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        The  information below describes information contained in the sample
-        and prep templates.
+        A summary of the {{type}} information is below.
     </div>
 
     <table class="table">
@@ -48,4 +43,3 @@
     {% end %}
     </table>
 </div>
-{% end %}

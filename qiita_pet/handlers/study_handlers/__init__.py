@@ -12,12 +12,12 @@ from .edit_handlers import StudyEditHandler, CreateStudyAJAX
 from .description_handlers import (StudyDescriptionHandler,
                                    PreprocessingSummaryHandler)
 from .ebi_handlers import EBISubmitHandler
-from .metadata_summary_handlers import MetadataSummaryHandler
 from .vamps_handlers import VAMPSHandler
 from .base import StudyIndexHandler, StudyBaseInfoAJAX
+from .sample_template import SampleTemplateAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyEditHandler', 'CreateStudyAJAX', 'StudyDescriptionHandler',
            'PreprocessingSummaryHandler', 'EBISubmitHandler',
-           'MetadataSummaryHandler', 'VAMPSHandler', 'SearchStudiesAJAX',
-           'StudyIndexHandler', 'StudyBaseInfoAJAX']
+           'VAMPSHandler', 'SearchStudiesAJAX',
+           'StudyIndexHandler', 'StudyBaseInfoAJAX', 'SampleTemplateAJAX']
