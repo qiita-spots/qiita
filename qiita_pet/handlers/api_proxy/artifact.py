@@ -17,7 +17,9 @@ def artifact_get_graph(self, artifact_id, direction, user_id):
     dict of lists of tuples
         A dictionary containing the edge list representation of the graph,
         and the node labels. Formatted as:
-        {'edge_list': [(0, 1), (0, 2)...],
+        {'status': status,
+         'message': message,
+         'edge_list': [(0, 1), (0, 2)...],
          'node_labels': [(0, 'label0'), (1, 'label1'), ...]}
 
     Raises
@@ -46,4 +48,6 @@ def artifact_get_graph(self, artifact_id, direction, user_id):
     node_labels = [(n.id, 'longer descriptive name for %d' % n.id)
                    for n in G.nodes()]
     return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
-            'node_labels': node_labels}
+            'node_labels': node_labels,
+            'status': 'success',
+            'message': ''}
