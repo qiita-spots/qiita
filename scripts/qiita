@@ -19,6 +19,8 @@ import tornado.ioloop
 from psycopg2 import OperationalError
 from future.utils import viewitems
 from os.path import join, abspath, dirname
+from os import environ
+from imp import reload
 
 from qiita_db.util import (get_filepath_types, get_filetypes,
                            get_data_types,
@@ -43,6 +45,7 @@ from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
 from qiita_ware.processing_pipeline import generate_demux_file
 from qiita_ware.context import system_call, ComputeError
+from qiita_core import qiita_settings
 from moi import r_client
 
 
@@ -56,8 +59,18 @@ else:
 
 
 @click.group()
-def qiita():
-    pass
+@click.option('--config-fp', default=ConfigurationManager().conf_fp,
+              show_default=True,
+              type=click.Path(exists=True, dir_okay=False, readable=True,
+                              resolve_path=True),
+              help="Qiita configuration file to use globally.")
+def qiita(config_fp):
+    """Command line utility to interact with Qiita and its main components"""
+
+    # with the updated envrionment variable, reload the config files
+    if config_fp != ConfigurationManager().conf_fp:
+        environ['QIITA_CONFIG_FP'] = config_fp
+        reload(qiita_settings)
 
 
 @qiita.group()
