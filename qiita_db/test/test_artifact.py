@@ -656,6 +656,14 @@ class ArtifactTests(TestCase):
         self.assertEqual(qdb.artifact.Artifact(3).children, [])
         self.assertEqual(qdb.artifact.Artifact(4).children, [])
 
+    def test_youngest_artifact(self):
+        exp = qdb.artifact.Artifact(4)
+        self.assertEqual(qdb.artifact.Artifact(1).youngest_artifact, exp)
+        self.assertEqual(qdb.artifact.Artifact(2).youngest_artifact, exp)
+        self.assertEqual(qdb.artifact.Artifact(3).youngest_artifact,
+                         qdb.artifact.Artifact(3))
+        self.assertEqual(qdb.artifact.Artifact(4).youngest_artifact, exp)
+
     def test_prep_templates(self):
         self.assertEqual(
             qdb.artifact.Artifact(1).prep_templates,

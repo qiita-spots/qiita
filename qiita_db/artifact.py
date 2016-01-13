@@ -828,6 +828,31 @@ class Artifact(qdb.base.QiitaObject):
                     for c_id in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
+    def youngest_artifact(self):
+        """Returns the youngest artifact of the artifact's lineage
+
+        Returns
+        -------
+        qiita_db.artifact.Artifact
+            The youngest descendant of the artifact's lineage
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_id
+                     FROM qiita.artifact_descendants(%s)
+                        JOIN qiita.artifact USING (artifact_id)
+                     ORDER BY generated_timestamp DESC
+                     LIMIT 1"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            a_id = qdb.sql_connection.TRN.execute_fetchindex()
+            # If the current artifact has no children, the previous call will
+            # return an empty list, so the youngest artifact in the lineage is
+            # the current artifact. On the other hand, if it has descendants,
+            # the id of the youngest artifact will be in a_id[0][0]
+            result = Artifact(a_id[0][0]) if a_id else self
+
+        return result
+
+    @property
     def prep_templates(self):
         """The prep templates attached to this artifact
 
