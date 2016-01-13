@@ -140,7 +140,7 @@ class Artifact(qdb.base.QiitaObject):
         return instance
 
     @classmethod
-    def create(cls, filepaths, artifact_type, prep_template=None,
+    def create(cls, filepaths, artifact_type, name=None, prep_template=None,
                parents=None, processing_parameters=None,
                can_be_submitted_to_ebi=False, can_be_submitted_to_vamps=False):
         r"""Creates a new artifact in the system
@@ -166,6 +166,8 @@ class Artifact(qdb.base.QiitaObject):
             file path and the second one is the file path type id
         artifact_type : str
             The type of the artifact
+        name : str, optional
+            The artifact's name
         prep_template : qiita_db.metadata_template.PrepTemplate, optional
             If the artifact is being uploaded by the user, the prep template
             to which the artifact should be linked to. If not provided,
@@ -315,6 +317,9 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
+            if name:
+                instance.name = name
+
         return instance
 
     @classmethod
@@ -403,6 +408,46 @@ class Artifact(qdb.base.QiitaObject):
             # Delete the row in the artifact table
             sql = "DELETE FROM qiita.artifact WHERE artifact_id = %s"
             qdb.sql_connection.TRN.add(sql, [artifact_id])
+
+    @property
+    def name(self):
+        """The name of the artifact
+
+        Returns
+        -------
+        str
+            The artifact name
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name
+                     FROM qiita.artifact
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @name.setter
+    def name(self, value):
+        """Set the name of the artifact
+
+        Parameters
+        ----------
+        value : str
+            The new artifact's name
+
+        Raises
+        ------
+        ValueError
+            If `value` contains more than 35 chars
+        """
+        if len(value) > 35:
+            raise ValueError("The name of an artifact cannot exceed 35 chars. "
+                             "Current length: %d" % len(value))
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.artifact
+                     SET name = %s
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [value, self.id])
+            qdb.sql_connection.TRN.execute()
 
     @property
     def timestamp(self):
@@ -781,6 +826,31 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return [Artifact(c_id)
                     for c_id in qdb.sql_connection.TRN.execute_fetchflatten()]
+
+    @property
+    def youngest_artifact(self):
+        """Returns the youngest artifact of the artifact's lineage
+
+        Returns
+        -------
+        qiita_db.artifact.Artifact
+            The youngest descendant of the artifact's lineage
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_id
+                     FROM qiita.artifact_descendants(%s)
+                        JOIN qiita.artifact USING (artifact_id)
+                     ORDER BY generated_timestamp DESC
+                     LIMIT 1"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            a_id = qdb.sql_connection.TRN.execute_fetchindex()
+            # If the current artifact has no children, the previous call will
+            # return an empty list, so the youngest artifact in the lineage is
+            # the current artifact. On the other hand, if it has descendants,
+            # the id of the youngest artifact will be in a_id[0][0]
+            result = Artifact(a_id[0][0]) if a_id else self
+
+        return result
 
     @property
     def prep_templates(self):
