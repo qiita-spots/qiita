@@ -30,6 +30,35 @@ pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
 pip install qiita-spots
 ```
 
+Install Qiita development version and its python dependencies
+-------------------------------------------------------------
+
+You can also use pip to install the development version of Qiita:
+
+```bash
+pip install numpy
+pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
+```
+
+Clone the git repository with the development version of Qiita:
+
+```bash
+git clone https://github.com/biocore/qiita.git
+```
+
+Install Qiita:
+```bash
+cd qiita
+pip install . -e
+```
+
+You will also need to install the target gene plugin for Qiita to be fully functional.
+However, the plugin is already included in the repository so to install it simply execute:
+```bash
+cd qiita_plugins/target_gene
+pip install . -e
+```
+
 Qiita configuration
 ===================
 After these commands are executed, you will need to:
