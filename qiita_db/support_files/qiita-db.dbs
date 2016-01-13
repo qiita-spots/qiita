@@ -842,6 +842,26 @@
 				<column name="client_id" />
 			</index>
 		</table>
+		<table name="oauth_software" >
+			<column name="software_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="client_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_oauth_software" unique="PRIMARY_KEY" >
+				<column name="software_id" />
+				<column name="client_id" />
+			</index>
+			<index name="idx_oauth_software" unique="NORMAL" >
+				<column name="software_id" />
+			</index>
+			<index name="idx_oauth_software" unique="NORMAL" >
+				<column name="client_id" />
+			</index>
+			<fk name="fk_oauth_software_software" to_schema="qiita" to_table="software" >
+				<fk_column name="software_id" pk="software_id" />
+			</fk>
+			<fk name="fk_oauth_software" to_schema="qiita" to_table="oauth_identifiers" >
+				<fk_column name="client_id" pk="client_id" />
+			</fk>
+		</table>
 		<table name="ontology" >
 			<column name="ontology_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="ontology" type="varchar" jt="12" mandatory="y" />
@@ -1529,7 +1549,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="45" y="1695" />
 		<entity schema="qiita" name="job_results_filepath" color="c0d4f3" x="405" y="1020" />
 		<entity schema="qiita" name="analysis_job" color="d0def5" x="285" y="1095" />
-		<entity schema="qiita" name="analysis_chain" color="c0d4f3" x="60" y="1095" />
 		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="270" y="1485" />
 		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="300" y="1650" />
 		<entity schema="qiita" name="analysis_users" color="d0def5" x="60" y="900" />
@@ -1561,7 +1580,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_prep_template" color="d0def5" x="1590" y="480" />
 		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1470" y="345" />
 		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1335" y="255" />
-		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="885" />
 		<entity schema="qiita" name="portal_type" color="c0d4f3" x="720" y="510" />
 		<entity schema="qiita" name="analysis_portal" color="a8c4ef" x="180" y="795" />
 		<entity schema="qiita" name="message_user" color="a8c4ef" x="1230" y="1320" />
@@ -1704,5 +1722,26 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="software_publication" />
 			<entity schema="qiita" name="study_publication" />
 		</group>
+		<group name="Group_oauth2" color="ccffcc" >
+			<entity schema="qiita" name="oauth_identifiers" />
+			<entity schema="qiita" name="oauth_software" />
+		</group>
+		<script name="Sql" id="SQL5888335" confirmed="y" >
+			<string><![CDATA[CREATE TABLE oauth_software (
+	software_id          bigint  NOT NULL,
+	client_id            bigint  NOT NULL,
+	CONSTRAINT idx_oauth_software PRIMARY KEY ( software_id, client_id )
+ ) ;
+
+CREATE INDEX idx_oauth_software ON oauth_software ( software_id ) ;
+
+CREATE INDEX idx_oauth_software ON oauth_software ( client_id ) ;
+
+ALTER TABLE oauth_software ADD CONSTRAINT fk_oauth_software_software FOREIGN KEY ( software_id ) REFERENCES software( software_id )    ;
+
+ALTER TABLE oauth_software ADD CONSTRAINT fk_oauth_software FOREIGN KEY ( client_id ) REFERENCES oauth_identifiers( client_id )    ;
+
+]]></string>
+		</script>
 	</layout>
 </project>
