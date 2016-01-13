@@ -27,7 +27,7 @@ from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
                                              looks_like_qiime_mapping_file)
 from qiita_db.metadata_template.constants import SAMPLE_TEMPLATE_COLUMNS
-from qiita_db.util import convert_to_id, get_mountpoint
+from qiita_db.util import convert_to_id, get_mountpoint, infer_status
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBExecutionError, QiitaDBDuplicateError,
                                  QiitaDBDuplicateHeaderError, QiitaDBError)
@@ -82,6 +82,28 @@ def _to_int(value):
     except ValueError:
         raise HTTPError(500, "%s cannot be converted to an integer" % value)
     return res
+
+
+def _propagate_visibility(artifact):
+    """Propagates the visibility of an artifact to all its ancestors
+
+    Parameters
+    ----------
+    artifact : qiita_db.artifact.Artifact
+        The artifact to propagate the visibility for
+
+    Notes
+    -----
+    This is emulating the previous functionality, in which the status of the
+    processed data was propagated to the preprocessed/raw data that was used
+    to generate such processed data. In the current interface, only the status
+    of the BIOM artifacts (processed data) can be changed, so this works as
+    expected.
+    """
+    for a in artifact.ancestors.nodes():
+        visibilities = [[c.visibility] for c in a.descendants.nodes()
+                        if c.artifact_type == 'BIOM']
+        a.visibility = infer_status(visibilities)
 
 
 class StudyDescriptionHandler(BaseHandler):
@@ -436,6 +458,7 @@ class StudyDescriptionHandler(BaseHandler):
         pd_id = int(self.get_argument('pd_id'))
         pd = Artifact(pd_id)
         pd.visibility = 'public'
+        _propagate_visibility(pd)
         msg = "Processed data set to public"
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
@@ -458,6 +481,7 @@ class StudyDescriptionHandler(BaseHandler):
             pd_id = int(self.get_argument('pd_id'))
             pd = Artifact(pd_id)
             pd.visibility = 'private'
+            _propagate_visibility(pd)
             msg = "Processed data approved"
             msg_level = "success"
         else:
@@ -483,6 +507,7 @@ class StudyDescriptionHandler(BaseHandler):
         pd_id = int(self.get_argument('pd_id'))
         pd = Artifact(pd_id)
         pd.visibility = 'awaiting_approval'
+        _propagate_visibility(pd)
         msg = "Processed data sent to admin for approval"
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
@@ -504,6 +529,7 @@ class StudyDescriptionHandler(BaseHandler):
         pd_id = int(self.get_argument('pd_id'))
         pd = Artifact(pd_id)
         pd.visibility = 'sandbox'
+        _propagate_visibility(pd)
         msg = "Processed data reverted to sandbox"
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))

@@ -10,7 +10,6 @@ from os.path import join, exists
 from functools import partial
 from os import makedirs
 
-import requests
 import pandas as pd
 from h5py import File
 # Currently the EBI submission is not part of the target gene plugin
@@ -18,16 +17,14 @@ from h5py import File
 # qiita_ware. Plans are to the EBI submission to the target gene plugin
 from qiita_ware.demux import to_hdf5
 
-from tgp.util import execute_request_retry
 
-
-def get_artifact_information(server_url, artifact_id):
+def get_artifact_information(qclient, artifact_id):
     """Retrieves the artifact information for running split libraries
 
     Parameters
     ----------
-    server_url : str
-        The URL of the server
+    qclient : tgp.qiita_client.QiitaClient
+        The Qiita server client
     artifact_id : str
         The artifact id
 
@@ -44,8 +41,7 @@ def get_artifact_information(server_url, artifact_id):
         If there is any problem gathering the information from the server
     """
     # Get the artifact filepath information
-    url = "%s/qiita_db/artifacts/%s/filepaths/" % (server_url, artifact_id)
-    fps_info = execute_request_retry(requests.get, url)
+    fps_info = qclient.get("/qiita_db/artifacts/%s/filepaths/" % artifact_id)
     if not fps_info or not fps_info['success']:
         error_msg = "Could not get artifact filepath information: %s"
         if fps_info:
@@ -56,8 +52,8 @@ def get_artifact_information(server_url, artifact_id):
     fps = fps_info['filepaths']
 
     # Get the artifact metadata
-    url = "%s/qiita_db/artifacts/%s/mapping/" % (server_url, artifact_id)
-    metadata_info = execute_request_retry(requests.get, url)
+    metadata_info = qclient.get(
+        "/qiita_db/artifacts/%s/mapping/" % artifact_id)
     if not metadata_info or not metadata_info['success']:
         error_msg = "Could not get artifact metadata information %s"
         if metadata_info:
@@ -68,8 +64,7 @@ def get_artifact_information(server_url, artifact_id):
     mapping_file = metadata_info['mapping']
 
     # Get the artifact type
-    url = "%s/qiita_db/artifacts/%s/type/" % (server_url, artifact_id)
-    type_info = execute_request_retry(requests.get, url)
+    type_info = qclient.get("/qiita_db/artifacts/%s/type/" % artifact_id)
     if not type_info or not type_info['success']:
         error_msg = "Could not get artifact metadata information %s"
         if type_info:

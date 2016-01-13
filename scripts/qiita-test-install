@@ -297,6 +297,11 @@ Qiita version and configuration tests
 =====================================
 """
 
+qiita_plugins_header = """
+Qiita plugins
+=============
+"""
+
 
 def main():
     system_info = [
@@ -415,6 +420,28 @@ def main():
     for v in qiita_config_info:
         if v != ('Extra info', None):
             print "%*s:\t%s" % (max_len, v[0], v[1])
+
+    print qiita_plugins_header
+    if not psql_running:
+        print "PostgreSQL not running, can't retrieve plugin information"
+    else:
+        try:
+            import qiita_db as qdb
+            with qdb.sql_connection.TRN:
+                sql = """SELECT name, version, client_id, client_secret
+                         FROM qiita.software
+                            JOIN qiita.oauth_software USING (software_id)
+                            JOIN qiita.oauth_identifiers USING (client_id)"""
+                qdb.sql_connection.TRN.add(sql)
+                res = qdb.sql_connection.TRN.execute_fetchindex()
+                for name, version, client_id, client_secret in res:
+                    print "Plugin name: %s" % name
+                    print "\tVersion: %s" % version
+                    print "\tClient id: %s" % client_id
+                    print "\tClient secret: %s" % client_secret
+        except Exception as e:
+            print ("An error occurred while retrieving plugin information: %s"
+                   % str(e))
 
     print qiita_config_tests_header
     suite = TestLoader().loadTestsFromTestCase(QiitaConfig)
