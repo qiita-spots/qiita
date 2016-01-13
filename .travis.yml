@@ -28,6 +28,9 @@ install:
   - source activate env_name
   - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
   - travis_retry pip install .
+  - pushd qiita_plugins/target_gene
+  - travis_retry pip install .
+  - popd
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
