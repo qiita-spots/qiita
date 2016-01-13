@@ -308,7 +308,7 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1225' y='1303' width='310' height='2' />
 
 <!-- ============= Group 'Group_artifact' ============= -->
-<rect class='grp' style='fill:#ffcccc;stroke:#e0c5c5' x='1034' y='670' width='677' height='380' />
+<rect class='grp' style='fill:#ffcccc;stroke:#e0c5c5' x='1034' y='670' width='677' height='410' />
 <text x='1045' y='685'>Group_artifact</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1045' y='688' width='655' height='2' />
 
@@ -712,12 +712,7 @@ table {
 	study_sample references study ( study_id )</title>
 </path>
 <text x='1612' y='175' transform='rotate(0 1612,175)' title='Foreign Key fk_required_sample_info_study
-	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1335 960 L 1327,960 Q 1320,960 1320,952 L 1320,945' >
-	<title>Foreign Key fk_ebi_run_accession_artifact
-	ebi_run_accession references artifact ( artifact_id )</title>
-</path>
-<text x='1283' y='955' transform='rotate(0 1283,955)' title='Foreign Key fk_ebi_run_accession_artifact
-	ebi_run_accession references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 705 L 2107,705 Q 2100,705 2100,697 L 2100,630' >
+	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2325 705 L 2107,705 Q 2100,705 2100,697 L 2100,630' >
 	<title>Foreign Key fk_study_publication_study
 	study_publication references study ( study_id )</title>
 </path>
@@ -737,7 +732,7 @@ table {
 	reference references filepath ( taxonomy_filepath -> filepath_id )</title>
 </path>
 <text x='1672' y='1300' transform='rotate(0 1672,1300)' title='Foreign Key fk_reference_taxonomy_filepath
-	reference references filepath ( taxonomy_filepath -> filepath_id )' style='fill:#a1a0a0;'>taxonomy_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1770 1320 L 1567,1320 Q 1560,1320 1560,1312 L 1560,1057 Q 1560,1050 1552,1050 L 952,1050 Q 945,1050 945,1042 L 945,922 Q 945,915 937,915 L 810,915' >
+	reference references filepath ( taxonomy_filepath -> filepath_id )' style='fill:#a1a0a0;'>taxonomy_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1770 1320 L 1567,1320 Q 1560,1320 1560,1312 L 1560,1087 Q 1560,1080 1552,1080 L 952,1080 Q 945,1080 945,1072 L 945,922 Q 945,915 937,915 L 810,915' >
 	<title>Foreign Key fk_reference_tree_filepath
 	reference references filepath ( tree_filepath -> filepath_id )</title>
 </path>
@@ -747,27 +742,7 @@ table {
 	software_command references software ( software_id )</title>
 </path>
 <text x='2032' y='760' transform='rotate(0 2032,760)' title='Foreign Key fk_soft_command_software
-	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 915 L 1177,915 Q 1170,915 1170,922 L 1170,930' >
-	<title>Foreign Key fk_artifact_visibility
-	artifact references visibility ( visibility_id )</title>
-</path>
-<text x='1127' y='910' transform='rotate(0 1127,910)' title='Foreign Key fk_artifact_visibility
-	artifact references visibility ( visibility_id )' style='fill:#a1a0a0;'>visibility_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 855 L 1417,855 Q 1425,855 1425,847 L 1425,825' >
-	<title>Foreign Key fk_artifact_filetype
-	artifact references artifact_type ( artifact_type_id )</title>
-</path>
-<text x='1402' y='850' transform='rotate(0 1402,850)' title='Foreign Key fk_artifact_filetype
-	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 870 L 1912,870 Q 1920,870 1920,862 L 1920,855' >
-	<title>Foreign Key fk_artifact_soft_command
-	artifact references software_command ( command_id )</title>
-</path>
-<text x='1402' y='865' transform='rotate(0 1402,865)' title='Foreign Key fk_artifact_soft_command
-	artifact references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 945 L 1215,1132 Q 1215,1140 1207,1140 L 787,1140 Q 780,1140 780,1147 L 780,1155' >
-	<title>Foreign Key fk_artifact_data_type
-	artifact references data_type ( data_type_id )</title>
-</path>
-<text x='1228' y='945' transform='rotate(90 1228,945)' title='Foreign Key fk_artifact_data_type
-	artifact references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1785 1095 L 1012,1095 Q 1005,1095 1005,1087 L 1005,412 Q 1005,405 997,405 L 480,405' >
+	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1785 1095 L 1012,1095 Q 1005,1095 1005,1087 L 1005,412 Q 1005,405 997,405 L 480,405' >
 	<title>Foreign Key fk_processing_job_qiita_user
 	processing_job references qiita_user ( email )</title>
 </path>
@@ -797,7 +772,7 @@ table {
 	command_parameter references software_command ( command_id )</title>
 </path>
 <text x='2048' y='1015' transform='rotate(0 2048,1015)' title='Foreign Key fk_command_parameter
-	command_parameter references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1770 930 L 1507,930 Q 1500,930 1500,922 L 1500,922 Q 1500,915 1492,915 L 1395,915' >
+	command_parameter references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1770 930 L 1395,930' >
 	<title>Foreign Key fk_artifact_processing_job
 	artifact_processing_job references artifact ( artifact_id )</title>
 </path>
@@ -837,7 +812,32 @@ table {
 	analysis_chain references analysis ( child_id -> analysis_id )</title>
 </path>
 <text x='157' y='1120' transform='rotate(0 157,1120)' title='Foreign Key fk_analysis_chain_0
-	analysis_chain references analysis ( child_id -> analysis_id )' style='fill:#a1a0a0;'>child_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	analysis_chain references analysis ( child_id -> analysis_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1185 915 L 1177,915 Q 1170,915 1170,922 L 1170,930' >
+	<title>Foreign Key fk_artifact_visibility
+	artifact references visibility ( visibility_id )</title>
+</path>
+<text x='1127' y='910' transform='rotate(0 1127,910)' title='Foreign Key fk_artifact_visibility
+	artifact references visibility ( visibility_id )' style='fill:#a1a0a0;'>visibility_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 855 L 1417,855 Q 1425,855 1425,847 L 1425,825' >
+	<title>Foreign Key fk_artifact_filetype
+	artifact references artifact_type ( artifact_type_id )</title>
+</path>
+<text x='1402' y='850' transform='rotate(0 1402,850)' title='Foreign Key fk_artifact_filetype
+	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1395 870 L 1912,870 Q 1920,870 1920,862 L 1920,855' >
+	<title>Foreign Key fk_artifact_soft_command
+	artifact references software_command ( command_id )</title>
+</path>
+<text x='1402' y='865' transform='rotate(0 1402,865)' title='Foreign Key fk_artifact_soft_command
+	artifact references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 960 L 1215,1132 Q 1215,1140 1207,1140 L 787,1140 Q 780,1140 780,1147 L 780,1155' >
+	<title>Foreign Key fk_artifact_data_type
+	artifact references data_type ( data_type_id )</title>
+</path>
+<text x='1228' y='960' transform='rotate(90 1228,960)' title='Foreign Key fk_artifact_data_type
+	artifact references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1395 960 L 1395,945' >
+	<title>Foreign Key fk_ebi_run_accession_artifact
+	ebi_run_accession references artifact ( artifact_id )</title>
+</path>
+<text x='1397' y='955' transform='rotate(270 1397,955)' title='Foreign Key fk_ebi_run_accession_artifact
+	ebi_run_accession references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1679,19 +1679,6 @@ Referred by ebi_run_accession ( sample_id ) </title></a>
   <a xlink:href='#study_sample.ebi_sample_accession'><text x='1473' y='217'>ebi_sample_accession</text><title>ebi_sample_accession varchar</title></a>
   <a xlink:href='#study_sample.biosample_accession'><text x='1473' y='232'>biosample_accession</text><title>biosample_accession varchar</title></a>
 
-<!-- ============= Table 'ebi_run_accession' ============= -->
-<rect class='table' x='1350' y='938' width='135' height='90' rx='7' ry='7' />
-<path d='M 1350.50 964.50 L 1350.50 945.50 Q 1350.50 938.50 1357.50 938.50 L 1477.50 938.50 Q 1484.50 938.50 1484.50 945.50 L 1484.50 964.50 L1350.50 964.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#ebi_run_accession'><text x='1367' y='952' class='tableTitle'>ebi_run_accession</text><title>Table qiita.ebi_run_accession</title></a>
-  <use id='nn' x='1352' y='972' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.sample_id'><use id='pk' x='1352' y='971' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) Index  ( sample_id ) </title></a>
-<a xlink:href='#ebi_run_accession.sample_id'><text x='1368' y='982'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#ebi_run_accession.sample_id'><use id='fk' x='1473' y='971' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
-  <use id='nn' x='1352' y='987' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.artifact_id'><use id='pk' x='1352' y='986' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) Index  ( artifact_id ) </title></a>
-<a xlink:href='#ebi_run_accession.artifact_id'><text x='1368' y='997'>artifact_id</text><title>artifact_id bigint not null</title></a>
-<a xlink:href='#ebi_run_accession.artifact_id'><use id='fk' x='1473' y='986' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
-  <use id='nn' x='1352' y='1002' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.ebi_run_accession'><use id='pk' x='1352' y='1001' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) </title></a>
-<a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1368' y='1012'>ebi_run_accession</text><title>ebi_run_accession bigint not null</title></a>
-
 <!-- ============= Table 'artifact_type' ============= -->
 <rect class='table' x='1410' y='728' width='120' height='90' rx='7' ry='7' />
 <path d='M 1410.50 754.50 L 1410.50 735.50 Q 1410.50 728.50 1417.50 728.50 L 1522.50 728.50 Q 1529.50 728.50 1529.50 735.50 L 1529.50 754.50 L1410.50 754.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1782,41 +1769,6 @@ Referred by processing_job ( command_id ) </title></a>
 <a xlink:href='#software_command.software_id'><text x='1923' y='817'>software_id</text><title>software_id bigint not null</title></a>
 <a xlink:href='#software_command.software_id'><use id='fk' x='2013' y='806' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
   <use id='nn' x='1907' y='822' xlink:href='#nn'/><a xlink:href='#software_command.description'><text x='1923' y='832'>description</text><title>description varchar not null</title></a>
-
-<!-- ============= Table 'artifact' ============= -->
-<rect class='table' x='1200' y='743' width='195' height='195' rx='7' ry='7' />
-<path d='M 1200.50 769.50 L 1200.50 750.50 Q 1200.50 743.50 1207.50 743.50 L 1387.50 743.50 Q 1394.50 743.50 1394.50 750.50 L 1394.50 769.50 L1200.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#artifact'><text x='1278' y='757' class='tableTitle'>artifact</text><title>Table qiita.artifact
-Represents data in the system</title></a>
-  <use id='nn' x='1202' y='777' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1202' y='776' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
-<a xlink:href='#artifact.artifact_id'><text x='1218' y='787'>artifact_id</text><title>artifact_id bigserial not null</title></a>
-<a xlink:href='#artifact.artifact_id'><use id='ref' x='1383' y='776' xlink:href='#ref'/><title>Referred by analysis_sample ( artifact_id ) 
-Referred by artifact_filepath ( artifact_id ) 
-Referred by artifact_processing_job ( artifact_id ) 
-Referred by ebi_run_accession ( artifact_id ) 
-Referred by parent_artifact ( artifact_id ) 
-Referred by parent_artifact ( parent_id -> artifact_id ) 
-Referred by prep_template ( artifact_id ) 
-Referred by study_artifact ( artifact_id ) </title></a>
-  <use id='nn' x='1202' y='792' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='802'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
-  <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='806' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
-<a xlink:href='#artifact.command_id'><text x='1218' y='817'>command_id</text><title>command_id bigint</title></a>
-<a xlink:href='#artifact.command_id'><use id='fk' x='1383' y='806' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
-  <a xlink:href='#artifact.command_parameters'><text x='1218' y='832'>command_parameters</text><title>command_parameters varchar
-Varchar in dbschema but is JSON in the postgresDB</title></a>
-  <use id='nn' x='1202' y='837' xlink:href='#nn'/><a xlink:href='#artifact.visibility_id'><use id='idx' x='1202' y='836' xlink:href='#idx'/><title>Index  ( visibility_id ) </title></a>
-<a xlink:href='#artifact.visibility_id'><text x='1218' y='847'>visibility_id</text><title>visibility_id bigint not null
-If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public</title></a>
-<a xlink:href='#artifact.visibility_id'><use id='fk' x='1383' y='836' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
-  <a xlink:href='#artifact.artifact_type_id'><use id='idx' x='1202' y='851' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
-<a xlink:href='#artifact.artifact_type_id'><text x='1218' y='862'>artifact_type_id</text><title>artifact_type_id integer</title></a>
-<a xlink:href='#artifact.artifact_type_id'><use id='fk' x='1383' y='851' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
-  <use id='nn' x='1202' y='867' xlink:href='#nn'/><a xlink:href='#artifact.data_type_id'><use id='idx' x='1202' y='866' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
-<a xlink:href='#artifact.data_type_id'><text x='1218' y='877'>data_type_id</text><title>data_type_id bigint not null</title></a>
-<a xlink:href='#artifact.data_type_id'><use id='fk' x='1383' y='866' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
-  <use id='nn' x='1202' y='882' xlink:href='#nn'/><a xlink:href='#artifact.can_be_submitted_to_ebi'><text x='1218' y='892'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
-  <use id='nn' x='1202' y='897' xlink:href='#nn'/><a xlink:href='#artifact.can_be_submitted_to_vamps'><text x='1218' y='907'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
-  <use id='nn' x='1202' y='912' xlink:href='#nn'/><a xlink:href='#artifact.submitted_to_vamps'><text x='1218' y='922'>submitted_to_vamps</text><title>submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
 
 <!-- ============= Table 'processing_job_status' ============= -->
 <rect class='table' x='2025' y='1133' width='225' height='90' rx='7' ry='7' />
@@ -1976,6 +1928,55 @@ Keeps track of the chain of analysis edits&#046; Tracks what previous analysis a
   <use id='nn' x='62' y='1137' xlink:href='#nn'/><a xlink:href='#analysis_chain.child_id'><use id='pk' x='62' y='1136' xlink:href='#pk'/><title>Index  ( child_id ) Primary Key  ( parent_id, child_id ) </title></a>
 <a xlink:href='#analysis_chain.child_id'><text x='78' y='1147'>child_id</text><title>child_id bigint not null</title></a>
 <a xlink:href='#analysis_chain.child_id'><use id='fk' x='138' y='1136' xlink:href='#fk'/><title>References analysis ( child_id -> analysis_id ) </title></a>
+
+<!-- ============= Table 'artifact' ============= -->
+<rect class='table' x='1200' y='743' width='195' height='210' rx='7' ry='7' />
+<path d='M 1200.50 769.50 L 1200.50 750.50 Q 1200.50 743.50 1207.50 743.50 L 1387.50 743.50 Q 1394.50 743.50 1394.50 750.50 L 1394.50 769.50 L1200.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#artifact'><text x='1278' y='757' class='tableTitle'>artifact</text><title>Table qiita.artifact
+Represents data in the system</title></a>
+  <use id='nn' x='1202' y='777' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1202' y='776' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
+<a xlink:href='#artifact.artifact_id'><text x='1218' y='787'>artifact_id</text><title>artifact_id bigserial not null</title></a>
+<a xlink:href='#artifact.artifact_id'><use id='ref' x='1383' y='776' xlink:href='#ref'/><title>Referred by analysis_sample ( artifact_id ) 
+Referred by artifact_filepath ( artifact_id ) 
+Referred by artifact_processing_job ( artifact_id ) 
+Referred by ebi_run_accession ( artifact_id ) 
+Referred by parent_artifact ( artifact_id ) 
+Referred by parent_artifact ( parent_id -> artifact_id ) 
+Referred by prep_template ( artifact_id ) 
+Referred by study_artifact ( artifact_id ) </title></a>
+  <use id='nn' x='1202' y='792' xlink:href='#nn'/><a xlink:href='#artifact.name'><text x='1218' y='802'>name</text><title>name varchar&#040;35&#041; not null</title></a>
+  <use id='nn' x='1202' y='807' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='817'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
+  <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='821' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
+<a xlink:href='#artifact.command_id'><text x='1218' y='832'>command_id</text><title>command_id bigint</title></a>
+<a xlink:href='#artifact.command_id'><use id='fk' x='1383' y='821' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <a xlink:href='#artifact.command_parameters'><text x='1218' y='847'>command_parameters</text><title>command_parameters varchar
+Varchar in dbschema but is JSON in the postgresDB</title></a>
+  <use id='nn' x='1202' y='852' xlink:href='#nn'/><a xlink:href='#artifact.visibility_id'><use id='idx' x='1202' y='851' xlink:href='#idx'/><title>Index  ( visibility_id ) </title></a>
+<a xlink:href='#artifact.visibility_id'><text x='1218' y='862'>visibility_id</text><title>visibility_id bigint not null
+If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public</title></a>
+<a xlink:href='#artifact.visibility_id'><use id='fk' x='1383' y='851' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
+  <a xlink:href='#artifact.artifact_type_id'><use id='idx' x='1202' y='866' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
+<a xlink:href='#artifact.artifact_type_id'><text x='1218' y='877'>artifact_type_id</text><title>artifact_type_id integer</title></a>
+<a xlink:href='#artifact.artifact_type_id'><use id='fk' x='1383' y='866' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
+  <use id='nn' x='1202' y='882' xlink:href='#nn'/><a xlink:href='#artifact.data_type_id'><use id='idx' x='1202' y='881' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#artifact.data_type_id'><text x='1218' y='892'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#artifact.data_type_id'><use id='fk' x='1383' y='881' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
+  <use id='nn' x='1202' y='897' xlink:href='#nn'/><a xlink:href='#artifact.can_be_submitted_to_ebi'><text x='1218' y='907'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
+  <use id='nn' x='1202' y='912' xlink:href='#nn'/><a xlink:href='#artifact.can_be_submitted_to_vamps'><text x='1218' y='922'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+  <use id='nn' x='1202' y='927' xlink:href='#nn'/><a xlink:href='#artifact.submitted_to_vamps'><text x='1218' y='937'>submitted_to_vamps</text><title>submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+
+<!-- ============= Table 'ebi_run_accession' ============= -->
+<rect class='table' x='1350' y='968' width='135' height='90' rx='7' ry='7' />
+<path d='M 1350.50 994.50 L 1350.50 975.50 Q 1350.50 968.50 1357.50 968.50 L 1477.50 968.50 Q 1484.50 968.50 1484.50 975.50 L 1484.50 994.50 L1350.50 994.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#ebi_run_accession'><text x='1367' y='982' class='tableTitle'>ebi_run_accession</text><title>Table qiita.ebi_run_accession</title></a>
+  <use id='nn' x='1352' y='1002' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.sample_id'><use id='pk' x='1352' y='1001' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) Index  ( sample_id ) </title></a>
+<a xlink:href='#ebi_run_accession.sample_id'><text x='1368' y='1012'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#ebi_run_accession.sample_id'><use id='fk' x='1473' y='1001' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
+  <use id='nn' x='1352' y='1017' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.artifact_id'><use id='pk' x='1352' y='1016' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) Index  ( artifact_id ) </title></a>
+<a xlink:href='#ebi_run_accession.artifact_id'><text x='1368' y='1027'>artifact_id</text><title>artifact_id bigint not null</title></a>
+<a xlink:href='#ebi_run_accession.artifact_id'><use id='fk' x='1473' y='1016' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
+  <use id='nn' x='1352' y='1032' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.ebi_run_accession'><use id='pk' x='1352' y='1031' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) </title></a>
+<a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1368' y='1042'>ebi_run_accession</text><title>ebi_run_accession bigint not null</title></a>
 
 </g></svg>
 
@@ -4660,54 +4661,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='ebi_run_accession'>Table ebi_run_accession</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='ebi_run_accession.sample_id'>sample&#095;id</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='ebi_run_accession.artifact_id'>artifact&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='ebi_run_accession.ebi_run_accession'>ebi&#095;run&#095;accession</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;ebi&#095;run&#095;accession primary key</td>
-		<td> ON sample&#095;id&#044; artifact&#095;id&#044; ebi&#095;run&#095;accession</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;ebi&#095;run&#095;accession </td>
-		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;ebi&#095;run&#095;accession </td>
-		<td> ON artifact&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_ebi_run_accession</td>
-		<td > ( sample&#095;id ) ref <a href='#study&#095;sample'>study&#095;sample</a> (sample&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_ebi_run_accession_artifact</td>
-		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='artifact_type'>Table artifact_type</a></th></tr>
 <tr><td colspan='3'>Type of artifact </td></tr>
 </thead>
@@ -4989,108 +4942,6 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_soft_command_software</td>
 		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='artifact'>Table artifact</a></th></tr>
-<tr><td colspan='3'>Represents data in the system </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='artifact.artifact_id'>artifact&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.generated_timestamp'>generated&#095;timestamp</a></td>
-		<td> timestamp  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.command_id'>command&#095;id</a></td>
-		<td> bigint   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.command_parameters'>command&#095;parameters</a></td>
-		<td> varchar   </td>
-		<td> Varchar in dbschema but is JSON in the postgresDB </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.visibility_id'>visibility&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.artifact_type_id'>artifact&#095;type&#095;id</a></td>
-		<td> integer   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.data_type_id'>data&#095;type&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.can_be_submitted_to_ebi'>can&#095;be&#095;submitted&#095;to&#095;ebi</a></td>
-		<td> bool  NOT NULL  DEFO 'FALSE' </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.can_be_submitted_to_vamps'>can&#095;be&#095;submitted&#095;to&#095;vamps</a></td>
-		<td> bool  NOT NULL  DEFO 'FALSE' </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='artifact.submitted_to_vamps'>submitted&#095;to&#095;vamps</a></td>
-		<td> bool  NOT NULL  DEFO 'FALSE' </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;artifact primary key</td>
-		<td> ON artifact&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact&#095;0 </td>
-		<td> ON visibility&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact&#095;1 </td>
-		<td> ON artifact&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact </td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;artifact&#095;2 </td>
-		<td> ON data&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_artifact_visibility</td>
-		<td > ( visibility&#095;id ) ref <a href='#visibility'>visibility</a> (visibility&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_artifact_filetype</td>
-		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_artifact_soft_command</td>
-		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_artifact_data_type</td>
-		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5594,6 +5445,161 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_analysis_chain_0</td>
 		<td > ( child&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='artifact'>Table artifact</a></th></tr>
+<tr><td colspan='3'>Represents data in the system </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='artifact.artifact_id'>artifact&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.name'>name</a></td>
+		<td> varchar&#040; 35 &#041;  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.generated_timestamp'>generated&#095;timestamp</a></td>
+		<td> timestamp  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.command_id'>command&#095;id</a></td>
+		<td> bigint   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.command_parameters'>command&#095;parameters</a></td>
+		<td> varchar   </td>
+		<td> Varchar in dbschema but is JSON in the postgresDB </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.visibility_id'>visibility&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.artifact_type_id'>artifact&#095;type&#095;id</a></td>
+		<td> integer   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.data_type_id'>data&#095;type&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.can_be_submitted_to_ebi'>can&#095;be&#095;submitted&#095;to&#095;ebi</a></td>
+		<td> bool  NOT NULL  DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.can_be_submitted_to_vamps'>can&#095;be&#095;submitted&#095;to&#095;vamps</a></td>
+		<td> bool  NOT NULL  DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact.submitted_to_vamps'>submitted&#095;to&#095;vamps</a></td>
+		<td> bool  NOT NULL  DEFO 'FALSE' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;artifact primary key</td>
+		<td> ON artifact&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;0 </td>
+		<td> ON visibility&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;1 </td>
+		<td> ON artifact&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact </td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;2 </td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_artifact_visibility</td>
+		<td > ( visibility&#095;id ) ref <a href='#visibility'>visibility</a> (visibility&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_artifact_filetype</td>
+		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_artifact_soft_command</td>
+		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_artifact_data_type</td>
+		<td > ( data&#095;type&#095;id ) ref <a href='#data&#095;type'>data&#095;type</a> (data&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='ebi_run_accession'>Table ebi_run_accession</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='ebi_run_accession.sample_id'>sample&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='ebi_run_accession.artifact_id'>artifact&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='ebi_run_accession.ebi_run_accession'>ebi&#095;run&#095;accession</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;ebi&#095;run&#095;accession primary key</td>
+		<td> ON sample&#095;id&#044; artifact&#095;id&#044; ebi&#095;run&#095;accession</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;ebi&#095;run&#095;accession </td>
+		<td> ON sample&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;ebi&#095;run&#095;accession </td>
+		<td> ON artifact&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_ebi_run_accession</td>
+		<td > ( sample&#095;id ) ref <a href='#study&#095;sample'>study&#095;sample</a> (sample&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_ebi_run_accession_artifact</td>
+		<td > ( artifact&#095;id ) ref <a href='#artifact'>artifact</a> (artifact&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
