@@ -49,14 +49,14 @@ git clone https://github.com/biocore/qiita.git
 Install Qiita:
 ```bash
 cd qiita
-pip install . -e
+pip install .
 ```
 
 You will also need to install the target gene plugin for Qiita to be fully functional.
 However, the plugin is already included in the repository so to install it simply execute:
 ```bash
 cd qiita_plugins/target_gene
-pip install . -e
+pip install .
 ```
 
 Qiita configuration
