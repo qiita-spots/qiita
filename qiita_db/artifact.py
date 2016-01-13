@@ -257,8 +257,8 @@ class Artifact(qdb.base.QiitaObject):
 
                 # Create the artifact
                 sql = """INSERT INTO qiita.artifact
-                            (generated_timestamp, command_id,
-                             data_type_id, command_parameters, visibility_id,
+                            (generated_timestamp, command_id, data_type_id,
+                             command_parameters, visibility_id,
                              artifact_type_id, can_be_submitted_to_ebi,
                              can_be_submitted_to_vamps, submitted_to_vamps)
                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -441,7 +441,7 @@ class Artifact(qdb.base.QiitaObject):
         """
         if len(value) > 35:
             raise ValueError("The name of an artifact cannot exceed 35 chars. "
-                             "Current lengths: %d" % len(value))
+                             "Current length: %d" % len(value))
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.artifact
                      SET name = %s
