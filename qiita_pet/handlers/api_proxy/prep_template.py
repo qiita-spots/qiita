@@ -355,8 +355,7 @@ def prep_template_graph_get_req(prep_id, user_id):
     if access_error:
         return access_error
     G = prep.artifact.descendants
-    node_labels = [(n.id, 'Artifact Name for %d - %s' % (n.id,
-                                                         n.artifact_type))
+    node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
                    for n in G.nodes()]
     return {'status': 'success',
             'message': '',
