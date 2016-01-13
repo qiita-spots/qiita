@@ -18,12 +18,12 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .base import QiitaStatusObject
+import qiita_db as qdb
 
 REQUIRED_KEYS = {"name", "description", "contact_person"}
 
 
-class Investigation(QiitaStatusObject):
+class Investigation(qdb.base.QiitaStatusObject):
     """
     Study object to access to the Qiita Study information
 

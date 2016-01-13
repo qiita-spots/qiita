@@ -6,17 +6,16 @@
 
 from os.path import basename
 
-from qiita_db.sql_connection import TRN
-from qiita_db.metadata_template import PrepTemplate
+import qiita_db as qdb
 
-with TRN:
+with qdb.sql_connection.TRN:
     sql = "SELECT prep_template_id FROM qiita.prep_template"
-    TRN.add(sql)
-    all_ids = TRN.execute_fetchflatten()
+    qdb.sql_connection.TRN.add(sql)
+    all_ids = qdb.sql_connection.TRN.execute_fetchflatten()
 
     # remove all the bad mapping files
     for prep_template_id in all_ids:
-        pt = PrepTemplate(prep_template_id)
+        pt = qdb.metadata_template.prep_template.PrepTemplate(prep_template_id)
         fps = pt.get_filepaths()
 
         # get the QIIME mapping file, note that the way to figure out what is
@@ -36,25 +35,25 @@ with TRN:
             sql = """SELECT filepath_id
                      FROM qiita.{0}
                      WHERE {1}=%s AND filepath_id=%s""".format(table, column)
-            TRN.add(sql, [pt.id, mf[0]])
-            ids = TRN.execute_fetchflatten()
+            qdb.sql_connection.TRN.add(sql, [pt.id, mf[0]])
+            ids = qdb.sql_connection.TRN.execute_fetchflatten()
 
             # (2) delete the entries from the prep_template_filepath table
             sql = """DELETE FROM qiita.{0}
                      WHERE {1}=%s and filepath_id=%s""".format(table, column)
-            TRN.add(sql, [pt.id, mf[0]])
+            qdb.sql_connection.TRN.add(sql, [pt.id, mf[0]])
 
             # (3) delete the entries from the filepath table
             sql = "DELETE FROM qiita.filepath WHERE filepath_id IN %s"
-            TRN.add(sql, [tuple(ids)])
+            qdb.sql_connection.TRN.add(sql, [tuple(ids)])
 
-    TRN.execute()
+    qdb.sql_connection.TRN.execute()
 
     # create correct versions of the mapping files
     for prep_template_id in all_ids:
 
         prep_template_id = prep_template_id[0]
-        pt = PrepTemplate(prep_template_id)
+        pt = qdb.metadata_template.prep_template.PrepTemplate(prep_template_id)
 
         # we can guarantee that all the filepaths will be prep templates so
         # we can just generate the qiime mapping files

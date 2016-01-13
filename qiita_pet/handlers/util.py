@@ -61,3 +61,6 @@ study_person_linkifier = partial(
 pubmed_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"http://www.ncbi.nlm.nih.gov/"
     "pubmed/{0}\">{0}</a>")
+
+doi_linkifier = partial(
+    linkify, "<a target=\"_blank\" href=\"http://dx.doi.org/{0}\">{0}</a>")

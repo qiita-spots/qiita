@@ -238,14 +238,15 @@ class QiitaConfig(TestCase):
         if not self.psql_version:
             self.assertTrue(False, 'PostgreSQL not running or configured')
 
-        acceptable_version = (9, 1, 14)
+        acceptable_version = (9, 3, 0)
         string_acceptable_version = '.'.join(map(str, acceptable_version))
         version = tuple(map(int, self.psql_version.split(' ')[1].split('.')))
 
         self.assertTrue(acceptable_version <= version,
-                        'Unsupported PostgreSQL version. You have %s but %s '
-                        'is requiered' % ('.'.join(map(str, version)),
-                                          string_acceptable_version))
+                        'Unsupported PostgreSQL version. You have %s but the '
+                        'minimum required version is %s'
+                        % ('.'.join(map(str, version)),
+                           string_acceptable_version))
 
     def test_redis_version(self):
         if not self.redis_version:
@@ -294,6 +295,11 @@ For definitions of these settings and to learn how to configure Qiita, visit:
 qiita_config_tests_header = """
 Qiita version and configuration tests
 =====================================
+"""
+
+qiita_plugins_header = """
+Qiita plugins
+=============
 """
 
 
@@ -414,6 +420,28 @@ def main():
     for v in qiita_config_info:
         if v != ('Extra info', None):
             print "%*s:\t%s" % (max_len, v[0], v[1])
+
+    print qiita_plugins_header
+    if not psql_running:
+        print "PostgreSQL not running, can't retrieve plugin information"
+    else:
+        try:
+            import qiita_db as qdb
+            with qdb.sql_connection.TRN:
+                sql = """SELECT name, version, client_id, client_secret
+                         FROM qiita.software
+                            JOIN qiita.oauth_software USING (software_id)
+                            JOIN qiita.oauth_identifiers USING (client_id)"""
+                qdb.sql_connection.TRN.add(sql)
+                res = qdb.sql_connection.TRN.execute_fetchindex()
+                for name, version, client_id, client_secret in res:
+                    print "Plugin name: %s" % name
+                    print "\tVersion: %s" % version
+                    print "\tClient id: %s" % client_id
+                    print "\tClient secret: %s" % client_secret
+        except Exception as e:
+            print ("An error occurred while retrieving plugin information: %s"
+                   % str(e))
 
     print qiita_config_tests_header
     suite = TestLoader().loadTestsFromTestCase(QiitaConfig)

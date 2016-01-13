@@ -12,45 +12,28 @@ from __future__ import division, print_function
 import errno
 import socket
 from datetime import datetime, timedelta
+from os.path import join, abspath, dirname
+from future.utils import viewitems
 
 import click
 import tornado.httpserver
 import tornado.ioloop
 from psycopg2 import OperationalError
-from future.utils import viewitems
-from os.path import join, abspath, dirname
+from moi import r_client
 
-from qiita_db.util import (get_filepath_types, get_filetypes,
-                           get_data_types,
-                           get_processed_params_tables,
-                           get_preprocessed_params_tables)
-from qiita_db.commands import (load_sample_template_from_cmd,
-                               load_study_from_cmd,
-                               load_raw_data_cmd, load_processed_data_cmd,
-                               load_preprocessed_data_from_cmd,
-                               load_prep_template_from_cmd,
-                               load_parameters_from_cmd, SUPPORTED_PARAMS,
-                               update_raw_data_from_cmd,
-                               update_preprocessed_data_from_cmd)
-from qiita_db.portal import Portal
-from qiita_db.sql_connection import SQLConnectionHandler
-from qiita_db.exceptions import QiitaDBConnectionError, QiitaDBError
-from qiita_db.reference import Reference
-from qiita_db.logger import LogEntry
-from qiita_db.util import add_system_message, clear_system_messages
+import qiita_db as qdb
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.commands import submit_EBI as _submit_EBI
-from qiita_ware.processing_pipeline import generate_demux_file
 from qiita_ware.context import system_call, ComputeError
-from moi import r_client
 
 
 try:
-    conn = SQLConnectionHandler()
+    conn = qdb.sql_connection.SQLConnectionHandler()
 except OperationalError:
-    raise QiitaDBConnectionError("Database does not exist. See qiita-env "
-                                 "make --help for more information")
+    raise qdb.exceptions.QiitaDBConnectionError(
+        "Database does not exist. See qiita-env make --help for more "
+        "information")
 else:
     del conn
 
@@ -124,7 +107,7 @@ def portal():
               "config file format")
 def load_study(owner, title, info):
     """Loads a study to the database"""
-    study = load_study_from_cmd(owner, title, info)
+    study = qdb.commands.load_study_from_cmd(owner, title, info)
     click.echo("Study successfully added to the database with id %s"
                % study.id)
 
@@ -132,87 +115,63 @@ def load_study(owner, title, info):
 @db.command()
 @click.option('--fp', required=True, type=click.Path(resolve_path=True,
               readable=True, exists=True), multiple=True,
-              help='Path to the raw data file. This option can be used '
-              'multiple times if there are multiple raw data files.')
+              help='Path to the artifact files. This option can be used '
+              'multiple times if there are multiple artifact files.')
 @click.option('--fp_type', required=True, multiple=True, help='Describes the '
               'contents of the file. Pass one fp_type per fp.',
-              type=click.Choice(get_filepath_types().keys()))
-@click.option('--filetype', required=True,
-              type=click.Choice(get_filetypes().keys()),
-              help='The type of data')
-@click.option('--prep_template', multiple=True, help='Associate the data with '
-              'this prep template. This option can be used multiple times if '
-              'the data should be associated with multiple prep templates',
-              type=int, required=True)
-def load_raw(fp, fp_type, filetype, prep_template):
-    """Loads a raw data to the database"""
-    raw_data = load_raw_data_cmd(fp, fp_type, filetype, prep_template)
-    click.echo("Raw data successfully added to the database with id %s"
-               % raw_data.id)
-
-
-@db.command()
-@click.option('--study_id', help="Study id associated with data",
-              required=True)
-@click.option('--params_table', help="Name of the paramaters table for the "
-              "preprocessed data", required=True,
-              type=click.Choice(get_preprocessed_params_tables()))
-@click.option('--filedir', help="Directory containing preprocessed data",
-              required=True)
-@click.option('--filepathtype', help="Describes the contents of the input "
-              "files", required=True,
-              type=click.Choice(get_filepath_types().keys()))
-@click.option('--params_id', required=True,
-              help="id in the paramater table associated with the parameters")
-@click.option('--prep_template_id',
-              help="Prep template id associated with data", default=None)
-@click.option('--data_type', default=None,
-              type=click.Choice(get_data_types()),
-              help="The data type of data")
-def load_preprocessed(study_id, params_table, filedir, filepathtype,
-                      params_id, prep_template_id, data_type):
-    """Loads a preprocessed data to the database"""
-    preproc_data = load_preprocessed_data_from_cmd(
-        study_id, params_table, filedir, filepathtype, params_id,
-        prep_template_id, data_type)
-    click.echo("Preprocessed data successfully added to the database with "
-               "id %s" % preproc_data.id)
+              type=click.Choice(qdb.util.get_filepath_types().keys()))
+@click.option('--artifact_type', required=True, help="The artifact type",
+              type=click.Choice(qdb.util.get_artifact_types().keys()))
+@click.option('--prep_template', required=False,
+              help="The prep template to which the artifact is attached",
+              type=click.IntRange(1))
+@click.option('--parents', required=False, multiple=True,
+              help="The parent artifacts from which the new artifact has been "
+                   "processed",
+              type=click.IntRange(1))
+@click.option('--dflt_params', required=False,
+              help="The default parameter set used to process the new "
+                   "artifact",
+              type=click.IntRange(1))
+@click.option('--required_params', required=False,
+              help="JSON string containing the required parameters used to "
+                   "process the new artifact",
+              type=str)
+@click.option('--optional_params', required=False,
+              help="JSON string containing the optional parameters used to "
+                   "process the new artifact, if different from the "
+                   "defaults",
+              type=str)
+@click.option('--ebi', is_flag=True,
+              help="Pass this flag if the artifact can be submitted to EBI")
+@click.option('--vamps', is_flag=True,
+              help="Pass this flag if the artifact can be submitted to VAMPS")
+def load_artifact(fp, fp_type, artifact_type, prep_template, parents,
+                  dflt_params, required_params, optional_params, ebi, vamps):
+    """Loads an artifact to the database"""
+    artifact = qdb.commands.load_artifact_from_cmd(
+        fp, fp_type, artifact_type, prep_template=prep_template,
+        parents=parents, dflt_params_id=dflt_params,
+        required_params=required_params, optional_params=optional_params,
+        can_be_submitted_to_ebi=ebi, can_be_submitted_to_vamps=vamps)
+    click.echo("Artifact %s successfully created" % artifact.id)
 
 
 @db.command()
 @click.option('--fp', required=True, type=click.Path(resolve_path=True,
-              readable=True, exists=True), multiple=True, help='Path to the '
-              'processed data. This option can be used multilpe times if '
-              'there are multiple processed data files.')
+              readable=True, exists=True), multiple=True,
+              help='Path to the artifact files. This option can be used '
+              'multiple times if there are multiple artifact files.')
 @click.option('--fp_type', required=True, multiple=True, help='Describes the '
               'contents of the file. Pass one fp_type per fp.',
-              type=click.Choice(get_filepath_types().keys()))
-@click.option('--processed_params_table', required=True,
-              type=click.Choice(get_processed_params_tables()),
-              help='The table containing the processed parameters used to '
-              'generate this file')
-@click.option('--processed_params_id', required=True, type=int,
-              help='The ID of the row in the processed_params table')
-@click.option('--preprocessed_data_id', type=int, default=None, help='The '
-              'ID of the row in the preprocessed_data table from which '
-              'this processed data was created')
-@click.option('--study_id', type=int, default=None, help='The '
-              'ID of the row in the study table to which this processed data '
-              'belongs')
-@click.option('--processed_date', type=str, default=None,
-              help='The date to use as the processed_date. Must be '
-              'interpretable  as a datetime. If None, then the current date '
-              'and time will be used.')
-def load_processed(fp, fp_type, processed_params_table,
-                   processed_params_id, preprocessed_data_id, study_id,
-                   processed_date):
-    """Loads a processed data to the database"""
-    proc_data = load_processed_data_cmd(fp, fp_type, processed_params_table,
-                                        processed_params_id,
-                                        preprocessed_data_id, study_id,
-                                        processed_date)
-    click.echo("Processed data successfully added to the database with id %s"
-               % proc_data.id)
+              type=click.Choice(qdb.util.get_filepath_types().keys()))
+@click.option('--artifact_id', required=True,
+              help="The artifact to update",
+              type=click.IntRange(1))
+def update_artifact(fp, fp_type, artifact_id):
+    """Updates an artifact from the database"""
+    artifact = qdb.commands.update_artifact_from_cmd(fp, fp_type, artifact_id)
+    click.echo("Artifact %s successfully updated" % artifact.id)
 
 
 @db.command()
@@ -222,7 +181,7 @@ def load_processed(fp, fp_type, processed_params_table,
               help='Associate the sample template with this study')
 def load_sample_template(fp, study):
     """Loads a sample template to the database"""
-    sample_temp = load_sample_template_from_cmd(fp, study)
+    sample_temp = qdb.commands.load_sample_template_from_cmd(fp, study)
     click.echo("Sample template successfully added to the database with id %s"
                % sample_temp.id)
 
@@ -233,11 +192,12 @@ def load_sample_template(fp, study):
 @click.option('--study', required=True, type=int,
               help='Associate the prep template with this study')
 @click.option('--data_type', required=True,
-              type=click.Choice(get_data_types()),
+              type=click.Choice(qdb.util.get_data_types()),
               help="The data type of data")
 def load_prep_template(fp, study, data_type):
     """Loads a sample template to the database"""
-    prep_template = load_prep_template_from_cmd(fp, study, data_type)
+    prep_template = qdb.commands.load_prep_template_from_cmd(
+        fp, study, data_type)
     click.echo("Prep template successfully added to the database with id %s"
                % prep_template.id)
 
@@ -258,7 +218,8 @@ def load_prep_template(fp, study, data_type):
               help="Path to the reference tree file")
 def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
     """Loads a reference db to the database"""
-    reference = Reference.create(name, version, seq_fp, tax_fp, tree_fp)
+    reference = qdb.reference.Reference.create(
+        name, version, seq_fp, tax_fp, tree_fp)
     click.echo("Reference db successfully added to the database with id %s"
                % reference.id)
 
@@ -266,51 +227,17 @@ def load_reference_db(name, version, seq_fp, tax_fp, tree_fp):
 @db.command()
 @click.argument('fp', required=True,
                 type=click.Path(resolve_path=True, readable=True, exists=True))
-@click.option('--table', required=True, type=click.Choice(SUPPORTED_PARAMS),
-              help='The table to add the parameter set')
+@click.option('--cmd-id', required=True,
+              type=click.IntRange(1, None),
+              help='The command to add the parameter set')
 @click.option('--name', required=True, type=str,
               help='The name of the parameters set')
-def load_parameters(fp, table, name):
+def load_parameters(fp, cmd_id, name):
     """Loads a parameter set to the database"""
-    param = load_parameters_from_cmd(name, fp, table)
-    click.echo("Parameters successfully added to table %s with id %s"
-               % (table, param.id))
+    param = qdb.commands.load_parameters_from_cmd(name, fp, cmd_id)
+    click.echo("Parameters successfully added to the command %s with id %s"
+               % (cmd_id, param.id))
 
-
-@db.command()
-@click.option('--fp', required=True, type=click.Path(resolve_path=True,
-              readable=True, exists=True), multiple=True,
-              help='Path to the raw data file. This option can be used '
-              'multiple times if there are multiple raw data files.')
-@click.option('--fp_type', required=True, multiple=True, help='Describes the '
-              'contents of the file. Pass one fp_type per fp.',
-              type=click.Choice(get_filepath_types().keys()))
-@click.option('--study', required=True, type=click.IntRange(1),
-              help='Study whose raw data will be updated')
-@click.option('--raw_data', required=False, type=click.IntRange(1),
-              help='Raw data to be updated. If not passed, the raw data with '
-                   'lowest id in the study will be updated.')
-def update_raw_data(fp, fp_type, study, raw_data):
-    """Updates the raw data with the provided raw data files"""
-    rd = update_raw_data_from_cmd(fp, fp_type, study, rd_id=raw_data)
-    click.echo("Raw data %s successfully updated" % rd.id)
-
-
-@db.command()
-@click.argument('sl_out_dir', required=True,
-                type=click.Path(resolve_path=True, readable=True, exists=True,
-                                file_okay=False))
-@click.option('--study', required=True, type=int,
-              help='Study whose preprocessed data will be updated')
-@click.option('--preprocessed_data', required=False, type=int,
-              help='Preprocessed data to be updated. If not passed, the '
-                   'preprocessed data with lowest id in the study will '
-                   'be updated.')
-def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
-    """Updates the study with the preprocessed data in sl_out_dir"""
-    ppd = update_preprocessed_data_from_cmd(sl_out_dir, study,
-                                            preprocessed_data)
-    click.echo("Preprocessed data %s successfully updated" % ppd.id)
 
 # #############################################################################
 # PORTAL COMMANDS
@@ -319,45 +246,45 @@ def update_preprocessed_data(sl_out_dir, study,  preprocessed_data):
 
 @portal.command(name="add-analyses")
 @click.argument('portal', required=True,
-                type=click.Choice(Portal.list_portals()))
+                type=click.Choice(qdb.portal.Portal.list_portals()))
 @click.argument('analyses', required=True, type=int, nargs=-1)
 def add_analysis(portal, analyses):
     try:
-        Portal(portal).add_analyses(analyses)
-    except QiitaDBError as e:
+        qdb.portal.Portal(portal).add_analyses(analyses)
+    except qdb.exceptions.QiitaDBError as e:
         raise click.BadOptionUsage("analyses", str(e))
 
 
 @portal.command(name="remove-analyses")
 @click.argument('portal', required=True,
-                type=click.Choice(Portal.list_portals()))
+                type=click.Choice(qdb.portal.Portal.list_portals()))
 @click.argument('analyses', required=True, type=int, nargs=-1)
 def remove_analysis(portal, analyses):
     try:
-        Portal(portal).remove_analyses(analyses)
-    except QiitaDBError as e:
+        qdb.portal.Portal(portal).remove_analyses(analyses)
+    except qdb.exceptions.QiitaDBError as e:
         raise click.BadOptionUsage("analyses", str(e))
 
 
 @portal.command(name="add-studies")
 @click.argument('portal', required=True,
-                type=click.Choice(Portal.list_portals()))
+                type=click.Choice(qdb.portal.Portal.list_portals()))
 @click.argument('studies', required=True, type=int, nargs=-1)
 def add_study(portal, studies):
     try:
-        Portal(portal).add_studies(studies)
-    except QiitaDBError as e:
+        qdb.portal.Portal(portal).add_studies(studies)
+    except qdb.exceptions.QiitaDBError as e:
         raise click.BadOptionUsage("studies", str(e))
 
 
 @portal.command(name="remove-studies")
 @click.argument('portal', required=True,
-                type=click.Choice(Portal.list_portals()))
+                type=click.Choice(qdb.portal.Portal.list_portals()))
 @click.argument('studies', required=True, type=int, nargs=-1)
 def remove_study(portal, studies):
     try:
-        Portal(portal).remove_studies(studies)
-    except QiitaDBError as e:
+        qdb.portal.Portal(portal).remove_studies(studies)
+    except qdb.exceptions.QiitaDBError as e:
         raise click.BadOptionUsage("studies", str(e))
 
 # #############################################################################
@@ -409,13 +336,13 @@ def sysmessage(message, time, banner):
         r_client.setex('sysmessage', message, time)
     else:
         expires = datetime.now() + timedelta(seconds=time)
-        add_system_message(message, expires)
+        qdb.util.add_system_message(message, expires)
 
 
 @maintenance.command()
 def clear_sysmessage():
     r_client.delete('sysmessage')
-    clear_system_messages()
+    qdb.util.clear_system_messages()
 
 
 @maintenance.command()
@@ -449,7 +376,7 @@ def log(n):
     template = width*"=" + "\nTime: {}\nMessage:\n{}\nInfo:{}\n"
 
     lines = []
-    for e in LogEntry.newest_records(n):
+    for e in qdb.logger.LogEntry.newest_records(n):
 
         info = []
         for i in e.info:
@@ -479,9 +406,12 @@ def start(port):
 
     if qiita_config.log_path:
         options.log_file_prefix = qiita_config.log_path
-        options.logging = 'warning'
+        options.logging = 'debug'
         parse_command_line()
-    http_server = tornado.httpserver.HTTPServer(Application())
+    ssl_options = {"certfile": qiita_config.certificate_file,
+                   "keyfile": qiita_config.key_file}
+    http_server = tornado.httpserver.HTTPServer(
+        Application(), ssl_options=ssl_options)
 
     try:
         http_server.listen(port)
@@ -496,19 +426,6 @@ def start(port):
     click.echo("Qiita started on port %d" % port)
     tornado.ioloop.IOLoop.instance().start()
 
-
-# #############################################################################
-# WARE COMMANDS
-# #############################################################################
-
-@ware.command()
-@click.argument('sl_out_dir', required=True,
-                type=click.Path(resolve_path=True, readable=True, exists=True,
-                                file_okay=False))
-def generate_demux(sl_out_dir):
-    """Generates the demux file for the split libraries output sl_out_dir"""
-    demux_fp = generate_demux_file(sl_out_dir)
-    click.echo("Demux file successfully generated: %s" % demux_fp)
 
 if __name__ == '__main__':
     qiita()

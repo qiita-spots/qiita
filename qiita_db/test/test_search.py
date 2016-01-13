@@ -11,15 +11,14 @@ from unittest import TestCase, main
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
-from qiita_db.user import User
-from qiita_db.search import QiitaStudySearch
+import qiita_db as qdb
 
 
 class SearchTest(TestCase):
     """Tests that the search object works as expected"""
 
     def setUp(self):
-        self.search = QiitaStudySearch()
+        self.search = qdb.search.QiitaStudySearch()
 
     def test_parse_study_search_string(self):
         st_sql, samp_sql, meta = \
@@ -175,7 +174,7 @@ class SearchTest(TestCase):
         obs_res, obs_meta = self.search(
             '(sample_type = ENVO:soil AND COMMON_NAME = "rhizosphere '
             'metagenome" ) AND NOT Description_duplicate includes Burmese',
-            User("test@foo.bar"))
+            qdb.user.User("test@foo.bar"))
         exp_meta = ["COMMON_NAME", "Description_duplicate", "sample_type"]
         exp_res = {1:
                    [['1.SKM4.640180', 'rhizosphere metagenome', 'Bucu Rhizo',
@@ -195,7 +194,7 @@ class SearchTest(TestCase):
 
     def test_call_bad_meta_category(self):
         obs_res, obs_meta = self.search(
-            'BAD_NAME_THING = ENVO:soil', User("test@foo.bar"))
+            'BAD_NAME_THING = ENVO:soil', qdb.user.User("test@foo.bar"))
         self.assertEqual(obs_res, {})
         self.assertEqual(obs_meta, ["BAD_NAME_THING"])
 
@@ -203,16 +202,17 @@ class SearchTest(TestCase):
         """makes sure a call on a required sample ID column that has no results
         actually returns no results"""
         obs_res, obs_meta = self.search('sample_type = unicorns_and_rainbows',
-                                        User('test@foo.bar'))
+                                        qdb.user.User('test@foo.bar'))
         self.assertEqual(obs_res, {})
         self.assertEqual(obs_meta, ['sample_type'])
 
     def test_filter_by_processed_data(self):
-        search = QiitaStudySearch()
-        results, meta_cols = search('study_id = 1', User('test@foo.bar'))
+        search = qdb.search.QiitaStudySearch()
+        results, meta_cols = search(
+            'study_id = 1', qdb.user.User('test@foo.bar'))
         spid, pds, meta = search.filter_by_processed_data()
-        exp_spid = {1: {'18S': [1]}}
-        exp_pds = {1: [
+        exp_spid = {1: {'18S': [4]}}
+        exp_pds = {4: [
             '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
             '1.SKB5.640181', '1.SKB6.640176', '1.SKB7.640196', '1.SKB8.640193',
             '1.SKB9.640200', '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
@@ -220,7 +220,7 @@ class SearchTest(TestCase):
             '1.SKD8.640184', '1.SKD9.640182', '1.SKM1.640183', '1.SKM2.640199',
             '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
             '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}
-        exp_meta = pd.DataFrame.from_dict({x: 1 for x in exp_pds[1]},
+        exp_meta = pd.DataFrame.from_dict({x: 1 for x in exp_pds[4]},
                                           orient='index')
         exp_meta.rename(columns={0: 'study_id'}, inplace=True)
 

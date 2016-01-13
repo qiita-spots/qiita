@@ -6,6 +6,13 @@ Version 0.2.0-dev (Changes since version 0.2.0 go here)
 * Users can now change values and add samples and/or columns to sample and prep templates using the <kbd>Update</kbd> button (see the prep template and sample template tabs).
 * The raw files of a RawData can be now updated using the `qiita db update_raw_data` CLI command.
 * instrument_model is now a required prep template column for EBI submissions.
+* PostgreSQL 9.3.0 is now the minimum required version because we are using the SQL type JSON, included for first time in 9.3.0.
+* The objects `RawData`, `PreprocessedData` and `ProcessedData` have been removed from the system and substituted by a general `Artifact` object.
+* The CLI commands `load_raw`, `load_preprocessed` and `load_processed` have been removed from the system and substituted by `load_artifact`.
+* We incorporated the idea of plugins into the system. Now, all processing could be plugins.
+* QIIME workflows for splitting libraries (SFF/FASTA-QUAL and FASTQ/per-sample-FASTQ) and for picking OTUs has been moved to a new target gene plugin.
+* An initial RESTapi has been introduced as a result of the plugin system, in which OAuth2 authentication is required to access the data.
+* The system has been ported to use HTTPS instead of HTTP.
 
 Version 0.2.0 (2015-08-25)
 --------------------------

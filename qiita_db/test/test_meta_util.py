@@ -13,11 +13,8 @@ import pandas as pd
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
-from qiita_db.meta_util import get_accessible_filepath_ids, get_lat_longs
-from qiita_db.study import Study
-from qiita_db.user import User
-from qiita_db.portal import Portal
-from qiita_db.metadata_template.sample_template import SampleTemplate
+
+import qiita_db as qdb
 
 
 @qiita_test_checker()
@@ -28,13 +25,13 @@ class MetaUtilTests(TestCase):
     def tearDown(self):
         qiita_config.portal = self.old_portal
 
-    def _set_processed_data_private(self):
+    def _set_artifact_private(self):
         self.conn_handler.execute(
-            "UPDATE qiita.processed_data SET processed_data_status_id=3")
+            "UPDATE qiita.artifact SET visibility_id=3")
 
-    def _set_processed_data_public(self):
+    def _set_artifact_public(self):
         self.conn_handler.execute(
-            "UPDATE qiita.processed_data SET processed_data_status_id=2")
+            "UPDATE qiita.artifact SET visibility_id=2")
 
     def _unshare_studies(self):
         self.conn_handler.execute("DELETE FROM qiita.study_users")
@@ -43,31 +40,36 @@ class MetaUtilTests(TestCase):
         self.conn_handler.execute("DELETE FROM qiita.analysis_users")
 
     def test_get_accessible_filepath_ids(self):
-        self._set_processed_data_private()
+        self._set_artifact_private()
 
         # shared has access to all study files and analysis files
 
-        obs = get_accessible_filepath_ids(User('shared@foo.bar'))
+        obs = qdb.meta_util.get_accessible_filepath_ids(
+            qdb.user.User('shared@foo.bar'))
         self.assertEqual(obs, {1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15, 16})
 
         # Now shared should not have access to the study files
         self._unshare_studies()
-        obs = get_accessible_filepath_ids(User('shared@foo.bar'))
+        obs = qdb.meta_util.get_accessible_filepath_ids(
+            qdb.user.User('shared@foo.bar'))
         self.assertEqual(obs, {10, 11, 12, 13})
 
         # Now shared should not have access to any files
         self._unshare_analyses()
-        obs = get_accessible_filepath_ids(User('shared@foo.bar'))
+        obs = qdb.meta_util.get_accessible_filepath_ids(
+            qdb.user.User('shared@foo.bar'))
         self.assertEqual(obs, set())
 
         # Now shared has access to public study files
-        self._set_processed_data_public()
-        obs = get_accessible_filepath_ids(User('shared@foo.bar'))
+        self._set_artifact_public()
+        obs = qdb.meta_util.get_accessible_filepath_ids(
+            qdb.user.User('shared@foo.bar'))
         self.assertEqual(obs, {1, 2, 3, 4, 5, 9, 14, 15, 16})
 
         # Test that it doesn't break: if the SampleTemplate hasn't been added
         exp = {1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15, 16}
-        obs = get_accessible_filepath_ids(User('test@foo.bar'))
+        obs = qdb.meta_util.get_accessible_filepath_ids(
+            qdb.user.User('test@foo.bar'))
         self.assertEqual(obs, exp)
 
         info = {
@@ -83,22 +85,25 @@ class MetaUtilTests(TestCase):
             "principal_investigator_id": 1,
             "lab_person_id": 1
         }
-        Study.create(User('test@foo.bar'), "Test study", [1], info)
-        obs = get_accessible_filepath_ids(User('test@foo.bar'))
+        qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), "Test study", [1], info)
+        obs = qdb.meta_util.get_accessible_filepath_ids(
+            qdb.user.User('test@foo.bar'))
         self.assertEqual(obs, exp)
 
         # test in case there is a prep template that failed
         self.conn_handler.execute(
-            "INSERT INTO qiita.prep_template (data_type_id, raw_data_id) "
-            "VALUES (2,1)")
-        obs = get_accessible_filepath_ids(User('test@foo.bar'))
+            "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
+        obs = qdb.meta_util.get_accessible_filepath_ids(
+            qdb.user.User('test@foo.bar'))
         self.assertEqual(obs, exp)
 
         # admin should have access to everything
         count = self.conn_handler.execute_fetchone("SELECT count(*) FROM "
                                                    "qiita.filepath")[0]
         exp = set(range(1, count + 1))
-        obs = get_accessible_filepath_ids(User('admin@foo.bar'))
+        obs = qdb.meta_util.get_accessible_filepath_ids(
+            qdb.user.User('admin@foo.bar'))
         self.assertEqual(obs, exp)
 
     def test_get_lat_longs(self):
@@ -129,7 +134,7 @@ class MetaUtilTests(TestCase):
             [78.3634273709, 74.423907894],
             [38.2627021402, 3.48274264219]]
 
-        obs = get_lat_longs()
+        obs = qdb.meta_util.get_lat_longs()
         self.assertItemsEqual(obs, exp)
 
     def test_get_lat_longs_EMP_portal(self):
@@ -143,9 +148,9 @@ class MetaUtilTests(TestCase):
             'study_alias': 'alias',
             'study_abstract': 'abstract'}
 
-        study = Study.create(User('test@foo.bar'), 'test_study_1', efo=[1],
-                             info=info)
-        Portal('EMP').add_studies([study.id])
+        study = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), 'test_study_1', efo=[1], info=info)
+        qdb.portal.Portal('EMP').add_studies([study.id])
 
         md = {
             'my.sample': {
@@ -165,11 +170,12 @@ class MetaUtilTests(TestCase):
         }
 
         md_ext = pd.DataFrame.from_dict(md, orient='index')
-        SampleTemplate.create(md_ext, study)
+        qdb.metadata_template.sample_template.SampleTemplate.create(
+            md_ext, study)
 
         qiita_config.portal = 'EMP'
 
-        obs = get_lat_longs()
+        obs = qdb.meta_util.get_lat_longs()
         exp = [[42.42, 41.41]]
 
         self.assertItemsEqual(obs, exp)

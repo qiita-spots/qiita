@@ -6,7 +6,7 @@ Qiita is pip installable, but depends on some non-python packages that must be i
 Install the non-python dependencies
 -----------------------------------
 
-* [PostgreSQL](http://www.postgresql.org/download/) (we have tested most extensively with 9.3)
+* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.0, we have tested most extensively with 9.3)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
 
 Install both of these packages according to the instructions on their websites.
@@ -28,6 +28,35 @@ Then, you can use pip to install Qiita, which will also install its python depen
 pip install numpy
 pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
 pip install qiita-spots
+```
+
+Install Qiita development version and its python dependencies
+-------------------------------------------------------------
+
+You can also use pip to install the development version of Qiita:
+
+```bash
+pip install numpy
+pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
+```
+
+Clone the git repository with the development version of Qiita:
+
+```bash
+git clone https://github.com/biocore/qiita.git
+```
+
+Install Qiita:
+```bash
+cd qiita
+pip install .
+```
+
+You will also need to install the target gene plugin for Qiita to be fully functional.
+However, the plugin is already included in the repository so to install it simply execute:
+```bash
+cd qiita_plugins/target_gene
+pip install .
 ```
 
 Qiita configuration

@@ -5,12 +5,15 @@ from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_db.artifact import Artifact
 from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
 from qiita_db.user import User
 from qiita_pet.handlers.study_handlers.listing_handlers import (
     _get_shared_links_for_study, _build_study_info, _build_single_study_info,
     _build_single_proc_data_info)
+from qiita_pet.handlers.study_handlers.description_handlers import (
+    _propagate_visibility)
 
 
 class TestHelpers(TestHandlerBase):
@@ -18,18 +21,20 @@ class TestHelpers(TestHandlerBase):
 
     def setUp(self):
         self.proc_data_exp = {
-            'pid': 1,
-            'processed_date': '2012-10-01 09:30:27',
+            'pid': 4,
+            'processed_date': '2012-10-02 17:30:00',
             'data_type': '18S',
-            'algorithm': 'uclust',
+            'algorithm': 'sortmerna',
             'reference_name': 'Greengenes',
             'reference_version': '13_8',
             'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
             'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
             'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
             'similarity': 0.97,
-            'enable_rev_strand_match': True,
-            'suppress_new_clusters': True,
+            'sortmerna_max_pos': 10000,
+            'sortmerna_e_value': 1,
+            'sortmerna_coverage': 0.97,
+            'threads': 1,
             'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
                         '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
                         '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
@@ -62,9 +67,13 @@ class TestHelpers(TestHandlerBase):
             'number_samples_collected': 27,
             'shared':
                 '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
-            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-                    'pubmed/123456">123456</a>, <a target="_blank" href="http:'
-                    '//www.ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
+            'publication_doi':
+                '<a target="_blank" href="http://dx.doi.org/10.100/123456">'
+                '10.100/123456</a>, <a target="_blank" '
+                'href="http://dx.doi.org/10.100/7891011">10.100/7891011</a>',
+            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov'
+                    '/pubmed/7891011">7891011</a>, <a target="_blank" href='
+                    '"http://www.ncbi.nlm.nih.gov/pubmed/123456">123456</a>',
             'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">'
                   'PIDude</a>',
             'proc_data_info': [self.proc_data_exp]
@@ -78,13 +87,13 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_single_study_info(self):
-        study_proc = {1: {'18S': [1]}}
-        proc_samples = {1: self.proc_data_exp['samples']}
+        study_proc = {1: {'18S': [4]}}
+        proc_samples = {4: self.proc_data_exp['samples']}
         study_info = {
             'study_id': 1,
             'email': 'test@foo.bar',
             'principal_investigator_id': 3,
-            'pmid': ['123456', '7891011'],
+            'publication_doi': ['10.100/123456', '10.100/7891011'],
             'study_title':
                 'Identification of the Microbiomes for Cannabis Soils',
             'metadata_complete': True,
@@ -107,7 +116,7 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, self.single_exp)
 
     def test_build_single_proc_data_info(self):
-        obs = _build_single_proc_data_info(1, '18S',
+        obs = _build_single_proc_data_info(4, '18S',
                                            self.proc_data_exp['samples'])
         self.assertEqual(obs, self.proc_data_exp)
 
@@ -144,10 +153,32 @@ class TestHelpers(TestHandlerBase):
             'number_samples_collected': 0,
             'shared': '',
             'pmid': '',
+            'publication_doi': '',
             'pi':
                 '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
             'proc_data_info': []})
         self.assertEqual(obs, self.exp)
+
+    def test_propagate_visibility(self):
+        a = Artifact(4)
+        a.visibility = 'public'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'public')
+        self.assertEqual(Artifact(2).visibility, 'public')
+        self.assertEqual(Artifact(4).visibility, 'public')
+
+        a.visibility = 'private'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'private')
+        self.assertEqual(Artifact(2).visibility, 'private')
+        self.assertEqual(Artifact(4).visibility, 'private')
+
+        a = Artifact(2)
+        a.visibility = 'public'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'private')
+        self.assertEqual(Artifact(2).visibility, 'private')
+        self.assertEqual(Artifact(4).visibility, 'private')
 
 
 class TestStudyEditorForm(TestHandlerBase):
@@ -279,7 +310,8 @@ class TestStudyEditHandler(TestHandlerBase):
             'new_people_phones': [],
             'study_title': 'dummy title',
             'study_alias': study_info['study_alias'],
-            'pubmed_id': ','.join(study.pmids),
+            'publications_doi': ','.join(
+                [doi for doi, _ in study.publications]),
             'study_abstract': study_info['study_abstract'],
             'study_description': study_info['study_description'],
             'principal_investigator': study_info['principal_investigator_id'],
@@ -322,9 +354,8 @@ class TestSearchStudiesAJAX(TestHandlerBase):
     json = {
         'iTotalRecords': 1, 'sEcho': 1021, 'iTotalDisplayRecords': 1,
         'aaData': [{
+            'study_id': 1,
             'status': 'private',
-            'study_title':
-                'Identification of the Microbiomes for Cannabis Soils',
             'study_abstract':
                 'This is a preliminary study to examine the microbiota '
                 'associated with the Cannabis plant. Soils samples '
@@ -337,30 +368,37 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                 'to analyze the soils and rhizospheres from the same '
                 'location at different time points in the plant '
                 'lifecycle.',
-            'pi':
-                '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
-            'study_id': 1,
+            'metadata_complete': True,
+            'study_title':
+                'Identification of the Microbiomes for Cannabis Soils',
+            'num_raw_data': 1,
             'number_samples_collected': 27,
             'shared':
                 '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
-            'metadata_complete': True,
-            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
-            'pubmed/123456">123456</a>, <a target="_blank" href="http://www.'
-            'ncbi.nlm.nih.gov/pubmed/7891011">7891011</a>',
-            'num_raw_data': 1,
+            'publication_doi':
+                '<a target="_blank" href="http://dx.doi.org/10.100/123456">'
+                '10.100/123456</a>, <a target="_blank" '
+                'href="http://dx.doi.org/10.100/7891011">10.100/7891011</a>',
+            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov'
+                    '/pubmed/7891011">7891011</a>, <a target="_blank" href='
+                    '"http://www.ncbi.nlm.nih.gov/pubmed/123456">123456</a>',
+            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">'
+                  'PIDude</a>',
             'proc_data_info': [{
-                'pid': 1,
-                'processed_date': '2012-10-01 09:30:27',
+                'pid': 4,
+                'processed_date': '2012-10-02 17:30:00',
                 'data_type': '18S',
-                'algorithm': 'uclust',
+                'algorithm': 'sortmerna',
                 'reference_name': 'Greengenes',
                 'reference_version': '13_8',
                 'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
                 'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
                 'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
                 'similarity': 0.97,
-                'enable_rev_strand_match': True,
-                'suppress_new_clusters': True,
+                'sortmerna_max_pos': 10000,
+                'sortmerna_e_value': 1,
+                'sortmerna_coverage': 0.97,
+                'threads': 1,
                 'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
                             '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
                             '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
@@ -370,7 +408,9 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                             '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
                             '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
                             '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
-                }]}]}
+                }]
+            }]
+        }
     empty = {'aaData': [],
              'iTotalDisplayRecords': 0,
              'iTotalRecords': 0,
@@ -476,8 +516,7 @@ class TestDelete(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         # checking that the action was sent
-        self.assertIn("Couldn't remove raw data 1: Raw data (1) can't be "
-                      "removed because it has linked files", response.body)
+        self.assertIn("Couldn't remove raw data", response.body)
 
     def test_delete_prep_template(self):
         response = self.post('/study/description/1',
@@ -486,9 +525,7 @@ class TestDelete(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         # checking that the action was sent
-        self.assertIn('Cannot remove prep template 1 because a preprocessed '
-                      'data has been already generated using it.',
-                      response.body)
+        self.assertIn("Couldn't remove prep template:", response.body)
 
     def test_delete_preprocessed_data(self):
         response = self.post('/study/description/1',
@@ -497,8 +534,7 @@ class TestDelete(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         # checking that the action was sent
-        self.assertIn('Illegal operation on non sandboxed preprocessed data',
-                      response.body)
+        self.assertIn("Couldn't remove preprocessed data", response.body)
 
     def test_delete_processed_data(self):
         response = self.post('/study/description/1',
@@ -507,8 +543,7 @@ class TestDelete(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         # checking that the action was sent
-        self.assertIn('Illegal operation on non sandboxed processed data',
-                      response.body)
+        self.assertIn("Couldn't remove processed data", response.body)
 
 if __name__ == "__main__":
     main()

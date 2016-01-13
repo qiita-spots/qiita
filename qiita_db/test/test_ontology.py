@@ -9,20 +9,20 @@
 from unittest import TestCase, main
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.ontology import Ontology
-from qiita_db.util import convert_from_id, convert_to_id
+import qiita_db as qdb
 
 
 @qiita_test_checker()
 class TestOntology(TestCase):
     def setUp(self):
-        self.ontology = Ontology(999999999)
+        self.ontology = qdb.ontology.Ontology(999999999)
 
     def testConvertToID(self):
-        self.assertEqual(convert_to_id('ENA', 'ontology'), 999999999)
+        self.assertEqual(qdb.util.convert_to_id('ENA', 'ontology'), 999999999)
 
     def testConvertFromID(self):
-        self.assertEqual(convert_from_id(999999999, 'ontology'), 'ENA')
+        self.assertEqual(
+            qdb.util.convert_from_id(999999999, 'ontology'), 'ENA')
 
     def testShortNameProperty(self):
         self.assertEqual(self.ontology.shortname, 'ENA')

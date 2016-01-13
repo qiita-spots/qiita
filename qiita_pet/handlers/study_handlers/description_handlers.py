@@ -19,14 +19,15 @@ from pandas.parser import CParserError
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
+from qiita_db.artifact import Artifact
 from qiita_db.study import Study
-from qiita_db.data import RawData, PreprocessedData, ProcessedData
 from qiita_db.ontology import Ontology
-from qiita_db.metadata_template import (PrepTemplate, SampleTemplate,
-                                        load_template_to_dataframe,
-                                        SAMPLE_TEMPLATE_COLUMNS,
-                                        looks_like_qiime_mapping_file)
-from qiita_db.util import convert_to_id, get_mountpoint
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.util import (load_template_to_dataframe,
+                                             looks_like_qiime_mapping_file)
+from qiita_db.metadata_template.constants import SAMPLE_TEMPLATE_COLUMNS
+from qiita_db.util import convert_to_id, get_mountpoint, infer_status
 from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBColumnError,
                                  QiitaDBExecutionError, QiitaDBDuplicateError,
                                  QiitaDBDuplicateHeaderError, QiitaDBError)
@@ -83,6 +84,28 @@ def _to_int(value):
     return res
 
 
+def _propagate_visibility(artifact):
+    """Propagates the visibility of an artifact to all its ancestors
+
+    Parameters
+    ----------
+    artifact : qiita_db.artifact.Artifact
+        The artifact to propagate the visibility for
+
+    Notes
+    -----
+    This is emulating the previous functionality, in which the status of the
+    processed data was propagated to the preprocessed/raw data that was used
+    to generate such processed data. In the current interface, only the status
+    of the BIOM artifacts (processed data) can be changed, so this works as
+    expected.
+    """
+    for a in artifact.ancestors.nodes():
+        visibilities = [[c.visibility] for c in a.descendants.nodes()
+                        if c.artifact_type == 'BIOM']
+        a.visibility = infer_status(visibilities)
+
+
 class StudyDescriptionHandler(BaseHandler):
     @execute_as_transaction
     def _get_study_and_check_access(self, study_id):
@@ -117,7 +140,7 @@ class StudyDescriptionHandler(BaseHandler):
             check_access(user, study, raise_error=True)
 
         full_access = (user.level == 'admin' or
-                       study.id in user.user_studies | user.shared_studies)
+                       study in user.user_studies | user.shared_studies)
 
         return study, user, full_access
 
@@ -286,39 +309,6 @@ class StudyDescriptionHandler(BaseHandler):
         callback((msg, msg_level, None, None, None))
 
     @execute_as_transaction
-    def add_raw_data(self, study, user, callback):
-        """Adds an existing raw data to the study
-
-        Parameters
-        ----------
-        study : Study
-            The current study object
-        user : User
-            The current user object
-        callback : function
-            The callback function to call with the results once the processing
-            is done
-        """
-        msg = "Raw data successfully added"
-        msg_level = "success"
-
-        # Get the arguments to add the raw data
-        pt_id = self.get_argument('prep_template_id')
-        raw_data_id = self.get_argument('raw_data_id')
-
-        prep_template = PrepTemplate(pt_id)
-        raw_data = RawData(raw_data_id)
-
-        try:
-            prep_template.raw_data = raw_data
-        except QiitaDBError as e:
-            msg = html_error_message % ("adding the raw data",
-                                        str(raw_data_id), str(e))
-            msg = convert_text_html(msg)
-
-        callback((msg, msg_level, 'prep_template_tab', pt_id, None))
-
-    @execute_as_transaction
     def add_prep_template(self, study, user, callback):
         """Adds a prep template to the system
 
@@ -466,8 +456,9 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         pd_id = int(self.get_argument('pd_id'))
-        pd = ProcessedData(pd_id)
-        pd.status = 'public'
+        pd = Artifact(pd_id)
+        pd.visibility = 'public'
+        _propagate_visibility(pd)
         msg = "Processed data set to public"
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
@@ -488,8 +479,9 @@ class StudyDescriptionHandler(BaseHandler):
         """
         if _approve(user.level):
             pd_id = int(self.get_argument('pd_id'))
-            pd = ProcessedData(pd_id)
-            pd.status = 'private'
+            pd = Artifact(pd_id)
+            pd.visibility = 'private'
+            _propagate_visibility(pd)
             msg = "Processed data approved"
             msg_level = "success"
         else:
@@ -513,8 +505,9 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         pd_id = int(self.get_argument('pd_id'))
-        pd = ProcessedData(pd_id)
-        pd.status = 'awaiting_approval'
+        pd = Artifact(pd_id)
+        pd.visibility = 'awaiting_approval'
+        _propagate_visibility(pd)
         msg = "Processed data sent to admin for approval"
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
@@ -534,8 +527,9 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         pd_id = int(self.get_argument('pd_id'))
-        pd = ProcessedData(pd_id)
-        pd.status = 'sandbox'
+        pd = Artifact(pd_id)
+        pd.visibility = 'sandbox'
+        _propagate_visibility(pd)
         msg = "Processed data reverted to sandbox"
         msg_level = "success"
         callback((msg, msg_level, "processed_data_tab", pd_id, None))
@@ -740,7 +734,7 @@ class StudyDescriptionHandler(BaseHandler):
         prep_template_id = int(self.get_argument('prep_template_id'))
 
         try:
-            RawData.delete(raw_data_id, prep_template_id)
+            Artifact.delete(raw_data_id)
             msg = ("Raw data %d has been deleted from prep_template %d"
                    % (raw_data_id, prep_template_id))
             msg_level = "success"
@@ -764,7 +758,7 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         prep_template_id = int(self.get_argument('prep_template_id'))
-        prep_id = PrepTemplate(prep_template_id).raw_data
+        prep_id = PrepTemplate(prep_template_id).artifact.id
 
         try:
             PrepTemplate.delete(prep_template_id)
@@ -793,7 +787,7 @@ class StudyDescriptionHandler(BaseHandler):
         ppd_id = int(self.get_argument('preprocessed_data_id'))
 
         try:
-            PreprocessedData.delete(ppd_id)
+            Artifact.delete(ppd_id)
             msg = ("Preprocessed data %d has been deleted" % ppd_id)
             msg_level = "success"
             ppd_id = None
@@ -820,7 +814,7 @@ class StudyDescriptionHandler(BaseHandler):
         pd_id = int(self.get_argument('processed_data_id'))
 
         try:
-            ProcessedData.delete(pd_id)
+            Artifact.delete(pd_id)
             msg = ("Processed data %d has been deleted" % pd_id)
             msg_level = "success"
             pd_id = None
@@ -855,7 +849,6 @@ class StudyDescriptionHandler(BaseHandler):
             lambda: self.unspecified_action,
             process_sample_template=self.process_sample_template,
             update_sample_template=self.update_sample_template,
-            add_raw_data=self.add_raw_data,
             add_prep_template=self.add_prep_template,
             update_prep_template=self.update_prep_template,
             make_public=self.make_public,
@@ -901,8 +894,8 @@ class PreprocessingSummaryHandler(BaseHandler):
             If the preprocessed data does not have a log file
         """
         # Get the objects and check user privileges
-        ppd = PreprocessedData(preprocessed_data_id)
-        study = Study(ppd.study)
+        ppd = Artifact(preprocessed_data_id)
+        study = ppd.study
         check_access(self.current_user, study, raise_error=True)
 
         # Get the return address
@@ -912,7 +905,7 @@ class PreprocessingSummaryHandler(BaseHandler):
             % (study.id, preprocessed_data_id))
 
         # Get all the filepaths attached to the preprocessed data
-        files_tuples = ppd.get_filepaths()
+        files_tuples = ppd.filepaths
 
         # Group the files by filepath type
         files = defaultdict(list)

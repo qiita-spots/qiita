@@ -107,6 +107,8 @@ class ConfigurationManager(object):
         The filepath for the configuration file that is loaded
     portal_fp : str
         The filepath to the portal styling config file
+    plugin_launcher : str
+        The script used to start the plugins
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -160,6 +162,7 @@ class ConfigurationManager(object):
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
         self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
         self.portal = config.get('main', 'PORTAL')
+        self.plugin_launcher = config.get('main', 'PLUGIN_LAUNCHER')
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]
@@ -167,6 +170,15 @@ class ConfigurationManager(object):
            self.valid_upload_extension == ['']):
             self.valid_upload_extension = []
             print 'No files will be allowed to be uploaded.'
+
+        self.certificate_file = config.get('main', 'CERTIFICATE_FILE')
+        if not self.certificate_file:
+            self.certificate_file = join(install_dir, 'qiita_core',
+                                         'support_files', 'server.crt')
+        self.key_file = config.get('main', 'KEY_FILE')
+        if not self.key_file:
+            self.key_file = join(install_dir, 'qiita_core', 'support_files',
+                                 'server.key')
 
     def _get_postgres(self, config):
         """Get the configuration of the postgres section"""

@@ -29,9 +29,7 @@ from __future__ import division
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
-from .sql_connection import TRN
-from .exceptions import (QiitaDBNotImplementedError, QiitaDBUnknownIDError,
-                         QiitaDBError)
+import qiita_db as qdb
 
 
 class QiitaObject(object):
@@ -74,7 +72,7 @@ class QiitaObject(object):
         QiitaDBNotImplementedError
             If the method is not overwritten by a subclass
         """
-        raise QiitaDBNotImplementedError()
+        raise qdb.exceptions.QiitaDBNotImplementedError()
 
     @classmethod
     def delete(cls, id_):
@@ -90,7 +88,7 @@ class QiitaObject(object):
         QiitaDBNotImplementedError
             If the method is not overwritten by a subclass
         """
-        raise QiitaDBNotImplementedError()
+        raise qdb.exceptions.QiitaDBNotImplementedError()
 
     @classmethod
     def exists(cls):
@@ -101,7 +99,7 @@ class QiitaObject(object):
         QiitaDBNotImplementedError
             If the method is not overwritten by a subclass
         """
-        raise QiitaDBNotImplementedError()
+        raise qdb.exceptions.QiitaDBNotImplementedError()
 
     @classmethod
     def _check_subclass(cls):
@@ -132,12 +130,12 @@ class QiitaObject(object):
         the other classes. However, still defining here as there is only one
         subclass that doesn't follow this convention and it can override this.
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT EXISTS(
                         SELECT * FROM qiita.{0}
                         WHERE {0}_id=%s)""".format(self._table)
-            TRN.add(sql, [id_])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [id_])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     def _check_portal(self, id_):
         """Checks that object is accessible in current portal
@@ -151,15 +149,15 @@ class QiitaObject(object):
             # assume not portal limited object
             return True
 
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.{0}
                             JOIN qiita.portal_type USING (portal_type_id)
                         WHERE {1}_id = %s AND portal = %s
                     )""".format(self._portal_table, self._table)
-            TRN.add(sql, [id_, qiita_config.portal])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [id_, qiita_config.portal])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     def __init__(self, id_):
         r"""Initializes the object
@@ -190,13 +188,13 @@ class QiitaObject(object):
         elif isinstance(id_, long):
             id_ = int(id_)
 
-        with TRN:
+        with qdb.sql_connection.TRN:
             self._check_subclass()
             if not self._check_id(id_):
-                raise QiitaDBUnknownIDError(id_, self._table)
+                raise qdb.exceptions.QiitaDBUnknownIDError(id_, self._table)
 
             if not self._check_portal(id_):
-                raise QiitaDBError(
+                raise qdb.exceptions.QiitaDBError(
                     "%s with id %d inaccessible in current portal: %s"
                     % (self.__class__.__name__, id_, qiita_config.portal))
 
@@ -213,6 +211,10 @@ class QiitaObject(object):
     def __ne__(self, other):
         r"""Self and other are not equal based on type and database id"""
         return not self.__eq__(other)
+
+    def __hash__(self):
+        r"""The hash of an object is based on the id"""
+        return hash(str(self.id))
 
     @property
     def id(self):
@@ -237,19 +239,19 @@ class QiitaStatusObject(QiitaObject):
     def status(self):
         r"""String with the current status of the analysis"""
         # Get the DB status of the object
-        with TRN:
+        with qdb.sql_connection.TRN:
             sql = """SELECT status FROM qiita.{0}_status
                      WHERE {0}_status_id = (
                         SELECT {0}_status_id FROM qiita.{0}
                         WHERE {0}_id = %s)""".format(self._table)
-            TRN.add(sql, [self._id])
-            return TRN.execute_fetchlast()
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
     def _status_setter_checks(self):
         r"""Perform any extra checks that needed to be done before setting the
         object status on the database. Should be overwritten by the subclasses
         """
-        raise QiitaDBNotImplementedError()
+        raise qdb.exceptions.QiitaDBNotImplementedError()
 
     @status.setter
     def status(self, status):
@@ -260,7 +262,7 @@ class QiitaStatusObject(QiitaObject):
         status: str
             The new object status
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             # Perform any extra checks needed before
             # we update the status in the DB
             self._status_setter_checks()
@@ -270,8 +272,8 @@ class QiitaStatusObject(QiitaObject):
                         SELECT {0}_status_id FROM qiita.{0}_status
                         WHERE status = %s)
                      WHERE {0}_id = %s""".format(self._table)
-            TRN.add(sql, [status, self._id])
-            TRN.execute()
+            qdb.sql_connection.TRN.add(sql, [status, self._id])
+            qdb.sql_connection.TRN.execute()
 
     def check_status(self, status, exclude=False):
         r"""Checks status of object.
@@ -303,14 +305,15 @@ class QiitaStatusObject(QiitaObject):
         Table setup:
         foo: foo_status_id  ----> foo_status: foo_status_id, status
         """
-        with TRN:
+        with qdb.sql_connection.TRN:
             # Get all available statuses
             sql = "SELECT DISTINCT status FROM qiita.{0}_status".format(
                 self._table)
-            TRN.add(sql)
+            qdb.sql_connection.TRN.add(sql)
             # We need to access to the results of the last SQL query,
             # hence indexing using -1
-            avail_status = [x[0] for x in TRN.execute_fetchindex()]
+            avail_status = [
+                x[0] for x in qdb.sql_connection.TRN.execute_fetchindex()]
 
             # Check that all the provided status are valid status
             if set(status).difference(avail_status):
