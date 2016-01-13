@@ -188,7 +188,9 @@ class ArtifactTests(TestCase):
         fp_count = qdb.util.get_count('qiita.filepath')
         before = datetime.now()
         obs = qdb.artifact.Artifact.create(
-            self.filepaths_root, "FASTQ", prep_template=self.prep_template)
+            self.filepaths_root, "FASTQ", prep_template=self.prep_template,
+            name='Test artifact')
+        self.assertEqual(obs.name, 'Test artifact')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertIsNone(obs.processing_parameters)
         self.assertEqual(obs.visibility, 'sandbox')
@@ -228,6 +230,7 @@ class ArtifactTests(TestCase):
             parents=[qdb.artifact.Artifact(1)],
             processing_parameters=exp_params, can_be_submitted_to_ebi=True,
             can_be_submitted_to_vamps=True)
+        self.assertEqual(obs.name, 'dflt_name')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
@@ -258,6 +261,7 @@ class ArtifactTests(TestCase):
         obs = qdb.artifact.Artifact.create(
             self.filepaths_biom, "BIOM", parents=[qdb.artifact.Artifact(2)],
             processing_parameters=exp_params)
+        self.assertEqual(obs.name, 'dflt_name')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
@@ -335,6 +339,23 @@ class ArtifactTests(TestCase):
 
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(test.id)
+
+    def test_name(self):
+        self.assertEqual(qdb.artifact.Artifact(1).name, "Raw data 1")
+        self.assertEqual(qdb.artifact.Artifact(2).name, "Demultiplexed 1")
+        self.assertEqual(qdb.artifact.Artifact(3).name, "Demultiplexed 2")
+        self.assertEqual(qdb.artifact.Artifact(4).name, "BIOM")
+
+    def test_name_setter(self):
+        a = qdb.artifact.Artifact(1)
+        self.assertEqual(a.name, "Raw data 1")
+        a.name = "new name"
+        self.assertEqual(a.name, "new name")
+
+    def test_name_setter_error(self):
+        with self.assertRaises(ValueError):
+            qdb.artifact.Artifact(1).name = (
+                "Some very large name to force the error to be raised")
 
     def test_timestamp(self):
         self.assertEqual(qdb.artifact.Artifact(1).timestamp,
@@ -634,6 +655,14 @@ class ArtifactTests(TestCase):
         self.assertEqual(qdb.artifact.Artifact(2).children, exp)
         self.assertEqual(qdb.artifact.Artifact(3).children, [])
         self.assertEqual(qdb.artifact.Artifact(4).children, [])
+
+    def test_youngest_artifact(self):
+        exp = qdb.artifact.Artifact(4)
+        self.assertEqual(qdb.artifact.Artifact(1).youngest_artifact, exp)
+        self.assertEqual(qdb.artifact.Artifact(2).youngest_artifact, exp)
+        self.assertEqual(qdb.artifact.Artifact(3).youngest_artifact,
+                         qdb.artifact.Artifact(3))
+        self.assertEqual(qdb.artifact.Artifact(4).youngest_artifact, exp)
 
     def test_prep_templates(self):
         self.assertEqual(

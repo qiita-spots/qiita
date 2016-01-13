@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 import time
-import requests
 import threading
 from json import dumps
 from subprocess import Popen, PIPE
@@ -47,95 +46,65 @@ def system_call(cmd):
     return stdout, stderr, return_value
 
 
-def execute_request_retry(req, *args, **kwargs):
-    """Executes a request retrying it 3 times in case of failure
-
-    Parameters
-    ----------
-    req : function
-        The request to execute
-    args : tuple
-        The request arguments
-    kwargs : dict
-        The request kwargs
-
-    Returns
-    -------
-    dict
-        The JSON information in the request reply
-    """
-    success = False
-    retries = 3
-    json_reply = None
-    while not success and retries > 0:
-        retries -= 1
-        r = req(*args, **kwargs)
-        r.close()
-        if r.status_code == 200:
-            json_reply = r.json()
-            break
-    return json_reply
-
-
-def heartbeat(url):
+def heartbeat(qclient, url):
     """Send the heartbeat calls to the server
 
     Parameters
     ----------
+    qclient : tgp.qiita_client.QiitaClient
+        The Qiita server client
     url : str
         The url to issue the heartbeat
     """
     while not JOB_COMPLETED:
-        r = requests.post(url, data='')
-        r.close()
-        if r.status_code == 200:
-            if not r.json()['success']:
-                # The server did not accept our heartbeat - stop doing it
-                break
-        # Perform the heartbeat every second
-        time.sleep(1)
+        json_reply = qclient.post(url, data='')
+        if not json_reply or not json_reply['success']:
+            # The server did not accept our heartbeat - stop doing it
+            break
+        # Perform the heartbeat every 5 seconds
+        time.sleep(5)
 
 
-def start_heartbeat(server_url, job_id):
+def start_heartbeat(qclient, job_id):
     """Create and start a thread that would send the heartbeats to the server
 
     Parameters
     ----------
-    server_url : str
-        The ust of the server
+    qclient : tgp.qiita_client.QiitaClient
+        The Qiita server client
     job_id : str
         The job id
     """
-    url = "%s/qiita_db/jobs/%s/heartbeat/" % (server_url, job_id)
-    heartbeat_thread = threading.Thread(target=heartbeat, args=(url,))
+    url = "/qiita_db/jobs/%s/heartbeat/" % job_id
+    heartbeat_thread = threading.Thread(
+        target=heartbeat, args=(qclient, url))
     heartbeat_thread.daemon = True
     heartbeat_thread.start()
 
 
-def update_job_step(server_url, job_id, new_step):
+def update_job_step(qclient, job_id, new_step):
     """Updates the curent step of the job in the server
 
     Parameters
     ----------
-    server_url : str
-        The url of the server
+    qclient : tgp.qiita_client.QiitaClient
+        The Qiita server client
     jon_id : str
         The job id
     new_step : str
         The new step
     """
-    url = "%s/qiita_db/jobs/%s/step/" % (server_url, job_id)
     json_payload = dumps({'step': new_step})
-    execute_request_retry(requests.post, url, data=json_payload)
+    qclient.post("/qiita_db/jobs/%s/step/" % job_id, data=json_payload)
 
 
-def complete_job(server_url, job_id, payload):
+def complete_job(qclient, job_id, payload):
     """Stops the heartbeat thread and send the job results to the server
 
     Parameters
     ----------
-    server_url : str
-        The url of the server
+    qclient : tgp.qiita_client.QiitaClient
+        The Qiita server client
     job_id : str
         The job id
     payload : dict
@@ -145,9 +114,8 @@ def complete_job(server_url, job_id, payload):
     global JOB_COMPLETED
     JOB_COMPLETED = True
     # Create the URL where we have to post the results
-    url = "%s/qiita_db/jobs/%s/complete/" % (server_url, job_id)
     json_payload = dumps(payload)
-    execute_request_retry(requests.post, url, data=json_payload)
+    qclient.post("/qiita_db/jobs/%s/complete/" % job_id, data=json_payload)
 
 
 def format_payload(success, error_msg=None, artifacts_info=None):
