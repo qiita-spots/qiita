@@ -1,0 +1,78 @@
+{% from future.utils import viewitems %}
+<div>
+    {% raw dl_path %}
+</div>
+
+<div>
+<h3>Update Sample Information</h3>
+    <p><select id="filepath" value="filepath">
+    {% for f in files %}
+      <option value="{{f}}">{{f}}</option>
+    {% end %}
+    </select>
+    {% if stats %}
+    <button class="btn btn-info btn-sm" onclick="sample_action('update')">Update</button>
+    <button class="btn btn-danger btn-sm" onclick="sample_action('delete')"></p>Delete</button>
+    {% end %}
+    </p>
+    <p> <select id="data_types" value="data_types">
+      <option value=""></option>
+    {% for d in data_types %}
+      <option value="{{d}}">{{d}}</option>
+    {% end %}
+    </select> If uploading a qiime mapping file, select data type</p>
+</div>
+
+<div>
+    <h3>Sample information summary</h3>
+    <p>There are <strong>{{num_samples}}</strong> samples in this study.</p>
+</div>
+
+<div class="panel panel-default" id="summary">
+    <div class="panel-heading">
+        A summary of the sample information is below.
+    </div>
+
+    <table class="table">
+    {% for category, summary in viewitems(stats) %}
+        {% if len(summary) == 1 %}
+            <tr>
+                <td colspan="2">
+                    <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
+                </td>
+            </tr>
+        {% elif len(set([row[1] for row in summary])) == 1 %}
+            <tr>
+                <td colspan="2">
+                    <b>{{category}}</b>: All the values in this category are different.
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <th colspan="2" align="center">{{category}}</th>
+            </tr>
+            {% for row in summary %}
+            <tr>
+                <td>{{row[0]}}</td>
+                <td>{{row[1]}}</td>
+            </tr>
+            {% end %}
+        {% end %}
+    {% end %}
+    </table>
+</div>
+
+<script type="text/javascript">
+  function sample_action(act) {
+    $.post('/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#filepath").val(), data_type: $("#data_types").val() })
+      .done(function ( data ) {
+        if(data.status == "error") {
+          bootstrapAlert("<p>Error updating sample template</p>" + data.message, "danger", 4000);
+        } else if(data.status == "warning") {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "warning", 4000);
+        } else {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "info", 4000);
+        }
+      })
+  }
+</script>
