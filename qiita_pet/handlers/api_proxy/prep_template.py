@@ -41,7 +41,7 @@ def _process_investigation_type(inv_type, user_def_type, new_type):
     if inv_type == '':
         inv_type = None
     elif inv_type == 'Other' and user_def_type == 'New Type':
-        # This is a nre user defined investigation type so store it
+        # This is a new user defined investigation type so store it
         inv_type = new_type
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
         ontology.add_user_defined_term(inv_type)
@@ -62,10 +62,10 @@ def prep_template_get_req(prep_id, user_id):
 
     Returns
     -------
-    dict of dictionaries
-        Dictionary object where the keys are the metadata samples
-        and the values are a dictionary of column and value.
-        Format {sample: {column: value, ...}, ...}
+    dict of objects
+    {'status': status,
+     'message': message,
+     'template': {sample: {column: value, ...}, ...}
     """
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
@@ -93,10 +93,10 @@ def prep_template_summary_get_req(prep_id, user_id):
         Dictionary object where the keys are the metadata categories
         and the values are list of tuples. Each tuple is an observed value in
         the category and the number of times its seen.
-        Format {status: status,
-                message: message,
-                num_samples: value,
-                category: [(val1, count1), (val2, count2), ...], ...}
+        Format {'status': status,
+                'message': message,
+                'num_samples': value,
+                'category': [(val1, count1), (val2, count2), ...], ...}
     """
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
@@ -129,7 +129,7 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     Parameters
     ----------
     study_id : int
-        Study to attach the pre ptemplate to
+        Study to attach the prep template to
     user_id : str
         User adding the prep template
     prep_template : str
@@ -142,6 +142,13 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
         Existing user added investigation type to attach to the prep template
     new_investigation_type: str, optional
         Investigation type to add to the system
+
+    Returns
+    -------
+    dict of str
+        {'status': status,
+         'message': message,
+         'file': prep_template}
     """
     access_error = check_access(study_id, user_id)
     if access_error:
@@ -205,8 +212,14 @@ def prep_template_put_req(prep_id, user_id, prep_template=None,
         Existing user added investigation type to attach to the prep template
     new_investigation_type: str, optional
         Investigation type to add to the system
+
+    Returns
+    -------
+    dict of str
+        {'status': status,
+         'message': message,
+         'file': prep_template}
     """
-    # Get the uploads folder
     prep = PrepTemplate(int(prep_id))
     study_id = prep.study_id
     access_error = check_access(study_id, user_id)
@@ -259,6 +272,12 @@ def prep_template_delete_req(prep_id, user_id):
         The prep template to update
     user_id : str
         The current user object id
+
+    Returns
+    -------
+    dict of str
+        {'status': status,
+         'message': message}
     """
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
@@ -287,6 +306,13 @@ def prep_template_filepaths_get_req(prep_id, user_id):
         The current prep template id
     user_id : int
         The current user object id
+
+    Returns
+    -------
+    dict of objects
+        {'status': status,
+         'message': message,
+         'filepaths': [(filepath_id, filepath), ...]}
     """
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
@@ -303,8 +329,10 @@ def prep_ontology_get_req():
 
     Returns
     -------
-    dict of list of str
-        {'ENA': [term1, term2, ...],
+    dict of objects
+        {'status': status,
+         'message': message,
+         'ENA': [term1, term2, ...],
          'User': [userterm1, userterm2, ...]}
     """
     # Get all the ENA terms for the investigation type
@@ -326,8 +354,6 @@ def prep_template_graph_get_req(prep_id, user_id):
 
     Parameters
     ----------
-    study_id : int
-        Study the prep template belongs to
     prep_id : int
         Prep template ID to get graph for
     user_id : str
@@ -338,13 +364,10 @@ def prep_template_graph_get_req(prep_id, user_id):
     dict of lists of tuples
         A dictionary containing the edge list representation of the graph,
         and the node labels. Formatted as:
-        {'edge_list': [(0, 1), (0, 2)...],
+        {'status': status,
+         'message': message,
+         'edge_list': [(0, 1), (0, 2)...],
          'node_labels': [(0, 'label0'), (1, 'label1'), ...]}
-
-    Raises
-    ------
-    HTTPError
-        Raises code 400 if unknown direction passed
 
     Notes
     -----
