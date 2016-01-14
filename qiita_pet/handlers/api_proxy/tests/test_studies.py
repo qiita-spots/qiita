@@ -92,7 +92,7 @@ class TestStudyAPI(TestCase):
                    'name': 'PREP 1 NAME',
                    'start_artifact_id': 1,
                    'start_artifact': 'FASTQ',
-                   'last_artifact': 'TODO new gui'}]}}
+                   'youngest_artifact': 'BIOM - BIOM'}]}}
         self.assertEqual(obs, exp)
 
     def test_study_prep_get_req_no_access(self):

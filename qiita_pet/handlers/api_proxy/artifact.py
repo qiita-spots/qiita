@@ -2,7 +2,7 @@ from qiita_db.artifact import Artifact
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
-def artifact_get_graph(self, artifact_id, direction, user_id):
+def artifact_graph_get_req(artifact_id, direction, user_id):
     """Creates graphs of ancestor or descendant artifacts from given one
 
     Parameters
@@ -45,7 +45,7 @@ def artifact_get_graph(self, artifact_id, direction, user_id):
             'message': 'Unknown directon %s' % direction
         }
 
-    node_labels = [(n.id, 'longer descriptive name for %d' % n.id)
+    node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
                    for n in G.nodes()]
     return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
             'node_labels': node_labels,

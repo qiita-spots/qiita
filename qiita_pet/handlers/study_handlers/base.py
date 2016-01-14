@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from tornado.web import authenticated
+from tornado.web import authenticated, HTTPError
 
 from qiita_pet.handlers.util import to_int, doi_linkifier
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -19,8 +19,14 @@ class StudyIndexHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
         study = to_int(study_id)
+
         # Proxies for what will become API requests
-        prep_info = study_prep_get_req(study, self.current_user.id)['info']
+        prep_info = study_prep_get_req(study, self.current_user.id)
+        # Make sure study exists
+        if prep_info['status'] != 'success':
+            raise HTTPError(404, prep_info['message'])
+
+        prep_info = prep_info['info']
         data_types = data_types_get_req()['data_types']
         study_info = study_get_req(study, self.current_user.id)['info']
         editable = study_info['status'] == 'sandbox'

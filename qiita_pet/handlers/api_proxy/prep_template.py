@@ -337,10 +337,10 @@ def prep_ontology_get_req():
     """
     # Get all the ENA terms for the investigation type
     ontology = Ontology(convert_to_id('ENA', 'ontology'))
-    # make "Other" last on the list
     ena_terms = sorted(ontology.terms)
+    # make "Other" last on the list
     ena_terms.remove('Other')
-    ena_terms + ['Other']
+    ena_terms.append('Other')
 
     return {'status': 'success',
             'message': '',

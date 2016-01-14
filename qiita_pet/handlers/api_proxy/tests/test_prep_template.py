@@ -7,21 +7,39 @@
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from os.path import join, exists
+from string import ascii_letters
+from random import choice
 
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.util import qiita_test_checker
+from qiita_db.ontology import Ontology
 from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req, prep_template_get_req,
     prep_template_graph_get_req, prep_template_filepaths_get_req,
-    prep_ontology_get_req)
+    prep_ontology_get_req, _process_investigation_type)
 
 
+@qiita_test_checker()
 class TestPrepAPI(TestCase):
     def setUp(self):
         fp = join(qiita_config.base_data_dir, 'uploads/1', 'uploaded_file.txt')
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
+
+    def test_process_investigation_type(self):
+        obs = _process_investigation_type('Metagenomics', '', '')
+        self.assertEqual(obs, 'Metagenomics')
+
+    def test_process_investigation_type_new_term(self):
+        randstr = ''.join([choice(ascii_letters) for x in range(30)])
+        obs = _process_investigation_type('Other', 'New Type', randstr)
+        self.assertEqual(obs, randstr)
+
+        # Make sure New Type added
+        ontology = Ontology(999999999)
+        self.assertIn(randstr, ontology.user_defined_terms)
 
     def test_prep_ontology_get_req(self):
         obs = prep_ontology_get_req()
@@ -30,7 +48,7 @@ class TestPrepAPI(TestCase):
                        'Metagenomics', 'Pooled Clone Sequencing',
                        'Population Genomics', 'RNASeq', 'Resequencing',
                        'Synthetic Genomics', 'Transcriptome Analysis',
-                       'Whole Genome Sequencing'],
+                       'Whole Genome Sequencing', 'Other'],
                'User': [],
                'status': 'success',
                'message': ''}
@@ -86,18 +104,24 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_prep_template_post_req(self):
-        obs = prep_template_post_req(1, 'test@foo.bar', '16S',
-                                     'uploaded_file.txt')
+        obs = prep_template_post_req(1, 'test@foo.bar', 'uploaded_file.txt',
+                                     '16S')
         exp = {'status': 'error',
                'message': 'Empty file passed!',
                'file': 'uploaded_file.txt'}
         self.assertEqual(obs, exp)
 
     def test_prep_template_post_req_no_access(self):
-        obs = prep_template_post_req(1, 'demo@microbio.me', '16S',
-                                     'filepath')
+        obs = prep_template_post_req(1, 'demo@microbio.me', 'filepath', '16S')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_post_req_bad_filepath(self):
+        obs = prep_template_post_req(1, 'test@foo.bar', 'badfilepath', '16S')
+        exp = {'status': 'error',
+               'message': 'file does not exist',
+               'file': 'badfilepath'}
         self.assertEqual(obs, exp)
 
     def test_prep_template_put_req(self):
@@ -108,10 +132,32 @@ class TestPrepAPI(TestCase):
                'file': 'uploaded_file.txt'}
         self.assertEqual(obs, exp)
 
+    def test_prep_put_req_inv_type(self):
+        randstr = ''.join([choice(ascii_letters) for x in range(30)])
+        obs = prep_template_put_req(1, 'test@foo.bar',
+                                    investigation_type='Other',
+                                    user_defined_investigation_type='New Type',
+                                    new_investigation_type=randstr)
+        exp = {'status': 'success',
+               'message': '',
+               'file': None}
+        self.assertEqual(obs, exp)
+
+        # Make sure New Type added
+        ontology = Ontology(999999999)
+        self.assertIn(randstr, ontology.user_defined_terms)
+
     def test_prep_template_put_req_no_access(self):
         obs = prep_template_put_req(1, 'demo@microbio.me', 'filepath')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_put_req_bad_filepath(self):
+        obs = prep_template_put_req(1, 'test@foo.bar', 'badfilepath')
+        exp = {'status': 'error',
+               'message': 'file does not exist',
+               'file': 'badfilepath'}
         self.assertEqual(obs, exp)
 
     def test_prep_template_delete_req(self):
@@ -148,10 +194,10 @@ class TestPrepAPI(TestCase):
     def test_prep_template_graph_get_req(self):
         obs = prep_template_graph_get_req(1, 'test@foo.bar')
         exp = {'edge_list': [(1, 3), (1, 2), (2, 4)],
-               'node_labels': [(1, 'Artifact Name for 1 - FASTQ'),
-                               (2, 'Artifact Name for 2 - Demultiplexed'),
-                               (3, 'Artifact Name for 3 - Demultiplexed'),
-                               (4, 'Artifact Name for 4 - BIOM')],
+               'node_labels': [(1, 'Raw data 1 - FASTQ'),
+                               (2, 'Demultiplexed 1 - Demultiplexed'),
+                               (3, 'Demultiplexed 2 - Demultiplexed'),
+                               (4, 'BIOM - BIOM')],
                'status': 'success',
                'message': ''}
 
