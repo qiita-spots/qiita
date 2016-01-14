@@ -8,13 +8,15 @@
 from unittest import TestCase, main
 from os.path import join
 
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.util import qiita_test_checker
+from qiita_db.util import get_mountpoint
 from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_summary_get_req, sample_template_post_req,
     sample_template_put_req, sample_template_delete_req,
     sample_template_filepaths_get_req)
 
 
+@qiita_test_checker()
 class TestSampleAPI(TestCase):
     def test_sample_template_summary_get_req(self):
         obs = sample_template_summary_get_req(1, 'test@foo.bar')
@@ -151,12 +153,12 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_sample_template_filepaths_get_req(self):
+        templates_dir = get_mountpoint('templates')[0][1]
         obs = sample_template_filepaths_get_req(1, 'test@foo.bar')
-
         exp = {'status': 'success',
                'message': '',
-               'filepaths': [(14, join(qiita_config.base_data_dir,
-                             'templates/1_19700101-000000.txt'))]}
+               'filepaths': [(14, join(templates_dir,
+                              '1_19700101-000000.txt'))]}
         self.assertEqual(obs, exp)
 
     def test_sample_template_filepaths_get_req_no_access(self):
