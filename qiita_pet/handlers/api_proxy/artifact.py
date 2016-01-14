@@ -22,11 +22,6 @@ def artifact_graph_get_req(artifact_id, direction, user_id):
          'edge_list': [(0, 1), (0, 2)...],
          'node_labels': [(0, 'label0'), (1, 'label1'), ...]}
 
-    Raises
-    ------
-    HTTPError
-        Raises code 400 if unknown direction passed
-
     Notes
     -----
     Nodes are identified by the corresponding Artifact ID.
