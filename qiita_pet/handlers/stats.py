@@ -67,7 +67,8 @@ class StatsHandler(BaseHandler):
 
         # Pull a random public study from the database
         public_studies = Study.get_by_status('public')
-        study = Study(choice(list(public_studies))) if public_studies else None
+        study = choice(list(public_studies)) if public_studies else None
+
         if study is None:
             random_study_info = None
             random_study_title = None
