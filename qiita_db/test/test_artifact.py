@@ -380,6 +380,35 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(test.id)
 
+    def test_delete_with_jobs(self):
+        test = qdb.artifact.Artifact.create(
+            self.filepaths_root, "FASTQ", prep_template=self.prep_template)
+        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
+                          str(test.study.id))
+        self._clean_up_files.extend(
+            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+
+        json_str = (
+            '{"input_data": %d, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}'
+            % test.id)
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(qdb.software.Command(1),
+                                         json_str=json_str))
+        job.status = 'success'
+
+        qdb.artifact.Artifact.delete(test.id)
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.artifact.Artifact(test.id)
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.processing_job.ProcessingJob(job.id)
+
     def test_name(self):
         self.assertEqual(qdb.artifact.Artifact(1).name, "Raw data 1")
         self.assertEqual(qdb.artifact.Artifact(2).name, "Demultiplexed 1")
