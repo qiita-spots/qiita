@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
+from os import remove
 from os.path import join, exists
 from string import ascii_letters
 from random import choice
@@ -23,10 +24,20 @@ from qiita_pet.handlers.api_proxy.prep_template import (
 @qiita_test_checker()
 class TestPrepAPI(TestCase):
     def setUp(self):
-        fp = join(qiita_config.base_data_dir, 'uploads/1', 'uploaded_file.txt')
+        fp = join(qiita_config.base_data_dir, 'uploads', '1',
+                  'uploaded_file.txt')
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
+
+        # Create test file to point update tests at
+        self.update_fp = join(qiita_config.base_data_dir, 'uploads', '1',
+                              'update.txt')
+        with open(self.update_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+
+        def tear_down(self):
+            remove(self.update_fp)
 
     def test_process_investigation_type(self):
         obs = _process_investigation_type('Metagenomics', '', '')
@@ -130,6 +141,17 @@ class TestPrepAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Empty file passed!',
                'file': 'uploaded_file.txt'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_put_req_warning(self):
+        obs = prep_template_put_req(1, 'test@foo.bar', 'update.txt')
+        exp = {'status': 'warning',
+               'message': 'Sample names were already prefixed with the study '
+                          'id.\nThe following columns have been added to the '
+                          'existing template: new_col\nThere are no '
+                          'differences between the data stored in the DB and '
+                          'the new data provided',
+               'file': 'update.txt'}
         self.assertEqual(obs, exp)
 
     def test_prep_put_req_inv_type(self):

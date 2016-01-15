@@ -67,4 +67,6 @@ def check_fp(study_id, filename):
         return {'status': 'error',
                 'message': 'file does not exist',
                 'file': filename}
-    return fp_rsp
+    return {'status': 'success',
+            'message': '',
+            'file': fp_rsp}

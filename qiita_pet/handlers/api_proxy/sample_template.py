@@ -106,9 +106,10 @@ def sample_template_post_req(study_id, user_id, data_type,
     if access_error:
         return access_error
     fp_rsp = check_fp(study_id, sample_template)
-    if isinstance(fp_rsp, dict):
+    if fp_rsp['status'] != 'success':
         # Unknown filepath, so return the error message
         return fp_rsp
+    fp_rsp = fp_rsp['file']
 
     # Define here the message and message level in case of success
     msg = ''
@@ -175,9 +176,10 @@ def sample_template_put_req(study_id, user_id, sample_template):
     if access_error:
         return access_error
     fp_rsp = check_fp(study_id, sample_template)
-    if isinstance(fp_rsp, dict):
+    if fp_rsp['status'] != 'success':
         # Unknown filepath, so return the error message
         return fp_rsp
+    fp_rsp = fp_rsp['file']
 
     msg = ''
     status = 'success'

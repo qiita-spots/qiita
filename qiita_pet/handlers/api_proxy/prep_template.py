@@ -154,9 +154,10 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     if access_error:
         return access_error
     fp_rpt = check_fp(study_id, prep_template)
-    if isinstance(fp_rpt, dict):
+    if fp_rpt['status'] != 'success':
         # Unknown filepath, so return the error message
         return fp_rpt
+    fp_rpt = fp_rpt['file']
 
     # Add new investigation type if needed
     investigation_type = _process_investigation_type(
@@ -236,9 +237,10 @@ def prep_template_put_req(prep_id, user_id, prep_template=None,
     status = 'success'
     if prep_template:
         fp = check_fp(study_id, prep_template)
-        if isinstance(fp, dict):
+        if fp['status'] != 'success':
             # Unknown filepath, so return the error message
             return fp
+        fp = fp['file']
         try:
             with warnings.catch_warnings(record=True) as warns:
                 pt = PrepTemplate(int(prep_id))

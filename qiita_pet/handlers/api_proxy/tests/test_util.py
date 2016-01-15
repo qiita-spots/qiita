@@ -32,7 +32,9 @@ class TestUtil(TestCase):
     def test_check_fp(self):
         obs = check_fp(1, 'uploaded_file.txt')
         _, base_fp = get_mountpoint("uploads")[0]
-        exp = join(base_fp, '1', 'uploaded_file.txt')
+        exp = {'status': 'success',
+               'message': '',
+               'file': join(base_fp, '1', 'uploaded_file.txt')}
         self.assertEqual(obs, exp)
 
     def test_check_fp_bad_fp(self):
