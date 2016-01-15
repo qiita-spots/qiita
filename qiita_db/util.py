@@ -813,13 +813,19 @@ def filepath_id_to_rel_path(filepath_id):
         The relative path for the given filepath id
     """
     with qdb.sql_connection.TRN:
-        sql = """SELECT mountpoint, filepath
+        sql = """SELECT mountpoint, filepath, subdirectory, artifact_id
                  FROM qiita.filepath
-                 JOIN qiita.data_directory USING (data_directory_id)
+                    JOIN qiita.data_directory USING (data_directory_id)
+                    LEFT JOIN qiita.artifact_filepath USING (filepath_id)
                  WHERE filepath_id = %s"""
         qdb.sql_connection.TRN.add(sql, [filepath_id])
+        mp, fp, sd, a_id = qdb.sql_connection.TRN.execute_fetchindex()[0]
+        if sd:
+            result = join(mp, str(a_id), fp)
+        else:
+            result = join(mp, fp)
         # It should be only one row
-        return join(*qdb.sql_connection.TRN.execute_fetchindex()[0])
+        return result
 
 
 def filepath_ids_to_rel_paths(filepath_ids):
@@ -838,13 +844,20 @@ def filepath_ids_to_rel_paths(filepath_ids):
         return {}
 
     with qdb.sql_connection.TRN:
-        sql = """SELECT filepath_id, mountpoint, filepath
+        sql = """SELECT filepath_id, mountpoint, filepath, subdirectory,
+                        artifact_id
                  FROM qiita.filepath
-                 JOIN qiita.data_directory USING (data_directory_id)
+                    JOIN qiita.data_directory USING (data_directory_id)
+                    LEFT JOIN qiita.artifact_filepath USING (filepath_id)
                  WHERE filepath_id IN %s"""
         qdb.sql_connection.TRN.add(sql, [tuple(filepath_ids)])
-        return {row[0]: join(*row[1:])
-                for row in qdb.sql_connection.TRN.execute_fetchindex()}
+        res = {}
+        for row in qdb.sql_connection.TRN.execute_fetchindex():
+            if row[3]:
+                res[row[0]] = join(row[1], str(row[4]), row[2])
+            else:
+                res[row[0]] = join(row[1], row[2])
+        return res
 
 
 def convert_to_id(value, table, text_col=None):
