@@ -313,7 +313,7 @@ class TestAnalysis(TestCase):
 
         mp = qdb.util.get_mountpoint("processed_data")[0][1]
         study_fp = join(mp, "2_study_1001_closed_reference_otu_table.biom")
-        artifact = qdb.artifact.Artifact.create([(study_fp, 6)], "BIOM",
+        artifact = qdb.artifact.Artifact.create([(study_fp, 7)], "BIOM",
                                                 prep_template=pt)
         self.table_fp = artifact.filepaths[0][1]
 
