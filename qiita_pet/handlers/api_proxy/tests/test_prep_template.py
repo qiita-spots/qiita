@@ -43,6 +43,11 @@ class TestPrepAPI(TestCase):
         obs = _process_investigation_type('Metagenomics', '', '')
         self.assertEqual(obs, 'Metagenomics')
 
+    def test_process_investigation_type_user_term(self):
+        _process_investigation_type('Other', 'New Type', 'userterm')
+        obs = _process_investigation_type('Other', 'userterm', '')
+        self.assertEqual(obs, 'userterm')
+
     def test_process_investigation_type_new_term(self):
         randstr = ''.join([choice(ascii_letters) for x in range(30)])
         obs = _process_investigation_type('Other', 'New Type', randstr)
