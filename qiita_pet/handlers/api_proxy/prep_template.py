@@ -104,18 +104,16 @@ def prep_template_summary_get_req(prep_id, user_id):
         return access_error
     df = prep.to_dataframe()
     out = {'num_samples': df.shape[0],
-           'summary': {}}
+           'summary': {},
+           'status': 'success',
+           'message': ''}
 
-    # drop the prep_id column if it exists
-    if 'study_id' in df.columns:
-        df.drop('study_id', axis=1, inplace=True)
     cols = list(df.columns)
     for column in cols:
         counts = df[column].value_counts()
         out['summary'][str(column)] = [(str(key), counts[key])
                                        for key in natsorted(counts.index)]
     # Add expected messaging and status info
-    out.update({'status': 'success', 'message': ''})
     return out
 
 
@@ -168,8 +166,6 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     status = 'success'
     try:
         with warnings.catch_warnings(record=True) as warns:
-            # force all warnings to always be triggered
-            warnings.simplefilter("always")
             data_type_id = convert_to_id(data_type, 'data_type')
             # deleting previous uploads and inserting new one
             PrepTemplate.create(load_template_to_dataframe(fp_rpt),
@@ -326,7 +322,7 @@ def prep_template_filepaths_get_req(prep_id, user_id):
             }
 
 
-def prep_ontology_get_req():
+def ena_ontology_get_req():
     """Returns all system and user defined terms for prep template type
 
     Returns

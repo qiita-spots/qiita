@@ -54,8 +54,12 @@ def check_fp(study_id, filename):
 
     Returns
     -------
-    dict or str
-        dict if error, filepath as string if filepath exists
+    dict
+        {'status': status,
+         'message': msg,
+         'file': str}
+        file contains full filepath if status is success, otherwise it contains
+        the filename
     """
     # Get the uploads folder
     _, base_fp = get_mountpoint("uploads")[0]

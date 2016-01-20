@@ -11,14 +11,19 @@ from os.path import join, exists
 from string import ascii_letters
 from random import choice
 
+import pandas as pd
+
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology
+from qiita_db.study import Study
+from qiita_db.util import get_count
 from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req, prep_template_get_req,
     prep_template_graph_get_req, prep_template_filepaths_get_req,
-    prep_ontology_get_req, _process_investigation_type)
+    ena_ontology_get_req, _process_investigation_type)
 
 
 @qiita_test_checker()
@@ -57,8 +62,8 @@ class TestPrepAPI(TestCase):
         ontology = Ontology(999999999)
         self.assertIn(randstr, ontology.user_defined_terms)
 
-    def test_prep_ontology_get_req(self):
-        obs = prep_ontology_get_req()
+    def test_ena_ontology_get_req(self):
+        obs = ena_ontology_get_req()
         exp = {'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
                        'Forensic or Paleo-genomics', 'Gene Regulation Study',
                        'Metagenomics', 'Pooled Clone Sequencing',
@@ -70,11 +75,34 @@ class TestPrepAPI(TestCase):
                'message': ''}
         self.assertEqual(obs, exp)
 
+    def test_ena_ontology_get_req_user_terms(self):
+        _process_investigation_type('Other', 'New Type', 'userterm')
+
+        obs = ena_ontology_get_req()
+        exp = {'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
+                       'Forensic or Paleo-genomics', 'Gene Regulation Study',
+                       'Metagenomics', 'Pooled Clone Sequencing',
+                       'Population Genomics', 'RNASeq', 'Resequencing',
+                       'Synthetic Genomics', 'Transcriptome Analysis',
+                       'Whole Genome Sequencing', 'Other'],
+               'User': ['userterm'],
+               'status': 'success',
+               'message': ''}
+        self.assertEqual(obs, exp)
+
     def test_prep_template_get_req(self):
         obs = prep_template_get_req(1, 'test@foo.bar')
         self.assertItemsEqual(obs.keys(), ['status', 'message', 'template'])
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(obs['message'], '')
+        self.assertEqual(obs['template'].keys(), [
+            '1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195', '1.SKB6.640176',
+            '1.SKD6.640190', '1.SKM6.640187', '1.SKD9.640182', '1.SKM8.640201',
+            '1.SKM2.640199', '1.SKD2.640178', '1.SKB7.640196', '1.SKD4.640185',
+            '1.SKB8.640193', '1.SKM3.640197', '1.SKD5.640186', '1.SKB1.640202',
+            '1.SKM1.640183', '1.SKD1.640179', '1.SKD3.640198', '1.SKB5.640181',
+            '1.SKB4.640189', '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
+            '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191'])
         self.assertEqual(obs['template']['1.SKD7.640191'], {
             'experiment_center': 'ANL',
             'center_name': 'ANL',
@@ -120,12 +148,37 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_prep_template_post_req(self):
-        obs = prep_template_post_req(1, 'test@foo.bar', 'uploaded_file.txt',
+        new_id = get_count('qiita.prep_template') + 1
+        obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
                                      '16S')
-        exp = {'status': 'error',
-               'message': 'Empty file passed!',
-               'file': 'uploaded_file.txt'}
+        exp = {'status': 'warning',
+               'message': 'Sample names were already prefixed with the study '
+                          'id.; Some functionality will be disabled due to '
+                          'missing columns:\n\tDemultiplexing with multiple '
+                          'input files disabled. If your raw data includes '
+                          'multiple raw input files, you will not be able to '
+                          'preprocess your raw data: primer, run_prefix, '
+                          'barcode;\n\tDemultiplexing disabled. You will not '
+                          'be able to preprocess your raw data: primer, '
+                          'barcode;\n\tEBI submission disabled: center_name, '
+                          'instrument_model, platform, '
+                          'library_construction_protocol, '
+                          'experiment_design_description, primer.\nSee the '
+                          'Templates tutorial for a description of these '
+                          'fields.; Some columns required to generate a '
+                          'QIIME-compliant mapping file are not present in the'
+                          ' template. A placeholder value (XXQIITAXX) has been'
+                          ' used to populate these columns. Missing columns: '
+                          'LinkerPrimerSequence, BarcodeSequence',
+               'file': 'update.txt'}
         self.assertEqual(obs, exp)
+
+        # Make sure new prep template added
+        prep = PrepTemplate(new_id)
+        self.assertEqual(prep.data_type(), '16S')
+        self.assertEqual([x for x in prep.keys()], ['1.SKD6.640190'])
+        self.assertEqual([x._to_dict() for x in prep.values()],
+                         [{'new_col': 'new_value'}])
 
     def test_prep_template_post_req_no_access(self):
         obs = prep_template_post_req(1, 'demo@microbio.me', 'filepath', '16S')
@@ -188,6 +241,15 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_prep_template_delete_req(self):
+        template = pd.read_csv(self.update_fp, sep='\t', index_col=0)
+        new_id = get_count('qiita.prep_template') + 1
+        PrepTemplate.create(template, Study(1), '16S')
+        obs = prep_template_delete_req(new_id, 'test@foo.bar')
+        exp = {'status': 'success',
+               'message': ''}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_delete_req_attached_artifact(self):
         obs = prep_template_delete_req(1, 'test@foo.bar')
         exp = {'status': 'error',
                'message': "Couldn't remove prep template: Cannot remove prep "
