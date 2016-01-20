@@ -348,6 +348,35 @@ class TestCreateStudyAJAX(TestHandlerBase):
         self.assertEqual(response.body, 'False')
 
 
+class TestShareStudyAjax(TestHandlerBase):
+    database = True
+
+    def test_get_deselected(self):
+        s = Study(1)
+        u = User('shared@foo.bar')
+        args = {'deselected': u.id, 'study_id': s.id}
+        self.assertEqual(s.shared_with, [u])
+        response = self.get('/study/sharing/', args)
+        self.assertEqual(response.code, 200)
+        exp = {'users': [], 'links': ''}
+        self.assertEqual(loads(response.body), exp)
+        self.assertEqual(s.shared_with, [])
+
+    def test_get_selected(self):
+        s = Study(1)
+        u = User('admin@foo.bar')
+        args = {'selected': u.id, 'study_id': s.id}
+        response = self.get('/study/sharing/', args)
+        self.assertEqual(response.code, 200)
+        exp = {
+            'users': ['shared@foo.bar', u.id],
+            'links':
+                ('<a target="_blank" href="mailto:shared@foo.bar">Shared</a>, '
+                 '<a target="_blank" href="mailto:admin@foo.bar">Admin</a>')}
+        self.assertEqual(loads(response.body), exp)
+        self.assertEqual(s.shared_with, [User('shared@foo.bar'), u])
+
+
 class TestSearchStudiesAJAX(TestHandlerBase):
     database = True
 
