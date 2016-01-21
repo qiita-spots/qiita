@@ -13,11 +13,22 @@ import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_summary_get_req, sample_template_post_req,
     sample_template_put_req, sample_template_delete_req,
-    sample_template_filepaths_get_req, sample_template_get_req)
+    sample_template_filepaths_get_req, sample_template_get_req,
+    _check_sample_template_exists)
 
 
 @qiita_test_checker()
 class TestSampleAPI(TestCase):
+    def test_check_sample_template_exists(self):
+        obs = _check_sample_template_exists(1)
+        self.assertEqual(obs, {'status': 'success', 'message': ''})
+
+    def test_check_sample_template_exists_no_template(self):
+        obs = _check_sample_template_exists(3100)
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Sample template 3100 does not '
+                               'exist'})
+
     def test_sample_template_get_req(self):
         obs = sample_template_get_req(1, 'test@foo.bar')
         self.assertEqual(obs.keys(), ['status', 'message', 'template'])

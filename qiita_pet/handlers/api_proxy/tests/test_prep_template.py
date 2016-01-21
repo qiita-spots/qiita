@@ -23,7 +23,8 @@ from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req, prep_template_get_req,
     prep_template_graph_get_req, prep_template_filepaths_get_req,
-    ena_ontology_get_req, _process_investigation_type)
+    ena_ontology_get_req, _process_investigation_type,
+    _check_prep_template_exists)
 
 
 @qiita_test_checker()
@@ -61,6 +62,15 @@ class TestPrepAPI(TestCase):
         # Make sure New Type added
         ontology = Ontology(999999999)
         self.assertIn(randstr, ontology.user_defined_terms)
+
+    def test_check_prep_template_exists(self):
+        obs = _check_prep_template_exists(1)
+        self.assertEqual(obs, {'status': 'success', 'message': ''})
+
+    def test_check_prep_template_exists_no_template(self):
+        obs = _check_prep_template_exists(3100)
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Prep template 3100 does not exist'})
 
     def test_ena_ontology_get_req(self):
         obs = ena_ontology_get_req()

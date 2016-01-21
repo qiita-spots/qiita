@@ -70,6 +70,37 @@ def sample_template_get_req(samp_id, user_id):
             'template': df.to_dict(orient='index')}
 
 
+def sample_template_samples_get_req(samp_id, user_id):
+    """Returns list of samples in the sample template
+
+    Parameters
+    ----------
+    samp_id : int or str typecastable to int
+        SampleTemplate id to get info for
+    user_id : str
+        User requesting the sample template info
+
+    Returns
+    -------
+    dict
+        Returns summary information in the form
+        {'status': str,
+         'message': str,
+         'samples': list of str}
+         samples is list of samples in the template
+    """
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
+    return {'status': 'success',
+            'message': '',
+            'samples': sorted(x for x in SampleTemplate(int(samp_id)))
+            }
+
+
 def sample_template_summary_get_req(samp_id, user_id):
     """Returns a summary of the sample template metadata columns
 

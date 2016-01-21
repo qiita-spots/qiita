@@ -591,15 +591,6 @@ class TestSampleSummaryAJAX(TestHandlerBase):
 class TestDelete(TestHandlerBase):
     database = True
 
-    def test_delete_study(self):
-        response = self.post('/study/description/1',
-                             {'study_id': 1,
-                              'action': 'delete_study'})
-        self.assertEqual(response.code, 200)
-
-        # checking that the action was sent
-        self.assertIn("Couldn't remove study", response.body)
-
     def test_delete_sample_template(self):
         response = self.post('/study/description/sample_template/',
                              {'study_id': 1,
