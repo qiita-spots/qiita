@@ -9,7 +9,6 @@ from __future__ import division
 import warnings
 
 from os import remove
-from os.path import exists, join
 
 from natsort import natsorted
 from qiita_db.metadata_template.sample_template import SampleTemplate
@@ -17,11 +16,11 @@ from qiita_db.study import Study
 from qiita_core.util import execute_as_transaction
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
                                              looks_like_qiime_mapping_file)
-from qiita_db.util import get_mountpoint
+
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
 from qiita_pet.util import convert_text_html
-from qiita_pet.handlers.api_proxy.util import check_access
+from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 
 
 def sample_template_summary_get_req(samp_id, user_id):
@@ -70,34 +69,6 @@ def sample_template_summary_get_req(samp_id, user_id):
     return out
 
 
-def _check_fp(study_id, filename):
-    """Check whether an uploaded file exists
-
-    Parameters
-    ----------
-    study_id : int
-        Study file uploaded to
-    filename : str
-        name of the uploaded file
-
-    Returns
-    -------
-    dict or str
-        dict if error, filepath as string if filepath exists
-    """
-    # Get the uploads folder
-    _, base_fp = get_mountpoint("uploads")[0]
-    # Get the path of the sample template in the uploads folder
-    fp_rsp = join(base_fp, str(study_id), filename)
-
-    if not exists(fp_rsp):
-        # The file does not exist, fail nicely
-        return {'status': 'error',
-                'message': 'file does not exist',
-                'file': filename}
-    return fp_rsp
-
-
 @execute_as_transaction
 def sample_template_post_req(study_id, user_id, data_type,
                              sample_template):
@@ -114,6 +85,11 @@ def sample_template_post_req(study_id, user_id, data_type,
     sample_template : str
         filename to use for creation
 
+    Raises
+    ------
+    HTTPError
+        If the sample template file does not exists
+
     Returns
     -------
     dict
@@ -129,10 +105,11 @@ def sample_template_post_req(study_id, user_id, data_type,
     access_error = check_access(int(study_id), user_id)
     if access_error:
         return access_error
-    fp_rsp = _check_fp(study_id, sample_template)
-    if isinstance(fp_rsp, dict):
+    fp_rsp = check_fp(study_id, sample_template)
+    if fp_rsp['status'] != 'success':
         # Unknown filepath, so return the error message
         return fp_rsp
+    fp_rsp = fp_rsp['file']
 
     # Define here the message and message level in case of success
     msg = ''
@@ -161,7 +138,6 @@ def sample_template_post_req(study_id, user_id, data_type,
                 msg = '; '.join([convert_text_html(str(w.message))
                                  for w in warns])
                 status = 'warning'
-
     except Exception as e:
         # Some error occurred while processing the sample template
         # Show the error to the user so they can fix the template
@@ -172,7 +148,6 @@ def sample_template_post_req(study_id, user_id, data_type,
             'file': sample_template}
 
 
-@execute_as_transaction
 def sample_template_put_req(study_id, user_id, sample_template):
     """Updates a sample template using the given file
 
@@ -200,10 +175,11 @@ def sample_template_put_req(study_id, user_id, sample_template):
     access_error = check_access(int(study_id), user_id)
     if access_error:
         return access_error
-    fp_rsp = _check_fp(study_id, sample_template)
-    if isinstance(fp_rsp, dict):
+    fp_rsp = check_fp(study_id, sample_template)
+    if fp_rsp['status'] != 'success':
         # Unknown filepath, so return the error message
         return fp_rsp
+    fp_rsp = fp_rsp['file']
 
     msg = ''
     status = 'success'
@@ -221,7 +197,6 @@ def sample_template_put_req(study_id, user_id, sample_template):
             if warns:
                 msg = '\n'.join(set(str(w.message) for w in warns))
                 status = 'warning'
-
     except Exception as e:
             status = 'error'
             msg = str(e)

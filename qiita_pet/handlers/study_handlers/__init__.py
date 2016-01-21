@@ -14,10 +14,14 @@ from .description_handlers import (StudyDescriptionHandler,
 from .ebi_handlers import EBISubmitHandler
 from .vamps_handlers import VAMPSHandler
 from .base import StudyIndexHandler, StudyBaseInfoAJAX
+from .prep_template import PrepTemplateGraphAJAX, PrepTemplateAJAX
+from .artifact import ArtifactGraphAJAX
 from .sample_template import SampleTemplateAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyEditHandler', 'CreateStudyAJAX', 'StudyDescriptionHandler',
            'PreprocessingSummaryHandler', 'EBISubmitHandler',
-           'VAMPSHandler', 'SearchStudiesAJAX',
-           'StudyIndexHandler', 'StudyBaseInfoAJAX', 'SampleTemplateAJAX']
+           'MetadataSummaryHandler', 'VAMPSHandler', 'SearchStudiesAJAX',
+           'PrepTemplateGraphAJAX', 'ArtifactGraphAJAX',
+           'StudyIndexHandler', 'StudyBaseInfoAJAX', 'SampleTemplateAJAX',
+           'PrepTemplateAJAX']

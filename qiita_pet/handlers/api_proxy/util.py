@@ -5,9 +5,12 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from os.path import exists, join
+
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
 from qiita_db.user import User
+from qiita_db.util import get_mountpoint
 
 
 def check_access(study_id, user_id):
@@ -37,3 +40,37 @@ def check_access(study_id, user_id):
         return {'status': 'error',
                 'message': 'User does not have access to study'}
     return {}
+
+
+def check_fp(study_id, filename):
+    """Check whether an uploaded file exists
+
+    Parameters
+    ----------
+    study_id : int
+        Study file uploaded to
+    filename : str
+        name of the uploaded file
+
+    Returns
+    -------
+    dict
+        {'status': status,
+         'message': msg,
+         'file': str}
+        file contains full filepath if status is success, otherwise it contains
+        the filename
+    """
+    # Get the uploads folder
+    _, base_fp = get_mountpoint("uploads")[0]
+    # Get the path of the sample template in the uploads folder
+    fp_rsp = join(base_fp, str(study_id), filename)
+
+    if not exists(fp_rsp):
+        # The file does not exist, fail nicely
+        return {'status': 'error',
+                'message': 'file does not exist',
+                'file': filename}
+    return {'status': 'success',
+            'message': '',
+            'file': fp_rsp}
