@@ -113,7 +113,6 @@ def prep_template_summary_get_req(prep_id, user_id):
         counts = df[column].value_counts()
         out['summary'][str(column)] = [(str(key), counts[key])
                                        for key in natsorted(counts.index)]
-    # Add expected messaging and status info
     return out
 
 
