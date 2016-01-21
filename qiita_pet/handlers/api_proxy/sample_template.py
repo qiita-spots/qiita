@@ -28,7 +28,7 @@ def sample_template_get_req(samp_id, user_id):
 
     Parameters
     ----------
-    samp_id : int
+    samp_id : int or int castable string
         SampleTemplate id to get info for
     user_id : str
         User requesting the sample template info
@@ -44,6 +44,9 @@ def sample_template_get_req(samp_id, user_id):
         and the values are a dictionary of column and value.
         Format {sample: {column: value, ...}, ...}
     """
+    access_error = check_access(int(samp_id), user_id)
+    if access_error:
+        return access_error
     template = SampleTemplate(int(samp_id))
     access_error = check_access(template.study_id, user_id)
     if access_error:
