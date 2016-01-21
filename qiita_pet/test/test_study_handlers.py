@@ -376,6 +376,27 @@ class TestShareStudyAjax(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
         self.assertEqual(s.shared_with, [User('shared@foo.bar'), u])
 
+    def test_get_no_access(self):
+        # Create a new study belonging to the 'shared' user, so 'test' doesn't
+        # have access
+        info = {
+            'timeseries_type_id': 1,
+            'lab_person_id': None,
+            'principal_investigator_id': 3,
+            'metadata_complete': False,
+            'mixs_compliant': True,
+            'study_description': 'desc',
+            'study_alias': 'alias',
+            'study_abstract': 'abstract'}
+        u = User('shared@foo.bar')
+        s = Study.create(u, 'test_study', efo=[1], info=info)
+        self.assertEqual(s.shared_with, [])
+
+        args = {'selected': 'test@foo.bar', 'study_id': s.id}
+        response = self.get('/study/sharing/', args)
+        self.assertEqual(response.code, 403)
+        self.assertEqual(s.shared_with, [])
+
 
 class TestSearchStudiesAJAX(TestHandlerBase):
     database = True
