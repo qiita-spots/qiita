@@ -7,22 +7,26 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from tornado.web import authenticated
+from tornado.web import authenticated, HTTPError
 
 from qiita_pet.handlers.util import to_int, doi_linkifier
-# ONLY IMPORT FROM qiita_pet HERE. All other imports must be made in
-# api_proxy.py so they will be removed when we get the API in place.
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    prep_template_get_req, data_types_get_req, study_get_req)
+    study_prep_get_req, data_types_get_req, study_get_req)
 
 
 class StudyIndexHandler(BaseHandler):
     @authenticated
     def get(self, study_id):
         study = to_int(study_id)
+
         # Proxies for what will become API requests
-        prep_info = prep_template_get_req(study, self.current_user.id)['info']
+        prep_info = study_prep_get_req(study, self.current_user.id)
+        # Make sure study exists
+        if prep_info['status'] != 'success':
+            raise HTTPError(404, prep_info['message'])
+
+        prep_info = prep_info['info']
         data_types = data_types_get_req()['data_types']
         study_info = study_get_req(study, self.current_user.id)['info']
         editable = study_info['status'] == 'sandbox'
@@ -37,10 +41,13 @@ class StudyBaseInfoAJAX(BaseHandler):
     def get(self):
         study_id = self.get_argument('study_id')
         study = to_int(study_id)
-        # Proxy for what will become API request
         study_info = study_get_req(study, self.current_user.id)['info']
         study_doi = ' '.join(
             [doi_linkifier(p) for p in study_info['publications']])
+        email = '<a href="mailto:{email}">{name} ({affiliation})</a>'
+        pi = email.format(**study_info['principal_investigator'])
+        contact = email.format(**study_info['lab_person'])
 
         self.render('study_ajax/base_info.html',
-                    study_info=study_info, publications=study_doi)
+                    study_info=study_info, publications=study_doi, pi=pi,
+                    contact=contact)

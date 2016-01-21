@@ -10,9 +10,10 @@
       <option value="{{f}}">{{f}}</option>
     {% end %}
     </select>
+    <button class="btn btn-info btn-sm" onclick="sample_action('create')">Create or reset</button>
     {% if stats %}
     <button class="btn btn-info btn-sm" onclick="sample_action('update')">Update</button>
-    <button class="btn btn-danger btn-sm" onclick="sample_action('delete')"></p>Delete</button>
+    <button class="btn btn-danger btn-sm" onclick="sample_action('delete')">Delete</button>
     {% end %}
     </p>
     <p> <select id="data_types" value="data_types">
@@ -73,6 +74,8 @@
         } else {
           bootstrapAlert(data.message.replace("\n", "<br/>"), "info", 4000);
         }
+        //reload section of the page with new info
+         fill_sample({{study_id}})
       })
   }
 </script>

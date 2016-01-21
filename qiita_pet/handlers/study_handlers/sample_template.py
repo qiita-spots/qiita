@@ -12,7 +12,8 @@ from qiita_pet.util import is_localhost
 from qiita_pet.handlers.util import download_link_or_path
 from qiita_db.util import get_files_from_uploads_folders
 from qiita_pet.handlers.api_proxy import (
-    sample_template_summary_get_req, sample_template_put_req,
+    sample_template_summary_get_req,
+    sample_template_post_req, sample_template_put_req,
     sample_template_delete_req, sample_template_filepaths_get_req,
     data_types_get_req)
 
@@ -39,10 +40,15 @@ class SampleTemplateAJAX(BaseHandler):
 
     @authenticated
     def post(self):
-        """Edit/delete sample template"""
+        """Edit/delete/create sample template"""
         action = self.get_argument('action')
         study_id = self.get_argument('study_id')
-        if action == 'update':
+        if action == 'create':
+            filepath = self.get_argument('filepath')
+            data_type = self.get_argument('data_type')
+            result = sample_template_post_req(study_id, self.current_user.id,
+                                              data_type, filepath)
+        elif action == 'update':
             filepath = self.get_argument('filepath')
             result = sample_template_put_req(study_id, self.current_user.id,
                                              filepath)

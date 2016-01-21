@@ -68,16 +68,64 @@ def study_get_req(study_id, user_id):
     study_info['status'] = study.status
 
     # Clean up StudyPerson objects to string for display
-    pi = study_info["principal_investigator"]
-    study_info["principal_investigator"] = '%s (%s)' % (pi.name,
-                                                        pi.affiliation)
-    lab_person = study_info["lab_person"]
-    study_info["lab_person"] = '%s (%s)' % (lab_person.name,
-                                            lab_person.affiliation)
+    pi = study_info['principal_investigator']
+    study_info['principal_investigator'] = {
+        'name': pi.name,
+        'email': pi.email,
+        'affiliation': pi.affiliation}
+
+    lab_person = study_info['lab_person']
+    study_info['lab_person'] = {
+        'name': lab_person.name,
+        'email': lab_person.email,
+        'affiliation': lab_person.affiliation}
 
     samples = study.sample_template.keys()
     study_info['num_samples'] = 0 if samples is None else len(list(samples))
     return {'status': 'success',
             'message': '',
             'info': study_info
+            }
+
+
+def study_prep_get_req(study_id, user_id):
+    """Gives a summary of each prep template attached to the study
+
+    Parameters
+    ----------
+    study_id : int
+        Study id to get prep template info for
+    user_id : str
+        User id requesting the prep templates
+
+    Returns
+    -------
+    dict of list of dict
+        prep template information seperated by data type, in the form
+        {data_type: [{prep 1 info dict}, ....], ...}
+    """
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
+    # Can only pass ids over API, so need to instantiate object
+    study = Study(int(study_id))
+    prep_info = {}
+    for dtype in study.data_types:
+        prep_info[dtype] = []
+        for prep in study.prep_templates(dtype):
+            start_artifact = prep.artifact
+            youngest_artifact = prep.artifact.youngest_artifact
+            info = {
+                'name': 'PREP %d NAME' % prep.id,
+                'id': prep.id,
+                'status': prep.status,
+                'start_artifact': start_artifact.artifact_type,
+                'start_artifact_id': start_artifact.id,
+                'youngest_artifact': ' - '.join(
+                    [youngest_artifact.name, youngest_artifact.artifact_type])
+            }
+            prep_info[dtype].append(info)
+    return {'status': 'success',
+            'message': '',
+            'info': prep_info
             }
