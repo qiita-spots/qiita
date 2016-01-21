@@ -221,7 +221,8 @@ def prep_template_samples_get_req(prep_id, user_id):
          'samples': list of str}
          samples is list of samples in the template
     """
-    access_error = check_access(prep_id, user_id)
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
     exists = _check_prep_template_exists(int(prep_id))
