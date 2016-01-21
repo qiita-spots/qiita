@@ -68,8 +68,8 @@ def build_sample_summary(study_id, user_id, visible=None):
         visible = []
     # Load sample template into dataframe and filter to wanted columns
     df = pd.DataFrame.from_dict(
-        sample_template_get_req(int(study_id), user_id),  orient='index',
-        dtype=str)
+        sample_template_get_req(int(study_id), user_id)['template'],
+        orient='index', dtype=str)
     meta_available = set(df.columns)
     # Add one column per prep template highlighting what samples exist
     prep_cols = []

@@ -20,12 +20,15 @@ from qiita_pet.handlers.api_proxy.sample_template import (
 class TestSampleAPI(TestCase):
     def test_sample_template_get_req(self):
         obs = sample_template_get_req(1, 'test@foo.bar')
-        self.assertEqual(len(obs), 27)
-        self.assertIn('1.SKB2.640194', obs.keys())
-        self.assertEqual(str(obs['1.SKB2.640194']['collection_timestamp']),
-                         '2011-11-11 13:00:00')
-        del obs['1.SKB2.640194']['collection_timestamp']
-        self.assertEqual(obs['1.SKB2.640194'], {
+        self.assertEqual(obs.keys(), ['status', 'message', 'template'])
+        self.assertEqual(obs['status'], 'success')
+        self.assertEqual(obs['message'], '')
+        self.assertEqual(len(obs['template']), 27)
+        self.assertEqual(str(
+            obs['template']['1.SKB2.640194']['collection_timestamp']),
+            '2011-11-11 13:00:00')
+        del obs['template']['1.SKB2.640194']['collection_timestamp']
+        self.assertEqual(obs['template']['1.SKB2.640194'], {
             'physical_specimen_location': 'ANL',
             'texture': '64.6 sand, 17.6 silt, 17.8 clay',
             'common_name': 'soil metagenome',

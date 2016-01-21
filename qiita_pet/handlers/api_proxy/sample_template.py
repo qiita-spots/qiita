@@ -45,7 +45,9 @@ def sample_template_get_req(samp_id, user_id):
     if access_error:
         return access_error
     df = template.to_dataframe()
-    return df.to_dict(orient='index')
+    return {'status': 'success',
+            'message': '',
+            'template': df.to_dict(orient='index')}
 
 
 def sample_template_summary_get_req(samp_id, user_id):
