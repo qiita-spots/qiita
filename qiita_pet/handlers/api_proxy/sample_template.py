@@ -23,6 +23,15 @@ from qiita_pet.util import convert_text_html
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 
 
+def _check_sample_template_exists(samp_id):
+    if not SampleTemplate.exists(int(samp_id)):
+        return {'status': 'error',
+                'message': 'Sample template %d does not exist' % int(samp_id)
+                }
+    return {'status': 'success',
+            'message': ''}
+
+
 def sample_template_get_req(samp_id, user_id):
     """Gets the json of the full sample template
 
@@ -47,6 +56,10 @@ def sample_template_get_req(samp_id, user_id):
     access_error = check_access(int(samp_id), user_id)
     if access_error:
         return access_error
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
+
     template = SampleTemplate(int(samp_id))
     access_error = check_access(template.study_id, user_id)
     if access_error:
@@ -85,6 +98,9 @@ def sample_template_summary_get_req(samp_id, user_id):
     access_error = check_access(samp_id, user_id)
     if access_error:
         return access_error
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
     template = SampleTemplate(int(samp_id))
     df = template.to_dataframe()
     out = {'status': 'success',
@@ -118,11 +134,6 @@ def sample_template_post_req(study_id, user_id, data_type,
         Data type for the sample template
     sample_template : str
         filename to use for creation
-
-    Raises
-    ------
-    HTTPError
-        If the sample template file does not exists
 
     Returns
     -------
@@ -209,6 +220,9 @@ def sample_template_put_req(study_id, user_id, sample_template):
     access_error = check_access(int(study_id), user_id)
     if access_error:
         return access_error
+    exists = _check_sample_template_exists(int(study_id))
+    if exists['status'] != 'success':
+        return exists
     fp_rsp = check_fp(study_id, sample_template)
     if fp_rsp['status'] != 'success':
         # Unknown filepath, so return the error message
@@ -263,6 +277,9 @@ def sample_template_delete_req(study_id, user_id):
     access_error = check_access(int(study_id), user_id)
     if access_error:
         return access_error
+    exists = _check_sample_template_exists(int(study_id))
+    if exists['status'] != 'success':
+        return exists
     try:
         SampleTemplate.delete(int(study_id))
     except Exception as e:
@@ -296,6 +313,9 @@ def sample_template_filepaths_get_req(study_id, user_id):
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
+    exists = _check_sample_template_exists(int(study_id))
+    if exists['status'] != 'success':
+        return exists
     return {'status': 'success',
             'message': '',
             'filepaths': SampleTemplate(int(study_id)).get_filepaths()

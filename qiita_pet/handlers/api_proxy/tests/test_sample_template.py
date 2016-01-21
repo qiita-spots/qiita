@@ -9,7 +9,7 @@ from unittest import TestCase, main
 from os.path import join
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import get_mountpoint
+import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_summary_get_req, sample_template_post_req,
     sample_template_put_req, sample_template_delete_req,
@@ -158,6 +158,34 @@ class TestSampleAPI(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
+    def test_sample_template_summary_get_req_no_exist(self):
+        # Create study without sample template
+        new_id = qdb.util.get_count('qiita.study') + 1
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "FCM",
+            "study_description": "Microbiome of people who eat nothing but "
+                                 "fried chicken",
+            "study_abstract": "Exploring how a high fat diet changes the "
+                              "gut microbiome",
+            "emp_person_id": qdb.study.StudyPerson(2),
+            "principal_investigator_id": qdb.study.StudyPerson(3),
+            "lab_person_id": qdb.study.StudyPerson(1)
+        }
+        qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), "Fried chicken microbiome", [1],
+            info)
+
+        # Test sample template not existing
+        obs = sample_template_get_req(new_id, 'test@foo.bar')
+        exp = {'status': 'error',
+               'message': 'Sample template 2 does not exist'}
+        self.assertEqual(obs, exp)
+
     def test_sample_template_post_req(self):
         obs = sample_template_post_req(1, 'test@foo.bar', '16S',
                                        'uploaded_file.txt')
@@ -201,7 +229,7 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_sample_template_filepaths_get_req(self):
-        templates_dir = get_mountpoint('templates')[0][1]
+        templates_dir = qdb.util.get_mountpoint('templates')[0][1]
         obs = sample_template_filepaths_get_req(1, 'test@foo.bar')
         exp = {'status': 'success',
                'message': '',
