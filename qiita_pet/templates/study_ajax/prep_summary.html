@@ -20,6 +20,32 @@
 </div>
 
 <div>
+<h3>Update Investigation Type</h3>
+    <p id="ena-info"> Selected investigation type: 
+    <select id="ena-ontology" value="ena-ontology">
+    <option value=""></option>
+    {% for o in ontology['ENA'] %}
+      <option value="{{o}}">{{o}}</option>
+    {% end %}
+      <option value="Other">Other</option>
+    </select></p>
+
+    <p id="user-ena-info"> User defined investigation type: 
+    <select id="user-ontology" value="user-ontology">
+    <option value=""></option>
+    {% for o in ontology['User'] %}
+      <option value="{{o}}">{{o}}</option>
+    {% end %}
+    <option value="New Type">New Type</option>
+    </select></p>
+
+    <p id="new-ena-info">New user defined term: 
+    <input type="textbox" id="new-ontology" name="new-ontology"></p>
+
+    <button class="btn btn-info btn-sm" onclick="prep_action('ontology')">Update</button>
+</div>
+
+<div>
     <h3>Prep information summary</h3>
     <p>There are <strong>{{num_samples}}</strong> samples in this study.</p>
 </div>
@@ -60,7 +86,7 @@
 
 <script type="text/javascript">
   function prep_action(act) {
-    $.post('/study/description/prep_template/', { prep_id: {{prep_id}}, action: act, filepath: $("#filepath").val() })
+    $.post('/study/description/prep_template/', { prep_id: {{prep_id}}, action: act, filepath: $("#filepath").val(), ena: $("#ena-ontology").val(), ena_user: $("#user-ontology").val(), ena_new: $("#new-ontology").val() })
       .done(function ( data ) {
         if(data.status == "error") {
           bootstrapAlert("<p>Error updating prep template</p>" + data.message, "danger", 4000);
@@ -73,4 +99,17 @@
          fill_prep({{prep_id}})
       })
   }
+
+  $(document).ready(function () {
+    $("#user-ena-info").hide();
+    $("#new-ena-info").hide();
+    $("#ena-info").change(function ( event ) {
+        if( $("#ena-ontology").val() == "Other" ) { $("#user-ena-info").show(); }
+        else { $("#user-ena-info").hide(); }
+    });
+    $("#user-ena-info").change(function ( event ) {
+        if( $("#user-ontology").val() == "New Type" ) { $("#new-ena-info").show(); }
+        else { $("#new-ena-info").hide(); }
+    });
+  });
 </script>

@@ -1,8 +1,15 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from qiita_db.artifact import Artifact
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
-def artifact_get_graph(self, artifact_id, direction, user_id):
+def artifact_graph_get_req(artifact_id, direction, user_id):
     """Creates graphs of ancestor or descendant artifacts from given one
 
     Parameters
@@ -17,13 +24,10 @@ def artifact_get_graph(self, artifact_id, direction, user_id):
     dict of lists of tuples
         A dictionary containing the edge list representation of the graph,
         and the node labels. Formatted as:
-        {'edge_list': [(0, 1), (0, 2)...],
+        {'status': status,
+         'message': message,
+         'edge_list': [(0, 1), (0, 2)...],
          'node_labels': [(0, 'label0'), (1, 'label1'), ...]}
-
-    Raises
-    ------
-    HTTPError
-        Raises code 400 if unknown direction passed
 
     Notes
     -----
@@ -43,7 +47,9 @@ def artifact_get_graph(self, artifact_id, direction, user_id):
             'message': 'Unknown directon %s' % direction
         }
 
-    node_labels = [(n.id, 'longer descriptive name for %d' % n.id)
+    node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
                    for n in G.nodes()]
     return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
-            'node_labels': node_labels}
+            'node_labels': node_labels,
+            'status': 'success',
+            'message': ''}

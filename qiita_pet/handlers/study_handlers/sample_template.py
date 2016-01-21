@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from json import dumps, loads
 
 from tornado.web import authenticated, HTTPError
@@ -22,13 +29,13 @@ class SampleTemplateAJAX(BaseHandler):
         study_id = self.get_argument('study_id')
         files = [f for _, f in get_files_from_uploads_folders(study_id)
                  if f.endswith(('txt', 'tsv'))]
-        data_types = sorted(data_types_get_req())
+        data_types = sorted(data_types_get_req()['data_types'])
         is_local = is_localhost(self.request.headers['host'])
         # Get the most recent version for download and build the link
-        download = sample_template_filepaths_get_req(study_id,
-                                                     self.current_user.id)[-1]
+        download = sample_template_filepaths_get_req(
+            study_id, self.current_user.id)['filepaths'][-1]
         dl_path = download_link_or_path(
-            is_local, download[0], download[1], "Download sample information")
+            is_local, download[1], download[0], "Download sample information")
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
         self.render('study_ajax/sample_summary.html', stats=stats['summary'],
@@ -74,11 +81,11 @@ class SampleAJAX(BaseHandler):
 
         # Add one column per prep template highlighting what samples exist
         prep_cols = []
-        preps = study_prep_get_req(study_id, self.current_user.id)
+        preps = study_prep_get_req(study_id, self.current_user.id)['info']
         for dt in preps:
             for prep in preps[dt]:
                 prep_samples = prep_template_get_req(
-                    prep['id'], self.current_user.id).keys()
+                    prep['id'], self.current_user.id)['template'].keys()
                 prep_df = pd.Series(['X'] * len(prep_samples),
                                     index=prep_samples, dtype=str)
                 col_name = ' - '.join([prep['name'], str(prep['id'])])

@@ -1,13 +1,22 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from os.path import join
 
-from qiita_core.qiita_settings import qiita_config
+from qiita_core.util import qiita_test_checker
+from qiita_db.util import get_mountpoint
 from qiita_pet.handlers.api_proxy.sample_template import (
-    sample_template_get_req, sample_template_post_req,
+    sample_template_summary_get_req, sample_template_post_req,
     sample_template_put_req, sample_template_delete_req,
-    sample_template_filepaths_get_req, sample_template_summary_get_req)
+    sample_template_filepaths_get_req, sample_template_get_req)
 
 
+@qiita_test_checker()
 class TestSampleAPI(TestCase):
     def test_sample_template_get_req(self):
         obs = sample_template_get_req(1, 'test@foo.bar')
@@ -135,7 +144,9 @@ class TestSampleAPI(TestCase):
                                 ('SKM1', 1), ('SKM2', 1), ('SKM3', 1),
                                 ('SKM4', 1), ('SKM5', 1), ('SKM6', 1),
                                 ('SKM7', 1), ('SKM8', 1), ('SKM9', 1)]},
-               'num_samples': 27}
+               'num_samples': 27,
+               'status': 'success',
+               'message': ''}
         self.assertEqual(obs, exp)
 
     def test_sample_template_summary_get_req_no_access(self):
@@ -187,10 +198,12 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_sample_template_filepaths_get_req(self):
+        templates_dir = get_mountpoint('templates')[0][1]
         obs = sample_template_filepaths_get_req(1, 'test@foo.bar')
-
-        exp = [(14, join(qiita_config.base_url,
-                         'download/templates/1_19700101-000000.txt'))]
+        exp = {'status': 'success',
+               'message': '',
+               'filepaths': [(14, join(templates_dir,
+                              '1_19700101-000000.txt'))]}
         self.assertEqual(obs, exp)
 
     def test_sample_template_filepaths_get_req_no_access(self):
