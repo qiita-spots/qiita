@@ -35,8 +35,12 @@ def sample_template_get_req(samp_id, user_id):
 
     Returns
     -------
-    dict of dictionaries
-        Dictionary object where the keys are the metadata samples
+    dict of objects
+        {'status': status,
+         'message': msg,
+         'template': dict of {str: {str: object, ...}, ...}
+
+        template is dictionary where the keys access_error the metadata samples
         and the values are a dictionary of column and value.
         Format {sample: {column: value, ...}, ...}
     """
