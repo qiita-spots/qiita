@@ -377,10 +377,43 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it has been submitted to VAMPS")
 
+            # Check if there is a job queued that will use the artifact
+            sql = """SELECT EXISTS(
+                        SELECT *
+                        FROM qiita.artifact_processing_job
+                            JOIN qiita.processing_job USING (processing_job_id)
+                            JOIN qiita.processing_job_status
+                                USING (processing_job_status_id)
+                        WHERE artifact_id = %s
+                            AND processing_job_status IN ('queued', 'running'))
+                  """
+            qdb.sql_connection.TRN.add(sql, [artifact_id])
+            if qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBArtifactDeletionError(
+                    artifact_id,
+                    "there is a queued/running job that uses this artifact")
+
             # We can now remove the artifact
             filepaths = instance.filepaths
             study = instance.study
 
+            # Delete any failed/successful job that had the artifact as input
+            sql = """SELECT processing_job_id
+                     FROM qiita.artifact_processing_job
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [artifact_id])
+            job_ids = tuple(qdb.sql_connection.TRN.execute_fetchflatten())
+
+            if job_ids:
+                sql = """DELETE FROM qiita.artifact_processing_job
+                         WHERE artifact_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [artifact_id])
+
+                sql = """DELETE FROM qiita.processing_job
+                         WHERE processing_job_id IN %s"""
+                qdb.sql_connection.TRN.add(sql, [job_ids])
+
+            # Detach the artifact from its filepaths
             sql = """DELETE FROM qiita.artifact_filepath
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [artifact_id])

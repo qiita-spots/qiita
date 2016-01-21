@@ -758,7 +758,7 @@ class StudyDescriptionHandler(BaseHandler):
             is done
         """
         prep_template_id = int(self.get_argument('prep_template_id'))
-        prep_id = PrepTemplate(prep_template_id).artifact.id
+        prep_id = prep_template_id
 
         try:
             PrepTemplate.delete(prep_template_id)
