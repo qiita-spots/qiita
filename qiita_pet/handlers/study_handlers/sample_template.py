@@ -63,39 +63,48 @@ class SampleTemplateAJAX(BaseHandler):
         self.write(result)
 
 
+def build_sample_summary(study_id, user_id, visible=None):
+    if visible is None:
+        visible = []
+    # Load sample template into dataframe and filter to wanted columns
+    df = pd.DataFrame.from_dict(
+        sample_template_get_req(int(study_id), user_id),  orient='index',
+        dtype=str)
+    meta_available = set(df.columns)
+    # Add one column per prep template highlighting what samples exist
+    prep_cols = []
+    preps = study_prep_get_req(study_id, user_id)['info']
+    for dt in preps:
+        for prep in preps[dt]:
+            prep_samples = prep_template_get_req(
+                prep['id'], user_id)['template'].keys()
+            prep_df = pd.Series(['X'] * len(prep_samples),
+                                index=prep_samples, dtype=str)
+            col_name = ' - '.join([prep['name'], str(prep['id'])])
+            prep_cols.append(col_name)
+            df[col_name] = prep_df
+
+    # Format the dataframe to html table
+    meta_available = meta_available.difference(visible)
+    table = df.to_html(classes='table table-striped', na_rep='',
+                       columns=prep_cols + visible)
+    return table, meta_available
+
+
 class SampleAJAX(BaseHandler):
     def get(self):
         """Show the sample summary page"""
         study_id = self.get_argument('study_id')
         meta_col = self.get_argument('meta_col', None)
         visible = self.get_argument('meta_visible', [])
-        # Load sample template into dataframe and filter to wanted columns
-        df = pd.DataFrame.from_dict(
-            sample_template_get_req(int(study_id), self.current_user.id),
-            orient='index', dtype=str)
-        meta_available = set(df.columns)
+        # Build list of metadta columns to keep
         if visible:
             visible = loads(visible)
         if meta_col:
             visible.append(meta_col)
 
-        # Add one column per prep template highlighting what samples exist
-        prep_cols = []
-        preps = study_prep_get_req(study_id, self.current_user.id)['info']
-        for dt in preps:
-            for prep in preps[dt]:
-                prep_samples = prep_template_get_req(
-                    prep['id'], self.current_user.id)['template'].keys()
-                prep_df = pd.Series(['X'] * len(prep_samples),
-                                    index=prep_samples, dtype=str)
-                col_name = ' - '.join([prep['name'], str(prep['id'])])
-                prep_cols.append(col_name)
-                df[col_name] = prep_df
-
-        # Format the dataframe to html table
-        meta_available = meta_available.difference(prep_cols)
-        table = df.to_html(classes='table table-striped', na_rep='',
-                           columns=prep_cols + visible)
+        table, meta_available = build_sample_summary(
+            study_id, self.current_user.id, visible)
         self.render('study_ajax/sample_prep_summary.html',
                     table=table, cols=sorted(meta_available),
                     meta_visible=dumps(visible), study_id=study_id)

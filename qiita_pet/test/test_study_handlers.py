@@ -16,6 +16,8 @@ from qiita_pet.handlers.study_handlers.listing_handlers import (
     _build_single_proc_data_info)
 from qiita_pet.handlers.study_handlers.description_handlers import (
     _propagate_visibility)
+from qiita_pet.handlers.study_handlers.sample_template import (
+    build_sample_summary)
 
 
 class TestHelpers(TestHandlerBase):
@@ -181,6 +183,56 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(Artifact(1).visibility, 'private')
         self.assertEqual(Artifact(2).visibility, 'private')
         self.assertEqual(Artifact(4).visibility, 'private')
+
+    def test_build_sample_summary(self):
+        table, meta = build_sample_summary(1, 'test@foo.bar', ['elevation'])
+        # Make sure header filled properly
+        header = (
+            '<thead>\n    <tr style="text-align: right;">\n      <th>'
+            '</th>\n      <th>PREP 1 NAME - 1</th>\n      <th>elevation</th>\n'
+            '    </tr>\n  </thead>')
+        self.assertIn(header, table)
+
+        # Make sure sample is set properly
+        sample = ('<tr>\n      <th>1.SKB9.640200</th>\n      <td>X</td>\n'
+                  '      <td>114</td>\n    </tr>')
+        self.assertIn(sample, table)
+        exp_meta = set([
+            'description', 'physical_specimen_location',
+            'collection_timestamp', 'physical_specimen_remaining',
+            'dna_extracted', 'taxon_id', 'tot_org_carb', 'common_name',
+            'samp_salinity', 'water_content_soil', 'host_subject_id',
+            'sample_type', 'env_feature', 'season_environment',
+            'assigned_from_geo', 'temp', 'tot_nitro', 'country', 'altitude',
+            'env_biome', 'texture', 'scientific_name', 'depth', 'longitude',
+            'description_duplicate', 'latitude', 'ph', 'anonymized_name',
+            'host_taxid'])
+        self.assertEqual(meta, exp_meta)
+
+    def test_build_sample_summary_no_cols(self):
+        table, meta = build_sample_summary(1, 'test@foo.bar', [])
+        # Make sure header filled properly
+        header = (
+            '<thead>\n    <tr style="text-align: right;">\n      <th>'
+            '</th>\n      <th>PREP 1 NAME - 1</th>\n    </tr>\n  </thead>')
+        self.assertIn(header, table)
+
+        # Make sure sample is set properly
+        sample = ('<tr>\n      <th>1.SKB9.640200</th>\n      <td>X</td>\n'
+                  '    </tr>')
+        self.assertIn(sample, table)
+
+        exp_meta = set([
+            'elevation', 'description', 'physical_specimen_location',
+            'collection_timestamp', 'physical_specimen_remaining',
+            'dna_extracted', 'taxon_id', 'tot_org_carb', 'common_name',
+            'samp_salinity', 'water_content_soil', 'host_subject_id',
+            'sample_type', 'env_feature', 'season_environment',
+            'assigned_from_geo', 'temp', 'tot_nitro', 'country', 'altitude',
+            'env_biome', 'texture', 'scientific_name', 'depth', 'longitude',
+            'description_duplicate', 'latitude', 'ph', 'anonymized_name',
+            'host_taxid'])
+        self.assertEqual(meta, exp_meta)
 
 
 class TestStudyEditorForm(TestHandlerBase):
@@ -518,6 +570,22 @@ class TestPrepTemplate(TestHandlerBase):
 
         # checking that the action was sent
         self.assertIn("Couldn't remove prep template:", response.body)
+
+
+class TestSampleSummaryAJAX(TestHandlerBase):
+    def test_get(self):
+        res = self.get("/study/description/sample_summary/", {'study_id': 1})
+        self.assertEqual(res.code, 200)
+        # Make sure header filled properly
+        header = (
+            '<thead>\n    <tr style="text-align: right;">\n      <th>'
+            '</th>\n      <th>PREP 1 NAME - 1</th>\n    </tr>\n  </thead>')
+        self.assertIn(header, res.body)
+
+        # Make sure sample is set properly
+        sample = ('<tr>\n      <th>1.SKB9.640200</th>\n      <td>X</td>'
+                  '\n    </tr>')
+        self.assertIn(sample, res.body)
 
 
 class TestDelete(TestHandlerBase):
