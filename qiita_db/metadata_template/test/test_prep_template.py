@@ -765,6 +765,44 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         exp.sort_index(axis=1, inplace=True)
         assert_frame_equal(obs, exp)
 
+    def test_get_category(self):
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        obs = pt.get_category('primer')
+        exp = {
+            '1.SKB2.640194': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKM4.640180': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKB3.640195': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKB6.640176': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKD6.640190': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKM6.640187': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKD9.640182': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKM8.640201': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKM2.640199': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKD2.640178': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKB7.640196': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKD4.640185': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKB8.640193': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKM3.640197': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKD5.640186': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKB1.640202': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKM1.640183': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKD1.640179': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKD3.640198': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKB5.640181': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKB4.640189': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKB9.640200': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKM9.640192': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKD8.640184': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKM5.640177': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKM7.640188': 'GTGCCAGCMGCCGCGGTAA',
+            '1.SKD7.640191': 'GTGCCAGCMGCCGCGGTAA'}
+        self.assertEqual(obs, exp)
+
+    def test_get_category_no_exists(self):
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        with self.assertRaises(ValueError):
+            pt.get_category('DOESNOTEXIST')
+
 
 @qiita_test_checker()
 class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
