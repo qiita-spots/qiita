@@ -552,13 +552,19 @@ class TestSampleSummaryAJAX(TestHandlerBase):
 
     def test_post(self):
         res = self.post("/study/description/sample_summary/", {
-            'study_id': 1, 'meta_col': 'assigned_from_geo'})
+            'study_id': 1, 'meta_col': 'latitude'})
         self.assertEqual(res.code, 200)
         exp = {"status": "success",
                "message": "",
-               "values": ["n", "n", "n", "n", "n", "n", "n", "n", "n", "n",
-                          "n", "n", "n", "n", "n", "n", "n", "n", "n", "n",
-                          "n", "n", "n", "n", "n", "n", "n"]}
+               "values": ["4.59216095574", "35.2374368957", "95.2060749748",
+                          "43.9614715197", "10.6655599093", "78.3634273709",
+                          "13.089194595", "74.0894932572", "12.6245524972",
+                          "68.0991287718", "53.5050692395", "84.0030227585",
+                          "40.8623799474", "85.4121476399", "29.1499460692",
+                          "68.51099627", "57.571893782", "23.1218032799",
+                          "38.2627021402", "82.8302905615", "None", "None",
+                          "44.9725384282", "0.291867635913", "60.1102854322",
+                          "3.21190859967", "12.7065957714"]}
         self.assertEqual(loads(res.body), exp)
 
     def test_post_error(self):
