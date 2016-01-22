@@ -10,20 +10,44 @@ Add sample column information to table
 </td></tr></table></p>
 {% raw table %}
 
-<script src="/static/vendor/js/tableaddcolumn.js"></script>
 <script type="text/javascript">
   function add_meta() {
     var meta_val = $("#meta_col").val();
     $.post("/study/description/sample_summary/", {study_id: {{study_id}}, meta_col: meta_val })
       .done( function ( data ) {
         if(data.status == "success"){
-          addColumn("samples-table", meta_val, data.values);
+          addColumn(meta_val, data.values);
         } else {
           bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
         }
       });
   }
 
-  function delete_meta() {}
+//Modified from code released to public domain at http://www.mredkj.com/tutorials/tableaddcolumn.html
+function addColumn(header, values)
+{
+  var tblHeadObj = document.getElementById("samples-table").tHead;
+  for (var h=0; h<tblHeadObj.rows.length; h++) {
+    var newTH = document.createElement('th');
+    newTH.id = header;
+    tblHeadObj.rows[h].appendChild(newTH);
+    newTH.innerHTML = header + '<a style="text-align:right" href="#" onclick="deleteColumn(\'' + header +'\')">(x)</a>';
+  }
 
+  var tblBodyObj = document.getElementById("samples-table").tBodies[0];
+  for (var i=0; i<tblBodyObj.rows.length; i++) {
+    var newCell = tblBodyObj.rows[i].insertCell(-1);
+    newCell.innerHTML = values[i];
+  }
+}
+function deleteColumn(col_id)
+{
+  var allRows = document.getElementById("samples-table").rows;
+  console.log($("#" + col_id));
+  var col = $("#" + col_id).parent().children().index($("#" + col_id));
+  for (var i=0; i<allRows.length; i++) {
+    allRows[i].deleteCell(col);
+  }
+  cols_count -= 1;
+}
 </script>
