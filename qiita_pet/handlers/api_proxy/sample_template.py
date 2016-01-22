@@ -101,6 +101,76 @@ def sample_template_samples_get_req(samp_id, user_id):
             }
 
 
+def sample_template_meta_cats_get_req(samp_id, user_id):
+    """Returns list of metadata categories in the sample template
+
+    Parameters
+    ----------
+    samp_id : int or str typecastable to int
+        SampleTemplate id to get info for
+    user_id : str
+        User requesting the sample template info
+
+    Returns
+    -------
+    dict
+        Returns information in the form
+        {'status': str,
+         'message': str,
+         'categories': list of str}
+         samples is list of metadata categories in the template
+    """
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
+    return {'status': 'success',
+            'message': '',
+            'categories': sorted(SampleTemplate(int(samp_id)).categories())
+            }
+
+
+def sample_template_category_get_req(category, samp_id, user_id):
+    """Returns dict of values for each sample in the given category
+
+    Parameters
+    ----------
+    category : str
+        Metadata category to get values for
+    samp_id : int or str typecastable to int
+        SampleTemplate id to get info for
+    user_id : str
+        User requesting the sample template info
+
+    Returns
+    -------
+    dict
+        Returns information in the form
+        {'status': str,
+         'message': str,
+         'values': dict of {str: object}}
+    """
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
+
+    st = SampleTemplate(int(samp_id))
+    try:
+        values = st.get_category(category)
+    except ValueError:
+        return {'status': 'error',
+                'message': 'Category %s does not exist in sample template' %
+                category}
+    return {'status': 'success',
+            'message': '',
+            'values': values}
+
+
 def sample_template_summary_get_req(samp_id, user_id):
     """Returns a summary of the sample template metadata columns
 

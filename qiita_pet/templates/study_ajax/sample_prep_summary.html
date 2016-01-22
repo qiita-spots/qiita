@@ -6,15 +6,24 @@ Add sample column information to table
   <option value="{{col}}">{{col}}</option>
 {% end %}
 </select>
-<button class="btn btn-info btn-sm" onclick="update_meta()">Add column</button>
+<button class="btn btn-info btn-sm" onclick="add_meta()">Add column</button>
 </td></tr></table></p>
 {% raw table %}
 
+<script src="/static/vendor/js/tableaddcolumn.js"></script>
 <script type="text/javascript">
-  function update_meta() {
-    $.get("/study/description/sample_summary/", {study_id: {{study_id}}, meta_visible: '{% raw meta_visible %}', meta_col: $("#meta_col").val()})
+  function add_meta() {
+    var meta_val = $("#meta_col").val();
+    $.post("/study/description/sample_summary/", {study_id: {{study_id}}, meta_col: meta_val })
       .done( function ( data ) {
-        $("#study-main").html(data);
+        if(data.status == "success"){
+          addColumn("samples-table", meta_val, data.values);
+        } else {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+        }
       });
   }
+
+  function delete_meta() {}
+
 </script>

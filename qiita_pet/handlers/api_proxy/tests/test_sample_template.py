@@ -14,7 +14,8 @@ from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_summary_get_req, sample_template_post_req,
     sample_template_put_req, sample_template_delete_req,
     sample_template_filepaths_get_req, sample_template_get_req,
-    _check_sample_template_exists)
+    _check_sample_template_exists, sample_template_samples_get_req,
+    sample_template_category_get_req)
 
 
 @qiita_test_checker()
@@ -195,6 +196,67 @@ class TestSampleAPI(TestCase):
         obs = sample_template_get_req(new_id, 'test@foo.bar')
         exp = {'status': 'error',
                'message': 'Sample template 2 does not exist'}
+        self.assertEqual(obs, exp)
+
+    def test_sample_template_samples_get_req(self):
+        obs = sample_template_samples_get_req(1, 'test@foo.bar')
+        exp = {'status': 'success',
+               'message': '',
+               'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+                           '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+                           '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+                           '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+                           '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+                           '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+                           '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+                           '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+                           '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}
+        self.assertEqual(obs, exp)
+
+    def test_sample_template_samples_get_req_no_access(self):
+        obs = sample_template_samples_get_req(1, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_sample_template_category_get_req(self):
+        obs = sample_template_category_get_req('latitude', 1, 'test@foo.bar')
+        exp = {'status': 'success',
+               'message': '',
+               'values': {'1.SKB2.640194': 35.2374368957,
+                          '1.SKM4.640180': None,
+                          '1.SKB3.640195': 95.2060749748,
+                          '1.SKB6.640176': 78.3634273709,
+                          '1.SKD6.640190': 29.1499460692,
+                          '1.SKM6.640187': 0.291867635913,
+                          '1.SKD9.640182': 23.1218032799,
+                          '1.SKM8.640201': 3.21190859967,
+                          '1.SKM2.640199': 82.8302905615,
+                          '1.SKD2.640178': 53.5050692395,
+                          '1.SKB7.640196': 13.089194595,
+                          '1.SKD4.640185': 40.8623799474,
+                          '1.SKB8.640193': 74.0894932572,
+                          '1.SKM3.640197': None,
+                          '1.SKD5.640186': 85.4121476399,
+                          '1.SKB1.640202': 4.59216095574,
+                          '1.SKM1.640183': 38.2627021402,
+                          '1.SKD1.640179': 68.0991287718,
+                          '1.SKD3.640198': 84.0030227585,
+                          '1.SKB5.640181': 10.6655599093,
+                          '1.SKB4.640189': 43.9614715197,
+                          '1.SKB9.640200': 12.6245524972,
+                          '1.SKM9.640192': 12.7065957714,
+                          '1.SKD8.640184': 57.571893782,
+                          '1.SKM5.640177': 44.9725384282,
+                          '1.SKM7.640188': 60.1102854322,
+                          '1.SKD7.640191': 68.51099627}}
+        self.assertEqual(obs, exp)
+
+    def test_sample_template_category_get_req_no_access(self):
+        obs = sample_template_category_get_req('latitude', 1,
+                                               'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
     def test_sample_template_post_req(self):

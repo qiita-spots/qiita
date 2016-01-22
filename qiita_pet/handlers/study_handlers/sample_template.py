@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from json import dumps, loads
+from xml.etree import ElementTree as et
 
 from tornado.web import authenticated, HTTPError
 import pandas as pd
@@ -18,8 +18,9 @@ from qiita_pet.handlers.api_proxy import (
     sample_template_summary_get_req,
     sample_template_post_req, sample_template_put_req,
     sample_template_delete_req, sample_template_filepaths_get_req,
-    data_types_get_req, sample_template_get_req, prep_template_get_req,
-    study_prep_get_req)
+    data_types_get_req, sample_template_samples_get_req,
+    prep_template_samples_get_req, study_prep_get_req,
+    sample_template_meta_cats_get_req, sample_template_category_get_req)
 
 
 class SampleTemplateAJAX(BaseHandler):
@@ -63,48 +64,69 @@ class SampleTemplateAJAX(BaseHandler):
         self.write(result)
 
 
-def build_sample_summary(study_id, user_id, visible=None):
-    if visible is None:
-        visible = []
-    # Load sample template into dataframe and filter to wanted columns
-    df = pd.DataFrame.from_dict(
-        sample_template_get_req(int(study_id), user_id)['template'],
-        orient='index', dtype=str)
-    meta_available = set(df.columns)
+def _build_sample_summary(study_id, user_id):
+    """Builds the initial table of samples associated with prep templates
+
+    Parameters
+    ----------
+    study_id : int
+        Study to get samples from
+    user_id : str
+        User requesting the information
+
+    Returns
+    -------
+    str
+        HTML of the summary table
+    """
+    # Load all samples available into dataframe
+    df = pd.DataFrame(
+        sorted(sample_template_samples_get_req(study_id, user_id)['samples']),
+        columns=['ALLSAMPS'])
+    df.set_index('ALLSAMPS', inplace=True)
+    df.index.name = None
     # Add one column per prep template highlighting what samples exist
-    prep_cols = []
     preps = study_prep_get_req(study_id, user_id)['info']
     for dt in preps:
         for prep in preps[dt]:
-            prep_samples = prep_template_get_req(
-                prep['id'], user_id)['template'].keys()
+            prep_samples = prep_template_samples_get_req(
+                prep['id'], user_id)['samples']
             prep_df = pd.Series(['X'] * len(prep_samples),
                                 index=prep_samples, dtype=str)
-            col_name = ' - '.join([prep['name'], str(prep['id'])])
-            prep_cols.append(col_name)
+            col_name = '%s - %d' % (prep['name'], prep['id'])
             df[col_name] = prep_df
 
-    # Format the dataframe to html table
-    meta_available = meta_available.difference(visible)
-    table = df.to_html(classes='table table-striped', na_rep='',
-                       columns=prep_cols + visible)
-    return table, meta_available
+    # Format the dataframe to html table with id
+    # From http://stackoverflow.com/a/30596068
+    t = et.fromstring(df.to_html(classes='table table-striped', na_rep=''))
+    t.set('id', 'samples-table')
+    return et.tostring(t)
 
 
 class SampleAJAX(BaseHandler):
+    @authenticated
     def get(self):
         """Show the sample summary page"""
         study_id = self.get_argument('study_id')
-        meta_col = self.get_argument('meta_col', None)
-        visible = self.get_argument('meta_visible', [])
-        # Build list of metadta columns to keep
-        if visible:
-            visible = loads(visible)
-        if meta_col:
-            visible.append(meta_col)
 
-        table, meta_available = build_sample_summary(
-            study_id, self.current_user.id, visible)
+        meta_cats = sample_template_meta_cats_get_req(
+            int(study_id), self.current_user.id)['categories']
+        table = _build_sample_summary(study_id, self.current_user.id)
         self.render('study_ajax/sample_prep_summary.html',
-                    table=table, cols=sorted(meta_available),
-                    meta_visible=dumps(visible), study_id=study_id)
+                    table=table, cols=meta_cats, study_id=study_id)
+
+    @authenticated
+    def post(self):
+        study_id = int(self.get_argument('study_id'))
+        meta_col = self.get_argument('meta_col')
+        values = sample_template_category_get_req(meta_col, study_id,
+                                                  self.current_user.id)
+        if values['status'] != 'success':
+            self.write(values)
+        else:
+            # Format to list sorted by sample ID
+            self.write({'status': 'success',
+                        'message': '',
+                        'values': [str(values['values'][s]) for s in
+                                   sorted(values['values'])]
+                        })
