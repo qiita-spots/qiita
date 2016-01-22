@@ -561,6 +561,14 @@ class TestSampleSummaryAJAX(TestHandlerBase):
                           "n", "n", "n", "n", "n", "n", "n"]}
         self.assertEqual(loads(res.body), exp)
 
+    def test_post_error(self):
+        res = self.post("/study/description/sample_summary/", {
+            'study_id': 1, 'meta_col': 'NOEXIST'})
+        self.assertEqual(res.code, 200)
+        exp = {"status": "error",
+               "message": "Category NOEXIST does not exist in sample template"}
+        self.assertEqual(loads(res.body), exp)
+
 
 class TestDelete(TestHandlerBase):
     database = True
