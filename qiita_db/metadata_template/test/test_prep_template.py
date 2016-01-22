@@ -800,7 +800,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
 
     def test_get_category_no_exists(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             pt.get_category('DOESNOTEXIST')
 
 

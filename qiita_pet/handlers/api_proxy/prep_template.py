@@ -51,6 +51,19 @@ def _process_investigation_type(inv_type, user_def_type, new_type):
 
 
 def _check_prep_template_exists(prep_id):
+    """Make sure a prep template exists in the system
+
+    Parameters
+    ----------
+    prep_id : int or str castable to int
+        PrepTemplate id to check
+
+    Returns
+    -------
+    dict
+        {'status': status,
+         'message': msg}
+    """
     if not PrepTemplate.exists(int(prep_id)):
         return {'status': 'error',
                 'message': 'Prep template %d does not exist' % int(prep_id)

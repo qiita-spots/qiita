@@ -16,6 +16,7 @@ from qiita_db.study import Study
 from qiita_core.util import execute_as_transaction
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
                                              looks_like_qiime_mapping_file)
+from qiita_db.exceptions import QiitaDBColumnError
 
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
@@ -24,6 +25,19 @@ from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 
 
 def _check_sample_template_exists(samp_id):
+    """Make sure a sample template exists in the system
+
+    Parameters
+    ----------
+    samp_id : int or str castable to int
+        SampleTemplate id to check
+
+    Returns
+    -------
+    dict
+        {'status': status,
+         'message': msg}
+    """
     if not SampleTemplate.exists(int(samp_id)):
         return {'status': 'error',
                 'message': 'Sample template %d does not exist' % int(samp_id)
@@ -162,7 +176,7 @@ def sample_template_category_get_req(category, samp_id, user_id):
     st = SampleTemplate(int(samp_id))
     try:
         values = st.get_category(category)
-    except ValueError:
+    except QiitaDBColumnError:
         return {'status': 'error',
                 'message': 'Category %s does not exist in sample template' %
                 category}

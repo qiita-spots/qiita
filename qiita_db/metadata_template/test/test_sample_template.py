@@ -900,7 +900,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
 
     def test_get_category_no_exists(self):
         pt = qdb.metadata_template.sample_template.SampleTemplate(1)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             pt.get_category('DOESNOTEXIST')
 
 
