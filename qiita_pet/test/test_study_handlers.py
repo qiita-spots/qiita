@@ -5,10 +5,12 @@ from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
 from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
 from qiita_db.user import User
+from qiita_db.ontology import Ontology
 from qiita_pet.handlers.study_handlers.listing_handlers import (
     _get_shared_links_for_study, _build_study_info, _build_single_study_info,
     _build_single_proc_data_info)
@@ -206,33 +208,6 @@ class TestStudyDescriptionHandler(TestHandlerBase):
         response = self.get('/study/description/245')
         self.assertEqual(response.code, 404)
 
-    def test_post(self):
-        post_args = {}
-        response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 200)
-
-    def test_post_no_exists(self):
-        post_args = {}
-        response = self.post('/study/description/245', post_args)
-        self.assertEqual(response.code, 404)
-
-    def test_update_sample_template(self):
-        # not sending file
-        post_args = {
-            'sample_template': '',
-            'action': 'update_sample_template'
-        }
-        response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 200)
-
-        # sending blank file
-        post_args = {
-            'sample_template': 'uploaded_file.txt',
-            'action': 'update_sample_template'
-        }
-        response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 200)
-
 
 class TestStudyEditHandler(TestHandlerBase):
     database = True
@@ -314,8 +289,8 @@ class TestStudyEditHandler(TestHandlerBase):
                 [doi for doi, _ in study.publications]),
             'study_abstract': study_info['study_abstract'],
             'study_description': study_info['study_description'],
-            'principal_investigator': study_info['principal_investigator_id'],
-            'lab_person': study_info['lab_person_id']}
+            'principal_investigator': study_info['principal_investigator'].id,
+            'lab_person': study_info['lab_person'].id}
 
         self.post('/study/edit/1', post_data)
 
@@ -504,36 +479,95 @@ class TestSearchStudiesAJAX(TestHandlerBase):
         self.assertEqual(response.code, 403)
 
 
-class TestMetadataSummaryHandler(TestHandlerBase):
-    def test_error_prep_and_sample(self):
-        response = self.get('/metadata_summary/', {'sample_template': 1,
-                                                   'prep_template': 1,
-                                                   'study_id': 1})
-        self.assertEqual(response.code, 500)
-
-    def test_error_no_prep_no_sample(self):
-        response = self.get('/metadata_summary/', {'study_id': 1})
-        self.assertEqual(response.code, 500)
-
-    def test_get_exists_prep(self):
-        response = self.get('/metadata_summary/', {'prep_template': 1,
-                                                   'study_id': 1})
-        self.assertEqual(response.code, 200)
-
-    def test_get_exists_sample(self):
-        response = self.get('/metadata_summary/', {'sample_template': 1,
-                                                   'study_id': 1})
-        self.assertEqual(response.code, 200)
-
-    def test_get_no_exist(self):
-        response = self.get('/metadata_summary/', {'sample_template': 237,
-                                                   'study_id': 237})
-        self.assertEqual(response.code, 500)
-
-
 class TestEBISubmitHandler(TestHandlerBase):
     # TODO: add proper test for this once figure out how. Issue 567
     pass
+
+
+class TestPrepGraphs(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/prep/graph/', {'prep_id': 1})
+        self.assertEqual(response.code, 200)
+        exp = {"status": "success",
+               "node_labels": [[1, "Raw data 1 - FASTQ"],
+                               [3, "Demultiplexed 2 - Demultiplexed"],
+                               [2, "Demultiplexed 1 - Demultiplexed"],
+                               [4, "BIOM - BIOM"]], "message": "",
+               "edge_list": [[1, 3], [1, 2], [2, 4]]}
+        self.assertEqual(loads(response.body), exp)
+
+
+class TestArtifactGraphs(TestHandlerBase):
+    def test_get_ancestors(self):
+        response = self.get('/artifact/graph/', {'direction': 'ancestors',
+                                                 'artifact_id': 1})
+        exp = {'status': 'success',
+               'message': '',
+               'node_labels': [[1, 'Raw data 1 - FASTQ']],
+               'edge_list': []}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+    def test_get_descendants(self):
+        response = self.get('/artifact/graph/', {'direction': 'descendants',
+                                                 'artifact_id': 1})
+        exp = {'status': 'success',
+               'message': '',
+               'node_labels': [[1, 'Raw data 1 - FASTQ'],
+                               [3, 'Demultiplexed 2 - Demultiplexed'],
+                               [2, 'Demultiplexed 1 - Demultiplexed'],
+                               [4, 'BIOM - BIOM']],
+               'edge_list': [[1, 3], [1, 2], [2, 4]]}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+    def test_get_unknown(self):
+        response = self.get('/artifact/graph/', {'direction': 'BAD',
+                                                 'artifact_id': 1})
+        exp = {'status': 'error',
+               'message': 'Unknown directon BAD'}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+
+@qiita_test_checker()
+class TestPrepTemplate(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/description/prep_template/',
+                            {'prep_id': 1, 'study_id': 1})
+        self.assertEqual(response.code, 200)
+        self.assertIn('This analysis was done as in Caporaso', response.body)
+
+    def test_post_update(self):
+        response = self.post('/study/description/prep_template/',
+                             {'prep_id': 1, 'action': 'update',
+                              'filepath': 'uploaded_file.txt'})
+        exp = {'status': 'error',
+               'message': 'Empty file passed!',
+               'file': 'uploaded_file.txt'}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+    def test_post_ontology(self):
+        response = self.post('/study/description/prep_template/',
+                             {'prep_id': 1, 'action': 'ontology',
+                              'ena': 'Other', 'ena_user': 'New Type',
+                              'ena_new': 'NEW THING'})
+        exp = {'status': 'success', 'message': '', 'file': None}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+        # Make sure New Type added
+        ontology = Ontology(999999999)
+        self.assertIn('NEW THING', ontology.user_defined_terms)
+
+    def test_post_delete(self):
+        response = self.post('/study/description/prep_template/',
+                             {'prep_id': 1,
+                              'action': 'delete'})
+        self.assertEqual(response.code, 200)
+
+        # checking that the action was sent
+        self.assertIn("Couldn't remove prep template:", response.body)
 
 
 class TestDelete(TestHandlerBase):
@@ -549,51 +583,17 @@ class TestDelete(TestHandlerBase):
         self.assertIn("Couldn't remove study", response.body)
 
     def test_delete_sample_template(self):
-        response = self.post('/study/description/1',
-                             {'sample_template_id': 1,
-                              'action': 'delete_sample_template'})
+        response = self.post('/study/description/sample_template/',
+                             {'study_id': 1,
+                              'action': 'delete'})
         self.assertEqual(response.code, 200)
 
+        exp = ('{"status": "error", '
+               '"message": "Sample template can not be erased because there '
+               'are prep templates associated."}')
         # checking that the action was sent
-        self.assertIn("Sample template can not be erased because there are "
-                      "prep templates", response.body)
+        self.assertEqual(response.body, exp)
 
-    def test_delete_raw_data(self):
-        response = self.post('/study/description/1',
-                             {'raw_data_id': 1,
-                              'prep_template_id': 1,
-                              'action': 'delete_raw_data'})
-        self.assertEqual(response.code, 200)
-
-        # checking that the action was sent
-        self.assertIn("Couldn't remove raw data", response.body)
-
-    def test_delete_prep_template(self):
-        response = self.post('/study/description/1',
-                             {'prep_template_id': 1,
-                              'action': 'delete_prep_template'})
-        self.assertEqual(response.code, 200)
-
-        # checking that the action was sent
-        self.assertIn("Couldn't remove prep template:", response.body)
-
-    def test_delete_preprocessed_data(self):
-        response = self.post('/study/description/1',
-                             {'preprocessed_data_id': 1,
-                              'action': 'delete_preprocessed_data'})
-        self.assertEqual(response.code, 200)
-
-        # checking that the action was sent
-        self.assertIn("Couldn't remove preprocessed data", response.body)
-
-    def test_delete_processed_data(self):
-        response = self.post('/study/description/1',
-                             {'processed_data_id': 1,
-                              'action': 'delete_processed_data'})
-        self.assertEqual(response.code, 200)
-
-        # checking that the action was sent
-        self.assertIn("Couldn't remove processed data", response.body)
 
 if __name__ == "__main__":
     main()
