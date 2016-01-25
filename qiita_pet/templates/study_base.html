@@ -129,7 +129,6 @@
             <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{cleaned_dt}}" aria-expanded="true" aria-controls="collapse{{cleaned_dt}}">{{dt}}</a>
           </h4>
         </div>
-      {% end %}
       {% for prep in prep_info[dt] %}
         <div id="collapse{{cleaned_dt}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{cleaned_dt}}">
           <div class="panel-body">
@@ -140,6 +139,7 @@
             </a>
           </div>
         </div>
+      {% end %}
       {% end %}
       </div>
     </div>

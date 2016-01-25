@@ -9,6 +9,34 @@ from qiita_db.artifact import Artifact
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
+def artifact_post_req(filepaths, artifact_type, name, prep_template_id):
+    """Creates the prep template and initial artifact for the prep template
+
+    Parameters
+    ----------
+    filepaths : list of str
+        Files to attach to the artifact
+    artifact_type : str
+        The type of the artifact
+    name : str
+        Name to give the artifact
+    prep_template_id : int
+        Prep template to attach the artifact to
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the new artifact ID
+        {'status': status,
+         'message': message,
+         'artifact': id}
+    """
+    # Artifact.create(filepaths, artifact_type, name=name,
+    #                prep_template=prep_template_id,
+    #                can_be_submitted_to_ebi=???,
+    #                can_be_submitted_to_vamps=???)
+
+
 def artifact_graph_get_req(artifact_id, direction, user_id):
     """Creates graphs of ancestor or descendant artifacts from given one
 
