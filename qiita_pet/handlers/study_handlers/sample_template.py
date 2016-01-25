@@ -40,8 +40,8 @@ class SampleTemplateAJAX(BaseHandler):
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
         if stats['status'] == 'success':
-            stats = stats['summary']
             num_samples = stats['num_samples']
+            stats = stats['summary']
         else:
             stats = {}
             num_samples = 0
