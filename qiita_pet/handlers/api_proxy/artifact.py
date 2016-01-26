@@ -32,9 +32,7 @@ def artifact_post_req(filepaths, artifact_type, name, prep_template_id):
          'artifact': id}
     """
     # Artifact.create(filepaths, artifact_type, name=name,
-    #                prep_template=prep_template_id,
-    #                can_be_submitted_to_ebi=???,
-    #                can_be_submitted_to_vamps=???)
+    #                prep_template=prep_template_id)
 
 
 def artifact_types_get_req():

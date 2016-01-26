@@ -1,14 +1,16 @@
 <script type="text/javascript>">
+  var file_types = [];
   function get_files() {
     $.get("/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep_file").val(), study_id: {{study_id}} })
       .done(function( data ) {
         // Add divs for the file type elements
+        file_types = data.file_types;
         for(i=0;i<data.file_types.length;i++) {
-          $("#files-row").append('<div class="col-md-3" id="'+data.file_types[i]+'-div"><h4>'+data.file_types[i].replace('_', ' ')+'</h4><ul id="'+data.file_types[i]+'-list" class="connectedSortable"></ul></div>')
+          $("#files-row").append('<div class="col-md-3" id="'+data.file_types[i]+'-div"><h4>'+data.file_types[i].replace('_', ' ')+'</h4><ul id="'+data.file_types[i]+'-list" class="connectedSortable"></ul><input type="hidden" name="'+data.file_types[i]+'" id="'+data.file_types[i]+'" value=""></div>')
         }
         // Solidify selections to text
-        $("#prep-span").html($("#prep_file").val());
-        $("#file-type-span").html($("#type").val());
+        $("#prep-span").html($("#prep_file").val() + '<input type="hidden" name="prep_file" value="'+$("#prep_file").val()+'">');
+        $("#file-type-span").html($("#type").val()+ '<input type="hidden" name="type" value="'+$("#type").val()+'">');
 
         //unhide rest of page
         $("#submit-div").show();
@@ -29,6 +31,17 @@
       });
   }
 
+  function build_file_lists() {
+    for(i=0;i<file_types.length;i++) {
+      var ft = file_types[i];
+      var files = [];
+      $("#"+ft+"-list li").each(function(){
+       files.push(this.id);
+      });
+      $("#"+ft).val(files);
+    }
+  }
+
   $(document).ready(function () {
     $("#user-ena-info").hide();
     $("#new-ena-info").hide();
@@ -44,7 +57,7 @@
 </script>
 <style>
   .connectedSortable {
-    border: 1px solid #eee;
+    border: 1px solid #ccc;
     width: 100%;
     min-height: 20px;
     list-style-type: none;
@@ -60,7 +73,7 @@
     width: 100%;
   }
 </style>
-
+<form action="/study/add_prep/{{study_id}}" method="POST" onsubmit="build_file_lists()">
   <div class="row">
     <div class="col-md-3">
     <h4>Select data type</h4>
@@ -116,6 +129,7 @@
   </div>
   <div class="row" id="submit-div" hidden>
     <div class="col-md-12">
-      <button class="btn btn-sm btn-danger" onclick="fill_new_prep()">Reset</button> <button class="btn btn-sm btn-success">Create New Preperation</button>
+      <button class="btn btn-sm btn-danger" onclick="fill_new_prep()">Reset</button> <input type="submit" class="btn btn-sm btn-success" value="Create New Preperation">
     </div>
   </div>
+</form>

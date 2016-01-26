@@ -40,4 +40,4 @@ class NewArtifactHandler(BaseHandler):
 
     @authenticated
     def post(self, study_id):
-        pass
+        print self.request.arguments
