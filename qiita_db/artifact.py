@@ -151,11 +151,6 @@ class Artifact(qdb.base.QiitaObject):
             should be provided and the parameter `prep_template` should not
             be provided.
 
-        The parameters `can_be_submitted_to_ebi` and
-        `can_be_submitted_to_vamps` defaults to false and they should be
-        provided if and only if the artifact can be submitted to EBI and
-        VAMPS, respectively.
-
         Parameters
         ----------
         filepaths : iterable of tuples (str, int)
