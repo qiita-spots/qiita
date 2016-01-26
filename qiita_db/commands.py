@@ -112,10 +112,6 @@ def load_artifact_from_cmd(filepaths, filepath_types, artifact_type,
         JSON string with the required parameters used to process the artifact
     optional_params : str, optional
         JSON string with the optional parameters used to process the artifact
-    can_be_submitted_to_ebi : bool, optional
-        Whether the artifact can be submitted to EBI or not
-    can_be_submitted_to_vamps : bool, optional
-        Whether the artifact can be submitted to VAMPS or not
 
     Returns
     -------
