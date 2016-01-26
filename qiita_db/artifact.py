@@ -123,13 +123,11 @@ class Artifact(qdb.base.QiitaObject):
                 prep_template.data_type(), "data_type")
             sql = """INSERT INTO qiita.artifact (
                         generated_timestamp, visibility_id, artifact_type_id,
-                        data_type_id, can_be_submitted_to_ebi,
-                        can_be_submitted_to_vamps, submitted_to_vamps)
-                     VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        data_type_id, submitted_to_vamps)
+                     VALUES (%s, %s, %s, %s, %s)
                      RETURNING artifact_id"""
             sql_args = [datetime.now(), visibility_id, atype_id, dtype_id,
-                        artifact.can_be_submitted_to_ebi,
-                        artifact.can_be_submitted_to_vamps, False]
+                        False]
             qdb.sql_connection.TRN.add(sql, sql_args)
             a_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -158,8 +156,7 @@ class Artifact(qdb.base.QiitaObject):
 
     @classmethod
     def create(cls, filepaths, artifact_type, name=None, prep_template=None,
-               parents=None, processing_parameters=None,
-               can_be_submitted_to_ebi=False, can_be_submitted_to_vamps=False):
+               parents=None, processing_parameters=None):
         r"""Creates a new artifact in the system
 
         The parameters depend on how the artifact was generated:
@@ -170,11 +167,6 @@ class Artifact(qdb.base.QiitaObject):
             artifacts, the parameters `parents` and `processing_parameters`
             should be provided and the parameter `prep_template` should not
             be provided.
-
-        The parameters `can_be_submitted_to_ebi` and
-        `can_be_submitted_to_vamps` defaults to false and they should be
-        provided if and only if the artifact can be submitted to EBI and
-        VAMPS, respectively.
 
         Parameters
         ----------
@@ -196,12 +188,6 @@ class Artifact(qdb.base.QiitaObject):
             The processing parameters used to generate the new artifact
             from `parents`. It is required if `parents` is provided. It should
             not be provided if `prep_template` is provided.
-        can_be_submitted_to_ebi : bool, optional
-            Whether the new artifact can be submitted to EBI or not. Default:
-            `False`.
-        can_be_submitted_to_vamps : bool, optional
-            Whether the new artifact can be submitted to VAMPS or not. Default:
-            `False`.
 
         Returns
         -------
@@ -222,6 +208,7 @@ class Artifact(qdb.base.QiitaObject):
         -----
         The visibility of the artifact is set by default to `sandbox`
         The timestamp of the artifact is set by default to `datetime.now()`
+        The value of `submitted_to_vamps` is set by default to `False`
         """
         # We need at least one file
         if not filepaths:
@@ -276,15 +263,12 @@ class Artifact(qdb.base.QiitaObject):
                 sql = """INSERT INTO qiita.artifact
                             (generated_timestamp, command_id, data_type_id,
                              command_parameters, visibility_id,
-                             artifact_type_id, can_be_submitted_to_ebi,
-                             can_be_submitted_to_vamps, submitted_to_vamps)
-                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             artifact_type_id, submitted_to_vamps)
+                         VALUES (%s, %s, %s, %s, %s, %s, %s)
                          RETURNING artifact_id"""
                 sql_args = [timestamp, processing_parameters.command.id,
                             dtype_id, processing_parameters.dump(),
-                            visibility_id, artifact_type_id,
-                            can_be_submitted_to_ebi, can_be_submitted_to_vamps,
-                            False]
+                            visibility_id, artifact_type_id, False]
                 qdb.sql_connection.TRN.add(sql, sql_args)
                 a_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -303,13 +287,11 @@ class Artifact(qdb.base.QiitaObject):
                 sql = """INSERT INTO qiita.artifact
                             (generated_timestamp, visibility_id,
                              artifact_type_id, data_type_id,
-                             can_be_submitted_to_ebi,
-                             can_be_submitted_to_vamps, submitted_to_vamps)
-                         VALUES (%s, %s, %s, %s, %s, %s, %s)
+                             submitted_to_vamps)
+                         VALUES (%s, %s, %s, %s, %s)
                          RETURNING artifact_id"""
                 sql_args = [timestamp, visibility_id, artifact_type_id,
-                            dtype_id, can_be_submitted_to_ebi,
-                            can_be_submitted_to_vamps, False]
+                            dtype_id, False]
                 qdb.sql_connection.TRN.add(sql, sql_args)
                 a_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -616,7 +598,8 @@ class Artifact(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT can_be_submitted_to_ebi
-                     FROM qiita.artifact
+                     FROM qiita.artifact_type
+                        JOIN qiita.artifact USING (artifact_type_id)
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
@@ -718,7 +701,8 @@ class Artifact(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT can_be_submitted_to_vamps
-                     FROM qiita.artifact
+                     FROM qiita.artifact_type
+                        JOIN qiita.artifact USING (artifact_type_id)
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()

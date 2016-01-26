@@ -28,7 +28,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import (
-    study_person_linkifier, doi_linkifier, pubmed_linkifier)
+    study_person_linkifier, doi_linkifier, pubmed_linkifier, check_access)
 
 
 @execute_as_transaction
@@ -217,14 +217,6 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
     return infolist
 
 
-@execute_as_transaction
-def _check_owner(user, study):
-    """make sure user is the owner of the study requested"""
-    if not user.id == study.owner:
-        raise HTTPError(403, "User %s does not own study %d" %
-                        (user.id, study.id))
-
-
 class ListStudiesHandler(BaseHandler):
     @authenticated
     @coroutine
@@ -266,7 +258,7 @@ class ShareStudyAJAX(BaseHandler):
     @execute_as_transaction
     def _get_shared_for_study(self, study, callback):
         shared_links = _get_shared_links_for_study(study)
-        users = study.shared_with
+        users = [u.email for u in study.shared_with]
         callback((users, shared_links))
 
     @execute_as_transaction
@@ -285,7 +277,8 @@ class ShareStudyAJAX(BaseHandler):
     def get(self):
         study_id = int(self.get_argument('study_id'))
         study = Study(study_id)
-        _check_owner(self.current_user, study)
+        check_access(self.current_user, study, no_public=True,
+                     raise_error=True)
 
         selected = self.get_argument('selected', None)
         deselected = self.get_argument('deselected', None)
