@@ -211,9 +211,7 @@ class CompleteHandlerTests(OauthTestingBase):
             {'success': True, 'error': '',
              'artifacts': [
                  {'filepaths': [(fp, 'biom')],
-                  'artifact_type': 'BIOM',
-                  'can_be_submitted_to_ebi': False,
-                  'can_be_submitted_to_vamps': False}
+                  'artifact_type': 'BIOM'}
              ]})
         obs = self.post(
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/complete/',

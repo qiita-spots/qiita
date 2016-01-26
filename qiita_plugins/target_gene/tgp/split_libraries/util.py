@@ -155,12 +155,10 @@ def generate_artifact_info(sl_out):
         libraries job is completed.
         - The artifact type
         - The list of filepaths with their artifact type
-        - Whether the artifact can be submitted to ebi
-        - Whether the artifact can be submitted to vamps
     """
     path_builder = partial(join, sl_out)
     filepaths = [(path_builder('seqs.fna'), 'preprocessed_fasta'),
                  (path_builder('seqs.fastq'), 'preprocessed_fastq'),
                  (path_builder('seqs.demux'), 'preprocessed_demux'),
                  (path_builder('split_library_log.txt'), 'log')]
-    return [['Demultiplexed', filepaths, True, True]]
+    return [['Demultiplexed', filepaths]]

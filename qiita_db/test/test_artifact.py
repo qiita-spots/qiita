@@ -228,8 +228,7 @@ class ArtifactTests(TestCase):
         obs = qdb.artifact.Artifact.create(
             self.filepaths_processed, "Demultiplexed",
             parents=[qdb.artifact.Artifact(1)],
-            processing_parameters=exp_params, can_be_submitted_to_ebi=True,
-            can_be_submitted_to_vamps=True)
+            processing_parameters=exp_params)
         self.assertEqual(obs.name, 'dflt_name')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
@@ -308,8 +307,7 @@ class ArtifactTests(TestCase):
         obs = qdb.artifact.Artifact.create(
             self.filepaths_processed, "Demultiplexed",
             parents=[qdb.artifact.Artifact(1)],
-            processing_parameters=parameters, can_be_submitted_to_ebi=True,
-            can_be_submitted_to_vamps=True)
+            processing_parameters=parameters)
         obs.ebi_run_accessions = {'1.SKB1.640202': 'ERR1000001',
                                   '1.SKB2.640194': 'ERR1000002'}
         self._clean_up_files.extend([fp for _, fp, _ in obs.filepaths])
@@ -322,8 +320,7 @@ class ArtifactTests(TestCase):
         obs = qdb.artifact.Artifact.create(
             self.filepaths_processed, "Demultiplexed",
             parents=[qdb.artifact.Artifact(1)],
-            processing_parameters=parameters,
-            can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
+            processing_parameters=parameters)
         obs.is_submitted_to_vamps = True
         self._clean_up_files.extend([fp for _, fp, _ in obs.filepaths])
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):

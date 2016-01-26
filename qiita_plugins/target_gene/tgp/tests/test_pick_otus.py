@@ -94,7 +94,7 @@ class PickOTUsTests(TestCase):
         fps = [(join(outdir, "otu_table.biom"), "biom"),
                (join(outdir, "sortmerna_picked_otus"), "directory"),
                (log_fp, "log")]
-        exp = [['BIOM', fps, True, True]]
+        exp = [['BIOM', fps]]
         self.assertEqual(obs, exp)
 
 EXP_PARAMS = """pick_otus:otu_picking_method\tsortmerna

@@ -141,18 +141,14 @@ def format_payload(success, error_msg=None, artifacts_info=None):
         {'success': bool,
          'error': str,
          'artifacts': list of {'artifact_type': str,
-                               'filepaths': list of (str, str),
-                               'can_be_submitted_to_ebi': bool,
-                               'can_be_submitted_to_vamps': bool}}
+                               'filepaths': list of (str, str)}}
     """
     if success:
         error_msg = ''
         artifacts = [
             {'artifact_type': atype,
-             'filepaths': filepaths,
-             'can_be_submitted_to_ebi': ebi,
-             'can_be_submitted_to_vamps': vamps}
-            for atype, filepaths, ebi, vamps in artifacts_info]
+             'filepaths': filepaths}
+            for atype, filepaths in artifacts_info]
     else:
         artifacts = None
 
