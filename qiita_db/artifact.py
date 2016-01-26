@@ -191,7 +191,7 @@ class Artifact(qdb.base.QiitaObject):
         -----
         The visibility of the artifact is set by default to `sandbox`
         The timestamp of the artifact is set by default to `datetime.now()`
-        The value of `submitted_to_vamps` is set by default to `false`
+        The value of `submitted_to_vamps` is set by default to `False`
         """
         # We need at least one file
         if not filepaths:
