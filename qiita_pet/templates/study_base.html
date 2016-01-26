@@ -96,9 +96,18 @@
       });
   }
 
+  function fill_new_prep() {
   $(document).ready(function() {
-    fill_base({{study_info['study_id']}});
+    $.get( "/study/add_prep/{{study_info['study_id']}}")
+      .done(function( data ) {
+        $("#study-main").html(data);
+        $("#study-prep-graph").empty();
+        $("#study-prep-graph-row").hide();
+        $("#study-file-breadcrumbs").empty();
+        $("#study-file-breadcrumbs-row").hide();
+      });
   });
+}
 </script>
 <style>
 .graph {
@@ -116,6 +125,7 @@
     {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
     <a href="#">Edit Study Information</a><br />
+    <a href="#" onclick="fill_new_prep()">Add New Preparation</a><br />
     <a href="#">Delete Study</a>
     {% end %}
 
@@ -160,7 +170,7 @@
     {% end %}
     <div class="row"><div class="col-md-12" id="study-prep-subheader"></div></div>
     <div class="row graph" id="study-prep-graph-row"><div class="col-md-12 graph" id="study-prep-graph"></div></div>
-    <div class="row"><div class="col-md-12" id="study-main"></div></div>
+    <div class="row"><div class="col-md-12" id="study-main"></div>{% block study_content %}{% end %}</div>
   </div>
 </div>
 {% end %}

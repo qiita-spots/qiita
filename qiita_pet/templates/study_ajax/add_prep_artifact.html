@@ -1,4 +1,81 @@
-{% extends sitebase.html %}
-{% block content %}
+<script type="text/javascript>">
+  function get_files() {
+    $.get("/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep_file").val(), study_id: {{study_id}} })
+      .done(function( data ) {
+        // Add divs for the file type elements
+        for(i=0;i<data.file_types.length;i++) {
+          $("#files-row").append('<div class="col-md-3" id="'+data.file_types[i]+'-div"><h3>'+data.file_types[i].replace('_', ' ')+'</h3><ul id="'+data.file_types[i]+'-list" class="connectedSortable"></ul></div>')
+        }
+        // Solidify selections to text
+        $("#prep-span").html($("#prep_file").val());
+        $("#file-type-span").html($("#type").val());
 
-{% end %}
+        //unhide rest of page
+        $("#submit-div").show();
+        $("#files-row").show();
+
+        //add files where they need to be added
+        for(i=0;i<data.selected.length;i++) {
+          $("#"+data.file_types[0]+"-list").append('<li id="'+data.selected[i]+'">'+data.remaining[i]+'</li>');
+        }
+        for(i=0;i<data.remaining.length;i++) {
+          $("#remaining-list").append('<li id="'+data.remaining[i]+'">'+data.remaining[i]+'</li>');
+        }
+
+        //make the files draggable
+        $(".connectedSortable").sortable({
+          connectWith: ".connectedSortable"
+        }).disableSelection();
+      });
+  }
+</script>
+<style>
+  .connectedSortable {
+    border: 1px solid #eee;
+    width: 100%;
+    min-height: 20px;
+    list-style-type: none;
+    margin: 0;
+    padding: 5px 0 0 0;
+    float: left;
+    margin-right: 10px;
+  }
+  .connectedSortable li {
+    margin: 0 5px 5px 5px;
+    padding: 5px;
+    font-size: 1em;
+    width: 120px;
+  }
+</style>
+
+<form action="/study/add_prep/{{study_id}}" type="POST">
+  <div class="row">
+    <div class="col-md-6">
+      <h3>Select file type</h3>
+      <span id="file-type-span"><select name="type" id="type" onchange="get_files()">
+      <option value=""></option>
+      {% for t, desc in types %}
+      <option value="{{t}}">{{t}} - {{desc}}</option>
+      {% end %}
+      </select></span>
+    </div>
+    <div class="col-md-6">
+    <h3>Select Prep Information</h3>
+    <span id="prep-span"><select name="prep_file" id="prep_file" onchange="get_files()">
+      <option value=""></option>
+      {% for file in prep_files %}
+      <option value="{{file}}">{{file}}</option>
+      {% end %}
+      </select></span>
+    </div>
+  </div>
+  <div class="row" id="files-row" hidden>
+  <h4>Click and drag your files to the correct file subtype.</h4>
+    <div class="col-md-3" id="files-div"><h3>Available Files</h3><ul id="remaining-list" class="connectedSortable"></ul></div>
+  </div>
+  <div class="row" id="submit-div" hidden>
+    <div class="col-md-12">
+      <input type="submit" value="Create New Preperation" class="btn btn-sm btn-success">
+    </div>
+  </div>
+</form>

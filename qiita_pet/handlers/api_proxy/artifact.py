@@ -37,6 +37,23 @@ def artifact_post_req(filepaths, artifact_type, name, prep_template_id):
     #                can_be_submitted_to_vamps=???)
 
 
+def artifact_types_get_req():
+    """Gets artifact types and descriptions available
+
+    Returns
+    -------
+    dict of objects
+        {'status': status,
+         'message': message,
+         'types': [[str, str], ...]}
+        types holds type and description of the artifact type, in the form
+        [[artifact_type, description], ...]
+    """
+    return {'status': 'success',
+            'message': '',
+            'types': Artifact.types()}
+
+
 def artifact_graph_get_req(artifact_id, direction, user_id):
     """Creates graphs of ancestor or descendant artifacts from given one
 

@@ -7,7 +7,8 @@
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 
-from qiita_pet.handlers.api_proxy.artifact import artifact_graph_get_req
+from qiita_pet.handlers.api_proxy.artifact import (
+    artifact_graph_get_req, artifact_types_get_req)
 
 
 class TestArtifactAPI(TestCase):
@@ -40,6 +41,19 @@ class TestArtifactAPI(TestCase):
         obs = artifact_graph_get_req(1, 'descendants', 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_types_get_req(self):
+        obs = artifact_types_get_req()
+        exp = {'message': '',
+               'status': 'success',
+               'types': [['SFF', None],
+                         ['FASTQ', None],
+                         ['FASTA', None],
+                         ['FASTA_Sanger', None],
+                         ['per_sample_FASTQ', None],
+                         ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+                         ['BIOM', 'BIOM table']]}
         self.assertEqual(obs, exp)
 
 
