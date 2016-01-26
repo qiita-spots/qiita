@@ -63,7 +63,7 @@ class NewArtifactHandler(BaseHandler):
             return
 
         artifact = artifact_post_req(
-            self.current_user.id, files, artifact_type, name, prep.id)
+            self.current_user.id, files, artifact_type, name, prep['id'])
         if artifact['status'] == 'success':
             self.redirect('/study/description/%d' % study_id)
         else:
