@@ -13,7 +13,8 @@ from qiita_db.util import get_files_from_uploads_folders
 from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    artifact_graph_get_req, artifact_types_get_req)
+    artifact_graph_get_req, artifact_types_get_req, data_types_get_req,
+    ena_ontology_get_req)
 
 
 class ArtifactGraphAJAX(BaseHandler):
@@ -30,9 +31,12 @@ class NewArtifactHandler(BaseHandler):
     def get(self, study_id):
         prep_files = [f for _, f in get_files_from_uploads_folders(study_id)
                       if f.endswith(('txt', 'tsv'))]
-        types = artifact_types_get_req()['types']
+        artifact_types = artifact_types_get_req()['types']
+        data_types = sorted(data_types_get_req()['data_types'])
+        ontology = ena_ontology_get_req()
         self.render("study_ajax/add_prep_artifact.html", prep_files=prep_files,
-                    types=types, study_id=study_id)
+                    artifact_types=artifact_types, data_types=data_types,
+                    ontology=ontology, study_id=study_id)
 
     @authenticated
     def post(self, study_id):
