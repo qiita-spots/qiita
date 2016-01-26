@@ -5,17 +5,25 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from qiita_core.util import execute_as_transaction
+from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.artifact import Artifact
-from qiita_pet.handlers.api_proxy.util import check_access
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.util import convert_to_id
 
 
-def artifact_post_req(filepaths, artifact_type, name, prep_template_id):
+@execute_as_transaction
+def artifact_post_req(user_id, filepaths, artifact_type, name,
+                      prep_template_id):
     """Creates the prep template and initial artifact for the prep template
 
     Parameters
     ----------
-    filepaths : list of str
-        Files to attach to the artifact
+    user_id : str
+        User adding the atrifact
+    filepaths : dict of {str: [str, ...], ...}
+        List of files to attach to the artifact, keyed to the file type
+    }
     artifact_type : str
         The type of the artifact
     name : str
@@ -31,8 +39,27 @@ def artifact_post_req(filepaths, artifact_type, name, prep_template_id):
          'message': message,
          'artifact': id}
     """
-    # Artifact.create(filepaths, artifact_type, name=name,
-    #                prep_template=prep_template_id)
+    prep = PrepTemplate(int(prep_template_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
+    study_id = PrepTemplate.study_id
+    cleaned_filepaths = []
+    for ftype in filepaths:
+        # Convert filepath type to the database ID for adding artifact
+        fp_id = convert_to_id(ftype, 'filepath_type')
+        for fp in filepaths[ftype]:
+            # Check if filepath being passed exists for study
+            exists = check_fp(study_id, fp)
+            if exists['status'] != 'success':
+                return exists
+            cleaned_filepaths.append((fp, fp_id))
+
+    artifact = Artifact.create(cleaned_filepaths, artifact_type, name=name,
+                               prep_template=prep_template_id)
+    return {'status': 'success',
+            'message': '',
+            'artifact': artifact.id}
 
 
 def artifact_types_get_req():

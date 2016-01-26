@@ -14,7 +14,7 @@ from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
     artifact_graph_get_req, artifact_types_get_req, data_types_get_req,
-    ena_ontology_get_req)
+    ena_ontology_get_req, prep_template_post_req, artifact_post_req)
 
 
 class ArtifactGraphAJAX(BaseHandler):
@@ -40,4 +40,31 @@ class NewArtifactHandler(BaseHandler):
 
     @authenticated
     def post(self, study_id):
-        print self.request.arguments
+        study_id = int(study_id)
+        name = self.get_argument('name')
+        data_type = self.get_argument('data-type')
+        ena_ontology = self.get_argument('ena-ontology', None)
+        user_ontology = self.get_argument('user-ontology', None)
+        new_ontology = self.get_argument('new-ontology', None)
+        artifact_type = self.get_argument('type')
+        prep_file = self.get_argument('prep-file')
+
+        # Remove known columns, leaving just file types and files
+        files = self.request.arguments
+        for arg in ['name', 'data-type', 'ena-ontology', 'user-ontology',
+                    'new-ontology', 'type', 'prep-file']:
+            files.pop(arg, None)
+
+        prep = prep_template_post_req(study_id, self.current_user.id,
+                                      prep_file, data_type, ena_ontology,
+                                      user_ontology, new_ontology)
+        if prep['status'] != 'success':
+            self.write(prep)
+            return
+
+        artifact = artifact_post_req(
+            self.current_user.id, files, artifact_type, name, prep.id)
+        if artifact['status'] == 'success':
+            self.redirect('/study/description/%d' % study_id)
+        else:
+            self.write(prep)

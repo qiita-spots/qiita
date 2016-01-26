@@ -1,7 +1,7 @@
 <script type="text/javascript>">
   var file_types = [];
   function get_files() {
-    $.get("/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep_file").val(), study_id: {{study_id}} })
+    $.get("/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep-file").val(), study_id: {{study_id}} })
       .done(function( data ) {
         // Add divs for the file type elements
         file_types = data.file_types;
@@ -9,7 +9,7 @@
           $("#files-row").append('<div class="col-md-3" id="'+data.file_types[i]+'-div"><h4>'+data.file_types[i].replace('_', ' ')+'</h4><ul id="'+data.file_types[i]+'-list" class="connectedSortable"></ul><input type="hidden" name="'+data.file_types[i]+'" id="'+data.file_types[i]+'" value=""></div>')
         }
         // Solidify selections to text
-        $("#prep-span").html($("#prep_file").val() + '<input type="hidden" name="prep_file" value="'+$("#prep_file").val()+'">');
+        $("#prep-span").html($("#prep_file").val() + '<input type="hidden" name="prep-file" value="'+$("#prep-file").val()+'">');
         $("#file-type-span").html($("#type").val()+ '<input type="hidden" name="type" value="'+$("#type").val()+'">');
 
         //unhide rest of page
@@ -47,12 +47,26 @@
     $("#new-ena-info").hide();
     $("#ena-info").change(function ( event ) {
         if( $("#ena-ontology").val() == "Other" ) { $("#user-ena-info").show(); }
-        else { $("#user-ena-info").hide(); }
+        else { $("#user-ena-info").hide(); $("#new-ena-info").hide(); }
     });
     $("#user-ena-info").change(function ( event ) {
         if( $("#user-ontology").val() == "New Type" ) { $("#new-ena-info").show(); }
         else { $("#new-ena-info").hide(); }
     });
+
+    $('#form').submit(function( event ){
+    event.preventDefault();
+    get_files();
+    $.ajax({
+      url: $('#form').attr('action'),
+      type: "POST",
+      data : $('#form').serialize(),
+      success: function( data ){
+        bootstrapAlert("<p>Error creating preperation</p>" + data.message, "danger");
+      }
+    });
+    return false;
+});
   });
 </script>
 <style>
@@ -73,11 +87,17 @@
     width: 100%;
   }
 </style>
-<form action="/study/add_prep/{{study_id}}" method="POST" onsubmit="build_file_lists()">
+<form action="/study/add_prep/{{study_id}}" method="POST" id="form" onsubmit="build_file_lists()">
+  <div class="row">
+    <div class="col-md-12">
+      <h4>Preperation Name</h4>
+      <input type="text" id="name" name="name" length="60" maxlength="35">
+    </div>
+  </div>
   <div class="row">
     <div class="col-md-3">
     <h4>Select data type</h4>
-    <select id="data-type" value="data-type">
+    <select id="data-type" name="data-type" value="data-type">
         <option value=""></option>
         {% for t in data_types %}
           <option value="{{t}}">{{t}}</option>
@@ -87,14 +107,14 @@
     <div class="col-md-3">
       <h4>Select Investigation Type</h4>
         <p id="ena-info">
-        <select id="ena-ontology" value="ena-ontology">
+        <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
         <option value=""></option>
         {% for o in ontology['ENA'] %}
           <option value="{{o}}">{{o}}</option>
         {% end %}
         </select></p>
         <p id="user-ena-info"> User defined investigation type: 
-        <select id="user-ontology" value="user-ontology">
+        <select id="user-ontology" name="user-ontology" value="user-ontology">
         <option value=""></option>
         {% for o in ontology['User'] %}
           <option value="{{o}}">{{o}}</option>
@@ -115,7 +135,7 @@
     </div>
     <div class="col-md-3">
     <h4>Select Prep Information</h4>
-    <span id="prep-span"><select name="prep_file" id="prep_file" onchange="get_files()">
+    <span id="prep-span"><select name="prep-file" id="prep-file" onchange="get_files()">
       <option value=""></option>
       {% for file in prep_files %}
       <option value="{{file}}">{{file}}</option>
