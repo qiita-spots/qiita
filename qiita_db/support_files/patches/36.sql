@@ -1,5 +1,5 @@
 -- Jan 25, 2016
--- Move the can_be_submitted_to_XX columsn to the artifact type
+-- Move the can_be_submitted_to_XX columns to the artifact type
 
 ALTER TABLE qiita.artifact DROP COLUMN can_be_submitted_to_ebi;
 ALTER TABLE qiita.artifact DROP COLUMN can_be_submitted_to_vamps;
