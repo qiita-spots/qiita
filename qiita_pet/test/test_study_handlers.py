@@ -3,6 +3,9 @@
 from unittest import main
 from json import loads
 
+from mock import Mock
+
+from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_db.artifact import Artifact
@@ -529,9 +532,6 @@ class TestMetadataSummaryHandler(TestHandlerBase):
         response = self.get('/metadata_summary/', {'sample_template': 237,
                                                    'study_id': 237})
         self.assertEqual(response.code, 500)
-
-from qiita_pet.handlers.base_handlers import BaseHandler
-from mock import Mock
 
 
 class TestEBISubmitHandler(TestHandlerBase):
