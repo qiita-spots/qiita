@@ -2,8 +2,12 @@
 
 from unittest import main
 from json import loads
+from os.path import exists
+from os import remove, close
+from tempfile import mkstemp
 
 from mock import Mock
+from h5py import File
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
@@ -17,6 +21,7 @@ from qiita_pet.handlers.study_handlers.listing_handlers import (
     _build_single_proc_data_info)
 from qiita_pet.handlers.study_handlers.description_handlers import (
     _propagate_visibility)
+from qiita_ware.demux import to_hdf5
 
 
 class TestHelpers(TestHandlerBase):
@@ -546,8 +551,37 @@ class TestMetadataSummaryHandler(TestHandlerBase):
 
 
 class TestEBISubmitHandler(TestHandlerBase):
-    # TODO: add proper test for this once figure out how. Issue 567
-    pass
+    # TODO: add tests for post function once we figure out how. Issue 567
+    def setUp(self):
+        super(TestEBISubmitHandler, self).setUp()
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                remove(fp)
+
+    def test_get(self):
+        demux_fp = [fp for _, fp, fp_type in Artifact(2).filepaths
+                    if fp_type == 'preprocessed_demux'][0]
+        fd, fna_fp = mkstemp(suffix='_seqs.fna')
+        close(fd)
+        self._clean_up_files.extend([fna_fp, demux_fp])
+        with open(fna_fp, 'w') as f:
+            f.write('>a_1 X orig_bc=X new_bc=X bc_diffs=0\nCCC')
+        with File(demux_fp, "w") as f:
+            to_hdf5(fna_fp, f)
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+        response = self.get("/ebi_submission/2")
+        self.assertEqual(response.code, 200)
+
+    def test_get_no_admin(self):
+        response = self.get("/ebi_submission/2")
+        self.assertEqual(response.code, 403)
+
+    def test_get_no_exist(self):
+        response = self.get('/ebi_submission/100')
+        self.assertEqual(response.code, 404)
 
 
 class TestDelete(TestHandlerBase):
