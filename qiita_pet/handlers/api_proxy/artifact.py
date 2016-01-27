@@ -54,7 +54,8 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             full_fp = join(uploads_path, fp)
             exists = check_fp(study_id, full_fp)
             if exists['status'] != 'success':
-                return exists
+                return {'status': 'error',
+                        'message': 'File does not exist: %s' % fp}
             cleaned_filepaths.append((full_fp, ftype))
 
     artifact = Artifact.create(cleaned_filepaths, artifact_type, name=name,
