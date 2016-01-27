@@ -530,10 +530,24 @@ class TestMetadataSummaryHandler(TestHandlerBase):
                                                    'study_id': 237})
         self.assertEqual(response.code, 500)
 
+from qiita_pet.handlers.base_handlers import BaseHandler
+from mock import Mock
+
 
 class TestEBISubmitHandler(TestHandlerBase):
-    # TODO: add proper test for this once figure out how. Issue 567
-    pass
+    # TODO: add proper test for this once figure out how. Issue 567 (post)
+    def test_get(self):
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+        response = self.get("/ebi_submission/2")
+        self.assertEqual(response.code, 200)
+
+    def test_get_no_admin(self):
+        response = self.get("/ebi_submission/2")
+        self.assertEqual(response.code, 403)
+
+    def test_get_no_exist(self):
+        response = self.get('/ebi_submission/100')
+        self.assertEqual(response.code, 404)
 
 
 class TestDelete(TestHandlerBase):
