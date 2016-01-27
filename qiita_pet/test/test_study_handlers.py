@@ -535,7 +535,7 @@ class TestMetadataSummaryHandler(TestHandlerBase):
 
 
 class TestEBISubmitHandler(TestHandlerBase):
-    # TODO: add proper test for this once figure out how. Issue 567 (post)
+    # TODO: add tests for post function once we figure out how. Issue 567
     def test_get(self):
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
         response = self.get("/ebi_submission/2")

@@ -43,9 +43,9 @@ class EBISubmitHandler(BaseHandler):
         if not allow_submission:
             msg_list.append(
                 "Only artifacts with a single prep template can be submitted")
-        # If allow submission is already false, we technically don't need to
-        # do the following work. However, there is currently no clean way to
-        # fix this using the current structure, so we perform the work as we
+        # If allow_submission is already false, we technically don't need to
+        # do the following work. However, there is no clean way to fix this
+        # using the current structure, so we perform the work as we
         # did not fail.
         # We currently support only one prep template for submission, so
         # grabbing the first one
