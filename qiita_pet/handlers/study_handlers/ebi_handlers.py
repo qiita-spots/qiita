@@ -38,7 +38,7 @@ class EBISubmitHandler(BaseHandler):
                                      "get/EBISubmitHandler: %s!" % user.id)
 
         prep_templates = preprocessed_data.prep_templates
-        allow_submission = len(prep_templates) > 1
+        allow_submission = len(prep_templates) == 1
         msg_list = ["Submission to EBI disabled:"]
         if allow_submission:
             msg_list.append(
