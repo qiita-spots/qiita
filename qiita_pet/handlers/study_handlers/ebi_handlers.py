@@ -40,7 +40,7 @@ class EBISubmitHandler(BaseHandler):
         prep_templates = preprocessed_data.prep_templates
         allow_submission = len(prep_templates) == 1
         msg_list = ["Submission to EBI disabled:"]
-        if allow_submission:
+        if not allow_submission:
             msg_list.append(
                 "Only artifacts with a single prep template can be submitted")
         # If allow submission is already false, we technically don't need to
@@ -79,7 +79,7 @@ class EBISubmitHandler(BaseHandler):
         st_missing_cols = sample_template.check_restrictions(
             [SAMPLE_TEMPLATE_COLUMNS['EBI']])
         allow_submission = (len(pt_missing_cols) == 0 and
-                            len(st_missing_cols) == 0) or allow_submission
+                            len(st_missing_cols) == 0 and allow_submission)
 
         if not allow_submission:
             if len(pt_missing_cols) > 0:
