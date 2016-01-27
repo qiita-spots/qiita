@@ -293,9 +293,9 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='730' y='1498' width='235' height='2' />
 
 <!-- ============= Group 'Group_filepaths' ============= -->
-<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='569' y='700' width='422' height='425' />
-<text x='580' y='715'>Group_filepaths</text>
-<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='580' y='718' width='400' height='2' />
+<rect class='grp' style='fill:#c4e0f9;stroke:#c5d4e0' x='569' y='745' width='392' height='380' />
+<text x='580' y='760'>Group_filepaths</text>
+<rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='580' y='763' width='370' height='2' />
 
 <!-- ============= Group 'Group_collection' ============= -->
 <rect class='grp' style='fill:#00cccc;stroke:#c5e0e0' x='29' y='460' width='362' height='290' />
@@ -308,7 +308,7 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1225' y='1303' width='310' height='2' />
 
 <!-- ============= Group 'Group_artifact' ============= -->
-<rect class='grp' style='fill:#ffcccc;stroke:#e0c5c5' x='1034' y='670' width='692' height='410' />
+<rect class='grp' style='fill:#ffcccc;stroke:#e0c5c5' x='1034' y='670' width='692' height='500' />
 <text x='1045' y='685'>Group_artifact</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='1045' y='688' width='670' height='2' />
 
@@ -372,7 +372,7 @@ table {
 	analysis_users references analysis ( analysis_id )</title>
 </path>
 <text x='157' y='910' transform='rotate(0 157,910)' title='Foreign Key fk_analysis_users_analysis
-	analysis_users references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 135 885 L 135,757 Q 135,750 142,750 L 382,750 Q 390,750 390,742 L 390,435' >
+	analysis_users references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 135 885 L 135,772 Q 135,765 142,765 L 382,765 Q 390,765 390,757 L 390,435' >
 	<title>Foreign Key fk_analysis_users_user
 	analysis_users references qiita_user ( email )</title>
 </path>
@@ -442,21 +442,21 @@ table {
 	job references logging ( log_id -> logging_id )</title>
 </path>
 <text x='517' y='1285' transform='rotate(0 517,1285)' title='Foreign Key fk_job
-	job references logging ( log_id -> logging_id )' style='fill:#a1a0a0;'>log_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 660 960 L 660,1020' >
+	job references logging ( log_id -> logging_id )' style='fill:#a1a0a0;'>log_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 810 870 L 832,870 Q 840,870 840,862 L 840,855' >
 	<title>Foreign Key fk_filepath
 	filepath references filepath_type ( filepath_type_id )</title>
 </path>
-<text x='673' y='960' transform='rotate(90 673,960)' title='Foreign Key fk_filepath
+<text x='817' y='865' transform='rotate(0 817,865)' title='Foreign Key fk_filepath
 	filepath references filepath_type ( filepath_type_id )' style='fill:#a1a0a0;'>filepath_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 750 960 L 750,1020' >
 	<title>Foreign Key fk_filepath_0
 	filepath references checksum_algorithm ( checksum_algorithm_id )</title>
 </path>
 <text x='763' y='960' transform='rotate(90 763,960)' title='Foreign Key fk_filepath_0
-	filepath references checksum_algorithm ( checksum_algorithm_id )' style='fill:#a1a0a0;'>checksum_algorithm_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 810 885 L 847,885 Q 855,885 855,877 L 855,855' >
+	filepath references checksum_algorithm ( checksum_algorithm_id )' style='fill:#a1a0a0;'>checksum_algorithm_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 660 960 L 660,975' >
 	<title>Foreign Key fk_filepath_data_directory
 	filepath references data_directory ( data_directory_id )</title>
 </path>
-<text x='817' y='880' transform='rotate(0 817,880)' title='Foreign Key fk_filepath_data_directory
+<text x='673' y='960' transform='rotate(90 673,960)' title='Foreign Key fk_filepath_data_directory
 	filepath references data_directory ( data_directory_id )' style='fill:#a1a0a0;'>data_directory_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 555 1770 L 555,1650' >
 	<title>Foreign Key fk_term_ontology
 	term references ontology ( ontology_id )</title>
@@ -542,7 +542,7 @@ table {
 	message_user references message ( message_id )</title>
 </path>
 <text x='1342' y='1330' transform='rotate(0 1342,1330)' title='Foreign Key fk_message_user
-	message_user references message ( message_id )' style='fill:#a1a0a0;'>message_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 1320 L 997,1320 Q 990,1320 990,1312 L 990,427 Q 990,420 982,420 L 480,420' >
+	message_user references message ( message_id )' style='fill:#a1a0a0;'>message_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 1320 L 967,1320 Q 960,1320 960,1312 L 960,427 Q 960,420 952,420 L 480,420' >
 	<title>Foreign Key fk_message_user_0
 	message_user references qiita_user ( email )</title>
 </path>
@@ -567,12 +567,12 @@ table {
 	sample_template_filepath references filepath ( filepath_id )</title>
 </path>
 <text x='981' y='625' transform='rotate(0 981,625)' title='Foreign Key fk_filepath_id
-	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1380 555 L 1380,922 Q 1380,930 1387,930 L 1492,930 Q 1500,930 1500,937 L 1500,1177 Q 1500,1185 1492,1185 L 795,1185' >
+	sample_template_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1290 525 L 1012,525 Q 1005,525 1005,532 L 1005,1132 Q 1005,1140 997,1140 L 787,1140 Q 780,1140 780,1147 L 780,1155' >
 	<title>Foreign Key fk_prep_template_data_type
 	prep_template references data_type ( data_type_id )</title>
 </path>
-<text x='1393' y='555' transform='rotate(90 1393,555)' title='Foreign Key fk_prep_template_data_type
-	prep_template references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1320 555 L 1320,735' >
+<text x='1224' y='520' transform='rotate(0 1224,520)' title='Foreign Key fk_prep_template_data_type
+	prep_template references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1320 555 L 1320,825' >
 	<title>Foreign Key fk_prep_template_artifact
 	prep_template references artifact ( artifact_id )</title>
 </path>
@@ -587,31 +587,31 @@ table {
 	analysis_sample references study_sample ( sample_id )</title>
 </path>
 <text x='-22' y='1330' transform='rotate(0 -22,1330)' title='Foreign Key fk_analysis_sample
-	analysis_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 150 1410 L 172,1410 Q 180,1410 180,1417 L 180,1432 Q 180,1440 187,1440 L 1012,1440 Q 1020,1440 1020,1432 L 1020,727 Q 1020,720 1027,720 L 1207,720 Q 1215,720 1215,727 L 1215,735' >
+	analysis_sample references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 30 1350 L 7,1350 Q 0,1350 0,1342 L 0,757 Q 0,750 7,750 L 1207,750 Q 1215,750 1215,757 L 1215,825' >
 	<title>Foreign Key fk_analysis_sample_artifact
 	analysis_sample references artifact ( artifact_id )</title>
 </path>
-<text x='157' y='1405' transform='rotate(0 157,1405)' title='Foreign Key fk_analysis_sample_artifact
-	analysis_sample references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1155 765 L 1185,765' >
+<text x='-22' y='1345' transform='rotate(0 -22,1345)' title='Foreign Key fk_analysis_sample_artifact
+	analysis_sample references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1155 855 L 1185,855' >
 	<title>Foreign Key fk_parent_artifact_artifact
 	parent_artifact references artifact ( artifact_id )</title>
 </path>
-<text x='1162' y='760' transform='rotate(0 1162,760)' title='Foreign Key fk_parent_artifact_artifact
-	parent_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1155 780 L 1185,780' >
+<text x='1162' y='850' transform='rotate(0 1162,850)' title='Foreign Key fk_parent_artifact_artifact
+	parent_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1155 870 L 1185,870' >
 	<title>Foreign Key fk_parent_artifact_parent
 	parent_artifact references artifact ( parent_id -> artifact_id )</title>
 </path>
-<text x='1162' y='775' transform='rotate(0 1162,775)' title='Foreign Key fk_parent_artifact_parent
-	parent_artifact references artifact ( parent_id -> artifact_id )' style='fill:#a1a0a0;'>parent_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1155 855 L 1185,855' >
+<text x='1162' y='865' transform='rotate(0 1162,865)' title='Foreign Key fk_parent_artifact_parent
+	parent_artifact references artifact ( parent_id -> artifact_id )' style='fill:#a1a0a0;'>parent_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1155 945 L 1185,945' >
 	<title>Foreign Key fk_artifact_filepath_artifact
 	artifact_filepath references artifact ( artifact_id )</title>
 </path>
-<text x='1162' y='850' transform='rotate(0 1162,850)' title='Foreign Key fk_artifact_filepath_artifact
-	artifact_filepath references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1035 870 L 810,870' >
+<text x='1162' y='940' transform='rotate(0 1162,940)' title='Foreign Key fk_artifact_filepath_artifact
+	artifact_filepath references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1035 930 L 810,930' >
 	<title>Foreign Key fk_artifact_filepath_filepath
 	artifact_filepath references filepath ( filepath_id )</title>
 </path>
-<text x='981' y='865' transform='rotate(0 981,865)' title='Foreign Key fk_artifact_filepath_filepath
+<text x='981' y='925' transform='rotate(0 981,925)' title='Foreign Key fk_artifact_filepath_filepath
 	artifact_filepath references filepath ( filepath_id )' style='fill:#a1a0a0;'>filepath_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1950 210 L 1950,240' >
 	<title>Foreign Key fk_study_users_study
 	study_users references study ( study_id )</title>
@@ -712,17 +712,17 @@ table {
 	study_publication references publication ( publication_doi -> doi )</title>
 </path>
 <text x='2467' y='760' transform='rotate(0 2467,760)' title='Foreign Key fk_study_publication
-	study_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1770 1290 L 937,1290 Q 930,1290 930,1282 L 930,937 Q 930,930 922,930 L 810,930' >
+	study_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1770 1290 L 937,1290 Q 930,1290 930,1282 L 930,922 Q 930,915 922,915 L 810,915' >
 	<title>Foreign Key fk_reference_sequence_filepath
 	reference references filepath ( sequence_filepath -> filepath_id )</title>
 </path>
 <text x='1675' y='1285' transform='rotate(0 1675,1285)' title='Foreign Key fk_reference_sequence_filepath
-	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1770 1305 L 1357,1305 Q 1350,1305 1350,1297 L 1350,1087 Q 1350,1080 1342,1080 L 952,1080 Q 945,1080 945,1072 L 945,922 Q 945,915 937,915 L 810,915' >
+	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1770 1305 L 1357,1305 Q 1350,1305 1350,1297 L 1350,1177 Q 1350,1170 1342,1170 L 952,1170 Q 945,1170 945,1162 L 945,982 Q 945,975 937,975 L 802,975 Q 795,975 795,967 L 795,960' >
 	<title>Foreign Key fk_reference_taxonomy_filepath
 	reference references filepath ( taxonomy_filepath -> filepath_id )</title>
 </path>
 <text x='1672' y='1300' transform='rotate(0 1672,1300)' title='Foreign Key fk_reference_taxonomy_filepath
-	reference references filepath ( taxonomy_filepath -> filepath_id )' style='fill:#a1a0a0;'>taxonomy_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1770 1320 L 1552,1320 Q 1545,1320 1545,1312 L 1545,1102 Q 1545,1095 1537,1095 L 967,1095 Q 960,1095 960,1087 L 960,982 Q 960,975 952,975 L 802,975 Q 795,975 795,967 L 795,960' >
+	reference references filepath ( taxonomy_filepath -> filepath_id )' style='fill:#a1a0a0;'>taxonomy_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1770 1320 L 1552,1320 Q 1545,1320 1545,1312 L 1545,1192 Q 1545,1185 1537,1185 L 982,1185 Q 975,1185 975,1177 L 975,907 Q 975,900 967,900 L 810,900' >
 	<title>Foreign Key fk_reference_tree_filepath
 	reference references filepath ( tree_filepath -> filepath_id )</title>
 </path>
@@ -732,11 +732,11 @@ table {
 	software_command references software ( software_id )</title>
 </path>
 <text x='2032' y='760' transform='rotate(0 2032,760)' title='Foreign Key fk_soft_command_software
-	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1785 1110 L 1012,1110 Q 1005,1110 1005,1102 L 1005,412 Q 1005,405 997,405 L 480,405' >
+	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1785 1200 L 997,1200 Q 990,1200 990,1192 L 990,412 Q 990,405 982,405 L 480,405' >
 	<title>Foreign Key fk_processing_job_qiita_user
 	processing_job references qiita_user ( email )</title>
 </path>
-<text x='1759' y='1105' transform='rotate(0 1759,1105)' title='Foreign Key fk_processing_job_qiita_user
+<text x='1759' y='1195' transform='rotate(0 1759,1195)' title='Foreign Key fk_processing_job_qiita_user
 	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1950 1080 L 1950,855' >
 	<title>Foreign Key fk_processing_job
 	processing_job references software_command ( command_id )</title>
@@ -762,11 +762,11 @@ table {
 	command_parameter references software_command ( command_id )</title>
 </path>
 <text x='2048' y='1015' transform='rotate(0 2048,1015)' title='Foreign Key fk_command_parameter
-	command_parameter references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1770 945 L 1342,945 Q 1335,945 1335,937 L 1335,930' >
+	command_parameter references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1770 975 L 1350,975' >
 	<title>Foreign Key fk_artifact_processing_job
 	artifact_processing_job references artifact ( artifact_id )</title>
 </path>
-<text x='1718' y='940' transform='rotate(0 1718,940)' title='Foreign Key fk_artifact_processing_job
+<text x='1718' y='970' transform='rotate(0 1718,970)' title='Foreign Key fk_artifact_processing_job
 	artifact_processing_job references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1815 1005 L 1815,1080' >
 	<title>Foreign Key fk_artifact_processing_job_0
 	artifact_processing_job references processing_job ( processing_job_id )</title>
@@ -782,12 +782,7 @@ table {
 	oauth_software references oauth_identifiers ( client_id )</title>
 </path>
 <text x='2467' y='955' transform='rotate(0 2467,955)' title='Foreign Key fk_oauth_software
-	oauth_software references oauth_identifiers ( client_id )' style='fill:#a1a0a0;'>client_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 870 L 315,772 Q 315,765 322,765 L 412,765 Q 420,765 420,757 L 420,435' >
-	<title>Foreign Key fk_analysis_user
-	analysis references qiita_user ( email )</title>
-</path>
-<text x='317' y='865' transform='rotate(270 317,865)' title='Foreign Key fk_analysis_user
-	analysis references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 210 1005 L 180,1005' >
+	oauth_software references oauth_identifiers ( client_id )' style='fill:#a1a0a0;'>client_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 210 1005 L 180,1005' >
 	<title>Foreign Key fk_analysis_analysis_status
 	analysis references analysis_status ( analysis_status_id )</title>
 </path>
@@ -802,42 +797,52 @@ table {
 	analysis_chain references analysis ( child_id -> analysis_id )</title>
 </path>
 <text x='157' y='1120' transform='rotate(0 157,1120)' title='Foreign Key fk_analysis_chain_0
-	analysis_chain references analysis ( child_id -> analysis_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 960 L 1365,922 Q 1365,915 1357,915 L 1350,915' >
+	analysis_chain references analysis ( child_id -> analysis_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 1050 L 1365,1012 Q 1365,1005 1357,1005 L 1350,1005' >
 	<title>Foreign Key fk_ebi_run_accession_artifact
 	ebi_run_accession references artifact ( artifact_id )</title>
 </path>
-<text x='1367' y='955' transform='rotate(270 1367,955)' title='Foreign Key fk_ebi_run_accession_artifact
-	ebi_run_accession references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1710 720 L 1942,720 Q 1950,720 1950,712 L 1950,630' >
+<text x='1367' y='1045' transform='rotate(270 1367,1045)' title='Foreign Key fk_ebi_run_accession_artifact
+	ebi_run_accession references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1710 810 L 1867,810 Q 1875,810 1875,802 L 1875,592 Q 1875,585 1882,585 L 1920,585' >
 	<title>Foreign Key fk_study_artifact_study
 	study_artifact references study ( study_id )</title>
 </path>
-<text x='1717' y='715' transform='rotate(0 1717,715)' title='Foreign Key fk_study_artifact_study
-	study_artifact references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 720 L 1342,720 Q 1335,720 1335,727 L 1335,735' >
+<text x='1717' y='805' transform='rotate(0 1717,805)' title='Foreign Key fk_study_artifact_study
+	study_artifact references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 810 L 1342,810 Q 1335,810 1335,817 L 1335,825' >
 	<title>Foreign Key fk_study_artifact_artifact
 	study_artifact references artifact ( artifact_id )</title>
 </path>
-<text x='1553' y='715' transform='rotate(0 1553,715)' title='Foreign Key fk_study_artifact_artifact
-	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 930 L 1215,952 Q 1215,960 1207,960 L 1200,960' >
+<text x='1553' y='805' transform='rotate(0 1553,805)' title='Foreign Key fk_study_artifact_artifact
+	study_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 1020 L 1215,1042 Q 1215,1050 1207,1050 L 1200,1050' >
 	<title>Foreign Key fk_artifact_visibility
 	artifact references visibility ( visibility_id )</title>
 </path>
-<text x='1228' y='930' transform='rotate(90 1228,930)' title='Foreign Key fk_artifact_visibility
-	artifact references visibility ( visibility_id )' style='fill:#a1a0a0;'>visibility_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1350 765 L 1395,765' >
+<text x='1228' y='1020' transform='rotate(90 1228,1020)' title='Foreign Key fk_artifact_visibility
+	artifact references visibility ( visibility_id )' style='fill:#a1a0a0;'>visibility_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1350 855 L 1395,855' >
 	<title>Foreign Key fk_artifact_filetype
 	artifact references artifact_type ( artifact_type_id )</title>
 </path>
-<text x='1357' y='760' transform='rotate(0 1357,760)' title='Foreign Key fk_artifact_filetype
-	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1350 885 L 1912,885 Q 1920,885 1920,877 L 1920,855' >
+<text x='1357' y='850' transform='rotate(0 1357,850)' title='Foreign Key fk_artifact_filetype
+	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1350 990 L 1747,990 Q 1755,990 1755,982 L 1755,832 Q 1755,825 1762,825 L 1890,825' >
 	<title>Foreign Key fk_artifact_soft_command
 	artifact references software_command ( command_id )</title>
 </path>
-<text x='1357' y='880' transform='rotate(0 1357,880)' title='Foreign Key fk_artifact_soft_command
-	artifact references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1230 930 L 1230,1132 Q 1230,1140 1222,1140 L 787,1140 Q 780,1140 780,1147 L 780,1155' >
+<text x='1357' y='985' transform='rotate(0 1357,985)' title='Foreign Key fk_artifact_soft_command
+	artifact references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1230 1020 L 1230,1207 Q 1230,1215 1222,1215 L 795,1215' >
 	<title>Foreign Key fk_artifact_data_type
 	artifact references data_type ( data_type_id )</title>
 </path>
-<text x='1243' y='930' transform='rotate(90 1243,930)' title='Foreign Key fk_artifact_data_type
-	artifact references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+<text x='1243' y='1020' transform='rotate(90 1243,1020)' title='Foreign Key fk_artifact_data_type
+	artifact references data_type ( data_type_id )' style='fill:#a1a0a0;'>data_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1425 795 L 1425,825' >
+	<title>Foreign Key fk_artifact_type_filepath_type
+	artifact_type_filepath_type references artifact_type ( artifact_type_id )</title>
+</path>
+<text x='1438' y='795' transform='rotate(90 1438,795)' title='Foreign Key fk_artifact_type_filepath_type
+	artifact_type_filepath_type references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 735 L 937,735 Q 930,735 930,742 L 930,765' >
+	<title>Foreign Key fk_artifact_type_filepath_type_0
+	artifact_type_filepath_type references filepath_type ( filepath_type_id )</title>
+</path>
+<text x='1282' y='730' transform='rotate(0 1282,730)' title='Foreign Key fk_artifact_type_filepath_type_0
+	artifact_type_filepath_type references filepath_type ( filepath_type_id )' style='fill:#a1a0a0;'>filepath_type_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1069,16 +1074,6 @@ Information on how raw data y was prepared &#040;prep template&#041;Linked by y 
 <a xlink:href='#prep_y.sample_id'><text x='1248' y='292'>sample_id</text><title>sample_id varchar not null</title></a>
   <a xlink:href='#prep_y.data'><text x='1248' y='307'>data</text><title>data bigint
 STUFFFFF</title></a>
-
-<!-- ============= Table 'filepath_type' ============= -->
-<rect class='table' x='585' y='1028' width='120' height='75' rx='7' ry='7' />
-<path d='M 585.50 1054.50 L 585.50 1035.50 Q 585.50 1028.50 592.50 1028.50 L 697.50 1028.50 Q 704.50 1028.50 704.50 1035.50 L 704.50 1054.50 L585.50 1054.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
-<a xlink:href='#filepath_type'><text x='610' y='1042' class='tableTitle'>filepath_type</text><title>Table qiita.filepath_type</title></a>
-  <use id='nn' x='587' y='1062' xlink:href='#nn'/><a xlink:href='#filepath_type.filepath_type_id'><use id='pk' x='587' y='1061' xlink:href='#pk'/><title>Primary Key  ( filepath_type_id ) </title></a>
-<a xlink:href='#filepath_type.filepath_type_id'><text x='603' y='1072'>filepath_type_id</text><title>filepath_type_id bigserial not null</title></a>
-<a xlink:href='#filepath_type.filepath_type_id'><use id='ref' x='693' y='1061' xlink:href='#ref'/><title>Referred by filepath ( filepath_type_id ) </title></a>
-  <a xlink:href='#filepath_type.filepath_type'><use id='unq' x='587' y='1076' xlink:href='#unq'/><title>Unique Index  ( filepath_type ) </title></a>
-<a xlink:href='#filepath_type.filepath_type'><text x='603' y='1087'>filepath_type</text><title>filepath_type varchar</title></a>
 
 <!-- ============= Table 'checksum_algorithm' ============= -->
 <rect class='table' x='735' y='1028' width='165' height='75' rx='7' ry='7' />
@@ -1437,26 +1432,26 @@ The investigation type &#040;e&#046;g&#046;&#044; one of the values from EBI&#03
 <a xlink:href='#analysis_sample.sample_id'><use id='fk' x='138' y='1391' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
 
 <!-- ============= Table 'parent_artifact' ============= -->
-<rect class='table' x='1065' y='743' width='90' height='75' rx='7' ry='7' />
-<path d='M 1065.50 769.50 L 1065.50 750.50 Q 1065.50 743.50 1072.50 743.50 L 1147.50 743.50 Q 1154.50 743.50 1154.50 750.50 L 1154.50 769.50 L1065.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#parent_artifact'><text x='1070' y='757' class='tableTitle'>parent_artifact</text><title>Table qiita.parent_artifact</title></a>
-  <use id='nn' x='1067' y='777' xlink:href='#nn'/><a xlink:href='#parent_artifact.artifact_id'><use id='pk' x='1067' y='776' xlink:href='#pk'/><title>Primary Key  ( artifact_id, parent_id ) Index  ( artifact_id ) </title></a>
-<a xlink:href='#parent_artifact.artifact_id'><text x='1083' y='787'>artifact_id</text><title>artifact_id bigint not null</title></a>
-<a xlink:href='#parent_artifact.artifact_id'><use id='fk' x='1143' y='776' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
-  <use id='nn' x='1067' y='792' xlink:href='#nn'/><a xlink:href='#parent_artifact.parent_id'><use id='pk' x='1067' y='791' xlink:href='#pk'/><title>Primary Key  ( artifact_id, parent_id ) Index  ( parent_id ) </title></a>
-<a xlink:href='#parent_artifact.parent_id'><text x='1083' y='802'>parent_id</text><title>parent_id bigint not null</title></a>
-<a xlink:href='#parent_artifact.parent_id'><use id='fk' x='1143' y='791' xlink:href='#fk'/><title>References artifact ( parent_id -> artifact_id ) </title></a>
+<rect class='table' x='1065' y='833' width='90' height='75' rx='7' ry='7' />
+<path d='M 1065.50 859.50 L 1065.50 840.50 Q 1065.50 833.50 1072.50 833.50 L 1147.50 833.50 Q 1154.50 833.50 1154.50 840.50 L 1154.50 859.50 L1065.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#parent_artifact'><text x='1070' y='847' class='tableTitle'>parent_artifact</text><title>Table qiita.parent_artifact</title></a>
+  <use id='nn' x='1067' y='867' xlink:href='#nn'/><a xlink:href='#parent_artifact.artifact_id'><use id='pk' x='1067' y='866' xlink:href='#pk'/><title>Primary Key  ( artifact_id, parent_id ) Index  ( artifact_id ) </title></a>
+<a xlink:href='#parent_artifact.artifact_id'><text x='1083' y='877'>artifact_id</text><title>artifact_id bigint not null</title></a>
+<a xlink:href='#parent_artifact.artifact_id'><use id='fk' x='1143' y='866' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
+  <use id='nn' x='1067' y='882' xlink:href='#nn'/><a xlink:href='#parent_artifact.parent_id'><use id='pk' x='1067' y='881' xlink:href='#pk'/><title>Primary Key  ( artifact_id, parent_id ) Index  ( parent_id ) </title></a>
+<a xlink:href='#parent_artifact.parent_id'><text x='1083' y='892'>parent_id</text><title>parent_id bigint not null</title></a>
+<a xlink:href='#parent_artifact.parent_id'><use id='fk' x='1143' y='881' xlink:href='#fk'/><title>References artifact ( parent_id -> artifact_id ) </title></a>
 
 <!-- ============= Table 'artifact_filepath' ============= -->
-<rect class='table' x='1050' y='833' width='105' height='75' rx='7' ry='7' />
-<path d='M 1050.50 859.50 L 1050.50 840.50 Q 1050.50 833.50 1057.50 833.50 L 1147.50 833.50 Q 1154.50 833.50 1154.50 840.50 L 1154.50 859.50 L1050.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#artifact_filepath'><text x='1060' y='847' class='tableTitle'>artifact_filepath</text><title>Table qiita.artifact_filepath</title></a>
-  <use id='nn' x='1052' y='867' xlink:href='#nn'/><a xlink:href='#artifact_filepath.artifact_id'><use id='pk' x='1052' y='866' xlink:href='#pk'/><title>Primary Key  ( artifact_id, filepath_id ) Index  ( artifact_id ) </title></a>
-<a xlink:href='#artifact_filepath.artifact_id'><text x='1068' y='877'>artifact_id</text><title>artifact_id bigint not null</title></a>
-<a xlink:href='#artifact_filepath.artifact_id'><use id='fk' x='1143' y='866' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
-  <use id='nn' x='1052' y='882' xlink:href='#nn'/><a xlink:href='#artifact_filepath.filepath_id'><use id='pk' x='1052' y='881' xlink:href='#pk'/><title>Primary Key  ( artifact_id, filepath_id ) Index  ( filepath_id ) </title></a>
-<a xlink:href='#artifact_filepath.filepath_id'><text x='1068' y='892'>filepath_id</text><title>filepath_id bigint not null</title></a>
-<a xlink:href='#artifact_filepath.filepath_id'><use id='fk' x='1143' y='881' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
+<rect class='table' x='1050' y='923' width='105' height='75' rx='7' ry='7' />
+<path d='M 1050.50 949.50 L 1050.50 930.50 Q 1050.50 923.50 1057.50 923.50 L 1147.50 923.50 Q 1154.50 923.50 1154.50 930.50 L 1154.50 949.50 L1050.50 949.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#artifact_filepath'><text x='1060' y='937' class='tableTitle'>artifact_filepath</text><title>Table qiita.artifact_filepath</title></a>
+  <use id='nn' x='1052' y='957' xlink:href='#nn'/><a xlink:href='#artifact_filepath.artifact_id'><use id='pk' x='1052' y='956' xlink:href='#pk'/><title>Primary Key  ( artifact_id, filepath_id ) Index  ( artifact_id ) </title></a>
+<a xlink:href='#artifact_filepath.artifact_id'><text x='1068' y='967'>artifact_id</text><title>artifact_id bigint not null</title></a>
+<a xlink:href='#artifact_filepath.artifact_id'><use id='fk' x='1143' y='956' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
+  <use id='nn' x='1052' y='972' xlink:href='#nn'/><a xlink:href='#artifact_filepath.filepath_id'><use id='pk' x='1052' y='971' xlink:href='#pk'/><title>Primary Key  ( artifact_id, filepath_id ) Index  ( filepath_id ) </title></a>
+<a xlink:href='#artifact_filepath.filepath_id'><text x='1068' y='982'>filepath_id</text><title>filepath_id bigint not null</title></a>
+<a xlink:href='#artifact_filepath.filepath_id'><use id='fk' x='1143' y='971' xlink:href='#fk'/><title>References filepath ( filepath_id ) </title></a>
 
 <!-- ============= Table 'study_users' ============= -->
 <rect class='table' x='1920' y='128' width='90' height='75' rx='7' ry='7' />
@@ -1643,15 +1638,15 @@ Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a
 <a xlink:href='#software_publication.publication_doi'><use id='fk' x='2463' y='836' xlink:href='#fk'/><title>References publication ( publication_doi -> doi ) </title></a>
 
 <!-- ============= Table 'visibility' ============= -->
-<rect class='table' x='1050' y='938' width='150' height='90' rx='7' ry='7' />
-<path d='M 1050.50 964.50 L 1050.50 945.50 Q 1050.50 938.50 1057.50 938.50 L 1192.50 938.50 Q 1199.50 938.50 1199.50 945.50 L 1199.50 964.50 L1050.50 964.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#visibility'><text x='1103' y='952' class='tableTitle'>visibility</text><title>Table qiita.visibility</title></a>
-  <use id='nn' x='1052' y='972' xlink:href='#nn'/><a xlink:href='#visibility.visibility_id'><use id='pk' x='1052' y='971' xlink:href='#pk'/><title>Primary Key  ( visibility_id ) </title></a>
-<a xlink:href='#visibility.visibility_id'><text x='1068' y='982'>visibility_id</text><title>visibility_id bigserial not null</title></a>
-<a xlink:href='#visibility.visibility_id'><use id='ref' x='1188' y='971' xlink:href='#ref'/><title>Referred by artifact ( visibility_id ) </title></a>
-  <use id='nn' x='1052' y='987' xlink:href='#nn'/><a xlink:href='#visibility.visibility'><use id='unq' x='1052' y='986' xlink:href='#unq'/><title>Unique Index  ( visibility ) </title></a>
-<a xlink:href='#visibility.visibility'><text x='1068' y='997'>visibility</text><title>visibility varchar not null</title></a>
-  <use id='nn' x='1052' y='1002' xlink:href='#nn'/><a xlink:href='#visibility.visibility_description'><text x='1068' y='1012'>visibility_description</text><title>visibility_description varchar not null</title></a>
+<rect class='table' x='1050' y='1028' width='150' height='90' rx='7' ry='7' />
+<path d='M 1050.50 1054.50 L 1050.50 1035.50 Q 1050.50 1028.50 1057.50 1028.50 L 1192.50 1028.50 Q 1199.50 1028.50 1199.50 1035.50 L 1199.50 1054.50 L1050.50 1054.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#visibility'><text x='1103' y='1042' class='tableTitle'>visibility</text><title>Table qiita.visibility</title></a>
+  <use id='nn' x='1052' y='1062' xlink:href='#nn'/><a xlink:href='#visibility.visibility_id'><use id='pk' x='1052' y='1061' xlink:href='#pk'/><title>Primary Key  ( visibility_id ) </title></a>
+<a xlink:href='#visibility.visibility_id'><text x='1068' y='1072'>visibility_id</text><title>visibility_id bigserial not null</title></a>
+<a xlink:href='#visibility.visibility_id'><use id='ref' x='1188' y='1061' xlink:href='#ref'/><title>Referred by artifact ( visibility_id ) </title></a>
+  <use id='nn' x='1052' y='1077' xlink:href='#nn'/><a xlink:href='#visibility.visibility'><use id='unq' x='1052' y='1076' xlink:href='#unq'/><title>Unique Index  ( visibility ) </title></a>
+<a xlink:href='#visibility.visibility'><text x='1068' y='1087'>visibility</text><title>visibility varchar not null</title></a>
+  <use id='nn' x='1052' y='1092' xlink:href='#nn'/><a xlink:href='#visibility.visibility_description'><text x='1068' y='1102'>visibility_description</text><title>visibility_description varchar not null</title></a>
 
 <!-- ============= Table 'study_sample' ============= -->
 <rect class='table' x='1455' y='143' width='150' height='105' rx='7' ry='7' />
@@ -1700,18 +1695,6 @@ Referred by study_publication ( publication_doi -> doi ) </title></a>
   <use id='nn' x='2342' y='747' xlink:href='#nn'/><a xlink:href='#study_publication.publication_doi'><use id='pk' x='2342' y='746' xlink:href='#pk'/><title>Index  ( publication_doi ) Primary Key  ( study_id, publication_doi ) </title></a>
 <a xlink:href='#study_publication.publication_doi'><text x='2358' y='757'>publication_doi</text><title>publication_doi varchar not null</title></a>
 <a xlink:href='#study_publication.publication_doi'><use id='fk' x='2448' y='746' xlink:href='#fk'/><title>References publication ( publication_doi -> doi ) </title></a>
-
-<!-- ============= Table 'data_directory' ============= -->
-<rect class='table' x='840' y='728' width='135' height='120' rx='7' ry='7' />
-<path d='M 840.50 754.50 L 840.50 735.50 Q 840.50 728.50 847.50 728.50 L 967.50 728.50 Q 974.50 728.50 974.50 735.50 L 974.50 754.50 L840.50 754.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#data_directory'><text x='868' y='742' class='tableTitle'>data_directory</text><title>Table qiita.data_directory</title></a>
-  <use id='nn' x='842' y='762' xlink:href='#nn'/><a xlink:href='#data_directory.data_directory_id'><use id='pk' x='842' y='761' xlink:href='#pk'/><title>Primary Key  ( data_directory_id ) </title></a>
-<a xlink:href='#data_directory.data_directory_id'><text x='858' y='772'>data_directory_id</text><title>data_directory_id bigserial not null</title></a>
-<a xlink:href='#data_directory.data_directory_id'><use id='ref' x='963' y='761' xlink:href='#ref'/><title>Referred by filepath ( data_directory_id ) </title></a>
-  <use id='nn' x='842' y='777' xlink:href='#nn'/><a xlink:href='#data_directory.data_type'><text x='858' y='787'>data_type</text><title>data_type varchar not null</title></a>
-  <use id='nn' x='842' y='792' xlink:href='#nn'/><a xlink:href='#data_directory.mountpoint'><text x='858' y='802'>mountpoint</text><title>mountpoint varchar not null</title></a>
-  <use id='nn' x='842' y='807' xlink:href='#nn'/><a xlink:href='#data_directory.subdirectory'><text x='858' y='817'>subdirectory</text><title>subdirectory bool not null default FALSE</title></a>
-  <use id='nn' x='842' y='822' xlink:href='#nn'/><a xlink:href='#data_directory.active'><text x='858' y='832'>active</text><title>active bool not null</title></a>
 
 <!-- ============= Table 'reference' ============= -->
 <rect class='table' x='1785' y='1283' width='135' height='135' rx='7' ry='7' />
@@ -1907,37 +1890,37 @@ Keeps track of the chain of analysis edits&#046; Tracks what previous analysis a
 <a xlink:href='#analysis_chain.child_id'><use id='fk' x='138' y='1136' xlink:href='#fk'/><title>References analysis ( child_id -> analysis_id ) </title></a>
 
 <!-- ============= Table 'ebi_run_accession' ============= -->
-<rect class='table' x='1350' y='968' width='135' height='90' rx='7' ry='7' />
-<path d='M 1350.50 994.50 L 1350.50 975.50 Q 1350.50 968.50 1357.50 968.50 L 1477.50 968.50 Q 1484.50 968.50 1484.50 975.50 L 1484.50 994.50 L1350.50 994.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#ebi_run_accession'><text x='1367' y='982' class='tableTitle'>ebi_run_accession</text><title>Table qiita.ebi_run_accession</title></a>
-  <use id='nn' x='1352' y='1002' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.sample_id'><use id='pk' x='1352' y='1001' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) Index  ( sample_id ) </title></a>
-<a xlink:href='#ebi_run_accession.sample_id'><text x='1368' y='1012'>sample_id</text><title>sample_id varchar not null</title></a>
-<a xlink:href='#ebi_run_accession.sample_id'><use id='fk' x='1473' y='1001' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
-  <use id='nn' x='1352' y='1017' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.artifact_id'><use id='pk' x='1352' y='1016' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) Index  ( artifact_id ) </title></a>
-<a xlink:href='#ebi_run_accession.artifact_id'><text x='1368' y='1027'>artifact_id</text><title>artifact_id bigint not null</title></a>
-<a xlink:href='#ebi_run_accession.artifact_id'><use id='fk' x='1473' y='1016' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
-  <use id='nn' x='1352' y='1032' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.ebi_run_accession'><use id='pk' x='1352' y='1031' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) </title></a>
-<a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1368' y='1042'>ebi_run_accession</text><title>ebi_run_accession bigint not null</title></a>
+<rect class='table' x='1350' y='1058' width='135' height='90' rx='7' ry='7' />
+<path d='M 1350.50 1084.50 L 1350.50 1065.50 Q 1350.50 1058.50 1357.50 1058.50 L 1477.50 1058.50 Q 1484.50 1058.50 1484.50 1065.50 L 1484.50 1084.50 L1350.50 1084.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#ebi_run_accession'><text x='1367' y='1072' class='tableTitle'>ebi_run_accession</text><title>Table qiita.ebi_run_accession</title></a>
+  <use id='nn' x='1352' y='1092' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.sample_id'><use id='pk' x='1352' y='1091' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) Index  ( sample_id ) </title></a>
+<a xlink:href='#ebi_run_accession.sample_id'><text x='1368' y='1102'>sample_id</text><title>sample_id varchar not null</title></a>
+<a xlink:href='#ebi_run_accession.sample_id'><use id='fk' x='1473' y='1091' xlink:href='#fk'/><title>References study_sample ( sample_id ) </title></a>
+  <use id='nn' x='1352' y='1107' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.artifact_id'><use id='pk' x='1352' y='1106' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) Index  ( artifact_id ) </title></a>
+<a xlink:href='#ebi_run_accession.artifact_id'><text x='1368' y='1117'>artifact_id</text><title>artifact_id bigint not null</title></a>
+<a xlink:href='#ebi_run_accession.artifact_id'><use id='fk' x='1473' y='1106' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
+  <use id='nn' x='1352' y='1122' xlink:href='#nn'/><a xlink:href='#ebi_run_accession.ebi_run_accession'><use id='pk' x='1352' y='1121' xlink:href='#pk'/><title>Primary Key  ( sample_id, artifact_id, ebi_run_accession ) </title></a>
+<a xlink:href='#ebi_run_accession.ebi_run_accession'><text x='1368' y='1132'>ebi_run_accession</text><title>ebi_run_accession bigint not null</title></a>
 
 <!-- ============= Table 'study_artifact' ============= -->
-<rect class='table' x='1620' y='698' width='90' height='75' rx='7' ry='7' />
-<path d='M 1620.50 724.50 L 1620.50 705.50 Q 1620.50 698.50 1627.50 698.50 L 1702.50 698.50 Q 1709.50 698.50 1709.50 705.50 L 1709.50 724.50 L1620.50 724.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#study_artifact'><text x='1628' y='712' class='tableTitle'>study_artifact</text><title>Table qiita.study_artifact</title></a>
-  <use id='nn' x='1622' y='732' xlink:href='#nn'/><a xlink:href='#study_artifact.study_id'><use id='pk' x='1622' y='731' xlink:href='#pk'/><title>Primary Key  ( study_id, artifact_id ) Index  ( study_id ) </title></a>
-<a xlink:href='#study_artifact.study_id'><text x='1638' y='742'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#study_artifact.study_id'><use id='fk' x='1698' y='731' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
-  <use id='nn' x='1622' y='747' xlink:href='#nn'/><a xlink:href='#study_artifact.artifact_id'><use id='pk' x='1622' y='746' xlink:href='#pk'/><title>Primary Key  ( study_id, artifact_id ) Index  ( artifact_id ) </title></a>
-<a xlink:href='#study_artifact.artifact_id'><text x='1638' y='757'>artifact_id</text><title>artifact_id bigint not null</title></a>
-<a xlink:href='#study_artifact.artifact_id'><use id='fk' x='1698' y='746' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
+<rect class='table' x='1620' y='788' width='90' height='75' rx='7' ry='7' />
+<path d='M 1620.50 814.50 L 1620.50 795.50 Q 1620.50 788.50 1627.50 788.50 L 1702.50 788.50 Q 1709.50 788.50 1709.50 795.50 L 1709.50 814.50 L1620.50 814.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#study_artifact'><text x='1628' y='802' class='tableTitle'>study_artifact</text><title>Table qiita.study_artifact</title></a>
+  <use id='nn' x='1622' y='822' xlink:href='#nn'/><a xlink:href='#study_artifact.study_id'><use id='pk' x='1622' y='821' xlink:href='#pk'/><title>Primary Key  ( study_id, artifact_id ) Index  ( study_id ) </title></a>
+<a xlink:href='#study_artifact.study_id'><text x='1638' y='832'>study_id</text><title>study_id bigint not null</title></a>
+<a xlink:href='#study_artifact.study_id'><use id='fk' x='1698' y='821' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
+  <use id='nn' x='1622' y='837' xlink:href='#nn'/><a xlink:href='#study_artifact.artifact_id'><use id='pk' x='1622' y='836' xlink:href='#pk'/><title>Primary Key  ( study_id, artifact_id ) Index  ( artifact_id ) </title></a>
+<a xlink:href='#study_artifact.artifact_id'><text x='1638' y='847'>artifact_id</text><title>artifact_id bigint not null</title></a>
+<a xlink:href='#study_artifact.artifact_id'><use id='fk' x='1698' y='836' xlink:href='#fk'/><title>References artifact ( artifact_id ) </title></a>
 
 <!-- ============= Table 'artifact' ============= -->
-<rect class='table' x='1200' y='743' width='150' height='180' rx='7' ry='7' />
-<path d='M 1200.50 769.50 L 1200.50 750.50 Q 1200.50 743.50 1207.50 743.50 L 1342.50 743.50 Q 1349.50 743.50 1349.50 750.50 L 1349.50 769.50 L1200.50 769.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#artifact'><text x='1256' y='757' class='tableTitle'>artifact</text><title>Table qiita.artifact
+<rect class='table' x='1200' y='833' width='150' height='180' rx='7' ry='7' />
+<path d='M 1200.50 859.50 L 1200.50 840.50 Q 1200.50 833.50 1207.50 833.50 L 1342.50 833.50 Q 1349.50 833.50 1349.50 840.50 L 1349.50 859.50 L1200.50 859.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#artifact'><text x='1256' y='847' class='tableTitle'>artifact</text><title>Table qiita.artifact
 Represents data in the system</title></a>
-  <use id='nn' x='1202' y='777' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1202' y='776' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
-<a xlink:href='#artifact.artifact_id'><text x='1218' y='787'>artifact_id</text><title>artifact_id bigserial not null</title></a>
-<a xlink:href='#artifact.artifact_id'><use id='ref' x='1338' y='776' xlink:href='#ref'/><title>Referred by analysis_sample ( artifact_id ) 
+  <use id='nn' x='1202' y='867' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1202' y='866' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
+<a xlink:href='#artifact.artifact_id'><text x='1218' y='877'>artifact_id</text><title>artifact_id bigserial not null</title></a>
+<a xlink:href='#artifact.artifact_id'><use id='ref' x='1338' y='866' xlink:href='#ref'/><title>Referred by analysis_sample ( artifact_id ) 
 Referred by artifact_filepath ( artifact_id ) 
 Referred by artifact_processing_job ( artifact_id ) 
 Referred by ebi_run_accession ( artifact_id ) 
@@ -1945,38 +1928,74 @@ Referred by parent_artifact ( artifact_id )
 Referred by parent_artifact ( parent_id -> artifact_id ) 
 Referred by prep_template ( artifact_id ) 
 Referred by study_artifact ( artifact_id ) </title></a>
-  <use id='nn' x='1202' y='792' xlink:href='#nn'/><a xlink:href='#artifact.name'><text x='1218' y='802'>name</text><title>name varchar&#040;35&#041; not null</title></a>
-  <use id='nn' x='1202' y='807' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='817'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
-  <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='821' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
-<a xlink:href='#artifact.command_id'><text x='1218' y='832'>command_id</text><title>command_id bigint</title></a>
-<a xlink:href='#artifact.command_id'><use id='fk' x='1338' y='821' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
-  <a xlink:href='#artifact.command_parameters'><text x='1218' y='847'>command_parameters</text><title>command_parameters varchar
+  <use id='nn' x='1202' y='882' xlink:href='#nn'/><a xlink:href='#artifact.name'><text x='1218' y='892'>name</text><title>name varchar&#040;35&#041; not null</title></a>
+  <use id='nn' x='1202' y='897' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='907'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
+  <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='911' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
+<a xlink:href='#artifact.command_id'><text x='1218' y='922'>command_id</text><title>command_id bigint</title></a>
+<a xlink:href='#artifact.command_id'><use id='fk' x='1338' y='911' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <a xlink:href='#artifact.command_parameters'><text x='1218' y='937'>command_parameters</text><title>command_parameters varchar
 Varchar in dbschema but is JSON in the postgresDB</title></a>
-  <use id='nn' x='1202' y='852' xlink:href='#nn'/><a xlink:href='#artifact.visibility_id'><use id='idx' x='1202' y='851' xlink:href='#idx'/><title>Index  ( visibility_id ) </title></a>
-<a xlink:href='#artifact.visibility_id'><text x='1218' y='862'>visibility_id</text><title>visibility_id bigint not null
+  <use id='nn' x='1202' y='942' xlink:href='#nn'/><a xlink:href='#artifact.visibility_id'><use id='idx' x='1202' y='941' xlink:href='#idx'/><title>Index  ( visibility_id ) </title></a>
+<a xlink:href='#artifact.visibility_id'><text x='1218' y='952'>visibility_id</text><title>visibility_id bigint not null
 If the artifact is sandbox&#044; awaiting&#095;for&#095;approval&#044; private or public</title></a>
-<a xlink:href='#artifact.visibility_id'><use id='fk' x='1338' y='851' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
-  <a xlink:href='#artifact.artifact_type_id'><use id='idx' x='1202' y='866' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
-<a xlink:href='#artifact.artifact_type_id'><text x='1218' y='877'>artifact_type_id</text><title>artifact_type_id integer</title></a>
-<a xlink:href='#artifact.artifact_type_id'><use id='fk' x='1338' y='866' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
-  <use id='nn' x='1202' y='882' xlink:href='#nn'/><a xlink:href='#artifact.data_type_id'><use id='idx' x='1202' y='881' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
-<a xlink:href='#artifact.data_type_id'><text x='1218' y='892'>data_type_id</text><title>data_type_id bigint not null</title></a>
-<a xlink:href='#artifact.data_type_id'><use id='fk' x='1338' y='881' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
-  <use id='nn' x='1202' y='897' xlink:href='#nn'/><a xlink:href='#artifact.submitted_to_vamps'><text x='1218' y='907'>submitted_to_vamps</text><title>submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+<a xlink:href='#artifact.visibility_id'><use id='fk' x='1338' y='941' xlink:href='#fk'/><title>References visibility ( visibility_id ) </title></a>
+  <a xlink:href='#artifact.artifact_type_id'><use id='idx' x='1202' y='956' xlink:href='#idx'/><title>Index  ( artifact_type_id ) </title></a>
+<a xlink:href='#artifact.artifact_type_id'><text x='1218' y='967'>artifact_type_id</text><title>artifact_type_id integer</title></a>
+<a xlink:href='#artifact.artifact_type_id'><use id='fk' x='1338' y='956' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
+  <use id='nn' x='1202' y='972' xlink:href='#nn'/><a xlink:href='#artifact.data_type_id'><use id='idx' x='1202' y='971' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
+<a xlink:href='#artifact.data_type_id'><text x='1218' y='982'>data_type_id</text><title>data_type_id bigint not null</title></a>
+<a xlink:href='#artifact.data_type_id'><use id='fk' x='1338' y='971' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
+  <use id='nn' x='1202' y='987' xlink:href='#nn'/><a xlink:href='#artifact.submitted_to_vamps'><text x='1218' y='997'>submitted_to_vamps</text><title>submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
 
 <!-- ============= Table 'artifact_type' ============= -->
-<rect class='table' x='1410' y='743' width='195' height='120' rx='7' ry='7' />
-<path d='M 1410.50 769.50 L 1410.50 750.50 Q 1410.50 743.50 1417.50 743.50 L 1597.50 743.50 Q 1604.50 743.50 1604.50 750.50 L 1604.50 769.50 L1410.50 769.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#artifact_type'><text x='1474' y='757' class='tableTitle'>artifact_type</text><title>Table qiita.artifact_type
+<rect class='table' x='1410' y='833' width='195' height='120' rx='7' ry='7' />
+<path d='M 1410.50 859.50 L 1410.50 840.50 Q 1410.50 833.50 1417.50 833.50 L 1597.50 833.50 Q 1604.50 833.50 1604.50 840.50 L 1604.50 859.50 L1410.50 859.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#artifact_type'><text x='1474' y='847' class='tableTitle'>artifact_type</text><title>Table qiita.artifact_type
 Type of artifact</title></a>
-  <use id='nn' x='1412' y='777' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type_id'><use id='pk' x='1412' y='776' xlink:href='#pk'/><title>Primary Key  ( artifact_type_id ) </title></a>
-<a xlink:href='#artifact_type.artifact_type_id'><text x='1428' y='787'>artifact_type_id</text><title>artifact_type_id bigserial not null</title></a>
-<a xlink:href='#artifact_type.artifact_type_id'><use id='ref' x='1593' y='776' xlink:href='#ref'/><title>Referred by artifact ( artifact_type_id ) </title></a>
-  <use id='nn' x='1412' y='792' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type'><use id='unq' x='1412' y='791' xlink:href='#unq'/><title>Unique Index  ( artifact_type ) </title></a>
-<a xlink:href='#artifact_type.artifact_type'><text x='1428' y='802'>artifact_type</text><title>artifact_type varchar not null</title></a>
-  <use id='nn' x='1412' y='807' xlink:href='#nn'/><a xlink:href='#artifact_type.description'><text x='1428' y='817'>description</text><title>description varchar not null</title></a>
-  <use id='nn' x='1412' y='822' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_ebi'><text x='1428' y='832'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
-  <use id='nn' x='1412' y='837' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_vamps'><text x='1428' y='847'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+  <use id='nn' x='1412' y='867' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type_id'><use id='pk' x='1412' y='866' xlink:href='#pk'/><title>Primary Key  ( artifact_type_id ) </title></a>
+<a xlink:href='#artifact_type.artifact_type_id'><text x='1428' y='877'>artifact_type_id</text><title>artifact_type_id bigserial not null</title></a>
+<a xlink:href='#artifact_type.artifact_type_id'><use id='ref' x='1593' y='866' xlink:href='#ref'/><title>Referred by artifact ( artifact_type_id ) 
+Referred by artifact_type_filepath_type ( artifact_type_id ) </title></a>
+  <use id='nn' x='1412' y='882' xlink:href='#nn'/><a xlink:href='#artifact_type.artifact_type'><use id='unq' x='1412' y='881' xlink:href='#unq'/><title>Unique Index  ( artifact_type ) </title></a>
+<a xlink:href='#artifact_type.artifact_type'><text x='1428' y='892'>artifact_type</text><title>artifact_type varchar not null</title></a>
+  <use id='nn' x='1412' y='897' xlink:href='#nn'/><a xlink:href='#artifact_type.description'><text x='1428' y='907'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='1412' y='912' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_ebi'><text x='1428' y='922'>can_be_submitted_to_ebi</text><title>can_be_submitted_to_ebi bool not null default &#039;FALSE&#039;</title></a>
+  <use id='nn' x='1412' y='927' xlink:href='#nn'/><a xlink:href='#artifact_type.can_be_submitted_to_vamps'><text x='1428' y='937'>can_be_submitted_to_vamps</text><title>can_be_submitted_to_vamps bool not null default &#039;FALSE&#039;</title></a>
+
+<!-- ============= Table 'filepath_type' ============= -->
+<rect class='table' x='825' y='773' width='120' height='75' rx='7' ry='7' />
+<path d='M 825.50 799.50 L 825.50 780.50 Q 825.50 773.50 832.50 773.50 L 937.50 773.50 Q 944.50 773.50 944.50 780.50 L 944.50 799.50 L825.50 799.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#filepath_type'><text x='850' y='787' class='tableTitle'>filepath_type</text><title>Table qiita.filepath_type</title></a>
+  <use id='nn' x='827' y='807' xlink:href='#nn'/><a xlink:href='#filepath_type.filepath_type_id'><use id='pk' x='827' y='806' xlink:href='#pk'/><title>Primary Key  ( filepath_type_id ) </title></a>
+<a xlink:href='#filepath_type.filepath_type_id'><text x='843' y='817'>filepath_type_id</text><title>filepath_type_id bigserial not null</title></a>
+<a xlink:href='#filepath_type.filepath_type_id'><use id='ref' x='933' y='806' xlink:href='#ref'/><title>Referred by filepath ( filepath_type_id ) 
+Referred by artifact_type_filepath_type ( filepath_type_id ) </title></a>
+  <a xlink:href='#filepath_type.filepath_type'><use id='unq' x='827' y='821' xlink:href='#unq'/><title>Unique Index  ( filepath_type ) </title></a>
+<a xlink:href='#filepath_type.filepath_type'><text x='843' y='832'>filepath_type</text><title>filepath_type varchar</title></a>
+
+<!-- ============= Table 'data_directory' ============= -->
+<rect class='table' x='585' y='983' width='135' height='120' rx='7' ry='7' />
+<path d='M 585.50 1009.50 L 585.50 990.50 Q 585.50 983.50 592.50 983.50 L 712.50 983.50 Q 719.50 983.50 719.50 990.50 L 719.50 1009.50 L585.50 1009.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#data_directory'><text x='613' y='997' class='tableTitle'>data_directory</text><title>Table qiita.data_directory</title></a>
+  <use id='nn' x='587' y='1017' xlink:href='#nn'/><a xlink:href='#data_directory.data_directory_id'><use id='pk' x='587' y='1016' xlink:href='#pk'/><title>Primary Key  ( data_directory_id ) </title></a>
+<a xlink:href='#data_directory.data_directory_id'><text x='603' y='1027'>data_directory_id</text><title>data_directory_id bigserial not null</title></a>
+<a xlink:href='#data_directory.data_directory_id'><use id='ref' x='708' y='1016' xlink:href='#ref'/><title>Referred by filepath ( data_directory_id ) </title></a>
+  <use id='nn' x='587' y='1032' xlink:href='#nn'/><a xlink:href='#data_directory.data_type'><text x='603' y='1042'>data_type</text><title>data_type varchar not null</title></a>
+  <use id='nn' x='587' y='1047' xlink:href='#nn'/><a xlink:href='#data_directory.mountpoint'><text x='603' y='1057'>mountpoint</text><title>mountpoint varchar not null</title></a>
+  <use id='nn' x='587' y='1062' xlink:href='#nn'/><a xlink:href='#data_directory.subdirectory'><text x='603' y='1072'>subdirectory</text><title>subdirectory bool not null default FALSE</title></a>
+  <use id='nn' x='587' y='1077' xlink:href='#nn'/><a xlink:href='#data_directory.active'><text x='603' y='1087'>active</text><title>active bool not null</title></a>
+
+<!-- ============= Table 'artifact_type_filepath_type' ============= -->
+<rect class='table' x='1380' y='698' width='165' height='90' rx='7' ry='7' />
+<path d='M 1380.50 724.50 L 1380.50 705.50 Q 1380.50 698.50 1387.50 698.50 L 1537.50 698.50 Q 1544.50 698.50 1544.50 705.50 L 1544.50 724.50 L1380.50 724.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#artifact_type_filepath_type'><text x='1391' y='712' class='tableTitle'>artifact_type_filepath_type</text><title>Table qiita.artifact_type_filepath_type</title></a>
+  <use id='nn' x='1382' y='732' xlink:href='#nn'/><a xlink:href='#artifact_type_filepath_type.artifact_type_id'><use id='pk' x='1382' y='731' xlink:href='#pk'/><title>Primary Key  ( artifact_type_id, filepath_type_id ) Index  ( artifact_type_id ) </title></a>
+<a xlink:href='#artifact_type_filepath_type.artifact_type_id'><text x='1398' y='742'>artifact_type_id</text><title>artifact_type_id bigint not null</title></a>
+<a xlink:href='#artifact_type_filepath_type.artifact_type_id'><use id='fk' x='1533' y='731' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
+  <use id='nn' x='1382' y='747' xlink:href='#nn'/><a xlink:href='#artifact_type_filepath_type.filepath_type_id'><use id='pk' x='1382' y='746' xlink:href='#pk'/><title>Primary Key  ( artifact_type_id, filepath_type_id ) Index  ( filepath_type_id ) </title></a>
+<a xlink:href='#artifact_type_filepath_type.filepath_type_id'><text x='1398' y='757'>filepath_type_id</text><title>filepath_type_id bigint not null</title></a>
+<a xlink:href='#artifact_type_filepath_type.filepath_type_id'><use id='fk' x='1533' y='746' xlink:href='#fk'/><title>References filepath_type ( filepath_type_id ) </title></a>
+  <use id='nn' x='1382' y='762' xlink:href='#nn'/><a xlink:href='#artifact_type_filepath_type.required'><text x='1398' y='772'>required</text><title>required bool not null default &#039;TRUE&#039;</title></a>
 
 </g></svg>
 
@@ -2702,34 +2721,6 @@ Type of artifact</title></a>
 <tr><th colspan='3'><b>Indexes</b></th></tr>
 	<tr>		<td>pk&#095;prep&#095;y primary key</td>
 		<td> ON sample&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='filepath_type'>Table filepath_type</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='filepath_type.filepath_type_id'>filepath&#095;type&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='filepath_type.filepath_type'>filepath&#095;type</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;filepath&#095;type primary key</td>
-		<td> ON filepath&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;filepath&#095;type unique</td>
-		<td> ON filepath&#095;type</td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -4718,45 +4709,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='data_directory'>Table data_directory</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='data_directory.data_directory_id'>data&#095;directory&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='data_directory.data_type'>data&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='data_directory.mountpoint'>mountpoint</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='data_directory.subdirectory'>subdirectory</a></td>
-		<td> bool  NOT NULL  DEFO FALSE </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='data_directory.active'>active</a></td>
-		<td> bool  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;data&#095;directory primary key</td>
-		<td> ON data&#095;directory&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='reference'>Table reference</a></th></tr>
 </thead>
 <tbody>
@@ -5600,6 +5552,121 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>		<td>idx&#095;filetype unique</td>
 		<td> ON artifact&#095;type</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='filepath_type'>Table filepath_type</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='filepath_type.filepath_type_id'>filepath&#095;type&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='filepath_type.filepath_type'>filepath&#095;type</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;filepath&#095;type primary key</td>
+		<td> ON filepath&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;filepath&#095;type unique</td>
+		<td> ON filepath&#095;type</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='data_directory'>Table data_directory</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='data_directory.data_directory_id'>data&#095;directory&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_directory.data_type'>data&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_directory.mountpoint'>mountpoint</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_directory.subdirectory'>subdirectory</a></td>
+		<td> bool  NOT NULL  DEFO FALSE </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='data_directory.active'>active</a></td>
+		<td> bool  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;data&#095;directory primary key</td>
+		<td> ON data&#095;directory&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='artifact_type_filepath_type'>Table artifact_type_filepath_type</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='artifact_type_filepath_type.artifact_type_id'>artifact&#095;type&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact_type_filepath_type.filepath_type_id'>filepath&#095;type&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='artifact_type_filepath_type.required'>required</a></td>
+		<td> bool  NOT NULL  DEFO 'TRUE' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;artifact&#095;type&#095;filepath&#095;type primary key</td>
+		<td> ON artifact&#095;type&#095;id&#044; filepath&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;type&#095;filepath&#095;type </td>
+		<td> ON artifact&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;artifact&#095;type&#095;filepath&#095;type </td>
+		<td> ON filepath&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_artifact_type_filepath_type</td>
+		<td > ( artifact&#095;type&#095;id ) ref <a href='#artifact&#095;type'>artifact&#095;type</a> (artifact&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_artifact_type_filepath_type_0</td>
+		<td > ( filepath&#095;type&#095;id ) ref <a href='#filepath&#095;type'>filepath&#095;type</a> (filepath&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
