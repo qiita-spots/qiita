@@ -62,7 +62,7 @@
       type: "POST",
       data : $('#form').serialize(),
       success: function( data ){
-        bootstrapAlert("<p>Error creating preperation</p>" + data.message, "danger");
+        bootstrapAlert("<p>Error adding preparation information</p>" + data.message, "danger");
       }
     });
     return false;

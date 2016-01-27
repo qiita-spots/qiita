@@ -5,17 +5,19 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from os.path import join
+
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.util import convert_to_id
+from qiita_db.util import get_mountpoint
 
 
 @execute_as_transaction
 def artifact_post_req(user_id, filepaths, artifact_type, name,
                       prep_template_id):
-    """Creates the prep template and initial artifact for the prep template
+    """Creates the initial artifact for the prep template
 
     Parameters
     ----------
@@ -28,7 +30,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         The type of the artifact
     name : str
         Name to give the artifact
-    prep_template_id : int
+    prep_template_id : int or str castable to int
         Prep template to attach the artifact to
 
     Returns
@@ -44,19 +46,19 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     if access_error:
         return access_error
     study_id = PrepTemplate.study_id
+    uploads_path = get_mountpoint('uploads')[0][1]
     cleaned_filepaths = []
     for ftype in filepaths:
-        # Convert filepath type to the database ID for adding artifact
-        fp_id = convert_to_id(ftype, 'filepath_type')
+        # Check if filepath being passed exists for study
         for fp in filepaths[ftype]:
-            # Check if filepath being passed exists for study
-            exists = check_fp(study_id, fp)
+            full_fp = join(uploads_path, fp)
+            exists = check_fp(study_id, full_fp)
             if exists['status'] != 'success':
                 return exists
-            cleaned_filepaths.append((fp, fp_id))
+            cleaned_filepaths.append((full_fp, ftype))
 
     artifact = Artifact.create(cleaned_filepaths, artifact_type, name=name,
-                               prep_template=prep_template_id)
+                               prep_template=prep)
     return {'status': 'success',
             'message': '',
             'artifact': artifact.id}

@@ -6,12 +6,49 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
+from os.path import join, exists
 
+import pandas as pd
+
+from qiita_core.qiita_settings import qiita_config
+from qiita_core.util import qiita_test_checker
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.study import Study
+from qiita_db.util import get_count
 from qiita_pet.handlers.api_proxy.artifact import (
-    artifact_graph_get_req, artifact_types_get_req)
+    artifact_graph_get_req, artifact_types_get_req, artifact_post_req)
 
 
+@qiita_test_checker()
 class TestArtifactAPI(TestCase):
+    def tearDown(self):
+        fp = join(qiita_config.base_data_dir, 'uploads', '1',
+                  'uploaded_file.txt')
+        if not exists(fp):
+            with open(fp, 'w') as f:
+                f.write('')
+
+        # Create prep test file to point at
+        self.update_fp = join(qiita_config.base_data_dir, 'uploads', '1',
+                              'update.txt')
+        with open(self.update_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+
+    def test_artifact_post_req(self):
+        # Create new prep template to attach artifact to
+        new_prep_id = get_count('qiita.prep_template') + 1
+        PrepTemplate.create(pd.DataFrame(
+            {'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
+
+        new_artifact_id = get_count('qiita.artifact') + 1
+        obs = artifact_post_req(
+            'test@foo.bar', {'raw_forward_seqs': ['uploaded_file.txt']},
+            'per_sample_FASTQ', 'New Test Artifact', new_prep_id)
+        exp = {'status': 'success',
+               'message': '',
+               'artifact': new_artifact_id}
+        self.assertEqual(obs, exp)
+
     def test_artifact_graph_get_req_ancestors(self):
         obs = artifact_graph_get_req(1, 'ancestors', 'test@foo.bar')
         exp = {'status': 'success',
@@ -47,13 +84,13 @@ class TestArtifactAPI(TestCase):
         obs = artifact_types_get_req()
         exp = {'message': '',
                'status': 'success',
-               'types': [['SFF', None],
-                         ['FASTQ', None],
+               'types': [['BIOM', 'BIOM table'],
+                         ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
                          ['FASTA', None],
                          ['FASTA_Sanger', None],
-                         ['per_sample_FASTQ', None],
-                         ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
-                         ['BIOM', 'BIOM table']]}
+                         ['FASTQ', None],
+                         ['SFF', None],
+                         ['per_sample_FASTQ', None]]}
         self.assertEqual(obs, exp)
 
 

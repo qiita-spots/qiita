@@ -36,7 +36,7 @@ class SampleTemplateAJAX(BaseHandler):
                 is_local, download[1], download[0],
                 "Download sample information")
         else:
-            dl_path = 'No sample template added'
+            dl_path = 'No sample information added'
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
         if stats['status'] == 'success':
@@ -66,5 +66,6 @@ class SampleTemplateAJAX(BaseHandler):
         elif action == 'delete':
             result = sample_template_delete_req(study_id, self.current_user.id)
         else:
-            raise HTTPError(400, 'Unknown sample template action: %s' % action)
+            raise HTTPError(400, 'Unknown sample information action: %s'
+                            % action)
         self.write(result)

@@ -3,6 +3,7 @@
 <link rel="stylesheet" src="/static/vendor/css/vis.css" type="text/css">
 <script type="text/javascript" src="/static/vendor/js/vis.js"></script>
 <script type="text/javascript">
+  var network = -1;
   function togglegraphs(id) {
     if($("#study-prep-graph-row").css('display') == 'none' ) {
       $("#study-prep-graph-row").show();
@@ -33,6 +34,11 @@
         }
         $("#study-prep-graph-row").show();
         draw_graph(nodes, edges, "study-prep-graph");
+        // add event listeners
+        network.on('select', function(params) {
+          //render the information for the selected artifact ID
+          if(+params.nodes !== 0) { fill_artifact(params.nodes); }
+        });
         // Copy existing formatted prep info to header position
         $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="togglegraphs(); return false;" id="graph-toggle-link">Hide files</a>');
       });
@@ -68,11 +74,6 @@
       }
     };
     network = new vis.Network(container, data, options);
-    // add event listeners
-    network.on('select', function(params) {
-      //render the information for the selected artifact ID
-      if(+params.nodes !== 0) { fill_artifact(params.nodes); }
-    });
   }
 
   function fill_base(sid) {

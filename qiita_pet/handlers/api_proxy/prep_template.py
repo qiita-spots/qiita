@@ -186,9 +186,9 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
         msg = str(e)
     info = {'status': status,
             'message': msg,
-            'file': prep_template}
-    if prep:
-        info['id'] = prep.id
+            'file': prep_template,
+            'id': prep.id if prep else None}
+
     return info
 
 

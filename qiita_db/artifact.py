@@ -84,7 +84,7 @@ class Artifact(qdb.base.QiitaObject):
 
     @staticmethod
     def types():
-        """Returns list of all artifact types available in the system
+        """Returns list of all artifact types available and their descriptions
 
         Returns
         -------
