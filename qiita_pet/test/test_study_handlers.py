@@ -205,6 +205,17 @@ class TestListStudiesHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
 
+class TestStudyApprovalList(TestHandlerBase):
+    database = True
+
+    def test_get(self):
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+        Artifact(4).visibility = "awaiting_approval"
+        response = self.get('/admin/approval/')
+        self.assertEqual(response.code, 200)
+        self.assertIn("test@foo.bar", response.body)
+
+
 class TestStudyDescriptionHandler(TestHandlerBase):
     def test_get_exists(self):
         response = self.get('/study/description/1')
