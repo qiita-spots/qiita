@@ -139,9 +139,7 @@ class SampleAJAX(BaseHandler):
         if values['status'] != 'success':
             self.write(values)
         else:
-            # Format to list sorted by sample ID
             self.write({'status': 'success',
                         'message': '',
-                        'values': [str(values['values'][s]) for s in
-                                   sorted(values['values'])]
+                        'values': values['values']
                         })
