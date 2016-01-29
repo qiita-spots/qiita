@@ -275,8 +275,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         if prep_template.artifact is None:
             artifact = Artifact.create(
-                [(demux_fp, 6)], "Demultiplexed", prep_template=prep_template,
-                can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
+                [(demux_fp, 6)], "Demultiplexed", prep_template=prep_template)
         else:
             params = Parameters.from_default_params(
                 DefaultParameters(1),
@@ -284,8 +283,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             artifact = Artifact.create(
                 [(demux_fp, 6)], "Demultiplexed",
                 parents=[prep_template.artifact],
-                processing_parameters=params,
-                can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
+                processing_parameters=params)
 
         return artifact
 
@@ -426,8 +424,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         # Magic number 6: the id of the preprocessed_demux filepath_type
         artifact = Artifact.create(
-            [(demux_fp, 6)], "Demultiplexed", prep_template=pt,
-            can_be_submitted_to_ebi=True, can_be_submitted_to_vamps=True)
+            [(demux_fp, 6)], "Demultiplexed", prep_template=pt)
 
         return artifact
 

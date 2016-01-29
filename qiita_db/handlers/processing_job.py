@@ -186,13 +186,9 @@ class CompleteHandler(OauthBaseHandler):
                             atype = artifact_data['artifact_type']
                             parents = job.input_artifacts
                             params = job.parameters
-                            ebi = artifact_data['can_be_submitted_to_ebi']
-                            vamps = artifact_data['can_be_submitted_to_vamps']
                             qdb.artifact.Artifact.create(
                                 filepaths, atype, parents=parents,
-                                processing_parameters=params,
-                                can_be_submitted_to_ebi=ebi,
-                                can_be_submitted_to_vamps=vamps)
+                                processing_parameters=params)
                         job.status = 'success'
                     else:
                         log = qdb.logger.LogEntry.create(
