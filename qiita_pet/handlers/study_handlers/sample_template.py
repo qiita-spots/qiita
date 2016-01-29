@@ -101,7 +101,8 @@ def _build_sample_summary(study_id, user_id):
             columns.append({'id': col_field,
                             'name': col_name,
                             'field': col_field,
-                            'sortable': True})
+                            'sortable': True,
+                            'width': 240})
 
             prep_samples = prep_template_samples_get_req(
                 prep['id'], user_id)['samples']
