@@ -80,40 +80,39 @@ def _build_sample_summary(study_id, user_id):
 
     Returns
     -------
-    str
-        HTML of the summary table
+    columns : list of dict
+        SlickGrid formatted list of columns
+    samples_table : list of dict
+        SlickGrid formatted table information
     """
     # Load all samples available into dictionary and set
-    samps_table = {s: [] for s in
+    samps_table = {s: {'sample': s} for s in
                    sample_template_samples_get_req(
         study_id, user_id)['samples']}
     all_samps = set(samps_table.keys())
-    col_names = ['']
+    columns = [{'id': 'sample', 'name': 'Sample', 'field': 'sample',
+                'width': 240, 'sortable': True}]
     # Add one column per prep template highlighting what samples exist
     preps = study_prep_get_req(study_id, user_id)['info']
     for dt in preps:
         for prep in preps[dt]:
+            col_field = "prep%d" % prep['id']
+            col_name = '%s - %d' % (prep['name'], prep['id'])
+            columns.append({'id': col_field,
+                            'name': col_name,
+                            'field': col_field,
+                            'sortable': True})
+
             prep_samples = prep_template_samples_get_req(
                 prep['id'], user_id)['samples']
             # Empty cell for samples not in the prep template
             for s in all_samps.difference(prep_samples):
-                samps_table[s].append('<td></td>')
+                samps_table[s][col_field] = ''
             # X in cell for samples in the prep template
             for s in all_samps.intersection(prep_samples):
-                samps_table[s].append('<td>X</td>')
-            col_names.append('%s - %d' % (prep['name'], prep['id']))
+                samps_table[s][col_field] = 'X'
 
-    # build the table header
-    table = ('<table id="samples-table" class="table table-striped"><thead>'
-             '<tr><th>%s</th></tr></thead><tbody>' % '</th><th>'.join(
-                 col_names))
-    # Build each row of samples
-    rows = []
-    for samp in sorted(all_samps):
-        rows.append('<tr><td>%s</td>%s</td></tr>' % (samp, '</td><td>'.join(
-            samps_table[samp])))
-    table = '%s%s</tbody></table>' % (table, ''.join(rows))
-    return table
+    return columns, samps_table.values()
 
 
 class SampleAJAX(BaseHandler):
@@ -124,9 +123,11 @@ class SampleAJAX(BaseHandler):
 
         meta_cats = sample_template_meta_cats_get_req(
             int(study_id), self.current_user.id)['categories']
-        table = _build_sample_summary(study_id, self.current_user.id)
+        cols, samps_table = _build_sample_summary(study_id,
+                                                  self.current_user.id)
         self.render('study_ajax/sample_prep_summary.html',
-                    table=table, cols=meta_cats, study_id=study_id)
+                    table=samps_table, cols=cols, meta_available=meta_cats,
+                    study_id=study_id)
 
     @authenticated
     def post(self):

@@ -1,15 +1,20 @@
+<link rel="stylesheet" href="/static/vendor/css/slick.grid.css" type="text/css"/>
+
 <p><table style='width:100%'><tr><td><h3>Sample Summary</h3></td><td style="text-align: right">
 Add sample column information to table 
 <select id="meta_col" name="meta_col">
   <option value=""></option>
-{% for col in cols %}
+{% for col in meta_available %}
   <option value="{{col}}">{{col}}</option>
 {% end %}
 </select>
 <button class="btn btn-info btn-sm" onclick="add_meta()">Add column</button>
-</td></tr></table></p>
-{% raw table %}
+</td></tr></table>
+<div id="samples-div" style="width:900px;height:800px;"></div>
 
+<script src="/static/vendor/js/jquery.event.drag-2.2.js"></script>
+<script src="/static/vendor/js/slick.core.js"></script>
+<script src="/static/vendor/js/slick.grid.js"></script>
 <script type="text/javascript">
   function add_meta() {
     var meta_val = $("#meta_col").val();
@@ -50,4 +55,17 @@ function deleteColumn(col_id)
   }
   cols_count -= 1;
 }
+$(document).ready(function() {
+  var True = true;
+  var False = false;
+  var table = {% raw table %};
+  var cols = {% raw cols %};
+  var options = {
+    enableCellNavigation: false,
+    enableColumnReorder: true
+  };
+  var currentSortCol = 'sample';
+  grid = new Slick.Grid("#samples-div", table, cols, options);
+  grid.headerRowHeight = 40;
+});
 </script>

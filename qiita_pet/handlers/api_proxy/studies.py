@@ -113,16 +113,15 @@ def study_prep_get_req(study_id, user_id):
     for dtype in study.data_types:
         prep_info[dtype] = []
         for prep in study.prep_templates(dtype):
-            start_artifact = prep.artifact
-            youngest_artifact = prep.artifact.youngest_artifact
+            # start_artifact = prep.artifact
+            # youngest_artifact = prep.artifact.youngest_artifact
             info = {
                 'name': 'PREP %d NAME' % prep.id,
                 'id': prep.id,
                 'status': prep.status,
-                'start_artifact': start_artifact.artifact_type,
-                'start_artifact_id': start_artifact.id,
-                'youngest_artifact': ' - '.join(
-                    [youngest_artifact.name, youngest_artifact.artifact_type])
+                'start_artifact': '16S',
+                'start_artifact_id': prep.id,
+                'youngest_artifact': 'youngest'
             }
             prep_info[dtype].append(info)
     return {'status': 'success',
