@@ -185,15 +185,41 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(Artifact(4).visibility, 'private')
 
     def test_build_sample_summary(self):
-        table = _build_sample_summary(1, 'test@foo.bar')
+        cols, table = _build_sample_summary(1, 'test@foo.bar')
         # Make sure header filled properly
-        header = (
-            '<thead><tr><th></th><th>PREP 1 NAME - 1</th></tr></thead>')
-        self.assertIn(header, table)
-
-        # Make sure sample is set properly
-        sample = ('<tr><td>1.SKB9.640200</td><td>X</td></tr>')
-        self.assertIn(sample, table)
+        cols_exp = [{'field': 'sample', 'width': 240, 'sortable': True,
+                     'id': 'sample', 'name': 'Sample'},
+                    {'field': 'prep1', 'width': 240, 'sortable': True,
+                     'id': 'prep1', 'name': 'PREP 1 NAME - 1'}]
+        self.assertEqual(cols, cols_exp)
+        table_exp = [{'sample': '1.SKB2.640194', 'prep1': 'X'},
+                     {'sample': '1.SKM4.640180', 'prep1': 'X'},
+                     {'sample': '1.SKB3.640195', 'prep1': 'X'},
+                     {'sample': '1.SKB6.640176', 'prep1': 'X'},
+                     {'sample': '1.SKD6.640190', 'prep1': 'X'},
+                     {'sample': '1.SKM6.640187', 'prep1': 'X'},
+                     {'sample': '1.SKD9.640182', 'prep1': 'X'},
+                     {'sample': '1.SKM8.640201', 'prep1': 'X'},
+                     {'sample': '1.SKM2.640199', 'prep1': 'X'},
+                     {'sample': '1.SKD2.640178', 'prep1': 'X'},
+                     {'sample': '1.SKB7.640196', 'prep1': 'X'},
+                     {'sample': '1.SKD4.640185', 'prep1': 'X'},
+                     {'sample': '1.SKB8.640193', 'prep1': 'X'},
+                     {'sample': '1.SKM3.640197', 'prep1': 'X'},
+                     {'sample': '1.SKD5.640186', 'prep1': 'X'},
+                     {'sample': '1.SKB1.640202', 'prep1': 'X'},
+                     {'sample': '1.SKM1.640183', 'prep1': 'X'},
+                     {'sample': '1.SKD1.640179', 'prep1': 'X'},
+                     {'sample': '1.SKD3.640198', 'prep1': 'X'},
+                     {'sample': '1.SKB5.640181', 'prep1': 'X'},
+                     {'sample': '1.SKB4.640189', 'prep1': 'X'},
+                     {'sample': '1.SKB9.640200', 'prep1': 'X'},
+                     {'sample': '1.SKM9.640192', 'prep1': 'X'},
+                     {'sample': '1.SKD8.640184', 'prep1': 'X'},
+                     {'sample': '1.SKM5.640177', 'prep1': 'X'},
+                     {'sample': '1.SKM7.640188', 'prep1': 'X'},
+                     {'sample': '1.SKD7.640191', 'prep1': 'X'}]
+        self.assertEqual(table, table_exp)
 
 
 class TestStudyEditorForm(TestHandlerBase):
@@ -587,14 +613,9 @@ class TestSampleSummaryAJAX(TestHandlerBase):
     def test_get(self):
         res = self.get("/study/description/sample_summary/", {'study_id': 1})
         self.assertEqual(res.code, 200)
-        # Make sure header filled properly
-        header = (
-            '<thead><tr><th></th><th>PREP 1 NAME - 1</th></tr></thead>')
-        self.assertIn(header, res.body)
-
-        # Make sure sample is set properly
-        sample = ('<tr><td>1.SKB9.640200</td><td>X</td></tr>')
-        self.assertIn(sample, res.body)
+        # Make sure metadata read properly
+        line = '<option value="altitude">altitude</option>'
+        self.assertIn(line, res.body)
 
     def test_post(self):
         res = self.post("/study/description/sample_summary/", {
