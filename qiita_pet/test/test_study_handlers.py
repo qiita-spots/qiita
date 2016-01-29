@@ -188,13 +188,11 @@ class TestHelpers(TestHandlerBase):
         table = _build_sample_summary(1, 'test@foo.bar')
         # Make sure header filled properly
         header = (
-            '<thead>\n    <tr style="text-align: right;">\n      <th>'
-            '</th>\n      <th>PREP 1 NAME - 1</th>\n    </tr>\n  </thead>')
+            '<thead><tr><th></th><th>PREP 1 NAME - 1</th></tr></thead>')
         self.assertIn(header, table)
 
         # Make sure sample is set properly
-        sample = ('<tr>\n      <th>1.SKB9.640200</th>\n      <td>X</td>\n'
-                  '    </tr>')
+        sample = ('<tr><td>1.SKB9.640200</td><td>X</td></tr>')
         self.assertIn(sample, table)
 
 
@@ -591,13 +589,11 @@ class TestSampleSummaryAJAX(TestHandlerBase):
         self.assertEqual(res.code, 200)
         # Make sure header filled properly
         header = (
-            '<thead>\n    <tr style="text-align: right;">\n      <th />\n'
-            '      <th>PREP 1 NAME - 1</th>\n    </tr>\n  </thead>')
+            '<thead><tr><th></th><th>PREP 1 NAME - 1</th></tr></thead>')
         self.assertIn(header, res.body)
 
         # Make sure sample is set properly
-        sample = ('<tr>\n      <th>1.SKB9.640200</th>\n      <td>X</td>'
-                  '\n    </tr>')
+        sample = ('<tr><td>1.SKB9.640200</td><td>X</td></tr>')
         self.assertIn(sample, res.body)
 
     def test_post(self):

@@ -5,10 +5,8 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from xml.etree import ElementTree as et
 
 from tornado.web import authenticated, HTTPError
-import pandas as pd
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.util import is_localhost
@@ -85,28 +83,37 @@ def _build_sample_summary(study_id, user_id):
     str
         HTML of the summary table
     """
-    # Load all samples available into dataframe
-    df = pd.DataFrame(
-        sorted(sample_template_samples_get_req(study_id, user_id)['samples']),
-        columns=['ALLSAMPS'])
-    df.set_index('ALLSAMPS', inplace=True)
-    df.index.name = None
+    # Load all samples available into dictionary and set
+    samps_table = {s: [] for s in
+                   sample_template_samples_get_req(
+        study_id, user_id)['samples']}
+    all_samps = set(samps_table.keys())
+    col_names = ['']
     # Add one column per prep template highlighting what samples exist
     preps = study_prep_get_req(study_id, user_id)['info']
     for dt in preps:
         for prep in preps[dt]:
             prep_samples = prep_template_samples_get_req(
                 prep['id'], user_id)['samples']
-            prep_df = pd.Series(['X'] * len(prep_samples),
-                                index=prep_samples, dtype=str)
-            col_name = '%s - %d' % (prep['name'], prep['id'])
-            df[col_name] = prep_df
+            # Empty cell for samples not in the prep template
+            for s in all_samps.difference(prep_samples):
+                samps_table[s].append('<td></td>')
+            # X in cell for samples in the prep template
+            for s in all_samps.intersection(prep_samples):
+                samps_table[s].append('<td>X</td>')
+            col_names.append('%s - %d' % (prep['name'], prep['id']))
 
-    # Format the dataframe to html table with id
-    # From http://stackoverflow.com/a/30596068
-    t = et.fromstring(df.to_html(classes='table table-striped', na_rep=''))
-    t.set('id', 'samples-table')
-    return et.tostring(t)
+    # build the table header
+    table = ('<table id="samples-table" class="table table-striped"><thead>'
+             '<tr><th>%s</th></tr></thead><tbody>' % '</th><th>'.join(
+                 col_names))
+    # Build each row of samples
+    rows = []
+    for samp in sorted(all_samps):
+        rows.append('<tr><td>%s</td>%s</td></tr>' % (samp, '</td><td>'.join(
+            samps_table[samp])))
+    table = '%s%s</tbody></table>' % (table, ''.join(rows))
+    return table
 
 
 class SampleAJAX(BaseHandler):
