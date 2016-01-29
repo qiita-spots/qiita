@@ -34,13 +34,19 @@ class SampleTemplateAJAX(BaseHandler):
         is_local = is_localhost(self.request.headers['host'])
         # Get the most recent version for download and build the link
         download = sample_template_filepaths_get_req(
-            study_id, self.current_user.id)['filepaths'][-1]
+            study_id, self.current_user.id)
+        if 'filepaths' in download:
+            download = download['filepaths'][-1]
+        else:
+            download = (-1, 'No sample information')
         dl_path = download_link_or_path(
             is_local, download[1], download[0], "Download sample information")
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
-        self.render('study_ajax/sample_summary.html', stats=stats['summary'],
-                    num_samples=stats['num_samples'], dl_path=dl_path,
+        summary = stats['summary'] if 'summary' in stats else {}
+        num_samples = stats['num_samples'] if 'num_samples' in stats else 0
+        self.render('study_ajax/sample_summary.html', stats=summary,
+                    num_samples=num_samples, dl_path=dl_path,
                     files=files, study_id=study_id, data_types=data_types)
 
     @authenticated
