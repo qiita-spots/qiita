@@ -132,7 +132,7 @@ def submit_EBI(preprocessed_data_id, action, send):
                 ebi_submission.sample_template.biosample_accessions = bio_acc
             if ex_acc:
                 ebi_submission.prep_template.ebi_experiment_accessions = ex_acc
-            ebi_submission.preprocessed_data.ebi_run_accessions = run_acc
+            ebi_submission.artifact.ebi_run_accessions = run_acc
     else:
         st_acc, sa_acc, bio_acc, ex_acc, run_acc = None, None, None, None, None
 
