@@ -658,6 +658,16 @@ class DBUtilTests(TestCase):
         # Run again with no system messages to make sure no errors
         qdb.util.clear_system_messages()
 
+    def test_supported_filepath_types(self):
+        obs = qdb.util.supported_filepath_types("FASTQ")
+        exp = [["raw_forward_seqs", True], ["raw_reverse_seqs", False],
+               ["raw_barcodes", True]]
+        self.assertItemsEqual(obs, exp)
+
+        obs = qdb.util.supported_filepath_types("BIOM")
+        exp = [["biom", True], ["directory", False], ["log", False]]
+        self.assertItemsEqual(obs, exp)
+
 
 class UtilTests(TestCase):
     """Tests for the util functions that do not need to access the DB"""

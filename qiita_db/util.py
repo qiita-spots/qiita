@@ -1152,3 +1152,27 @@ def clear_system_messages():
             sql = "DELETE FROM qiita.message WHERE message_id IN %s"
             qdb.sql_connection.TRN.add(sql, [msg_ids])
             qdb.sql_connection.TRN.execute()
+
+
+def supported_filepath_types(artifact_type):
+    """Returns the list of supported filepath types for the given artifact type
+
+    Parameters
+    ----------
+    artifact_type : str
+        The artifact type to check the supported filepath types
+
+    Returns
+    -------
+    list of [str, bool]
+        The list of supported filepath types and whether it is required by the
+        artifact type or not
+    """
+    with qdb.sql_connection.TRN:
+        sql = """SELECT DISTINCT filepath_type, required
+                 FROM qiita.artifact_type_filepath_type
+                    JOIN qiita.artifact_type USING (artifact_type_id)
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                 WHERE artifact_type = %s"""
+        qdb.sql_connection.TRN.add(sql, [artifact_type])
+        return qdb.sql_connection.TRN.execute_fetchindex()
