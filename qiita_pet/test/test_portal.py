@@ -13,41 +13,39 @@ class TestPortal(TestHandlerBase):
         response = self.get('/admin/portals/studies/')
         self.assertEqual(response.code, 200)
 
-    def test_post(self):
+    def test_post_add(self):
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
         response = self.post('/admin/portals/studies/', {'portal': 'EMP',
                                                          'selected': [1],
                                                          'action': 'Add'})
         self.assertEqual(response.code, 200)
 
+    def test_post_remove(self):
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
         response = self.post('/admin/portals/studies/', {'portal': 'EMP',
                                                          'selected': [1],
                                                          'action': 'Remove'})
         self.assertEqual(response.code, 200)
 
-    def test_get_errors(self):
-        # not valid user
+    def test_get_not_valid_user(self):
         response = self.get('/admin/portals/studies/')
         self.assertEqual(response.code, 403)
 
-    def test_post_errors(self):
-        # not valid user
+    def test_post_not_valid_user(self):
         response = self.post('/admin/portals/studies/', {'portal': 'EMP',
                                                          'selected': [1],
                                                          'action': 'Add'})
         self.assertEqual(response.code, 403)
 
-        # making an admin the valid user so the next tests actually test
-        # what they should
+    def test_post_not_valid_portal(self):
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
-
-        # not valid portal
         response = self.post('/admin/portals/studies/', {'portal': 'not-valid',
                                                          'selected': [1],
                                                          'action': 'Add'})
         self.assertEqual(response.code, 400)
 
-        # not a valid action
+    def test_post_not_valid_action(self):
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
         response = self.post('/admin/portals/studies/', {'portal': 'EMP',
                                                          'selected': [1],
                                                          'action': 'Error'})
