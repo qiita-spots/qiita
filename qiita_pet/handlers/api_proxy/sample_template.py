@@ -12,6 +12,7 @@ from os import remove
 
 from natsort import natsorted
 from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.study import Study
 from qiita_core.util import execute_as_transaction
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
@@ -51,7 +52,12 @@ def sample_template_summary_get_req(samp_id, user_id):
     access_error = check_access(samp_id, user_id)
     if access_error:
         return access_error
-    template = SampleTemplate(int(samp_id))
+    try:
+        template = SampleTemplate(int(samp_id))
+    except QiitaDBUnknownIDError as e:
+        return {'status': 'error',
+                'message': str(e)}
+
     df = template.to_dataframe()
     out = {'status': 'success',
            'message': '',
@@ -262,7 +268,14 @@ def sample_template_filepaths_get_req(study_id, user_id):
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
+
+    try:
+        template = SampleTemplate(int(study_id))
+    except QiitaDBUnknownIDError as e:
+        return {'status': 'error',
+                'message': str(e)}
+
     return {'status': 'success',
             'message': '',
-            'filepaths': SampleTemplate(int(study_id)).get_filepaths()
+            'filepaths': template.get_filepaths()
             }

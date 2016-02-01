@@ -108,6 +108,14 @@ class ArtifactTests(TestCase):
         exp = [a1, a4]
         self.assertEqual(obs, exp)
 
+    def test_types(self):
+        obs = qdb.artifact.Artifact.types()
+        exp = [['BIOM', 'BIOM table'],
+               ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+               ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
+               ['SFF', None], ['per_sample_FASTQ', None]]
+        self.assertEqual(obs, exp)
+
     def test_copy(self):
         src = qdb.artifact.Artifact(1)
         # Create the files to the first artifact

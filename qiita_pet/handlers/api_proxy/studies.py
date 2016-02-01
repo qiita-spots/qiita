@@ -80,8 +80,8 @@ def study_get_req(study_id, user_id):
         'email': lab_person.email,
         'affiliation': lab_person.affiliation}
 
-    samples = study.sample_template.keys()
-    study_info['num_samples'] = 0 if samples is None else len(list(samples))
+    samples = study.sample_template
+    study_info['num_samples'] = 0 if samples is None else len(samples)
     return {'status': 'success',
             'message': '',
             'info': study_info
