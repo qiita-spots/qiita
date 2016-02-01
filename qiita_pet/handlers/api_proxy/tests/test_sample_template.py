@@ -15,7 +15,7 @@ from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_put_req, sample_template_delete_req,
     sample_template_filepaths_get_req, sample_template_get_req,
     _check_sample_template_exists, sample_template_samples_get_req,
-    sample_template_category_get_req)
+    sample_template_category_get_req, sample_template_meta_cats_get_req)
 
 
 @qiita_test_checker()
@@ -314,6 +314,11 @@ class TestSampleAPI(TestCase):
         obs = sample_template_filepaths_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_sample_template_meta_cats_get_req(self):
+        obs = sample_template_meta_cats_get_req(1, 'test@foo.bar')
+        exp = []
         self.assertEqual(obs, exp)
 
 

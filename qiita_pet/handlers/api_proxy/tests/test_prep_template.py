@@ -157,6 +157,11 @@ class TestPrepAPI(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
+    def test_prep_template_get_req_no_exists(self):
+        obs = prep_template_get_req(3100, 'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Prep template 3100 does not exist'})
+
     def test_prep_template_post_req(self):
         new_id = get_count('qiita.prep_template') + 1
         obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
@@ -202,6 +207,12 @@ class TestPrepAPI(TestCase):
                'message': 'file does not exist',
                'file': 'badfilepath'}
         self.assertEqual(obs, exp)
+
+    def test_prep_template_post_req_no_exists(self):
+        obs = prep_template_post_req(3100, 'test@foo.bar', 'update.txt',
+                                     '16S')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Study does not exist'})
 
     def test_prep_template_put_req(self):
         obs = prep_template_put_req(1, 'test@foo.bar',
@@ -250,6 +261,11 @@ class TestPrepAPI(TestCase):
                'file': 'badfilepath'}
         self.assertEqual(obs, exp)
 
+    def test_prep_template_put_req_no_exists(self):
+        obs = prep_template_put_req(3100, 'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Prep template 3100 does not exist'})
+
     def test_prep_template_delete_req(self):
         template = pd.read_csv(self.update_fp, sep='\t', index_col=0)
         new_id = get_count('qiita.prep_template') + 1
@@ -271,6 +287,12 @@ class TestPrepAPI(TestCase):
         obs = prep_template_delete_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_delete_req_no_prep(self):
+        obs = prep_template_delete_req(3100, 'test@foo.bar')
+        exp = {'status': 'error',
+               'message': 'Prep template 3100 does not exist'}
         self.assertEqual(obs, exp)
 
     def test_prep_template_filepaths_get_req(self):
@@ -309,6 +331,11 @@ class TestPrepAPI(TestCase):
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
+
+    def test_prep_template_graph_get_req_no_exists(self):
+        obs = prep_template_graph_get_req(3100, 'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Prep template 3100 does not exist'})
 
     def test_prep_template_summary_get_req(self):
         obs = prep_template_summary_get_req(1, 'test@foo.bar')
@@ -369,6 +396,11 @@ class TestPrepAPI(TestCase):
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
+
+    def test_prep_template_summary_get_req_no_exists(self):
+        obs = prep_template_summary_get_req(3100, 'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Prep template 3100 does not exist'})
 
 if __name__ == '__main__':
     main()

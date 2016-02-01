@@ -89,13 +89,14 @@ def prep_template_get_req(prep_id, user_id):
      'message': message,
      'template': {sample: {column: value, ...}, ...}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
-        return exists
     df = prep.to_dataframe()
     return {'status': 'success',
             'message': '',
@@ -123,13 +124,14 @@ def prep_template_summary_get_req(prep_id, user_id):
                 'num_samples': value,
                 'category': [(val1, count1), (val2, count2), ...], ...}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
-        return exists
     df = prep.to_dataframe()
     out = {'num_samples': df.shape[0],
            'summary': {},
@@ -234,13 +236,13 @@ def prep_template_samples_get_req(prep_id, user_id):
          'samples': list of str}
          samples is list of samples in the template
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
-        return exists
     return {'status': 'success',
             'message': '',
             'samples': sorted(x for x in PrepTemplate(int(prep_id)))
@@ -276,14 +278,15 @@ def prep_template_put_req(prep_id, user_id, prep_template=None,
          'message': message,
          'file': prep_template}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     study_id = prep.study_id
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
-    exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
-        return exists
 
     if investigation_type:
         investigation_type = _process_investigation_type(
@@ -339,14 +342,14 @@ def prep_template_delete_req(prep_id, user_id):
         {'status': status,
          'message': message}
     """
-    prep = PrepTemplate(int(prep_id))
-    access_error = check_access(prep.study_id, user_id)
-    if access_error:
-        return access_error
     exists = _check_prep_template_exists(int(prep_id))
     if exists['status'] != 'success':
         return exists
 
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
     msg = ''
     status = 'success'
     try:
@@ -377,13 +380,14 @@ def prep_template_filepaths_get_req(prep_id, user_id):
          'message': message,
          'filepaths': [(filepath_id, filepath), ...]}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
-        return exists
     return {'status': 'success',
             'message': '',
             'filepaths': prep.get_filepaths()
@@ -439,13 +443,14 @@ def prep_template_graph_get_req(prep_id, user_id):
     -----
     Nodes are identified by the corresponding Artifact ID.
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
-        return exists
     G = prep.artifact.descendants
     node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
                    for n in G.nodes()]
