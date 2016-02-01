@@ -29,7 +29,7 @@ class PortalEditBase(BaseHandler):
     @execute_as_transaction
     def get_info(self, portal="QIITA"):
         # Add the portals and, optionally, checkbox to the information
-        studies = Portal(portal).get_studies()
+        studies = [s.id for s in Portal(portal).get_studies()]
         if not studies:
             return []
 
