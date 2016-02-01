@@ -28,6 +28,7 @@ class TestPortal(TestHandlerBase):
                                                          'selected': [1],
                                                          'action': 'Remove'})
         self.assertEqual(response.code, 200)
+        self.assertNotEqual(response.code, "")
 
     def test_get_not_valid_user(self):
         response = self.get('/admin/portals/studies/')
