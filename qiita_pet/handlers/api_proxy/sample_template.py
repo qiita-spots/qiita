@@ -67,12 +67,12 @@ def sample_template_get_req(samp_id, user_id):
         and the values are a dictionary of column and value.
         Format {sample: {column: value, ...}, ...}
     """
-    access_error = check_access(int(samp_id), user_id)
-    if access_error:
-        return access_error
     exists = _check_sample_template_exists(int(samp_id))
     if exists['status'] != 'success':
         return exists
+    access_error = check_access(int(samp_id), user_id)
+    if access_error:
+        return access_error
 
     template = SampleTemplate(int(samp_id))
     access_error = check_access(template.study_id, user_id)
@@ -103,12 +103,13 @@ def sample_template_samples_get_req(samp_id, user_id):
          'samples': list of str}
          samples is list of samples in the template
     """
-    access_error = check_access(samp_id, user_id)
-    if access_error:
-        return access_error
     exists = _check_sample_template_exists(int(samp_id))
     if exists['status'] != 'success':
         return exists
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
+
     return {'status': 'success',
             'message': '',
             'samples': sorted(x for x in SampleTemplate(int(samp_id)))
@@ -134,12 +135,13 @@ def sample_template_meta_cats_get_req(samp_id, user_id):
          'categories': list of str}
          samples is list of metadata categories in the template
     """
-    access_error = check_access(samp_id, user_id)
-    if access_error:
-        return access_error
     exists = _check_sample_template_exists(int(samp_id))
     if exists['status'] != 'success':
         return exists
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
+
     return {'status': 'success',
             'message': '',
             'categories': sorted(SampleTemplate(int(samp_id)).categories())
@@ -166,12 +168,12 @@ def sample_template_category_get_req(category, samp_id, user_id):
          'message': str,
          'values': dict of {str: object}}
     """
-    access_error = check_access(samp_id, user_id)
-    if access_error:
-        return access_error
     exists = _check_sample_template_exists(int(samp_id))
     if exists['status'] != 'success':
         return exists
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
 
     st = SampleTemplate(int(samp_id))
     try:
@@ -210,12 +212,13 @@ def sample_template_summary_get_req(samp_id, user_id):
         Format {num_samples: value,
                 category: [(val1, count1), (val2, count2), ...], ...}
     """
-    access_error = check_access(samp_id, user_id)
-    if access_error:
-        return access_error
     exists = _check_sample_template_exists(int(samp_id))
     if exists['status'] != 'success':
         return exists
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
+
     template = SampleTemplate(int(samp_id))
     df = template.to_dataframe()
     out = {'status': 'success',
@@ -332,12 +335,13 @@ def sample_template_put_req(study_id, user_id, sample_template):
     message has the warnings or errors
     file has the file name
     """
-    access_error = check_access(int(study_id), user_id)
-    if access_error:
-        return access_error
     exists = _check_sample_template_exists(int(study_id))
     if exists['status'] != 'success':
         return exists
+    access_error = check_access(int(study_id), user_id)
+    if access_error:
+        return access_error
+
     fp_rsp = check_fp(study_id, sample_template)
     if fp_rsp['status'] != 'success':
         # Unknown filepath, so return the error message
@@ -389,12 +393,13 @@ def sample_template_delete_req(study_id, user_id):
     status can be success, warning, or error depending on result
     message has the warnings or errors
     """
-    access_error = check_access(int(study_id), user_id)
-    if access_error:
-        return access_error
     exists = _check_sample_template_exists(int(study_id))
     if exists['status'] != 'success':
         return exists
+    access_error = check_access(int(study_id), user_id)
+    if access_error:
+        return access_error
+
     try:
         SampleTemplate.delete(int(study_id))
     except Exception as e:
@@ -425,12 +430,13 @@ def sample_template_filepaths_get_req(study_id, user_id):
         filepaths is a list of tuple of int and str
         All files in the sample template, as [(id, URL), ...]
     """
-    access_error = check_access(study_id, user_id)
-    if access_error:
-        return access_error
     exists = _check_sample_template_exists(int(study_id))
     if exists['status'] != 'success':
         return exists
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
+
     return {'status': 'success',
             'message': '',
             'filepaths': SampleTemplate(int(study_id)).get_filepaths()

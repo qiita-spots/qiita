@@ -30,12 +30,6 @@ from qiita_pet.handlers.api_proxy.prep_template import (
 @qiita_test_checker()
 class TestPrepAPI(TestCase):
     def setUp(self):
-        fp = join(qiita_config.base_data_dir, 'uploads', '1',
-                  'uploaded_file.txt')
-        if not exists(fp):
-            with open(fp, 'w') as f:
-                f.write('')
-
         # Create test file to point update tests at
         self.update_fp = join(qiita_config.base_data_dir, 'uploads', '1',
                               'update.txt')
@@ -44,6 +38,12 @@ class TestPrepAPI(TestCase):
 
         def tear_down(self):
             remove(self.update_fp)
+
+        fp = join(qiita_config.base_data_dir, 'uploads', '1',
+                  'uploaded_file.txt')
+        if not exists(fp):
+            with open(fp, 'w') as f:
+                f.write('')
 
     def test_process_investigation_type(self):
         obs = _process_investigation_type('Metagenomics', '', '')

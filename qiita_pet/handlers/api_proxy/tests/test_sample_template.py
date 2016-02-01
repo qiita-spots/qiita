@@ -6,9 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
-from os.path import join
+from os.path import join, exists
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_summary_get_req, sample_template_post_req,
@@ -20,15 +21,47 @@ from qiita_pet.handlers.api_proxy.sample_template import (
 
 @qiita_test_checker()
 class TestSampleAPI(TestCase):
+    info = {
+        "timeseries_type_id": 1,
+        "metadata_complete": True,
+        "mixs_compliant": True,
+        "number_samples_collected": 25,
+        "number_samples_promised": 28,
+        "study_alias": "FCM",
+        "study_description": "DESC",
+        "study_abstract": "ABS",
+        "emp_person_id": qdb.study.StudyPerson(2),
+        "principal_investigator_id": qdb.study.StudyPerson(3),
+        "lab_person_id": qdb.study.StudyPerson(1)
+        }
+
+    new_study = qdb.study.Study.create(
+        qdb.user.User('test@foo.bar'), "Some New Study", [1],
+        info)
+
+    def setUp(self):
+        fp = join(qiita_config.base_data_dir, 'uploads',
+                  str(self.new_study.id), 'uploaded_file.txt')
+        if not exists(fp):
+            with open(fp, 'w') as f:
+                f.write('')
+
+    def tearDown(self):
+        fp = join(qiita_config.base_data_dir, 'uploads', '1',
+                  'uploaded_file.txt')
+        if not exists(fp):
+            with open(fp, 'w') as f:
+                f.write('')
+
     def test_check_sample_template_exists(self):
         obs = _check_sample_template_exists(1)
         self.assertEqual(obs, {'status': 'success', 'message': ''})
 
     def test_check_sample_template_exists_no_template(self):
-        obs = _check_sample_template_exists(3100)
+        obs = _check_sample_template_exists(self.new_study.id)
         self.assertEqual(obs, {'status': 'error',
-                               'message': 'Sample template 3100 does not '
-                               'exist'})
+                               'message': 'Sample template %d does not '
+                               'exist' % self.new_study.id})
 
     def test_sample_template_get_req(self):
         obs = sample_template_get_req(1, 'test@foo.bar')
@@ -77,6 +110,12 @@ class TestSampleAPI(TestCase):
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
+
+    def test_sample_template_get_req_no_template(self):
+        obs = sample_template_get_req(self.new_study.id, 'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Sample template %d does not '
+                               'exist' % self.new_study.id})
 
     def test_sample_template_summary_get_req(self):
         obs = sample_template_summary_get_req(1, 'test@foo.bar')
@@ -170,32 +209,12 @@ class TestSampleAPI(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_sample_template_summary_get_req_no_exist(self):
-        # Create study without sample template
-        new_id = qdb.util.get_count('qiita.study') + 1
-        info = {
-            "timeseries_type_id": 1,
-            "metadata_complete": True,
-            "mixs_compliant": True,
-            "number_samples_collected": 25,
-            "number_samples_promised": 28,
-            "study_alias": "FCM",
-            "study_description": "Microbiome of people who eat nothing but "
-                                 "fried chicken",
-            "study_abstract": "Exploring how a high fat diet changes the "
-                              "gut microbiome",
-            "emp_person_id": qdb.study.StudyPerson(2),
-            "principal_investigator_id": qdb.study.StudyPerson(3),
-            "lab_person_id": qdb.study.StudyPerson(1)
-        }
-        qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Fried chicken microbiome", [1],
-            info)
-
+    def test_sample_template_summary_get_req_no_template(self):
         # Test sample template not existing
-        obs = sample_template_get_req(new_id, 'test@foo.bar')
+        obs = sample_template_get_req(self.new_study.id, 'test@foo.bar')
         exp = {'status': 'error',
-               'message': 'Sample template 2 does not exist'}
+               'message': 'Sample template %d does not exist' %
+                          self.new_study.id}
         self.assertEqual(obs, exp)
 
     def test_sample_template_samples_get_req(self):
@@ -218,6 +237,13 @@ class TestSampleAPI(TestCase):
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
+
+    def test_sample_template_sample_get_req_no_template(self):
+        obs = sample_template_samples_get_req(self.new_study.id,
+                                              'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Sample template %d does not '
+                               'exist' % self.new_study.id})
 
     def test_sample_template_category_get_req(self):
         obs = sample_template_category_get_req('latitude', 1, 'test@foo.bar')
@@ -259,6 +285,13 @@ class TestSampleAPI(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
+    def test_sample_template_category_get_req_no_template(self):
+        obs = sample_template_category_get_req('latitiude', self.new_study.id,
+                                               'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Sample template %d does not '
+                               'exist' % self.new_study.id})
+
     def test_sample_template_post_req(self):
         obs = sample_template_post_req(1, 'test@foo.bar', '16S',
                                        'uploaded_file.txt')
@@ -288,6 +321,13 @@ class TestSampleAPI(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
+    def test_sample_template_put_req_no_template(self):
+        obs = sample_template_put_req(self.new_study.id, 'test@foo.bar',
+                                      'uploaded_file.txt')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Sample template %d does not '
+                               'exist' % self.new_study.id})
+
     def test_sample_template_delete_req(self):
         obs = sample_template_delete_req(1, 'test@foo.bar')
         exp = {'status': 'error',
@@ -300,6 +340,12 @@ class TestSampleAPI(TestCase):
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
+
+    def test_sample_template_delete_req_no_template(self):
+        obs = sample_template_delete_req(self.new_study.id, 'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Sample template %d does not '
+                               'exist' % self.new_study.id})
 
     def test_sample_template_filepaths_get_req(self):
         templates_dir = qdb.util.get_mountpoint('templates')[0][1]
@@ -316,10 +362,41 @@ class TestSampleAPI(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
+    def test_sample_template_filepaths_get_req_no_template(self):
+        obs = sample_template_filepaths_get_req(self.new_study.id,
+                                                'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Sample template %d does not '
+                               'exist' % self.new_study.id})
+
     def test_sample_template_meta_cats_get_req(self):
         obs = sample_template_meta_cats_get_req(1, 'test@foo.bar')
-        exp = []
+        exp = {'status': 'success',
+               'message': '',
+               'categories': [
+                   'altitude', 'anonymized_name', 'assigned_from_geo',
+                   'collection_timestamp', 'common_name', 'country', 'depth',
+                   'description', 'description_duplicate', 'dna_extracted',
+                   'elevation', 'env_biome', 'env_feature', 'host_subject_id',
+                   'host_taxid', 'latitude', 'longitude', 'ph',
+                   'physical_specimen_location', 'physical_specimen_remaining',
+                   'samp_salinity', 'sample_type', 'scientific_name',
+                   'season_environment', 'taxon_id', 'temp', 'texture',
+                   'tot_nitro', 'tot_org_carb', 'water_content_soil']}
         self.assertEqual(obs, exp)
+
+    def test_sample_template_meta_cats_get_req_no_access(self):
+        obs = sample_template_meta_cats_get_req(1, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_sample_template_meta_cats_get_req_no_template(self):
+        obs = sample_template_meta_cats_get_req(self.new_study.id,
+                                                'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Sample template %d does not '
+                               'exist' % self.new_study.id})
 
 
 if __name__ == '__main__':
