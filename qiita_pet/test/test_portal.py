@@ -51,6 +51,20 @@ class TestPortal(TestHandlerBase):
                                                          'action': 'Error'})
         self.assertEqual(response.code, 400)
 
+    def test_get_AJAX(self):
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+        page = '/admin/portals/studiesAJAX/'
+        response = self.get(page, {'sEcho': '1001', 'view-portal': 'QIITA'})
+        self.assertEqual(response.code, 200)
+
+        exp = "Identification of the Microbiomes for Cannabis Soils"
+        self.assertIn(exp, response.body)
+
+    def test_get_AJAX_not_valid_user(self):
+        page = '/admin/portals/studiesAJAX/'
+        response = self.get(page, {'sEcho': '1001', 'view-portal': 'QIITA'})
+        self.assertEqual(response.code, 403)
+
 
 if __name__ == "__main__":
     main()
