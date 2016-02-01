@@ -12,7 +12,7 @@ class TestPortal(TestHandlerBase):
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
         response = self.get('/admin/portals/studies/')
         self.assertEqual(response.code, 200)
-        self.assertNotEqual(response.code, "")
+        self.assertNotEqual(response.body, "")
 
     def test_post_add(self):
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
@@ -20,7 +20,7 @@ class TestPortal(TestHandlerBase):
                                                          'selected': [1],
                                                          'action': 'Add'})
         self.assertEqual(response.code, 200)
-        self.assertNotEqual(response.code, "")
+        self.assertNotEqual(response.body, "")
 
     def test_post_remove(self):
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
@@ -28,7 +28,7 @@ class TestPortal(TestHandlerBase):
                                                          'selected': [1],
                                                          'action': 'Remove'})
         self.assertEqual(response.code, 200)
-        self.assertNotEqual(response.code, "")
+        self.assertNotEqual(response.body, "")
 
     def test_get_not_valid_user(self):
         response = self.get('/admin/portals/studies/')
