@@ -646,6 +646,15 @@ class TestSampleSummaryAJAX(TestHandlerBase):
 class TestDelete(TestHandlerBase):
     database = True
 
+    def test_delete_study(self):
+        response = self.post('/study/delete/', {'study_id': 1})
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'error',
+               'message': 'Unable to delete study: Study "Identification of '
+                          'the Microbiomes for Cannabis Soils" cannot be '
+                          'erased because it has a sample template'}
+        self.assertEqual(loads(response.body), exp)
+
     def test_delete_sample_template(self):
         response = self.post('/study/description/sample_template/',
                              {'study_id': 1,

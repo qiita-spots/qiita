@@ -8,8 +8,9 @@
 from unittest import TestCase, main
 from datetime import datetime
 
+import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.studies import (
-    data_types_get_req, study_get_req, study_prep_get_req)
+    data_types_get_req, study_get_req, study_prep_get_req, study_delete_req)
 
 
 class TestStudyAPI(TestCase):
@@ -99,6 +100,50 @@ class TestStudyAPI(TestCase):
         obs = study_prep_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_study_delete_req(self):
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "FCM",
+            "study_description": "DESC",
+            "study_abstract": "ABS",
+            "emp_person_id": qdb.study.StudyPerson(2),
+            "principal_investigator_id": qdb.study.StudyPerson(3),
+            "lab_person_id": qdb.study.StudyPerson(1)
+        }
+
+        new_study = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), "Some New Study", [1],
+            info)
+
+        study_delete_req(new_study.id, 'test@foo.bar')
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.study.Study(new_study.id)
+
+    def test_study_delete_req_error(self):
+        obs = study_delete_req(1, 'test@foo.bar')
+        exp = {'status': 'error',
+               'message': 'Unable to delete study: Study "Identification of '
+                          'the Microbiomes for Cannabis Soils" cannot be '
+                          'erased because it has a sample template'}
+        self.assertEqual(obs, exp)
+
+    def test_study_delete_req_no_access(self):
+        obs = study_delete_req(1, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_study_delete_req_no_exists(self):
+        obs = study_delete_req(4, 'test@foo.bar')
+        exp = {'status': 'error',
+               'message': 'Study does not exist'}
         self.assertEqual(obs, exp)
 
 if __name__ == '__main__':

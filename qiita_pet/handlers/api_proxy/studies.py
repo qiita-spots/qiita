@@ -112,6 +112,7 @@ def study_delete_req(study_id, user_id):
     status = 'success'
     try:
         Study.delete(int(study_id))
+        msg = ''
     except Exception as e:
         status = 'error'
         msg = 'Unable to delete study: %s' % str(e)
