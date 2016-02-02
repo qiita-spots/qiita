@@ -255,7 +255,7 @@ def split_libraries_fastq(qclient, job_id, parameters, out_dir):
     std_out, std_err, return_value = system_call(command)
     if return_value != 0:
         raise RuntimeError(
-            "Error processing sff file:\nStd output: %s\n Std error:%s"
+            "Error processing files:\nStd output: %s\n Std error:%s"
             % (std_out, std_err))
 
     # Step 4 generate the demux file
