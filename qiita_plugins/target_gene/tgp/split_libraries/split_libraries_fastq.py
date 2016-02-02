@@ -253,6 +253,10 @@ def split_libraries_fastq(qclient, job_id, parameters, out_dir):
         qclient, job_id,
         "Step 3 of 4: Executing demultiplexing and quality control")
     std_out, std_err, return_value = system_call(command)
+    if return_value != 0:
+        raise RuntimeError(
+            "Error processing sff file:\nStd output: %s\n Std error:%s"
+            % (std_out, std_err))
 
     # Step 4 generate the demux file
     update_job_step(qclient, job_id, "Step 4 of 4: Generating demux file")
