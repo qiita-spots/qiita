@@ -16,7 +16,9 @@ from .vamps_handlers import VAMPSHandler
 from .base import StudyIndexHandler, StudyBaseInfoAJAX
 from .prep_template import (
     PrepTemplateGraphAJAX, PrepTemplateAJAX, PrepFilesHandler)
-from .artifact import ArtifactGraphAJAX, NewArtifactHandler
+from .artifact import (ArtifactGraphAJAX, NewArtifactHandler)
+from .processing import (ProcessArtifactHandler, ListCommandsHandler,
+                         ListOptionsHandler)
 from .sample_template import SampleTemplateAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
@@ -25,4 +27,6 @@ __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'MetadataSummaryHandler', 'VAMPSHandler', 'SearchStudiesAJAX',
            'PrepTemplateGraphAJAX', 'ArtifactGraphAJAX',
            'StudyIndexHandler', 'StudyBaseInfoAJAX', 'SampleTemplateAJAX',
-           'PrepTemplateAJAX', 'NewArtifactHandler', 'PrepFilesHandler']
+           'PrepTemplateAJAX', 'NewArtifactHandler', 'PrepFilesHandler',
+           'ProcessArtifactHandler', 'ListCommandsHandler',
+           'ListOptionsHandler']

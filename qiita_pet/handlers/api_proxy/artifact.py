@@ -12,6 +12,54 @@ from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import get_mountpoint
+from qiita_db.exceptions import QiitaDBOperationNotPermittedError
+
+
+def artifact_get_req(user_id, artifact_id):
+    """Returns all base information about an artifact
+
+    Parameters
+    ----------
+    user_id : str
+        user making the request
+    artifact_id : int or str coercable to int
+        Atrtifact to get information for
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the artifact information
+        {'status': status,
+         'message': message,
+         'artifact': {info key: val, ...}}
+    """
+    artifact = Artifact(int(artifact_id))
+    info = {
+        'id': artifact.id,
+        'timestamp': artifact.timestamp,
+        'processing_parameters': artifact.processing_parameters,
+        'visibility': artifact.visibility,
+        'type': artifact.artifact_type,
+        'data_type': artifact.data_type,
+        'filepaths': artifact.filepaths,
+        'parents': [a.id for a in artifact.parents],
+        'study': artifact.study.id if artifact.study else None
+    }
+    try:
+        info['can_submit_ebi'] = artifact.can_be_submitted_to_ebi
+        info['ebi_run_accessions'] = artifact.ebi_run_accessions
+    except QiitaDBOperationNotPermittedError:
+        info['can_submit_ebi'] = False
+        info['ebi_run_accessions'] = None
+
+    try:
+        info['can_submit_vamps'] = artifact.can_be_submitted_to_vamps
+        info['is_submitted_vamps'] = artifact.is_submitted_to_vamps
+    except QiitaDBOperationNotPermittedError:
+        info['can_submit_vamps'] = False
+        info['is_submitted_vamps'] = None
+
+    return info
 
 
 @execute_as_transaction

@@ -15,7 +15,16 @@
   }
 
   function fill_artifact(aid) {
-    $("#study-main").html("ARTIFACT " + aid + " HTML STUFF");
+    $("#study-main").html("<p><button onclick='process_from(" + aid + ")' class='btn btn-sm'>Process from here</button></p>ARTIFACT " + aid + " HTML STUFF");
+  }
+
+  function process_from(aid) {
+    $.get("/study/process/", { artifact_id: aid })
+      .done(function ( data ){
+        $("#study-prep-graph-row").hide();
+        $("#graph-toggle-link").text("Show files");
+        $("#study-main").html(data);
+      });
   }
 
   function fill_prep(pid) {

@@ -7,16 +7,19 @@
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from os.path import join, exists
+import datetime
 
 import pandas as pd
 
+from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
 from qiita_db.util import get_count, get_mountpoint
 from qiita_pet.handlers.api_proxy.artifact import (
-    artifact_graph_get_req, artifact_types_get_req, artifact_post_req)
+    artifact_graph_get_req, artifact_types_get_req, artifact_post_req,
+    artifact_get_req)
 
 
 @qiita_test_checker()
@@ -32,6 +35,29 @@ class TestArtifactAPI(TestCase):
         self.update_fp = join(uploads_path, 'update.txt')
         with open(self.update_fp, 'w') as f:
             f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+
+    def test_artifact_get_req(self):
+        obs = artifact_get_req('test@foo.bar', 1)
+        exp = {'id': 1,
+               'type': 'FASTQ',
+               'study': 1,
+               'data_type': '18S',
+               'timestamp': datetime.datetime(2012, 10, 1, 9, 30, 27),
+               'visibility': 'private',
+               'can_submit_vamps': False,
+               'can_submit_ebi': False,
+               'processing_parameters': None,
+               'ebi_run_accessions': None,
+               'is_submitted_vamps': None,
+               'parents': [],
+               'filepaths': [
+                   (1, join(qiita_config.base_data_dir, 'raw_data',
+                    '1_s_G1_L001_sequences.fastq.gz'), 'raw_forward_seqs'),
+                   (2,  join(qiita_config.base_data_dir, 'raw_data',
+                    '1_s_G1_L001_sequences_barcodes.fastq.gz'),
+                    'raw_barcodes')]
+               }
+        self.assertEqual(obs, exp)
 
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to
