@@ -6,9 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from tornado.web import RequestHandler
-
 import qiita_db as qdb
+from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
 def _get_artifact(a_id):
@@ -36,7 +35,8 @@ def _get_artifact(a_id):
     return artifact, True, ''
 
 
-class ArtifactFilepathsHandler(RequestHandler):
+class ArtifactFilepathsHandler(OauthBaseHandler):
+    @authenticate_oauth
     def get(self, artifact_id):
         """Retrieves the filepath information of the given artifact
 
@@ -70,7 +70,8 @@ class ArtifactFilepathsHandler(RequestHandler):
         self.write(response)
 
 
-class ArtifactMappingHandler(RequestHandler):
+class ArtifactMappingHandler(OauthBaseHandler):
+    @authenticate_oauth
     def get(self, artifact_id):
         """Retrieves the mapping file information of the given artifact
 
@@ -113,7 +114,8 @@ class ArtifactMappingHandler(RequestHandler):
         self.write(response)
 
 
-class ArtifactTypeHandler(RequestHandler):
+class ArtifactTypeHandler(OauthBaseHandler):
+    @authenticate_oauth
     def get(self, artifact_id):
         """Retrieves the artifact type information of the given artifact
 

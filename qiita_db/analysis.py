@@ -831,8 +831,15 @@ class Analysis(qdb.base.QiitaStatusObject):
             for a_id, samps in viewitems(samples):
                 # one biom table attached to each artifact object
                 artifact = qdb.artifact.Artifact(a_id)
-                artifact_fp = artifact.filepaths[0][1]
-                table_fp = join(base_fp, artifact_fp)
+                table_fp = None
+                for _, fp, fp_type in artifact.filepaths:
+                    if fp_type == 'biom':
+                        table_fp = fp
+                        break
+                if not table_fp:
+                    raise RuntimeError(
+                        "Artifact %s do not have a biom table associated"
+                        % a_id)
                 table = load_table(table_fp)
                 # HACKY WORKAROUND FOR DEMO. Issue # 246
                 # make sure samples not in biom table are not filtered for

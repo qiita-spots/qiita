@@ -813,13 +813,19 @@ def filepath_id_to_rel_path(filepath_id):
         The relative path for the given filepath id
     """
     with qdb.sql_connection.TRN:
-        sql = """SELECT mountpoint, filepath
+        sql = """SELECT mountpoint, filepath, subdirectory, artifact_id
                  FROM qiita.filepath
-                 JOIN qiita.data_directory USING (data_directory_id)
+                    JOIN qiita.data_directory USING (data_directory_id)
+                    LEFT JOIN qiita.artifact_filepath USING (filepath_id)
                  WHERE filepath_id = %s"""
         qdb.sql_connection.TRN.add(sql, [filepath_id])
+        mp, fp, sd, a_id = qdb.sql_connection.TRN.execute_fetchindex()[0]
+        if sd:
+            result = join(mp, str(a_id), fp)
+        else:
+            result = join(mp, fp)
         # It should be only one row
-        return join(*qdb.sql_connection.TRN.execute_fetchindex()[0])
+        return result
 
 
 def filepath_ids_to_rel_paths(filepath_ids):
@@ -838,13 +844,20 @@ def filepath_ids_to_rel_paths(filepath_ids):
         return {}
 
     with qdb.sql_connection.TRN:
-        sql = """SELECT filepath_id, mountpoint, filepath
+        sql = """SELECT filepath_id, mountpoint, filepath, subdirectory,
+                        artifact_id
                  FROM qiita.filepath
-                 JOIN qiita.data_directory USING (data_directory_id)
+                    JOIN qiita.data_directory USING (data_directory_id)
+                    LEFT JOIN qiita.artifact_filepath USING (filepath_id)
                  WHERE filepath_id IN %s"""
         qdb.sql_connection.TRN.add(sql, [tuple(filepath_ids)])
-        return {row[0]: join(*row[1:])
-                for row in qdb.sql_connection.TRN.execute_fetchindex()}
+        res = {}
+        for row in qdb.sql_connection.TRN.execute_fetchindex():
+            if row[3]:
+                res[row[0]] = join(row[1], str(row[4]), row[2])
+            else:
+                res[row[0]] = join(row[1], row[2])
+        return res
 
 
 def convert_to_id(value, table, text_col=None):
@@ -1139,3 +1152,27 @@ def clear_system_messages():
             sql = "DELETE FROM qiita.message WHERE message_id IN %s"
             qdb.sql_connection.TRN.add(sql, [msg_ids])
             qdb.sql_connection.TRN.execute()
+
+
+def supported_filepath_types(artifact_type):
+    """Returns the list of supported filepath types for the given artifact type
+
+    Parameters
+    ----------
+    artifact_type : str
+        The artifact type to check the supported filepath types
+
+    Returns
+    -------
+    list of [str, bool]
+        The list of supported filepath types and whether it is required by the
+        artifact type or not
+    """
+    with qdb.sql_connection.TRN:
+        sql = """SELECT DISTINCT filepath_type, required
+                 FROM qiita.artifact_type_filepath_type
+                    JOIN qiita.artifact_type USING (artifact_type_id)
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                 WHERE artifact_type = %s"""
+        qdb.sql_connection.TRN.add(sql, [artifact_type])
+        return qdb.sql_connection.TRN.execute_fetchindex()

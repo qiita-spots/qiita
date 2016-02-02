@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="qiita" id="Project669804" database="PostgreSQL" >
 	<comment>Qiita-DB layout</comment>
-	<schema name="qiita" schemaname="qiita" defo="y" >
+	<schema name="qiita" schemaname="qiita" >
 		<table name="analysis" >
-			<comment>hHolds analysis information</comment>
+			<comment>Holds analysis information</comment>
 			<column name="analysis_id" type="bigserial" jt="-5" mandatory="y" >
 				<comment><![CDATA[Unique identifier for analysis]]></comment>
 			</column>
@@ -211,6 +211,7 @@
 		<table name="artifact" >
 			<comment>Represents data in the system</comment>
 			<column name="artifact_id" type="bigserial" jt="-5" mandatory="y" />
+			<column name="name" type="varchar" length="35" jt="12" mandatory="y" />
 			<column name="generated_timestamp" type="timestamp" jt="93" mandatory="y" />
 			<column name="command_id" type="bigint" jt="-5" />
 			<column name="command_parameters" type="varchar" jt="12" >
@@ -221,12 +222,6 @@
 			</column>
 			<column name="artifact_type_id" type="integer" jt="4" />
 			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="can_be_submitted_to_ebi" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;FALSE&#039;</defo>
-			</column>
-			<column name="can_be_submitted_to_vamps" type="bool" jt="-7" mandatory="y" >
-				<defo>&#039;FALSE&#039;</defo>
-			</column>
 			<column name="submitted_to_vamps" type="bool" jt="-7" mandatory="y" >
 				<defo>&#039;FALSE&#039;</defo>
 			</column>
@@ -303,12 +298,41 @@
 			<column name="artifact_type_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="artifact_type" type="varchar" jt="12" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
+			<column name="can_be_submitted_to_ebi" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;FALSE&#039;</defo>
+			</column>
+			<column name="can_be_submitted_to_vamps" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;FALSE&#039;</defo>
+			</column>
 			<index name="pk_filetype" unique="PRIMARY_KEY" >
 				<column name="artifact_type_id" />
 			</index>
 			<index name="idx_filetype" unique="UNIQUE" >
 				<column name="artifact_type" />
 			</index>
+		</table>
+		<table name="artifact_type_filepath_type" >
+			<column name="artifact_type_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="filepath_type_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="required" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;TRUE&#039;</defo>
+			</column>
+			<index name="idx_artifact_type_filepath_type" unique="PRIMARY_KEY" >
+				<column name="artifact_type_id" />
+				<column name="filepath_type_id" />
+			</index>
+			<index name="idx_artifact_type_filepath_type" unique="NORMAL" >
+				<column name="artifact_type_id" />
+			</index>
+			<index name="idx_artifact_type_filepath_type" unique="NORMAL" >
+				<column name="filepath_type_id" />
+			</index>
+			<fk name="fk_artifact_type_filepath_type" to_schema="qiita" to_table="artifact_type" >
+				<fk_column name="artifact_type_id" pk="artifact_type_id" />
+			</fk>
+			<fk name="fk_artifact_type_filepath_type_0" to_schema="qiita" to_table="filepath_type" >
+				<fk_column name="filepath_type_id" pk="filepath_type_id" />
+			</fk>
 		</table>
 		<table name="checksum_algorithm" >
 			<column name="checksum_algorithm_id" type="bigserial" jt="-5" mandatory="y" />
@@ -833,6 +857,33 @@
 			<index name="pk_mixs_field_description" unique="PRIMARY_KEY" >
 				<column name="column_name" />
 			</index>
+		</table>
+		<table name="oauth_identifiers" >
+			<column name="client_id" type="varchar" length="50" jt="12" mandatory="y" />
+			<column name="client_secret" type="varchar" length="255" jt="12" />
+			<index name="pk_oauth_identifiers" unique="PRIMARY_KEY" >
+				<column name="client_id" />
+			</index>
+		</table>
+		<table name="oauth_software" >
+			<column name="software_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="client_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_oauth_software" unique="PRIMARY_KEY" >
+				<column name="software_id" />
+				<column name="client_id" />
+			</index>
+			<index name="idx_oauth_software" unique="NORMAL" >
+				<column name="software_id" />
+			</index>
+			<index name="idx_oauth_software" unique="NORMAL" >
+				<column name="client_id" />
+			</index>
+			<fk name="fk_oauth_software_software" to_schema="qiita" to_table="software" >
+				<fk_column name="software_id" pk="software_id" />
+			</fk>
+			<fk name="fk_oauth_software" to_schema="qiita" to_table="oauth_identifiers" >
+				<fk_column name="client_id" pk="client_id" />
+			</fk>
 		</table>
 		<table name="ontology" >
 			<column name="ontology_id" type="bigint" jt="-5" mandatory="y" />
@@ -1521,7 +1572,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="45" y="1695" />
 		<entity schema="qiita" name="job_results_filepath" color="c0d4f3" x="405" y="1020" />
 		<entity schema="qiita" name="analysis_job" color="d0def5" x="285" y="1095" />
-		<entity schema="qiita" name="analysis_chain" color="c0d4f3" x="60" y="1095" />
 		<entity schema="qiita" name="column_controlled_vocabularies" color="d0def5" x="270" y="1485" />
 		<entity schema="qiita" name="mixs_field_description" color="d0def5" x="300" y="1650" />
 		<entity schema="qiita" name="analysis_users" color="d0def5" x="60" y="900" />
@@ -1535,7 +1585,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="ontology" color="d0def5" x="510" y="1485" />
 		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="240" />
 		<entity schema="qiita" name="prep_y" color="d0def5" x="1230" y="255" />
-		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="585" y="1035" />
 		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="735" y="1035" />
 		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="225" />
 		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="1185" />
@@ -1553,7 +1602,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_prep_template" color="d0def5" x="1590" y="480" />
 		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1470" y="345" />
 		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1335" y="255" />
-		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="885" />
 		<entity schema="qiita" name="portal_type" color="c0d4f3" x="720" y="510" />
 		<entity schema="qiita" name="analysis_portal" color="a8c4ef" x="180" y="795" />
 		<entity schema="qiita" name="message_user" color="a8c4ef" x="1230" y="1320" />
@@ -1563,8 +1611,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="sample_template_filepath" color="b2cdf7" x="1050" y="585" />
 		<entity schema="qiita" name="prep_template" color="b2cdf7" x="1305" y="435" />
 		<entity schema="qiita" name="analysis_sample" color="d0def5" x="45" y="1335" />
-		<entity schema="qiita" name="parent_artifact" color="b2cdf7" x="1065" y="750" />
-		<entity schema="qiita" name="artifact_filepath" color="b2cdf7" x="1050" y="840" />
+		<entity schema="qiita" name="parent_artifact" color="b2cdf7" x="1065" y="840" />
+		<entity schema="qiita" name="artifact_filepath" color="b2cdf7" x="1050" y="930" />
 		<entity schema="qiita" name="study_users" color="d0def5" x="1920" y="135" />
 		<entity schema="qiita" name="study" color="d0def5" x="1935" y="255" />
 		<entity schema="qiita" name="study_person" color="c0d4f3" x="2220" y="195" />
@@ -1575,25 +1623,31 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="investigation" color="c0d4f3" x="2430" y="300" />
 		<entity schema="qiita" name="study_portal" color="a8c4ef" x="1995" y="45" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="690" y="1170" />
-		<entity schema="qiita" name="study_artifact" color="b2cdf7" x="1605" y="705" />
 		<entity schema="qiita" name="software_publication" color="b2cdf7" x="2340" y="795" />
-		<entity schema="qiita" name="visibility" color="b2cdf7" x="1050" y="945" />
+		<entity schema="qiita" name="visibility" color="b2cdf7" x="1050" y="1035" />
 		<entity schema="qiita" name="study_sample" color="d0def5" x="1455" y="150" />
-		<entity schema="qiita" name="ebi_run_accession" color="b2cdf7" x="1350" y="945" />
-		<entity schema="qiita" name="artifact_type" color="d0def5" x="1410" y="735" />
 		<entity schema="qiita" name="publication" color="b2cdf7" x="2535" y="795" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2235" y="555" />
 		<entity schema="qiita" name="study_publication" color="b2cdf7" x="2340" y="705" />
-		<entity schema="qiita" name="data_directory" color="b2cdf7" x="840" y="735" />
 		<entity schema="qiita" name="reference" color="c0d4f3" x="1785" y="1290" />
 		<entity schema="qiita" name="software_command" color="b2cdf7" x="1905" y="750" />
-		<entity schema="qiita" name="artifact" color="b2cdf7" x="1200" y="750" />
 		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="2025" y="1140" />
 		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1800" y="1095" />
 		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2115" y="900" />
 		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2130" y="1020" />
 		<entity schema="qiita" name="artifact_processing_job" color="b2cdf7" x="1785" y="930" />
 		<entity schema="qiita" name="software" color="b2cdf7" x="2100" y="750" />
+		<entity schema="qiita" name="oauth_identifiers" color="b7c8e3" x="2505" y="945" />
+		<entity schema="qiita" name="oauth_software" color="b2cdf7" x="2355" y="945" />
+		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="885" />
+		<entity schema="qiita" name="analysis_chain" color="c0d4f3" x="60" y="1095" />
+		<entity schema="qiita" name="ebi_run_accession" color="b2cdf7" x="1350" y="1065" />
+		<entity schema="qiita" name="study_artifact" color="b2cdf7" x="1620" y="795" />
+		<entity schema="qiita" name="artifact" color="b2cdf7" x="1200" y="840" />
+		<entity schema="qiita" name="artifact_type" color="d0def5" x="1410" y="840" />
+		<entity schema="qiita" name="filepath_type" color="c0d4f3" x="825" y="780" />
+		<entity schema="qiita" name="data_directory" color="b2cdf7" x="585" y="990" />
+		<entity schema="qiita" name="artifact_type_filepath_type" color="b2cdf7" x="1380" y="705" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1667,6 +1721,7 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="artifact_type" />
 			<entity schema="qiita" name="ebi_run_accession" />
 			<entity schema="qiita" name="study_artifact" />
+			<entity schema="qiita" name="artifact_type_filepath_type" />
 		</group>
 		<group name="Group_template" color="ffffcc" >
 			<entity schema="qiita" name="prep_y" />
@@ -1695,5 +1750,44 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="software_publication" />
 			<entity schema="qiita" name="study_publication" />
 		</group>
+		<group name="Group_oauth2" color="ccffcc" >
+			<entity schema="qiita" name="oauth_identifiers" />
+			<entity schema="qiita" name="oauth_software" />
+		</group>
+		<script name="Sql" id="SQL5888335" confirmed="y" >
+			<string><![CDATA[CREATE TABLE oauth_software ( 
+	software_id          bigint  NOT NULL,
+	client_id            bigint  NOT NULL,
+	CONSTRAINT idx_oauth_software PRIMARY KEY ( software_id, client_id )
+ ) ;
+
+CREATE INDEX idx_oauth_software ON oauth_software ( software_id ) ;
+
+CREATE INDEX idx_oauth_software ON oauth_software ( client_id ) ;
+
+ALTER TABLE oauth_software ADD CONSTRAINT fk_oauth_software_software FOREIGN KEY ( software_id ) REFERENCES software( software_id )    ;
+
+ALTER TABLE oauth_software ADD CONSTRAINT fk_oauth_software FOREIGN KEY ( client_id ) REFERENCES oauth_identifiers( client_id )    ;
+
+]]></string>
+		</script>
+		<script name="Sql_001" id="SQL8642158" >
+			<string><![CDATA[CREATE TABLE artifact_type_filepath_type ( 
+	artifact_type_id     bigint  NOT NULL,
+	filepath_type_id     bigint  NOT NULL,
+	required             bool DEFAULT 'TRUE' NOT NULL,
+	CONSTRAINT idx_artifact_type_filepath_type PRIMARY KEY ( artifact_type_id, filepath_type_id )
+ ) ;
+
+CREATE INDEX idx_artifact_type_filepath_type ON artifact_type_filepath_type ( artifact_type_id ) ;
+
+CREATE INDEX idx_artifact_type_filepath_type ON artifact_type_filepath_type ( filepath_type_id ) ;
+
+ALTER TABLE artifact_type_filepath_type ADD CONSTRAINT fk_artifact_type_filepath_type FOREIGN KEY ( artifact_type_id ) REFERENCES artifact_type( artifact_type_id )    ;
+
+ALTER TABLE artifact_type_filepath_type ADD CONSTRAINT fk_artifact_type_filepath_type_0 FOREIGN KEY ( filepath_type_id ) REFERENCES filepath_type( filepath_type_id )    ;
+
+]]></string>
+		</script>
 	</layout>
 </project>

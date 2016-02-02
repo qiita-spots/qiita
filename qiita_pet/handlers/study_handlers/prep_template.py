@@ -17,7 +17,7 @@ from qiita_pet.handlers.api_proxy import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req,
     prep_template_filepaths_get_req, data_types_get_req,
-    prep_template_graph_get_req)
+    prep_template_graph_get_req, ena_ontology_get_req)
 
 
 class PrepTemplateGraphAJAX(BaseHandler):
@@ -38,15 +38,17 @@ class PrepTemplateAJAX(BaseHandler):
         data_types = sorted(data_types_get_req())
         is_local = is_localhost(self.request.headers['host'])
         # Get the most recent version for download and build the link
-        download = prep_template_filepaths_get_req(study_id,
-                                                   self.current_user.id)[-1]
+        download = prep_template_filepaths_get_req(
+            study_id, self.current_user.id)['filepaths'][-1]
         dl_path = download_link_or_path(
-            is_local, download[0], download[1], "Download prep information")
+            is_local, download[1], download[0], "Download prep information")
+        ontology = ena_ontology_get_req()
 
         stats = prep_template_summary_get_req(prep_id, self.current_user.id)
         self.render('study_ajax/prep_summary.html', stats=stats['summary'],
                     num_samples=stats['num_samples'], dl_path=dl_path,
-                    files=files, prep_id=prep_id, data_types=data_types)
+                    files=files, prep_id=prep_id, data_types=data_types,
+                    ontology=ontology)
 
     @authenticated
     def post(self):
@@ -61,9 +63,17 @@ class PrepTemplateAJAX(BaseHandler):
         elif action == 'update':
             filepath = self.get_argument('filepath')
             result = prep_template_put_req(prep_id, self.current_user.id,
-                                           filepath)
+                                           prep_template=filepath)
         elif action == 'delete':
             result = prep_template_delete_req(prep_id, self.current_user.id)
+        elif action == 'ontology':
+            inv_type = self.get_argument('ena')
+            user_inv_type = self.get_argument('ena_user', None)
+            new_inv_type = self.get_argument('ena_new', None)
+            result = prep_template_put_req(
+                prep_id, self.current_user.id, investigation_type=inv_type,
+                user_defined_investigation_type=user_inv_type,
+                new_investigation_type=new_inv_type)
         else:
             raise HTTPError(400, 'Unknown prep template action: %s' % action)
         self.write(result)

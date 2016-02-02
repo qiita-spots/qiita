@@ -36,7 +36,7 @@ $(document).ready(function() {
               <tr>
                 <td>{{error.time}}</td>
                 <td>{{error.severity}}</td>
-                <td>{% raw error.msg.replace("\n", "<br />") %}</td>
+                <td>{% raw escape(error.msg).replace("\n", "<br />") %}</td>
                 <td>
                     {% for entry in error.info %}
                       {% for field, val in viewitems(entry) %}
