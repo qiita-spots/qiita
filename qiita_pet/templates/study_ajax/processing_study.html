@@ -7,6 +7,7 @@
 
   function add_command() {
     var command_info = commands[$("#command").val()];
+    //TODO: add job callback
     for(i=0;i<command_info.output.length;i++) {
       var node_id = nodes.length + 1;
       edges.add({ id: edges.length + 1, from: current_node, to: node_id, command_id: command_info.id, label: command_info.command });
@@ -16,6 +17,7 @@
   }
 
   function remove_command(edge_id) {
+    //TODO: delete job callback
     var queue = [edges.get(edge_id).to];
     edges.remove(edge_id);
     while(queue.length !== 0) {
@@ -31,7 +33,39 @@
     network.redraw();
   }
 
-  function load_command(edge_id) {
+  function load_job(edge_id) {
+    current_note = null;
+    $.get('/study/job/', {job_id: edges.get(edge_id).id})
+      .done(function ( data ) {
+        $("#network-info").empty();
+        var button = $('<button>').appendTo('#network-info');
+        button.addClass('btn btn-xs').text('Remove Command').click(function () { remove_command(edges.get(edge_id).id); });
+        options = data.options;
+        for(i=0;i<options.length;i++) {
+          opt = options[i];
+          // add each input to the form, based on the type given
+          $('<p>').text(opt.name).attr('id', opt.name).appendTo('#network-info');
+          var input = $('<input>');
+          input.attr('value', opt.value).attr('name', opt.name);
+          if(opt.required) { input.attr('required', true); }
+
+          switch(opt.type) {
+            case 'integer': input.attr('type', 'number').attr('min', 0).attr('step', 1); input.appendTo('#' + opt.name);
+              break;
+            case 'float': input.attr('type', 'number').attr('min', 0); input.appendTo('#' + opt.name);
+              break;
+            case 'bool': input.attr('type', 'checkbox'); if(opt.value == true) { input.attr('checked', true) } input.appendTo('#' + opt.name);
+              break;
+            case 'string': input.attr('type', 'text'); input.appendTo('#' + opt.name);
+              break;
+          }
+        }
+        var button = $('<button>').appendTo('#network-info');
+        button.addClass('btn btn-xs').text('Save Changes').click(save_options);
+      });
+  }
+
+  function save_options() {
 
   }
 
@@ -74,13 +108,15 @@
       interaction: {
         dragNodes: false,
         dragView: true,
-        zoomView: true
+        zoomView: true,
+        selectConnectedEdges: false
       }
     };
     network = new vis.Network(container, data, options);
     network.on('select', function(params) {
           //render the information for the selected artifact ID
           if(+params.nodes !== 0) { load_filetype(+params.nodes); }
+          else { load_job(+params.edges); }
         });
   });
 </script>
