@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from os.path import splitext, join
+from os.path import join
 
 from tornado.web import authenticated, HTTPError
 import pandas as pd
@@ -86,7 +86,6 @@ class PrepFilesHandler(BaseHandler):
     def get(self):
         study_id = self.get_argument('study_id')
         prep_file = self.get_argument('prep_file')
-        # atype = self.get_argument('type')
 
         # TODO: Get file types for the artifact type
         # FILE TYPE IN POSTION 0 MUST BE DEFAULT FOR SELECTED
@@ -103,10 +102,11 @@ class PrepFilesHandler(BaseHandler):
             per_sample = True
             prep_prefixes = set(prep['run_prefix'])
             for _, filename in uploaded:
-                if splitext(filename)[0] in prep_prefixes:
-                    selected.append(filename)
-                else:
-                    not_selected.append(filename)
+                for prefix in prep_prefixes:
+                    if filename.startswith(prefix):
+                        selected.append(filename)
+                    else:
+                        not_selected.append(filename)
         else:
             per_sample = False
             not_selected = [f for _, f in uploaded]

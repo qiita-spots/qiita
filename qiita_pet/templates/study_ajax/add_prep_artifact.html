@@ -1,6 +1,13 @@
+
+<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
 <script type="text/javascript>">
   var file_types = [];
   function get_files() {
+    $("#errDiv").text();
+    var valid = $("#form").valid();
+    if( valid == false) {
+      return;
+    }
     $.get("/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep-file").val(), study_id: {{study_id}} })
       .done(function( data ) {
         // Add divs for the file type elements
@@ -9,9 +16,10 @@
           $("#files-row").append('<div class="col-md-3" id="'+data.file_types[i]+'-div"><h4>'+data.file_types[i].replace('_', ' ')+'</h4><ul id="'+data.file_types[i]+'-list" class="connectedSortable"></ul><input type="hidden" name="'+data.file_types[i]+'" id="'+data.file_types[i]+'" value=""></div>')
         }
         // Solidify selections to text
-        $("#prep-span").html($("#prep_file").val() + '<input type="hidden" name="prep-file" value="'+$("#prep-file").val()+'">');
         $("#file-type-span").html($("#type").val()+ '<input type="hidden" name="type" value="'+$("#type").val()+'">');
 
+        //remove button
+        $("#start-add-btn").remove();
         //unhide rest of page
         $("#submit-div").show();
         $("#files-row").show();
@@ -28,6 +36,9 @@
         $(".connectedSortable").sortable({
           connectWith: ".connectedSortable"
         }).disableSelection();
+      })
+      .fail(function ( data ){
+        $("#errDiv").text('Please check prep information file selected and try again.');
       });
   }
 
@@ -54,9 +65,16 @@
         else { $("#new-ena-info").hide(); }
     });
 
+    $("#form").validate();
+
     $('#form').submit(function( event ){
     event.preventDefault();
-    get_files();
+    $("#errDiv").text();
+    var valid = $("#form").valid();
+    if( valid == false) {
+      return;
+    }
+    build_file_lists();
     $.ajax({
       url: $('#form').attr('action'),
       type: "POST",
@@ -87,22 +105,25 @@
     width: 100%;
   }
 </style>
+
+<div class="row"><div class="col-md-12" id="errDiv" style="color:red"></div></div>
 <form action="/study/add_prep/{{study_id}}" method="POST" id="form" onsubmit="build_file_lists()">
   <div class="row">
     <div class="col-md-12">
       <h4>Preperation Name</h4>
-      <input type="text" id="name" name="name" length="60" maxlength="35">
+      <input type="text" id="name" name="name" length="60" maxlength="35" required>
     </div>
   </div>
   <div class="row">
     <div class="col-md-3">
     <h4>Select data type</h4>
-    <select id="data-type" name="data-type" value="data-type">
+   <p> <select id="data-type" name="data-type" value="data-type" required>
         <option value=""></option>
         {% for t in data_types %}
           <option value="{{t}}">{{t}}</option>
         {% end %}
-        </select>
+        </select></p>
+        <p><button class="btn btn-sm" id="start-add-btn" onclick="get_files(); return false;">Start adding files</button></p>
     </div>
     <div class="col-md-3">
       <h4>Select Investigation Type</h4>
@@ -126,7 +147,7 @@
     </div>
     <div class="col-md-3">
       <h4>Select file type</h4>
-      <span id="file-type-span"><select name="type" id="type" onchange="get_files()">
+      <span id="file-type-span"><select name="type" id="type" required>
       <option value=""></option>
       {% for t, desc in artifact_types %}
       <option value="{{t}}">{{t}} - {{desc}}</option>
@@ -135,7 +156,7 @@
     </div>
     <div class="col-md-3">
     <h4>Select Prep Information</h4>
-    <span id="prep-span"><select name="prep-file" id="prep-file" onchange="get_files()">
+    <span id="prep-span"><select name="prep-file" id="prep-file" required>
       <option value=""></option>
       {% for file in prep_files %}
       <option value="{{file}}">{{file}}</option>
@@ -149,7 +170,7 @@
   </div>
   <div class="row" id="submit-div" hidden>
     <div class="col-md-12">
-      <button class="btn btn-sm btn-danger" onclick="fill_new_prep()">Reset</button> <input type="submit" class="btn btn-sm btn-success" value="Create New Preperation">
+      <button class="btn btn-sm btn-danger" onclick="fill_new_prep(); return false;">Reset</button> <input type="submit" class="btn btn-sm btn-success" value="Create New Preperation">
     </div>
   </div>
 </form>
