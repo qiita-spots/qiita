@@ -6,7 +6,7 @@ Plugin ideology
 
 Qiita can be seen as an analytical pipeline broker that can apply any specific
 pipeline, tool, or script to any of its stored data. All the analytical
-pipelines are autonomous and independently developed, and tested, which
+pipelines are autonomous, independently developed, and tested, which
 facilitates the support of current tools and the development of new ones. This
 principle is supported via virtual environments and artifacts. Virtual
 environments for each pipeline gives the freedom of adding any pipeline with
@@ -24,7 +24,7 @@ The current plugins available are:
 A Study
 -------
 
-Qiita’s main entity is the idea of Study. A study can have many samples, with
+Qiita’s main entity is the idea of a study. A study can have many samples, with
 many preparations, that have been sequenced several times, Figure 1.
 Additionally, study artifacts have 3 different states: sandboxed, private and
 public. A sandboxed artifact has all operational capabilities in the system
