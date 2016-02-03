@@ -104,13 +104,13 @@ $(document).ready(function() {
               // render the metadata complete cell
               {"render": function ( data, type, row, meta ) {
                     var glyph = 'remove';
-                    if(data === true) { glyph = 'ok' } 
+                    if(data === true) { glyph = 'ok' }
                     return "<span class='glyphicon glyphicon-"+ glyph +"'></span>";
               }, targets: [5]},
               // render the shared with cell
               {"render": function ( data, type, row, meta ) {
                     var glyph = 'remove';
-                    if(data === true) { glyph = 'ok' } 
+                    if(data === true) { glyph = 'ok' }
                     return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
               }, targets: [8]},
               ],
@@ -134,7 +134,7 @@ $(document).ready(function() {
         var table = $('#studies-table').DataTable();
         var tr = $(this).closest('tr');
         var row = table.row( tr );
- 
+
         if ( row.child.isShown() ) {
             // This row is already open - close it
             row.child.hide();
@@ -201,27 +201,6 @@ function add_metacat(metacat) {
 
 {% end %}
 {% block content %}
-<!--Search div-->
-<div class="row">
-  <div class="col-sm-12">
-    <h1>Metadata Search</h1>
-    A basic search consists of: (category)  (operator) (value)<br/>
-    Example search: {{portal_styling.example_search}}<br />
-    <p><a href="#" data-toggle="modal" data-target="#searchexample">Search help</a> | <a href="#" data-toggle="modal" data-target="#availmeta">Available Metadata</a></p>
-    <form id="search-form" name="search-form" class="form-inline">
-        <input type="textbox" id="searchbox" name="searchbox" class="form-control" style="width:80%;white-space:nowrap;" />
-      <button type="submit" id="submit-button" class="btn btn-default">Submit</button>
-    </form>
-    <span id="search-msg" class='gray-msg'></span><br />
-    <span id="search-error" style="color:red"></span>
-  </div>
-  <div class="col-sm-12" id="searchmsg" name="searchmsg"></div>
-</div>
-<div class="row" id="search-waiting">
-  <div class="col-sm-12">
-  <p><img src="/static/img/waiting.gif" style="float: left;"> <h2>Searching</h2></p>
-  </div>
-</div>
 <!--User Studies-->
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
