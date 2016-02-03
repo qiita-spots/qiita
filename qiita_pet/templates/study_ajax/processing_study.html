@@ -46,21 +46,23 @@
         for(i=0;i<options.length;i++) {
           opt = options[i];
           // add each input to the form, based on the type given
-          $('<p>').text(opt.name).attr('id', opt.name).appendTo('#network-info');
           var input = $('<input>');
           input.attr('value', opt.value).attr('name', opt.name);
           if(opt.required) { input.attr('required', true); }
 
           switch(opt.type) {
-            case 'integer': input.attr('type', 'number').attr('min', 0).attr('step', 1); input.appendTo('#' + opt.name);
+            case 'integer': input.attr('type', 'number').attr('min', 0).attr('step', 1);
               break;
-            case 'float': input.attr('type', 'number').attr('min', 0); input.appendTo('#' + opt.name);
+            case 'float': input.attr('type', 'number').attr('min', 0);
               break;
-            case 'bool': input.attr('type', 'checkbox'); if(opt.value == true) { input.attr('checked', true) } input.appendTo('#' + opt.name);
+            case 'bool': input.attr('type', 'checkbox'); if(opt.value == true) { input.attr('checked', true) }
               break;
-            case 'string': input.attr('type', 'text'); input.appendTo('#' + opt.name);
+            case 'string': input.attr('type', 'text');
+              break;
+            default: input = null;
               break;
           }
+          if(input != null) { $('<p>').text(opt.name).attr('id', opt.name).appendTo('#network-info'); input.appendTo('#' + opt.name); }
         }
         var button = $('<button>').appendTo('#network-info');
         button.addClass('btn btn-xs').text('Save Changes').click(save_options);
