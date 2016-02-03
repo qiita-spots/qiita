@@ -26,7 +26,7 @@ If you'd like to report bugs or request features, you can do that in the
 To install and configure your own Qiita server, see
 `INSTALL.md <https://github.com/biocore/qiita/blob/master/INSTALL.md>`__.
 
-For more specific details about qiita visit `the Qiita main site tutorial <https://qiita.microbio.me/static/doc/html/qiita-philosophy/index.html`__.
+For more specific details about qiita visit `the Qiita main site tutorial <https://qiita.microbio.me/static/doc/html/qiita-philosophy/index.html>`__.
 
 Current features
 ----------------
@@ -63,7 +63,7 @@ future.
 * Allow to update any kind of biom for data analysis and visualization
 * Integration of other pipelines via artifacts. Processing of raw data in
   external sources. For example, metabolomics processing in
-  [GNPS](http://gnps.ucsd.edu) and data visualization in Qiita.
+  `GNPS <http://gnps.ucsd.edu>`__ and data visualization in Qiita.
 * Creation of a REST API to query and access the data hosted by Qiita.
 * Improved analysis pipeline for 16S datasets.
 * Crowd-sourced metadata curation of existing studies: improve the metadata of
