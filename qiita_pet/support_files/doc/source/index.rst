@@ -23,7 +23,7 @@ following documents:
 .. toctree::
    :maxdepth: 1
 
+   qiita-philosophy/index.rst
    tutorials/index.rst
    admin/index.rst
    faq.rst
-
