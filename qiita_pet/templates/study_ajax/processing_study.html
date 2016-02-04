@@ -22,7 +22,6 @@
   function remove_command(node_id) {
     //TODO: delete job callback
     var queue = [node_id];
-    edges.remove(edges.get({ filter: function (item) { return item.to == node_id; } })[0].id);
     var edge_list = edges.get();
     while(queue.length !== 0) {
       var current = queue.pop();
@@ -35,6 +34,7 @@
       }
       nodes.remove(current);
     }
+    edges.remove(edges.get({ filter: function (item) { return item.to == node_id; } })[0].id);
     network.redraw();
   }
 
