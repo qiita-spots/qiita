@@ -22,6 +22,7 @@
   function remove_command(node_id) {
     //TODO: delete job callback
     var queue = [node_id];
+    edges.remove(edges.get({ filter: function (item) { return item.to == node_id; } })[0].id);
     var edge_list = edges.get();
     while(queue.length !== 0) {
       var current = queue.pop();
@@ -29,7 +30,6 @@
         edge = edge_list[i];
         if(edge.from == current) {
           if($.inArray(edge.to, queue) == -1) { queue.push(edge.to); }
-          if($.inArray(edge.from, queue) == -1) { queue.push(edge.from); }
           edges.remove(edge.id);
         }
       }
