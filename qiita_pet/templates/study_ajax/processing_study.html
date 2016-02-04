@@ -19,10 +19,9 @@
     network.redraw();
   }
 
-  function remove_command(edge_id) {
+  function remove_command(node_id) {
     //TODO: delete job callback
-    var queue = [edges.get(edge_id).to];
-    edges.remove(edge_id);
+    var queue = [node_id];
     var edge_list = edges.get();
     while(queue.length !== 0) {
       var current = queue.pop();
@@ -38,13 +37,13 @@
     network.redraw();
   }
 
-  function load_job(edge_id) {
-    current_node = null;
-    $.get('/study/job/', {job_id: edges.get(edge_id).id})
+  function load_job(node_id) {
+    current_node = node_id;
+    $.get('/study/job/', {job_id: nodes.get(node_id).id})
       .done(function ( data ) {
         $("#network-info").empty();
         var button = $('<button>').appendTo('#network-info');
-        button.addClass('btn btn-xs').text('Remove Command').click(function () { remove_command(edges.get(edge_id).id); });
+        button.addClass('btn btn-xs').text('Remove Command').click(function () { remove_command(nodes.get(node_id).id); });
         options = data.options;
         for(i=0;i<options.length;i++) {
           opt = options[i];
@@ -122,8 +121,11 @@
     network = new vis.Network(container, data, options);
     network.on('select', function(params) {
           //render the information for the selected artifact ID
-          if(+params.nodes !== 0) { load_filetype(+params.nodes); }
-          else { load_job(+params.edges); }
+          if(+params.nodes !== 0) { 
+            var node_info = nodes.get(+params.nodes);
+            if(node_info.type == 'command') { load_job(+params.nodes) }
+            else { load_filetype(+params.nodes); }
+          }
         });
   });
 </script>
