@@ -8,10 +8,13 @@
   function add_command() {
     var command_info = commands[$("#command").val()];
     //TODO: add job callback
+    var command_node = nodes.length + 1;
+    edges.add({ id: edges.length + 1, from: current_node, to: command_node});
+    nodes.add({ id: command_node, label: command_info.command, type: 'command', command_id: command_info.id});
     for(i=0;i<command_info.output.length;i++) {
       var node_id = nodes.length + 1;
-      edges.add({ id: edges.length + 1, from: current_node, to: node_id, command_id: command_info.id, label: command_info.command });
-      nodes.add({ id: node_id, label: command_info.output[i]});
+      edges.add({ id: edges.length + 1, from: command_node, to: node_id});
+      nodes.add({ id: node_id, label: command_info.output[i], type: 'output', command_id: null});
     }
     network.redraw();
   }
@@ -106,7 +109,7 @@
         hierarchical: {
           direction: "LR",
           sortMethod: "directed",
-          levelSeparation: 260
+          levelSeparation: 150
         }
       },
       interaction: {
