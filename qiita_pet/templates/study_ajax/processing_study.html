@@ -1,6 +1,6 @@
 <script type="text/javascript">
   var network = null;
-  var nodes = new vis.DataSet([{id: 1, label: "{{artifact_type}}"}]);
+  var nodes = new vis.DataSet([{id: 1, label: "{{artifact_type}}", group: 'type'}]);
   var edges = new vis.DataSet();
   var commands = null;
   var current_node = null;
@@ -10,11 +10,11 @@
     //TODO: add job callback
     var command_node = nodes.length + 1;
     edges.add({ id: edges.length + 1, from: current_node, to: command_node});
-    nodes.add({ id: command_node, label: command_info.command, type: 'command', command_id: command_info.id});
+    nodes.add({ id: command_node, label: command_info.command, group: 'command', command_id: command_info.id});
     for(i=0;i<command_info.output.length;i++) {
       var node_id = nodes.length + 1;
       edges.add({ id: edges.length + 1, from: command_node, to: node_id});
-      nodes.add({ id: node_id, label: command_info.output[i], type: 'output', command_id: null});
+      nodes.add({ id: node_id, label: command_info.output[i], group: 'type', command_id: null});
     }
     network.redraw();
   }
@@ -29,6 +29,7 @@
         edge = edge_list[i];
         if(edge.from == current) {
           if($.inArray(edge.to, queue) == -1) { queue.push(edge.to); }
+          if($.inArray(edge.from, queue) == -1) { queue.push(edge.from); }
           edges.remove(edge.id);
         }
       }
@@ -101,8 +102,11 @@
     };
     var options = {
       nodes: {
-        color: '#ffffff',
-        font: '16px arial black'
+        color: {highlight: {border: "yellow"}},
+        font: '14px arial black'
+      },
+      edges:{
+        color: 'grey'
       },
       layout: {
         hierarchical: {
@@ -116,14 +120,18 @@
         dragView: true,
         zoomView: true,
         selectConnectedEdges: false
+      },
+      groups: {
+        type: {shape: "ellipse", color: "#cef"},
+        command: {shape: "box", color: "#9fd"}
       }
     };
     network = new vis.Network(container, data, options);
     network.on('select', function(params) {
           //render the information for the selected artifact ID
-          if(+params.nodes !== 0) { 
+          if(+params.nodes !== 0) {
             var node_info = nodes.get(+params.nodes);
-            if(node_info.type == 'command') { load_job(+params.nodes) }
+            if(node_info.group == 'command') { load_job(+params.nodes) }
             else { load_filetype(+params.nodes); }
           }
         });
