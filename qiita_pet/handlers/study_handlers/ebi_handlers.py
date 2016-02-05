@@ -14,7 +14,6 @@ from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
 from qiita_db.metadata_template.constants import (SAMPLE_TEMPLATE_COLUMNS,
                                                   PREP_TEMPLATE_COLUMNS)
-from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.artifact import Artifact
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -120,8 +119,8 @@ class EBISubmitHandler(BaseHandler):
 
         msg = ''
         msg_level = 'success'
-        study_id = Artifact(preprocessed_data_id).study
-        study = Study(study_id)
+        study = Artifact(preprocessed_data_id).study
+        study_id = study.id
         state = study.ebi_submission_status
         if state == 'submitting':
             msg = "Cannot resubmit! Current state is: %s" % state
