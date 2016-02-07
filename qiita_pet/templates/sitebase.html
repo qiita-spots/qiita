@@ -1,10 +1,12 @@
 {% from moi import r_client %}
 {% from qiita_core.qiita_settings import qiita_config %}
+{% from qiita_core.util import get_qiita_version %}
 {% from qiita_pet import allowed_min_browser_versions %}
 {% from qiita_pet.portal import portal_styling %}
 {% set maintenance = r_client.get('maintenance') %}
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
+{% set qiita_version = get_qiita_version() %}
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
@@ -241,6 +243,11 @@
                 <li>
                   <a href="http://github.com/biocore/qiita">GitHub</a>
                 </li>
+                <li role="separator" class="divider"></li>
+                <li>
+                  <a href="#"><h6>{{qiita_version}}</h6></a>
+                </li>
+
               </ul>
             </li>
           </ul>

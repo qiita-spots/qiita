@@ -8,8 +8,11 @@
 from smtplib import SMTP, SMTP_SSL, SMTPException
 from future import standard_library
 from functools import wraps
+from os.path import dirname
+from git import Repo
 
 from qiita_core.qiita_settings import qiita_config
+from qiita_pet import __version__ as qiita_pet_lib_version
 import qiita_db as qdb
 
 with standard_library.hooks():
@@ -51,9 +54,14 @@ def send_email(to, subject, body):
         smtp.close()
 
 
-def qiita_test_checker():
+def qiita_test_checker(test=False):
     """Decorator that allows the execution of all methods in a test class only
     and only if Qiita is set up to work in a test environment.
+
+    Parameters
+    ----------
+    test : bool, optional
+        If True it will raise a RuntimeError error
 
     Raises
     ------
@@ -66,7 +74,7 @@ def qiita_test_checker():
         # It is possible that we are connecting to a production database
         test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
         # Or the loaded configuration file belongs to a production environment
-        if not qiita_config.test_environment or not test_db:
+        if not qiita_config.test_environment or not test_db or test:
             raise RuntimeError("Working in a production environment. Not "
                                "executing the tests to keep the production "
                                "database safe.")
@@ -93,3 +101,21 @@ def execute_as_transaction(func):
         with TRN:
             return func(*args, **kwargs)
     return wrapper
+
+
+def get_qiita_version():
+    """Returns the Qiita version and Git sha if present"""
+    # the actual repo is the abspath of the current file without
+    # qiita_core
+    current_fp = dirname(__file__)
+    len_for_trimming = len('qiita_core/')
+    git_repo_path = current_fp[:-len_for_trimming]
+
+    try:
+        repo = Repo(git_repo_path)
+        sha = '@' + repo.active_branch.commit.hexsha[0:7]
+    except:
+        sha = ''
+    version = "%s %s" % (qiita_pet_lib_version, sha)
+
+    return version
