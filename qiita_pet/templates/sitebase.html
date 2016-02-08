@@ -6,7 +6,7 @@
 {% set maintenance = r_client.get('maintenance') %}
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
-{% set qiita_version = get_qiita_version() %}
+{% set qiita_version, qiita_sha = get_qiita_version() %}
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
@@ -245,7 +245,16 @@
                 </li>
                 <li role="separator" class="divider"></li>
                 <li>
-                  <a href="#"><h6>{{qiita_version}}</h6></a>
+                  {% if qiita_sha=="" %}
+                    <a href="#">
+                  {% else %}
+                    <a href="https://github.com/biocore/qiita/commit/{{qiita_sha}}">
+                  {% end %}
+                    <h6>
+                      <b>Current version:</b></br>
+                      {{qiita_version}} {{qiita_sha}}
+                    </h6>
+                  </a>
                 </li>
 
               </ul>

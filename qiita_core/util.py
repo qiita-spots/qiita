@@ -10,6 +10,7 @@ from future import standard_library
 from functools import wraps
 from os.path import dirname
 from git import Repo
+from git.exc import InvalidGitRepositoryError
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet import __version__ as qiita_pet_lib_version
@@ -104,7 +105,13 @@ def execute_as_transaction(func):
 
 
 def get_qiita_version():
-    """Returns the Qiita version and Git sha if present"""
+    """Returns the Qiita version and Git sha if present
+
+    Returns
+    ------
+    tuple (version, sha)
+        The Qiita version and SHA. SHA can be an empty string.
+    """
     # the actual repo is the abspath of the current file without
     # qiita_core
     current_fp = dirname(__file__)
@@ -113,9 +120,8 @@ def get_qiita_version():
 
     try:
         repo = Repo(git_repo_path)
-        sha = '@' + repo.active_branch.commit.hexsha[0:7]
-    except:
+        sha = repo.active_branch.commit.hexsha[0:7]
+    except InvalidGitRepositoryError:
         sha = ''
-    version = "%s %s" % (qiita_pet_lib_version, sha)
 
-    return version
+    return (qiita_pet_lib_version, sha)

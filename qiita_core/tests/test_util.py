@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from __future__ import division
 
 # -----------------------------------------------------------------------------
@@ -58,9 +56,8 @@ class UtilTests(TestCase):
         self.assertNotEqual(f1, f2)
 
     def test_get_qiita_version(self):
-        version = get_qiita_version()
+        exp_version, exp_sha = get_qiita_version()
         # testing just the version
-        exp_version = version.split(' ')[0]
         self.assertEqual(exp_version, qdb.__version__)
 
 if __name__ == '__main__':
