@@ -3,14 +3,18 @@
   var nodes = new vis.DataSet([{id: 1, label: "{{artifact_type}}", group: 'type'}]);
   var edges = new vis.DataSet();
   var commands = null;
-  var current_node = null;
+  var curr_nodes = null;
 
-  function add_command() {
+  function add_command(type_nodes) {
     var command_info = commands[$("#command").val()];
     //TODO: add job callback
     var command_node = nodes.length + 1;
-    edges.add({ id: edges.length + 1, from: current_node, to: command_node});
+    // Add edges to the new command node, then the new command node
+    for(var i=0;i<type_nodes.length;i++) {
+      edges.add({ id: edges.length + 1, from: type_nodes[i], to: command_node});
+    }
     nodes.add({ id: command_node, label: command_info.command, group: 'command', command_id: command_info.id});
+    // Add edges for types created by command
     for(i=0;i<command_info.output.length;i++) {
       var node_id = nodes.length + 1;
       edges.add({ id: edges.length + 1, from: command_node, to: node_id});
@@ -21,6 +25,8 @@
 
   function remove_command(node_id) {
     //TODO: delete job callback
+    if(node_id.length > 1) { alert("Can only delete one command at a time."); return;}
+    node_id = +node_id;
     var queue = [node_id];
     var edge_list = edges.get();
     while(queue.length !== 0) {
@@ -36,10 +42,12 @@
     }
     edges.remove(edges.get({ filter: function (item) { return item.to == node_id; } })[0].id);
     network.redraw();
+    var curr_nodes = null;
   }
 
   function load_job(node_id) {
-    current_node = node_id;
+    if(node_id.length > 1) { alert("Can only load one command at a time."); return;}
+    node_id = +node_id;
     $.get('/study/job/', {job_id: nodes.get(node_id).id})
       .done(function ( data ) {
         $("#network-info").empty();
@@ -76,8 +84,11 @@
 
   }
 
-  function load_filetype(node_id) {
-    $.get('/study/commands/', {artifact_type: nodes.get(node_id).label})
+  function load_filetype(node_ids) {
+    //Check nodes all match type
+    var type = nodes.get(node_ids[0]).label;
+    for(var i=1;i<node_ids.length;i++) { if(nodes.get(node_ids[i]).label != type){ $("#network-info").empty(); return; }}
+    $.get('/study/commands/', {artifact_type: type})
       .done(function ( data ) {
         $("#network-info").empty();
         commands = data.commands;
@@ -88,8 +99,7 @@
          sel.append($("<option>").attr('value',i).text(commands[i].command));
         }
         var select = $('<button>').appendTo('#network-info');
-        select.addClass('btn btn-xs').text('Add Command').click(add_command);
-        current_node = node_id;
+        select.addClass('btn btn-xs').text('Add Command').click(function () { add_command(curr_nodes); });
       });
   }
 
@@ -119,7 +129,10 @@
         dragNodes: false,
         dragView: true,
         zoomView: true,
-        selectConnectedEdges: false
+        selectConnectedEdges: false,
+        multiselect: true,
+        navigationButtons: true,
+        keyboard: true
       },
       groups: {
         type: {shape: "ellipse", color: "#cef"},
@@ -128,11 +141,15 @@
     };
     network = new vis.Network(container, data, options);
     network.on('select', function(params) {
-          //render the information for the selected artifact ID
-          if(+params.nodes !== 0) {
-            var node_info = nodes.get(+params.nodes);
-            if(node_info.group == 'command') { load_job(+params.nodes) }
-            else { load_filetype(+params.nodes); }
+          //render the information for the selected artifacts or commands
+          if(params.nodes.length !== 0) {
+            // Make sure all selected nodes are of same group, so we dont link files to commands
+            var group = nodes.get(params.nodes[0]).group;
+            for(var i=0;i<params.nodes.length;i++) { if(nodes.get(params.nodes[i]).group != group) { $("#network-info").empty(); }}
+            curr_nodes = params.nodes;
+            if(group == 'command') { load_job(params.nodes); }
+            else if(group == 'type') { load_filetype(params.nodes); }
+            else { $("#network-info").empty(); }
           }
         });
   });
