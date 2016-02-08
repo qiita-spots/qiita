@@ -88,6 +88,40 @@ def study_get_req(study_id, user_id):
             }
 
 
+def study_delete_req(study_id, user_id):
+    """Delete a given study
+
+    Parameters
+    ----------
+    study_id : int
+        Study id to delete
+    user_id : str
+        User requesting the deletion
+
+    Returns
+    -------
+    dict
+        Status of deletion, in the format
+        {status: status,
+         message: message}
+    """
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
+
+    status = 'success'
+    try:
+        Study.delete(int(study_id))
+        msg = ''
+    except Exception as e:
+        status = 'error'
+        msg = 'Unable to delete study: %s' % str(e)
+    return {
+        'status': status,
+        'message': msg
+    }
+
+
 def study_prep_get_req(study_id, user_id):
     """Gives a summary of each prep template attached to the study
 

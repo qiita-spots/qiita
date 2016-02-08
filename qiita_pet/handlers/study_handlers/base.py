@@ -12,7 +12,7 @@ from tornado.web import authenticated, HTTPError
 from qiita_pet.handlers.util import to_int, doi_linkifier
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    study_prep_get_req, data_types_get_req, study_get_req)
+    study_prep_get_req, data_types_get_req, study_get_req, study_delete_req)
 
 
 class StudyIndexHandler(BaseHandler):
@@ -51,3 +51,9 @@ class StudyBaseInfoAJAX(BaseHandler):
         self.render('study_ajax/base_info.html',
                     study_info=study_info, publications=study_doi, pi=pi,
                     contact=contact)
+
+
+class StudyDeleteAjax(BaseHandler):
+    def post(self):
+        study_id = self.get_argument('study_id')
+        self.write(study_delete_req(int(study_id), self.current_user.id))

@@ -25,7 +25,7 @@
         var nodes = [];
         // format edge list data
         for(i=0;i<data.edge_list.length;i++) {
-          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1],});
+          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1]});
         }
         //format node depth data
         for(i=0;i<data.node_labels.length;i++) {
@@ -35,12 +35,12 @@
         draw_graph(nodes, edges, "study-prep-graph");
         // Copy existing formatted prep info to header position
         $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="togglegraphs(); return false;" id="graph-toggle-link">Hide files</a>');
-      });
-    $.get( "/study/description/prep_template/", { prep_id: pid, study_id: {{study_info['study_id']}}} )
+    });
+    $.get( "/study/description/prep_template/", { prep_id: pid, study_id: {{study_info['study_id']}} } )
       .done(function( data ) {
         $("#study-main").html(data);
-      });
-    }
+    });
+  }
 
   function draw_graph(nodes, edges, target) {
     var container = document.getElementById(target);
@@ -112,11 +112,37 @@
   $(document).ready(function() {
     fill_base({{study_info['study_id']}});
   });
+
+  function validate_delete_study_text() {
+    if ($("#study-alias").val() == "{{study_info['study_alias']}}") {
+      $('#delete-study-button').prop('disabled', false);
+    } else {
+      $('#delete-study-button').prop('disabled', true);
+    }
+  }
+
+function delete_study() {
+  if ($("#study-alias").val() != "{{study_info['study_alias']}}") {
+    alert("The entered study alias doesn't match the study");
+    return false;
+  }
+  if (confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
+    $.post('/study/delete/', {study_id: {{study_info['study_id']}}})
+      .done(function ( data ) {
+        if(data["status"] == "error") {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+        } else {
+          window.location.replace = '/'
+        }
+      });
+  }
+}
 </script>
 <style>
 .graph {
   width:100%;
-  height:500px;
+  height:300px;
+  border: 1px solid #ccc;
 }
 </style>
 {% end %}
@@ -128,8 +154,8 @@
     <a href="#" onclick="fill_sample_summary({{study_info['study_id']}}); return false;">Sample Summary</a><br />
     {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
-    <a href="#">Edit Study Information</a><br />
-    <a href="#">Delete Study</a>
+    <a href="/study/edit/{{study_info['study_id']}}">Edit Study Information</a><br />
+    <a href="#" data-toggle="modal" data-target="#delete-study">Delete Study</a>
     {% end %}
 
     <h3>Data Types</h3>
@@ -175,6 +201,25 @@
     <div class="row"><div class="col-md-12" id="study-prep-subheader"></div></div>
     <div class="row graph" id="study-prep-graph-row"><div class="col-md-12 graph" id="study-prep-graph"></div></div>
     <div class="row"><div class="col-md-12" id="study-main"></div></div>
+  </div>
+</div>
+
+<div class="modal fade delete-study" tabindex="-1" role="dialog" id="delete-study">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Deleting:<br/></h3><h4>{{study_info['study_title']}}</h4>
+      </div>
+      <div class="modal-body">
+        You will only be able to delete a study that has no data associated with it.
+      </div>
+      <div class="modal-footer">
+        To continue you need to write the alias name of the study:
+        <input type="text" name="study-alias" id="study-alias" onkeyup="validate_delete_study_text();">
+        <button class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_study();" id="delete-study-button" disabled></button>
+      </div>
+    </div>
   </div>
 </div>
 {% end %}
