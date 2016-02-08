@@ -172,14 +172,14 @@ BEGIN
 		VALUES (1, 'FASTQ upstream workflow (demux + OTU picking)');
 
 	-- We need 2 nodes
-	SELECT min(SELECT default_parameter_set_id
-			   FROM qiita.default_parameter_set
-		   	   WHERE command_id = 1)
+	SELECT min(default_parameter_set_id)
+		FROM qiita.default_parameter_set
+		WHERE command_id = 1
 		INTO dflt_sl_id;
 
-	SELECT min(SELECT default_parameter_set_id
-			   FROM qiita.default_parameter_set
-		   	   WHERE command_id = 3)
+	SELECT min(default_parameter_set_id)
+		FROM qiita.default_parameter_set
+		WHERE command_id = 3
 		INTO dflt_po_id;
 
 	INSERT INTO qiita.default_workflow_node (default_workflow_id, command_id, default_parameter_set_id)
@@ -187,9 +187,9 @@ BEGIN
 
 	-- We need 1 edge
 	INSERT INTO qiita.default_workflow_edge (parent_id, child_id)
-		VALUE (1, 2);
+		VALUES (1, 2);
 
-	INSERT INTO qiita.default_workflow_edge_connections (parent_output_id, child_input_id)
-		VALUES (1, in_po_param_id);
+	INSERT INTO qiita.default_workflow_edge_connections (default_workflow_edge_id, parent_output_id, child_input_id)
+		VALUES (1, 1, in_po_param_id);
 
 END $do$
