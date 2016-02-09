@@ -8,6 +8,8 @@
 
 from unittest import TestCase, main
 
+import networkx as nx
+
 from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 
@@ -466,6 +468,53 @@ class ParametersTests(TestCase):
                '"rev_comp_barcode": false, '
                '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
         self.assertEqual(obs, exp)
+
+
+@qiita_test_checker()
+class DefaultWorkflowNodeTests(TestCase):
+    def test_command(self):
+        obs = qdb.software.DefaultWorkflowNode(1)
+        self.assertEqual(obs.command, qdb.software.Command(1))
+
+        obs = qdb.software.DefaultWorkflowNode(2)
+        self.assertEqual(obs.command, qdb.software.Command(3))
+
+    def test_parameters(self):
+        obs = qdb.software.DefaultWorkflowNode(1)
+        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(1))
+
+        obs = qdb.software.DefaultWorkflowNode(2)
+        self.assertEqual(obs.parameters, qdb.software.DefaultParameters(10))
+
+
+@qiita_test_checker()
+class DefaultWorkflowEdgeTests(TestCase):
+    def test_connections(self):
+        tester = qdb.software.DefaultWorkflowEdge(1)
+        obs = tester.connections
+        self.assertEqual(obs, [['demultiplexed', 'input_data']])
+
+
+@qiita_test_checker()
+class DefaultWorkflowTests(TestCase):
+    def setUp(self):
+        self.tester = qdb.software.DefaultWorkflow(1)
+
+    def test_name(self):
+        self.assertEqual(self.tester.name,
+                         "FASTQ upstream workflow (demux + OTU picking)")
+
+    def test_graph(self):
+        obs = self.tester.graph
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        exp = [qdb.software.DefaultWorkflowNode(1),
+               qdb.software.DefaultWorkflowNode(2)]
+        self.assertItemsEqual(obs.nodes(), exp)
+        exp = [(qdb.software.DefaultWorkflowNode(1),
+                qdb.software.DefaultWorkflowNode(2),
+                {'connections': qdb.software.DefaultWorkflowEdge(1)})]
+        self.assertItemsEqual(obs.edges(data=True), exp)
+
 
 if __name__ == '__main__':
     main()

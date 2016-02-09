@@ -10,6 +10,8 @@ from json import dumps, loads
 from copy import deepcopy
 import inspect
 
+import networkx as nx
+
 import qiita_db as qdb
 
 
@@ -514,6 +516,21 @@ class Software(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
+    @property
+    def default_workflows(self):
+        """Returns the default workflows attached to the current software
+
+        Returns
+        -------
+        generator of qiita_db.software.DefaultWorkflow"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT default_workflow_id
+                     FROM qiita.default_workflow
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            for wf_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield DefaultWorkflow(wf_id)
+
 
 class DefaultParameters(qdb.base.QiitaObject):
     """Models a default set of parameters of a command
@@ -879,3 +896,139 @@ class Parameters(object):
             The parameter values as a JSON string
         """
         return dumps(self._values, sort_keys=True)
+
+
+class DefaultWorkflowNode(qdb.base.QiitaObject):
+    r"""Represents a node in a default software workflow
+
+    Attributes
+    ----------
+    command
+    parameters
+    """
+    _table = "default_workflow_node"
+
+    @property
+    def command(self):
+        """The command to execute in this node
+
+        Returns
+        -------
+        qiita_db.software.Command
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT command_id
+                     FROM qiita.default_workflow_node
+                     WHERE default_workflow_node_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            cmd_id = qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.software.Command(cmd_id)
+
+    @property
+    def parameters(self):
+        """The default parameter set to use in this node
+
+        Returns
+        -------
+        qiita_db.software.DefaultParameters
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT default_parameter_set_id
+                     FROM qiita.default_workflow_node
+                     WHERE default_workflow_node_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            params_id = qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.software.DefaultParameters(params_id)
+
+
+class DefaultWorkflowEdge(qdb.base.QiitaObject):
+    r"""Represents an edge in a default software workflow
+
+    Attributes
+    ----------
+    connections
+    """
+    _table = "default_workflow_edge"
+
+    @property
+    def connections(self):
+        """Retrieve how the commands are connected using this edge
+
+        Returns
+        -------
+        list of [str, str]
+            The list of pairs of output parameter name and input parameter name
+            used to connect the output of the source command to the input of
+            the destination command.
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name, parameter_name
+                     FROM qiita.default_workflow_edge_connections c
+                        JOIN qiita.command_output o
+                            ON c.parent_output_id = o.command_output_id
+                        JOIN qiita.command_parameter p
+                            ON c.child_input_id = p.command_parameter_id
+                     WHERE default_workflow_edge_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchindex()
+
+
+class DefaultWorkflow(qdb.base.QiitaObject):
+    r"""Represents a software's default workflow
+
+    A default workflow is defined by a Directed Acyclic Graph (DAG) in which
+    the nodes represent the commands to be executed with the default parameter
+    set to use and the edges represent the command precedence, including
+    which outputs of the source command are provided as input to the
+    destination command.
+    """
+    _table = "default_workflow"
+
+    @property
+    def name(self):
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name
+                     FROM qiita.default_workflow
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def graph(self):
+        """Returns the graph that represents the workflow
+
+        Returns
+        -------
+        networkx.DiGraph
+            The graph representing the default workflow.
+        """
+        g = nx.DiGraph()
+        with qdb.sql_connection.TRN:
+            # Retrieve all graph workflow nodes
+            sql = """SELECT default_workflow_node_id
+                     FROM qiita.default_workflow_node
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            db_nodes = qdb.sql_connection.TRN.execute_fetchflatten()
+
+            nodes = {}
+            for node_id in db_nodes:
+                n = DefaultWorkflowNode(node_id)
+                nodes[node_id] = n
+                g.add_node(n)
+
+            # Retrieve all grpah edges
+            sql = """SELECT DISTINCT default_workflow_edge_id, parent_id,
+                                     child_id
+                     FROM qiita.default_workflow_edge e
+                        JOIN qiita.default_workflow_node n
+                            ON e.parent_id = n.default_workflow_node_id
+                            OR e.child_id = n.default_workflow_node_id
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            db_edges = qdb.sql_connection.TRN.execute_fetchindex()
+
+            for edge_id, p_id, c_id in db_edges:
+                e = DefaultWorkflowEdge(edge_id)
+                g.add_edge(nodes[p_id], nodes[c_id], connections=e)
+        return g
