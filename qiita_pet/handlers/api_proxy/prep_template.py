@@ -50,6 +50,28 @@ def _process_investigation_type(inv_type, user_def_type, new_type):
     return inv_type
 
 
+def _check_prep_template_exists(prep_id):
+    """Make sure a prep template exists in the system
+
+    Parameters
+    ----------
+    prep_id : int or str castable to int
+        PrepTemplate id to check
+
+    Returns
+    -------
+    dict
+        {'status': status,
+         'message': msg}
+    """
+    if not PrepTemplate.exists(int(prep_id)):
+        return {'status': 'error',
+                'message': 'Prep template %d does not exist' % int(prep_id)
+                }
+    return {'status': 'success',
+            'message': ''}
+
+
 def prep_template_get_req(prep_id, user_id):
     """Gets the json of the full prep template
 
@@ -67,6 +89,10 @@ def prep_template_get_req(prep_id, user_id):
      'message': message,
      'template': {sample: {column: value, ...}, ...}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
@@ -98,6 +124,10 @@ def prep_template_summary_get_req(prep_id, user_id):
                 'num_samples': value,
                 'category': [(val1, count1), (val2, count2), ...], ...}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
@@ -187,6 +217,38 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
             'file': prep_template}
 
 
+def prep_template_samples_get_req(prep_id, user_id):
+    """Returns list of samples in the prep template
+
+    Parameters
+    ----------
+    prep_id : int or str typecastable to int
+        PrepTemplate id to get info for
+    user_id : str
+        User requesting the prep template info
+
+    Returns
+    -------
+    dict
+        Returns summary information in the form
+        {'status': str,
+         'message': str,
+         'samples': list of str}
+         samples is list of samples in the template
+    """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
+    return {'status': 'success',
+            'message': '',
+            'samples': sorted(x for x in PrepTemplate(int(prep_id)))
+            }
+
+
 @execute_as_transaction
 def prep_template_put_req(prep_id, user_id, prep_template=None,
                           investigation_type=None,
@@ -216,6 +278,10 @@ def prep_template_put_req(prep_id, user_id, prep_template=None,
          'message': message,
          'file': prep_template}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     study_id = prep.study_id
     access_error = check_access(study_id, user_id)
@@ -276,11 +342,14 @@ def prep_template_delete_req(prep_id, user_id):
         {'status': status,
          'message': message}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-
     msg = ''
     status = 'success'
     try:
@@ -311,6 +380,10 @@ def prep_template_filepaths_get_req(prep_id, user_id):
          'message': message,
          'filepaths': [(filepath_id, filepath), ...]}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
@@ -370,6 +443,10 @@ def prep_template_graph_get_req(prep_id, user_id):
     -----
     Nodes are identified by the corresponding Artifact ID.
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
