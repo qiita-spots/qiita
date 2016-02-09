@@ -101,8 +101,8 @@ class TestArtifactAPI(TestCase):
         obs = artifact_graph_get_req(1, 'ancestors', 'test@foo.bar')
         exp = {'status': 'success',
                'message': '',
-               'node_labels': [(1, 'Raw data 1 - FASTQ')],
-               'edge_list': []}
+               'edge_list': [],
+               'node_labels': [(1, 'Raw data 1 - FASTQ')]}
         self.assertEqual(obs, exp)
 
     def test_artifact_graph_get_req_descendants(self):

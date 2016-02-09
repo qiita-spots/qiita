@@ -29,7 +29,7 @@ class PortalEditBase(BaseHandler):
     @execute_as_transaction
     def get_info(self, portal="QIITA"):
         # Add the portals and, optionally, checkbox to the information
-        studies = Portal(portal).get_studies()
+        studies = [s.id for s in Portal(portal).get_studies()]
         if not studies:
             return []
 
@@ -63,7 +63,10 @@ class StudyPortalHandler(PortalEditBase):
         studies = map(int, self.get_arguments('selected'))
         action = self.get_argument('action')
 
-        portal = Portal(portal)
+        try:
+            portal = Portal(portal)
+        except:
+            raise HTTPError(400, "Not valid portal: %s" % portal)
         try:
             with warnings.catch_warnings(record=True) as warns:
                 if action == "Add":
