@@ -121,7 +121,7 @@ def get_qiita_version():
     try:
         repo = Repo(git_repo_path)
         sha = repo.active_branch.commit.hexsha[0:7]
-    except InvalidGitRepositoryError:
+    except (InvalidGitRepositoryError, TypeError):
         sha = ''
 
     return (qiita_pet_lib_version, sha)
