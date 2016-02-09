@@ -247,7 +247,7 @@ class StudyApprovalList(BaseHandler):
         studies = defaultdict(list)
         for artifact in Artifact.iter_by_visibility('awaiting_approval'):
             studies[artifact.study].append(artifact.id)
-        parsed_studies = [(s.id, s.title, s.owner, pds)
+        parsed_studies = [(s.id, s.title, s.owner.email, pds)
                           for s, pds in viewitems(studies)]
 
         self.render('admin_approval.html',
