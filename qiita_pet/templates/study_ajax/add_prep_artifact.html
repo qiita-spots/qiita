@@ -13,7 +13,7 @@
         // Add divs for the file type elements
         file_types = data.file_types;
         for(i=0;i<data.file_types.length;i++) {
-          $("#files-row").append('<div class="col-md-3" id="'+data.file_types[i]+'-div"><h4>'+data.file_types[i].replace('_', ' ')+'</h4><ul id="'+data.file_types[i]+'-list" class="connectedSortable"></ul><input type="hidden" name="'+data.file_types[i]+'" id="'+data.file_types[i]+'" value=""></div>')
+          $("#files-row").append('<div class="col-md-3" id="'+data.file_types[i][0]+'-div"><h4>'+data.file_types[i][0].replace('_', ' ')+'</h4><ul id="'+data.file_types[i][0]+'-list" class="connectedSortable"></ul><input type="hidden" name="'+data.file_types[i][0]+'" id="'+data.file_types[i][0]+'" value=""></div>')
         }
         // Solidify selections to text
         $("#file-type-span").html($("#type").val()+ '<input type="hidden" name="type" value="'+$("#type").val()+'">');

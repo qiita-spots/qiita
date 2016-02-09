@@ -14,7 +14,8 @@ import pandas as pd
 from qiita_pet.handlers.util import to_int, download_link_or_path
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.util import is_localhost
-from qiita_db.util import get_files_from_uploads_folders, get_mountpoint
+from qiita_db.util import (get_files_from_uploads_folders, get_mountpoint,
+                           supported_filepath_types)
 from qiita_pet.handlers.api_proxy import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req,
@@ -86,10 +87,11 @@ class PrepFilesHandler(BaseHandler):
     def get(self):
         study_id = self.get_argument('study_id')
         prep_file = self.get_argument('prep_file')
+        prep_type = self.get_argument('type')
 
         # TODO: Get file types for the artifact type
         # FILE TYPE IN POSTION 0 MUST BE DEFAULT FOR SELECTED
-        file_types = ['raw_fwd', 'raw_rev']
+        file_types = supported_filepath_types(prep_type)
 
         selected = []
         not_selected = []
