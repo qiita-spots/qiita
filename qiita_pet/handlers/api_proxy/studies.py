@@ -7,10 +7,6 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-# This is the only folder in qiita_pet that should import outside qiita_pet
-# The idea is that this proxies the call and response dicts we expect from the
-# Qiita API once we build it. This will be removed and replaced with API calls
-# when the API is complete.
 from qiita_db.study import Study
 from qiita_pet.handlers.api_proxy.util import check_access
 
@@ -20,11 +16,19 @@ def data_types_get_req():
 
     Returns
     -------
-    list of str
-        Data types available on the system
+    dict
+        Data types information in the form
+        {'status': status,
+         'message': message,
+         'data_types': list of str}
+        status can be success, warning, or error depending on result
+        message has the warnings or errors
+        data_types is the list of available data types in the system
     """
-    data_types = Study.all_data_types()
-    return data_types
+    return {'status': 'success',
+            'message': '',
+            'data_types': Study.all_data_types()
+            }
 
 
 def study_get_req(study_id, user_id):
@@ -39,14 +43,16 @@ def study_get_req(study_id, user_id):
 
     Returns
     -------
-    dict of info
-        Study information seperated by data type, in the form
-        {col_name: value, ...}
-
-    Raises
-    ------
-    HTTPError
-        Raises code 403 if user does not have access to the study
+    dict
+        Data types information in the form
+        {'status': status,
+         'message': message,
+         'info': dict of objects
+        status can be success, warning, or error depending on result
+        message has the warnings or errors
+        info contains study information seperated by data type, in the form
+        {col_name: value, ...} with value being a string, int, or list of
+        strings or ints
     """
     access_error = check_access(study_id, user_id)
     if access_error:
@@ -74,9 +80,12 @@ def study_get_req(study_id, user_id):
         'email': lab_person.email,
         'affiliation': lab_person.affiliation}
 
-    samples = study.sample_template.keys()
-    study_info['num_samples'] = 0 if samples is None else len(set(samples))
-    return study_info
+    samples = study.sample_template
+    study_info['num_samples'] = 0 if samples is None else len(list(samples))
+    return {'status': 'success',
+            'message': '',
+            'info': study_info
+            }
 
 
 def study_delete_req(study_id, user_id):
@@ -103,6 +112,7 @@ def study_delete_req(study_id, user_id):
     status = 'success'
     try:
         Study.delete(int(study_id))
+        msg = ''
     except Exception as e:
         status = 'error'
         msg = 'Unable to delete study: %s' % str(e)
@@ -138,13 +148,18 @@ def study_prep_get_req(study_id, user_id):
         prep_info[dtype] = []
         for prep in study.prep_templates(dtype):
             start_artifact = prep.artifact
+            youngest_artifact = prep.artifact.youngest_artifact
             info = {
                 'name': 'PREP %d NAME' % prep.id,
                 'id': prep.id,
                 'status': prep.status,
                 'start_artifact': start_artifact.artifact_type,
                 'start_artifact_id': start_artifact.id,
-                'last_artifact': 'TODO new gui'
+                'youngest_artifact': ' - '.join(
+                    [youngest_artifact.name, youngest_artifact.artifact_type])
             }
             prep_info[dtype].append(info)
-    return prep_info
+    return {'status': 'success',
+            'message': '',
+            'info': prep_info
+            }

@@ -5,12 +5,19 @@ from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.util import qiita_test_checker
+from qiita_db.artifact import Artifact
 from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
 from qiita_db.user import User
+from qiita_db.ontology import Ontology
 from qiita_pet.handlers.study_handlers.listing_handlers import (
     _get_shared_links_for_study, _build_study_info, _build_single_study_info,
     _build_single_proc_data_info)
+from qiita_pet.handlers.study_handlers.description_handlers import (
+    _propagate_visibility)
+from qiita_pet.handlers.study_handlers.sample_template import (
+    _build_sample_summary)
 
 
 class TestHelpers(TestHandlerBase):
@@ -156,6 +163,64 @@ class TestHelpers(TestHandlerBase):
             'proc_data_info': []})
         self.assertEqual(obs, self.exp)
 
+    def test_propagate_visibility(self):
+        a = Artifact(4)
+        a.visibility = 'public'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'public')
+        self.assertEqual(Artifact(2).visibility, 'public')
+        self.assertEqual(Artifact(4).visibility, 'public')
+
+        a.visibility = 'private'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'private')
+        self.assertEqual(Artifact(2).visibility, 'private')
+        self.assertEqual(Artifact(4).visibility, 'private')
+
+        a = Artifact(2)
+        a.visibility = 'public'
+        _propagate_visibility(a)
+        self.assertEqual(Artifact(1).visibility, 'private')
+        self.assertEqual(Artifact(2).visibility, 'private')
+        self.assertEqual(Artifact(4).visibility, 'private')
+
+    def test_build_sample_summary(self):
+        cols, table = _build_sample_summary(1, 'test@foo.bar')
+        # Make sure header filled properly
+        cols_exp = [{'field': 'sample', 'width': 240, 'sortable': True,
+                     'id': 'sample', 'name': 'Sample'},
+                    {'field': 'prep1', 'width': 240, 'sortable': True,
+                     'id': 'prep1', 'name': 'PREP 1 NAME - 1'}]
+        self.assertEqual(cols, cols_exp)
+        table_exp = [{'sample': '1.SKB2.640194', 'prep1': 'X'},
+                     {'sample': '1.SKM4.640180', 'prep1': 'X'},
+                     {'sample': '1.SKB3.640195', 'prep1': 'X'},
+                     {'sample': '1.SKB6.640176', 'prep1': 'X'},
+                     {'sample': '1.SKD6.640190', 'prep1': 'X'},
+                     {'sample': '1.SKM6.640187', 'prep1': 'X'},
+                     {'sample': '1.SKD9.640182', 'prep1': 'X'},
+                     {'sample': '1.SKM8.640201', 'prep1': 'X'},
+                     {'sample': '1.SKM2.640199', 'prep1': 'X'},
+                     {'sample': '1.SKD2.640178', 'prep1': 'X'},
+                     {'sample': '1.SKB7.640196', 'prep1': 'X'},
+                     {'sample': '1.SKD4.640185', 'prep1': 'X'},
+                     {'sample': '1.SKB8.640193', 'prep1': 'X'},
+                     {'sample': '1.SKM3.640197', 'prep1': 'X'},
+                     {'sample': '1.SKD5.640186', 'prep1': 'X'},
+                     {'sample': '1.SKB1.640202', 'prep1': 'X'},
+                     {'sample': '1.SKM1.640183', 'prep1': 'X'},
+                     {'sample': '1.SKD1.640179', 'prep1': 'X'},
+                     {'sample': '1.SKD3.640198', 'prep1': 'X'},
+                     {'sample': '1.SKB5.640181', 'prep1': 'X'},
+                     {'sample': '1.SKB4.640189', 'prep1': 'X'},
+                     {'sample': '1.SKB9.640200', 'prep1': 'X'},
+                     {'sample': '1.SKM9.640192', 'prep1': 'X'},
+                     {'sample': '1.SKD8.640184', 'prep1': 'X'},
+                     {'sample': '1.SKM5.640177', 'prep1': 'X'},
+                     {'sample': '1.SKM7.640188', 'prep1': 'X'},
+                     {'sample': '1.SKD7.640191', 'prep1': 'X'}]
+        self.assertEqual(table, table_exp)
+
 
 class TestStudyEditorForm(TestHandlerBase):
     # TODO: add proper test for this once figure out how. Issue 567
@@ -181,33 +246,6 @@ class TestStudyDescriptionHandler(TestHandlerBase):
     def test_get_no_exists(self):
         response = self.get('/study/description/245')
         self.assertEqual(response.code, 404)
-
-    def test_post(self):
-        post_args = {}
-        response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 200)
-
-    def test_post_no_exists(self):
-        post_args = {}
-        response = self.post('/study/description/245', post_args)
-        self.assertEqual(response.code, 404)
-
-    def test_update_sample_template(self):
-        # not sending file
-        post_args = {
-            'sample_template': '',
-            'action': 'update_sample_template'
-        }
-        response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 200)
-
-        # sending blank file
-        post_args = {
-            'sample_template': 'uploaded_file.txt',
-            'action': 'update_sample_template'
-        }
-        response = self.post('/study/description/1', post_args)
-        self.assertEqual(response.code, 200)
 
 
 class TestStudyEditHandler(TestHandlerBase):
@@ -290,8 +328,8 @@ class TestStudyEditHandler(TestHandlerBase):
                 [doi for doi, _ in study.publications]),
             'study_abstract': study_info['study_abstract'],
             'study_description': study_info['study_description'],
-            'principal_investigator': study_info['principal_investigator_id'],
-            'lab_person': study_info['lab_person_id']}
+            'principal_investigator': study_info['principal_investigator'].id,
+            'lab_person': study_info['lab_person'].id}
 
         self.post('/study/edit/1', post_data)
 
@@ -322,6 +360,56 @@ class TestCreateStudyAJAX(TestHandlerBase):
         self.assertEqual(response.code, 200)
         # make sure responds properly
         self.assertEqual(response.body, 'False')
+
+
+class TestShareStudyAjax(TestHandlerBase):
+    database = True
+
+    def test_get_deselected(self):
+        s = Study(1)
+        u = User('shared@foo.bar')
+        args = {'deselected': u.id, 'study_id': s.id}
+        self.assertEqual(s.shared_with, [u])
+        response = self.get('/study/sharing/', args)
+        self.assertEqual(response.code, 200)
+        exp = {'users': [], 'links': ''}
+        self.assertEqual(loads(response.body), exp)
+        self.assertEqual(s.shared_with, [])
+
+    def test_get_selected(self):
+        s = Study(1)
+        u = User('admin@foo.bar')
+        args = {'selected': u.id, 'study_id': s.id}
+        response = self.get('/study/sharing/', args)
+        self.assertEqual(response.code, 200)
+        exp = {
+            'users': ['shared@foo.bar', u.id],
+            'links':
+                ('<a target="_blank" href="mailto:shared@foo.bar">Shared</a>, '
+                 '<a target="_blank" href="mailto:admin@foo.bar">Admin</a>')}
+        self.assertEqual(loads(response.body), exp)
+        self.assertEqual(s.shared_with, [User('shared@foo.bar'), u])
+
+    def test_get_no_access(self):
+        # Create a new study belonging to the 'shared' user, so 'test' doesn't
+        # have access
+        info = {
+            'timeseries_type_id': 1,
+            'lab_person_id': None,
+            'principal_investigator_id': 3,
+            'metadata_complete': False,
+            'mixs_compliant': True,
+            'study_description': 'desc',
+            'study_alias': 'alias',
+            'study_abstract': 'abstract'}
+        u = User('shared@foo.bar')
+        s = Study.create(u, 'test_study', efo=[1], info=info)
+        self.assertEqual(s.shared_with, [])
+
+        args = {'selected': 'test@foo.bar', 'study_id': s.id}
+        response = self.get('/study/sharing/', args)
+        self.assertEqual(response.code, 403)
+        self.assertEqual(s.shared_with, [])
 
 
 class TestSearchStudiesAJAX(TestHandlerBase):
@@ -430,69 +518,56 @@ class TestSearchStudiesAJAX(TestHandlerBase):
         self.assertEqual(response.code, 403)
 
 
-class TestMetadataSummaryHandler(TestHandlerBase):
-    def test_error_prep_and_sample(self):
-        response = self.get('/metadata_summary/', {'sample_template': 1,
-                                                   'prep_template': 1,
-                                                   'study_id': 1})
-        self.assertEqual(response.code, 500)
-
-    def test_error_no_prep_no_sample(self):
-        response = self.get('/metadata_summary/', {'study_id': 1})
-        self.assertEqual(response.code, 500)
-
-    def test_get_exists_prep(self):
-        response = self.get('/metadata_summary/', {'prep_template': 1,
-                                                   'study_id': 1})
-        self.assertEqual(response.code, 200)
-
-    def test_get_exists_sample(self):
-        response = self.get('/metadata_summary/', {'sample_template': 1,
-                                                   'study_id': 1})
-        self.assertEqual(response.code, 200)
-
-    def test_get_no_exist(self):
-        response = self.get('/metadata_summary/', {'sample_template': 237,
-                                                   'study_id': 237})
-        self.assertEqual(response.code, 500)
-
-
 class TestEBISubmitHandler(TestHandlerBase):
     # TODO: add proper test for this once figure out how. Issue 567
     pass
 
 
-class TestDelete(TestHandlerBase):
-    database = True
-
-    def test_delete_study(self):
-        response = self.post('/study/description/1',
-                             {'study_id': 1,
-                              'action': 'delete_study'})
+class TestPrepGraphs(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/prep/graph/', {'prep_id': 1})
         self.assertEqual(response.code, 200)
+        exp = {"status": "success",
+               "node_labels": [[1, "Raw data 1 - FASTQ"],
+                               [3, "Demultiplexed 2 - Demultiplexed"],
+                               [2, "Demultiplexed 1 - Demultiplexed"],
+                               [4, "BIOM - BIOM"]], "message": "",
+               "edge_list": [[1, 3], [1, 2], [2, 4]]}
+        self.assertEqual(loads(response.body), exp)
 
-        # checking that the action was sent
-        self.assertIn("Couldn't remove study", response.body)
 
-    def test_delete_sample_template(self):
-        response = self.post('/study/description/1',
-                             {'sample_template_id': 1,
-                              'action': 'delete_sample_template'})
+@qiita_test_checker()
+class TestArtifact(TestHandlerBase):
+    def test_get_ancestors(self):
+        response = self.get('/artifact/graph/', {'direction': 'ancestors',
+                                                 'artifact_id': 1})
+        exp = {'status': 'success',
+               'message': '',
+               'node_labels': [[1, 'Raw data 1 - FASTQ']],
+               'edge_list': []}
         self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
 
-        # checking that the action was sent
-        self.assertIn("Sample template can not be erased because there are "
-                      "prep templates", response.body)
-
-    def test_delete_raw_data(self):
-        response = self.post('/study/description/1',
-                             {'raw_data_id': 1,
-                              'prep_template_id': 1,
-                              'action': 'delete_raw_data'})
+    def test_get_descendants(self):
+        response = self.get('/artifact/graph/', {'direction': 'descendants',
+                                                 'artifact_id': 1})
+        exp = {'status': 'success',
+               'message': '',
+               'node_labels': [[1, 'Raw data 1 - FASTQ'],
+                               [3, 'Demultiplexed 2 - Demultiplexed'],
+                               [2, 'Demultiplexed 1 - Demultiplexed'],
+                               [4, 'BIOM - BIOM']],
+               'edge_list': [[1, 3], [1, 2], [2, 4]]}
         self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
 
-        # checking that the action was sent
-        self.assertIn("Couldn't remove raw data", response.body)
+    def test_get_unknown(self):
+        response = self.get('/artifact/graph/', {'direction': 'BAD',
+                                                 'artifact_id': 1})
+        exp = {'status': 'error',
+               'message': 'Unknown directon BAD'}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
 
     def test_delete_artifact(self):
         response = self.post('/artifact/',
@@ -503,32 +578,129 @@ class TestDelete(TestHandlerBase):
         self.assertIn("Cannot delete artifact 2: it has children: 4",
                       response.body)
 
-    def test_delete_prep_template(self):
-        response = self.post('/study/description/1',
-                             {'prep_template_id': 1,
-                              'action': 'delete_prep_template'})
+    def test_get_admin(self):
+        response = self.get('/admin/artifact/',
+                            {'artifact_id': 3})
+        self.assertEqual(response.code, 200)
+
+        # checking that proper actions shown
+        self.assertIn("Make public</button>", response.body)
+        self.assertIn("Revert to sandbox</button>", response.body)
+        self.assertIn("Submit to EBI</a>", response.body)
+        self.assertIn("Submit to VAMPS</a>", response.body)
+
+    def test_post_admin(self):
+        response = self.post('/admin/artifact/',
+                             {'artifact_id': 3,
+                              'visibility': 'sandbox'})
+        self.assertEqual(response.code, 200)
+
+        # checking that proper actions shown
+        self.assertEqual({"status": "success",
+                          "message": "Artifact visibility changed to sandbox"},
+                         loads(response.body))
+
+        self.assertEqual(Artifact(3).visibility, 'sandbox')
+
+
+@qiita_test_checker()
+class TestPrepTemplate(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/description/prep_template/',
+                            {'prep_id': 1, 'study_id': 1})
+        self.assertEqual(response.code, 200)
+        self.assertIn('This analysis was done as in Caporaso', response.body)
+
+    def test_post_update(self):
+        response = self.post('/study/description/prep_template/',
+                             {'prep_id': 1, 'action': 'update',
+                              'filepath': 'uploaded_file.txt'})
+        exp = {'status': 'error',
+               'message': 'Empty file passed!',
+               'file': 'uploaded_file.txt'}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+    def test_post_ontology(self):
+        response = self.post('/study/description/prep_template/',
+                             {'prep_id': 1, 'action': 'ontology',
+                              'ena': 'Other', 'ena_user': 'New Type',
+                              'ena_new': 'NEW THING'})
+        exp = {'status': 'success', 'message': '', 'file': None}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+        # Make sure New Type added
+        ontology = Ontology(999999999)
+        self.assertIn('NEW THING', ontology.user_defined_terms)
+
+    def test_post_delete(self):
+        response = self.post('/study/description/prep_template/',
+                             {'prep_id': 1,
+                              'action': 'delete'})
         self.assertEqual(response.code, 200)
 
         # checking that the action was sent
         self.assertIn("Couldn't remove prep template:", response.body)
 
-    def test_delete_preprocessed_data(self):
-        response = self.post('/study/description/1',
-                             {'preprocessed_data_id': 1,
-                              'action': 'delete_preprocessed_data'})
+
+class TestSampleSummaryAJAX(TestHandlerBase):
+    def test_get(self):
+        res = self.get("/study/description/sample_summary/", {'study_id': 1})
+        self.assertEqual(res.code, 200)
+        # Make sure metadata read properly
+        line = '<option value="altitude">altitude</option>'
+        self.assertIn(line, res.body)
+
+    def test_post(self):
+        res = self.post("/study/description/sample_summary/", {
+            'study_id': 1, 'meta_col': 'latitude'})
+        self.assertEqual(res.code, 200)
+        exp = {"status": "success",
+               "message": "",
+               "values": ["4.59216095574", "35.2374368957", "95.2060749748",
+                          "43.9614715197", "10.6655599093", "78.3634273709",
+                          "13.089194595", "74.0894932572", "12.6245524972",
+                          "68.0991287718", "53.5050692395", "84.0030227585",
+                          "40.8623799474", "85.4121476399", "29.1499460692",
+                          "68.51099627", "57.571893782", "23.1218032799",
+                          "38.2627021402", "82.8302905615", "None", "None",
+                          "44.9725384282", "0.291867635913", "60.1102854322",
+                          "3.21190859967", "12.7065957714"]}
+        self.assertEqual(loads(res.body), exp)
+
+    def test_post_error(self):
+        res = self.post("/study/description/sample_summary/", {
+            'study_id': 1, 'meta_col': 'NOEXIST'})
+        self.assertEqual(res.code, 200)
+        exp = {"status": "error",
+               "message": "Category NOEXIST does not exist in sample template"}
+        self.assertEqual(loads(res.body), exp)
+
+
+class TestDelete(TestHandlerBase):
+    database = True
+
+    def test_delete_study(self):
+        response = self.post('/study/delete/', {'study_id': 1})
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'error',
+               'message': 'Unable to delete study: Study "Identification of '
+                          'the Microbiomes for Cannabis Soils" cannot be '
+                          'erased because it has a sample template'}
+        self.assertEqual(loads(response.body), exp)
+
+    def test_delete_sample_template(self):
+        response = self.post('/study/description/sample_template/',
+                             {'study_id': 1,
+                              'action': 'delete'})
         self.assertEqual(response.code, 200)
 
+        exp = ('{"status": "error", '
+               '"message": "Sample template can not be erased because there '
+               'are prep templates associated."}')
         # checking that the action was sent
-        self.assertIn("Couldn't remove preprocessed data", response.body)
+        self.assertEqual(response.body, exp)
 
-    def test_delete_processed_data(self):
-        response = self.post('/study/description/1',
-                             {'processed_data_id': 1,
-                              'action': 'delete_processed_data'})
-        self.assertEqual(response.code, 200)
-
-        # checking that the action was sent
-        self.assertIn("Couldn't remove processed data", response.body)
 
 if __name__ == "__main__":
     main()

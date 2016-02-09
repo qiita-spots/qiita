@@ -218,13 +218,13 @@ def generate_split_libraries_fastq_cmd(filepaths, mapping_file, atype,
     return cmd, output_dir
 
 
-def split_libraries_fastq(server_url, job_id, parameters, out_dir):
+def split_libraries_fastq(qclient, job_id, parameters, out_dir):
     """Run split libraries fastq with the given parameters
 
     Parameters
     ----------
-    server_url : str
-        The URL of the server
+    qclient : tgp.qiita_client.QiitaClient
+        The Qiita server client
     job_id : str
         The job id
     parameters : dict
@@ -238,24 +238,24 @@ def split_libraries_fastq(server_url, job_id, parameters, out_dir):
         The results of the job
     """
     # Step 1 get the rest of the information need to run split libraries
-    update_job_step(server_url, job_id, "Step 1 of 4: Collecting information")
+    update_job_step(qclient, job_id, "Step 1 of 4: Collecting information")
     artifact_id = parameters['input_data']
     filepaths, mapping_file, atype = get_artifact_information(
-        server_url, artifact_id)
+        qclient, artifact_id)
 
     # Step 2 generate the split libraries fastq command
-    update_job_step(server_url, job_id, "Step 2 of 4: Generating command")
+    update_job_step(qclient, job_id, "Step 2 of 4: Generating command")
     command, sl_out = generate_split_libraries_fastq_cmd(
         filepaths, mapping_file, atype, out_dir, parameters)
 
     # Step 3 execute split libraries
     update_job_step(
-        server_url, job_id,
+        qclient, job_id,
         "Step 3 of 4: Executing demultiplexing and quality control")
     std_out, std_err, return_value = system_call(command)
 
     # Step 4 generate the demux file
-    update_job_step(server_url, job_id, "Step 4 of 4: Generating demux file")
+    update_job_step(qclient, job_id, "Step 4 of 4: Generating demux file")
     generate_demux_file(sl_out)
 
     artifacts_info = generate_artifact_info(sl_out)

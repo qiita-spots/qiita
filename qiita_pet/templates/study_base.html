@@ -40,7 +40,7 @@
         var nodes = [];
         // format edge list data
         for(i=0;i<data.edge_list.length;i++) {
-          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1],});
+          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1]});
         }
         //format node depth data
         for(i=0;i<data.node_labels.length;i++) {
@@ -50,12 +50,12 @@
         draw_graph(nodes, edges, "study-prep-graph");
         // Copy existing formatted prep info to header position
         $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="togglegraphs(); return false;" id="graph-toggle-link">Hide files</a>');
-      });
-    $.get( "/study/description/prep_template/", { prep_id: pid, study_id: {{study_info['study_id']}}} )
+    });
+    $.get( "/study/description/prep_template/", { prep_id: pid, study_id: {{study_info['study_id']}} } )
       .done(function( data ) {
         $("#study-main").html(data);
-      });
-    }
+    });
+  }
 
   function draw_graph(nodes, edges, target) {
     var container = document.getElementById(target);
@@ -160,7 +160,7 @@
 
 function delete_study() {
   if ($("#study-alias").val() != "{{study_info['study_alias']}}") {
-    alert("The added name doesn't match the study alias");
+    alert("The entered study alias doesn't match the study");
     return false;
   }
   if (confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
@@ -178,7 +178,8 @@ function delete_study() {
 <style>
 .graph {
   width:100%;
-  height:500px;
+  height:300px;
+  border: 1px solid #ccc;
 }
 </style>
 {% end %}
@@ -188,11 +189,11 @@ function delete_study() {
   <h3><a href="#" onclick="fill_base({{study_info['study_id']}})">Study Information</a></h3>
     <a href="#" onclick="fill_sample({{study_info['study_id']}}); return false;">Sample Template</a><br />
     <a href="#" onclick="fill_sample_summary({{study_info['study_id']}}); return false;">Sample Summary</a><br />
-    {# if editable #}
+    {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
     <a href="/study/edit/{{study_info['study_id']}}">Edit Study Information</a><br />
     <a href="#" data-toggle="modal" data-target="#delete-study">Delete Study</a>
-    {# end #}
+    {% end %}
 
     <h3>Data Types</h3>
     <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
@@ -204,15 +205,16 @@ function delete_study() {
             <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{cleaned_dt}}" aria-expanded="true" aria-controls="collapse{{cleaned_dt}}">{{dt}}</a>
           </h4>
         </div>
-      {% end %}
-      {% for prep in prep_info[dt] %}
         <div id="collapse{{cleaned_dt}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{cleaned_dt}}">
           <div class="panel-body">
+      {% for prep in prep_info[dt] %}
             <a href="#" style="display:block;color:black;" onclick="fill_prep({{prep['id']}})">
             <span id="prep-header-{{prep['id']}}">{{prep['name']}} - ID {{prep['id']}} - {{prep['status']}}</span><br/>
             {{prep['start_artifact']}} - ID {{prep['start_artifact_id']}}<br/>
-            {{prep['last_artifact']}}
+            {{prep['youngest_artifact']}}
             </a>
+            <hr>
+      {% end %}
           </div>
         </div>
       {% end %}

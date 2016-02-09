@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.exceptions import (QiitaDBOperationNotPermittedError,
@@ -21,7 +28,9 @@ def artifact_graph_get_req(artifact_id, direction, user_id):
     dict of lists of tuples
         A dictionary containing the edge list representation of the graph,
         and the node labels. Formatted as:
-        {'edge_list': [(0, 1), (0, 2)...],
+        {'status': status,
+         'message': message,
+         'edge_list': [(0, 1), (0, 2)...],
          'node_labels': [(0, 'label0'), (1, 'label1'), ...]}
 
     Notes
@@ -42,10 +51,12 @@ def artifact_graph_get_req(artifact_id, direction, user_id):
             'message': 'Unknown directon %s' % direction
         }
 
-    node_labels = [(n.id, 'longer descriptive name for %d' % n.id)
+    node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
                    for n in G.nodes()]
     return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
-            'node_labels': node_labels}
+            'node_labels': node_labels,
+            'status': 'success',
+            'message': ''}
 
 
 def artifact_get_req(artifact_id, user_id):
@@ -70,23 +81,17 @@ def artifact_get_req(artifact_id, user_id):
 
     try:
         can_be_submitted_to_ebi = pd.can_be_submitted_to_ebi
+        ebi_run_accessions = pd.ebi_run_accessions
     except QiitaDBOperationNotPermittedError:
         can_be_submitted_to_ebi = False
+        ebi_run_accessions = None
 
     try:
         can_be_submitted_to_vamps = pd.can_be_submitted_to_vamps
-    except QiitaDBOperationNotPermittedError:
-        can_be_submitted_to_vamps = False
-
-    try:
         is_submitted_to_vamps = pd.is_submitted_to_vamps
     except QiitaDBOperationNotPermittedError:
+        can_be_submitted_to_vamps = False
         is_submitted_to_vamps = False
-
-    try:
-        ebi_run_accessions = pd.ebi_run_accessions
-    except QiitaDBOperationNotPermittedError:
-        ebi_run_accessions = None
 
     return {
         'timestamp': pd.timestamp,
@@ -105,6 +110,22 @@ def artifact_get_req(artifact_id, user_id):
 
 
 def artifact_delete_req(artifact_id, user_id):
+    """Deletes the artifact
+
+    Parameters
+    ----------
+    artifact_id : int
+        Artifact being acted on
+    user_id : str
+        The user requesting the action
+
+    Returns
+    -------
+    dict
+        Status of action, in the form {'status': status, 'message': msg}
+        status: status of the action, either success or error
+        message: Human readable message for status
+    """
     pd = Artifact(int(artifact_id))
     access_error = check_access(pd.study.id, user_id)
     if access_error:

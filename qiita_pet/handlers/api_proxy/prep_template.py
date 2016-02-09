@@ -9,17 +9,12 @@ from __future__ import division
 import warnings
 
 from os import remove
-from os.path import exists, join
 from natsort import natsorted
 
-# This is the only folder in qiita_pet that should import outside qiita_pet
-# The idea is that this proxies the call and response dicts we expect from the
-# Qiita API once we build it. This will be removed and replaced with API calls
-# when the API is complete.
 from qiita_core.util import execute_as_transaction
-from qiita_pet.handlers.api_proxy.util import check_access
+from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.metadata_template.util import load_template_to_dataframe
-from qiita_db.util import convert_to_id, get_mountpoint
+from qiita_db.util import convert_to_id
 from qiita_db.study import Study
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -43,16 +38,38 @@ def _process_investigation_type(inv_type, user_def_type, new_type):
     str
         The investigation type chosen by the user
     """
-    if inv_type == 'None Selected':
+    if inv_type == '':
         inv_type = None
     elif inv_type == 'Other' and user_def_type == 'New Type':
-        # This is a nre user defined investigation type so store it
+        # This is a new user defined investigation type so store it
         inv_type = new_type
         ontology = Ontology(convert_to_id('ENA', 'ontology'))
         ontology.add_user_defined_term(inv_type)
     elif inv_type == 'Other' and user_def_type != 'New Type':
         inv_type = user_def_type
     return inv_type
+
+
+def _check_prep_template_exists(prep_id):
+    """Make sure a prep template exists in the system
+
+    Parameters
+    ----------
+    prep_id : int or str castable to int
+        PrepTemplate id to check
+
+    Returns
+    -------
+    dict
+        {'status': status,
+         'message': msg}
+    """
+    if not PrepTemplate.exists(int(prep_id)):
+        return {'status': 'error',
+                'message': 'Prep template %d does not exist' % int(prep_id)
+                }
+    return {'status': 'success',
+            'message': ''}
 
 
 def prep_template_get_req(prep_id, user_id):
@@ -67,17 +84,23 @@ def prep_template_get_req(prep_id, user_id):
 
     Returns
     -------
-    dict of dictionaries
-        Dictionary object where the keys are the metadata samples
-        and the values are a dictionary of column and value.
-        Format {sample: {column: value, ...}, ...}
+    dict of objects
+    {'status': status,
+     'message': message,
+     'template': {sample: {column: value, ...}, ...}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
     df = prep.to_dataframe()
-    return df.to_dict(orient='index')
+    return {'status': 'success',
+            'message': '',
+            'template': df.to_dict(orient='index')}
 
 
 def prep_template_summary_get_req(prep_id, user_id):
@@ -92,30 +115,34 @@ def prep_template_summary_get_req(prep_id, user_id):
 
     Returns
     -------
-    dict of list of tuples
+    dict of objects
         Dictionary object where the keys are the metadata categories
         and the values are list of tuples. Each tuple is an observed value in
         the category and the number of times its seen.
-        Format {num_samples: value,
-                category: [(val1, count1), (val2, count2), ...], ...}
+        Format {'status': status,
+                'message': message,
+                'num_samples': value,
+                'category': [(val1, count1), (val2, count2), ...], ...}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
     df = prep.to_dataframe()
     out = {'num_samples': df.shape[0],
-           'summary': {}}
+           'summary': {},
+           'status': 'success',
+           'message': ''}
 
-    # drop the prep_id column if it exists
-    if 'study_id' in df.columns:
-        df.drop('study_id', axis=1, inplace=True)
     cols = list(df.columns)
     for column in cols:
         counts = df[column].value_counts()
         out['summary'][str(column)] = [(str(key), counts[key])
                                        for key in natsorted(counts.index)]
-
     return out
 
 
@@ -129,7 +156,7 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     Parameters
     ----------
     study_id : int
-        Study to attach the pre ptemplate to
+        Study to attach the prep template to
     user_id : str
         User adding the prep template
     prep_template : str
@@ -142,33 +169,32 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
         Existing user added investigation type to attach to the prep template
     new_investigation_type: str, optional
         Investigation type to add to the system
+
+    Returns
+    -------
+    dict of str
+        {'status': status,
+         'message': message,
+         'file': prep_template}
     """
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
-    msg = "Your prep template was added"
-    status = "success"
+    fp_rpt = check_fp(study_id, prep_template)
+    if fp_rpt['status'] != 'success':
+        # Unknown filepath, so return the error message
+        return fp_rpt
+    fp_rpt = fp_rpt['file']
 
+    # Add new investigation type if needed
     investigation_type = _process_investigation_type(
         investigation_type, user_defined_investigation_type,
         new_investigation_type)
-
-    # Get the upload base directory
-    _, base_path = get_mountpoint("uploads")[0]
-    # Get the path to the prep template
-    fp_rpt = join(base_path, str(study_id), prep_template)
-    if not exists(fp_rpt):
-        # The file does not exist, fail nicely
-        return {'status': 'error',
-                'error': 'filepath does not exist',
-                'filepath': prep_template}
 
     msg = ''
     status = 'success'
     try:
         with warnings.catch_warnings(record=True) as warns:
-            # force all warnings to always be triggered
-            warnings.simplefilter("always")
             data_type_id = convert_to_id(data_type, 'data_type')
             # deleting previous uploads and inserting new one
             PrepTemplate.create(load_template_to_dataframe(fp_rpt),
@@ -191,8 +217,43 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
             'file': prep_template}
 
 
+def prep_template_samples_get_req(prep_id, user_id):
+    """Returns list of samples in the prep template
+
+    Parameters
+    ----------
+    prep_id : int or str typecastable to int
+        PrepTemplate id to get info for
+    user_id : str
+        User requesting the prep template info
+
+    Returns
+    -------
+    dict
+        Returns summary information in the form
+        {'status': str,
+         'message': str,
+         'samples': list of str}
+         samples is list of samples in the template
+    """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+    prep = PrepTemplate(int(prep_id))
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
+    return {'status': 'success',
+            'message': '',
+            'samples': sorted(x for x in PrepTemplate(int(prep_id)))
+            }
+
+
 @execute_as_transaction
-def prep_template_put_req(prep_id, user_id, prep_template):
+def prep_template_put_req(prep_id, user_id, prep_template=None,
+                          investigation_type=None,
+                          user_defined_investigation_type=None,
+                          new_investigation_type=None):
     """Updates the prep template with the changes in the given file
 
     Parameters
@@ -201,45 +262,65 @@ def prep_template_put_req(prep_id, user_id, prep_template):
         The prep template to update
     user_id : str
         The current user object id
-    prep_template : str
+    prep_template : str, optional
         filepath to use for updating
+    investigation_type: str, optional
+        Existing investigation type to attach to the prep template
+    user_defined_investigation_type: str, optional
+        Existing user added investigation type to attach to the prep template
+    new_investigation_type: str, optional
+        Investigation type to add to the system
+
+    Returns
+    -------
+    dict of str
+        {'status': status,
+         'message': message,
+         'file': prep_template}
     """
-    # Get the uploads folder
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
-    access_error = check_access(prep.study_id, user_id)
+    study_id = prep.study_id
+    access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
-    _, base_fp = get_mountpoint("uploads")[0]
-    # Get the path of the prep template in the uploads folder
-    fp = join(base_fp, str(prep.study_id), prep_template)
 
-    if not exists(fp):
-        # The file does not exist, fail nicely
-        return {'status': 'error',
-                'message': 'file does not exist',
-                'file': prep_template}
+    if investigation_type:
+        investigation_type = _process_investigation_type(
+            investigation_type, user_defined_investigation_type,
+            new_investigation_type)
+        prep.investigation_type = investigation_type
 
     msg = ''
     status = 'success'
-    try:
-        with warnings.catch_warnings(record=True) as warns:
-            pt = PrepTemplate(int(prep_id))
-            df = load_template_to_dataframe(fp)
-            pt.extend(df)
-            pt.update(df)
-            remove(fp)
+    if prep_template:
+        fp = check_fp(study_id, prep_template)
+        if fp['status'] != 'success':
+            # Unknown filepath, so return the error message
+            return fp
+        fp = fp['file']
+        try:
+            with warnings.catch_warnings(record=True) as warns:
+                pt = PrepTemplate(int(prep_id))
+                df = load_template_to_dataframe(fp)
+                pt.extend(df)
+                pt.update(df)
+                remove(fp)
 
-            # join all the warning messages into one. Note that this info
-            # will be ignored if an exception is raised
-            if warns:
-                msg = '\n'.join(set(str(w.message) for w in warns))
-                status = 'warning'
+                # join all the warning messages into one. Note that this info
+                # will be ignored if an exception is raised
+                if warns:
+                    msg = '\n'.join(set(str(w.message) for w in warns))
+                    status = 'warning'
 
-    except Exception as e:
-        # Some error occurred while processing the sample template
-        # Show the error to the user so they can fix the template
-        status = 'error'
-        msg = str(e)
+        except Exception as e:
+            # Some error occurred while processing the sample template
+            # Show the error to the user so they can fix the template
+            status = 'error'
+            msg = str(e)
     return {'status': status,
             'message': msg,
             'file': prep_template}
@@ -254,12 +335,21 @@ def prep_template_delete_req(prep_id, user_id):
         The prep template to update
     user_id : str
         The current user object id
+
+    Returns
+    -------
+    dict of str
+        {'status': status,
+         'message': message}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-
     msg = ''
     status = 'success'
     try:
@@ -282,12 +372,51 @@ def prep_template_filepaths_get_req(prep_id, user_id):
         The current prep template id
     user_id : int
         The current user object id
+
+    Returns
+    -------
+    dict of objects
+        {'status': status,
+         'message': message,
+         'filepaths': [(filepath_id, filepath), ...]}
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
-    return prep.get_filepaths()
+    return {'status': 'success',
+            'message': '',
+            'filepaths': prep.get_filepaths()
+            }
+
+
+def ena_ontology_get_req():
+    """Returns all system and user defined terms for prep template type
+
+    Returns
+    -------
+    dict of objects
+        {'status': status,
+         'message': message,
+         'ENA': [term1, term2, ...],
+         'User': [userterm1, userterm2, ...]}
+    """
+    # Get all the ENA terms for the investigation type
+    ontology = Ontology(convert_to_id('ENA', 'ontology'))
+    ena_terms = sorted(ontology.terms)
+    # make "Other" last on the list
+    ena_terms.remove('Other')
+    ena_terms.append('Other')
+
+    return {'status': 'success',
+            'message': '',
+            'ENA': ena_terms,
+            'User': sorted(ontology.user_defined_terms)
+            }
 
 
 def prep_template_graph_get_req(prep_id, user_id):
@@ -295,8 +424,6 @@ def prep_template_graph_get_req(prep_id, user_id):
 
     Parameters
     ----------
-    study_id : int
-        Study the prep template belongs to
     prep_id : int
         Prep template ID to get graph for
     user_id : str
@@ -307,26 +434,27 @@ def prep_template_graph_get_req(prep_id, user_id):
     dict of lists of tuples
         A dictionary containing the edge list representation of the graph,
         and the node labels. Formatted as:
-        {'edge_list': [(0, 1), (0, 2)...],
+        {'status': status,
+         'message': message,
+         'edge_list': [(0, 1), (0, 2)...],
          'node_labels': [(0, 'label0'), (1, 'label1'), ...]}
-
-    Raises
-    ------
-    HTTPError
-        Raises code 400 if unknown direction passed
 
     Notes
     -----
     Nodes are identified by the corresponding Artifact ID.
     """
+    exists = _check_prep_template_exists(int(prep_id))
+    if exists['status'] != 'success':
+        return exists
+
     prep = PrepTemplate(int(prep_id))
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
     G = prep.artifact.descendants
-    node_labels = [(n.id, 'Artifact Name for %d - %s' % (n.id,
-                                                         n.artifact_type))
+    node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
                    for n in G.nodes()]
-    return {'edge_list': [(n.id, m.id) for n, m in G.edges()],
+    return {'status': 'success',
+            'message': '',
+            'edge_list': [(n.id, m.id) for n, m in G.edges()],
             'node_labels': node_labels}
-    return {'edge_list': G.edges(), 'node_labels': node_labels}

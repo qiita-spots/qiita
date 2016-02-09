@@ -14,7 +14,8 @@ from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (artifact_status_put_req,
                                           artifact_get_req,
-                                          artifact_delete_req)
+                                          artifact_delete_req,
+                                          artifact_graph_get_req)
 
 
 class ArtifactGraphAJAX(BaseHandler):
@@ -22,7 +23,8 @@ class ArtifactGraphAJAX(BaseHandler):
     def get(self):
         direction = self.get_argument('direction')
         artifact = to_int(self.get_argument('artifact_id'))
-        self.write(self.artifact_graph_proxy(artifact, direction))
+        self.write(artifact_graph_get_req(artifact, direction,
+                                          self.current_user.id))
 
 
 class ArtifactAJAX(BaseHandler):

@@ -556,10 +556,43 @@ class DBUtilTests(TestCase):
         exp = 'preprocessed_data/1_seqs.fna'
         self.assertEqual(obs, exp)
 
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp)
+        test = qdb.util.insert_filepaths(
+            [(fp, "raw_forward_seqs")], 1, "FASTQ", "filepath")[0]
+        with qdb.sql_connection.TRN:
+            sql = """INSERT INTO qiita.artifact_filepath
+                            (artifact_id, filepath_id)
+                        VALUES (%s, %s)"""
+            qdb.sql_connection.TRN.add(sql, [1, test])
+            qdb.sql_connection.TRN.execute()
+
+        obs = qdb.util.filepath_id_to_rel_path(test)
+        exp = 'FASTQ/1/%s' % basename(fp)
+        self.assertEqual(obs, exp)
+
     def test_filepath_ids_to_rel_paths(self):
-        obs = qdb.util.filepath_ids_to_rel_paths([1, 3])
+        fd, fp = mkstemp()
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        self.files_to_remove.append(fp)
+        test = qdb.util.insert_filepaths(
+            [(fp, "raw_forward_seqs")], 1, "FASTQ", "filepath")[0]
+        with qdb.sql_connection.TRN:
+            sql = """INSERT INTO qiita.artifact_filepath
+                            (artifact_id, filepath_id)
+                        VALUES (%s, %s)"""
+            qdb.sql_connection.TRN.add(sql, [1, test])
+            qdb.sql_connection.TRN.execute()
+
+        obs = qdb.util.filepath_ids_to_rel_paths([1, 3, test])
         exp = {1: 'raw_data/1_s_G1_L001_sequences.fastq.gz',
-               3: 'preprocessed_data/1_seqs.fna'}
+               3: 'preprocessed_data/1_seqs.fna',
+               test: 'FASTQ/1/%s' % basename(fp)}
 
         self.assertEqual(obs, exp)
 
@@ -624,6 +657,16 @@ class DBUtilTests(TestCase):
 
         # Run again with no system messages to make sure no errors
         qdb.util.clear_system_messages()
+
+    def test_supported_filepath_types(self):
+        obs = qdb.util.supported_filepath_types("FASTQ")
+        exp = [["raw_forward_seqs", True], ["raw_reverse_seqs", False],
+               ["raw_barcodes", True]]
+        self.assertItemsEqual(obs, exp)
+
+        obs = qdb.util.supported_filepath_types("BIOM")
+        exp = [["biom", True], ["directory", False], ["log", False]]
+        self.assertItemsEqual(obs, exp)
 
 
 class UtilTests(TestCase):

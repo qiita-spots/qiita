@@ -318,16 +318,15 @@ INSERT INTO qiita.study_prep_template (study_id, prep_template_id) VALUES (1, 1)
 -- Insert some artifacts
 --   1 (Raw fastq) ---> 2 (demultiplexed) ---> 4 (otu table)
 --                  \-> 3 (demultiplexed)
-INSERT INTO qiita.artifact (generated_timestamp, command_id, command_parameters,
-                            visibility_id, artifact_type_id, data_type_id,
-                            can_be_submitted_to_ebi, can_be_submitted_to_vamps)
-    VALUES ('Mon Oct 1 09:30:27 2012', NULL, NULL, 3, 3, 2, FALSE, FALSE),
-           ('Mon Oct 1 10:30:27 2012', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json,
-            3, 6, 2, TRUE, TRUE),
-           ('Mon Oct 1 11:30:27 2012', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json,
-            3, 6, 2, TRUE, TRUE),
-           ('Tue Oct 2 17:30:00 2012', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json,
-            3, 7, 2, FALSE, FALSE);
+INSERT INTO qiita.artifact (name, generated_timestamp, command_id, command_parameters,
+                            visibility_id, artifact_type_id, data_type_id)
+    VALUES ('Raw data 1', 'Mon Oct 1 09:30:27 2012', NULL, NULL, 3, 3, 2),
+           ('Demultiplexed 1', 'Mon Oct 1 10:30:27 2012', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json,
+            3, 6, 2),
+           ('Demultiplexed 2', 'Mon Oct 1 11:30:27 2012', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json,
+            3, 6, 2),
+           ('BIOM', 'Tue Oct 2 17:30:00 2012', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json,
+            3, 7, 2);
 
 -- Link the child artifacts with their parents artifacts
 INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
@@ -507,3 +506,8 @@ INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
            (1, 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
            (1, 'b72369f9-a886-4193-8d3d-f7b504168e75'),
            (2, 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');
+
+-- Add client ids and secrets
+
+INSERT INTO qiita.oauth_identifiers (client_id) VALUES ('DWelYzEYJYcZ4wlqUp0bHGXojrvZVz0CNBJvOqUKcrPQ5p4UqE');
+INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4', 'J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKhAmmCWZuabe0O5Mp28s1');
