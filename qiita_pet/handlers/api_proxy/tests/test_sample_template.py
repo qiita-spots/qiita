@@ -9,7 +9,6 @@ from unittest import TestCase, main
 from os.path import join, exists
 
 from qiita_core.util import qiita_test_checker
-from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_summary_get_req, sample_template_post_req,
@@ -21,34 +20,34 @@ from qiita_pet.handlers.api_proxy.sample_template import (
 
 @qiita_test_checker()
 class TestSampleAPI(TestCase):
-    info = {
-        "timeseries_type_id": 1,
-        "metadata_complete": True,
-        "mixs_compliant": True,
-        "number_samples_collected": 25,
-        "number_samples_promised": 28,
-        "study_alias": "FCM",
-        "study_description": "DESC",
-        "study_abstract": "ABS",
-        "emp_person_id": qdb.study.StudyPerson(2),
-        "principal_investigator_id": qdb.study.StudyPerson(3),
-        "lab_person_id": qdb.study.StudyPerson(1)
+    def setUp(self):
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "FCM",
+            "study_description": "DESC",
+            "study_abstract": "ABS",
+            "emp_person_id": qdb.study.StudyPerson(2),
+            "principal_investigator_id": qdb.study.StudyPerson(3),
+            "lab_person_id": qdb.study.StudyPerson(1)
         }
 
-    new_study = qdb.study.Study.create(
-        qdb.user.User('test@foo.bar'), "Some New Study", [1],
-        info)
+        self.new_study = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), "Some New Study", [1],
+            info)
 
-    def setUp(self):
-        fp = join(qiita_config.base_data_dir, 'uploads',
-                  str(self.new_study.id), 'uploaded_file.txt')
+        base_dir = qdb.util.get_mountpoint('uploads')[0][1]
+        fp = join(base_dir, str(self.new_study.id), 'uploaded_file.txt')
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
 
     def tearDown(self):
-        fp = join(qiita_config.base_data_dir, 'uploads', '1',
-                  'uploaded_file.txt')
+        base_dir = qdb.util.get_mountpoint('uploads')[0][1]
+        fp = join(base_dir, '1', 'uploaded_file.txt')
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
