@@ -21,6 +21,11 @@ function bootstrapAlert(message, severity, timeout){
   // prepend a space to separate the message from the '!' icon
   alertDiv.append(' '+message);
 
+  // prepend the "Need help" message
+  if (severity == 'warning' || severity == 'danger'){
+    alertDiv.append('<p style="text-align:center">Need help? Send us an <a href="mailto:qiita.help@gmail.com">email</a>.</p>');
+  }
+
   $('body').prepend(alertDiv);
 
   if(timeout > 0) {

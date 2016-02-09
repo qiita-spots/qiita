@@ -17,11 +17,175 @@ from qiita_db.study import Study
 from qiita_core.util import execute_as_transaction
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
                                              looks_like_qiime_mapping_file)
+from qiita_db.exceptions import QiitaDBColumnError
 
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
 from qiita_pet.util import convert_text_html
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
+
+
+def _check_sample_template_exists(samp_id):
+    """Make sure a sample template exists in the system
+
+    Parameters
+    ----------
+    samp_id : int or str castable to int
+        SampleTemplate id to check
+
+    Returns
+    -------
+    dict
+        {'status': status,
+         'message': msg}
+    """
+    if not SampleTemplate.exists(int(samp_id)):
+        return {'status': 'error',
+                'message': 'Sample template %d does not exist' % int(samp_id)
+                }
+    return {'status': 'success',
+            'message': ''}
+
+
+def sample_template_get_req(samp_id, user_id):
+    """Gets the json of the full sample template
+
+    Parameters
+    ----------
+    samp_id : int or int castable string
+        SampleTemplate id to get info for
+    user_id : str
+        User requesting the sample template info
+
+    Returns
+    -------
+    dict of objects
+        {'status': status,
+         'message': msg,
+         'template': dict of {str: {str: object, ...}, ...}
+
+        template is dictionary where the keys access_error the metadata samples
+        and the values are a dictionary of column and value.
+        Format {sample: {column: value, ...}, ...}
+    """
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
+    access_error = check_access(int(samp_id), user_id)
+    if access_error:
+        return access_error
+
+    template = SampleTemplate(int(samp_id))
+    access_error = check_access(template.study_id, user_id)
+    if access_error:
+        return access_error
+    df = template.to_dataframe()
+    return {'status': 'success',
+            'message': '',
+            'template': df.to_dict(orient='index')}
+
+
+def sample_template_samples_get_req(samp_id, user_id):
+    """Returns list of samples in the sample template
+
+    Parameters
+    ----------
+    samp_id : int or str typecastable to int
+        SampleTemplate id to get info for
+    user_id : str
+        User requesting the sample template info
+
+    Returns
+    -------
+    dict
+        Returns summary information in the form
+        {'status': str,
+         'message': str,
+         'samples': list of str}
+         samples is list of samples in the template
+    """
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
+
+    return {'status': 'success',
+            'message': '',
+            'samples': sorted(x for x in SampleTemplate(int(samp_id)))
+            }
+
+
+def sample_template_meta_cats_get_req(samp_id, user_id):
+    """Returns list of metadata categories in the sample template
+
+    Parameters
+    ----------
+    samp_id : int or str typecastable to int
+        SampleTemplate id to get info for
+    user_id : str
+        User requesting the sample template info
+
+    Returns
+    -------
+    dict
+        Returns information in the form
+        {'status': str,
+         'message': str,
+         'categories': list of str}
+         samples is list of metadata categories in the template
+    """
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
+
+    return {'status': 'success',
+            'message': '',
+            'categories': sorted(SampleTemplate(int(samp_id)).categories())
+            }
+
+
+def sample_template_category_get_req(category, samp_id, user_id):
+    """Returns dict of values for each sample in the given category
+
+    Parameters
+    ----------
+    category : str
+        Metadata category to get values for
+    samp_id : int or str typecastable to int
+        SampleTemplate id to get info for
+    user_id : str
+        User requesting the sample template info
+
+    Returns
+    -------
+    dict
+        Returns information in the form
+        {'status': str,
+         'message': str,
+         'values': dict of {str: object}}
+    """
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
+    access_error = check_access(samp_id, user_id)
+    if access_error:
+        return access_error
+
+    st = SampleTemplate(int(samp_id))
+    try:
+        values = st.get_category(category)
+    except QiitaDBColumnError:
+        return {'status': 'error',
+                'message': 'Category %s does not exist in sample template' %
+                category}
+    return {'status': 'success',
+            'message': '',
+            'values': values}
 
 
 def sample_template_summary_get_req(samp_id, user_id):
@@ -49,6 +213,9 @@ def sample_template_summary_get_req(samp_id, user_id):
         Format {num_samples: value,
                 category: [(val1, count1), (val2, count2), ...], ...}
     """
+    exists = _check_sample_template_exists(int(samp_id))
+    if exists['status'] != 'success':
+        return exists
     access_error = check_access(samp_id, user_id)
     if access_error:
         return access_error
@@ -90,11 +257,6 @@ def sample_template_post_req(study_id, user_id, data_type,
         Data type for the sample template
     sample_template : str
         filename to use for creation
-
-    Raises
-    ------
-    HTTPError
-        If the sample template file does not exists
 
     Returns
     -------
@@ -178,9 +340,13 @@ def sample_template_put_req(study_id, user_id, sample_template):
     message has the warnings or errors
     file has the file name
     """
+    exists = _check_sample_template_exists(int(study_id))
+    if exists['status'] != 'success':
+        return exists
     access_error = check_access(int(study_id), user_id)
     if access_error:
         return access_error
+
     fp_rsp = check_fp(study_id, sample_template)
     if fp_rsp['status'] != 'success':
         # Unknown filepath, so return the error message
@@ -232,9 +398,13 @@ def sample_template_delete_req(study_id, user_id):
     status can be success, warning, or error depending on result
     message has the warnings or errors
     """
+    exists = _check_sample_template_exists(int(study_id))
+    if exists['status'] != 'success':
+        return exists
     access_error = check_access(int(study_id), user_id)
     if access_error:
         return access_error
+
     try:
         SampleTemplate.delete(int(study_id))
     except Exception as e:
@@ -265,6 +435,9 @@ def sample_template_filepaths_get_req(study_id, user_id):
         filepaths is a list of tuple of int and str
         All files in the sample template, as [(id, URL), ...]
     """
+    exists = _check_sample_template_exists(int(study_id))
+    if exists['status'] != 'success':
+        return exists
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error

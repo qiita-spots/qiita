@@ -1320,6 +1320,31 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
                 raise e
 
+    def get_category(self, category):
+        """Returns the values of all samples for the given category
+
+        Parameters
+        ----------
+        category : str
+            Metadata category to get information for
+
+        Returns
+        -------
+        dict
+            Sample metadata for the category in the form {sample_id: value}
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If category is not part of the template
+        """
+        with qdb.sql_connection.TRN:
+            qdb.util.check_table_cols([category], self._table_name(self._id))
+            sql = 'SELECT sample_id, {0} FROM qiita.{1}'.format(
+                category, self._table_name(self._id))
+            qdb.sql_connection.TRN.add(sql)
+            return dict(qdb.sql_connection.TRN.execute_fetchindex())
+
     def check_restrictions(self, restrictions):
         """Checks if the template fulfills the restrictions
 

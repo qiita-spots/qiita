@@ -43,7 +43,7 @@ class PrepTemplateAJAX(BaseHandler):
         download = prep_template_filepaths_get_req(
             study_id, self.current_user.id)['filepaths'][-1]
         dl_path = download_link_or_path(
-            is_local, download[0], download[1], "Download prep information")
+            is_local, download[1], download[0], "Download prep information")
         ontology = ena_ontology_get_req()
 
         stats = prep_template_summary_get_req(prep_id, self.current_user.id)

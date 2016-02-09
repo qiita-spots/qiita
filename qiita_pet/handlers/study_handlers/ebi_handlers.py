@@ -12,11 +12,8 @@ from tornado.web import authenticated, HTTPError
 from qiita_ware.context import submit
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_ebi
-from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.metadata_template.constants import (SAMPLE_TEMPLATE_COLUMNS,
                                                   PREP_TEMPLATE_COLUMNS)
-from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.artifact import Artifact
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -39,14 +36,26 @@ class EBISubmitHandler(BaseHandler):
                 raise HTTPError(403, "No permissions of admin, "
                                      "get/EBISubmitHandler: %s!" % user.id)
 
-        prep_template = PrepTemplate(preprocessed_data.prep_template)
-        sample_template = SampleTemplate(preprocessed_data.study)
-        study = Study(preprocessed_data.study)
+        prep_templates = preprocessed_data.prep_templates
+        allow_submission = len(prep_templates) == 1
+        msg_list = ["Submission to EBI disabled:"]
+        if not allow_submission:
+            msg_list.append(
+                "Only artifacts with a single prep template can be submitted")
+        # If allow_submission is already false, we technically don't need to
+        # do the following work. However, there is no clean way to fix this
+        # using the current structure, so we perform the work as we
+        # did not fail.
+        # We currently support only one prep template for submission, so
+        # grabbing the first one
+        prep_template = prep_templates[0]
+        study = preprocessed_data.study
+        sample_template = study.sample_template
         stats = [('Number of samples', len(prep_template)),
                  ('Number of metadata headers',
                   len(sample_template.categories()))]
 
-        demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
+        demux = [path for _, path, ftype in preprocessed_data.filepaths
                  if ftype == 'preprocessed_demux']
         demux_length = len(demux)
 
@@ -69,10 +78,9 @@ class EBISubmitHandler(BaseHandler):
         st_missing_cols = sample_template.check_restrictions(
             [SAMPLE_TEMPLATE_COLUMNS['EBI']])
         allow_submission = (len(pt_missing_cols) == 0 and
-                            len(st_missing_cols) == 0)
+                            len(st_missing_cols) == 0 and allow_submission)
 
         if not allow_submission:
-            msg_list = ["Submission to EBI disabled due to missing columns:"]
             if len(pt_missing_cols) > 0:
                 msg_list.append("Columns missing in prep template: %s"
                                 % ', '.join(pt_missing_cols))
@@ -111,8 +119,8 @@ class EBISubmitHandler(BaseHandler):
 
         msg = ''
         msg_level = 'success'
-        study_id = Artifact(preprocessed_data_id).study
-        study = Study(study_id)
+        study = Artifact(preprocessed_data_id).study
+        study_id = study.id
         state = study.ebi_submission_status
         if state == 'submitting':
             msg = "Cannot resubmit! Current state is: %s" % state
