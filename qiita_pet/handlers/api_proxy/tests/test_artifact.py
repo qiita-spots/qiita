@@ -6,22 +6,28 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
-from os.path import join, exists
 
+from os.path import join, exists
 import pandas as pd
+from datetime import datetime
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import qiita_config
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
 from qiita_db.util import get_count, get_mountpoint
+from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.api_proxy.artifact import (
-    artifact_graph_get_req, artifact_types_get_req, artifact_post_req)
+    artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
+    artifact_delete_req, artifact_types_get_req, artifact_post_req)
 
 
 @qiita_test_checker()
 class TestArtifactAPI(TestCase):
     def tearDown(self):
+        Artifact(1).visibility = 'private'
+
         uploads_path = get_mountpoint('uploads')[0][1]
         fp = join(uploads_path, 'uploaded_file.txt')
         if not exists(fp):
@@ -32,6 +38,50 @@ class TestArtifactAPI(TestCase):
         self.update_fp = join(uploads_path, 'update.txt')
         with open(self.update_fp, 'w') as f:
             f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+
+    def test_artifact_get_req(self):
+        obs = artifact_get_req(1, 'test@foo.bar')
+        exp = {'is_submitted_to_vamps': False,
+               'data_type': '18S',
+               'can_be_submitted_to_vamps': False,
+               'can_be_submitted_to_ebi': False,
+               'timestamp': datetime(2012, 10, 1, 9, 30, 27),
+               'prep_templates': [1],
+               'visibility': 'private',
+               'study': 1,
+               'processing_parameters': None,
+               'ebi_run_accessions': None,
+               'parents': [],
+               'filepaths': [
+                   (1, join(qiita_config.base_data_dir,
+                            'raw_data/1_s_G1_L001_sequences.fastq.gz'),
+                    'raw_forward_seqs'),
+                   (2, join(qiita_config.base_data_dir,
+                            'raw_data/1_s_G1_L001_sequences_barcodes.'
+                            'fastq.gz'),
+                    'raw_barcodes')],
+               'artifact_type': 'FASTQ'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_get_req_no_access(self):
+        obs = artifact_get_req(1, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_delete_req(self):
+        obs = artifact_delete_req(3, 'test@foo.bar')
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(obs, exp)
+
+        with self.assertRaises(QiitaDBUnknownIDError):
+            Artifact(3)
+
+    def test_artifact_delete_req_no_access(self):
+        obs = artifact_delete_req(3, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
 
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to
@@ -63,6 +113,36 @@ class TestArtifactAPI(TestCase):
                'message': 'File does not exist: NOEXIST'}
         self.assertEqual(obs, exp)
 
+    def test_artifact_status_put_req(self):
+        obs = artifact_status_put_req(1, 'test@foo.bar', 'sandbox')
+        exp = {'status': 'success',
+               'message': 'Artifact visibility changed to sandbox'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_status_put_req_private(self):
+        obs = artifact_status_put_req(1, 'admin@foo.bar', 'private')
+        exp = {'status': 'success',
+               'message': 'Artifact visibility changed to private'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_status_put_req_private_bad_permissions(self):
+        obs = artifact_status_put_req(1, 'test@foo.bar', 'private')
+        exp = {'status': 'error',
+               'message': 'User does not have permissions to approve change'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_status_put_req_no_access(self):
+        obs = artifact_status_put_req(1, 'demo@microbio.me', 'sandbox')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_status_put_req_unknown_status(self):
+        obs = artifact_status_put_req(1, 'test@foo.bar', 'BADSTAT')
+        exp = {'status': 'error',
+               'message': 'Unknown visiblity value: BADSTAT'}
+        self.assertEqual(obs, exp)
+
     def test_artifact_graph_get_req_ancestors(self):
         obs = artifact_graph_get_req(1, 'ancestors', 'test@foo.bar')
         exp = {'status': 'success',
@@ -75,21 +155,15 @@ class TestArtifactAPI(TestCase):
         obs = artifact_graph_get_req(1, 'descendants', 'test@foo.bar')
         exp = {'status': 'success',
                'message': '',
-               'edge_list': [(1, 3), (1, 2), (2, 4)],
                'node_labels': [(1, 'Raw data 1 - FASTQ'),
                                (3, 'Demultiplexed 2 - Demultiplexed'),
                                (2, 'Demultiplexed 1 - Demultiplexed'),
-                               (4, 'BIOM - BIOM')]}
-        self.assertEqual(obs, exp)
-
-    def test_artifact_graph_get_req_bad(self):
-        obs = artifact_graph_get_req(1, 'UNKNOWN', 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': 'Unknown directon UNKNOWN'}
+                               (4, 'BIOM - BIOM')],
+               'edge_list': [(1, 3), (1, 2), (2, 4)]}
         self.assertEqual(obs, exp)
 
     def test_artifact_graph_get_req_no_access(self):
-        obs = artifact_graph_get_req(1, 'descendants', 'demo@microbio.me')
+        obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
@@ -105,6 +179,11 @@ class TestArtifactAPI(TestCase):
                          ['FASTQ', None],
                          ['SFF', None],
                          ['per_sample_FASTQ', None]]}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_graph_get_req_bad_direction(self):
+        obs = artifact_graph_get_req(1, 'WRONG', 'test@foo.bar')
+        exp = {'status': 'error', 'message': 'Unknown directon WRONG'}
         self.assertEqual(obs, exp)
 
 

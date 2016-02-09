@@ -16,14 +16,15 @@ from .vamps_handlers import VAMPSHandler
 from .base import StudyIndexHandler, StudyBaseInfoAJAX, StudyDeleteAjax
 from .prep_template import (
     PrepTemplateGraphAJAX, PrepTemplateAJAX, PrepFilesHandler)
-from .artifact import ArtifactGraphAJAX, NewArtifactHandler
+from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
+                       ArtifactAdminAJAX, ArtifactAJAX)
 from .sample_template import SampleTemplateAJAX, SampleAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyEditHandler', 'CreateStudyAJAX', 'StudyDescriptionHandler',
            'PreprocessingSummaryHandler', 'EBISubmitHandler',
            'MetadataSummaryHandler', 'VAMPSHandler', 'SearchStudiesAJAX',
-           'PrepTemplateGraphAJAX', 'ArtifactGraphAJAX',
+           'PrepTemplateGraphAJAX', 'ArtifactGraphAJAX', 'ArtifactAdminAJAX',
            'StudyIndexHandler', 'StudyBaseInfoAJAX', 'SampleTemplateAJAX',
            'NewArtifactHandler', 'PrepFilesHandler', 'PrepTemplateAJAX',
-           'SampleAJAX', 'StudyDeleteAjax']
+           'SampleAJAX', 'StudyDeleteAjax', 'ArtifactAJAX']
