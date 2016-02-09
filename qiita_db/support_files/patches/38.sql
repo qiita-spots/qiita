@@ -123,7 +123,9 @@ DECLARE
 	in_slq_param_id		bigint;
 	in_sl_param_id		bigint;
 	in_po_param_id		bigint;
+	dflt_slq_id			bigint;
 	dflt_sl_id			bigint;
+	dflt_per_sample_id	bigint;
 	dflt_po_id			bigint;
 BEGIN
 	-- Add the artifact type information for the input parameters for the commands
@@ -161,35 +163,59 @@ BEGIN
 
 
 	-- Add the default workflow for the target gene pipeline.
-	-- Currently, there is a single default workflow which is running
-	-- split libraries + OTU picking. Since we don't know which default parameter
-	-- set may be available at the specific time the patches are applied, we just
-	-- choose the one with lowest ID for the given commands. Note that we do know
-	-- the command id because they're inserted in patch 33.sql
+	-- We are going to create three different default workflows for the
+	-- target gene plugin:
+	--   1) FASTQ upstream workflow: split_libraries_fastq.py + OTU picking
+	--   2) FASTA upstream workflow: split_libraries.py + OTU picking
+	--   3) Per sample FASTQ upstream workflow:
+	--      split_libraries_fastq.py + OTU picking using per sample fastq parameters
+	-- In order to choose the default parameters set, we are going to choose
+	-- the one with minimum id. The reason for this is that in the live system
+	-- there are default parameter set that were added manually, so we don't
+	-- know the ids for those parameter set. Note that we do know
+	-- the command id because they're inserted in patch 33.sql, and that is
+	-- the only way of adding commands at this point.
 
 	-- Insert default workflow
 	INSERT INTO qiita.default_workflow (software_id, name)
-		VALUES (1, 'FASTQ upstream workflow (demux + OTU picking)');
+		VALUES (1, 'FASTQ upstream workflow'),
+			   (1, 'FASTA upstream workflow'),
+			   (1, 'Per sample FASTQ upstream workflow');
 
-	-- We need 2 nodes
+	-- Retrieve all the ids of the default parameter set that we need
 	SELECT min(default_parameter_set_id)
 		FROM qiita.default_parameter_set
 		WHERE command_id = 1
+		INTO dflt_slq_id;
+
+	SELECT min(default_parameter_set_id)
+		FROM qiita.default_parameter_set
+		WHERE command_id = 2
 		INTO dflt_sl_id;
+
+	SELECT min(default_parameter_set_id)
+		FROM qiita.default_parameter_set
+		WHERE command_id = 1 AND parameter_set->>'barcode_type' = 'not-barcoded'
+		INTO dflt_per_sample_id;
 
 	SELECT min(default_parameter_set_id)
 		FROM qiita.default_parameter_set
 		WHERE command_id = 3
 		INTO dflt_po_id;
 
+	-- We need 2 nodes per workflow -> 6 nodes
 	INSERT INTO qiita.default_workflow_node (default_workflow_id, command_id, default_parameter_set_id)
-		VALUES (1, 1, dflt_sl_id), (1, 3, dflt_po_id);
+		VALUES (1, 1, dflt_slq_id), (1, 3, dflt_po_id),
+			   (2, 2, dflt_sl_id), (2, 3, dflt_po_id),
+			   (3, 1, dflt_per_sample_id), (3, 3, dflt_po_id);
 
-	-- We need 1 edge
+	-- We need 1 edge per workflow -> 3 edges
 	INSERT INTO qiita.default_workflow_edge (parent_id, child_id)
-		VALUES (1, 2);
+		VALUES (1, 2), (3, 4), (5, 6);
 
 	INSERT INTO qiita.default_workflow_edge_connections (default_workflow_edge_id, parent_output_id, child_input_id)
-		VALUES (1, 1, in_po_param_id);
+		VALUES (1, 1, in_po_param_id),
+			   (2, 2, in_po_param_id),
+			   (3, 1, in_po_param_id);
 
 END $do$

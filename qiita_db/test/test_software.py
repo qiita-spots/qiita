@@ -497,15 +497,16 @@ class DefaultWorkflowEdgeTests(TestCase):
 
 @qiita_test_checker()
 class DefaultWorkflowTests(TestCase):
-    def setUp(self):
-        self.tester = qdb.software.DefaultWorkflow(1)
-
     def test_name(self):
-        self.assertEqual(self.tester.name,
-                         "FASTQ upstream workflow (demux + OTU picking)")
+        self.assertEqual(qdb.software.DefaultWorkflow(1).name,
+                         "FASTQ upstream workflow")
+        self.assertEqual(qdb.software.DefaultWorkflow(2).name,
+                         "FASTA upstream workflow")
+        self.assertEqual(qdb.software.DefaultWorkflow(3).name,
+                         "Per sample FASTQ upstream workflow")
 
     def test_graph(self):
-        obs = self.tester.graph
+        obs = qdb.software.DefaultWorkflow(1).graph
         self.assertTrue(isinstance(obs, nx.DiGraph))
         exp = [qdb.software.DefaultWorkflowNode(1),
                qdb.software.DefaultWorkflowNode(2)]
@@ -513,6 +514,16 @@ class DefaultWorkflowTests(TestCase):
         exp = [(qdb.software.DefaultWorkflowNode(1),
                 qdb.software.DefaultWorkflowNode(2),
                 {'connections': qdb.software.DefaultWorkflowEdge(1)})]
+        self.assertItemsEqual(obs.edges(data=True), exp)
+
+        obs = qdb.software.DefaultWorkflow(2).graph
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        exp = [qdb.software.DefaultWorkflowNode(3),
+               qdb.software.DefaultWorkflowNode(4)]
+        self.assertItemsEqual(obs.nodes(), exp)
+        exp = [(qdb.software.DefaultWorkflowNode(3),
+                qdb.software.DefaultWorkflowNode(4),
+                {'connections': qdb.software.DefaultWorkflowEdge(2)})]
         self.assertItemsEqual(obs.edges(data=True), exp)
 
 
