@@ -1,8 +1,11 @@
 <script type="text/javascript">
+  //the network object itself, + nodes list and edge list
   var network = null;
   var nodes = new vis.DataSet([{id: 1, label: "{{artifact_type}}", group: 'type'}]);
   var edges = new vis.DataSet();
+  //current commands available for selected nodes
   var commands = null;
+  //currently selected nodes
   var curr_nodes = [1];
 
   function add_command(type_nodes) {
