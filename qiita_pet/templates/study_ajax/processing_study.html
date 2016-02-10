@@ -3,7 +3,7 @@
   var nodes = new vis.DataSet([{id: 1, label: "{{artifact_type}}", group: 'type'}]);
   var edges = new vis.DataSet();
   var commands = null;
-  var curr_nodes = null;
+  var curr_nodes = [1];
 
   function add_command(type_nodes) {
     var command_info = commands[$("#command").val()];
@@ -152,6 +152,7 @@
             else { $("#network-info").empty(); }
           }
         });
+    load_filetype([1]);
   });
 </script>
 
