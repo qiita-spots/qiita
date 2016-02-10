@@ -25,6 +25,7 @@ Methods
     convert_from_id
     convert_to_id
     get_environmental_packages
+    get_visibilities
     purge_filepaths
     move_filepaths_to_upload_folder
     move_upload_files_to_trash
@@ -976,6 +977,19 @@ def get_environmental_packages():
     """
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT * FROM qiita.environmental_package")
+        return qdb.sql_connection.TRN.execute_fetchindex()
+
+
+def get_visibilities():
+    """Get the list of available visibilities for artifacts
+
+    Returns
+    -------
+    list of str
+        The available visibilities
+    """
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT visibility FROM qiita.visibility")
         return qdb.sql_connection.TRN.execute_fetchindex()
 
 

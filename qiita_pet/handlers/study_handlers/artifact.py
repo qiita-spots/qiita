@@ -30,7 +30,8 @@ class ArtifactGraphAJAX(BaseHandler):
 class ArtifactAJAX(BaseHandler):
     def get(self):
         artifact_id = to_int(self.get_argument('artifact_id'))
-        self.write('TITLE FOR ARTIFACT %d' % artifact_id)
+        name = artifact_get_req(artifact_id)['name']
+        self.write(name)
 
     def post(self):
         artifact_id = to_int(self.get_argument('artifact_id'))

@@ -3,6 +3,7 @@
 <link rel="stylesheet" src="/static/vendor/css/vis.css" type="text/css">
 <script type="text/javascript" src="/static/vendor/js/vis.js"></script>
 <script type="text/javascript">
+  // Track what prep template is currently being shown.
   var curr_prep = -1;
   function togglegraphs(id) {
     if($("#study-prep-graph-row").css('display') == 'none' ) {
@@ -145,11 +146,10 @@
   function set_admin_visibility(visibility, aid) {
     $.post('/admin/artifact/', {artifact_id: +aid, visibility: visibility})
       .done(function ( data ) {
-        if(data["status"] == "error") {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
-        } else {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "info", 4000);
-        }
+        var status = "info"
+        if(data["status"] == "error") { status = "danger" }
+        //Show for 4 seconds (4000 ms), then remove
+        bootstrapAlert(data.message.replace("\n", "<br/>"), status, 4000);
         //update buttons to match new status
         $.get("/admin/artifact/", {artifact_id: +aid })
           .done(function ( data ) {
