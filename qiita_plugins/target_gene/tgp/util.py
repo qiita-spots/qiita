@@ -128,11 +128,9 @@ def format_payload(success, error_msg=None, artifacts_info=None):
     error_msg : str, optional
         If `success` is False, ther error message to include in the optional.
         If `success` is True, it is ignored
-    artifacts_info : list of (str, list of (str, str), bool, bool)
-        For each artifact that needs to be created, the artifact type,
-        the list of files attached to the artifact, a boolean indicating if
-        the artifact can be submitted to ebi and a boolean indicating if the
-        artifact can be submitted to vamps
+    artifacts_info : list of (str, str, list of (str, str))
+        For each artifact that needs to be created, the command output name,
+        the artifact type and the list of files attached to the artifact.
 
     Returns
     -------
@@ -140,15 +138,14 @@ def format_payload(success, error_msg=None, artifacts_info=None):
         Format:
         {'success': bool,
          'error': str,
-         'artifacts': list of {'artifact_type': str,
-                               'filepaths': list of (str, str)}}
+         'artifacts': dict of {str: {'artifact_type': str,
+                                     'filepaths': list of (str, str)}}
     """
     if success:
         error_msg = ''
-        artifacts = [
-            {'artifact_type': atype,
-             'filepaths': filepaths}
-            for atype, filepaths in artifacts_info]
+        artifacts = {out_name: {'artifact_type': atype,
+                                'filepaths': filepaths}
+                     for out_name, atype, filepaths in artifacts_info}
     else:
         artifacts = None
 
