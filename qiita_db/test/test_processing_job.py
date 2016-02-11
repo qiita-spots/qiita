@@ -8,6 +8,9 @@
 
 from unittest import TestCase, main
 from datetime import datetime
+from os.path import exists
+from os import remove, close
+from tempfile import mkstemp
 
 import qiita_db as qdb
 from qiita_core.util import qiita_test_checker
@@ -24,6 +27,12 @@ class ProcessingJobTest(TestCase):
             "b72369f9-a886-4193-8d3d-f7b504168e75")
         self.tester4 = qdb.processing_job.ProcessingJob(
             "d19f76ee-274e-4c1b-b3a2-a12d73507c55")
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                remove(fp)
 
     def test_exists(self):
         self.assertTrue(qdb.processing_job.ProcessingJob.exists(
@@ -132,23 +141,53 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(self.tester3.status, 'success')
         self.assertEqual(self.tester4.status, 'error')
 
-    def test_status_setter(self):
+    def test_set_status(self):
         self.assertEqual(self.tester1.status, 'queued')
-        self.tester1.status = 'running'
+        self.tester1._set_status('running')
         self.assertEqual(self.tester1.status, 'running')
-        self.tester1.status = 'error'
+        self.tester1._set_status('error')
         self.assertEqual(self.tester1.status, 'error')
-        self.tester1.status = 'running'
+        self.tester1._set_status('running')
         self.assertEqual(self.tester1.status, 'running')
-        self.tester1.status = 'success'
+        self.tester1._set_status('success')
         self.assertEqual(self.tester1.status, 'success')
 
-    def test_status_setter_error(self):
+    def test_set_status_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            self.tester2.status = 'queued'
+            self.tester2._set_status('queued')
 
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            self.tester3.status = 'running'
+            self.tester3._set_status('running')
+
+    def test_complete_success(self):
+        fd, fp = mkstemp(suffix='_table.biom')
+        self._clean_up_files.append(fp)
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+
+        exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
+        artifacts_data = {'OTU table': {'filepaths': [(fp, 'biom')],
+                                        'artifact_type': 'BIOM'}}
+        self.tester2.complete(True, artifacts_data=artifacts_data)
+        self.assertTrue(self.tester2.status, 'success')
+        self.assertEqual(qdb.util.get_count('qiita.artifact'),
+                         exp_artifact_count)
+        self._clean_up_files.extend(
+            [afp for _, afp, _ in
+                qdb.artifact.Artifact(exp_artifact_count).filepaths])
+
+    def test_complete_failure(self):
+        self.tester2.complete(False, error="Job failure")
+        self.assertEqual(self.tester2.status, 'error')
+        self.assertEqual(self.tester2.log,
+                         qdb.logger.LogEntry.newest_records(numrecords=1)[0])
+        self.assertEqual(self.tester2.log.msg, 'Job failure')
+
+    def test_complete_error(self):
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            self.tester1.complete(False, error="Job failure")
 
     def test_log(self):
         self.assertIsNone(self.tester1.log)
@@ -156,16 +195,16 @@ class ProcessingJobTest(TestCase):
         self.assertIsNone(self.tester3.log)
         self.assertEqual(self.tester4.log, qdb.logger.LogEntry(1))
 
-    def test_log_setter(self):
-        self.tester2.status = 'error'
+    def test_set_log(self):
+        self.tester2._set_status('error')
         exp = qdb.logger.LogEntry(1)
-        self.tester2.log = exp
+        self.tester2._set_log(exp)
         self.assertEqual(self.tester2.log, exp)
 
-    def test_log_setter_error(self):
+    def test_set_log_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
-            self.tester2.log = qdb.logger.LogEntry(1)
+            self.tester2._set_log(qdb.logger.LogEntry(1))
 
     def test_heartbeat(self):
         self.assertIsNone(self.tester1.heartbeat)
@@ -176,12 +215,22 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(self.tester4.heartbeat,
                          datetime(2015, 11, 22, 21, 30, 00))
 
-    def test_heartbeat_setter(self):
-        self.assertEqual(self.tester2.heartbeat,
-                         datetime(2015, 11, 22, 21, 00, 00))
-        exp = datetime(2015, 11, 22, 21, 00, 10)
-        self.tester2.heartbeat = exp
-        self.assertEqual(self.tester2.heartbeat, exp)
+    def test_execute_heartbeat(self):
+        before = datetime.now()
+        self.tester2.execute_heartbeat()
+        self.assertTrue(before < self.tester2.heartbeat < datetime.now())
+
+    def test_execute_heartbeat_queued(self):
+        before = datetime.now()
+        self.assertEqual(self.tester1.status, 'queued')
+        self.tester1.execute_heartbeat()
+        self.assertTrue(before < self.tester1.heartbeat < datetime.now())
+        self.assertEqual(self.tester1.status, 'running')
+
+    def test_execute_heartbeat_error(self):
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            self.tester3.execute_heartbeat()
 
     def test_step(self):
         self.assertIsNone(self.tester1.step)

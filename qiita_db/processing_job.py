@@ -7,6 +7,9 @@
 # -----------------------------------------------------------------------------
 
 from uuid import UUID
+from datetime import datetime
+
+from future.utils import viewitems
 
 import qiita_db as qdb
 
@@ -186,8 +189,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    @status.setter
-    def status(self, value):
+    def _set_status(self, value):
         """Sets the status of the job
 
         Parameters
@@ -219,6 +221,60 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [new_status, self.id])
             qdb.sql_connection.TRN.execute()
 
+    def complete(self, success, artifacts_data=None, error=None):
+        """Completes the job, either with a success or error status
+
+        Parameters
+        ----------
+        success : bool
+            Whether the job has completed successfully or not
+        artifacts_data : dict of dicts
+            The generated artifact information, keyed by output name.
+            The format of each of the internal dictionaries must be
+            {'filepaths': list of (str, str), 'artifact_type': str}
+            where `filepaths` contains the list of filepaths and filepath types
+            for the artifact and `artifact_type` the type of the artifact
+        error : str, optional
+            If the job was not successful, the error message
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBOperationNotPermittedError
+            If the job is not in running state
+        """
+        with qdb.sql_connection.TRN:
+            if self.status != 'running':
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Can't complete job: not in a running state")
+            if success:
+                if artifacts_data:
+                    artifact_ids = []
+                    for out_name, a_data in viewitems(artifacts_data):
+                        filepaths = a_data['filepaths']
+                        atype = a_data['artifact_type']
+                        parents = self.input_artifacts
+                        params = self.parameters
+                        a = qdb.artifact.Artifact.create(
+                            filepaths, atype, parents=parents,
+                            processing_parameters=params)
+                        cmd_out_id = qdb.util.convert_to_id(
+                            out_name, "command_output", "name")
+                        artifact_ids.append((cmd_out_id, a.id))
+                    if artifact_ids:
+                        sql = """INSERT INTO
+                                    qiita.artifact_output_processing_job
+                                    (artifact_id, processing_job_id,
+                                     command_output_id)
+                                 VALUES (%s, %s, %s)"""
+                        sql_params = [[aid, self.id, out_id]
+                                      for out_id, aid in artifact_ids]
+                        qdb.sql_connection.TRN.add(sql, sql_params, many=True)
+                self._set_status('success')
+            else:
+                log = qdb.logger.LogEntry.create('Runtime', error)
+                self._set_status('error')
+                self._set_log(log)
+
     @property
     def log(self):
         """The log entry attached to the job if it failed
@@ -240,8 +296,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 res = qdb.logger.LogEntry(log_id)
         return res
 
-    @log.setter
-    def log(self, value):
+    def _set_log(self, value):
         """Attaches a log entry to the job
 
         Parameters
@@ -281,20 +336,28 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    @heartbeat.setter
-    def heartbeat(self, value):
-        """Sets the timestamp for the last received heartbeat
+    def execute_heartbeat(self):
+        """Updates the heartbeat of the job
 
-        Parameters
-        ----------
-        value : datetime
-            The new timestamp
+        In case that the job is in `queued` status, it changes the status to
+        `running`.
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the job is already completed
         """
         with qdb.sql_connection.TRN:
+            status = self.status
+            if status == 'queued':
+                self._set_status('running')
+            elif status != 'running':
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Can't execute heartbeat on job: already completed")
             sql = """UPDATE qiita.processing_job
                      SET heartbeat = %s
                      WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value, self.id])
+            qdb.sql_connection.TRN.add(sql, [datetime.now(), self.id])
             qdb.sql_connection.TRN.execute()
 
     @property
