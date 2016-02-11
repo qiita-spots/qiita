@@ -162,15 +162,13 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
     user = User(str(user_id))
     # Set the approval to private if needs approval and admin
     if visibility == 'private':
-        if all([qiita_config.require_approval, user.level == 'admin']):
+        status = 'success'
+        msg = 'Artifact visibility changed to private'
+        if not qiita_config.require_approval:
             pd.visibility = 'private'
-            status = 'success'
-            msg = 'Artifact visibility changed to private'
         # Set the approval to private if approval not required
-        elif not qiita_config.require_approval:
+        elif user.level == 'admin':
             pd.visibility = 'private'
-            status = 'success'
-            msg = 'Artifact visibility changed to private'
         # Trying to set approval without admin privileges
         else:
             status = 'error'

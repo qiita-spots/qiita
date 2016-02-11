@@ -990,7 +990,7 @@ def get_visibilities():
     """
     with qdb.sql_connection.TRN:
         qdb.sql_connection.TRN.add("SELECT visibility FROM qiita.visibility")
-        return qdb.sql_connection.TRN.execute_fetchindex()
+        return qdb.sql_connection.TRN.execute_fetchflatten()
 
 
 def get_timeseries_types():
