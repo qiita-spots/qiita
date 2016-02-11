@@ -120,15 +120,15 @@ ALTER TABLE qiita.parent_processing_job ADD CONSTRAINT fk_parent_processing_job_
 -- and be 100% sure that we are connecting the jobs and the artifacts correctly
 CREATE TABLE qiita.artifact_output_processing_job (
 	artifact_id          bigint  NOT NULL,
-	processing_job_id    bigint  NOT NULL,
+	processing_job_id    uuid    NOT NULL,
 	command_output_id    bigint  NOT NULL
  ) ;
 CREATE INDEX idx_artifact_output_processing_job_artifact ON qiita.artifact_output_processing_job ( artifact_id ) ;
 CREATE INDEX idx_artifact_output_processing_job_job ON qiita.artifact_output_processing_job ( processing_job_id ) ;
 CREATE INDEX idx_artifact_output_processing_job_cmd ON qiita.artifact_output_processing_job ( command_output_id ) ;
-ALTER TABLE qiita.artifact_output_processing_job ADD CONSTRAINT fk_artifact_output_processing_job_artifact FOREIGN KEY ( artifact_id ) REFERENCES artifact( artifact_id )    ;
-ALTER TABLE qiita.artifact_output_processing_job ADD CONSTRAINT fk_artifact_output_processing_job_job FOREIGN KEY ( processing_job_id ) REFERENCES processing_job( processing_job_id )    ;
-ALTER TABLE qiita.artifact_output_processing_job ADD CONSTRAINT fk_artifact_output_processing_job_cmd FOREIGN KEY ( command_output_id ) REFERENCES command_output( command_output_id )    ;
+ALTER TABLE qiita.artifact_output_processing_job ADD CONSTRAINT fk_artifact_output_processing_job_artifact FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact( artifact_id )    ;
+ALTER TABLE qiita.artifact_output_processing_job ADD CONSTRAINT fk_artifact_output_processing_job_job FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
+ALTER TABLE qiita.artifact_output_processing_job ADD CONSTRAINT fk_artifact_output_processing_job_cmd FOREIGN KEY ( command_output_id ) REFERENCES qiita.command_output( command_output_id )    ;
 
 -- In order to successfully represent the current status of a job,
 -- we need to identify if the job is part of a workflow in construction
