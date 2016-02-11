@@ -114,9 +114,7 @@ def get_qiita_version():
     """
     # the actual repo is the abspath of the current file without
     # qiita_core
-    current_fp = dirname(__file__)
-    len_for_trimming = len('qiita_core/')
-    git_repo_path = current_fp[:-len_for_trimming]
+    git_repo_path = dirname(dirname(__file__))
 
     try:
         repo = Repo(git_repo_path)
