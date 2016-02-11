@@ -48,7 +48,7 @@ class UtilTests(TestCase):
             # retrieve transaction id
             with qdb.sql_connection.TRN:
                 sql = "SELECT txid_current();"
-                qdb.sql_connection.TRN.add(sql, [])
+                qdb.sql_connection.TRN.add(sql)
                 return qdb.sql_connection.TRN.execute_fetchlast()
 
         f1 = function()
