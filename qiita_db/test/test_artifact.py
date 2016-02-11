@@ -359,7 +359,7 @@ class ArtifactTests(TestCase):
             qdb.user.User('test@foo.bar'),
             qdb.software.Parameters.load(qdb.software.Command(1),
                                          json_str=json_str))
-        job.status = 'running'
+        job._set_status('running')
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):
             qdb.artifact.Artifact.delete(test.id)
 
@@ -396,7 +396,7 @@ class ArtifactTests(TestCase):
             qdb.user.User('test@foo.bar'),
             qdb.software.Parameters.load(qdb.software.Command(1),
                                          json_str=json_str))
-        job.status = 'success'
+        job._set_status('success')
 
         qdb.artifact.Artifact.delete(test.id)
 
@@ -405,6 +405,26 @@ class ArtifactTests(TestCase):
 
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.processing_job.ProcessingJob(job.id)
+
+    def test_delete_as_output_job(self):
+        fd, fp = mkstemp(suffix='_table.biom')
+        self._clean_up_files.append(fp)
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        data = {'OTU table': {'filepaths': [(fp, 'biom')],
+                              'artifact_type': 'BIOM'}}
+        qdb.processing_job.ProcessingJob(
+            "bcc7ebcd-39c1-43e4-af2d-822e3589f14d").complete(
+                True, artifacts_data=data)
+        a_id = qdb.util.get_count('qiita.artifact')
+        self._clean_up_files.extend(
+            [afp for _, afp, _ in qdb.artifact.Artifact(a_id).filepaths])
+
+        qdb.artifact.Artifact.delete(a_id)
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.artifact.Artifact(a_id)
 
     def test_name(self):
         self.assertEqual(qdb.artifact.Artifact(1).name, "Raw data 1")

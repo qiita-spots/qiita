@@ -359,7 +359,8 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it has been submitted to VAMPS")
 
-            # Check if there is a job queued that will use the artifact
+            # Check if there is a job queued or running that will use/is using
+            # the artifact
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.artifact_processing_job
@@ -394,6 +395,11 @@ class Artifact(qdb.base.QiitaObject):
                 sql = """DELETE FROM qiita.processing_job
                          WHERE processing_job_id IN %s"""
                 qdb.sql_connection.TRN.add(sql, [job_ids])
+
+            # Delete the entry from the artifact_output_processing_job table
+            sql = """DELETE FROM qiita.artifact_output_processing_job
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [artifact_id])
 
             # Detach the artifact from its filepaths
             sql = """DELETE FROM qiita.artifact_filepath
