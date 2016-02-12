@@ -6,6 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from qiita_db.artifact import Artifact
+from qiita_db.user import User
+from qiita_db.util import get_visibilities
+from qiita_db.exceptions import QiitaDBArtifactDeletionError
+from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
@@ -53,3 +57,124 @@ def artifact_graph_get_req(artifact_id, direction, user_id):
             'node_labels': node_labels,
             'status': 'success',
             'message': ''}
+
+
+def artifact_get_req(artifact_id, user_id):
+    """Get information about the artifact
+
+    Parameters
+    ----------
+    artifact_id : int
+        Artifact being acted on
+    user_id : str
+        The user requesting the action
+
+    Returns
+    -------
+    dict
+        information about the artifact
+    """
+    pd = Artifact(int(artifact_id))
+    access_error = check_access(pd.study.id, user_id)
+    if access_error:
+        return access_error
+
+    can_submit_to_ebi = pd.can_be_submitted_to_ebi
+    ebi_run_accessions = pd.ebi_run_accessions if can_submit_to_ebi else None
+
+    can_submit_to_vamps = pd.can_be_submitted_to_vamps
+    is_submitted_to_vamps = pd.is_submitted_to_vamps if can_submit_to_vamps \
+        else False
+
+    return {
+        'timestamp': pd.timestamp,
+        'processing_parameters': pd.processing_parameters,
+        'visibility': pd.visibility,
+        'artifact_type': pd.artifact_type,
+        'data_type': pd.data_type,
+        'can_be_submitted_to_ebi': can_submit_to_ebi,
+        'can_be_submitted_to_vamps': can_submit_to_vamps,
+        'is_submitted_to_vamps': is_submitted_to_vamps,
+        'filepaths': pd.filepaths,
+        'parents': [a.id for a in pd.parents],
+        'prep_templates': [p.id for p in pd.prep_templates],
+        'ebi_run_accessions': ebi_run_accessions,
+        'study': pd.study.id}
+
+
+def artifact_delete_req(artifact_id, user_id):
+    """Deletes the artifact
+
+    Parameters
+    ----------
+    artifact_id : int
+        Artifact being acted on
+    user_id : str
+        The user requesting the action
+
+    Returns
+    -------
+    dict
+        Status of action, in the form {'status': status, 'message': msg}
+        status: status of the action, either success or error
+        message: Human readable message for status
+    """
+    pd = Artifact(int(artifact_id))
+    access_error = check_access(pd.study.id, user_id)
+    if access_error:
+        return access_error
+    try:
+        Artifact.delete(int(artifact_id))
+    except QiitaDBArtifactDeletionError as e:
+        return {'status': 'error',
+                'message': str(e)}
+    return {'status': 'success',
+            'message': ''}
+
+
+def artifact_status_put_req(artifact_id, user_id, visibility):
+    """Set the status of the artifact given
+
+    Parameters
+    ----------
+    artifact_id : int
+        Artifact being acted on
+    user_id : str
+        The user requesting the action
+    visibility : {'sandbox', 'awaiting_approval', 'private', 'public'}
+        What to change the visibility to
+
+    Returns
+    -------
+    dict
+        Status of action, in the form {'status': status, 'message': msg}
+        status: status of the action, either success or error
+        message: Human readable message for status
+    """
+    if visibility not in get_visibilities():
+        return {'status': 'error',
+                'message': 'Unknown visiblity value: %s' % visibility}
+
+    pd = Artifact(int(artifact_id))
+    access_error = check_access(pd.study.id, user_id)
+    if access_error:
+        return access_error
+    user = User(str(user_id))
+    status = 'success'
+    msg = 'Artifact visibility changed to %s' % visibility
+    # Set the approval to private if needs approval and admin
+    if visibility == 'private':
+        if not qiita_config.require_approval:
+            pd.visibility = 'private'
+        # Set the approval to private if approval not required
+        elif user.level == 'admin':
+            pd.visibility = 'private'
+        # Trying to set approval without admin privileges
+        else:
+            status = 'error'
+            msg = 'User does not have permissions to approve change'
+    else:
+        pd.visibility = visibility
+
+    return {'status': status,
+            'message': msg}

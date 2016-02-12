@@ -14,7 +14,7 @@ from qiita_pet.handlers.api_proxy.studies import (
     data_types_get_req, study_get_req, study_prep_get_req, study_delete_req)
 
 
-@qiita_test_checker
+@qiita_test_checker()
 class TestStudyAPI(TestCase):
     def test_data_types_get_req(self):
         obs = data_types_get_req()
