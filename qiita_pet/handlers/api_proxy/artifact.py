@@ -160,10 +160,10 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
     if access_error:
         return access_error
     user = User(str(user_id))
+    status = 'success'
+    msg = 'Artifact visibility changed to %s' % visibility
     # Set the approval to private if needs approval and admin
     if visibility == 'private':
-        status = 'success'
-        msg = 'Artifact visibility changed to private'
         if not qiita_config.require_approval:
             pd.visibility = 'private'
         # Set the approval to private if approval not required
@@ -175,8 +175,6 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
             msg = 'User does not have permissions to approve change'
     else:
         pd.visibility = visibility
-        status = 'success'
-        msg = 'Artifact visibility changed to %s' % visibility
 
     return {'status': status,
             'message': msg}
