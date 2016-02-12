@@ -12,10 +12,9 @@ from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
-from qiita_db.exceptions import (QiitaDBOperationNotPermittedError,
-                                 QiitaDBArtifactDeletionError)
+from qiita_db.exceptions import QiitaDBArtifactDeletionError
 from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.util import get_mountpoint
+from qiita_db.util import get_mountpoint, get_visibilities
 
 
 @execute_as_transaction
@@ -152,19 +151,12 @@ def artifact_get_req(artifact_id, user_id):
     if access_error:
         return access_error
 
-    try:
-        can_be_submitted_to_ebi = pd.can_be_submitted_to_ebi
-        ebi_run_accessions = pd.ebi_run_accessions
-    except QiitaDBOperationNotPermittedError:
-        can_be_submitted_to_ebi = False
-        ebi_run_accessions = None
+    can_submit_to_ebi = pd.can_be_submitted_to_ebi
+    ebi_run_accessions = pd.ebi_run_accessions if can_submit_to_ebi else None
 
-    try:
-        can_be_submitted_to_vamps = pd.can_be_submitted_to_vamps
-        is_submitted_to_vamps = pd.is_submitted_to_vamps
-    except QiitaDBOperationNotPermittedError:
-        can_be_submitted_to_vamps = False
-        is_submitted_to_vamps = False
+    can_submit_to_vamps = pd.can_be_submitted_to_vamps
+    is_submitted_to_vamps = pd.is_submitted_to_vamps if can_submit_to_vamps \
+        else False
 
     return {
         'timestamp': pd.timestamp,
@@ -172,8 +164,8 @@ def artifact_get_req(artifact_id, user_id):
         'visibility': pd.visibility,
         'artifact_type': pd.artifact_type,
         'data_type': pd.data_type,
-        'can_be_submitted_to_ebi': can_be_submitted_to_ebi,
-        'can_be_submitted_to_vamps': can_be_submitted_to_vamps,
+        'can_be_submitted_to_ebi': can_submit_to_ebi,
+        'can_be_submitted_to_vamps': can_submit_to_vamps,
         'is_submitted_to_vamps': is_submitted_to_vamps,
         'filepaths': pd.filepaths,
         'parents': [a.id for a in pd.parents],
@@ -231,7 +223,7 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
         status: status of the action, either success or error
         message: Human readable message for status
     """
-    if visibility not in {'sandbox', 'awaiting_approval', 'private', 'public'}:
+    if visibility not in get_visibilities():
         return {'status': 'error',
                 'message': 'Unknown visiblity value: %s' % visibility}
 
@@ -240,26 +232,21 @@ def artifact_status_put_req(artifact_id, user_id, visibility):
     if access_error:
         return access_error
     user = User(str(user_id))
+    status = 'success'
+    msg = 'Artifact visibility changed to %s' % visibility
     # Set the approval to private if needs approval and admin
-    if all([qiita_config.require_approval, visibility == 'private',
-            user.level == 'admin']):
-        pd.visibility = 'private'
-        status = 'success'
-        msg = 'Artifact visibility changed to private'
-    # Set the approval to private if approval not required
-    elif all([not qiita_config.require_approval,
-              visibility == 'private']):
-        pd.visibility = 'private'
-        status = 'success'
-        msg = 'Artifact visibility changed to private'
-    # Trying to set approval without admin privileges
-    elif visibility == 'private':
-        status = 'error'
-        msg = 'User does not have permissions to approve change'
+    if visibility == 'private':
+        if not qiita_config.require_approval:
+            pd.visibility = 'private'
+        # Set the approval to private if approval not required
+        elif user.level == 'admin':
+            pd.visibility = 'private'
+        # Trying to set approval without admin privileges
+        else:
+            status = 'error'
+            msg = 'User does not have permissions to approve change'
     else:
         pd.visibility = visibility
-        status = 'success'
-        msg = 'Artifact visibility changed to %s' % visibility
 
     return {'status': status,
             'message': msg}

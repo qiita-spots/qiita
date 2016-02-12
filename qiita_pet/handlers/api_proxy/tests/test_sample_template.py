@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
+from os import remove
 from os.path import join, exists
 
 from qiita_core.util import qiita_test_checker
@@ -40,9 +41,10 @@ class TestSampleAPI(TestCase):
             info)
 
         base_dir = qdb.util.get_mountpoint('uploads')[0][1]
-        fp = join(base_dir, str(self.new_study.id), 'uploaded_file.txt')
-        if not exists(fp):
-            with open(fp, 'w') as f:
+        self.new_study_fp = join(base_dir, str(self.new_study.id),
+                                 'uploaded_file.txt')
+        if not exists(self.new_study_fp):
+            with open(self.new_study_fp, 'w') as f:
                 f.write('')
 
     def tearDown(self):
@@ -51,6 +53,9 @@ class TestSampleAPI(TestCase):
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
+
+        if exists(self.new_study_fp):
+            remove(self.new_study_fp)
 
     def test_check_sample_template_exists(self):
         obs = _check_sample_template_exists(1)

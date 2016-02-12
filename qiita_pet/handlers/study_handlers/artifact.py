@@ -76,7 +76,8 @@ class NewArtifactHandler(BaseHandler):
 class ArtifactAJAX(BaseHandler):
     def get(self):
         artifact_id = to_int(self.get_argument('artifact_id'))
-        self.write('TITLE FOR ARTIFACT %d' % artifact_id)
+        name = artifact_get_req(artifact_id)['name']
+        self.write(name)
 
     def post(self):
         artifact_id = to_int(self.get_argument('artifact_id'))
@@ -93,19 +94,19 @@ class ArtifactAdminAJAX(BaseHandler):
         btn_base = ('<button onclick="set_admin_visibility(\'%s\', {0})" '
                     'class="btn btn-primary">%s</button>').format(artifact_id)
 
-        if all([status == 'sandbox', qiita_config.require_approval]):
-            # The request approval button only appears if the processed data is
-            # sandboxed and the qiita_config specifies that the approval should
-            # be requested
-            buttons.append(
-                btn_base % ('awaiting_approval', 'Request approval'))
-        elif all([self.current_user.level == 'admin',
-                  status == 'awaiting_approval',
-                  qiita_config.require_approval]):
-            # The approve processed data button only appears if the user is an
-            # admin, the processed data is waiting to be approved and the qiita
-            # config requires processed data approval
-            buttons.append(btn_base % ('private', 'Approve artifact'))
+        if qiita_config.require_approval:
+            if status == 'sandbox':
+                # The request approval button only appears if the processed
+                # data issandboxed and the qiita_config specifies that the
+                # approval should be requested
+                buttons.append(
+                    btn_base % ('awaiting_approval', 'Request approval'))
+            elif self.current_user.level == 'admin' and \
+                    status == 'awaiting_approval':
+                # The approve processed data button only appears if the user is
+                # an admin, the processed data is waiting to be approved and
+                # the qiita config requires processed data approval
+                buttons.append(btn_base % ('private', 'Approve artifact'))
         elif status == 'private':
             # The make public button only appears if the status is private
             buttons.append(btn_base % ('public', 'Make public'))
@@ -116,13 +117,12 @@ class ArtifactAdminAJAX(BaseHandler):
             buttons.append(btn_base % ('sandbox', 'Revert to sandbox'))
 
         # Add EBI and VAMPS submission buttons if allowed
-        if all([not info['ebi_run_accessions'],
-                info['can_be_submitted_to_ebi']]):
+        if not info['ebi_run_accessions'] and info['can_be_submitted_to_ebi']:
             buttons.append('<a class="btn btn-primary glyphicon '
                            'glyphicon-export" href="/ebi_submission/{{ppd_id}}'
                            '" style="word-spacing: -10px;"> Submit to EBI</a>')
-        if all([not info['is_submitted_to_vamps'],
-                info['can_be_submitted_to_vamps']]):
+        if not info['is_submitted_to_vamps'] and \
+                info['can_be_submitted_to_vamps']:
             buttons.append('<a class="btn btn-primary glyphicon '
                            'glyphicon-export" href="/vamps/{{ppd_id}}" '
                            'style="word-spacing: -10px;"> Submit to VAMPS</a>')

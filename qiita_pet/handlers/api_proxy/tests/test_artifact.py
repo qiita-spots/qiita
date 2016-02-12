@@ -77,6 +77,12 @@ class TestArtifactAPI(TestCase):
         with self.assertRaises(QiitaDBUnknownIDError):
             Artifact(3)
 
+    def test_artifact_delete_req_error(self):
+        obs = artifact_delete_req(1, 'test@foo.bar')
+        exp = {'status': 'error',
+               'message': 'Cannot delete artifact 1: it has children: 2, 3'}
+        self.assertEqual(obs, exp)
+
     def test_artifact_delete_req_no_access(self):
         obs = artifact_delete_req(3, 'demo@microbio.me')
         exp = {'status': 'error',
