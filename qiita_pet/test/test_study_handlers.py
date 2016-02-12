@@ -4,6 +4,7 @@ from unittest import main
 from json import loads
 from os.path import exists
 from os import remove, close
+from os.path import join
 from tempfile import mkstemp
 
 from mock import Mock
@@ -14,8 +15,9 @@ from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import StudyPerson, Study
-from qiita_db.util import get_count, check_count
+from qiita_db.util import get_count, check_count, get_mountpoint
 from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_pet.handlers.study_handlers.listing_handlers import (
@@ -682,6 +684,47 @@ class TestArtifact(TestHandlerBase):
                          loads(response.body))
 
         self.assertEqual(Artifact(3).visibility, 'sandbox')
+
+
+@qiita_test_checker()
+class TestAddArtifact(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/add_prep/1')
+        self.assertEqual(response.code, 200)
+        self.assertIn('Select file type', response.body)
+        self.assertIn('uploaded_file.txt', response.body)
+
+    def test_get_files_not_allowed(self):
+        response = self.post(
+            '/study/prep_files/',
+            {'type': 'BIOM', 'prep_file': 'uploaded_file.txt', 'study_id': 1})
+        self.assertEqual(response.code, 405)
+
+    def test_post_artifact(self):
+        new_artifact_id = get_count('qiita.artifact') + 1
+        new_prep_id = get_count('qiita.prep_template') + 1
+        uploads_path = get_mountpoint('uploads')[0][1]
+        # Create prep test file to point at
+        prep_fp = join(uploads_path, '1', 'prep_create.txt')
+        with open(prep_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+        prep_fp = join(uploads_path, '1', 'uploaded_file.txt')
+        with open(prep_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+
+        response = self.post(
+            '/study/add_prep/1', {
+                'name': 'new prep', 'data-type': '16S',
+                'ena-ontology': 'Metagenomics', 'user-ontology': '',
+                'new-ontology': '', 'type': 'per_sample_FASTQ',
+                'prep-file': 'prep_create.txt',
+                'raw_forward_seqs': ['uploaded_file.txt'],
+                'raw_reverse_seqs': []})
+        self.assertEqual(response.code, 200)
+        # make sure new artifact created
+        artifact = Artifact(new_artifact_id)
+        self.assertEqual(artifact.name, 'new prep')
+        PrepTemplate(new_prep_id)
 
 
 @qiita_test_checker()

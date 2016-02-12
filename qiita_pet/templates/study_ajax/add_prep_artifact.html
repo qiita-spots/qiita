@@ -84,7 +84,9 @@
       type: "POST",
       data : $('#form').serialize(),
       success: function( data ){
-        bootstrapAlert("<p>Error adding preparation information</p>" + data.message, "danger");
+        if(data.status == 'warning') { bootstrapAlert(data.message, "warning"); }
+        else if( data.status == 'error') { bootstrapAlert(data.message, "danger"); }
+        else {window.location.href('/study/description/{{study_id}}')}
       }
     });
     return false;

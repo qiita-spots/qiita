@@ -82,7 +82,6 @@ def study_get_req(study_id, user_id):
 
     samples = study.sample_template
     study_info['num_samples'] = 0 if samples is None else len(list(samples))
-
     return {'status': 'success',
             'message': '',
             'info': study_info

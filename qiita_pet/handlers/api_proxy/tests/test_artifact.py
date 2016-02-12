@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 
+from os import remove
 from os.path import join, exists
 import pandas as pd
 from datetime import datetime
@@ -25,19 +26,24 @@ from qiita_pet.handlers.api_proxy.artifact import (
 
 @qiita_test_checker()
 class TestArtifactAPI(TestCase):
+    def setUp(self):
+        uploads_path = get_mountpoint('uploads')[0][1]
+        # Create prep test file to point at
+        self.update_fp = join(uploads_path, '1', 'update.txt')
+        with open(self.update_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+
     def tearDown(self):
         Artifact(1).visibility = 'private'
+        if exists(self.update_fp):
+            remove(self.update_fp)
 
+        # Replace file if removed as part of function testing
         uploads_path = get_mountpoint('uploads')[0][1]
-        fp = join(uploads_path, 'uploaded_file.txt')
+        fp = join(uploads_path, '1', 'uploaded_file.txt')
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
-
-        # Create prep test file to point at
-        self.update_fp = join(uploads_path, 'update.txt')
-        with open(self.update_fp, 'w') as f:
-            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
 
     def test_artifact_get_req(self):
         obs = artifact_get_req(1, 'test@foo.bar')
@@ -97,7 +103,8 @@ class TestArtifactAPI(TestCase):
 
         new_artifact_id = get_count('qiita.artifact') + 1
         obs = artifact_post_req(
-            'test@foo.bar', {'raw_forward_seqs': ['uploaded_file.txt']},
+            'test@foo.bar', {'raw_forward_seqs': ['uploaded_file.txt'],
+                             'raw_reverse_seqs': []},
             'per_sample_FASTQ', 'New Test Artifact', new_prep_id)
         exp = {'status': 'success',
                'message': '',

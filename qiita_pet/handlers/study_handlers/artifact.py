@@ -17,6 +17,7 @@ from qiita_pet.handlers.api_proxy import (
     artifact_graph_get_req, artifact_types_get_req, data_types_get_req,
     ena_ontology_get_req, prep_template_post_req, artifact_post_req,
     artifact_status_put_req, artifact_get_req, artifact_delete_req)
+from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 
 
@@ -42,6 +43,7 @@ class NewArtifactHandler(BaseHandler):
                     ontology=ontology, study_id=study_id)
 
     @authenticated
+    @execute_as_transaction
     def post(self, study_id):
         study_id = int(study_id)
         name = self.get_argument('name')
@@ -61,14 +63,15 @@ class NewArtifactHandler(BaseHandler):
         prep = prep_template_post_req(study_id, self.current_user.id,
                                       prep_file, data_type, ena_ontology,
                                       user_ontology, new_ontology)
-        if prep['status'] != 'success':
+        if prep['status'] == 'error':
             self.write(prep)
             return
 
         artifact = artifact_post_req(
             self.current_user.id, files, artifact_type, name, prep['id'])
-        if artifact['status'] == 'success':
-            self.redirect('/study/description/%d' % study_id)
+        if artifact['status'] == 'success' and prep['status'] != 'warning':
+                self.write({'status': 'success',
+                            'message': 'Artifact created successfully'})
         else:
             self.write(prep)
 

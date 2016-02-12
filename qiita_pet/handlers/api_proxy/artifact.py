@@ -45,16 +45,16 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
          'artifact': id}
     """
     prep = PrepTemplate(int(prep_template_id))
-    access_error = check_access(prep.study_id, user_id)
+    study_id = prep.study_id
+    access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
-    study_id = PrepTemplate.study_id
     uploads_path = get_mountpoint('uploads')[0][1]
     cleaned_filepaths = []
     for ftype in filepaths:
         # Check if filepath being passed exists for study
         for fp in filepaths[ftype]:
-            full_fp = join(uploads_path, fp)
+            full_fp = join(uploads_path, str(study_id), fp)
             exists = check_fp(study_id, full_fp)
             if exists['status'] != 'success':
                 return {'status': 'error',
