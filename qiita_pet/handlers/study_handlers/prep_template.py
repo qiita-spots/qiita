@@ -98,11 +98,11 @@ class PrepFilesHandler(BaseHandler):
         _, base = get_mountpoint("uploads")[0]
         uploaded = get_files_from_uploads_folders(study_id)
         prep = pd.read_table(join(base, study_id, prep_file), sep='\t')
-        if 'per_prefix' in prep.columns:
-            # Use per_prefix column of prep template to auto-select
+        if 'run_prefix' in prep.columns:
+            # Use run_prefix column of prep template to auto-select
             # per-sample uploaded files if available.
-            per_sample = True
-            prep_prefixes = set(prep['per_prefix'])
+            per_prefix = True
+            prep_prefixes = set(prep['run_prefix'])
             for _, filename in uploaded:
                 for prefix in prep_prefixes:
                     if filename.startswith(prefix):
@@ -110,13 +110,13 @@ class PrepFilesHandler(BaseHandler):
                     else:
                         not_selected.append(filename)
         else:
-            per_sample = False
+            per_prefix = False
             not_selected = [f for _, f in uploaded]
 
         # Write out if this prep template supports per-sample files, and the
         # as well as pre-selected and remaining files
         self.write({
-            'per_sample': per_sample,
+            'per_prefix': per_prefix,
             'file_types': file_types,
             'selected': selected,
             'remaining': not_selected})
