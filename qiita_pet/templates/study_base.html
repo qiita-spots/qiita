@@ -183,24 +183,6 @@
       });
   }
 
-  function delete_study() {
-    if ($("#study-alias").val() != "{{study_info['study_alias']}}") {
-      alert("The entered study alias doesn't match the study");
-      return false;
-    }
-    if (confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
-      $.post('/study/delete/', {study_id: {{study_info['study_id']}}})
-        .done(function ( data ) {
-          if(data["status"] == "error") {
-            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
-          } else {
-            window.location.replace = '/'
-          }
-        });
-
-    }
-  }
-
   $(document).ready(function() {
     fill_base({{study_info['study_id']}});
   });

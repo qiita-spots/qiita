@@ -43,14 +43,6 @@ class SampleTemplateAJAX(BaseHandler):
             dl_path = 'No sample information added'
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
-        if stats['status'] == 'success':
-            num_samples = stats['num_samples']
-            stats = stats['summary']
-        else:
-            stats = {}
-            num_samples = 0
-
-        stats = sample_template_summary_get_req(study_id, self.current_user.id)
         summary = stats['summary'] if 'summary' in stats else {}
         num_samples = stats['num_samples'] if 'num_samples' in stats else 0
         self.render('study_ajax/sample_summary.html', stats=summary,

@@ -194,7 +194,7 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
 
     msg = ''
     status = 'success'
-    prep = False
+    prep = None
     try:
         with warnings.catch_warnings(record=True) as warns:
             data_type_id = convert_to_id(data_type, 'data_type')
@@ -217,7 +217,7 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     info = {'status': status,
             'message': msg,
             'file': prep_template,
-            'id': prep.id if prep else None}
+            'id': prep.id if prep is not None else None}
 
     return info
 

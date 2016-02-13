@@ -98,11 +98,11 @@ class PrepFilesHandler(BaseHandler):
         _, base = get_mountpoint("uploads")[0]
         uploaded = get_files_from_uploads_folders(study_id)
         prep = pd.read_table(join(base, study_id, prep_file), sep='\t')
-        if 'run_prefix' in prep.columns:
-            # Use run_prefix column of prep template to auto-select
+        if 'per_prefix' in prep.columns:
+            # Use per_prefix column of prep template to auto-select
             # per-sample uploaded files if available.
             per_sample = True
-            prep_prefixes = set(prep['run_prefix'])
+            prep_prefixes = set(prep['per_prefix'])
             for _, filename in uploaded:
                 for prefix in prep_prefixes:
                     if filename.startswith(prefix):
