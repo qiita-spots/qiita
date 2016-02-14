@@ -13,20 +13,22 @@ from .description_handlers import (StudyDescriptionHandler,
                                    PreprocessingSummaryHandler)
 from .ebi_handlers import EBISubmitHandler
 from .vamps_handlers import VAMPSHandler
-from .base import StudyIndexHandler, StudyBaseInfoAJAX
+from .base import StudyIndexHandler, StudyBaseInfoAJAX, StudyDeleteAjax
 from .prep_template import (
     PrepTemplateGraphAJAX, PrepTemplateAJAX, PrepFilesHandler)
-from .artifact import (ArtifactGraphAJAX, NewArtifactHandler)
 from .processing import (ProcessArtifactHandler, ListCommandsHandler,
                          ListOptionsHandler)
-from .sample_template import SampleTemplateAJAX
+from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
+                       ArtifactAdminAJAX, ArtifactAJAX)
+from .sample_template import SampleTemplateAJAX, SampleAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyEditHandler', 'CreateStudyAJAX', 'StudyDescriptionHandler',
            'PreprocessingSummaryHandler', 'EBISubmitHandler',
            'MetadataSummaryHandler', 'VAMPSHandler', 'SearchStudiesAJAX',
-           'PrepTemplateGraphAJAX', 'ArtifactGraphAJAX',
+           'PrepTemplateGraphAJAX', 'ArtifactGraphAJAX', 'ArtifactAdminAJAX',
            'StudyIndexHandler', 'StudyBaseInfoAJAX', 'SampleTemplateAJAX',
            'PrepTemplateAJAX', 'NewArtifactHandler', 'PrepFilesHandler',
            'ProcessArtifactHandler', 'ListCommandsHandler',
-           'ListOptionsHandler']
+           'ListOptionsHandler', 'SampleAJAX', 'StudyDeleteAjax',
+           'ArtifactAJAX']

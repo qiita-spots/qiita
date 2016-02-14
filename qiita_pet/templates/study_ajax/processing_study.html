@@ -1,6 +1,6 @@
 <script type="text/javascript">
   //the network object itself, + nodes list and edge list
-  var network = null;
+  var proc_network = null;
   var nodes = new vis.DataSet([{id: 1, label: "{{artifact_type}}", group: 'type'}]);
   var edges = new vis.DataSet();
   //current commands available for selected nodes
@@ -23,7 +23,7 @@
       edges.add({ id: edges.length + 1, from: command_node, to: node_id});
       nodes.add({ id: node_id, label: command_info.output[i], group: 'type', command_id: null});
     }
-    network.redraw();
+    proc_network.redraw();
   }
 
   function remove_command(node_id) {
@@ -44,7 +44,7 @@
       nodes.remove(current);
     }
     edges.remove(edges.get({ filter: function (item) { return item.to == node_id; } })[0].id);
-    network.redraw();
+    proc_network.redraw();
     var curr_nodes = null;
   }
 
@@ -108,6 +108,7 @@
 
   $(document).ready(function() {
     // create a network
+    $("#graph-toggle-link").remove();
     var container = document.getElementById('network');
     var data = {
         nodes: nodes,
@@ -142,8 +143,8 @@
         command: {shape: "box", color: "#9fd"}
       }
     };
-    network = new vis.Network(container, data, options);
-    network.on('select', function(params) {
+    proc_network = new vis.Network(container, data, options);
+    proc_network.on('select', function(params) {
           //render the information for the selected artifacts or commands
           if(params.nodes.length !== 0) {
             // Make sure all selected nodes are of same group, so we dont link files to commands

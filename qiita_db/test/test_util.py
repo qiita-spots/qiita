@@ -697,6 +697,11 @@ class UtilTests(TestCase):
         """Correctly removes single quotes from the string"""
         self.assertEqual(qdb.util.scrub_data("'quotes'"), "quotes")
 
+    def test_get_visibilities(self):
+        obs = qdb.util.get_visibilities()
+        exp = ['awaiting_approval', 'sandbox', 'private', 'public']
+        self.assertEqual(obs, exp)
+
     def test_infer_status(self):
         obs = qdb.util.infer_status([])
         self.assertEqual(obs, 'sandbox')

@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from os.path import splitext, join
+from os.path import join
 
 from tornado.web import authenticated, HTTPError
 import pandas as pd
@@ -14,7 +14,8 @@ import pandas as pd
 from qiita_pet.handlers.util import to_int, download_link_or_path
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.util import is_localhost
-from qiita_db.util import get_files_from_uploads_folders, get_mountpoint
+from qiita_db.util import (get_files_from_uploads_folders, get_mountpoint,
+                           supported_filepath_types)
 from qiita_pet.handlers.api_proxy import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req,
@@ -43,7 +44,7 @@ class PrepTemplateAJAX(BaseHandler):
         download = prep_template_filepaths_get_req(
             study_id, self.current_user.id)['filepaths'][-1]
         dl_path = download_link_or_path(
-            is_local, download[0], download[1], "Download prep information")
+            is_local, download[1], download[0], "Download prep information")
         ontology = ena_ontology_get_req()
 
         stats = prep_template_summary_get_req(prep_id, self.current_user.id)
@@ -86,11 +87,11 @@ class PrepFilesHandler(BaseHandler):
     def get(self):
         study_id = self.get_argument('study_id')
         prep_file = self.get_argument('prep_file')
-        # atype = self.get_argument('type')
+        prep_type = self.get_argument('type')
 
         # TODO: Get file types for the artifact type
         # FILE TYPE IN POSTION 0 MUST BE DEFAULT FOR SELECTED
-        file_types = ['raw_fwd', 'raw_rev']
+        file_types = supported_filepath_types(prep_type)
 
         selected = []
         not_selected = []
@@ -99,22 +100,23 @@ class PrepFilesHandler(BaseHandler):
         prep = pd.read_table(join(base, study_id, prep_file), sep='\t')
         if 'run_prefix' in prep.columns:
             # Use run_prefix column of prep template to auto-select
-            # per-sample uploaded files if available.
-            per_sample = True
+            # per-prefix uploaded files if available.
+            per_prefix = True
             prep_prefixes = set(prep['run_prefix'])
             for _, filename in uploaded:
-                if splitext(filename)[0] in prep_prefixes:
-                    selected.append(filename)
-                else:
-                    not_selected.append(filename)
+                for prefix in prep_prefixes:
+                    if filename.startswith(prefix):
+                        selected.append(filename)
+                    else:
+                        not_selected.append(filename)
         else:
-            per_sample = False
+            per_prefix = False
             not_selected = [f for _, f in uploaded]
 
-        # Write out if this prep template supports per-sample files, and the
+        # Write out if this prep template supports per-prefix files, and the
         # as well as pre-selected and remaining files
         self.write({
-            'per_sample': per_sample,
+            'per_prefix': per_prefix,
             'file_types': file_types,
             'selected': selected,
             'remaining': not_selected})
