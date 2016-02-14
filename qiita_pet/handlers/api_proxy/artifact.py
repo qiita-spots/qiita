@@ -15,6 +15,54 @@ from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBArtifactDeletionError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import get_mountpoint, get_visibilities
+from qiita_db.exceptions import QiitaDBOperationNotPermittedError
+
+
+def artifact_get_req(user_id, artifact_id):
+    """Returns all base information about an artifact
+
+    Parameters
+    ----------
+    user_id : str
+        user making the request
+    artifact_id : int or str coercable to int
+        Atrtifact to get information for
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the artifact information
+        {'status': status,
+         'message': message,
+         'artifact': {info key: val, ...}}
+    """
+    artifact = Artifact(int(artifact_id))
+    info = {
+        'id': artifact.id,
+        'timestamp': artifact.timestamp,
+        'processing_parameters': artifact.processing_parameters,
+        'visibility': artifact.visibility,
+        'type': artifact.artifact_type,
+        'data_type': artifact.data_type,
+        'filepaths': artifact.filepaths,
+        'parents': [a.id for a in artifact.parents],
+        'study': artifact.study.id if artifact.study else None
+    }
+    try:
+        info['can_submit_ebi'] = artifact.can_be_submitted_to_ebi
+        info['ebi_run_accessions'] = artifact.ebi_run_accessions
+    except QiitaDBOperationNotPermittedError:
+        info['can_submit_ebi'] = False
+        info['ebi_run_accessions'] = None
+
+    try:
+        info['can_submit_vamps'] = artifact.can_be_submitted_to_vamps
+        info['is_submitted_vamps'] = artifact.is_submitted_to_vamps
+    except QiitaDBOperationNotPermittedError:
+        info['can_submit_vamps'] = False
+        info['is_submitted_vamps'] = None
+
+    return info
 
 
 @execute_as_transaction
@@ -128,49 +176,6 @@ def artifact_graph_get_req(artifact_id, direction, user_id):
             'node_labels': node_labels,
             'status': 'success',
             'message': ''}
-
-
-def artifact_get_req(artifact_id, user_id):
-    """Get information about the artifact
-
-    Parameters
-    ----------
-    artifact_id : int
-        Artifact being acted on
-    user_id : str
-        The user requesting the action
-
-    Returns
-    -------
-    dict
-        information about the artifact
-    """
-    pd = Artifact(int(artifact_id))
-    access_error = check_access(pd.study.id, user_id)
-    if access_error:
-        return access_error
-
-    can_submit_to_ebi = pd.can_be_submitted_to_ebi
-    ebi_run_accessions = pd.ebi_run_accessions if can_submit_to_ebi else None
-
-    can_submit_to_vamps = pd.can_be_submitted_to_vamps
-    is_submitted_to_vamps = pd.is_submitted_to_vamps if can_submit_to_vamps \
-        else False
-
-    return {
-        'timestamp': pd.timestamp,
-        'processing_parameters': pd.processing_parameters,
-        'visibility': pd.visibility,
-        'artifact_type': pd.artifact_type,
-        'data_type': pd.data_type,
-        'can_be_submitted_to_ebi': can_submit_to_ebi,
-        'can_be_submitted_to_vamps': can_submit_to_vamps,
-        'is_submitted_to_vamps': is_submitted_to_vamps,
-        'filepaths': pd.filepaths,
-        'parents': [a.id for a in pd.parents],
-        'prep_templates': [p.id for p in pd.prep_templates],
-        'ebi_run_accessions': ebi_run_accessions,
-        'study': pd.study.id}
 
 
 def artifact_delete_req(artifact_id, user_id):

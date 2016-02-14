@@ -26,6 +26,7 @@ from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
     PreprocessingSummaryHandler, VAMPSHandler, PrepTemplateGraphAJAX,
+    ProcessArtifactHandler, ListCommandsHandler, ListOptionsHandler,
     PrepTemplateAJAX, NewArtifactHandler, PrepFilesHandler, SampleAJAX,
     StudyDeleteAjax, ArtifactAdminAJAX, ArtifactAJAX)
 from qiita_pet.handlers.websocket_handlers import (
@@ -100,6 +101,8 @@ class Application(tornado.web.Application):
             (r"/study/create/", StudyEditHandler),
             (r"/study/edit/(.*)", StudyEditHandler),
             (r"/study/list/", ListStudiesHandler),
+            (r"/study/commands/", ListCommandsHandler),
+            (r"/study/process/", ProcessArtifactHandler),
             (r"/study/list/socket/", SelectSamplesHandler),
             (r"/study/search/(.*)", SearchStudiesAJAX),
             (r"/study/add_prep/(.*)", NewArtifactHandler),
@@ -107,6 +110,7 @@ class Application(tornado.web.Application):
             (r"/study/create_raw_data", CreateRawData),
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/process", ProcessHandler),
+            (r"/study/job/", ListOptionsHandler),
             (r"/study/sharing/", ShareStudyAJAX),
             (r"/prep/graph/", PrepTemplateGraphAJAX),
             (r"/artifact/", ArtifactAJAX),

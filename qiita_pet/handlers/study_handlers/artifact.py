@@ -90,7 +90,7 @@ class ArtifactAJAX(BaseHandler):
 class ArtifactAdminAJAX(BaseHandler):
     def get(self):
         artifact_id = to_int(self.get_argument('artifact_id'))
-        info = artifact_get_req(artifact_id, self.current_user.id)
+        info = artifact_get_req(self.current_user.id, artifact_id)
         status = info['visibility']
         buttons = []
 
@@ -120,12 +120,12 @@ class ArtifactAdminAJAX(BaseHandler):
             buttons.append(btn_base % ('sandbox', 'Revert to sandbox'))
 
         # Add EBI and VAMPS submission buttons if allowed
-        if not info['ebi_run_accessions'] and info['can_be_submitted_to_ebi']:
+        if not info['ebi_run_accessions'] and info['can_submit_ebi']:
             buttons.append('<a class="btn btn-primary glyphicon '
                            'glyphicon-export" href="/ebi_submission/{{ppd_id}}'
                            '" style="word-spacing: -10px;"> Submit to EBI</a>')
-        if not info['is_submitted_to_vamps'] and \
-                info['can_be_submitted_to_vamps']:
+        if not info['is_submitted_vamps'] and \
+                info['can_submit_vamps']:
             buttons.append('<a class="btn btn-primary glyphicon '
                            'glyphicon-export" href="/vamps/{{ppd_id}}" '
                            'style="word-spacing: -10px;"> Submit to VAMPS</a>')
