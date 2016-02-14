@@ -28,7 +28,6 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         User adding the atrifact
     filepaths : dict of {str: [str, ...], ...}
         List of files to attach to the artifact, keyed to the file type
-    }
     artifact_type : str
         The type of the artifact
     name : str

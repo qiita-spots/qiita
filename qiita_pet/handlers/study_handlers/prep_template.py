@@ -100,7 +100,7 @@ class PrepFilesHandler(BaseHandler):
         prep = pd.read_table(join(base, study_id, prep_file), sep='\t')
         if 'run_prefix' in prep.columns:
             # Use run_prefix column of prep template to auto-select
-            # per-sample uploaded files if available.
+            # per-prefix uploaded files if available.
             per_prefix = True
             prep_prefixes = set(prep['run_prefix'])
             for _, filename in uploaded:
@@ -113,7 +113,7 @@ class PrepFilesHandler(BaseHandler):
             per_prefix = False
             not_selected = [f for _, f in uploaded]
 
-        # Write out if this prep template supports per-sample files, and the
+        # Write out if this prep template supports per-prefix files, and the
         # as well as pre-selected and remaining files
         self.write({
             'per_prefix': per_prefix,
