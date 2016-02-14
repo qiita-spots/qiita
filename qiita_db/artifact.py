@@ -82,6 +82,23 @@ class Artifact(qdb.base.QiitaObject):
         """
         return cls.iter_by_visibility('public')
 
+    @staticmethod
+    def types():
+        """Returns list of all artifact types available and their descriptions
+
+        Returns
+        -------
+        list of list of str
+            The artifact type and description of the artifact type, in the form
+            [[artifact_type, description], ...]
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_type, description
+                     FROM qiita.artifact_type
+                     ORDER BY artifact_type"""
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchindex()
+
     @classmethod
     def copy(cls, artifact, prep_template):
         """Creates a copy of `artifact` and attaches it to `prep_template`

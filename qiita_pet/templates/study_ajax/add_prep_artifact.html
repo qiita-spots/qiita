@@ -1,0 +1,190 @@
+
+<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript>">
+  var file_types = [];
+  function get_files() {
+    $("#errDiv").text();
+    var valid = $("#form").valid();
+    if( valid == false) {
+      return;
+    }
+    $.get("/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep-file").val(), study_id: {{study_id}} })
+      .done(function( data ) {
+        // Add divs for the file type elements
+        file_types = data.file_types;
+        for(i=0;i<data.file_types.length;i++) {
+          $("#files-row").append('<div class="col-md-3" id="'+data.file_types[i][0]+'-div"><h4>'+data.file_types[i][0].replace('_', ' ')+'</h4><ul id="'+data.file_types[i][0]+'-list" class="connectedSortable"></ul><input type="hidden" name="'+data.file_types[i][0]+'" id="'+data.file_types[i][0]+'" value=""></div>')
+            if(data.per_prefix) { $("#" + data.file_types[i][0]+'-list').addClass('multi')}
+        }
+        // Solidify selections to text
+        $("#file-type-span").html($("#type").val()+ '<input type="hidden" name="type" value="'+$("#type").val()+'">');
+
+        //remove button
+        $("#start-add-btn").remove();
+        //unhide rest of page
+        $("#submit-div").show();
+        $("#files-row").show();
+
+        //add files where they need to be added
+        for(i=0;i<data.selected.length;i++) {
+          $("#"+data.file_types[0]+"-list").append('<li id="'+data.selected[i]+'">'+data.remaining[i]+'</li>');
+        }
+        for(i=0;i<data.remaining.length;i++) {
+          $("#remaining-list").append('<li id="'+data.remaining[i]+'">'+data.remaining[i]+'</li>');
+        }
+
+        //make the files draggable
+        $(".connectedSortable").sortable({
+          connectWith: ".connectedSortable"
+        }).disableSelection();
+      })
+      .fail(function ( data ){
+        $("#errDiv").text('Please check prep information file selected and try again.');
+      });
+  }
+
+  function build_file_lists() {
+    for(i=0;i<file_types.length;i++) {
+      var ft = file_types[i][0];
+      $("#"+ft).val([]);
+      var files = [];
+      $("#"+ft+"-list li").each(function(){
+       files.push(this.id);
+      });
+      // Make sure files added if required
+      if ((file_types[i][1]  && files.length == 0) || ($('#'+ft+'-list').hasClass('multi') && files.length < 2)) {
+        $('#'+ft+'-list').addClass('highlight');
+        return false;
+      }
+      $(ft+'-div').removeClass('highlight');
+      $("#"+ft).val(files);
+    }
+  }
+
+  $(document).ready(function () {
+    $("#user-ena-info").hide();
+    $("#new-ena-info").hide();
+    $("#ena-info").change(function ( event ) {
+        if( $("#ena-ontology").val() == "Other" ) { $("#user-ena-info").show(); }
+        else { $("#user-ena-info").hide(); $("#new-ena-info").hide(); }
+    });
+    $("#user-ena-info").change(function ( event ) {
+        if( $("#user-ontology").val() == "New Type" ) { $("#new-ena-info").show(); }
+        else { $("#new-ena-info").hide(); }
+    });
+
+    $("#form").validate();
+
+    $('#form').submit(function( event ){
+    event.preventDefault();
+    $("#errDiv").text();
+    var valid = $("#form").valid();
+    if( valid == false) {
+      return;
+    }
+    if(build_file_lists() == false) { return; }
+    $.ajax({
+      url: $('#form').attr('action'),
+      type: "POST",
+      data : $('#form').serialize(),
+      success: function( data ){
+        if(data.status == 'warning') { bootstrapAlert(data.message, "warning"); }
+        else if( data.status == 'error') { bootstrapAlert(data.message, "danger"); }
+        else {window.location.href('/study/description/{{study_id}}')}
+      }
+    });
+    return false;
+});
+  });
+</script>
+<style>
+  .connectedSortable {
+    border: 1px solid #ccc;
+    width: 100%;
+    min-height: 20px;
+    list-style-type: none;
+    margin: 0;
+    padding: 5px 0 0 0;
+    float: left;
+    margin-right: 10px;
+  }
+  .connectedSortable li {
+    margin: 0 5px 5px 5px;
+    padding: 5px;
+    font-size: 1em;
+    width: 100%;
+  }
+  .highlight {
+    color:red;
+    border: 1px solid red;
+  }
+</style>
+
+<div class="row"><div class="col-md-12" id="errDiv" style="color:red"></div></div>
+<form action="/study/add_prep/{{study_id}}" method="POST" id="form" onsubmit="build_file_lists()">
+  <div class="row">
+    <div class="col-md-12">
+      <h4>Preperation Name</h4>
+      <input type="text" id="name" name="name" length="60" maxlength="35" required>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-3">
+    <h4>Select data type</h4>
+   <p> <select id="data-type" name="data-type" value="data-type" required>
+        <option value=""></option>
+        {% for t in data_types %}
+          <option value="{{t}}">{{t}}</option>
+        {% end %}
+        </select></p>
+        <p><button class="btn btn-sm" id="start-add-btn" onclick="get_files(); return false;">Start adding files</button></p>
+    </div>
+    <div class="col-md-3">
+      <h4>Select Investigation Type</h4>
+        <p id="ena-info">
+        <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
+        <option value=""></option>
+        {% for o in ontology['ENA'] %}
+          <option value="{{o}}">{{o}}</option>
+        {% end %}
+        </select></p>
+        <p id="user-ena-info"> User defined investigation type: 
+        <select id="user-ontology" name="user-ontology" value="user-ontology">
+        <option value=""></option>
+        {% for o in ontology['User'] %}
+          <option value="{{o}}">{{o}}</option>
+        {% end %}
+        <option value="New Type">New Type</option>
+        </select></p>
+        <p id="new-ena-info">New user defined term: 
+        <input type="textbox" id="new-ontology" name="new-ontology"></p>
+    </div>
+    <div class="col-md-3">
+      <h4>Select file type</h4>
+      <span id="file-type-span"><select name="type" id="type" required>
+      <option value=""></option>
+      {% for t, desc in artifact_types %}
+      <option value="{{t}}">{{t}} - {{desc}}</option>
+      {% end %}
+      </select></span>
+    </div>
+    <div class="col-md-3">
+    <h4>Select Prep Information</h4>
+    <span id="prep-span"><select name="prep-file" id="prep-file" required>
+      <option value=""></option>
+      {% for file in prep_files %}
+      <option value="{{file}}">{{file}}</option>
+      {% end %}
+      </select></span>
+    </div>
+  </div>
+  <div class="row" id="files-row" hidden>
+  <h4>Click and drag your files to the correct file subtype.</h4>
+    <div class="col-md-3" id="files-div"><h4>Available Files</h4><ul id="remaining-list" class="connectedSortable"></ul></div>
+  </div>
+  <div class="row" id="submit-div" hidden>
+    <div class="col-md-12">
+      <button class="btn btn-sm btn-danger" onclick="fill_new_prep(); return false;">Reset</button> <input type="submit" class="btn btn-sm btn-success" value="Create New Preperation">
+    </div>
+  </div>
+</form>

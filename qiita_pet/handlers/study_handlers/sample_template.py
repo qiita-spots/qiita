@@ -33,12 +33,14 @@ class SampleTemplateAJAX(BaseHandler):
         # Get the most recent version for download and build the link
         download = sample_template_filepaths_get_req(
             study_id, self.current_user.id)
-        if 'filepaths' in download:
+
+        if download['status'] == 'success':
             download = download['filepaths'][-1]
+            dl_path = download_link_or_path(
+                is_local, download[1], download[0],
+                "Download sample information")
         else:
-            download = (-1, 'No sample information')
-        dl_path = download_link_or_path(
-            is_local, download[1], download[0], "Download sample information")
+            dl_path = 'No sample information added'
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
         summary = stats['summary'] if 'summary' in stats else {}
@@ -64,7 +66,8 @@ class SampleTemplateAJAX(BaseHandler):
         elif action == 'delete':
             result = sample_template_delete_req(study_id, self.current_user.id)
         else:
-            raise HTTPError(400, 'Unknown sample template action: %s' % action)
+            raise HTTPError(400, 'Unknown sample information action: %s'
+                            % action)
         self.write(result)
 
 

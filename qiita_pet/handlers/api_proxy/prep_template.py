@@ -175,7 +175,8 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     dict of str
         {'status': status,
          'message': message,
-         'file': prep_template}
+         'file': prep_template,
+         'id': id}
     """
     access_error = check_access(study_id, user_id)
     if access_error:
@@ -193,13 +194,14 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
 
     msg = ''
     status = 'success'
+    prep = None
     try:
         with warnings.catch_warnings(record=True) as warns:
             data_type_id = convert_to_id(data_type, 'data_type')
             # deleting previous uploads and inserting new one
-            PrepTemplate.create(load_template_to_dataframe(fp_rpt),
-                                Study(int(study_id)), int(data_type_id),
-                                investigation_type=investigation_type)
+            prep = PrepTemplate.create(load_template_to_dataframe(fp_rpt),
+                                       Study(int(study_id)), int(data_type_id),
+                                       investigation_type=investigation_type)
             remove(fp_rpt)
 
             # join all the warning messages into one. Note that this info
@@ -212,9 +214,12 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
         # Show the error to the user so he can fix the template
         status = 'error'
         msg = str(e)
-    return {'status': status,
+    info = {'status': status,
             'message': msg,
-            'file': prep_template}
+            'file': prep_template,
+            'id': prep.id if prep is not None else None}
+
+    return info
 
 
 def prep_template_samples_get_req(prep_id, user_id):

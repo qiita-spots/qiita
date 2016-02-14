@@ -3,6 +3,7 @@
 <link rel="stylesheet" src="/static/vendor/css/vis.css" type="text/css">
 <script type="text/javascript" src="/static/vendor/js/vis.js"></script>
 <script type="text/javascript">
+  var network = null;
   // Track what prep template is currently being shown.
   var curr_prep = -1;
   function togglegraphs(id) {
@@ -49,6 +50,11 @@
         }
         $("#study-prep-graph-row").show();
         draw_graph(nodes, edges, "study-prep-graph");
+        // add event listeners
+        network.on('select', function(params) {
+          //render the information for the selected artifact ID
+          if(+params.nodes !== 0) { fill_artifact(params.nodes); }
+        });
         // Copy existing formatted prep info to header position
         $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="togglegraphs(); return false;" id="graph-toggle-link">Hide files</a>');
     });
@@ -84,11 +90,6 @@
       }
     };
     network = new vis.Network(container, data, options);
-    // add event listeners
-    network.on('select', function(params) {
-      //render the information for the selected artifact ID
-      if(+params.nodes !== 0) { fill_artifact(params.nodes); }
-    });
   }
 
   function fill_base(sid) {
@@ -131,15 +132,39 @@
       });
   }
 
-  $(document).ready(function() {
-    fill_base({{study_info['study_id']}});
-  });
+  function fill_new_prep() {
+    $.get( "/study/add_prep/{{study_info['study_id']}}")
+      .done(function( data ) {
+        $("#study-main").html(data);
+        $("#study-prep-graph").empty();
+        $("#study-prep-graph-row").hide();
+        $("#study-file-breadcrumbs").empty();
+        $("#study-file-breadcrumbs-row").hide();
+      });
+  }
 
   function validate_delete_study_text() {
     if ($("#study-alias").val() == "{{study_info['study_alias']}}") {
       $('#delete-study-button').prop('disabled', false);
     } else {
       $('#delete-study-button').prop('disabled', true);
+    }
+  }
+
+  function delete_study() {
+    if ($("#study-alias").val() != "{{study_info['study_alias']}}") {
+      alert("The entered study alias doesn't match the study");
+      return false;
+    }
+    if (confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
+      $.post('/study/delete/', {study_id: {{study_info['study_id']}}})
+        .done(function ( data ) {
+          if(data["status"] == "error") {
+            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+          } else {
+            window.location.replace = '/'
+          }
+        });
     }
   }
 
@@ -158,22 +183,9 @@
       });
   }
 
-function delete_study() {
-  if ($("#study-alias").val() != "{{study_info['study_alias']}}") {
-    alert("The entered study alias doesn't match the study");
-    return false;
-  }
-  if (confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
-    $.post('/study/delete/', {study_id: {{study_info['study_id']}}})
-      .done(function ( data ) {
-        if(data["status"] == "error") {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
-        } else {
-          window.location.replace = '/'
-        }
-      });
-  }
-}
+  $(document).ready(function() {
+    fill_base({{study_info['study_id']}});
+  });
 </script>
 <style>
 .graph {
@@ -191,6 +203,7 @@ function delete_study() {
     <a href="#" onclick="fill_sample_summary({{study_info['study_id']}}); return false;">Sample Summary</a><br />
     {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
+    <a href="#" onclick="fill_new_prep()">Add New Preparation</a><br />
     <a href="/study/edit/{{study_info['study_id']}}">Edit Study Information</a><br />
     <a href="#" data-toggle="modal" data-target="#delete-study">Delete Study</a>
     {% end %}

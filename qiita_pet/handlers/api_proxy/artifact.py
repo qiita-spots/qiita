@@ -5,12 +5,83 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+from os.path import join
+
+from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config
+from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
-from qiita_db.util import get_visibilities
 from qiita_db.exceptions import QiitaDBArtifactDeletionError
-from qiita_core.qiita_settings import qiita_config
-from qiita_pet.handlers.api_proxy.util import check_access
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.util import get_mountpoint, get_visibilities
+
+
+@execute_as_transaction
+def artifact_post_req(user_id, filepaths, artifact_type, name,
+                      prep_template_id):
+    """Creates the initial artifact for the prep template
+
+    Parameters
+    ----------
+    user_id : str
+        User adding the atrifact
+    filepaths : dict of {str: [str, ...], ...}
+        List of files to attach to the artifact, keyed to the file type
+    artifact_type : str
+        The type of the artifact
+    name : str
+        Name to give the artifact
+    prep_template_id : int or str castable to int
+        Prep template to attach the artifact to
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the new artifact ID
+        {'status': status,
+         'message': message,
+         'artifact': id}
+    """
+    prep = PrepTemplate(int(prep_template_id))
+    study_id = prep.study_id
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
+    uploads_path = get_mountpoint('uploads')[0][1]
+    cleaned_filepaths = []
+    for ftype in filepaths:
+        # Check if filepath being passed exists for study
+        for fp in filepaths[ftype]:
+            full_fp = join(uploads_path, str(study_id), fp)
+            exists = check_fp(study_id, full_fp)
+            if exists['status'] != 'success':
+                return {'status': 'error',
+                        'message': 'File does not exist: %s' % fp}
+            cleaned_filepaths.append((full_fp, ftype))
+
+    artifact = Artifact.create(cleaned_filepaths, artifact_type, name=name,
+                               prep_template=prep)
+    return {'status': 'success',
+            'message': '',
+            'artifact': artifact.id}
+
+
+def artifact_types_get_req():
+    """Gets artifact types and descriptions available
+
+    Returns
+    -------
+    dict of objects
+        {'status': status,
+         'message': message,
+         'types': [[str, str], ...]}
+        types holds type and description of the artifact type, in the form
+        [[artifact_type, description], ...]
+    """
+    return {'status': 'success',
+            'message': '',
+            'types': Artifact.types()}
 
 
 def artifact_graph_get_req(artifact_id, direction, user_id):

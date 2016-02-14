@@ -185,7 +185,8 @@ class TestPrepAPI(TestCase):
                           ' template. A placeholder value (XXQIITAXX) has been'
                           ' used to populate these columns. Missing columns: '
                           'LinkerPrimerSequence, BarcodeSequence',
-               'file': 'update.txt'}
+               'file': 'update.txt',
+               'id': new_id}
         self.assertEqual(obs, exp)
 
         # Make sure new prep template added

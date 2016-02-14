@@ -6,13 +6,16 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from os.path import join
 
 from tornado.web import authenticated, HTTPError
+import pandas as pd
 
 from qiita_pet.handlers.util import to_int, download_link_or_path
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.util import is_localhost
-from qiita_db.util import get_files_from_uploads_folders
+from qiita_db.util import (get_files_from_uploads_folders, get_mountpoint,
+                           supported_filepath_types)
 from qiita_pet.handlers.api_proxy import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req,
@@ -33,7 +36,7 @@ class PrepTemplateAJAX(BaseHandler):
         """Send formatted summary page of prep template"""
         study_id = self.get_argument('study_id')
         prep_id = self.get_argument('prep_id')
-        files = [f for _, f in get_files_from_uploads_folders(study_id)
+        files = [f for _, f in get_files_from_uploads_folders(str(study_id))
                  if f.endswith(('txt', 'tsv'))]
         data_types = sorted(data_types_get_req())
         is_local = is_localhost(self.request.headers['host'])
@@ -77,3 +80,43 @@ class PrepTemplateAJAX(BaseHandler):
         else:
             raise HTTPError(400, 'Unknown prep template action: %s' % action)
         self.write(result)
+
+
+class PrepFilesHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        study_id = self.get_argument('study_id')
+        prep_file = self.get_argument('prep_file')
+        prep_type = self.get_argument('type')
+
+        # TODO: Get file types for the artifact type
+        # FILE TYPE IN POSTION 0 MUST BE DEFAULT FOR SELECTED
+        file_types = supported_filepath_types(prep_type)
+
+        selected = []
+        not_selected = []
+        _, base = get_mountpoint("uploads")[0]
+        uploaded = get_files_from_uploads_folders(study_id)
+        prep = pd.read_table(join(base, study_id, prep_file), sep='\t')
+        if 'run_prefix' in prep.columns:
+            # Use run_prefix column of prep template to auto-select
+            # per-prefix uploaded files if available.
+            per_prefix = True
+            prep_prefixes = set(prep['run_prefix'])
+            for _, filename in uploaded:
+                for prefix in prep_prefixes:
+                    if filename.startswith(prefix):
+                        selected.append(filename)
+                    else:
+                        not_selected.append(filename)
+        else:
+            per_prefix = False
+            not_selected = [f for _, f in uploaded]
+
+        # Write out if this prep template supports per-prefix files, and the
+        # as well as pre-selected and remaining files
+        self.write({
+            'per_prefix': per_prefix,
+            'file_types': file_types,
+            'selected': selected,
+            'remaining': not_selected})
