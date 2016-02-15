@@ -46,7 +46,7 @@ class TestArtifactAPI(TestCase):
                 f.write('')
 
     def test_artifact_get_req_no_access(self):
-        obs = artifact_get_req(1, 'demo@microbio.me')
+        obs = artifact_get_req('demo@microbio.me', 1)
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)

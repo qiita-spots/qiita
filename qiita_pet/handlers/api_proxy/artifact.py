@@ -37,6 +37,11 @@ def artifact_get_req(user_id, artifact_id):
          'artifact': {info key: val, ...}}
     """
     artifact = Artifact(int(artifact_id))
+
+    access_error = check_access(artifact.study.id, user_id)
+    if access_error:
+        return access_error
+
     info = {
         'id': artifact.id,
         'timestamp': artifact.timestamp,
