@@ -83,7 +83,7 @@ class TestArtifactAPI(TestCase):
                'can_submit_ebi': False,
                'processing_parameters': None,
                'ebi_run_accessions': None,
-               'is_submitted_vamps': None,
+               'is_submitted_vamps': False,
                'parents': [],
                'filepaths': [
                    (1, join(qiita_config.base_data_dir, 'raw_data',

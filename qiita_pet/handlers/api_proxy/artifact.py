@@ -42,32 +42,26 @@ def artifact_get_req(user_id, artifact_id):
     if access_error:
         return access_error
 
-    info = {
-        'id': artifact.id,
-        'timestamp': artifact.timestamp,
-        'processing_parameters': artifact.processing_parameters,
-        'visibility': artifact.visibility,
-        'type': artifact.artifact_type,
-        'data_type': artifact.data_type,
-        'filepaths': artifact.filepaths,
-        'parents': [a.id for a in artifact.parents],
-        'study': artifact.study.id if artifact.study else None
-    }
-    try:
-        info['can_submit_ebi'] = artifact.can_be_submitted_to_ebi
-        info['ebi_run_accessions'] = artifact.ebi_run_accessions
-    except QiitaDBOperationNotPermittedError:
-        info['can_submit_ebi'] = False
-        info['ebi_run_accessions'] = None
+    can_submit_ebi = artifact.can_be_submitted_to_ebi
+    ebi_run_accessions = (artifact.ebi_run_accessions
+                          if can_submit_ebi else None)
+    can_submit_vamps = artifact.can_be_submitted_to_vamps
+    is_submitted_vamps = (artifact.is_submitted_to_vamps
+                          if can_submit_vamps else False)
 
-    try:
-        info['can_submit_vamps'] = artifact.can_be_submitted_to_vamps
-        info['is_submitted_vamps'] = artifact.is_submitted_to_vamps
-    except QiitaDBOperationNotPermittedError:
-        info['can_submit_vamps'] = False
-        info['is_submitted_vamps'] = None
-
-    return info
+    return {'id': artifact.id,
+            'timestamp': artifact.timestamp,
+            'processing_parameters': artifact.processing_parameters,
+            'visibility': artifact.visibility,
+            'type': artifact.artifact_type,
+            'data_type': artifact.data_type,
+            'filepaths': artifact.filepaths,
+            'parents': [a.id for a in artifact.parents],
+            'study': artifact.study.id if artifact.study else None,
+            'can_submit_ebi': can_submit_ebi,
+            'ebi_run_accessions': ebi_run_accessions,
+            'can_submit_vamps': can_submit_vamps,
+            'is_submitted_vamps': is_submitted_vamps}
 
 
 @execute_as_transaction
