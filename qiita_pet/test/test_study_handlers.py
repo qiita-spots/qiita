@@ -2,13 +2,21 @@
 
 from unittest import main
 from json import loads
+from os.path import exists
+from os import remove, close
+from os.path import join
+from tempfile import mkstemp
 
+from mock import Mock
+from h5py import File
+
+from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import StudyPerson, Study
-from qiita_db.util import get_count, check_count
+from qiita_db.util import get_count, check_count, get_mountpoint
 from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_pet.handlers.study_handlers.listing_handlers import (
@@ -16,6 +24,7 @@ from qiita_pet.handlers.study_handlers.listing_handlers import (
     _build_single_proc_data_info)
 from qiita_pet.handlers.study_handlers.description_handlers import (
     _propagate_visibility)
+from qiita_ware.demux import to_hdf5
 from qiita_pet.handlers.study_handlers.sample_template import (
     _build_sample_summary)
 
@@ -236,6 +245,17 @@ class TestListStudiesHandler(TestHandlerBase):
     def test_get(self):
         response = self.get('/study/list/')
         self.assertEqual(response.code, 200)
+
+
+class TestStudyApprovalList(TestHandlerBase):
+    database = True
+
+    def test_get(self):
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+        Artifact(4).visibility = "awaiting_approval"
+        response = self.get('/admin/approval/')
+        self.assertEqual(response.code, 200)
+        self.assertIn("test@foo.bar", response.body)
 
 
 class TestStudyDescriptionHandler(TestHandlerBase):
@@ -519,8 +539,37 @@ class TestSearchStudiesAJAX(TestHandlerBase):
 
 
 class TestEBISubmitHandler(TestHandlerBase):
-    # TODO: add proper test for this once figure out how. Issue 567
-    pass
+    # TODO: add tests for post function once we figure out how. Issue 567
+    def setUp(self):
+        super(TestEBISubmitHandler, self).setUp()
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                remove(fp)
+
+    def test_get(self):
+        demux_fp = [fp for _, fp, fp_type in Artifact(2).filepaths
+                    if fp_type == 'preprocessed_demux'][0]
+        fd, fna_fp = mkstemp(suffix='_seqs.fna')
+        close(fd)
+        self._clean_up_files.extend([fna_fp, demux_fp])
+        with open(fna_fp, 'w') as f:
+            f.write('>a_1 X orig_bc=X new_bc=X bc_diffs=0\nCCC')
+        with File(demux_fp, "w") as f:
+            to_hdf5(fna_fp, f)
+        BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
+        response = self.get("/ebi_submission/2")
+        self.assertEqual(response.code, 200)
+
+    def test_get_no_admin(self):
+        response = self.get("/ebi_submission/2")
+        self.assertEqual(response.code, 403)
+
+    def test_get_no_exist(self):
+        response = self.get('/ebi_submission/100')
+        self.assertEqual(response.code, 404)
 
 
 class TestPrepGraphs(TestHandlerBase):
@@ -569,8 +618,127 @@ class TestArtifactGraphs(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
 
-@qiita_test_checker()
+class TestArtifact(TestHandlerBase):
+    database = True
+
+    def test_get_ancestors(self):
+        response = self.get('/artifact/graph/', {'direction': 'ancestors',
+                                                 'artifact_id': 1})
+        exp = {'status': 'success',
+               'message': '',
+               'node_labels': [[1, 'Raw data 1 - FASTQ']],
+               'edge_list': []}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+    def test_get_descendants(self):
+        response = self.get('/artifact/graph/', {'direction': 'descendants',
+                                                 'artifact_id': 1})
+        exp = {'status': 'success',
+               'message': '',
+               'node_labels': [[1, 'Raw data 1 - FASTQ'],
+                               [3, 'Demultiplexed 2 - Demultiplexed'],
+                               [2, 'Demultiplexed 1 - Demultiplexed'],
+                               [4, 'BIOM - BIOM']],
+               'edge_list': [[1, 3], [1, 2], [2, 4]]}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+    def test_get_unknown(self):
+        response = self.get('/artifact/graph/', {'direction': 'BAD',
+                                                 'artifact_id': 1})
+        exp = {'status': 'error',
+               'message': 'Unknown directon BAD'}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+    def test_delete_artifact(self):
+        response = self.post('/artifact/',
+                             {'artifact_id': 2})
+        self.assertEqual(response.code, 200)
+
+        # checking that the action was sent
+        self.assertIn("Cannot delete artifact 2: it has children: 4",
+                      response.body)
+
+    def test_get_admin(self):
+        response = self.get('/admin/artifact/',
+                            {'artifact_id': 3})
+        self.assertEqual(response.code, 200)
+
+        # checking that proper actions shown
+        self.assertIn("Make public</button>", response.body)
+        self.assertIn("Revert to sandbox</button>", response.body)
+        self.assertIn("Submit to EBI</a>", response.body)
+        self.assertIn("Submit to VAMPS</a>", response.body)
+
+    def test_post_admin(self):
+        response = self.post('/admin/artifact/',
+                             {'artifact_id': 3,
+                              'visibility': 'sandbox'})
+        self.assertEqual(response.code, 200)
+
+        # checking that proper actions shown
+        self.assertEqual({"status": "success",
+                          "message": "Artifact visibility changed to sandbox"},
+                         loads(response.body))
+
+        self.assertEqual(Artifact(3).visibility, 'sandbox')
+
+
+class TestAddArtifact(TestHandlerBase):
+    database = True
+
+    def tearDown(self):
+        # Replace file if removed as part of function testing
+        uploads_path = get_mountpoint('uploads')[0][1]
+        fp = join(uploads_path, '1', 'uploaded_file.txt')
+        if not exists(fp):
+            with open(fp, 'w') as f:
+                f.write('')
+
+    def test_get(self):
+        response = self.get('/study/add_prep/1')
+        self.assertEqual(response.code, 200)
+        self.assertIn('Select file type', response.body)
+        self.assertIn('uploaded_file.txt', response.body)
+
+    def test_get_files_not_allowed(self):
+        response = self.post(
+            '/study/prep_files/',
+            {'type': 'BIOM', 'prep_file': 'uploaded_file.txt', 'study_id': 1})
+        self.assertEqual(response.code, 405)
+
+    def test_post_artifact(self):
+        new_artifact_id = get_count('qiita.artifact') + 1
+        new_prep_id = get_count('qiita.prep_template') + 1
+        uploads_path = get_mountpoint('uploads')[0][1]
+        # Create prep test file to point at
+        prep_fp = join(uploads_path, '1', 'prep_create.txt')
+        with open(prep_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+        prep_fp = join(uploads_path, '1', 'uploaded_file.txt')
+        with open(prep_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+
+        response = self.post(
+            '/study/add_prep/1', {
+                'name': 'new prep', 'data-type': '16S',
+                'ena-ontology': 'Metagenomics', 'user-ontology': '',
+                'new-ontology': '', 'type': 'per_sample_FASTQ',
+                'prep-file': 'prep_create.txt',
+                'raw_forward_seqs': ['uploaded_file.txt'],
+                'raw_reverse_seqs': []})
+        self.assertEqual(response.code, 200)
+        # make sure new artifact created
+        artifact = Artifact(new_artifact_id)
+        self.assertEqual(artifact.name, 'new prep')
+        PrepTemplate(new_prep_id)
+
+
 class TestPrepTemplate(TestHandlerBase):
+    database = True
+
     def test_get(self):
         response = self.get('/study/description/prep_template/',
                             {'prep_id': 1, 'study_id': 1})
@@ -623,15 +791,33 @@ class TestSampleSummaryAJAX(TestHandlerBase):
         self.assertEqual(res.code, 200)
         exp = {"status": "success",
                "message": "",
-               "values": ["4.59216095574", "35.2374368957", "95.2060749748",
-                          "43.9614715197", "10.6655599093", "78.3634273709",
-                          "13.089194595", "74.0894932572", "12.6245524972",
-                          "68.0991287718", "53.5050692395", "84.0030227585",
-                          "40.8623799474", "85.4121476399", "29.1499460692",
-                          "68.51099627", "57.571893782", "23.1218032799",
-                          "38.2627021402", "82.8302905615", "None", "None",
-                          "44.9725384282", "0.291867635913", "60.1102854322",
-                          "3.21190859967", "12.7065957714"]}
+               "values": {'1.SKB2.640194': 35.2374368957,
+                          '1.SKM4.640180': None,
+                          '1.SKB3.640195': 95.2060749748,
+                          '1.SKB6.640176': 78.3634273709,
+                          '1.SKD6.640190': 29.1499460692,
+                          '1.SKM6.640187': 0.291867635913,
+                          '1.SKD9.640182': 23.1218032799,
+                          '1.SKM8.640201': 3.21190859967,
+                          '1.SKM2.640199': 82.8302905615,
+                          '1.SKD2.640178': 53.5050692395,
+                          '1.SKB7.640196': 13.089194595,
+                          '1.SKD4.640185': 40.8623799474,
+                          '1.SKB8.640193': 74.0894932572,
+                          '1.SKM3.640197': None,
+                          '1.SKD5.640186': 85.4121476399,
+                          '1.SKB1.640202': 4.59216095574,
+                          '1.SKM1.640183': 38.2627021402,
+                          '1.SKD1.640179': 68.0991287718,
+                          '1.SKD3.640198': 84.0030227585,
+                          '1.SKB5.640181': 10.6655599093,
+                          '1.SKB4.640189': 43.9614715197,
+                          '1.SKB9.640200': 12.6245524972,
+                          '1.SKM9.640192': 12.7065957714,
+                          '1.SKD8.640184': 57.571893782,
+                          '1.SKM5.640177': 44.9725384282,
+                          '1.SKM7.640188': 60.1102854322,
+                          '1.SKD7.640191': 68.51099627}}
         self.assertEqual(loads(res.body), exp)
 
     def test_post_error(self):
@@ -646,12 +832,20 @@ class TestSampleSummaryAJAX(TestHandlerBase):
 class TestDelete(TestHandlerBase):
     database = True
 
+    def test_delete_study(self):
+        response = self.post('/study/delete/', {'study_id': 1})
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'error',
+               'message': 'Unable to delete study: Study "Identification of '
+                          'the Microbiomes for Cannabis Soils" cannot be '
+                          'erased because it has a sample template'}
+        self.assertEqual(loads(response.body), exp)
+
     def test_delete_sample_template(self):
         response = self.post('/study/description/sample_template/',
                              {'study_id': 1,
                               'action': 'delete'})
         self.assertEqual(response.code, 200)
-
         exp = ('{"status": "error", '
                '"message": "Sample template can not be erased because there '
                'are prep templates associated."}')
