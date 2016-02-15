@@ -79,7 +79,7 @@ class NewArtifactHandler(BaseHandler):
 class ArtifactAJAX(BaseHandler):
     def get(self):
         artifact_id = to_int(self.get_argument('artifact_id'))
-        name = artifact_get_req(artifact_id)['name']
+        name = artifact_get_req(self.current_user.id, artifact_id)['name']
         self.write(name)
 
     def post(self):
