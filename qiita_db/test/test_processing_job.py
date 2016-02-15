@@ -187,7 +187,7 @@ class ProcessingJobTest(TestCase):
     def test_complete_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
-            self.tester1.complete(False, error="Job failure")
+            self.tester1.complete(True, artifacts_data={})
 
     def test_log(self):
         self.assertIsNone(self.tester1.log)
@@ -195,16 +195,17 @@ class ProcessingJobTest(TestCase):
         self.assertIsNone(self.tester3.log)
         self.assertEqual(self.tester4.log, qdb.logger.LogEntry(1))
 
-    def test_set_log(self):
-        self.tester2._set_status('error')
-        exp = qdb.logger.LogEntry(1)
-        self.tester2._set_log(exp)
-        self.assertEqual(self.tester2.log, exp)
+    def test_set_error(self):
+        for t in [self.tester1, self.tester2]:
+            t._set_error('Job failure')
+            self.assertEqual(t.status, 'error')
+            self.assertEqual(
+                t.log, qdb.logger.LogEntry.newest_records(numrecords=1)[0])
 
-    def test_set_log_error(self):
+    def test_set_error_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
-            self.tester2._set_log(qdb.logger.LogEntry(1))
+            self.tester3._set_error("Job failure")
 
     def test_heartbeat(self):
         self.assertIsNone(self.tester1.heartbeat)

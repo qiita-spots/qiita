@@ -177,7 +177,7 @@ class ProcessingJob(qdb.base.QiitaObject):
 
         Returns
         -------
-        {'queued', 'running', 'success', 'error'}
+        {'queued', 'running', 'success', 'error', 'in_construction', 'waiting'}
             The current status of the job
         """
         with qdb.sql_connection.TRN:
@@ -194,7 +194,8 @@ class ProcessingJob(qdb.base.QiitaObject):
 
         Parameters
         ----------
-        value : str, {'queued', 'running', 'success', 'error'}
+        value : str, {'queued', 'running', 'success', 'error',
+                      'in_construction', 'waiting'}
             The new status of the job
 
         Raises
@@ -243,10 +244,12 @@ class ProcessingJob(qdb.base.QiitaObject):
             If the job is not in running state
         """
         with qdb.sql_connection.TRN:
-            if self.status != 'running':
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Can't complete job: not in a running state")
             if success:
+                if self.status != 'running':
+                    # If the job is not running, we only allow to complete it
+                    # if it did not success
+                    raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                        "Can't complete job: not in a running state")
                 if artifacts_data:
                     artifact_ids = []
                     for out_name, a_data in viewitems(artifacts_data):
@@ -271,9 +274,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                         qdb.sql_connection.TRN.add(sql, sql_params, many=True)
                 self._set_status('success')
             else:
-                log = qdb.logger.LogEntry.create('Runtime', error)
-                self._set_status('error')
-                self._set_log(log)
+                self._set_error(error)
 
     @property
     def log(self):
@@ -296,28 +297,31 @@ class ProcessingJob(qdb.base.QiitaObject):
                 res = qdb.logger.LogEntry(log_id)
         return res
 
-    def _set_log(self, value):
+    def _set_error(self, error):
         """Attaches a log entry to the job
 
         Parameters
         ----------
-        value : qiita_db.logger.LogEntry
-            The log entry to attach to the job
+        error : str
+            The error message
 
         Raises
         ------
         qiita_db.exceptions.QiitaDBOperationNotPermittedError
-            If the status of the job is not 'error'
+            If the status of the job is 'success'
         """
         with qdb.sql_connection.TRN:
-            if self.status != 'error':
+            if self.status == 'success':
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                     "Can only set up the log for jobs whose status is 'error'")
+
+            self._set_status('error')
+            log = qdb.logger.LogEntry.create('Runtime', error)
 
             sql = """UPDATE qiita.processing_job
                      SET logging_id = %s
                      WHERE processing_job_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [value.id, self.id])
+            qdb.sql_connection.TRN.add(sql, [log.id, self.id])
             qdb.sql_connection.TRN.execute()
 
     @property
