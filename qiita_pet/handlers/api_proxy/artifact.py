@@ -15,7 +15,6 @@ from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBArtifactDeletionError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import get_mountpoint, get_visibilities
-from qiita_db.exceptions import QiitaDBOperationNotPermittedError
 
 
 def artifact_get_req(user_id, artifact_id):
