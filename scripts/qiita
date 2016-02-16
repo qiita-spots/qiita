@@ -143,7 +143,7 @@ def load_study(owner, title, info):
                    "defaults",
               type=str)
 def load_artifact(fp, fp_type, artifact_type, prep_template, parents,
-                  dflt_params, required_params, optional_params, ebi, vamps):
+                  dflt_params, required_params, optional_params):
     """Loads an artifact to the database"""
     artifact = qdb.commands.load_artifact_from_cmd(
         fp, fp_type, artifact_type, prep_template=prep_template,

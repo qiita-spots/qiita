@@ -35,7 +35,8 @@ def artifact_get_req(user_id, artifact_id):
          'message': message,
          'artifact': {info key: val, ...}}
     """
-    artifact = Artifact(int(artifact_id))
+    artifact_id = int(artifact_id)
+    artifact = Artifact(artifact_id)
 
     access_error = check_access(artifact.study.id, user_id)
     if access_error:
@@ -48,7 +49,7 @@ def artifact_get_req(user_id, artifact_id):
     is_submitted_vamps = (artifact.is_submitted_to_vamps
                           if can_submit_vamps else False)
 
-    return {'id': artifact.id,
+    return {'id': artifact_id,
             'timestamp': artifact.timestamp,
             'processing_parameters': artifact.processing_parameters,
             'visibility': artifact.visibility,
