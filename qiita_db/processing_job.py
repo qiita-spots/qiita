@@ -8,10 +8,55 @@
 
 from uuid import UUID
 from datetime import datetime
+from subprocess import Popen, PIPE
+from multiprocessing import Process
+from os.path import join
 
 from future.utils import viewitems
 
+from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
+
+
+def _system_call(cmd):
+    """Call cmd and return (stdout, stderr, return_value)
+
+    Parameters
+    ----------
+    cmd : str or iterator of str
+        The string containing the command to be run, or a sequence of strings
+        that are the tokens of the command.
+
+    Notes
+    -----
+    This function is ported from QIIME (http://www.qiime.org), previously named
+    qiime_system_call. QIIME is a GPL project, but we obtained permission from
+    the authors of this function to port it to Qiita and keep it under BSD
+    license.
+    """
+    proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
+                 stderr=PIPE)
+    # Communicate pulls all stdout/stderr from the PIPEs
+    # This call blocks until the command is done
+    stdout, stderr = proc.communicate()
+    return_value = proc.returncode
+    return stdout, stderr, return_value
+
+
+def _job_submitter(job, cmd):
+    """Executes the commands `cmd` and updates the job in case of failure
+
+    Parameters
+    ----------
+    job : qiita_db.processing_job.ProcesingJob
+        The job that is executed by cmd
+    cmd : str
+        The command to execute the job
+    """
+    std_out, std_err, return_value = _system_call(cmd)
+    if return_value != 0:
+        error = ""
+        job.complete(False, error=error)
 
 
 class ProcessingJob(qdb.base.QiitaObject):
@@ -221,6 +266,39 @@ class ProcessingJob(qdb.base.QiitaObject):
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [new_status, self.id])
             qdb.sql_connection.TRN.execute()
+
+    def _generate_cmd(self):
+        """Generates the command to submit the job
+
+        Returns
+        -------
+        str
+            The command to use to submit the job
+        """
+        job_dir = join(qdb.util.get_work_base_dir(), self.id)
+        software = self.command.software
+        plugin_start_script = software.start_script
+        plugin_env_script = software.environment_script
+        cmd = '%s "%s" "%s" "%s" "%s" "%s"' % (
+            qiita_config.plugin_launcher, plugin_env_script,
+            plugin_start_script, qiita_config.base_url, self.id, job_dir)
+        return cmd
+
+    def submit(self):
+        """Submits the job to execution
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the job is not in 'waiting' or 'in_construction' status
+        """
+        if self.status not in {'in_construction', 'waiting'}:
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Can't submit job, not in 'in_construction' or "
+                "'waiting' status")
+        cmd = self._generate_cmd()
+        p = Process(target=_job_submitter, args=(self, cmd))
+        p.start()
 
     def complete(self, success, artifacts_data=None, error=None):
         """Completes the job, either with a success or error status

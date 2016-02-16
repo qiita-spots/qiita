@@ -8,12 +8,30 @@
 
 from unittest import TestCase, main
 from datetime import datetime
-from os.path import exists
+from os.path import exists, join
 from os import remove, close
 from tempfile import mkstemp
 
 import qiita_db as qdb
 from qiita_core.util import qiita_test_checker
+
+
+@qiita_test_checker()
+class ProcessingJobUtilTest(TestCase):
+    def test_system_call(self):
+        obs_out, obs_err, obs_status = qdb.processing_job._system_call(
+            'echo "Test system call stdout"')
+
+        self.assertEqual(obs_out, "Test system call stdout\n")
+        self.assertEqual(obs_err, "")
+        self.assertEqual(obs_status, 0)
+
+    def test_system_call_error(self):
+        obs_out, obs_err, obs_status = qdb.processing_job._system_call(
+            '>&2  echo "Test system call stderr"; exit 1')
+        self.assertEqual(obs_out, "")
+        self.assertEqual(obs_err, "Test system call stderr\n")
+        self.assertEqual(obs_status, 1)
 
 
 @qiita_test_checker()
@@ -158,6 +176,20 @@ class ProcessingJobTest(TestCase):
 
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
             self.tester3._set_status('running')
+
+    def test_generate_cmd(self):
+        obs = self.tester1._generate_cmd()
+        exp = ('qiita-plugin-launcher "source activate qiita" '
+               '"start_target_gene" "https://localhost" '
+               '"063e553b-327c-4818-ab4a-adfe58e49860" "%s"'
+               % join(qdb.util.get_work_base_dir(),
+                      "063e553b-327c-4818-ab4a-adfe58e49860"))
+        self.assertEqual(obs, exp)
+
+    def test_submit_error(self):
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            self.tester1.submit()
 
     def test_complete_success(self):
         fd, fp = mkstemp(suffix='_table.biom')
