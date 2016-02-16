@@ -8,6 +8,15 @@
   //currently selected nodes
   var curr_nodes = [1];
 
+  function validate_node_id(node_id, action){
+      if (node_id.length !== 1) {
+          alert("Can only " + action + " one command at a time");
+          return -1;
+      }
+      // node_id only has one element
+      return +node_id[0];
+  }
+
   function add_command(type_nodes) {
     var command_info = commands[$("#command").val()];
     //TODO: add job callback
@@ -28,8 +37,8 @@
 
   function remove_command(node_id) {
     //TODO: delete job callback
-    if(node_id.length > 1) { alert("Can only delete one command at a time."); return;}
-    node_id = +node_id;
+    node_id = validate_node_id(node_id, "delete");
+    if (node_id === -1){ return;}
     var queue = [node_id];
     var edge_list = edges.get();
     while(queue.length !== 0) {
@@ -49,8 +58,8 @@
   }
 
   function load_job(node_id) {
-    if(node_id.length > 1) { alert("Can only load one command at a time."); return;}
-    node_id = +node_id;
+    node_id = validate_node_id(node_id, "load");
+    if(node_id === -1){ return;}
     $.get('/study/job/', {job_id: nodes.get(node_id).id})
       .done(function ( data ) {
         $("#network-info").empty();
