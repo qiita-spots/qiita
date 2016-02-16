@@ -530,7 +530,7 @@ class TestAnalysis(TestCase):
             self.analysis.mapping_file, index='#SampleID')
         exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.duplicated_samples_not_merged, index='#SampleID')
-        # assert_frame_equal(obs, exp)
+        assert_frame_equal(obs, exp)
 
     def test_build_mapping_file_duplicated_samples_merge(self):
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
