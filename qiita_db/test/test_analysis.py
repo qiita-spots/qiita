@@ -8,6 +8,7 @@ import warnings
 from biom import load_table
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
+from functools import partial
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
@@ -28,10 +29,17 @@ class TestAnalysis(TestCase):
         self.analysis = qdb.analysis.Analysis(1)
         self.portal = qiita_config.portal
         _, self.fp = qdb.util.get_mountpoint("analysis")[0]
-        self.biom_fp = join(self.fp, "1_analysis_18S.biom")
-        self.map_fp = join(self.fp, "1_analysis_mapping.txt")
+
+        self.get_fp = partial(join, self.fp)
+        self.biom_fp = self.get_fp("1_analysis_18S.biom")
+        self.map_fp = self.get_fp("1_analysis_mapping.txt")
         self._old_portal = qiita_config.portal
         self.table_fp = None
+
+        # fullpaths for testing
+        self.duplicated_samples_not_merged = self.get_fp(
+            "not_merged_samples.txt")
+        self.map_exp_fp = self.get_fp("1_analysis_mapping_exp.txt")
 
     def tearDown(self):
         qiita_config.portal = self.portal
@@ -40,7 +48,7 @@ class TestAnalysis(TestCase):
         with open(self.map_fp, 'w') as f:
                 f.write("")
 
-        fp = join(qdb.util.get_mountpoint('analysis')[0][1], 'testfile.txt')
+        fp = self.get_fp('testfile.txt')
         if exists(fp):
             remove(fp)
 
@@ -230,7 +238,7 @@ class TestAnalysis(TestCase):
     def test_retrieve_samples(self):
         exp = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
                    '1.SKM9.640192', '1.SKM4.640180']}
-        self.assertEqual(self.analysis.samples, exp)
+        self.assertItemsEqual(self.analysis.samples, exp)
 
     def test_retrieve_dropped_samples(self):
         # Create and populate second study to do test with
@@ -326,7 +334,7 @@ class TestAnalysis(TestCase):
 
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
                    artifact.id: ['2.SKB8.640193', '2.SKD8.640184']}
-        self.analysis._build_biom_tables(samples, 10000)
+        self.analysis._build_biom_tables(samples, 10000, True)
         exp = {4: {'1.SKM4.640180', '1.SKM9.640192'},
                artifact.id: {'2.SKB7.640196'}}
         self.assertEqual(self.analysis.dropped_samples, exp)
@@ -464,13 +472,13 @@ class TestAnalysis(TestCase):
                                      samples=('1.SKB8.640193', ))
         exp = {4: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
                    '1.SKM4.640180']}
-        self.assertEqual(self.analysis.samples, exp)
+        self.assertItemsEqual(self.analysis.samples, exp)
 
     def test_remove_samples_samples(self):
         self.analysis.remove_samples(samples=('1.SKD8.640184', ))
         exp = {4: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
                    '1.SKM4.640180']}
-        self.assertEqual(self.analysis.samples, exp)
+        self.assertItemsEqual(self.analysis.samples, exp)
 
     def test_remove_samples_artifact(self):
         self.analysis.remove_samples(artifacts=(qdb.artifact.Artifact(4), ))
@@ -486,26 +494,18 @@ class TestAnalysis(TestCase):
         self.analysis.unshare(qdb.user.User("shared@foo.bar"))
         self.assertEqual(self.analysis.shared_with, [])
 
-    def test_get_samples(self):
-        obs = self.analysis._get_samples()
-        exp = {4: ['1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
-                   '1.SKM4.640180', '1.SKM9.640192']}
-        self.assertEqual(obs, exp)
-
     def test_build_mapping_file(self):
         new_id = qdb.util.get_count('qiita.filepath') + 1
-        samples = {1: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        self.analysis._build_mapping_file(samples)
+        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
+        self.analysis._build_mapping_file(samples, True)
         obs = self.analysis.mapping_file
         self.assertEqual(obs, self.map_fp)
 
-        base_dir = qdb.util.get_mountpoint('analysis')[0][1]
         obs = pd.read_csv(obs, sep='\t', infer_datetime_format=True,
                           parse_dates=True, index_col=False, comment='\t')
-        exp = pd.read_csv(join(base_dir, '1_analysis_mapping_exp.txt'),
-                          sep='\t', infer_datetime_format=True,
-                          parse_dates=True, index_col=False, comment='\t')
-
+        exp = pd.read_csv(self.map_exp_fp, sep='\t',
+                          infer_datetime_format=True, parse_dates=True,
+                          index_col=False, comment='\t')
         assert_frame_equal(obs, exp)
 
         sql = """SELECT * FROM qiita.filepath
@@ -522,17 +522,35 @@ class TestAnalysis(TestCase):
         obs = self.conn_handler.execute_fetchall(sql, (self.analysis.id,))
         exp = [[1L, 14L, 2L], [1L, 15L, None], [1L, new_id, None]]
 
-    def test_build_mapping_file_duplicate_samples(self):
-        samples = {1: ['1.SKB8.640193', '1.SKB8.640193', '1.SKD8.640184']}
-        with self.assertRaises(qdb.exceptions.QiitaDBError):
-            self.analysis._build_mapping_file(samples)
+    def test_build_mapping_file_duplicated_samples_no_merge(self):
+        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
+                   3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
+        self.analysis._build_mapping_file(samples)
+        obs = pd.read_csv(self.analysis.mapping_file, sep='\t',
+                          infer_datetime_format=True, parse_dates=True,
+                          index_col=False, comment='\t')
+        exp = pd.read_csv(self.duplicated_samples_not_merged, sep='\t',
+                          infer_datetime_format=True, parse_dates=True,
+                          index_col=False, comment='\t')
+        assert_frame_equal(obs, exp)
+
+    def test_build_mapping_file_duplicated_samples_merge(self):
+        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
+                   3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
+        self.analysis._build_mapping_file(samples, True)
+        obs = pd.read_csv(self.analysis.mapping_file, sep='\t',
+                          infer_datetime_format=True, parse_dates=True,
+                          index_col=False, comment='\t')
+        exp = pd.read_csv(self.map_exp_fp, sep='\t',
+                          infer_datetime_format=True, parse_dates=True,
+                          index_col=False, comment='\t')
+        assert_frame_equal(obs, exp)
 
     def test_build_biom_tables(self):
         new_id = qdb.util.get_count('qiita.filepath') + 1
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        self.analysis._build_biom_tables(samples, 100)
+        self.analysis._build_biom_tables(samples, 100, True)
         obs = self.analysis.biom_tables
-
         self.assertEqual(obs, {'18S': self.biom_fp})
 
         table = load_table(self.biom_fp)
@@ -549,13 +567,25 @@ class TestAnalysis(TestCase):
         sql = """SELECT EXISTS(SELECT * FROM qiita.filepath
                  WHERE filepath_id=%s)"""
         obs = self.conn_handler.execute_fetchone(sql, (new_id,))[0]
-
         self.assertTrue(obs)
 
         sql = """SELECT * FROM qiita.analysis_filepath
                  WHERE analysis_id=%s ORDER BY filepath_id"""
         obs = self.conn_handler.execute_fetchall(sql, (self.analysis.id,))
-        exp = [[1L, 14L, 2L], [1L, 15L, None], [1L, new_id, None]]
+        exp = [[1L, 12L, 2L], [1L, 13L, None], [1L, new_id, 2L]]
+        self.assertEqual(obs, exp)
+
+    def test_build_biom_tables_duplicated_samples_merge(self):
+        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
+                   5: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
+        self.analysis._build_biom_tables(samples, 100)
+        obs = self.analysis.biom_tables
+
+        table = load_table(self.biom_fp)
+        obs = set(table.ids(axis='sample'))
+        exp = {'4.1.SKD8.640184', '4.1.SKB7.640196', '4.1.SKB8.640193',
+               '5.1.SKB8.640193', '5.1.SKB7.640196', '5.1.SKD8.640184'}
+        self.assertItemsEqual(obs, exp)
 
     def test_build_files(self):
         self.analysis.build_files()
@@ -576,7 +606,7 @@ class TestAnalysis(TestCase):
 
     def test_add_file(self):
         new_id = qdb.util.get_count('qiita.filepath') + 1
-        fp = join(qdb.util.get_mountpoint('analysis')[0][1], 'testfile.txt')
+        fp = self.get_fp('testfile.txt')
         with open(fp, 'w') as f:
             f.write('testfile!')
         self.analysis._add_file('testfile.txt', 'plain_text', '18S')
