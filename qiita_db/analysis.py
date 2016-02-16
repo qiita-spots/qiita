@@ -17,15 +17,13 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from collections import defaultdict
-from itertools import product
+from itertools import product, chain
 from os.path import join
 
 from future.utils import viewitems
 from biom import load_table
 from biom.util import biom_open
 import pandas as pd
-from skbio.util import flatten
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
@@ -812,16 +810,17 @@ class Analysis(qdb.base.QiitaStatusObject):
             samples = self.samples
             # figuring out if we are going to have duplicated samples, again
             # doing it here cause it's computetional cheaper
-            all_ids = flatten([samps for _, samps in viewitems(samples)])
-            duplicated_samples = ((len(all_ids) != len(set(all_ids))) and
+            all_ids = list(chain.from_iterable([
+                samps for _, samps in viewitems(samples)]))
+            rename_dup_samples = ((len(all_ids) != len(set(all_ids))) or
                                   merge_duplicated_sample_ids)
 
-            self._build_mapping_file(samples, duplicated_samples)
+            self._build_mapping_file(samples, rename_dup_samples)
             self._build_biom_tables(samples, rarefaction_depth,
-                                    duplicated_samples)
+                                    rename_dup_samples)
 
     def _build_biom_tables(self, samples, rarefaction_depth=None,
-                           duplicated_samples=False):
+                           rename_dup_samples=False):
         """Build tables and add them to the analysis"""
         with qdb.sql_connection.TRN:
             base_fp = qdb.util.get_work_base_dir()
@@ -849,14 +848,14 @@ class Analysis(qdb.base.QiitaStatusObject):
                 biom_table.filter(selected_samples, axis='sample',
                                   inplace=True)
 
-                if not duplicated_samples:
+                if rename_dup_samples:
                     ids_map = {_id: "%d.%s" % (aid, _id)
                                for _id in biom_table.ids()}
                     biom_table.update_ids(ids_map, 'sample', True, True)
 
                 # add the metadata column for study the samples come from,
                 # this is useful in case the user download the bioms
-                study_md = {'Study': artifact.study.title, 'Processed_id': aid}
+                study_md = {'Study': artifact.study.title, 'Artifact_id': aid}
                 samples_md = {sid: study_md for sid in selected_samples}
                 biom_table.add_metadata(samples_md, axis='sample')
                 data_type = artifact.data_type
@@ -883,7 +882,7 @@ class Analysis(qdb.base.QiitaStatusObject):
                 self._add_file("%d_analysis_%s.biom" % (self._id, dt),
                                "biom", data_type=dt)
 
-    def _build_mapping_file(self, samples, duplicated_samples=False):
+    def _build_mapping_file(self, samples, rename_dup_samples=False):
         """Builds the combined mapping file for all samples
            Code modified slightly from qiime.util.MetadataMap.__add__"""
         with qdb.sql_connection.TRN:
@@ -901,27 +900,26 @@ class Analysis(qdb.base.QiitaStatusObject):
 
             all_ids = set()
             to_concat = []
-            for pid, samps in viewitems(samples):
-                qdb.sql_connection.TRN.add(sql, [pid])
+            for aid, samps in viewitems(samples):
+                qdb.sql_connection.TRN.add(sql, [aid])
                 qm_fp = qdb.sql_connection.TRN.execute_fetchindex()[0][1]
 
                 # Parse the mapping file
-                qm = pd.read_csv(join(fp, qm_fp), sep='\t',
-                                 keep_default_na=False, na_values=['unknown'],
-                                 index_col=False,
-                                 converters=defaultdict(lambda: str))
+                qm = qdb.metadata_template.util.load_template_to_dataframe(
+                    join(fp, qm_fp), index='#SampleID')
 
                 # if we are not going to merge the duplicated samples
-                # append the pid to the sample name
-                if duplicated_samples:
+                # append the aid to the sample name
+                if rename_dup_samples:
+                    qm['original_SampleID'] = qm.index
+                    qm['#SampleID'] = "%d." % aid + qm.index
+                    qm['qiita_aid'] = aid
+                    samps = ['%d.%s' % (aid, _id) for _id in samps]
+                    qm.set_index('#SampleID', inplace=True, drop=True)
+                else:
                     samps = set(samps) - all_ids
                     all_ids.update(samps)
-                else:
-                    qm['#SampleID'] = qm['#SampleID'] + ".%d" % pid
-                    qm['qiita_pid'] = pid
-                    samps = ['%s.%d' % (_id, pid) for _id in samps]
 
-                qm.set_index('#SampleID', inplace=True, drop=True)
                 qm = qm.loc[samps]
                 to_concat.append(qm)
 

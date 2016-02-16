@@ -501,11 +501,10 @@ class TestAnalysis(TestCase):
         obs = self.analysis.mapping_file
         self.assertEqual(obs, self.map_fp)
 
-        obs = pd.read_csv(obs, sep='\t', infer_datetime_format=True,
-                          parse_dates=True, index_col=False, comment='\t')
-        exp = pd.read_csv(self.map_exp_fp, sep='\t',
-                          infer_datetime_format=True, parse_dates=True,
-                          index_col=False, comment='\t')
+        obs = qdb.metadata_template.util.load_template_to_dataframe(
+            obs, index='#SampleID')
+        exp = qdb.metadata_template.util.load_template_to_dataframe(
+            self.map_exp_fp, index='#SampleID')
         assert_frame_equal(obs, exp)
 
         sql = """SELECT * FROM qiita.filepath
@@ -514,8 +513,8 @@ class TestAnalysis(TestCase):
             sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
 
         exp = [[13, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
-               [new_id, '1_analysis_mapping.txt', 9, '3242541223', 1, 1]]
-        self.assertEqual(obs, exp)
+               [new_id, '1_analysis_mapping.txt', 9, '682183006', 1, 1]]
+        self.assertItemsEqual(obs, exp)
 
         sql = """SELECT * FROM qiita.analysis_filepath
                  WHERE analysis_id=%s ORDER BY filepath_id"""
@@ -526,24 +525,21 @@ class TestAnalysis(TestCase):
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
                    3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
         self.analysis._build_mapping_file(samples)
-        obs = pd.read_csv(self.analysis.mapping_file, sep='\t',
-                          infer_datetime_format=True, parse_dates=True,
-                          index_col=False, comment='\t')
-        exp = pd.read_csv(self.duplicated_samples_not_merged, sep='\t',
-                          infer_datetime_format=True, parse_dates=True,
-                          index_col=False, comment='\t')
+
+        obs = qdb.metadata_template.util.load_template_to_dataframe(
+            self.analysis.mapping_file, index='#SampleID')
+        exp = qdb.metadata_template.util.load_template_to_dataframe(
+            self.duplicated_samples_not_merged, index='#SampleID')
         assert_frame_equal(obs, exp)
 
     def test_build_mapping_file_duplicated_samples_merge(self):
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
                    3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
         self.analysis._build_mapping_file(samples, True)
-        obs = pd.read_csv(self.analysis.mapping_file, sep='\t',
-                          infer_datetime_format=True, parse_dates=True,
-                          index_col=False, comment='\t')
-        exp = pd.read_csv(self.map_exp_fp, sep='\t',
-                          infer_datetime_format=True, parse_dates=True,
-                          index_col=False, comment='\t')
+        obs = qdb.metadata_template.util.load_template_to_dataframe(
+            self.analysis.mapping_file, index='#SampleID')
+        exp = qdb.metadata_template.util.load_template_to_dataframe(
+            self.map_exp_fp, index='#SampleID')
         assert_frame_equal(obs, exp)
 
     def test_build_biom_tables(self):
@@ -561,7 +557,7 @@ class TestAnalysis(TestCase):
         obs = table.metadata('1.SKB8.640193')
         exp = {'Study':
                'Identification of the Microbiomes for Cannabis Soils',
-               'Processed_id': 4}
+               'Artifact_id': 4}
         self.assertEqual(obs, exp)
 
         sql = """SELECT EXISTS(SELECT * FROM qiita.filepath
@@ -575,7 +571,7 @@ class TestAnalysis(TestCase):
         exp = [[1L, 12L, 2L], [1L, 13L, None], [1L, new_id, 2L]]
         self.assertEqual(obs, exp)
 
-    def test_build_biom_tables_duplicated_samples_merge(self):
+    def test_build_biom_tables_duplicated_samples_not_merge(self):
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
                    5: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
         self.analysis._build_biom_tables(samples, 100)
@@ -589,6 +585,34 @@ class TestAnalysis(TestCase):
 
     def test_build_files(self):
         self.analysis.build_files()
+
+        # testing that the generated files have the same sample ids
+        biom_ids = load_table(
+            self.analysis.biom_tables['18S']).ids(axis='sample')
+        mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
+            self.analysis.mapping_file, index='#SampleID').index
+
+        self.assertItemsEqual(biom_ids, mf_ids)
+
+        # now that the samples have been prefixed
+        exp = ['1.SKM9.640192', '1.SKM4.640180', '1.SKD8.640184',
+               '1.SKB8.640193', '1.SKB7.640196']
+        self.assertItemsEqual(biom_ids, exp)
+
+    def test_build_files_merge_duplicated_sample_ids(self):
+        self.analysis.build_files(merge_duplicated_sample_ids=True)
+
+        # testing that the generated files have the same sample ids
+        biom_ids = load_table(
+            self.analysis.biom_tables['18S']).ids(axis='sample')
+        mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
+            self.analysis.mapping_file, index='#SampleID').index
+        self.assertItemsEqual(biom_ids, mf_ids)
+
+        # now that the samples have been prefixed
+        exp = ['4.1.SKM9.640192', '4.1.SKM4.640180', '4.1.SKD8.640184',
+               '4.1.SKB8.640193', '4.1.SKB7.640196']
+        self.assertItemsEqual(biom_ids, exp)
 
     def test_build_files_raises_type_error(self):
         with self.assertRaises(TypeError):
