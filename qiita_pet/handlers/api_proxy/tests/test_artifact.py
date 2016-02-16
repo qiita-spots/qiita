@@ -6,14 +6,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
-
-from os import remove
 from os.path import join, exists
-import pandas as pd
+from os import remove
 from datetime import datetime
 
-from qiita_core.util import qiita_test_checker
+import pandas as pd
+
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
@@ -45,32 +45,8 @@ class TestArtifactAPI(TestCase):
             with open(fp, 'w') as f:
                 f.write('')
 
-    def test_artifact_get_req(self):
-        obs = artifact_get_req(1, 'test@foo.bar')
-        exp = {'is_submitted_to_vamps': False,
-               'data_type': '18S',
-               'can_be_submitted_to_vamps': False,
-               'can_be_submitted_to_ebi': False,
-               'timestamp': datetime(2012, 10, 1, 9, 30, 27),
-               'prep_templates': [1],
-               'visibility': 'private',
-               'study': 1,
-               'processing_parameters': None,
-               'ebi_run_accessions': None,
-               'parents': [],
-               'filepaths': [
-                   (1, join(qiita_config.base_data_dir,
-                            'raw_data/1_s_G1_L001_sequences.fastq.gz'),
-                    'raw_forward_seqs'),
-                   (2, join(qiita_config.base_data_dir,
-                            'raw_data/1_s_G1_L001_sequences_barcodes.'
-                            'fastq.gz'),
-                    'raw_barcodes')],
-               'artifact_type': 'FASTQ'}
-        self.assertEqual(obs, exp)
-
     def test_artifact_get_req_no_access(self):
-        obs = artifact_get_req(1, 'demo@microbio.me')
+        obs = artifact_get_req('demo@microbio.me', 1)
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
@@ -93,6 +69,29 @@ class TestArtifactAPI(TestCase):
         obs = artifact_delete_req(3, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_get_req(self):
+        obs = artifact_get_req('test@foo.bar', 1)
+        exp = {'id': 1,
+               'type': 'FASTQ',
+               'study': 1,
+               'data_type': '18S',
+               'timestamp': datetime(2012, 10, 1, 9, 30, 27),
+               'visibility': 'private',
+               'can_submit_vamps': False,
+               'can_submit_ebi': False,
+               'processing_parameters': None,
+               'ebi_run_accessions': None,
+               'is_submitted_vamps': False,
+               'parents': [],
+               'filepaths': [
+                   (1, join(qiita_config.base_data_dir, 'raw_data',
+                    '1_s_G1_L001_sequences.fastq.gz'), 'raw_forward_seqs'),
+                   (2,  join(qiita_config.base_data_dir, 'raw_data',
+                    '1_s_G1_L001_sequences_barcodes.fastq.gz'),
+                    'raw_barcodes')]
+               }
         self.assertEqual(obs, exp)
 
     def test_artifact_post_req(self):

@@ -13,7 +13,6 @@ from h5py import File
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
-from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import StudyPerson, Study
@@ -619,8 +618,9 @@ class TestArtifactGraphs(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
 
-@qiita_test_checker()
 class TestArtifact(TestHandlerBase):
+    database = True
+
     def test_get_ancestors(self):
         response = self.get('/artifact/graph/', {'direction': 'ancestors',
                                                  'artifact_id': 1})
@@ -686,8 +686,17 @@ class TestArtifact(TestHandlerBase):
         self.assertEqual(Artifact(3).visibility, 'sandbox')
 
 
-@qiita_test_checker()
 class TestAddArtifact(TestHandlerBase):
+    database = True
+
+    def tearDown(self):
+        # Replace file if removed as part of function testing
+        uploads_path = get_mountpoint('uploads')[0][1]
+        fp = join(uploads_path, '1', 'uploaded_file.txt')
+        if not exists(fp):
+            with open(fp, 'w') as f:
+                f.write('')
+
     def test_get(self):
         response = self.get('/study/add_prep/1')
         self.assertEqual(response.code, 200)
@@ -727,8 +736,9 @@ class TestAddArtifact(TestHandlerBase):
         PrepTemplate(new_prep_id)
 
 
-@qiita_test_checker()
 class TestPrepTemplate(TestHandlerBase):
+    database = True
+
     def test_get(self):
         response = self.get('/study/description/prep_template/',
                             {'prep_id': 1, 'study_id': 1})

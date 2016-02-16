@@ -17,10 +17,19 @@
   }
 
   function fill_artifact(aid) {
-    $("#study-main").html("ARTIFACT " + aid + " HTML STUFF");
-    $.get("/admin/artifact/", {artifact_id: +aid })
+    $("#study-main").html("<p><button onclick='process_from(" + aid + ")' class='btn btn-sm'>Process from here</button></p>ARTIFACT " + aid + " HTML STUFF");
+  $.get("/admin/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
         $("#study-admin").html(data);
+      });
+  }
+
+  function process_from(aid) {
+    $.get("/study/process/", { artifact_id: aid })
+      .done(function ( data ){
+        $("#study-prep-graph-row").hide();
+        $("#graph-toggle-link").text("Show files");
+        $("#study-main").html(data);
       });
   }
 
@@ -152,17 +161,17 @@
   }
 
   function delete_study() {
-    if ($("#study-alias").val() != "{{study_info['study_alias']}}") {
+    if($("#study-alias").val() != "{{study_info['study_alias']}}") {
       alert("The entered study alias doesn't match the study");
       return false;
     }
-    if (confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
-      $.post('/study/delete/', {study_id: {{study_info['study_id']}}})
+    else if(confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
+      $.post('/study/delete/', { study_id: {{study_info['study_id']}} })
         .done(function ( data ) {
-          if(data["status"] == "error") {
+          if(data.status == "error") {
             bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
           } else {
-            window.location.replace = '/'
+            window.location.replace = '/';
           }
         });
     }
@@ -171,8 +180,8 @@
   function set_admin_visibility(visibility, aid) {
     $.post('/admin/artifact/', {artifact_id: +aid, visibility: visibility})
       .done(function ( data ) {
-        var status = "info"
-        if(data["status"] == "error") { status = "danger" }
+        var status = "info";
+        if(data["status"] == "error") { status = "danger"; }
         //Show for 4 seconds (4000 ms), then remove
         bootstrapAlert(data.message.replace("\n", "<br/>"), status, 4000);
         //update buttons to match new status
