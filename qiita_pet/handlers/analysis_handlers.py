@@ -111,6 +111,10 @@ class AnalysisWaitHandler(BaseHandler):
     def post(self, analysis_id):
         analysis_id = int(analysis_id)
         rarefaction_depth = self.get_argument('rarefaction-depth')
+        mdsi = self.get_argument('merge-duplicated-sample-ids', default=False)
+        if mdsi == 'on':
+            mdsi = True
+
         # convert to integer if rarefaction level given
         if rarefaction_depth:
             rarefaction_depth = int(rarefaction_depth)
@@ -120,7 +124,7 @@ class AnalysisWaitHandler(BaseHandler):
         check_analysis_access(self.current_user, analysis)
 
         command_args = self.get_arguments("commands")
-        split = [x.split("#") for x in command_args]
+        cmd_split = [x.split("#") for x in command_args]
 
         moi_user_id = get_id_from_user(self.current_user.id)
         moi_group = create_info(analysis_id, 'group', url='/analysis/',
@@ -130,8 +134,9 @@ class AnalysisWaitHandler(BaseHandler):
         moi_result_url = '/analysis/results/%d' % analysis_id
 
         submit(ctx_default, moi_group['id'], moi_name,
-               moi_result_url, run_analysis, analysis_id, split,
-               rarefaction_depth=rarefaction_depth)
+               moi_result_url, run_analysis, analysis_id, cmd_split,
+               rarefaction_depth=rarefaction_depth,
+               merge_duplicated_sample_ids=mdsi)
 
         r_client.hset('analyis-map', analysis_id, moi_group['id'])
 

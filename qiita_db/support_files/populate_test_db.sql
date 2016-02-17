@@ -327,12 +327,14 @@ INSERT INTO qiita.artifact (name, generated_timestamp, command_id, command_param
            ('Demultiplexed 2', 'Mon Oct 1 11:30:27 2012', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json,
             3, 6, 2, TRUE, TRUE),
            ('BIOM', 'Tue Oct 2 17:30:00 2012', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json,
+            3, 7, 2, FALSE, FALSE),
+           ('BIOM', 'Tue Oct 2 17:30:00 2012', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json,
             3, 7, 2, FALSE, FALSE);
 
 -- Link the child artifacts with their parents artifacts
 INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
     VALUES (1, 2), (1, 3),
-           (2, 4);
+           (2, 4), (2, 5);
 
 -- Insert the jobs that processed the previous artifacts
 INSERT INTO qiita.processing_job (processing_job_id, email, command_id, command_parameters, processing_job_status_id)
@@ -362,14 +364,14 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
     VALUES (1, 1), (1, 2),
            (2, 3), (2, 4), (2, 5),
-           (4, 9);
+           (4, 9), (5, 9);
 
 -- Link the artifact with the prep template
 UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
 
 -- Link the study with the artifacts
 INSERT INTO qiita.study_artifact (study_id, artifact_id)
-    VALUES (1, 1), (1, 2), (1, 3), (1, 4);
+    VALUES (1, 1), (1, 2), (1, 3), (1, 4), (1, 5);
 
 -- Insert EBI information for artifact 2
 INSERT INTO qiita.ebi_run_accession (sample_id, artifact_id, ebi_run_accession)

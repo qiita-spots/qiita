@@ -24,8 +24,38 @@
 <h1>Select Commands</h1>
 <span id="error" style="color:red"></span>
 <form role="form" action="/analysis/wait/{{aid}}" method="post" onsubmit="return check_selection()">
-<div style="padding-bottom:25px;">
-    Rarefaction Depth: <input type="number" min="10" id="rarefaction-depth" name="rarefaction-depth" class="form-control" style="width:10em;">
+
+<div>
+<table class="table">
+  <tr>
+    <td style="width:100px;">
+      Rarefaction Depth: <input type="number" min="10" id="rarefaction-depth" name="rarefaction-depth" class="form-control" style="width:10em;">
+    </td>
+    <td style="width:10px;">&nbsp;</td>
+    <td style="text-align:left;vertical-align:middle;">
+      <table>
+        <tr>
+          <td style="width:20px;">
+            <input type="checkbox" id="merge-duplicated-sample-ids" name="merge-duplicated-sample-ids" class="form-control">
+          </td>
+          <td>
+            <label style="font-weight:normal;" for="merge-duplicated-sample-ids">Merge same sample ids</label>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <small>
+              Merging sample ids is useful for when you have the same sample in different preparations of the
+              same data, i.e. a sample processed twice in 16S. When the samples are not merged, they are prefixed
+              with the artifact id.
+            </small>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
 </div>
 
 <ul class="nav nav-tabs" id="data-types-tabs">
@@ -34,7 +64,7 @@
   {% end %}
 </ul>
 
-<div class="tab-content" style="height:300px">
+<div class="tab-content">
 {% for data_type in data_types %}
   <div class="tab-pane" id="{{ data_type }}">
         <table class="table">
