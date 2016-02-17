@@ -809,7 +809,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             # different stages and possible errors.
             samples = self.samples
             # figuring out if we are going to have duplicated samples, again
-            # doing it here cause it's computetional cheaper
+            # doing it here cause it's computational cheaper
             all_ids = list(chain.from_iterable([
                 samps for _, samps in viewitems(samples)]))
             rename_dup_samples = ((len(all_ids) != len(set(all_ids))) or
@@ -825,7 +825,7 @@ class Analysis(qdb.base.QiitaStatusObject):
         with qdb.sql_connection.TRN:
             base_fp = qdb.util.get_work_base_dir()
 
-            # this assumes that there is only one refererence/pipeline for each
+            # this assumes that there is only one reference/pipeline for each
             # data_type issue #164
             new_tables = {dt: None for dt in self.data_types}
             for aid, samps in viewitems(samples):
@@ -887,7 +887,7 @@ class Analysis(qdb.base.QiitaStatusObject):
            Code modified slightly from qiime.util.MetadataMap.__add__"""
         with qdb.sql_connection.TRN:
             # query to get the latest qiime mapping file
-            sql = """SELECT filepath_id, filepath
+            sql = """SELECT filepath
                      FROM qiita.filepath
                         JOIN qiita.prep_template_filepath USING (filepath_id)
                         JOIN qiita.prep_template USING (prep_template_id)
@@ -902,7 +902,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             to_concat = []
             for aid, samps in viewitems(samples):
                 qdb.sql_connection.TRN.add(sql, [aid])
-                qm_fp = qdb.sql_connection.TRN.execute_fetchindex()[0][1]
+                qm_fp = qdb.sql_connection.TRN.execute_fetchindex()[0][0]
 
                 # Parse the mapping file
                 qm = qdb.metadata_template.util.load_template_to_dataframe(

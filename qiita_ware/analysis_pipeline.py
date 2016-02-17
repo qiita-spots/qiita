@@ -27,7 +27,8 @@ def _build_analysis_files(analysis, r_depth=None,
     analysis : Analysis object
         The analysis to build files for
     r_depth : int, optional
-        Rarefaction depth for biom table creation. Default
+        Rarefaction depth for biom table creation. Default: None, no
+        rarefaction is applied
     merge_duplicated_sample_ids : bool, optional
         If the duplicated sample ids in the selected studies should be
         merged or prepended with the artifact ids. False (default) prepends
