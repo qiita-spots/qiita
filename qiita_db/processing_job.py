@@ -12,7 +12,8 @@ from subprocess import Popen, PIPE
 from multiprocessing import Process
 from os.path import join
 
-from future.utils import viewitems
+from future.utils import viewitems, viewvalues
+import networkx as nx
 
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
@@ -128,7 +129,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                          processing_job_status_id)
                      VALUES (%s, %s, %s, %s)
                      RETURNING processing_job_id"""
-            status = qdb.util.convert_to_id("queued", "processing_job_status")
+            status = qdb.util.convert_to_id(
+                "in_construction", "processing_job_status")
             sql_args = [user.id, command.id,
                         parameters.dump(), status]
             qdb.sql_connection.TRN.add(sql, sql_args)
@@ -140,8 +142,14 @@ class ProcessingJob(qdb.base.QiitaObject):
                      VALUES (%s, %s)"""
             for pname, vals in command.parameters.items():
                 if vals[0] == 'artifact':
-                    qdb.sql_connection.TRN.add(
-                        sql, [parameters.values[pname], job_id])
+                    artifact_info = parameters.values[pname]
+                    # If the artifact_info is a list, then the artifact
+                    # still doesn't exists because the current job is part
+                    # of a workflow, so we can't link
+                    if not isinstance(artifact_info, list):
+                        qdb.sql_connection.TRN.add(
+                            sql, [artifact_info, job_id])
+
             qdb.sql_connection.TRN.execute()
 
             return cls(job_id)
@@ -482,3 +490,192 @@ class ProcessingJob(qdb.base.QiitaObject):
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [value, self.id])
             qdb.sql_connection.TRN.execute()
+
+
+class ProcessingWorkflow(qdb.base.QiitaObject):
+    """Models a workflow defined by the user
+
+    Parameters
+    ----------
+    user : qiita_db.user.User
+        The user that modeled the workflow
+    root : list of qiita_db.processing_job.ProcessingJob
+        The first job in the workflow
+    """
+    _table = "processing_job_workflow"
+
+    @classmethod
+    def from_default_workflow(cls, user, dflt_wf, req_params, name=None):
+        """Creates a new processing workflow from a default workflow
+
+        Parameters
+        ----------
+        user : qiita_db.user.User
+            The user creating the workflow
+        dflt_wf : qiita_db.software.DefaultWorkflow
+            The default workflow
+        req_params : dict of {qdb.software.Command: dict of {str: object}}
+            The required parameters values for the source commands in the
+            workflow, keyed by command. The inner dicts are keyed by
+            parameter name.
+        name : str, optional
+            Name of the workflow. Default: generated from user's name
+
+        Returns
+        -------
+        qiita_db.processing_job.ProcessingWorkflow
+            The newly created workflow
+        """
+        with qdb.sql_connection.TRN:
+            dflt_g = dflt_wf.graph
+
+            # Find the roots of the workflow. That is, the nodes that do not
+            # have a parent in the graph (in_degree = 0)
+            in_degrees = dflt_g.in_degree()
+
+            # We can potentially access this information from the nodes
+            # multiple times, so caching in here
+            all_nodes = {n: (n.command, n.parameters)
+                         for n in in_degrees}
+            roots = {n: (n.command, n.parameters)
+                     for n, d in viewitems(in_degrees) if d == 0}
+
+            # Check that we have all the required parameters
+            root_cmds = set(c for c, _ in viewvalues(roots))
+            if root_cmds != set(req_params):
+                error_msg = ['Provided required parameters do not match the '
+                             'initial set of commands for the workflow.']
+                missing = [c.name for c in root_cmds - set(req_params)]
+                if missing:
+                    error_msg.append(
+                        ' Command(s) "%s" are missing the required parameter '
+                        'set.' % ', '.join(missing))
+                extra = [c.name for c in set(req_params) - root_cmds]
+                if extra:
+                    error_msg.append(
+                        ' Paramters for command(s) "%s" have been provided, '
+                        'but they are not the initial commands for the '
+                        'workflow.' % ', '.join(extra))
+                raise qdb.exceptions.QiitaDBError(''.join(error_msg))
+
+            # Start creating the root jobs
+            node_to_job = {
+                n: ProcessingJob.create(
+                    user,
+                    qdb.software.Parameters.from_default_params(
+                        p, req_params[c]))
+                for n, (c, p) in viewitems(roots)}
+            root_jobs = node_to_job.values()
+
+            # SQL used to create the edges between jobs
+            sql = """INSERT INTO qiita.parent_processing_job
+                        (parent_id, child_id)
+                     VALUES (%s, %s)"""
+
+            # Create the rest of the jobs. These are different form the root
+            # jobs because they depend on other jobs to complete in order to be
+            # submitted
+            for n in nx.topological_sort(dflt_g):
+                if n in node_to_job:
+                    # We have already seend this node
+                    # (because it is a root node)
+                    continue
+
+                cmd, dflt_params = all_nodes[n]
+                job_req_params = {}
+                parent_ids = []
+
+                # Each incoming edge represents an artifact that is generated
+                # by the source job of the edge
+                for source, dest, data in dflt_g.in_edges(n, data=True):
+                    # Retrieve the id of the parent job - it already exists
+                    # because we are visiting the nodes in topological order
+                    source_id = node_to_job[source].id
+                    parent_ids.append(source_id)
+                    # Get the connections between the job and the source
+                    connections = data['connections'].connections
+                    for out, in_param in connections:
+                        # We take advantage of the fact the parameters are
+                        # stored in JSON to encode the name of the output
+                        # artifact from
+                        # the previous job
+                        job_req_params[in_param] = [source_id, out]
+
+                # At this point we should have all the requried paramters for
+                # the current job, so create it
+                new_job = ProcessingJob.create(
+                    user, qdb.software.Parameters.from_default_params(
+                        dflt_params, job_req_params))
+                node_to_job[n] = new_job
+
+                # Create the parent-child links in the DB
+                sql_args = [[pid, new_job.id] for pid in parent_ids]
+                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+
+            # Insert the workflow in the processing_job_worflow table
+            name = name if name else "%s's workflow" % user.info['name']
+            sql = """INSERT INTO qiita.processing_job_workflow (email, name)
+                     VALUES (%s, %s)
+                     RETURNING processing_job_workflow_id"""
+            qdb.sql_connection.TRN.add(sql, [user.email, name])
+            w_id = qdb.sql_connection.TRN.execute_fetchlast()
+            # Connect the workflow with it's initial set of jobs
+            sql = """INSERT INTO qiita.processing_job_workflow_roots
+                        (processing_job_workflow_id, processing_job_id)
+                     VALUES (%s, %s)"""
+            sql_args = [[w_id, j.id] for j in root_jobs]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
+        return cls(w_id)
+
+    @classmethod
+    def from_scratch(cls, user, parameters):
+        """Creates a new processing workflow from scratch
+
+        Parameters
+        ----------
+        user : qiita_db.user.User
+            The user creating the workflow
+        parameters : qiita_db.software.Parameters
+            The parameters of the first job in the workflow
+        """
+        pass
+
+    def add(self, parents, dflt_params, connections=None, params=None):
+        """Adds a new job to the workflow
+        """
+        pass
+
+    @property
+    def name(self):
+        """"The name of the workflow
+
+        Returns
+        -------
+        str
+            The name of the workflow
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name
+                     FROM qiita.processing_job_workflow
+                     WHERE processing_job_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def user(self):
+        """The user that created the workflow
+
+        Returns
+        -------
+        qdb.user.User
+            The user that created the workflow
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT email
+                     FROM qiita.processing_job_workflow
+                     WHERE processing_job_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            email = qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.user.User(email)

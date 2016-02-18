@@ -81,7 +81,7 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(obs.user, exp_user)
         self.assertEqual(obs.command, exp_command)
         self.assertEqual(obs.parameters, exp_params)
-        self.assertEqual(obs.status, 'queued')
+        self.assertEqual(obs.status, 'in_construction')
         self.assertEqual(obs.log, None)
         self.assertEqual(obs.heartbeat, None)
         self.assertEqual(obs.step, None)
@@ -288,6 +288,21 @@ class ProcessingJobTest(TestCase):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             self.tester4.step = 'demultiplexing'
+
+
+class ProcessingWorkflowTests(TestCase):
+    def test_from_default_workflow(self):
+        user = qdb.user.User('test@foo.bar')
+        dflt_wf = qdb.software.DefaultWorkflow(1)
+        req_params = {qdb.software.Command(1): {'input_data': 1}}
+        name = "Test processing workflow"
+
+        obs = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
+            user, dflt_wf, req_params, name=name)
+        self.assertEqual(obs.name, "Test processing workflow")
+        self.assertEqual(obs.user, user)
+        # obs_graph = obs.graph
+
 
 if __name__ == '__main__':
     main()
