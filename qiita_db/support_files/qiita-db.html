@@ -1152,9 +1152,9 @@ Referred by collection ( email )
 Referred by collection_users ( email ) 
 Referred by message_user ( email ) 
 Referred by processing_job ( email ) 
+Referred by processing_job_workflow ( email ) 
 Referred by study ( email ) 
-Referred by study_users ( email ) 
-Referred by processing_job_workflow ( email ) </title></a>
+Referred by study_users ( email ) </title></a>
   <use id='nn' x='332' y='282' xlink:href='#nn'/><a xlink:href='#qiita_user.user_level_id'><use id='idx' x='332' y='281' xlink:href='#idx'/><title>Index  ( user_level_id ) </title></a>
 <a xlink:href='#qiita_user.user_level_id'><text x='348' y='292'>user_level_id</text><title>user_level_id integer not null default 5
 user level</title></a>
@@ -2246,9 +2246,8 @@ The last heartbeat received by this job</title></a>
 <path d='M 2235.50 1639.50 L 2235.50 1620.50 Q 2235.50 1613.50 2242.50 1613.50 L 2422.50 1613.50 Q 2429.50 1613.50 2429.50 1620.50 L 2429.50 1639.50 L2235.50 1639.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
 <a xlink:href='#processing_job_workflow'><text x='2264' y='1627' class='tableTitle'>processing_job_workflow</text><title>Table qiita.processing_job_workflow</title></a>
   <use id='nn' x='2237' y='1647' xlink:href='#nn'/><a xlink:href='#processing_job_workflow.processing_job_workflow_id'><use id='pk' x='2237' y='1646' xlink:href='#pk'/><title>Primary Key  ( processing_job_workflow_id ) </title></a>
-<a xlink:href='#processing_job_workflow.processing_job_workflow_id'><text x='2253' y='1657'>processing_job_workflow_id</text><title>processing_job_workflow_id bigint not null</title></a>
-<a xlink:href='#processing_job_workflow.processing_job_workflow_id'><use id='ref' x='2418' y='1646' xlink:href='#ref'/><title>Referred by processing_job_workflow_roots ( processing_job_workflow_id ) 
-Referred by processing_job_workflow_roots ( processing_job_workflow_id ) </title></a>
+<a xlink:href='#processing_job_workflow.processing_job_workflow_id'><text x='2253' y='1657'>processing_job_workflow_id</text><title>processing_job_workflow_id bigserial not null</title></a>
+<a xlink:href='#processing_job_workflow.processing_job_workflow_id'><use id='ref' x='2418' y='1646' xlink:href='#ref'/><title>Referred by processing_job_workflow_roots ( processing_job_workflow_id ) </title></a>
   <use id='nn' x='2237' y='1662' xlink:href='#nn'/><a xlink:href='#processing_job_workflow.email'><use id='idx' x='2237' y='1661' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#processing_job_workflow.email'><text x='2253' y='1672'>email</text><title>email varchar not null</title></a>
 <a xlink:href='#processing_job_workflow.email'><use id='fk' x='2418' y='1661' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
@@ -6395,7 +6394,7 @@ Controlled Vocabulary </td>
 <tbody>
 	<tr>
 		<td><a name='processing_job_workflow.processing_job_workflow_id'>processing&#095;job&#095;workflow&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
+		<td> bigserial  NOT NULL  </td>
 		<td>  </td>
 	</tr>
 	<tr>

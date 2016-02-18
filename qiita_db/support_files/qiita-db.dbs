@@ -1268,7 +1268,7 @@
 			</index>
 		</table>
 		<table name="processing_job_workflow" >
-			<column name="processing_job_workflow_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="processing_job_workflow_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="email" type="varchar" jt="12" mandatory="y" />
 			<column name="name" type="varchar" jt="12" />
 			<index name="pk_processing_job_workflow" unique="PRIMARY_KEY" >

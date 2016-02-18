@@ -100,10 +100,10 @@ ALTER TABLE qiita.default_workflow_edge_connections ADD CONSTRAINT fk_default_wo
 -- The table qiita.processing_job_workflow holds the workflow actually executed
 -- by the user. We allow the user to name the workflow for easier reference
 CREATE TABLE qiita.processing_job_workflow (
-	processing_job_worfklow_id bigint  NOT NULL,
-	email                varchar  NOT NULL,
-	name                 varchar  ,
-	CONSTRAINT pk_processing_job_workflow PRIMARY KEY ( processing_job_worfklow_id )
+	processing_job_workflow_id 	bigserial  	NOT NULL,
+	email                		varchar  	NOT NULL,
+	name                 		varchar  ,
+	CONSTRAINT pk_processing_job_workflow PRIMARY KEY ( processing_job_workflow_id )
  ) ;
 CREATE INDEX idx_processing_job_workflow ON qiita.processing_job_workflow ( email ) ;
 ALTER TABLE qiita.processing_job_workflow ADD CONSTRAINT fk_processing_job_workflow FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ;
@@ -118,7 +118,7 @@ CREATE TABLE qiita.processing_job_workflow_roots (
  ) ;
 CREATE INDEX idx_processing_job_workflow_roots_wf ON qiita.processing_job_workflow_roots ( processing_job_workflow_id ) ;
 CREATE INDEX idx_processing_job_workflow_roots_job ON qiita.processing_job_workflow_roots ( processing_job_id ) ;
-ALTER TABLE qiita.processing_job_workflow_roots ADD CONSTRAINT fk_processing_job_workflow_roots_job FOREIGN KEY ( processing_job_workflow_id ) REFERENCES qiita.processing_job_workflow( processing_job_worfklow_id )    ;
+ALTER TABLE qiita.processing_job_workflow_roots ADD CONSTRAINT fk_processing_job_workflow_roots_job FOREIGN KEY ( processing_job_workflow_id ) REFERENCES qiita.processing_job_workflow( processing_job_workflow_id )    ;
 ALTER TABLE qiita.processing_job_workflow_roots ADD CONSTRAINT fk_processing_job_workflow_roots_wf FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
 
 -- the table parent_processing_job stores the edges between the
