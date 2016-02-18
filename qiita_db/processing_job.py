@@ -11,6 +11,7 @@ from datetime import datetime
 from subprocess import Popen, PIPE
 from multiprocessing import Process
 from os.path import join
+from itertools import chain
 
 from future.utils import viewitems, viewvalues
 import networkx as nx
@@ -620,7 +621,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [user.email, name])
             w_id = qdb.sql_connection.TRN.execute_fetchlast()
             # Connect the workflow with it's initial set of jobs
-            sql = """INSERT INTO qiita.processing_job_workflow_roots
+            sql = """INSERT INTO qiita.processing_job_workflow_root
                         (processing_job_workflow_id, processing_job_id)
                      VALUES (%s, %s)"""
             sql_args = [[w_id, j.id] for j in root_jobs]
@@ -679,3 +680,26 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             email = qdb.sql_connection.TRN.execute_fetchlast()
             return qdb.user.User(email)
+
+    @property
+    def graph(self):
+        """Returns the graph of jobs that represent the workflow
+
+        Returns
+        -------
+        networkx.DiGraph
+            The graph representing the workflow
+        """
+        g = nx.DiGraph()
+        with qdb.sql_connection.TRN:
+            # Retrieve all graph workflow nodes
+            sql = """SELECT parent_id, child_id
+                     FROM qiita.get_processing_workflow_edges(%s)"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            edges = qdb.sql_connection.TRN.execute_fetchindex()
+            nodes = {jid: ProcessingJob(jid)
+                     for jid in set(chain.from_iterable(edges))}
+            g.add_nodes_from(nodes.values())
+            edges = [(nodes[s], nodes[d]) for s, d in edges]
+            g.add_edges_from(edges)
+        return g

@@ -12,6 +12,8 @@ from os.path import exists, join
 from os import remove, close
 from tempfile import mkstemp
 
+import networkx as nx
+
 import qiita_db as qdb
 from qiita_core.util import qiita_test_checker
 
@@ -301,7 +303,27 @@ class ProcessingWorkflowTests(TestCase):
             user, dflt_wf, req_params, name=name)
         self.assertEqual(obs.name, "Test processing workflow")
         self.assertEqual(obs.user, user)
-        # obs_graph = obs.graph
+        obs_graph = obs.graph
+        self.assertTrue(isinstance(obs_graph, nx.DiGraph))
+        self.assertEqual(len(obs_graph.nodes()), 2)
+        obs_edges = obs_graph.edges()
+        self.assertEqual(len(obs_edges), 1)
+        obs_src = obs_edges[0][0]
+        obs_dst = obs_edges[0][1]
+        self.assertTrue(isinstance(obs_src, qdb.processing_job.ProcessingJob))
+        self.assertTrue(isinstance(obs_dst, qdb.processing_job.ProcessingJob))
+        self.assertTrue(obs_src.command, qdb.software.Command(1))
+        self.assertTrue(obs_dst.command, qdb.software.Command(1))
+        obs_params = obs_dst.parameters.values
+        exp_params = {
+            'input_data': [obs_src.id, u'demultiplexed'],
+            'reference': 1,
+            'similarity': 0.97,
+            'sortmerna_coverage': 0.97,
+            'sortmerna_e_value': 1,
+            'sortmerna_max_pos': 10000,
+            'threads': 1}
+        self.assertEqual(obs_params, exp_params)
 
 
 if __name__ == '__main__':
