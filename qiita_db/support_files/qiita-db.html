@@ -932,22 +932,22 @@ table {
 	parent_processing_job references processing_job ( child_id -> processing_job_id )</title>
 </path>
 <text x='2087' y='1465' transform='rotate(270 2087,1465)' title='Foreign Key fk_parent_processing_job_0
-	parent_processing_job references processing_job ( child_id -> processing_job_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2235 1485 L 2235,1417 Q 2235,1410 2227,1410 L 2145,1410' >
-	<title>Foreign Key fk_processing_job_workflow_roots_0
-	processing_job_workflow_roots references processing_job ( processing_job_id )</title>
-</path>
-<text x='2237' y='1480' transform='rotate(270 2237,1480)' title='Foreign Key fk_processing_job_workflow_roots_0
-	processing_job_workflow_roots references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2250 1575 L 2250,1605' >
-	<title>Foreign Key fk_processing_job_workflow_roots
-	processing_job_workflow_roots references processing_job_workflow ( processing_job_workflow_id )</title>
-</path>
-<text x='2263' y='1575' transform='rotate(90 2263,1575)' title='Foreign Key fk_processing_job_workflow_roots
-	processing_job_workflow_roots references processing_job_workflow ( processing_job_workflow_id )' style='fill:#a1a0a0;'>processing_job_workflow_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2220 1680 L 1912,1680 Q 1905,1680 1905,1687 L 1905,1732 Q 1905,1740 1897,1740 L 1027,1740 Q 1020,1740 1020,1732 L 1020,412 Q 1020,405 1012,405 L 480,405' >
+	parent_processing_job references processing_job ( child_id -> processing_job_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2220 1680 L 1912,1680 Q 1905,1680 1905,1687 L 1905,1732 Q 1905,1740 1897,1740 L 1027,1740 Q 1020,1740 1020,1732 L 1020,412 Q 1020,405 1012,405 L 480,405' >
 	<title>Foreign Key fk_processing_job_workflow
 	processing_job_workflow references qiita_user ( email )</title>
 </path>
 <text x='2194' y='1675' transform='rotate(0 2194,1675)' title='Foreign Key fk_processing_job_workflow
-	processing_job_workflow references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	processing_job_workflow references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2235 1485 L 2235,1417 Q 2235,1410 2227,1410 L 2145,1410' >
+	<title>Foreign Key fk_processing_job_workflow_roots_0
+	processing_job_workflow_root references processing_job ( processing_job_id )</title>
+</path>
+<text x='2237' y='1480' transform='rotate(270 2237,1480)' title='Foreign Key fk_processing_job_workflow_roots_0
+	processing_job_workflow_root references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2250 1575 L 2250,1605' >
+	<title>Foreign Key fk_processing_job_workflow_roots
+	processing_job_workflow_root references processing_job_workflow ( processing_job_workflow_id )</title>
+</path>
+<text x='2263' y='1575' transform='rotate(90 2263,1575)' title='Foreign Key fk_processing_job_workflow_roots
+	processing_job_workflow_root references processing_job_workflow ( processing_job_workflow_id )' style='fill:#a1a0a0;'>processing_job_workflow_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -2197,7 +2197,7 @@ Using bigserial in DBSchema &#045; however in the postgres DB this column is of 
 Referred by artifact_processing_job ( processing_job_id ) 
 Referred by parent_processing_job ( parent_id -> processing_job_id ) 
 Referred by parent_processing_job ( child_id -> processing_job_id ) 
-Referred by processing_job_workflow_roots ( processing_job_id ) </title></a>
+Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
   <use id='nn' x='1967' y='1302' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='1967' y='1301' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#processing_job.email'><text x='1983' y='1312'>email</text><title>email varchar not null
 The user that launched the job</title></a>
@@ -2230,28 +2230,28 @@ The last heartbeat received by this job</title></a>
 <a xlink:href='#parent_processing_job.child_id'><text x='2073' y='1537'>child_id</text><title>child_id bigint not null</title></a>
 <a xlink:href='#parent_processing_job.child_id'><use id='fk' x='2178' y='1526' xlink:href='#fk'/><title>References processing_job ( child_id -> processing_job_id ) </title></a>
 
-<!-- ============= Table 'processing_job_workflow_roots' ============= -->
-<rect class='table' x='2220' y='1493' width='195' height='75' rx='7' ry='7' />
-<path d='M 2220.50 1519.50 L 2220.50 1500.50 Q 2220.50 1493.50 2227.50 1493.50 L 2407.50 1493.50 Q 2414.50 1493.50 2414.50 1500.50 L 2414.50 1519.50 L2220.50 1519.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#processing_job_workflow_roots'><text x='2231' y='1507' class='tableTitle'>processing_job_workflow_roots</text><title>Table qiita.processing_job_workflow_roots</title></a>
-  <use id='nn' x='2222' y='1527' xlink:href='#nn'/><a xlink:href='#processing_job_workflow_roots.processing_job_workflow_id'><use id='pk' x='2222' y='1526' xlink:href='#pk'/><title>Index  ( processing_job_workflow_id ) Primary Key  ( processing_job_workflow_id, processing_job_id ) </title></a>
-<a xlink:href='#processing_job_workflow_roots.processing_job_workflow_id'><text x='2238' y='1537'>processing_job_workflow_id</text><title>processing_job_workflow_id bigint not null</title></a>
-<a xlink:href='#processing_job_workflow_roots.processing_job_workflow_id'><use id='fk' x='2403' y='1526' xlink:href='#fk'/><title>References processing_job_workflow ( processing_job_workflow_id ) </title></a>
-  <use id='nn' x='2222' y='1542' xlink:href='#nn'/><a xlink:href='#processing_job_workflow_roots.processing_job_id'><use id='pk' x='2222' y='1541' xlink:href='#pk'/><title>Index  ( processing_job_id ) Primary Key  ( processing_job_workflow_id, processing_job_id ) </title></a>
-<a xlink:href='#processing_job_workflow_roots.processing_job_id'><text x='2238' y='1552'>processing_job_id</text><title>processing_job_id bigint not null</title></a>
-<a xlink:href='#processing_job_workflow_roots.processing_job_id'><use id='fk' x='2403' y='1541' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
-
 <!-- ============= Table 'processing_job_workflow' ============= -->
 <rect class='table' x='2235' y='1613' width='195' height='90' rx='7' ry='7' />
 <path d='M 2235.50 1639.50 L 2235.50 1620.50 Q 2235.50 1613.50 2242.50 1613.50 L 2422.50 1613.50 Q 2429.50 1613.50 2429.50 1620.50 L 2429.50 1639.50 L2235.50 1639.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
 <a xlink:href='#processing_job_workflow'><text x='2264' y='1627' class='tableTitle'>processing_job_workflow</text><title>Table qiita.processing_job_workflow</title></a>
   <use id='nn' x='2237' y='1647' xlink:href='#nn'/><a xlink:href='#processing_job_workflow.processing_job_workflow_id'><use id='pk' x='2237' y='1646' xlink:href='#pk'/><title>Primary Key  ( processing_job_workflow_id ) </title></a>
 <a xlink:href='#processing_job_workflow.processing_job_workflow_id'><text x='2253' y='1657'>processing_job_workflow_id</text><title>processing_job_workflow_id bigserial not null</title></a>
-<a xlink:href='#processing_job_workflow.processing_job_workflow_id'><use id='ref' x='2418' y='1646' xlink:href='#ref'/><title>Referred by processing_job_workflow_roots ( processing_job_workflow_id ) </title></a>
+<a xlink:href='#processing_job_workflow.processing_job_workflow_id'><use id='ref' x='2418' y='1646' xlink:href='#ref'/><title>Referred by processing_job_workflow_root ( processing_job_workflow_id ) </title></a>
   <use id='nn' x='2237' y='1662' xlink:href='#nn'/><a xlink:href='#processing_job_workflow.email'><use id='idx' x='2237' y='1661' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#processing_job_workflow.email'><text x='2253' y='1672'>email</text><title>email varchar not null</title></a>
 <a xlink:href='#processing_job_workflow.email'><use id='fk' x='2418' y='1661' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
   <a xlink:href='#processing_job_workflow.name'><text x='2253' y='1687'>name</text><title>name varchar</title></a>
+
+<!-- ============= Table 'processing_job_workflow_root' ============= -->
+<rect class='table' x='2220' y='1493' width='195' height='75' rx='7' ry='7' />
+<path d='M 2220.50 1519.50 L 2220.50 1500.50 Q 2220.50 1493.50 2227.50 1493.50 L 2407.50 1493.50 Q 2414.50 1493.50 2414.50 1500.50 L 2414.50 1519.50 L2220.50 1519.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#processing_job_workflow_root'><text x='2234' y='1507' class='tableTitle'>processing_job_workflow_root</text><title>Table qiita.processing_job_workflow_root</title></a>
+  <use id='nn' x='2222' y='1527' xlink:href='#nn'/><a xlink:href='#processing_job_workflow_root.processing_job_workflow_id'><use id='pk' x='2222' y='1526' xlink:href='#pk'/><title>Index  ( processing_job_workflow_id ) Primary Key  ( processing_job_workflow_id, processing_job_id ) </title></a>
+<a xlink:href='#processing_job_workflow_root.processing_job_workflow_id'><text x='2238' y='1537'>processing_job_workflow_id</text><title>processing_job_workflow_id bigint not null</title></a>
+<a xlink:href='#processing_job_workflow_root.processing_job_workflow_id'><use id='fk' x='2403' y='1526' xlink:href='#fk'/><title>References processing_job_workflow ( processing_job_workflow_id ) </title></a>
+  <use id='nn' x='2222' y='1542' xlink:href='#nn'/><a xlink:href='#processing_job_workflow_root.processing_job_id'><use id='pk' x='2222' y='1541' xlink:href='#pk'/><title>Index  ( processing_job_id ) Primary Key  ( processing_job_workflow_id, processing_job_id ) </title></a>
+<a xlink:href='#processing_job_workflow_root.processing_job_id'><text x='2238' y='1552'>processing_job_id</text><title>processing_job_id bigint not null</title></a>
+<a xlink:href='#processing_job_workflow_root.processing_job_id'><use id='fk' x='2403' y='1541' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
 
 </g></svg>
 
@@ -6346,49 +6346,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='processing_job_workflow_roots'>Table processing_job_workflow_roots</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='processing_job_workflow_roots.processing_job_workflow_id'>processing&#095;job&#095;workflow&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processing_job_workflow_roots.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;processing&#095;job&#095;workflow&#095;roots </td>
-		<td> ON processing&#095;job&#095;workflow&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processing&#095;job&#095;workflow&#095;roots </td>
-		<td> ON processing&#095;job&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processing&#095;job&#095;workflow&#095;roots&#095;0 primary key</td>
-		<td> ON processing&#095;job&#095;workflow&#095;id&#044; processing&#095;job&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_processing_job_workflow_roots_0</td>
-		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_processing_job_workflow_roots</td>
-		<td > ( processing&#095;job&#095;workflow&#095;id ) ref <a href='#processing&#095;job&#095;workflow'>processing&#095;job&#095;workflow</a> (processing&#095;job&#095;workflow&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='processing_job_workflow'>Table processing_job_workflow</a></th></tr>
 </thead>
 <tbody>
@@ -6420,6 +6377,49 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_processing_job_workflow</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='processing_job_workflow_root'>Table processing_job_workflow_root</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='processing_job_workflow_root.processing_job_workflow_id'>processing&#095;job&#095;workflow&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job_workflow_root.processing_job_id'>processing&#095;job&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;workflow&#095;roots </td>
+		<td> ON processing&#095;job&#095;workflow&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;workflow&#095;roots </td>
+		<td> ON processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;workflow&#095;roots&#095;0 primary key</td>
+		<td> ON processing&#095;job&#095;workflow&#095;id&#044; processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_processing_job_workflow_roots_0</td>
+		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_processing_job_workflow_roots</td>
+		<td > ( processing&#095;job&#095;workflow&#095;id ) ref <a href='#processing&#095;job&#095;workflow'>processing&#095;job&#095;workflow</a> (processing&#095;job&#095;workflow&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>

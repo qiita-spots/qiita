@@ -108,18 +108,18 @@ CREATE TABLE qiita.processing_job_workflow (
 CREATE INDEX idx_processing_job_workflow ON qiita.processing_job_workflow ( email ) ;
 ALTER TABLE qiita.processing_job_workflow ADD CONSTRAINT fk_processing_job_workflow FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ;
 
--- The processing_job_workflow_roots connects the processing_job_workflow with
+-- The processing_job_workflow_root connects the processing_job_workflow with
 -- it's initial set of jobs. From this jobs, we can trace down the rest of the
 -- workflow
-CREATE TABLE qiita.processing_job_workflow_roots (
+CREATE TABLE qiita.processing_job_workflow_root (
 	processing_job_workflow_id 	bigint  NOT NULL,
 	processing_job_id    		uuid  	NOT NULL,
-	CONSTRAINT idx_processing_job_workflow_roots_0 PRIMARY KEY ( processing_job_workflow_id, processing_job_id )
+	CONSTRAINT idx_processing_job_workflow_root_0 PRIMARY KEY ( processing_job_workflow_id, processing_job_id )
  ) ;
-CREATE INDEX idx_processing_job_workflow_roots_wf ON qiita.processing_job_workflow_roots ( processing_job_workflow_id ) ;
-CREATE INDEX idx_processing_job_workflow_roots_job ON qiita.processing_job_workflow_roots ( processing_job_id ) ;
-ALTER TABLE qiita.processing_job_workflow_roots ADD CONSTRAINT fk_processing_job_workflow_roots_job FOREIGN KEY ( processing_job_workflow_id ) REFERENCES qiita.processing_job_workflow( processing_job_workflow_id )    ;
-ALTER TABLE qiita.processing_job_workflow_roots ADD CONSTRAINT fk_processing_job_workflow_roots_wf FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
+CREATE INDEX idx_processing_job_workflow_root_wf ON qiita.processing_job_workflow_root ( processing_job_workflow_id ) ;
+CREATE INDEX idx_processing_job_workflow_root_job ON qiita.processing_job_workflow_root ( processing_job_id ) ;
+ALTER TABLE qiita.processing_job_workflow_root ADD CONSTRAINT fk_processing_job_workflow_root_job FOREIGN KEY ( processing_job_workflow_id ) REFERENCES qiita.processing_job_workflow( processing_job_workflow_id )    ;
+ALTER TABLE qiita.processing_job_workflow_root ADD CONSTRAINT fk_processing_job_workflow_root_wf FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
 
 -- the table parent_processing_job stores the edges between the
 -- different processing jobs. The specific connections are encoded in the
@@ -262,4 +262,23 @@ BEGIN
 			   (2, 2, in_po_param_id),
 			   (3, 1, in_po_param_id);
 
-END $do$
+END $do$;
+
+-- Create a function to return all the edges of a processing_job_workflow
+CREATE FUNCTION qiita.get_processing_workflow_edges(wf_id bigint) RETURNS SETOF qiita.parent_processing_job AS $$
+BEGIN
+	RETURN QUERY WITH RECURSIVE edges AS (
+		SELECT parent_id, child_id
+		FROM qiita.parent_processing_job
+		WHERE parent_id IN (SELECT processing_job_id
+							FROM qiita.processing_job_workflow_root
+							WHERE processing_job_workflow_id = wf_id)
+	  UNION
+	  	SELECT p.parent_id, p.child_id
+		FROM qiita.parent_processing_job p
+			JOIN edges e ON (e.child_id = p.parent_id)
+	)
+	SELECT DISTINCT parent_id, child_id
+		FROM edges;
+END
+$$ LANGUAGE plpgsql;
