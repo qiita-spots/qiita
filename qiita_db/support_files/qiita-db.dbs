@@ -1267,6 +1267,40 @@
 				<column name="processing_job_status_id" />
 			</index>
 		</table>
+		<table name="processing_job_worflow" >
+			<column name="processing_job_worfklow_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="email" type="varchar" jt="12" mandatory="y" />
+			<column name="name" type="varchar" jt="12" />
+			<index name="pk_processing_job_worflow" unique="PRIMARY_KEY" >
+				<column name="processing_job_worfklow_id" />
+			</index>
+			<index name="idx_processing_job_worflow" unique="NORMAL" >
+				<column name="email" />
+			</index>
+			<fk name="fk_processing_job_worflow" to_schema="qiita" to_table="qiita_user" >
+				<fk_column name="email" pk="email" />
+			</fk>
+		</table>
+		<table name="processing_job_workflow_roots" >
+			<column name="processing_job_workflow_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="processing_job_id" type="bigint" jt="-5" mandatory="y" />
+			<index name="idx_processing_job_workflow_roots" unique="NORMAL" >
+				<column name="processing_job_workflow_id" />
+			</index>
+			<index name="idx_processing_job_workflow_roots" unique="NORMAL" >
+				<column name="processing_job_id" />
+			</index>
+			<index name="idx_processing_job_workflow_roots_0" unique="PRIMARY_KEY" >
+				<column name="processing_job_workflow_id" />
+				<column name="processing_job_id" />
+			</index>
+			<fk name="fk_processing_job_workflow_roots" to_schema="qiita" to_table="processing_job_worflow" >
+				<fk_column name="processing_job_workflow_id" pk="processing_job_worfklow_id" />
+			</fk>
+			<fk name="fk_processing_job_workflow_roots_0" to_schema="qiita" to_table="processing_job" >
+				<fk_column name="processing_job_id" pk="processing_job_id" />
+			</fk>
+		</table>
 		<table name="publication" >
 			<column name="doi" type="varchar" jt="12" mandatory="y" />
 			<column name="pubmed_id" type="varchar" jt="12" />
@@ -1835,12 +1869,14 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="default_workflow_node" color="b2cdf7" x="2370" y="1215" />
 		<entity schema="qiita" name="default_workflow_edge" color="b2cdf7" x="2610" y="1230" />
 		<entity schema="qiita" name="default_workflow_edge_connections" color="b2cdf7" x="2280" y="1350" />
-		<entity schema="qiita" name="parent_processing_job" color="b2cdf7" x="2115" y="1410" />
-		<entity schema="qiita" name="reference" color="c0d4f3" x="1815" y="1530" />
-		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="1875" y="1425" />
 		<entity schema="qiita" name="artifact_processing_job" color="b2cdf7" x="1755" y="1185" />
 		<entity schema="qiita" name="artifact_output_processing_job" color="b2cdf7" x="1725" y="1290" />
-		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1965" y="1215" />
+		<entity schema="qiita" name="reference" color="c0d4f3" x="1755" y="1590" />
+		<entity schema="qiita" name="processing_job_status" color="b2cdf7" x="1770" y="1470" />
+		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1965" y="1260" />
+		<entity schema="qiita" name="parent_processing_job" color="b2cdf7" x="2055" y="1485" />
+		<entity schema="qiita" name="processing_job_worflow" color="b2cdf7" x="2265" y="1620" />
+		<entity schema="qiita" name="processing_job_workflow_roots" color="b2cdf7" x="2220" y="1500" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -1945,6 +1981,8 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="artifact_output_processing_job" />
 			<entity schema="qiita" name="parent_processing_job" />
 			<entity schema="qiita" name="default_workflow_edge_connections" />
+			<entity schema="qiita" name="processing_job_worflow" />
+			<entity schema="qiita" name="processing_job_workflow_roots" />
 		</group>
 		<group name="Group_publication" color="ffccff" >
 			<entity schema="qiita" name="publication" />
