@@ -161,6 +161,10 @@ INSERT INTO qiita.processing_job_status (processing_job_status, processing_job_s
 	VALUES ('in_construction', 'The job is one of the source nodes of a workflow that is in construction'),
 		   ('waiting', 'The job is waiting for a previous job in the workflow to be completed in order to be executed.');
 
+-- In order to keep better track of the jobs that we are waiting for
+-- we add another json to the processing_job table
+ALTER TABLE qiita.processing_job ADD pending json  ;
+
 -- Populate the newly created tables
 DO $do$
 DECLARE

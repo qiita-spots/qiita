@@ -902,32 +902,12 @@ table {
 	reference references filepath ( tree_filepath -> filepath_id )</title>
 </path>
 <text x='1675' y='1615' transform='rotate(0 1675,1615)' title='Foreign Key fk_reference_tree_filepath
-	reference references filepath ( tree_filepath -> filepath_id )' style='fill:#a1a0a0;'>tree_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1950 1395 L 1642,1395 Q 1635,1395 1635,1387 L 1635,817 Q 1635,810 1627,810 L 982,810 Q 975,810 975,802 L 975,397 Q 975,390 967,390 L 480,390' >
-	<title>Foreign Key fk_processing_job_qiita_user
-	processing_job references qiita_user ( email )</title>
-</path>
-<text x='1924' y='1390' transform='rotate(0 1924,1390)' title='Foreign Key fk_processing_job_qiita_user
-	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2115 1245 L 2115,1207 Q 2115,1200 2122,1200 L 2130,1200' >
-	<title>Foreign Key fk_processing_job
-	processing_job references software_command ( command_id )</title>
-</path>
-<text x='2117' y='1240' transform='rotate(270 2117,1240)' title='Foreign Key fk_processing_job
-	processing_job references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1980 1425 L 1980,1455' >
-	<title>Foreign Key fk_processing_job_status
-	processing_job references processing_job_status ( processing_job_status_id )</title>
-</path>
-<text x='1993' y='1425' transform='rotate(90 1993,1425)' title='Foreign Key fk_processing_job_status
-	processing_job references processing_job_status ( processing_job_status_id )' style='fill:#a1a0a0;'>processing_job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1950 1380 L 1927,1380 Q 1920,1380 1920,1387 L 1920,1432 Q 1920,1440 1912,1440 L 1552,1440 Q 1545,1440 1545,1447 L 1545,1477 Q 1545,1485 1537,1485 L 832,1485 Q 825,1485 825,1492 L 825,1500' >
-	<title>Foreign Key fk_processing_job_logging
-	processing_job references logging ( logging_id )</title>
-</path>
-<text x='1895' y='1375' transform='rotate(0 1895,1375)' title='Foreign Key fk_processing_job_logging
-	processing_job references logging ( logging_id )' style='fill:#a1a0a0;'>logging_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2070 1470 L 2070,1425' >
+	reference references filepath ( tree_filepath -> filepath_id )' style='fill:#a1a0a0;'>tree_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2070 1470 L 2070,1440' >
 	<title>Foreign Key fk_parent_processing_job
 	parent_processing_job references processing_job ( parent_id -> processing_job_id )</title>
 </path>
 <text x='2072' y='1465' transform='rotate(270 2072,1465)' title='Foreign Key fk_parent_processing_job
-	parent_processing_job references processing_job ( parent_id -> processing_job_id )' style='fill:#a1a0a0;'>parent_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2085 1470 L 2085,1425' >
+	parent_processing_job references processing_job ( parent_id -> processing_job_id )' style='fill:#a1a0a0;'>parent_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2085 1470 L 2085,1440' >
 	<title>Foreign Key fk_parent_processing_job_0
 	parent_processing_job references processing_job ( child_id -> processing_job_id )</title>
 </path>
@@ -937,7 +917,7 @@ table {
 	processing_job_workflow references qiita_user ( email )</title>
 </path>
 <text x='2194' y='1675' transform='rotate(0 2194,1675)' title='Foreign Key fk_processing_job_workflow
-	processing_job_workflow references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2235 1485 L 2235,1417 Q 2235,1410 2227,1410 L 2145,1410' >
+	processing_job_workflow references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2235 1485 L 2235,1432 Q 2235,1425 2227,1425 L 2145,1425' >
 	<title>Foreign Key fk_processing_job_workflow_roots_0
 	processing_job_workflow_root references processing_job ( processing_job_id )</title>
 </path>
@@ -947,7 +927,27 @@ table {
 	processing_job_workflow_root references processing_job_workflow ( processing_job_workflow_id )</title>
 </path>
 <text x='2263' y='1575' transform='rotate(90 2263,1575)' title='Foreign Key fk_processing_job_workflow_roots
-	processing_job_workflow_root references processing_job_workflow ( processing_job_workflow_id )' style='fill:#a1a0a0;'>processing_job_workflow_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	processing_job_workflow_root references processing_job_workflow ( processing_job_workflow_id )' style='fill:#a1a0a0;'>processing_job_workflow_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1950 1395 L 1642,1395 Q 1635,1395 1635,1387 L 1635,817 Q 1635,810 1627,810 L 982,810 Q 975,810 975,802 L 975,397 Q 975,390 967,390 L 480,390' >
+	<title>Foreign Key fk_processing_job_qiita_user
+	processing_job references qiita_user ( email )</title>
+</path>
+<text x='1924' y='1390' transform='rotate(0 1924,1390)' title='Foreign Key fk_processing_job_qiita_user
+	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2115 1245 L 2115,1207 Q 2115,1200 2122,1200 L 2130,1200' >
+	<title>Foreign Key fk_processing_job
+	processing_job references software_command ( command_id )</title>
+</path>
+<text x='2117' y='1240' transform='rotate(270 2117,1240)' title='Foreign Key fk_processing_job
+	processing_job references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1980 1440 L 1980,1455' >
+	<title>Foreign Key fk_processing_job_status
+	processing_job references processing_job_status ( processing_job_status_id )</title>
+</path>
+<text x='1993' y='1440' transform='rotate(90 1993,1440)' title='Foreign Key fk_processing_job_status
+	processing_job references processing_job_status ( processing_job_status_id )' style='fill:#a1a0a0;'>processing_job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1950 1410 L 1552,1410 Q 1545,1410 1545,1417 L 1545,1477 Q 1545,1485 1537,1485 L 832,1485 Q 825,1485 825,1492 L 825,1500' >
+	<title>Foreign Key fk_processing_job_logging
+	processing_job references logging ( logging_id )</title>
+</path>
+<text x='1895' y='1405' transform='rotate(0 1895,1405)' title='Foreign Key fk_processing_job_logging
+	processing_job references logging ( logging_id )' style='fill:#a1a0a0;'>logging_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -2186,39 +2186,6 @@ Referred by default_workflow_edge ( child_id -> default_workflow_node_id ) </tit
   <use id='nn' x='1772' y='1512' xlink:href='#nn'/><a xlink:href='#processing_job_status.processing_job_status'><text x='1788' y='1522'>processing_job_status</text><title>processing_job_status varchar not null</title></a>
   <use id='nn' x='1772' y='1527' xlink:href='#nn'/><a xlink:href='#processing_job_status.processing_job_status_description'><text x='1788' y='1537'>processing_job_status_description</text><title>processing_job_status_description varchar not null</title></a>
 
-<!-- ============= Table 'processing_job' ============= -->
-<rect class='table' x='1965' y='1253' width='180' height='165' rx='7' ry='7' />
-<path d='M 1965.50 1279.50 L 1965.50 1260.50 Q 1965.50 1253.50 1972.50 1253.50 L 2137.50 1253.50 Q 2144.50 1253.50 2144.50 1260.50 L 2144.50 1279.50 L1965.50 1279.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#processing_job'><text x='2013' y='1267' class='tableTitle'>processing_job</text><title>Table qiita.processing_job</title></a>
-  <use id='nn' x='1967' y='1287' xlink:href='#nn'/><a xlink:href='#processing_job.processing_job_id'><use id='pk' x='1967' y='1286' xlink:href='#pk'/><title>Primary Key  ( processing_job_id ) </title></a>
-<a xlink:href='#processing_job.processing_job_id'><text x='1983' y='1297'>processing_job_id</text><title>processing_job_id bigserial not null
-Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046;</title></a>
-<a xlink:href='#processing_job.processing_job_id'><use id='ref' x='2133' y='1286' xlink:href='#ref'/><title>Referred by artifact_output_processing_job ( processing_job_id ) 
-Referred by artifact_processing_job ( processing_job_id ) 
-Referred by parent_processing_job ( parent_id -> processing_job_id ) 
-Referred by parent_processing_job ( child_id -> processing_job_id ) 
-Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
-  <use id='nn' x='1967' y='1302' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='1967' y='1301' xlink:href='#idx'/><title>Index  ( email ) </title></a>
-<a xlink:href='#processing_job.email'><text x='1983' y='1312'>email</text><title>email varchar not null
-The user that launched the job</title></a>
-<a xlink:href='#processing_job.email'><use id='fk' x='2133' y='1301' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
-  <use id='nn' x='1967' y='1317' xlink:href='#nn'/><a xlink:href='#processing_job.command_id'><use id='idx' x='1967' y='1316' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
-<a xlink:href='#processing_job.command_id'><text x='1983' y='1327'>command_id</text><title>command_id bigint not null
-The command launched</title></a>
-<a xlink:href='#processing_job.command_id'><use id='fk' x='2133' y='1316' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
-  <use id='nn' x='1967' y='1332' xlink:href='#nn'/><a xlink:href='#processing_job.command_parameters'><text x='1983' y='1342'>command_parameters</text><title>command_parameters varchar not null
-The parameters used in the command in JSON format</title></a>
-  <use id='nn' x='1967' y='1347' xlink:href='#nn'/><a xlink:href='#processing_job.processing_job_status_id'><use id='idx' x='1967' y='1346' xlink:href='#idx'/><title>Index  ( processing_job_status_id ) </title></a>
-<a xlink:href='#processing_job.processing_job_status_id'><text x='1983' y='1357'>processing_job_status_id</text><title>processing_job_status_id bigint not null</title></a>
-<a xlink:href='#processing_job.processing_job_status_id'><use id='fk' x='2133' y='1346' xlink:href='#fk'/><title>References processing_job_status ( processing_job_status_id ) </title></a>
-  <a xlink:href='#processing_job.logging_id'><use id='idx' x='1967' y='1361' xlink:href='#idx'/><title>Index  ( logging_id ) </title></a>
-<a xlink:href='#processing_job.logging_id'><text x='1983' y='1372'>logging_id</text><title>logging_id bigint
-In case of failure&#044; point to the log entry that holds more information about the error</title></a>
-<a xlink:href='#processing_job.logging_id'><use id='fk' x='2133' y='1361' xlink:href='#fk'/><title>References logging ( logging_id ) </title></a>
-  <a xlink:href='#processing_job.heartbeat'><text x='1983' y='1387'>heartbeat</text><title>heartbeat timestamp
-The last heartbeat received by this job</title></a>
-  <a xlink:href='#processing_job.step'><text x='1983' y='1402'>step</text><title>step varchar</title></a>
-
 <!-- ============= Table 'parent_processing_job' ============= -->
 <rect class='table' x='2055' y='1478' width='135' height='75' rx='7' ry='7' />
 <path d='M 2055.50 1504.50 L 2055.50 1485.50 Q 2055.50 1478.50 2062.50 1478.50 L 2182.50 1478.50 Q 2189.50 1478.50 2189.50 1485.50 L 2189.50 1504.50 L2055.50 1504.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -2252,6 +2219,40 @@ The last heartbeat received by this job</title></a>
   <use id='nn' x='2222' y='1542' xlink:href='#nn'/><a xlink:href='#processing_job_workflow_root.processing_job_id'><use id='pk' x='2222' y='1541' xlink:href='#pk'/><title>Index  ( processing_job_id ) Primary Key  ( processing_job_workflow_id, processing_job_id ) </title></a>
 <a xlink:href='#processing_job_workflow_root.processing_job_id'><text x='2238' y='1552'>processing_job_id</text><title>processing_job_id bigint not null</title></a>
 <a xlink:href='#processing_job_workflow_root.processing_job_id'><use id='fk' x='2403' y='1541' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
+
+<!-- ============= Table 'processing_job' ============= -->
+<rect class='table' x='1965' y='1253' width='180' height='180' rx='7' ry='7' />
+<path d='M 1965.50 1279.50 L 1965.50 1260.50 Q 1965.50 1253.50 1972.50 1253.50 L 2137.50 1253.50 Q 2144.50 1253.50 2144.50 1260.50 L 2144.50 1279.50 L1965.50 1279.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#processing_job'><text x='2013' y='1267' class='tableTitle'>processing_job</text><title>Table qiita.processing_job</title></a>
+  <use id='nn' x='1967' y='1287' xlink:href='#nn'/><a xlink:href='#processing_job.processing_job_id'><use id='pk' x='1967' y='1286' xlink:href='#pk'/><title>Primary Key  ( processing_job_id ) </title></a>
+<a xlink:href='#processing_job.processing_job_id'><text x='1983' y='1297'>processing_job_id</text><title>processing_job_id bigserial not null
+Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046;</title></a>
+<a xlink:href='#processing_job.processing_job_id'><use id='ref' x='2133' y='1286' xlink:href='#ref'/><title>Referred by artifact_output_processing_job ( processing_job_id ) 
+Referred by artifact_processing_job ( processing_job_id ) 
+Referred by parent_processing_job ( parent_id -> processing_job_id ) 
+Referred by parent_processing_job ( child_id -> processing_job_id ) 
+Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
+  <use id='nn' x='1967' y='1302' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='1967' y='1301' xlink:href='#idx'/><title>Index  ( email ) </title></a>
+<a xlink:href='#processing_job.email'><text x='1983' y='1312'>email</text><title>email varchar not null
+The user that launched the job</title></a>
+<a xlink:href='#processing_job.email'><use id='fk' x='2133' y='1301' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+  <use id='nn' x='1967' y='1317' xlink:href='#nn'/><a xlink:href='#processing_job.command_id'><use id='idx' x='1967' y='1316' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
+<a xlink:href='#processing_job.command_id'><text x='1983' y='1327'>command_id</text><title>command_id bigint not null
+The command launched</title></a>
+<a xlink:href='#processing_job.command_id'><use id='fk' x='2133' y='1316' xlink:href='#fk'/><title>References software_command ( command_id ) </title></a>
+  <use id='nn' x='1967' y='1332' xlink:href='#nn'/><a xlink:href='#processing_job.command_parameters'><text x='1983' y='1342'>command_parameters</text><title>command_parameters varchar not null
+The parameters used in the command in JSON format</title></a>
+  <use id='nn' x='1967' y='1347' xlink:href='#nn'/><a xlink:href='#processing_job.processing_job_status_id'><use id='idx' x='1967' y='1346' xlink:href='#idx'/><title>Index  ( processing_job_status_id ) </title></a>
+<a xlink:href='#processing_job.processing_job_status_id'><text x='1983' y='1357'>processing_job_status_id</text><title>processing_job_status_id bigint not null</title></a>
+<a xlink:href='#processing_job.processing_job_status_id'><use id='fk' x='2133' y='1346' xlink:href='#fk'/><title>References processing_job_status ( processing_job_status_id ) </title></a>
+  <a xlink:href='#processing_job.logging_id'><use id='idx' x='1967' y='1361' xlink:href='#idx'/><title>Index  ( logging_id ) </title></a>
+<a xlink:href='#processing_job.logging_id'><text x='1983' y='1372'>logging_id</text><title>logging_id bigint
+In case of failure&#044; point to the log entry that holds more information about the error</title></a>
+<a xlink:href='#processing_job.logging_id'><use id='fk' x='2133' y='1361' xlink:href='#fk'/><title>References logging ( logging_id ) </title></a>
+  <a xlink:href='#processing_job.heartbeat'><text x='1983' y='1387'>heartbeat</text><title>heartbeat timestamp
+The last heartbeat received by this job</title></a>
+  <a xlink:href='#processing_job.step'><text x='1983' y='1402'>step</text><title>step varchar</title></a>
+  <a xlink:href='#processing_job.pending'><text x='1983' y='1417'>pending</text><title>pending varchar</title></a>
 
 </g></svg>
 
@@ -6212,97 +6213,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='processing_job'>Table processing_job</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td> Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046; </td>
-	</tr>
-	<tr>
-		<td><a name='processing_job.email'>email</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td> The user that launched the job </td>
-	</tr>
-	<tr>
-		<td><a name='processing_job.command_id'>command&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td> The command launched </td>
-	</tr>
-	<tr>
-		<td><a name='processing_job.command_parameters'>command&#095;parameters</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td> The parameters used in the command in JSON format </td>
-	</tr>
-	<tr>
-		<td><a name='processing_job.processing_job_status_id'>processing&#095;job&#095;status&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processing_job.logging_id'>logging&#095;id</a></td>
-		<td> bigint   </td>
-		<td> In case of failure&#044; point to the log entry that holds more information about the error </td>
-	</tr>
-	<tr>
-		<td><a name='processing_job.heartbeat'>heartbeat</a></td>
-		<td> timestamp   </td>
-		<td> The last heartbeat received by this job </td>
-	</tr>
-	<tr>
-		<td><a name='processing_job.step'>step</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;processing&#095;job primary key</td>
-		<td> ON processing&#095;job&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processing&#095;job </td>
-		<td> ON email</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processing&#095;job </td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processing&#095;job&#095;0 </td>
-		<td> ON processing&#095;job&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processing&#095;job&#095;1 </td>
-		<td> ON logging&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_processing_job_qiita_user</td>
-		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_processing_job</td>
-		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_processing_job_status</td>
-		<td > ( processing&#095;job&#095;status&#095;id ) ref <a href='#processing&#095;job&#095;status'>processing&#095;job&#095;status</a> (processing&#095;job&#095;status&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_processing_job_logging</td>
-		<td > ( logging&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='parent_processing_job'>Table parent_processing_job</a></th></tr>
 </thead>
 <tbody>
@@ -6420,6 +6330,102 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_processing_job_workflow_roots</td>
 		<td > ( processing&#095;job&#095;workflow&#095;id ) ref <a href='#processing&#095;job&#095;workflow'>processing&#095;job&#095;workflow</a> (processing&#095;job&#095;workflow&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='processing_job'>Table processing_job</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td> Using bigserial in DBSchema &#045; however in the postgres DB this column is of type UUID&#046; </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job.email'>email</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> The user that launched the job </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job.command_id'>command&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td> The command launched </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job.command_parameters'>command&#095;parameters</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> The parameters used in the command in JSON format </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job.processing_job_status_id'>processing&#095;job&#095;status&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job.logging_id'>logging&#095;id</a></td>
+		<td> bigint   </td>
+		<td> In case of failure&#044; point to the log entry that holds more information about the error </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job.heartbeat'>heartbeat</a></td>
+		<td> timestamp   </td>
+		<td> The last heartbeat received by this job </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job.step'>step</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job.pending'>pending</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;processing&#095;job primary key</td>
+		<td> ON processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processing&#095;job </td>
+		<td> ON email</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processing&#095;job </td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;0 </td>
+		<td> ON processing&#095;job&#095;status&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;1 </td>
+		<td> ON logging&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_processing_job_qiita_user</td>
+		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_processing_job</td>
+		<td > ( command&#095;id ) ref <a href='#software&#095;command'>software&#095;command</a> (command&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_processing_job_status</td>
+		<td > ( processing&#095;job&#095;status&#095;id ) ref <a href='#processing&#095;job&#095;status'>processing&#095;job&#095;status</a> (processing&#095;job&#095;status&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_processing_job_logging</td>
+		<td > ( logging&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
