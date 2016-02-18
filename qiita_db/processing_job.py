@@ -851,4 +851,27 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.execute()
 
     def submit(self):
-        """"""
+        """Submits the workflow to execution
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBOperationNotPermittedError
+            If the workflow is not in construction
+        """
+        with qdb.sql_connection.TRN:
+            self._raise_if_not_in_construction()
+
+            g = self.graph
+            # In order to avoid potential race conditions, we are going to set
+            # all the childrens in 'waiting' status before submitting
+            # the root nodes
+            in_degrees = g.in_degrees()
+            roots = []
+            for job, degree in viewitems(in_degrees):
+                if degree == 0:
+                    roots.append(job)
+                else:
+                    job._set_status('waiting')
+
+            for job in roots:
+                job.submit()
