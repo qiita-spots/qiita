@@ -46,13 +46,14 @@ class MetaUtilTests(TestCase):
 
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('shared@foo.bar'))
-        self.assertEqual(obs, {1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15, 16})
+        self.assertItemsEqual(obs, {
+            1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19})
 
         # Now shared should not have access to the study files
         self._unshare_studies()
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('shared@foo.bar'))
-        self.assertEqual(obs, {10, 11, 12, 13})
+        self.assertItemsEqual(obs, {16, 14, 15, 13})
 
         # Now shared should not have access to any files
         self._unshare_analyses()
@@ -64,10 +65,10 @@ class MetaUtilTests(TestCase):
         self._set_artifact_public()
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('shared@foo.bar'))
-        self.assertEqual(obs, {1, 2, 3, 4, 5, 9, 14, 15, 16})
+        self.assertEqual(obs, {1, 2, 3, 4, 5, 9, 12, 17, 18, 19})
 
         # Test that it doesn't break: if the SampleTemplate hasn't been added
-        exp = {1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15, 16}
+        exp = {1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19}
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('test@foo.bar'))
         self.assertEqual(obs, exp)

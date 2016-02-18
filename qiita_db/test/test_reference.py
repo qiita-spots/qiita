@@ -42,7 +42,7 @@ class ReferenceTests(TestCase):
         # Check that the returned object has the correct id
         obs = qdb.reference.Reference.create(
             self.name, self.version, self.seqs_fp, self.tax_fp, self.tree_fp)
-        self.assertEqual(obs.id, 2)
+        self.assertEqual(obs.id, 3)
 
         seqs_id = fp_count + 1
         tax_id = fp_count + 2
@@ -50,8 +50,8 @@ class ReferenceTests(TestCase):
 
         # Check that the information on the database is correct
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.reference WHERE reference_id=2")
-        exp = [[2, self.name, self.version, seqs_id, tax_id, tree_id]]
+            "SELECT * FROM qiita.reference WHERE reference_id=3")
+        exp = [[3, self.name, self.version, seqs_id, tax_id, tree_id]]
         self.assertEqual(obs, exp)
 
         # Check that the filepaths have been correctly added to the DB
