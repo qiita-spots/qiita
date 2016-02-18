@@ -511,3 +511,13 @@ INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
 
 INSERT INTO qiita.oauth_identifiers (client_id) VALUES ('DWelYzEYJYcZ4wlqUp0bHGXojrvZVz0CNBJvOqUKcrPQ5p4UqE');
 INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4', 'J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKhAmmCWZuabe0O5Mp28s1');
+
+-- Add a processing workflow
+INSERT INTO qiita.processing_job_workflow (email, name)
+    VALUES ('shared@foo.bar', 'Testing processing workflow');
+
+INSERT INTO qiita.processing_job_workflow_root (processing_job_workflow_id, processing_job_id)
+    VALUES ('1', 'b72369f9-a886-4193-8d3d-f7b504168e75');
+
+INSERT INTO qiita.parent_processing_job (parent_id, child_id)
+    VALUES ('b72369f9-a886-4193-8d3d-f7b504168e75', 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');

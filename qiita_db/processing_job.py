@@ -506,8 +506,18 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
     _table = "processing_job_workflow"
 
     @classmethod
-    def _common_creation_steps(cls, user, root_jobs, name):
-        """"""
+    def _common_creation_steps(cls, user, root_jobs, name=None):
+        """Executes the common creation steps
+
+        Parameters
+        ----------
+        user : qiita_db.user.User
+            The user creating the workflow
+        root_jobs : list of qiita_db.processing_job.ProcessingJob
+            The root jobs of the workflow
+        name : str, optional
+            The name of the workflow. Default: generated from user's name
+        """
         with qdb.sql_connection.TRN:
             # Insert the workflow in the processing_job_worflow table
             name = name if name else "%s's workflow" % user.info['name']
@@ -726,6 +736,30 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 g.add_nodes_from(nodes)
         return g
 
+    def _raise_if_not_in_construction(self):
+        """Raises an error if the workflow is not in construction
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBOperationNotPermittedError
+            If the workflow is not in construction
+        """
+        with qdb.sql_connection.TRN:
+            # To know if the workflow is in construction or not it suffices
+            # to look at the status of the root jobs
+            sql = """SELECT DISTINCT processing_job_status
+                     FROM qiita.processing_job_workflow_root
+                        JOIN qiita.processing_job USING (processing_job_id)
+                        JOIN qiita.processing_job_status
+                            USING (processing_job_status_id)
+                     WHERE processing_job_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            res = qdb.sql_connection.TRN.execute_fetchflatten()
+            if len(res) != 1 or res[0] != 'in_construction':
+                # The workflow is no longer in construction, raise an error
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Workflow not in construction")
+
     def add(self, connections, dflt_params, req_params=None, opt_params=None):
         """Adds a new job to the workflow
 
@@ -745,8 +779,15 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         opt_params : dict of {str: object}, optional
             The optional parameters to change from the default set, keyed by
             parameter name. Default: None, use the values in `dflt_params`
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBOperationNotPermittedError
+            If the workflow is not in construction
         """
         with qdb.sql_connection.TRN:
+            self._raise_if_not_in_construction()
+
             req_params = req_params if req_params else {}
             # Loop through all the connections to add the relevant parameters
             for source, mapping in viewitems(connections):
@@ -764,6 +805,49 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                      VALUES (%s, %s)"""
             sql_args = [[s.id, new_job.id] for s in connections]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
+    def remove(self, job):
+        """Removes a given job from the workflow
+
+        Parameters
+        ----------
+        job : qiita_db.processing_job.ProcessingJob
+            The job to be removed
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBOperationNotPermittedError
+            If the workflow is not in construction
+            If the job to be removed has children
+        """
+        with qdb.sql_connection.TRN:
+            self._raise_if_not_in_construction()
+
+            # Check if the given job has children
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.parent_processing_job
+                                   WHERE parent_id=%s)"""
+            qdb.sql_connection.TRN.add(sql, [job.id])
+            if qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Can't remove job '%s': it has children" % job.id)
+
+            # Remove any edges (it can only appear as a child)
+            sql = """DELETE FROM qiita.parent_processing_job
+                     WHERE child_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [job.id])
+
+            # Remove as root job
+            sql = """DELETE FROM qiita.processing_job_workflow_root
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [job.id])
+
+            # Remove the job
+            sql = """DELETE FROM qiita.processing_job
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [job.id])
+
             qdb.sql_connection.TRN.execute()
 
     def submit(self):

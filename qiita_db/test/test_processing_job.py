@@ -292,6 +292,7 @@ class ProcessingJobTest(TestCase):
             self.tester4.step = 'demultiplexing'
 
 
+@qiita_test_checker()
 class ProcessingWorkflowTests(TestCase):
     def test_from_default_workflow(self):
         exp_user = qdb.user.User('test@foo.bar')
@@ -349,6 +350,25 @@ class ProcessingWorkflowTests(TestCase):
         self.assertEqual(nodes[0].parameters, exp_params)
         self.assertEqual(obs_graph.edges(), [])
 
+    def test_name(self):
+        self.assertEqual(qdb.processing_job.ProcessingWorkflow(1).name,
+                         'Testing processing workflow')
+
+    def test_user(self):
+        self.assertEqual(qdb.processing_job.ProcessingWorkflow(1).user,
+                         qdb.user.User('shared@foo.bar'))
+
+    def test_graph(self):
+        obs = qdb.processing_job.ProcessingWorkflow(1).graph
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        exp_nodes = [
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75'),
+            qdb.processing_job.ProcessingJob(
+                'd19f76ee-274e-4c1b-b3a2-a12d73507c55')]
+        self.assertItemsEqual(obs.nodes(), exp_nodes)
+        self.assertEqual(obs.edges(), [(exp_nodes[0], exp_nodes[1])])
+
     def test_add(self):
         exp_command = qdb.software.Command(1)
         json_str = (
@@ -389,6 +409,61 @@ class ProcessingWorkflowTests(TestCase):
             'sortmerna_max_pos': 10000,
             'threads': 1}
         self.assertEqual(obs_params, exp_params)
+
+    def test_add_error(self):
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            qdb.processing_job.ProcessingWorkflow(1).add({}, None)
+
+    def test_remove(self):
+        exp_command = qdb.software.Command(1)
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        exp_params = qdb.software.Parameters.load(exp_command,
+                                                  json_str=json_str)
+        exp_user = qdb.user.User('test@foo.bar')
+        name = "Test processing workflow"
+
+        tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
+            exp_user, exp_params, name=name)
+
+        parent = tester.graph.nodes()[0]
+        connections = {parent: {'demultiplexed': 'input_data'}}
+        dflt_params = qdb.software.DefaultParameters(10)
+        tester.add(connections, dflt_params)
+
+        self.assertEqual(len(tester.graph.nodes()), 2)
+        tester.remove(tester.graph.edges()[0][1])
+
+        g = tester.graph
+        obs_nodes = g.nodes()
+        self.assertEqual(len(obs_nodes), 1)
+        self.assertEqual(obs_nodes[0], parent)
+        self.assertEqual(g.edges(), [])
+
+    def test_remove_error_not_in_construction(self):
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            qdb.processing_job.ProcessingWorkflow(1).remove(
+                qdb.processing_job.ProcessingJob(
+                    'b72369f9-a886-4193-8d3d-f7b504168e75'))
+
+    def test_remove_error_children(self):
+        exp_user = qdb.user.User('test@foo.bar')
+        dflt_wf = qdb.software.DefaultWorkflow(1)
+        req_params = {qdb.software.Command(1): {'input_data': 1}}
+        name = "Test processing workflow"
+
+        tester = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
+            exp_user, dflt_wf, req_params, name=name)
+
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            tester.remove(tester.graph.edges()[0][0])
 
 if __name__ == '__main__':
     main()
