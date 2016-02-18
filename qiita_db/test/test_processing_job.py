@@ -291,6 +291,10 @@ class ProcessingJobTest(TestCase):
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             self.tester4.step = 'demultiplexing'
 
+    def test_children(self):
+        self.assertEqual(list(self.tester1.children), [])
+        self.assertEqual(list(self.tester3.children), [self.tester4])
+
 
 @qiita_test_checker()
 class ProcessingWorkflowTests(TestCase):

@@ -12,6 +12,8 @@ from subprocess import Popen, PIPE
 from multiprocessing import Process
 from os.path import join
 from itertools import chain
+from collections import defaultdict
+from json import dumps
 
 from future.utils import viewitems, viewvalues
 import networkx as nx
@@ -141,6 +143,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             sql = """INSERT INTO qiita.artifact_processing_job
                         (artifact_id, processing_job_id)
                      VALUES (%s, %s)"""
+            pending = defaultdict(dict)
             for pname, vals in command.parameters.items():
                 if vals[0] == 'artifact':
                     artifact_info = parameters.values[pname]
@@ -150,6 +153,13 @@ class ProcessingJob(qdb.base.QiitaObject):
                     if not isinstance(artifact_info, list):
                         qdb.sql_connection.TRN.add(
                             sql, [artifact_info, job_id])
+                    else:
+                        pending[artifact_info[0]][pname] = artifact_info[1]
+            if pending:
+                sql = """UPDATE qiita.processing_job
+                         SET pending = %s
+                         WHERE processing_job_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [dumps(pending), job_id])
 
             qdb.sql_connection.TRN.execute()
 
@@ -338,7 +348,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                         "Can't complete job: not in a running state")
                 if artifacts_data:
-                    artifact_ids = []
+                    artifact_ids = {}
                     for out_name, a_data in viewitems(artifacts_data):
                         filepaths = a_data['filepaths']
                         atype = a_data['artifact_type']
@@ -349,7 +359,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                             processing_parameters=params)
                         cmd_out_id = qdb.util.convert_to_id(
                             out_name, "command_output", "name")
-                        artifact_ids.append((cmd_out_id, a.id))
+                        artifact_ids[cmd_out_id] = a.id
                     if artifact_ids:
                         sql = """INSERT INTO
                                     qiita.artifact_output_processing_job
@@ -357,8 +367,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                                      command_output_id)
                                  VALUES (%s, %s, %s)"""
                         sql_params = [[aid, self.id, out_id]
-                                      for out_id, aid in artifact_ids]
+                                      for out_id, aid in viewitems(
+                                          artifact_ids)]
                         qdb.sql_connection.TRN.add(sql, sql_params, many=True)
+                        self._update_children(artifact_ids)
                 self._set_status('success')
             else:
                 self._set_error(error)
@@ -410,6 +422,10 @@ class ProcessingJob(qdb.base.QiitaObject):
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [log.id, self.id])
             qdb.sql_connection.TRN.execute()
+
+            # All the children should be marked as failure
+            for c in self.children:
+                c.complete(False, error="Parent job '%s' failed." % self.id)
 
     @property
     def heartbeat(self):
@@ -491,6 +507,64 @@ class ProcessingJob(qdb.base.QiitaObject):
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [value, self.id])
             qdb.sql_connection.TRN.execute()
+
+    @property
+    def children(self):
+        """The children jobs
+
+        Returns
+        -------
+        generator of qiita_db.processing_job.ProcessingJob
+            The children jobs
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT child_id
+                     FROM qiita.parent_processing_job
+                     WHERE parent_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            for jid in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield ProcessingJob(jid)
+
+    def _update_children(self, mapping):
+        """Updates the children of the current job to populate the input params
+
+        Parameters
+        ----------
+        mapping : dict of {int: int}
+            The mapping between output parameter and artifact
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT command_output_id, name
+                     FROM qiita.command_output
+                     WHERE command_output_id IN %s"""
+            sql_args = [tuple(mapping.keys())]
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+            new_map = {name: mapping[oid] for oid, name in res}
+
+            sql = """SELECT command_parameters, pending
+                     FROM qiita.processing_job
+                     WHERE processing_job_id = %s"""
+            sql_update = """UPDATE qiita.processing_job
+                            SET command_parameters = %s,
+                                pending = %s
+                            WHERE processing_job_id = %s"""
+            for c in self.children:
+                qdb.sql_connection.TRN.add(sql, [c.id])
+                params, pending = qdb.sql_connection.TRN.fetchflatten()
+                for pname, out_name in pending[self.id]:
+                    params[pname] = new_map[out_name]
+                    del pending[self.id]
+
+                # Force to insert a NULL in the DB if pending is empty
+                pending = pending if pending else None
+                qdb.sql_connection.TRN.add(sql_update,
+                                           [dumps(params), pending, c.id])
+                qdb.sql_connection.TRN.execute()
+
+                if pending is None:
+                    # The child already has all the parameters - submit it
+                    c.submit()
 
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
