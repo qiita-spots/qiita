@@ -27,9 +27,8 @@ def _system_call(cmd):
 
     Parameters
     ----------
-    cmd : str or iterator of str
-        The string containing the command to be run, or a sequence of strings
-        that are the tokens of the command.
+    cmd : str
+        The string containing the command to be run.
 
     Notes
     -----
@@ -59,7 +58,8 @@ def _job_submitter(job, cmd):
     """
     std_out, std_err, return_value = _system_call(cmd)
     if return_value != 0:
-        error = ""
+        error = ("Error submitting job '%s':\nStd output:%s\nStd error:%s"
+                 % (job.id, std_out, std_err))
         job.complete(False, error=error)
 
 
@@ -370,7 +370,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                                       for out_id, aid in viewitems(
                                           artifact_ids)]
                         qdb.sql_connection.TRN.add(sql, sql_params, many=True)
-                        self._update_children(artifact_ids)
+                        self._update_and_launch_children(artifact_ids)
                 self._set_status('success')
             else:
                 self._set_error(error)
@@ -443,7 +443,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    def execute_heartbeat(self):
+    def update_heartbeat_state(self):
         """Updates the heartbeat of the job
 
         In case that the job is in `queued` status, it changes the status to
@@ -532,7 +532,13 @@ class ProcessingJob(qdb.base.QiitaObject):
         ----------
         mapping : dict of {int: int}
             The mapping between output parameter and artifact
+
+        Returns
+        -------
+        list of qiita_db.processing_job.ProcessingJob
+            The list of childrens that are ready to be submitted
         """
+        ready = []
         with qdb.sql_connection.TRN:
             sql = """SELECT command_output_id, name
                      FROM qiita.command_output
@@ -551,8 +557,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                             WHERE processing_job_id = %s"""
             for c in self.children:
                 qdb.sql_connection.TRN.add(sql, [c.id])
-                params, pending = qdb.sql_connection.TRN.fetchflatten()
-                for pname, out_name in pending[self.id]:
+                params, pending = qdb.sql_connection.TRN.execute_fetchflatten()
+                for pname, out_name in viewitems(pending[self.id]):
                     params[pname] = new_map[out_name]
                     del pending[self.id]
 
@@ -563,8 +569,23 @@ class ProcessingJob(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.execute()
 
                 if pending is None:
-                    # The child already has all the parameters - submit it
-                    c.submit()
+                    # The child already has all the parameters
+                    # Add it to the ready list
+                    ready.append(c)
+        return ready
+
+    def _update_and_launch_children(self, mapping):
+        """Updates the children of the current job to populate the input params
+
+        Parameters
+        ----------
+        mapping : dict of {int: int}
+            The mapping between output parameter and artifact
+        """
+        ready = self._update_children(mapping)
+        # Submit all the children that already have all the input parameters
+        for c in ready:
+            c.submit()
 
 
 class ProcessingWorkflow(qdb.base.QiitaObject):

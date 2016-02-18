@@ -104,7 +104,7 @@ class HeartbeatHandler(OauthBaseHandler):
             job, success, error_msg = _get_job(job_id)
             if success:
                 try:
-                    job.execute_heartbeat()
+                    job.update_heartbeat_state()
                 except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
                     success = False
                     error_msg = str(e)

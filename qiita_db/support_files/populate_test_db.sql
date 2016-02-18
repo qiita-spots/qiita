@@ -499,7 +499,8 @@ INSERT INTO qiita.processing_job
     VALUES ('063e553b-327c-4818-ab4a-adfe58e49860', 'test@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json, 1, NULL, NULL, NULL),
            ('bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'test@foo.bar', 2, '{"min_seq_len":100,"max_seq_len":1000,"trim_seq_length":false,"min_qual_score":25,"max_ambig":6,"max_homopolymer":6,"max_primer_mismatch":0,"barcode_type":"golay_12","max_barcode_errors":1.5,"disable_bc_correction":false,"qual_score_window":0,"disable_primers":false,"reverse_primers":"disable","reverse_primer_mismatches":0,"truncate_ambi_bases":false,"input_data":1}'::json, 2, NULL, 'Sun Nov 22 21:00:00 2015', 'demultiplexing'),
            ('b72369f9-a886-4193-8d3d-f7b504168e75', 'shared@foo.bar', 1, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":true,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json, 3, NULL, 'Sun Nov 22 21:15:00 2015', NULL),
-           ('d19f76ee-274e-4c1b-b3a2-a12d73507c55', 'shared@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json, 4, 1, 'Sun Nov 22 21:30:00 2015', 'generating demux file');
+           ('d19f76ee-274e-4c1b-b3a2-a12d73507c55', 'shared@foo.bar', 3, '{"reference":1,"sortmerna_e_value":1,"sortmerna_max_pos":10000,"similarity":0.97,"sortmerna_coverage":0.97,"threads":1,"input_data":2}'::json, 4, 1, 'Sun Nov 22 21:30:00 2015', 'generating demux file'),
+           ('ac653cb5-76a6-4a45-929e-eb9b2dee6b63', 'test@foo.bar', 5, '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"golay_12","max_barcode_errors":1.5,"input_data":1}'::json, 1, NULL, NULL, NULL);
 
 INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
     VALUES (1, '063e553b-327c-4818-ab4a-adfe58e49860'),
@@ -514,10 +515,12 @@ INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('19ndkO3o
 
 -- Add a processing workflow
 INSERT INTO qiita.processing_job_workflow (email, name)
-    VALUES ('shared@foo.bar', 'Testing processing workflow');
+    VALUES ('shared@foo.bar', 'Testing processing workflow'),
+           ('test@foo.bar', 'Single node workflow');
 
 INSERT INTO qiita.processing_job_workflow_root (processing_job_workflow_id, processing_job_id)
-    VALUES ('1', 'b72369f9-a886-4193-8d3d-f7b504168e75');
+    VALUES ('1', 'b72369f9-a886-4193-8d3d-f7b504168e75'),
+           ('2', 'ac653cb5-76a6-4a45-929e-eb9b2dee6b63');
 
 INSERT INTO qiita.parent_processing_job (parent_id, child_id)
     VALUES ('b72369f9-a886-4193-8d3d-f7b504168e75', 'd19f76ee-274e-4c1b-b3a2-a12d73507c55');

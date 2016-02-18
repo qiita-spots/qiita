@@ -35,6 +35,29 @@ class ProcessingJobUtilTest(TestCase):
         self.assertEqual(obs_err, "Test system call stderr\n")
         self.assertEqual(obs_status, 1)
 
+    def test_job_submitter(self):
+        # The cmd parameter of the function should be the command that
+        # actually executes the function. However, in order to avoid executing
+        # a expensive command, we are just going to pass some other command.
+        # In case of success, nothing happens, so we just run it and see that
+        # it doesn't raise an error
+        job = qdb.processing_job.ProcessingJob(
+            "063e553b-327c-4818-ab4a-adfe58e49860")
+        cmd = 'echo "Test system call stdout"'
+        qdb.processing_job._job_submitter(job, cmd)
+
+    def test_job_submitter_error(self):
+        # Same comment as above, but here we are going to force failure, and
+        # check that the job is updated correctly
+        job = qdb.processing_job.ProcessingJob(
+            "063e553b-327c-4818-ab4a-adfe58e49860")
+        cmd = '>&2  echo "Test system call stderr"; exit 1'
+        qdb.processing_job._job_submitter(job, cmd)
+        self.assertEqual(job.status, 'error')
+        exp = ("Error submitting job '063e553b-327c-4818-ab4a-adfe58e49860':\n"
+               "Std output:\nStd error:Test system call stderr\n")
+        self.assertEqual(job.log.msg, exp)
+
 
 @qiita_test_checker()
 class ProcessingJobTest(TestCase):
@@ -188,6 +211,11 @@ class ProcessingJobTest(TestCase):
                       "063e553b-327c-4818-ab4a-adfe58e49860"))
         self.assertEqual(obs, exp)
 
+    def test_submit(self):
+        # In order to test a success, we need to actually run the job, which
+        # will mean to run split libraries, for example.
+        pass
+
     def test_submit_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
@@ -250,22 +278,22 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(self.tester4.heartbeat,
                          datetime(2015, 11, 22, 21, 30, 00))
 
-    def test_execute_heartbeat(self):
+    def test_update_heartbeat_state(self):
         before = datetime.now()
-        self.tester2.execute_heartbeat()
+        self.tester2.update_heartbeat_state()
         self.assertTrue(before < self.tester2.heartbeat < datetime.now())
 
-    def test_execute_heartbeat_queued(self):
+    def test_update_heartbeat_state_queued(self):
         before = datetime.now()
         self.assertEqual(self.tester1.status, 'queued')
-        self.tester1.execute_heartbeat()
+        self.tester1.update_heartbeat_state()
         self.assertTrue(before < self.tester1.heartbeat < datetime.now())
         self.assertEqual(self.tester1.status, 'running')
 
-    def test_execute_heartbeat_error(self):
+    def test_update_heartbeat_state_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
-            self.tester3.execute_heartbeat()
+            self.tester3.update_heartbeat_state()
 
     def test_step(self):
         self.assertIsNone(self.tester1.step)
@@ -294,6 +322,39 @@ class ProcessingJobTest(TestCase):
     def test_children(self):
         self.assertEqual(list(self.tester1.children), [])
         self.assertEqual(list(self.tester3.children), [self.tester4])
+
+    def test_update_children(self):
+        # Create a workflow so we can test this functionality
+        exp_command = qdb.software.Command(1)
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        exp_params = qdb.software.Parameters.load(exp_command,
+                                                  json_str=json_str)
+        exp_user = qdb.user.User('test@foo.bar')
+        name = "Test processing workflow"
+
+        tester = qdb.processing_job.ProcessingWorkflow.from_scratch(
+            exp_user, exp_params, name=name)
+
+        parent = tester.graph.nodes()[0]
+        connections = {parent: {'demultiplexed': 'input_data'}}
+        dflt_params = qdb.software.DefaultParameters(10)
+        tester.add(connections, dflt_params)
+        child = tester.graph.nodes()[1]
+
+        mapping = {1: 3}
+        obs = parent._update_children(mapping)
+        exp = [child]
+        self.assertTrue(obs, exp)
+
+    def test_update_and_launch_children(self):
+        # In order to test a success, we need to actually run the children
+        # jobs, which will mean to run split libraries, for example.
+        pass
 
 
 @qiita_test_checker()
@@ -329,6 +390,31 @@ class ProcessingWorkflowTests(TestCase):
             'sortmerna_max_pos': 10000,
             'threads': 1}
         self.assertEqual(obs_params, exp_params)
+
+    def test_from_default_workflow_missing(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError) as err:
+            qdb.processing_job.ProcessingWorkflow.from_default_workflow(
+                qdb.user.User('test@foo.bar'), qdb.software.DefaultWorkflow(1),
+                {}, name="Test name")
+
+        exp = ('Provided required parameters do not match the initial set of '
+               'commands for the workflow. Command(s) "Split libraries FASTQ"'
+               ' are missing the required parameter set.')
+        self.assertEqual(str(err.exception), exp)
+
+    def test_from_default_workflow_extra(self):
+        req_params = {qdb.software.Command(1): {'input_data': 1},
+                      qdb.software.Command(2): {'input_data': 2}}
+
+        with self.assertRaises(qdb.exceptions.QiitaDBError) as err:
+            qdb.processing_job.ProcessingWorkflow.from_default_workflow(
+                qdb.user.User('test@foo.bar'), qdb.software.DefaultWorkflow(1),
+                req_params, name="Test name")
+        exp = ('Provided required parameters do not match the initial set of '
+               'commands for the workflow. Paramters for command(s) '
+               '"Split libraries" have been provided, but they are not the '
+               'initial commands for the workflow.')
+        self.assertEqual(str(err.exception), exp)
 
     def test_from_scratch(self):
         exp_command = qdb.software.Command(1)
@@ -372,6 +458,26 @@ class ProcessingWorkflowTests(TestCase):
                 'd19f76ee-274e-4c1b-b3a2-a12d73507c55')]
         self.assertItemsEqual(obs.nodes(), exp_nodes)
         self.assertEqual(obs.edges(), [(exp_nodes[0], exp_nodes[1])])
+
+    def test_graph_only_root(self):
+        obs = qdb.processing_job.ProcessingWorkflow(2).graph
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        exp_nodes = [
+            qdb.processing_job.ProcessingJob(
+                'ac653cb5-76a6-4a45-929e-eb9b2dee6b63')]
+        self.assertItemsEqual(obs.nodes(), exp_nodes)
+        self.assertEqual(obs.edges(), [])
+
+    def test_raise_if_not_in_construction(self):
+        # We just need to test that the execution continues (i.e. no raise)
+        tester = qdb.processing_job.ProcessingWorkflow(1)
+        tester._raise_if_not_in_construction()
+
+    def test_raise_if_not_in_construction_error(self):
+        tester = qdb.processing_job.ProcessingWorkflow(1)
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            tester._raise_if_not_in_construction()
 
     def test_add(self):
         exp_command = qdb.software.Command(1)
@@ -468,6 +574,11 @@ class ProcessingWorkflowTests(TestCase):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             tester.remove(tester.graph.edges()[0][0])
+
+    def test_submit(self):
+        # In order to test a success, we need to actually run the jobs, which
+        # will mean to run split libraries, for example.
+        pass
 
 if __name__ == '__main__':
     main()
