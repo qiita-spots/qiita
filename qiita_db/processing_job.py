@@ -657,11 +657,6 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         job = ProcessingJob.create(user, parameters)
         return cls._common_creation_steps(user, [job], name)
 
-    def add(self, parents, dflt_params, connections=None, params=None):
-        """Adds a new job to the workflow
-        """
-        pass
-
     @property
     def name(self):
         """"The name of the workflow
@@ -730,3 +725,46 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                     for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
                 g.add_nodes_from(nodes)
         return g
+
+    def add(self, connections, dflt_params, req_params=None, opt_params=None):
+        """Adds a new job to the workflow
+
+        Parameters
+        ----------
+        connections : dict of {qiita_db.processing_job.ProcessingJob:
+                               {str: str}}
+            Dictionary keyed by the jobs in which the new job depends on,
+            and values is a dict mapping between source outputs and new job
+            inputs
+        dflt_params : qiita_db.software.DefaultParameters
+            The DefaultParameters object used
+        req_params : dict of {str: object}, optional
+            Any extra required parameter values, keyed by parameter name.
+            Default: None, all the requried parameters are provided through
+            the `connections` dictionary
+        opt_params : dict of {str: object}, optional
+            The optional parameters to change from the default set, keyed by
+            parameter name. Default: None, use the values in `dflt_params`
+        """
+        with qdb.sql_connection.TRN:
+            req_params = req_params if req_params else {}
+            # Loop through all the connections to add the relevant parameters
+            for source, mapping in viewitems(connections):
+                source_id = source.id
+                for out, in_param in viewitems(mapping):
+                    req_params[in_param] = [source_id, out]
+
+            new_job = ProcessingJob.create(
+                self.user, qdb.software.Parameters.from_default_params(
+                    dflt_params, req_params, opt_params=opt_params))
+
+            # SQL used to create the edges between jobs
+            sql = """INSERT INTO qiita.parent_processing_job
+                        (parent_id, child_id)
+                     VALUES (%s, %s)"""
+            sql_args = [[s.id, new_job.id] for s in connections]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
+    def submit(self):
+        """"""

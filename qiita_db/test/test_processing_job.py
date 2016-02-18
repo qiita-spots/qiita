@@ -349,6 +349,46 @@ class ProcessingWorkflowTests(TestCase):
         self.assertEqual(nodes[0].parameters, exp_params)
         self.assertEqual(obs_graph.edges(), [])
 
+    def test_add(self):
+        exp_command = qdb.software.Command(1)
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        exp_params = qdb.software.Parameters.load(exp_command,
+                                                  json_str=json_str)
+        exp_user = qdb.user.User('test@foo.bar')
+        name = "Test processing workflow"
+
+        obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
+            exp_user, exp_params, name=name)
+
+        parent = obs.graph.nodes()[0]
+        connections = {parent: {'demultiplexed': 'input_data'}}
+        dflt_params = qdb.software.DefaultParameters(10)
+        obs.add(connections, dflt_params)
+
+        obs_graph = obs.graph
+        self.assertTrue(isinstance(obs_graph, nx.DiGraph))
+        self.assertEqual(len(obs_graph.nodes()), 2)
+        obs_edges = obs_graph.edges()
+        self.assertEqual(len(obs_edges), 1)
+        obs_src = obs_edges[0][0]
+        obs_dst = obs_edges[0][1]
+        self.assertEqual(obs_src, parent)
+        self.assertTrue(isinstance(obs_dst, qdb.processing_job.ProcessingJob))
+        obs_params = obs_dst.parameters.values
+        exp_params = {
+            'input_data': [parent.id, u'demultiplexed'],
+            'reference': 1,
+            'similarity': 0.97,
+            'sortmerna_coverage': 0.97,
+            'sortmerna_e_value': 1,
+            'sortmerna_max_pos': 10000,
+            'threads': 1}
+        self.assertEqual(obs_params, exp_params)
 
 if __name__ == '__main__':
     main()
