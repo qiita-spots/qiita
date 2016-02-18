@@ -506,6 +506,27 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
     _table = "processing_job_workflow"
 
     @classmethod
+    def _common_creation_steps(cls, user, root_jobs, name):
+        """"""
+        with qdb.sql_connection.TRN:
+            # Insert the workflow in the processing_job_worflow table
+            name = name if name else "%s's workflow" % user.info['name']
+            sql = """INSERT INTO qiita.processing_job_workflow (email, name)
+                     VALUES (%s, %s)
+                     RETURNING processing_job_workflow_id"""
+            qdb.sql_connection.TRN.add(sql, [user.email, name])
+            w_id = qdb.sql_connection.TRN.execute_fetchlast()
+            # Connect the workflow with it's initial set of jobs
+            sql = """INSERT INTO qiita.processing_job_workflow_root
+                        (processing_job_workflow_id, processing_job_id)
+                     VALUES (%s, %s)"""
+            sql_args = [[w_id, j.id] for j in root_jobs]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
+        return cls(w_id)
+
+    @classmethod
     def from_default_workflow(cls, user, dflt_wf, req_params, name=None):
         """Creates a new processing workflow from a default workflow
 
@@ -613,25 +634,10 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 sql_args = [[pid, new_job.id] for pid in parent_ids]
                 qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
-            # Insert the workflow in the processing_job_worflow table
-            name = name if name else "%s's workflow" % user.info['name']
-            sql = """INSERT INTO qiita.processing_job_workflow (email, name)
-                     VALUES (%s, %s)
-                     RETURNING processing_job_workflow_id"""
-            qdb.sql_connection.TRN.add(sql, [user.email, name])
-            w_id = qdb.sql_connection.TRN.execute_fetchlast()
-            # Connect the workflow with it's initial set of jobs
-            sql = """INSERT INTO qiita.processing_job_workflow_root
-                        (processing_job_workflow_id, processing_job_id)
-                     VALUES (%s, %s)"""
-            sql_args = [[w_id, j.id] for j in root_jobs]
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-            qdb.sql_connection.TRN.execute()
-
-        return cls(w_id)
+            return cls._common_creation_steps(user, root_jobs, name)
 
     @classmethod
-    def from_scratch(cls, user, parameters):
+    def from_scratch(cls, user, parameters, name=None):
         """Creates a new processing workflow from scratch
 
         Parameters
@@ -640,8 +646,16 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             The user creating the workflow
         parameters : qiita_db.software.Parameters
             The parameters of the first job in the workflow
+        name : str, optional
+            Name of the workflow. Default: generated from user's name
+
+        Returns
+        -------
+        qiita_db.processing_job.ProcessingWorkflow
+            The newly created workflow
         """
-        pass
+        job = ProcessingJob.create(user, parameters)
+        return cls._common_creation_steps(user, [job], name)
 
     def add(self, parents, dflt_params, connections=None, params=None):
         """Adds a new job to the workflow
@@ -697,9 +711,22 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                      FROM qiita.get_processing_workflow_edges(%s)"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             edges = qdb.sql_connection.TRN.execute_fetchindex()
-            nodes = {jid: ProcessingJob(jid)
-                     for jid in set(chain.from_iterable(edges))}
-            g.add_nodes_from(nodes.values())
-            edges = [(nodes[s], nodes[d]) for s, d in edges]
-            g.add_edges_from(edges)
+            if edges:
+                nodes = {jid: ProcessingJob(jid)
+                         for jid in set(chain.from_iterable(edges))}
+                g.add_nodes_from(nodes.values())
+                edges = [(nodes[s], nodes[d]) for s, d in edges]
+                g.add_edges_from(edges)
+            else:
+                # It is possible that there are no edges because we are still
+                # building the workflow. In that case, just return a graph
+                # with only the nodes
+                sql = """SELECT processing_job_id
+                         FROM qiita.processing_job_workflow_root
+                         WHERE processing_job_workflow_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [self.id])
+                nodes = [
+                    ProcessingJob(jid)
+                    for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
+                g.add_nodes_from(nodes)
         return g

@@ -294,15 +294,15 @@ class ProcessingJobTest(TestCase):
 
 class ProcessingWorkflowTests(TestCase):
     def test_from_default_workflow(self):
-        user = qdb.user.User('test@foo.bar')
+        exp_user = qdb.user.User('test@foo.bar')
         dflt_wf = qdb.software.DefaultWorkflow(1)
         req_params = {qdb.software.Command(1): {'input_data': 1}}
         name = "Test processing workflow"
 
         obs = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-            user, dflt_wf, req_params, name=name)
-        self.assertEqual(obs.name, "Test processing workflow")
-        self.assertEqual(obs.user, user)
+            exp_user, dflt_wf, req_params, name=name)
+        self.assertEqual(obs.name, name)
+        self.assertEqual(obs.user, exp_user)
         obs_graph = obs.graph
         self.assertTrue(isinstance(obs_graph, nx.DiGraph))
         self.assertEqual(len(obs_graph.nodes()), 2)
@@ -324,6 +324,30 @@ class ProcessingWorkflowTests(TestCase):
             'sortmerna_max_pos': 10000,
             'threads': 1}
         self.assertEqual(obs_params, exp_params)
+
+    def test_from_scratch(self):
+        exp_command = qdb.software.Command(1)
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        exp_params = qdb.software.Parameters.load(exp_command,
+                                                  json_str=json_str)
+        exp_user = qdb.user.User('test@foo.bar')
+        name = "Test processing workflow"
+
+        obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
+            exp_user, exp_params, name=name)
+        self.assertEqual(obs.name, name)
+        self.assertEqual(obs.user, exp_user)
+        obs_graph = obs.graph
+        self.assertTrue(isinstance(obs_graph, nx.DiGraph))
+        nodes = obs_graph.nodes()
+        self.assertEqual(len(nodes), 1)
+        self.assertEqual(nodes[0].parameters, exp_params)
+        self.assertEqual(obs_graph.edges(), [])
 
 
 if __name__ == '__main__':
