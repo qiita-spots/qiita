@@ -326,8 +326,8 @@ class ProcessingJob(qdb.base.QiitaObject):
         ----------
         success : bool
             Whether the job has completed successfully or not
-        artifacts_data : dict of dicts
-            The generated artifact information, keyed by output name.
+        artifacts_data : dict of dicts, optional
+            The generated artifact information, if any, keyed by output name.
             The format of each of the internal dictionaries must be
             {'filepaths': list of (str, str), 'artifact_type': str}
             where `filepaths` contains the list of filepaths and filepath types

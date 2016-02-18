@@ -255,6 +255,13 @@ class SoftwareTests(TestCase):
         tester = qdb.software.Software(1)
         self.assertEqual(tester.start_script, 'start_target_gene')
 
+    def test_default_software(self):
+        obs = qdb.software.Software(1).default_workflows
+        exp = [qdb.software.DefaultWorkflow(1),
+               qdb.software.DefaultWorkflow(2),
+               qdb.software.DefaultWorkflow(3)]
+        self.assertEqual(obs, exp)
+
 
 @qiita_test_checker()
 class DefaultParametersTests(TestCase):

@@ -14,9 +14,9 @@ ALTER TABLE qiita.command_parameter ADD CONSTRAINT idx_command_parameter_0 UNIQU
 -- In case that the parameter is of type "artifact" this table holds which
 -- specific set of artifact types the command accepts
 CREATE TABLE qiita.parameter_artifact_type (
-	command_parameter_id bigserial  NOT NULL,
-	artifact_type_id     bigint  NOT NULL,
-	CONSTRAINT idx_parameter_artifact_type PRIMARY KEY ( command_parameter_id, artifact_type_id )
+    command_parameter_id bigserial  NOT NULL,
+    artifact_type_id     bigint     NOT NULL,
+    CONSTRAINT idx_parameter_artifact_type PRIMARY KEY ( command_parameter_id, artifact_type_id )
  ) ;
 CREATE INDEX idx_parameter_artifact_type_param_id ON qiita.parameter_artifact_type ( command_parameter_id ) ;
 CREATE INDEX idx_parameter_artifact_type_type_id ON qiita.parameter_artifact_type ( artifact_type_id ) ;
@@ -26,12 +26,12 @@ ALTER TABLE qiita.parameter_artifact_type ADD CONSTRAINT fk_parameter_artifact_t
 -- In case that the command outputs a set of artifacts (including len(set) = 1),
 -- this table holds which are the types of those artifacts
 CREATE TABLE qiita.command_output (
-	command_output_id    bigserial  NOT NULL,
-	name                 varchar  NOT NULL,
-	command_id           bigint  NOT NULL,
-	artifact_type_id     bigint  NOT NULL,
-	CONSTRAINT pk_command_output PRIMARY KEY ( command_output_id ),
-	CONSTRAINT idx_command_output UNIQUE ( name, command_id )
+    command_output_id    bigserial  NOT NULL,
+    name                 varchar    NOT NULL,
+    command_id           bigint     NOT NULL,
+    artifact_type_id     bigint     NOT NULL,
+    CONSTRAINT pk_command_output PRIMARY KEY ( command_output_id ),
+    CONSTRAINT idx_command_output UNIQUE ( name, command_id )
  ) ;
 CREATE INDEX idx_command_output_cmd_id ON qiita.command_output ( command_id ) ;
 CREATE INDEX idx_command_output_type_id ON qiita.command_output ( artifact_type_id ) ;
@@ -44,11 +44,11 @@ ALTER TABLE qiita.command_output ADD CONSTRAINT fk_command_output_0 FOREIGN KEY 
 
 -- The table default_workflow links each software with its set of default workflows
 CREATE TABLE qiita.default_workflow (
-	default_workflow_id  bigserial  NOT NULL,
-	software_id          bigint  NOT NULL,
-	name                 varchar  NOT NULL,
-	CONSTRAINT pk_default_workflow PRIMARY KEY ( default_workflow_id ),
-	CONSTRAINT idx_default_workflow UNIQUE ( software_id, name )
+    default_workflow_id  bigserial  NOT NULL,
+    software_id          bigint     NOT NULL,
+    name                 varchar    NOT NULL,
+    CONSTRAINT pk_default_workflow PRIMARY KEY ( default_workflow_id ),
+    CONSTRAINT idx_default_workflow UNIQUE ( software_id, name )
  ) ;
 CREATE INDEX idx_default_workflow_software ON qiita.default_workflow ( software_id ) ;
 ALTER TABLE qiita.default_workflow ADD CONSTRAINT fk_default_workflow_software FOREIGN KEY ( software_id ) REFERENCES qiita.software( software_id )    ;
@@ -56,11 +56,11 @@ ALTER TABLE qiita.default_workflow ADD CONSTRAINT fk_default_workflow_software F
 -- The table default_workflow_node stores the nodes information from the
 -- workflow graph
 CREATE TABLE qiita.default_workflow_node (
-	default_workflow_node_id bigserial  NOT NULL,
-	default_workflow_id  bigint  NOT NULL,
-	command_id           bigint  NOT NULL,
-	default_parameter_set_id bigint  NOT NULL,
-	CONSTRAINT pk_default_workflow_command PRIMARY KEY ( default_workflow_node_id )
+    default_workflow_node_id  bigserial  NOT NULL,
+    default_workflow_id       bigint     NOT NULL,
+    command_id                bigint     NOT NULL,
+    default_parameter_set_id  bigint     NOT NULL,
+    CONSTRAINT pk_default_workflow_command PRIMARY KEY ( default_workflow_node_id )
  ) ;
 CREATE INDEX idx_default_workflow_command_cmd_id ON qiita.default_workflow_node ( command_id ) ;
 CREATE INDEX idx_default_workflow_command_dflt_param_id ON qiita.default_workflow_node ( default_parameter_set_id ) ;
@@ -71,10 +71,10 @@ ALTER TABLE qiita.default_workflow_node ADD CONSTRAINT fk_default_workflow_comma
 
 -- The table default_workflow_edge stores the edge of the workflow graph
 CREATE TABLE qiita.default_workflow_edge (
-	default_workflow_edge_id bigserial  NOT NULL,
-	parent_id            bigint  NOT NULL,
-	child_id             bigint  NOT NULL,
-	CONSTRAINT pk_default_workflow_edge PRIMARY KEY ( default_workflow_edge_id )
+    default_workflow_edge_id  bigserial  NOT NULL,
+    parent_id                 bigint     NOT NULL,
+    child_id                  bigint     NOT NULL,
+    CONSTRAINT pk_default_workflow_edge PRIMARY KEY ( default_workflow_edge_id )
  ) ;
 CREATE INDEX idx_default_workflow_edge_parent ON qiita.default_workflow_edge ( parent_id ) ;
 CREATE INDEX idx_default_workflow_edge_child ON qiita.default_workflow_edge ( child_id ) ;
@@ -85,10 +85,10 @@ ALTER TABLE qiita.default_workflow_edge ADD CONSTRAINT fk_default_workflow_edge_
 -- about the edges. Specifically, it stores which outputs are connected to
 -- which inputs across commands in the default workflow command.
 CREATE TABLE qiita.default_workflow_edge_connections (
-	default_workflow_edge_id bigint  NOT NULL,
-	parent_output_id     bigint  NOT NULL,
-	child_input_id       bigint  NOT NULL,
-	CONSTRAINT idx_default_workflow_edge_connections PRIMARY KEY ( default_workflow_edge_id, parent_output_id, child_input_id )
+    default_workflow_edge_id  bigint  NOT NULL,
+    parent_output_id          bigint  NOT NULL,
+    child_input_id            bigint  NOT NULL,
+    CONSTRAINT idx_default_workflow_edge_connections PRIMARY KEY ( default_workflow_edge_id, parent_output_id, child_input_id )
  ) ;
 CREATE INDEX idx_default_workflow_edge_connections_parent ON qiita.default_workflow_edge_connections ( parent_output_id ) ;
 CREATE INDEX idx_default_workflow_edge_connections_child ON qiita.default_workflow_edge_connections ( child_input_id ) ;
@@ -100,10 +100,10 @@ ALTER TABLE qiita.default_workflow_edge_connections ADD CONSTRAINT fk_default_wo
 -- The table qiita.processing_job_workflow holds the workflow actually executed
 -- by the user. We allow the user to name the workflow for easier reference
 CREATE TABLE qiita.processing_job_workflow (
-	processing_job_workflow_id 	bigserial  	NOT NULL,
-	email                		varchar  	NOT NULL,
-	name                 		varchar  ,
-	CONSTRAINT pk_processing_job_workflow PRIMARY KEY ( processing_job_workflow_id )
+    processing_job_workflow_id     bigserial      NOT NULL,
+    email                          varchar      NOT NULL,
+    name                           varchar  ,
+    CONSTRAINT pk_processing_job_workflow PRIMARY KEY ( processing_job_workflow_id )
  ) ;
 CREATE INDEX idx_processing_job_workflow ON qiita.processing_job_workflow ( email ) ;
 ALTER TABLE qiita.processing_job_workflow ADD CONSTRAINT fk_processing_job_workflow FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ;
@@ -112,9 +112,9 @@ ALTER TABLE qiita.processing_job_workflow ADD CONSTRAINT fk_processing_job_workf
 -- it's initial set of jobs. From this jobs, we can trace down the rest of the
 -- workflow
 CREATE TABLE qiita.processing_job_workflow_root (
-	processing_job_workflow_id 	bigint  NOT NULL,
-	processing_job_id    		uuid  	NOT NULL,
-	CONSTRAINT idx_processing_job_workflow_root_0 PRIMARY KEY ( processing_job_workflow_id, processing_job_id )
+    processing_job_workflow_id     bigint    NOT NULL,
+    processing_job_id              uuid      NOT NULL,
+    CONSTRAINT idx_processing_job_workflow_root_0 PRIMARY KEY ( processing_job_workflow_id, processing_job_id )
  ) ;
 CREATE INDEX idx_processing_job_workflow_root_wf ON qiita.processing_job_workflow_root ( processing_job_workflow_id ) ;
 CREATE INDEX idx_processing_job_workflow_root_job ON qiita.processing_job_workflow_root ( processing_job_id ) ;
@@ -125,9 +125,9 @@ ALTER TABLE qiita.processing_job_workflow_root ADD CONSTRAINT fk_processing_job_
 -- different processing jobs. The specific connections are encoded in the
 -- processing_job's command_parameters attribute (JSON)
 CREATE TABLE qiita.parent_processing_job (
-	parent_id            uuid  NOT NULL,
-	child_id             uuid  NOT NULL,
-	CONSTRAINT idx_parent_processing_job PRIMARY KEY ( parent_id, child_id )
+    parent_id            uuid  NOT NULL,
+    child_id             uuid  NOT NULL,
+    CONSTRAINT idx_parent_processing_job PRIMARY KEY ( parent_id, child_id )
  ) ;
 CREATE INDEX idx_parent_processing_job_parent ON qiita.parent_processing_job ( parent_id ) ;
 CREATE INDEX idx_parent_processing_job_child ON qiita.parent_processing_job ( child_id ) ;
@@ -143,9 +143,9 @@ ALTER TABLE qiita.parent_processing_job ADD CONSTRAINT fk_parent_processing_job_
 -- there is no way to retrieve this information once the job has been executed
 -- and be 100% sure that we are connecting the jobs and the artifacts correctly
 CREATE TABLE qiita.artifact_output_processing_job (
-	artifact_id          bigint  NOT NULL,
-	processing_job_id    uuid    NOT NULL,
-	command_output_id    bigint  NOT NULL
+    artifact_id          bigint  NOT NULL,
+    processing_job_id    uuid    NOT NULL,
+    command_output_id    bigint  NOT NULL
  ) ;
 CREATE INDEX idx_artifact_output_processing_job_artifact ON qiita.artifact_output_processing_job ( artifact_id ) ;
 CREATE INDEX idx_artifact_output_processing_job_job ON qiita.artifact_output_processing_job ( processing_job_id ) ;
@@ -158,8 +158,8 @@ ALTER TABLE qiita.artifact_output_processing_job ADD CONSTRAINT fk_artifact_outp
 -- we need to identify if the job is part of a workflow in construction
 -- and if the job is waiting for a previous job to finish in order to be executed
 INSERT INTO qiita.processing_job_status (processing_job_status, processing_job_status_description)
-	VALUES ('in_construction', 'The job is one of the source nodes of a workflow that is in construction'),
-		   ('waiting', 'The job is waiting for a previous job in the workflow to be completed in order to be executed.');
+    VALUES ('in_construction', 'The job is one of the source nodes of a workflow that is in construction'),
+           ('waiting', 'The job is waiting for a previous job in the workflow to be completed in order to be executed.');
 
 -- In order to keep better track of the jobs that we are waiting for
 -- we add another json to the processing_job table
@@ -168,121 +168,121 @@ ALTER TABLE qiita.processing_job ADD pending json  ;
 -- Populate the newly created tables
 DO $do$
 DECLARE
-	in_slq_param_id		bigint;
-	in_sl_param_id		bigint;
-	in_po_param_id		bigint;
-	dflt_slq_id			bigint;
-	dflt_sl_id			bigint;
-	dflt_per_sample_id	bigint;
-	dflt_po_id			bigint;
+    in_slq_param_id        bigint;
+    in_sl_param_id         bigint;
+    in_po_param_id         bigint;
+    dflt_slq_id            bigint;
+    dflt_sl_id             bigint;
+    dflt_per_sample_id     bigint;
+    dflt_po_id             bigint;
 BEGIN
-	-- Add the artifact type information for the input parameters for the commands
-	-- command_id = 1 -> Split libraries FASTQ
-	SELECT command_parameter_id FROM qiita.command_parameter
-		WHERE command_id = 1 AND parameter_name = 'input_data'
-		INTO in_slq_param_id;
+    -- Add the artifact type information for the input parameters for the commands
+    -- command_id = 1 -> Split libraries FASTQ
+    SELECT command_parameter_id FROM qiita.command_parameter
+        WHERE command_id = 1 AND parameter_name = 'input_data'
+        INTO in_slq_param_id;
 
-	-- Split libraries FASTQ supports FASTQ (3) and per_sample_FASTQ (5)
-	INSERT INTO qiita.parameter_artifact_type (command_parameter_id, artifact_type_id)
-		VALUES (in_slq_param_id, 3), (in_slq_param_id, 5);
+    -- Split libraries FASTQ supports FASTQ (3) and per_sample_FASTQ (5)
+    INSERT INTO qiita.parameter_artifact_type (command_parameter_id, artifact_type_id)
+        VALUES (in_slq_param_id, 3), (in_slq_param_id, 5);
 
-	-- command_id = 2 -> Split libraries
-	SELECT command_parameter_id FROM qiita.command_parameter
-		WHERE command_id = 2 AND parameter_name = 'input_data'
-		INTO in_sl_param_id;
+    -- command_id = 2 -> Split libraries
+    SELECT command_parameter_id FROM qiita.command_parameter
+        WHERE command_id = 2 AND parameter_name = 'input_data'
+        INTO in_sl_param_id;
 
-	-- Split libraries supports SFF (1), FASTA_Sanger (2), FASTA (4)
-	INSERT INTO qiita.parameter_artifact_type (command_parameter_id, artifact_type_id)
-		VALUES (in_sl_param_id, 1), (in_sl_param_id, 2), (in_sl_param_id, 4);
+    -- Split libraries supports SFF (1), FASTA_Sanger (2), FASTA (4)
+    INSERT INTO qiita.parameter_artifact_type (command_parameter_id, artifact_type_id)
+        VALUES (in_sl_param_id, 1), (in_sl_param_id, 2), (in_sl_param_id, 4);
 
-	-- command_id = 3 -> Pick closed-reference OTUs
-	SELECT command_parameter_id FROM qiita.command_parameter
-		WHERE command_id = 3 AND parameter_name = 'input_data'
-		INTO in_po_param_id;
+    -- command_id = 3 -> Pick closed-reference OTUs
+    SELECT command_parameter_id FROM qiita.command_parameter
+        WHERE command_id = 3 AND parameter_name = 'input_data'
+        INTO in_po_param_id;
 
-	-- Pick closed-reference OTUs supports Demultiplexed (6)
-	INSERT INTO qiita.parameter_artifact_type (command_parameter_id, artifact_type_id)
-		VALUES (in_po_param_id, 6);
-
-
-	-- Add the output information for each command
-	INSERT INTO qiita.command_output (name, command_id, artifact_type_id)
-		VALUES ('demultiplexed', 1, 6), ('demultiplexed', 2, 6), ('OTU table', 3, 7);
+    -- Pick closed-reference OTUs supports Demultiplexed (6)
+    INSERT INTO qiita.parameter_artifact_type (command_parameter_id, artifact_type_id)
+        VALUES (in_po_param_id, 6);
 
 
-	-- Add the default workflow for the target gene pipeline.
-	-- We are going to create three different default workflows for the
-	-- target gene plugin:
-	--   1) FASTQ upstream workflow: split_libraries_fastq.py + OTU picking
-	--   2) FASTA upstream workflow: split_libraries.py + OTU picking
-	--   3) Per sample FASTQ upstream workflow:
-	--      split_libraries_fastq.py + OTU picking using per sample fastq parameters
-	-- In order to choose the default parameters set, we are going to choose
-	-- the one with minimum id. The reason for this is that in the live system
-	-- there are default parameter set that were added manually, so we don't
-	-- know the ids for those parameter set. Note that we do know
-	-- the command id because they're inserted in patch 33.sql, and that is
-	-- the only way of adding commands at this point.
+    -- Add the output information for each command
+    INSERT INTO qiita.command_output (name, command_id, artifact_type_id)
+        VALUES ('demultiplexed', 1, 6), ('demultiplexed', 2, 6), ('OTU table', 3, 7);
 
-	-- Insert default workflow
-	INSERT INTO qiita.default_workflow (software_id, name)
-		VALUES (1, 'FASTQ upstream workflow'),
-			   (1, 'FASTA upstream workflow'),
-			   (1, 'Per sample FASTQ upstream workflow');
 
-	-- Retrieve all the ids of the default parameter set that we need
-	SELECT min(default_parameter_set_id)
-		FROM qiita.default_parameter_set
-		WHERE command_id = 1
-		INTO dflt_slq_id;
+    -- Add the default workflow for the target gene pipeline.
+    -- We are going to create three different default workflows for the
+    -- target gene plugin:
+    --   1) FASTQ upstream workflow: split_libraries_fastq.py + OTU picking
+    --   2) FASTA upstream workflow: split_libraries.py + OTU picking
+    --   3) Per sample FASTQ upstream workflow:
+    --      split_libraries_fastq.py + OTU picking using per sample fastq parameters
+    -- In order to choose the default parameters set, we are going to choose
+    -- the one with minimum id. The reason for this is that in the live system
+    -- there are default parameter set that were added manually, so we don't
+    -- know the ids for those parameter set. Note that we do know
+    -- the command id because they're inserted in patch 33.sql, and that is
+    -- the only way of adding commands at this point.
 
-	SELECT min(default_parameter_set_id)
-		FROM qiita.default_parameter_set
-		WHERE command_id = 2
-		INTO dflt_sl_id;
+    -- Insert default workflow
+    INSERT INTO qiita.default_workflow (software_id, name)
+        VALUES (1, 'FASTQ upstream workflow'),
+               (1, 'FASTA upstream workflow'),
+               (1, 'Per sample FASTQ upstream workflow');
 
-	SELECT min(default_parameter_set_id)
-		FROM qiita.default_parameter_set
-		WHERE command_id = 1 AND parameter_set->>'barcode_type' = 'not-barcoded'
-		INTO dflt_per_sample_id;
+    -- Retrieve all the ids of the default parameter set that we need
+    SELECT min(default_parameter_set_id)
+        FROM qiita.default_parameter_set
+        WHERE command_id = 1
+        INTO dflt_slq_id;
 
-	SELECT min(default_parameter_set_id)
-		FROM qiita.default_parameter_set
-		WHERE command_id = 3
-		INTO dflt_po_id;
+    SELECT min(default_parameter_set_id)
+        FROM qiita.default_parameter_set
+        WHERE command_id = 2
+        INTO dflt_sl_id;
 
-	-- We need 2 nodes per workflow -> 6 nodes
-	INSERT INTO qiita.default_workflow_node (default_workflow_id, command_id, default_parameter_set_id)
-		VALUES (1, 1, dflt_slq_id), (1, 3, dflt_po_id),
-			   (2, 2, dflt_sl_id), (2, 3, dflt_po_id),
-			   (3, 1, dflt_per_sample_id), (3, 3, dflt_po_id);
+    SELECT min(default_parameter_set_id)
+        FROM qiita.default_parameter_set
+        WHERE command_id = 1 AND parameter_set->>'barcode_type' = 'not-barcoded'
+        INTO dflt_per_sample_id;
 
-	-- We need 1 edge per workflow -> 3 edges
-	INSERT INTO qiita.default_workflow_edge (parent_id, child_id)
-		VALUES (1, 2), (3, 4), (5, 6);
+    SELECT min(default_parameter_set_id)
+        FROM qiita.default_parameter_set
+        WHERE command_id = 3
+        INTO dflt_po_id;
 
-	INSERT INTO qiita.default_workflow_edge_connections (default_workflow_edge_id, parent_output_id, child_input_id)
-		VALUES (1, 1, in_po_param_id),
-			   (2, 2, in_po_param_id),
-			   (3, 1, in_po_param_id);
+    -- We need 2 nodes per workflow -> 6 nodes
+    INSERT INTO qiita.default_workflow_node (default_workflow_id, command_id, default_parameter_set_id)
+        VALUES (1, 1, dflt_slq_id), (1, 3, dflt_po_id),
+               (2, 2, dflt_sl_id), (2, 3, dflt_po_id),
+               (3, 1, dflt_per_sample_id), (3, 3, dflt_po_id);
+
+    -- We need 1 edge per workflow -> 3 edges
+    INSERT INTO qiita.default_workflow_edge (parent_id, child_id)
+        VALUES (1, 2), (3, 4), (5, 6);
+
+    INSERT INTO qiita.default_workflow_edge_connections (default_workflow_edge_id, parent_output_id, child_input_id)
+        VALUES (1, 1, in_po_param_id),
+               (2, 2, in_po_param_id),
+               (3, 1, in_po_param_id);
 
 END $do$;
 
 -- Create a function to return all the edges of a processing_job_workflow
 CREATE FUNCTION qiita.get_processing_workflow_edges(wf_id bigint) RETURNS SETOF qiita.parent_processing_job AS $$
 BEGIN
-	RETURN QUERY WITH RECURSIVE edges AS (
-		SELECT parent_id, child_id
-		FROM qiita.parent_processing_job
-		WHERE parent_id IN (SELECT processing_job_id
-							FROM qiita.processing_job_workflow_root
-							WHERE processing_job_workflow_id = wf_id)
-	  UNION
-	  	SELECT p.parent_id, p.child_id
-		FROM qiita.parent_processing_job p
-			JOIN edges e ON (e.child_id = p.parent_id)
-	)
-	SELECT DISTINCT parent_id, child_id
-		FROM edges;
+    RETURN QUERY WITH RECURSIVE edges AS (
+        SELECT parent_id, child_id
+        FROM qiita.parent_processing_job
+        WHERE parent_id IN (SELECT processing_job_id
+                            FROM qiita.processing_job_workflow_root
+                            WHERE processing_job_workflow_id = wf_id)
+      UNION
+          SELECT p.parent_id, p.child_id
+        FROM qiita.parent_processing_job p
+            JOIN edges e ON (e.child_id = p.parent_id)
+    )
+    SELECT DISTINCT parent_id, child_id
+        FROM edges;
 END
 $$ LANGUAGE plpgsql;
