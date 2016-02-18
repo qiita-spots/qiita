@@ -105,19 +105,19 @@ CREATE TABLE qiita.processing_job_workflow (
 	name                 varchar  ,
 	CONSTRAINT pk_processing_job_workflow PRIMARY KEY ( processing_job_worfklow_id )
  ) ;
-CREATE INDEX idx_processing_job_workflow ON processing_job_workflow ( email ) ;
+CREATE INDEX idx_processing_job_workflow ON qiita.processing_job_workflow ( email ) ;
 ALTER TABLE qiita.processing_job_workflow ADD CONSTRAINT fk_processing_job_workflow FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email )    ;
 
 -- The processing_job_workflow_roots connects the processing_job_workflow with
 -- it's initial set of jobs. From this jobs, we can trace down the rest of the
 -- workflow
-CREATE TABLE processing_job_workflow_roots (
+CREATE TABLE qiita.processing_job_workflow_roots (
 	processing_job_workflow_id 	bigint  NOT NULL,
 	processing_job_id    		uuid  	NOT NULL,
 	CONSTRAINT idx_processing_job_workflow_roots_0 PRIMARY KEY ( processing_job_workflow_id, processing_job_id )
  ) ;
-CREATE INDEX idx_processing_job_workflow_roots ON processing_job_workflow_roots ( processing_job_workflow_id ) ;
-CREATE INDEX idx_processing_job_workflow_roots ON processing_job_workflow_roots ( processing_job_id ) ;
+CREATE INDEX idx_processing_job_workflow_roots_wf ON qiita.processing_job_workflow_roots ( processing_job_workflow_id ) ;
+CREATE INDEX idx_processing_job_workflow_roots_job ON qiita.processing_job_workflow_roots ( processing_job_id ) ;
 ALTER TABLE qiita.processing_job_workflow_roots ADD CONSTRAINT fk_processing_job_workflow_roots_job FOREIGN KEY ( processing_job_workflow_id ) REFERENCES qiita.processing_job_workflow( processing_job_worfklow_id )    ;
 ALTER TABLE qiita.processing_job_workflow_roots ADD CONSTRAINT fk_processing_job_workflow_roots_wf FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
 
