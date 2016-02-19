@@ -1,7 +1,7 @@
 {% extends sitebase.html %}
 {%block content %}
 <div id="login-form">
-    <form action="/auth/login/" method="post" id="login_form">
+    <form action="{% raw qiita_config.portal_dir %}/auth/login/" method="post" id="login_form">
         <fieldset>
             <label for="username">Username</label>
             <input autocapitalize="off" autocorrect="off" class="text-input" id="username" name="username" tabindex="1" type="text" value="">
@@ -20,6 +20,6 @@
         </div>
     </form>
     <br>
-    <a class="link" href="../../auth/create/">Create User</a>
+    <a class="link" href="{% raw qiita_config.portal_dir %}/auth/create/">Create User</a>
 </div>
 {% end %}

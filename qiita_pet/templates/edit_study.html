@@ -1,6 +1,6 @@
 {% extends sitebase.html %}
 {% block head %}
-<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.validate.min.js"></script>
 <style>
   .custom-combobox {
     position: relative;
@@ -38,7 +38,7 @@ $(document).ready(function() {
         // fire off ajax the request
         request = $.ajax({
           type: "GET",
-          url: '/check_study/',
+          url: '{% raw qiita_config.portal_dir %}/check_study/',
           data: {study_title: $("#study_title")[0].value {% if study %}, old_study_title: '{{study.title}}'{% end %} }
         });
 
