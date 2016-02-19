@@ -211,7 +211,10 @@ class SearchTest(TestCase):
         results, meta_cols = search(
             'study_id = 1', qdb.user.User('test@foo.bar'))
         spid, pds, meta = search.filter_by_processed_data()
-        exp_spid = {1: {'18S': [4]}}
+
+        exp_spid = {1: {'18S': [4, 5]}}
+        self.assertEqual(spid, exp_spid)
+
         exp_pds = {4: [
             '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
             '1.SKB5.640181', '1.SKB6.640176', '1.SKB7.640196', '1.SKB8.640193',
@@ -219,13 +222,20 @@ class SearchTest(TestCase):
             '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191',
             '1.SKD8.640184', '1.SKD9.640182', '1.SKM1.640183', '1.SKM2.640199',
             '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'],
+                   5: [
+            '1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
+            '1.SKB5.640181', '1.SKB6.640176', '1.SKB7.640196', '1.SKB8.640193',
+            '1.SKB9.640200', '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+            '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191',
+            '1.SKD8.640184', '1.SKD9.640182', '1.SKM1.640183', '1.SKM2.640199',
+            '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
             '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}
+        self.assertItemsEqual(pds, exp_pds)
+
         exp_meta = pd.DataFrame.from_dict({x: 1 for x in exp_pds[4]},
                                           orient='index')
         exp_meta.rename(columns={0: 'study_id'}, inplace=True)
-
-        self.assertEqual(spid, exp_spid)
-        self.assertEqual(pds, exp_pds)
         self.assertEqual(meta.keys(), [1])
         assert_frame_equal(meta[1], exp_meta)
 

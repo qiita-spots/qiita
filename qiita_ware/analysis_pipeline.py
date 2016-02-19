@@ -18,7 +18,8 @@ from qiita_ware.wrapper import ParallelWrapper, system_call_from_job
 # -----------------------------------------------------------------------------
 
 
-def _build_analysis_files(analysis, r_depth=None, **kwargs):
+def _build_analysis_files(analysis, r_depth=None,
+                          merge_duplicated_sample_ids=False, **kwargs):
     """Creates the biom tables and mapping file, then adds to jobs
 
     Parameters
@@ -26,7 +27,12 @@ def _build_analysis_files(analysis, r_depth=None, **kwargs):
     analysis : Analysis object
         The analysis to build files for
     r_depth : int, optional
-        Rarefaction depth for biom table creation. Default None
+        Rarefaction depth for biom table creation. Default: None, no
+        rarefaction is applied
+    merge_duplicated_sample_ids : bool, optional
+        If the duplicated sample ids in the selected studies should be
+        merged or prepended with the artifact ids. False (default) prepends
+        the artifact id
 
     Raises
     ------
@@ -38,7 +44,7 @@ def _build_analysis_files(analysis, r_depth=None, **kwargs):
 
     # create the biom tables and add jobs to the analysis
     analysis.status = "running"
-    analysis.build_files(r_depth)
+    analysis.build_files(r_depth, merge_duplicated_sample_ids)
     mapping_file = analysis.mapping_file
     biom_tables = analysis.biom_tables
 
@@ -80,7 +86,8 @@ def _finish_analysis(analysis, **kwargs):
 
 class RunAnalysis(ParallelWrapper):
     def _construct_job_graph(self, analysis, commands, comm_opts=None,
-                             rarefaction_depth=None):
+                             rarefaction_depth=None,
+                             merge_duplicated_sample_ids=False):
         """Builds the job graph for running an analysis
 
         Parameters
@@ -95,6 +102,10 @@ class RunAnalysis(ParallelWrapper):
             Default None (use default options).
         rarefaction_depth : int, optional
             Rarefaction depth for analysis' biom tables. Default None.
+        merge_duplicated_sample_ids : bool, optional
+            If the duplicated sample ids in the selected studies should be
+            merged or prepended with the artifact ids. False (default) prepends
+            the artifact id
         """
         self._logger = stderr
         self.analysis = analysis
@@ -129,7 +140,8 @@ class RunAnalysis(ParallelWrapper):
         files_node_name = "%d_ANALYSISFILES" % analysis.id
         self._job_graph.add_node(files_node_name,
                                  func=_build_analysis_files,
-                                 args=(analysis, rarefaction_depth),
+                                 args=(analysis, rarefaction_depth,
+                                       merge_duplicated_sample_ids),
                                  job_name='Build analysis',
                                  requires_deps=False)
 

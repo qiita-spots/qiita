@@ -702,7 +702,8 @@ class TestStudy(TestCase):
         exp = [qdb.artifact.Artifact(1),
                qdb.artifact.Artifact(2),
                qdb.artifact.Artifact(3),
-               qdb.artifact.Artifact(4)]
+               qdb.artifact.Artifact(4),
+               qdb.artifact.Artifact(5)]
         self.assertEqual(self.study.artifacts(), exp)
         self.assertEqual(self.study.artifacts(dtype="16S"), [])
         self.assertEqual(self.study.artifacts(dtype="18S"), exp)
