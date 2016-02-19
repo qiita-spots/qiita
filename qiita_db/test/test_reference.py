@@ -84,5 +84,9 @@ class ReferenceTests(TestCase):
         exp = join(self.db_dir, "GreenGenes_13_8_97_otus.tree")
         self.assertEqual(ref.tree_fp, exp)
 
+    def test_tree_fp_empty(self):
+        ref = qdb.reference.Reference(2)
+        self.assertEqual(ref.tree_fp, '')
+
 if __name__ == '__main__':
     main()
