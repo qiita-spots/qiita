@@ -69,7 +69,7 @@
                   <h3 style="color:red">ERROR</h3>
                 {% end %}
                 {%for result, result_name in results%}
-                  <a href='{{"/results/%s" % result}}' target="resframe">{{result_name}}</a><br />
+                  <a href='{% raw qiita_config.portal_dir %}{{"/results/%s" % result}}' target="resframe">{{result_name}}</a><br />
                 {% end %}
               </div>
             {% end %}
