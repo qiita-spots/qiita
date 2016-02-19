@@ -183,7 +183,7 @@ class TestSQL(TestCase):
         """Correctly returns the descendants of a root artifact"""
         sql = "SELECT * FROM qiita.artifact_descendants(%s)"
         obs = self.conn_handler.execute_fetchall(sql, [1])
-        exp = [[2, 1], [3, 1], [4, 2], [5, 2]]
+        exp = [[2, 1], [3, 1], [4, 2], [5, 2], [6L, 2L]]
         self.assertItemsEqual(obs, exp)
 
     def test_artifact_descendants_middle(self):
@@ -191,7 +191,7 @@ class TestSQL(TestCase):
         the DAG"""
         sql = "SELECT * FROM qiita.artifact_descendants(%s)"
         obs = self.conn_handler.execute_fetchall(sql, [2])
-        exp = [[4, 2], [5, 2]]
+        exp = [[4, 2], [5, 2], [6L, 2L]]
         self.assertItemsEqual(obs, exp)
 
 

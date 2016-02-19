@@ -36,7 +36,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.study_experimental_factor"), 1)
 
     def test_filepath(self):
-        self.assertEqual(get_count("qiita.filepath"), 16)
+        self.assertEqual(get_count("qiita.filepath"), 19)
 
     def test_filepath_type(self):
         self.assertEqual(get_count("qiita.filepath_type"), 19)
@@ -66,7 +66,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.prep_1"), 27)
 
     def test_reference(self):
-        self.assertEqual(get_count("qiita.reference"), 1)
+        self.assertEqual(get_count("qiita.reference"), 2)
 
     def test_job(self):
         self.assertEqual(get_count("qiita.job"), 3)
@@ -84,7 +84,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.analysis_filepath"), 2)
 
     def test_analysis_sample(self):
-        self.assertEqual(get_count("qiita.analysis_sample"), 13)
+        self.assertEqual(get_count("qiita.analysis_sample"), 31)
 
     def test_analysis_users(self):
         self.assertEqual(get_count("qiita.analysis_users"), 1)

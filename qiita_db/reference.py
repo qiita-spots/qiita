@@ -171,6 +171,11 @@ class Reference(qdb.base.QiitaObject):
                         JOIN qiita.{0} r ON r.tree_filepath=f.filepath_id
                      WHERE r.reference_id=%s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            rel_path = qdb.sql_connection.TRN.execute_fetchlast()
+            rel_path = qdb.sql_connection.TRN.execute_fetchindex()
+            if rel_path:
+                rel_path = rel_path[0][0]
+            else:
+                return ''
+
             _, basefp = qdb.util.get_mountpoint('reference')[0]
             return join(basefp, rel_path)

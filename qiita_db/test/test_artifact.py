@@ -89,7 +89,8 @@ class ArtifactTests(TestCase):
                qdb.artifact.Artifact(2),
                qdb.artifact.Artifact(3),
                qdb.artifact.Artifact(4),
-               qdb.artifact.Artifact(5)]
+               qdb.artifact.Artifact(5),
+               qdb.artifact.Artifact(6)]
         self.assertEqual(obs, exp)
 
     def test_iter_public(self):
@@ -688,24 +689,26 @@ class ArtifactTests(TestCase):
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
                      qdb.artifact.Artifact(3), qdb.artifact.Artifact(4),
-                     qdb.artifact.Artifact(5)]
+                     qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
         self.assertItemsEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
                      (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
                      (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
-                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5))]
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
         self.assertItemsEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(2).descendants
         self.assertTrue(isinstance(obs, nx.DiGraph))
         obs_nodes = obs.nodes()
         exp_nodes = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(4),
-                     qdb.artifact.Artifact(5)]
+                     qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
         self.assertItemsEqual(obs_nodes, exp_nodes)
         obs_edges = obs.edges()
         exp_edges = [(qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
-                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5))]
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
         self.assertItemsEqual(obs_edges, exp_edges)
 
         obs = qdb.artifact.Artifact(3).descendants
@@ -725,18 +728,19 @@ class ArtifactTests(TestCase):
     def test_children(self):
         exp = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)]
         self.assertEqual(qdb.artifact.Artifact(1).children, exp)
-        exp = [qdb.artifact.Artifact(4), qdb.artifact.Artifact(5)]
+        exp = [qdb.artifact.Artifact(4), qdb.artifact.Artifact(5),
+               qdb.artifact.Artifact(6)]
         self.assertEqual(qdb.artifact.Artifact(2).children, exp)
         self.assertEqual(qdb.artifact.Artifact(3).children, [])
         self.assertEqual(qdb.artifact.Artifact(4).children, [])
 
     def test_youngest_artifact(self):
-        exp = qdb.artifact.Artifact(5)
+        exp = qdb.artifact.Artifact(6)
         self.assertEqual(qdb.artifact.Artifact(1).youngest_artifact, exp)
         self.assertEqual(qdb.artifact.Artifact(2).youngest_artifact, exp)
         self.assertEqual(qdb.artifact.Artifact(3).youngest_artifact,
                          qdb.artifact.Artifact(3))
-        self.assertEqual(qdb.artifact.Artifact(5).youngest_artifact, exp)
+        self.assertEqual(qdb.artifact.Artifact(6).youngest_artifact, exp)
 
     def test_prep_templates(self):
         self.assertEqual(

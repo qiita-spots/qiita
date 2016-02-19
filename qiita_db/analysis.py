@@ -812,7 +812,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             # doing it here cause it's computational cheaper
             all_ids = list(chain.from_iterable([
                 samps for _, samps in viewitems(samples)]))
-            rename_dup_samples = ((len(all_ids) != len(set(all_ids))) or
+            rename_dup_samples = ((len(all_ids) != len(set(all_ids))) and
                                   merge_duplicated_sample_ids)
 
             self._build_mapping_file(samples, rename_dup_samples)
@@ -871,6 +871,8 @@ class Analysis(qdb.base.QiitaStatusObject):
             # add the new tables to the analysis
             _, base_fp = qdb.util.get_mountpoint(self._table)[0]
             for dt, biom_table in viewitems(new_tables):
+                if biom_table is None:
+                    continue
                 # rarefy, if specified
                 if rarefaction_depth is not None:
                     biom_table = biom_table.subsample(rarefaction_depth)
