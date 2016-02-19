@@ -2,7 +2,7 @@
 {% block head %}
 {% from future.utils import viewitems %}
 {% from itertools import chain %}
-<script src="/static/vendor/js/moi.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
 <script type="text/javascript">
 
 function error(evt) { $('#ws-error').html("<b>Server communication error. Sample removal will not be recorded. Please try again later.</b>"); };
@@ -58,7 +58,7 @@ function remove_sample_from_html(data) {
     check_empty();
 }
 $(document).ready(function() {
-      moi.init(null, window.location.host + '/analysis/selected/socket/', function(){}, error, error);
+      moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/analysis/selected/socket/', function(){}, error, error);
       moi.add_callback('remove_pd', remove_pd_from_html);
       moi.add_callback('remove_sample', remove_sample_from_html);
       moi.add_callback('clear', clear_from_html);
@@ -75,7 +75,7 @@ $(document).ready(function() {
 <span id="ws-error" style="color:red"></span>
 <div id="no-selected" class="jumbotron">
   <h1>No samples selected</h1>
-  <h3><a href="/study/list/">Please select at least one sample to continue</a><h3>
+  <h3><a href="{% raw qiita_config.portal_dir %}/study/list/">Please select at least one sample to continue</a><h3>
 </div>
 {% if sel_data %}
 <div class="row topfloat">
@@ -93,7 +93,7 @@ $(document).ready(function() {
 {% for study, proc_datas in viewitems(sel_data) %}
 <div class="row" id="study{{study.id}}">
   <div class="col-md-12" style="border:2px solid #a1a1a1; border-radius: 15px;">
-    <h2><a href="/study/description/{{study.id}}">{{study.title}}</a></h2>
+    <h2><a href="{% raw qiita_config.portal_dir %}/study/description/{{study.id}}">{{study.title}}</a></h2>
     <h4>Processed Data</h4>
     <table class='table table-striped' id='study{{study.id}}-table'>
     <tr>
@@ -126,7 +126,7 @@ $(document).ready(function() {
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h4 class="modal-title" id="myModalLabel">Processed Data {{pid}}</h4>
           </div>
-          <form role="form" action="/analysis/3" method="post">
+          <form role="form" action="{% raw qiita_config.portal_dir %}/analysis/3" method="post">
           <input type="hidden" name="action" value="create">
             <div class="modal-body">
               <b>Datatype</b>: {{proc_info[pid]["data_type"]}} <br/>
@@ -159,7 +159,7 @@ $(document).ready(function() {
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             <h4 class="modal-title" id="myModalLabel">Create new analysis</h4>
           </div>
-          <form role="form" action="/analysis/3" method="post">
+          <form role="form" action="{% raw qiita_config.portal_dir %}/analysis/3" method="post">
           <input type="hidden" name="action" value="create">
             <div class="modal-body">
               <div>
