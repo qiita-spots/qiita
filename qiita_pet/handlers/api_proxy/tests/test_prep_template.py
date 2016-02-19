@@ -315,17 +315,15 @@ class TestPrepAPI(TestCase):
 
     def test_prep_template_graph_get_req(self):
         obs = prep_template_graph_get_req(1, 'test@foo.bar')
-        exp = {'edge_list': [(1, 3), (1, 2), (2, 4)],
+        exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5)],
                'node_labels': [(1, 'Raw data 1 - FASTQ'),
                                (2, 'Demultiplexed 1 - Demultiplexed'),
                                (3, 'Demultiplexed 2 - Demultiplexed'),
-                               (4, 'BIOM - BIOM')],
+                               (4, 'BIOM - BIOM'),
+                               (5, 'BIOM - BIOM')],
                'status': 'success',
                'message': ''}
-
-        self.assertItemsEqual(obs.keys(), exp.keys())
-        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
-        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
+        self.assertItemsEqual(obs, exp)
 
     def test_prep_template_graph_get_req_no_access(self):
         obs = prep_template_graph_get_req(1, 'demo@microbio.me')
