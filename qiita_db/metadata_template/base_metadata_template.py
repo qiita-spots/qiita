@@ -1077,26 +1077,10 @@ class MetadataTemplate(qdb.base.QiitaObject):
     def get_filepaths(self):
         r"""Retrieves the list of (filepath_id, filepath)"""
         with qdb.sql_connection.TRN:
-            try:
-                sql = """SELECT filepath_id, filepath
-                         FROM qiita.filepath
-                         WHERE filepath_id IN (
-                            SELECT filepath_id FROM qiita.{0}
-                            WHERE {1}=%s)
-                         ORDER BY filepath_id DESC""".format(
-                    self._filepath_table, self._id_column)
-
-                qdb.sql_connection.TRN.add(sql, [self.id])
-                filepath_ids = qdb.sql_connection.TRN.execute_fetchindex()
-            except Exception as e:
-                qdb.logger.LogEntry.create(
-                    'Runtime', str(e), info={self.__class__.__name__: self.id})
-                raise e
-
-            _, fb = qdb.util.get_mountpoint('templates')[0]
-            base_fp = partial(join, fb)
-
-            return [(fpid, base_fp(fp)) for fpid, fp in filepath_ids]
+            return [(fp_id, fp)
+                    for fp_id, fp, _ in qdb.util.retrieve_filepaths(
+                        self._filepath_table, self._id_column, self.id,
+                        sort='descendent')]
 
     def categories(self):
         """Identifies the metadata columns present in a template
