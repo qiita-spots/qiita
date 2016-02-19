@@ -498,20 +498,13 @@ class PrepTemplate(MetadataTemplate):
             else:
                 new_cols = ['BarcodeSequence', 'LinkerPrimerSequence']
 
-            # getting the latest sample template
-            sql = """SELECT filepath_id, filepath
-                     FROM qiita.filepath
-                        JOIN qiita.sample_template_filepath
-                        USING (filepath_id)
-                     WHERE study_id=%s
-                     ORDER BY filepath_id DESC"""
-            qdb.sql_connection.TRN.add(sql, [self.study_id])
-            # We know that the good filepath is the one in the first row
-            # because we sorted them in the SQL query
-            sample_template_fname = \
-                qdb.sql_connection.TRN.execute_fetchindex()[0][1]
-            _, fp = qdb.util.get_mountpoint('templates')[0]
-            sample_template_fp = join(fp, sample_template_fname)
+            # Retrieve the latest sample template
+            # Since we sorted the filepath retrieval, the first result contains
+            # the filepath that we want. `retrieve_filepaths` returns a
+            # 3-tuple, in which the fp is the second element
+            sample_template_fp = qdb.util.retrieve_filepaths(
+                "sample_template_filepath", "study_id", self.study_id,
+                sort='descendent')[0][1]
 
             # reading files via pandas
             st = qdb.metadata_template.util.load_template_to_dataframe(
@@ -610,20 +603,11 @@ class PrepTemplate(MetadataTemplate):
         str
             The filepath of the QIIME mapping file
         """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT filepath_id, filepath
-                     FROM qiita.filepath
-                        JOIN qiita.{0} USING (filepath_id)
-                        JOIN qiita.filepath_type USING (filepath_type_id)
-                     WHERE {1} = %s AND filepath_type = 'qiime_map'
-                     ORDER BY filepath_id DESC""".format(self._filepath_table,
-                                                         self._id_column)
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            # We know that the good filepath is the one in the first row
-            # because we sorted them in the SQL query
-            fn = qdb.sql_connection.TRN.execute_fetchindex()[0][1]
-            base_dir = qdb.util.get_mountpoint('templates')[0][1]
-            return join(base_dir, fn)
+        for _, fp, fp_type in qdb.util.retrieve_filepaths(
+                self._filepath_table, self._id_column, self.id,
+                sort='descendent'):
+            if fp_type == 'qiime_map':
+                return fp
 
     @property
     def ebi_experiment_accessions(self):
