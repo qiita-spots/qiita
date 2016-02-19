@@ -170,9 +170,10 @@ class TestArtifactAPI(TestCase):
                'node_labels': [(1, 'Raw data 1 - FASTQ'),
                                (3, 'Demultiplexed 2 - Demultiplexed'),
                                (2, 'Demultiplexed 1 - Demultiplexed'),
-                               (4, 'BIOM - BIOM')],
-               'edge_list': [(1, 3), (1, 2), (2, 4)]}
-        self.assertEqual(obs, exp)
+                               (4, 'BIOM - BIOM'),
+                               (5, 'BIOM - BIOM')],
+               'edge_list': [(1, 3), (1, 2), (2, 5), (2, 4)]}
+        self.assertItemsEqual(obs, exp)
 
     def test_artifact_graph_get_req_no_access(self):
         obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')
