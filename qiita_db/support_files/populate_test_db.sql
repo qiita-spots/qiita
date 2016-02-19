@@ -442,7 +442,6 @@ INSERT INTO qiita.analysis_filepath (analysis_id, filepath_id, data_type_id) VAL
 
 -- Attach samples to analysis
 INSERT INTO qiita.analysis_sample (analysis_id, artifact_id, sample_id) VALUES
--- first table
 (1, 4, '1.SKB8.640193'), (1, 4, '1.SKD8.640184'), (1, 4, '1.SKB7.640196'), (1, 4, '1.SKM9.640192'), (1, 4, '1.SKM4.640180'),
 (2, 4, '1.SKB8.640193'), (2, 4, '1.SKD8.640184'), (2, 4, '1.SKB7.640196'), (2, 4, '1.SKM3.640197'),
 (1, 5, '1.SKB8.640193'), (1, 5, '1.SKD8.640184'), (1, 5, '1.SKB7.640196'), (1, 5, '1.SKM9.640192'), (1, 5, '1.SKM4.640180'),
