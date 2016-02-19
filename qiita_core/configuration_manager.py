@@ -162,6 +162,9 @@ class ConfigurationManager(object):
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
         self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
         self.portal = config.get('main', 'PORTAL')
+        self.portal_dir = config.get('main', 'PORTAL_DIR')
+        if not self.portal_dir:
+            self.portal_dir = ""
         self.plugin_launcher = config.get('main', 'PLUGIN_LAUNCHER')
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
