@@ -123,7 +123,7 @@ class JobTest(TestCase):
                 qdb.job.Job(1)
 
             obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.filepath WHERE filepath_id = 10")
+                "SELECT * FROM qiita.filepath WHERE filepath_id = 13")
             self.assertEqual(obs, [])
 
             obs = self.conn_handler.execute_fetchall(
@@ -149,7 +149,7 @@ class JobTest(TestCase):
                 qdb.job.Job(2)
 
             obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.filepath WHERE filepath_id = 11")
+                "SELECT * FROM qiita.filepath WHERE filepath_id = 14")
             self.assertEqual(obs, [])
 
             obs = self.conn_handler.execute_fetchall(
@@ -233,7 +233,7 @@ class JobTest(TestCase):
         new = qdb.job.Job.create(
             "18S", "Beta Diversity", {"--otu_table_fp": 1, "--mapping_fp": 1},
             qdb.analysis.Analysis(new_id), return_existing=True)
-        self.assertEqual(new.id, 2)
+        self.assertEqual(new.id, 4)
 
     def test_retrieve_datatype(self):
         """Makes sure datatype retrieval is correct"""
@@ -306,7 +306,7 @@ class JobTest(TestCase):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
 
-        self.assertEqual(obs, [[1, 10], [1, fp_count + 1]])
+        self.assertEqual(obs, [[1, 13], [1, fp_count + 1]])
 
     def test_add_results_dir(self):
         fp_count = qdb.util.get_count('qiita.filepath')
@@ -319,7 +319,7 @@ class JobTest(TestCase):
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
-        self.assertEqual(obs, [[1, 10], [1, fp_count + 1]])
+        self.assertEqual(obs, [[1, 13], [1, fp_count + 1]])
 
     def test_add_results_completed(self):
         self.job.status = "completed"
