@@ -58,7 +58,7 @@ function remove_sample_from_html(data) {
     check_empty();
 }
 $(document).ready(function() {
-      moi.init(null, window.location.host + '/analysis/selected/socket/', function(){}, error, error);
+      moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/analysis/selected/socket/', function(){}, error, error);
       moi.add_callback('remove_pd', remove_pd_from_html);
       moi.add_callback('remove_sample', remove_sample_from_html);
       moi.add_callback('clear', clear_from_html);
