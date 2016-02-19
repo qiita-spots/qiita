@@ -1,6 +1,6 @@
 {% extends sitebase.html %}
 {% block head %}
-<link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.css" type="text/css">
 <style>
 .alert {
   position: fixed;
@@ -12,13 +12,13 @@ td.details-control {
   cursor: pointer;
 }
 </style>
-<script src="/static/vendor/js/jquery.dataTables.min.js"></script>
-<script src="/static/vendor/js/jquery.dataTables.plugin.natural.js"></script>
-<script src="/static/vendor/js/moi.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.min.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.plugin.natural.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
 
 <script type="text/javascript">
 var current_study;
-var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
+var ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
 function sel_study(row) {
@@ -56,7 +56,7 @@ function fillAbstract(table, row) {
 
 $(document).ready(function() {
         $("#search-waiting").hide();
-        moi.init(null, window.location.host + '/study/list/socket/', function(){}, error, error);
+        moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
         moi.add_callback('sel', show_alert);
         function format ( d, row ) {
             // `d` is the original data object for the row
@@ -150,7 +150,7 @@ $(document).ready(function() {
     $('#users_list').chosen({width: "100%"});
     $('#users_list').on('change', function(evt, params) {
         params['study_id'] = current_study;
-        $.get('/study/sharing/', params)
+        $.get('{% raw qiita_config.portal_dir %}/study/sharing/', params)
             .done(function(data) {
                 users_links = JSON.parse(data);
                 links = users_links['links'];
@@ -184,7 +184,7 @@ function modify_sharing(study_id) {
     var shared_list;
     current_study = study_id;
 
-    $.get('/study/sharing/', {study_id: study_id})
+    $.get('{% raw qiita_config.portal_dir %}/study/sharing/', {study_id: study_id})
         .done(function(data) {
             users_links = JSON.parse(data);
             users = users_links['users'];
@@ -282,7 +282,7 @@ function add_metacat(metacat) {
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h4 class="modal-title" id="myModalLabel">Modify Sharing Settings</h4>
       </div>
-      <form role="form" action="/study/sharing/" method="post">
+      <form role="form" action="{% raw qiita_config.portal_dir %}/study/sharing/" method="post">
         <div class="modal-body">
           <div>
             <div class="form-group">
