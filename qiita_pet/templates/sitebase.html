@@ -12,25 +12,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
   <head>
     <title>{{portal_styling.title}}</title>
-    <link rel="stylesheet" href="{{qiita_config.portal_dir}}/static/vendor/css/jquery-ui.min.css" type="text/css">
-    <link rel="stylesheet" href="{{qiita_config.portal_dir}}/static/vendor/css/jquery-ui.structure.min.css" type="text/css">
-    <link rel="stylesheet" href="{{qiita_config.portal_dir}}/static/vendor/css/jquery-ui.theme.min.css" type="text/css">
-    <link rel="stylesheet" href="{{qiita_config.portal_dir}}/static/vendor/css/bootstrap.min.css" type="text/css">
-    <link rel="stylesheet" href="{{qiita_config.portal_dir}}/static/vendor/css/bootstrap-theme.min.css" type="text/css">
-    <link rel="stylesheet" href="{{qiita_config.portal_dir}}/static/vendor/css/chosen.css" type="text/css">
-    <link rel="stylesheet" href="{{qiita_config.portal_dir}}/static/css/style.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery-ui.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery-ui.structure.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery-ui.theme.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap-theme.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/chosen.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/css/style.css" type="text/css">
     {% if portal_styling.custom_css %}
     <style type="text/css">
       {% raw portal_styling.custom_css %}
     </style>
     {% end %}
-    <script src="{{qiita_config.portal_dir}}/static/vendor/js/jquery-2.1.0.min.js"></script>
-    <script src="{{qiita_config.portal_dir}}/static/vendor/js/jquery-ui.min.js"></script>
-    <script src="{{qiita_config.portal_dir}}/static/vendor/js/bootstrap.min.js"></script>
-    <script src="{{qiita_config.portal_dir}}/static/vendor/js/chosen.jquery.min.js"></script>
-    <script src="{{qiita_config.portal_dir}}/static/js/qiita.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-2.1.0.min.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-ui.min.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/bootstrap.min.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/chosen.jquery.min.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/js/qiita.js"></script>
 
-    <link rel="shortcut icon" href="{{qiita_config.portal_dir}}/static/img/favicon.ico">
+    <link rel="shortcut icon" href="{% raw qiita_config.portal_dir %}/static/img/favicon.ico">
 
     <script>
       function overlay_check() {
@@ -64,14 +64,14 @@
       }
 
       $(document).ready(function() {
-        $.getJSON("{{qiita_config.portal_dir}}/analysis/dflt/sumary/", function(result) {
+        $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
             if(parseInt(result.studies) > 0) {
                 $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
             }
         });
         // Load default analysis summary data when displayed in menu
         $("#dflt-sel-info").mouseover(function() {
-          $.getJSON("{{qiita_config.portal_dir}}/analysis/dflt/sumary/", function(result) {
+          $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
             $("#dflt-study-count").text(result.studies);
             $("#dflt-pd-count").text(result.processed_data);
             $("#dflt-samp-count").text(result.samples);
@@ -82,7 +82,7 @@
           $.getJSON("/analysis/dflt/sumary/", function(result){
             if(parseInt(result.studies) > 0){
               $("#selected_samples_menu").removeClass('disabled');
-              $("#selected_samples_link").attr('href', '{{qiita_config.portal_dir}}/analysis/selected/');
+              $("#selected_samples_link").attr('href', '{% raw qiita_config.portal_dir %}/analysis/selected/');
             }
             else{
               $("#selected_samples_menu").addClass('disabled');
@@ -134,8 +134,8 @@
           <ul class="nav navbar-nav">
             <li>
               <!-- qiita logo -->
-              <a class="navbar-brand" rel="home" href="{{qiita_config.portal_dir}}/" title="{{portal_styling.title}}">
-                <img style="max-width:100px; margin-top: -7px;" src="{{qiita_config.portal_dir}}{{portal_styling.logo}}">
+              <a class="navbar-brand" rel="home" href="{% raw qiita_config.portal_dir %}/" title="{{portal_styling.title}}">
+                <img style="max-width:100px; margin-top: -7px;" src="{% raw qiita_config.portal_dir %}{{portal_styling.logo}}">
               </a>
             </li>
             <!-- analysis menu -->
@@ -143,16 +143,16 @@
             <li class="dropdown">
               <a href="#" data-toggle="dropdown" class="dropdown-toggle" id="analysis-drop-down">Analysis<b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li><a href="{{qiita_config.portal_dir}}/study/list/">Create new analysis</a>
-                <li id="selected_samples_menu"><a id="selected_samples_link" href="{{qiita_config.portal_dir}}/analysis/selected/">Create From Selected Samples</a></li>
-                <li><a href="{{qiita_config.portal_dir}}/analysis/show/">See Previous Analyses</a></li>
+                <li><a href="{% raw qiita_config.portal_dir %}/study/list/">Create new analysis</a>
+                <li id="selected_samples_menu"><a id="selected_samples_link" href="{% raw qiita_config.portal_dir %}/analysis/selected/">Create From Selected Samples</a></li>
+                <li><a href="{% raw qiita_config.portal_dir %}/analysis/show/">See Previous Analyses</a></li>
               </ul>
             </li>
             <li class="dropdown">
               <a href="#" data-toggle="dropdown" class="dropdown-toggle">Study<b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li><a href="{{qiita_config.portal_dir}}/study/create/">Create Study</a></li>
-                <li><a href="{{qiita_config.portal_dir}}/study/list/">View Studies</a></li>
+                <li><a href="{% raw qiita_config.portal_dir %}/study/create/">Create Study</a></li>
+                <li><a href="{% raw qiita_config.portal_dir %}/study/list/">View Studies</a></li>
               </ul>
             </li>
               {% set user_level = user.level %}
@@ -160,10 +160,10 @@
             <li class="dropdown">
               <a href="#" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li><a href="{{qiita_config.portal_dir}}/admin/error/">View Errors</a></li>
-                <li><a href="{{qiita_config.portal_dir}}/admin/approval/">View Studies awaiting approval</a></li>
+                <li><a href="{% raw qiita_config.portal_dir %}/admin/error/">View Errors</a></li>
+                <li><a href="{% raw qiita_config.portal_dir %}/admin/approval/">View Studies awaiting approval</a></li>
                 {% if qiita_config.portal == "QIITA" %}
-                <li><a href="{{qiita_config.portal_dir}}/admin/portals/studies/">Edit study portal connections</a></li>
+                <li><a href="{% raw qiita_config.portal_dir %}/admin/portals/studies/">Edit study portal connections</a></li>
                 {% end %}
               </ul>
             </li>
@@ -171,7 +171,7 @@
             <li class="dropdown">
               <a href="#" data-toggle="dropdown" class="dropdown-toggle">Dev<b class="caret"></b></a>
               <ul class="dropdown-menu">
-                <li><a href="{{qiita_config.portal_dir}}/admin/error/">View Errors</a></li>
+                <li><a href="{% raw qiita_config.portal_dir %}/admin/error/">View Errors</a></li>
               </ul>
             </li>
               {% end %}
@@ -181,15 +181,15 @@
           {% if user %}
           <ul class="nav navbar-nav navbar-right">
             <li>
-              <a href="{{qiita_config.portal_dir}}/profile/">Welcome {{user.id}}</a>
+              <a href="{% raw qiita_config.portal_dir %}/profile/">Welcome {{user.id}}</a>
             </li>
             <li>
-              <a href="{{qiita_config.portal_dir}}/auth/logout/">Log Out</a>
+              <a href="{% raw qiita_config.portal_dir %}/auth/logout/">Log Out</a>
             </li>
             <li class="dropdown">
               {% set user_messages = current_user.messages(5) %}
               {% set unread =  len(current_user.unread_messages) %}
-              <a href="{{qiita_config.portal_dir}}/user/messages/"><span class="glyphicon glyphicon-envelope"></span> {% if unread > 0 %}<span style="color:red">({{unread}})</span>{% end %}</a>
+              <a href="{% raw qiita_config.portal_dir %}/user/messages/"><span class="glyphicon glyphicon-envelope"></span> {% if unread > 0 %}<span style="color:red">({{unread}})</span>{% end %}</a>
               <ul class="dropdown-menu info-menu" style="padding: 5px">
               {% if user_messages %}
                 {% for _, um, ts, read, _ in user_messages %}
@@ -201,7 +201,7 @@
               </ul>
             </li>
             <li class="dropdown">
-              <a href="{{qiita_config.portal_dir}}/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span></a>
+              <a href="{% raw qiita_config.portal_dir %}/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span></a>
               <ul class="dropdown-menu" style="padding: 5px">
                 <li> <span id="dflt-study-count"></span> Studies</li>
                 <li><span id="dflt-pd-count"></span> Processed Data</li>
@@ -213,13 +213,13 @@
           {% elif  maintenance is None %}
           <ul class="nav navbar-nav">
             <li>
-              <a href="{{qiita_config.portal_dir}}/auth/forgot/">Forgot Password</a>
+              <a href="{% raw qiita_config.portal_dir %}/auth/forgot/">Forgot Password</a>
             </li>
           </ul>
-          <form action="{{qiita_config.portal_dir}}/auth/create/" class="navbar-form navbar-right">
+          <form action="{% raw qiita_config.portal_dir %}/auth/create/" class="navbar-form navbar-right">
             <input type="submit" value="Sign up" class="btn btn-info">
           </form>
-          <form class="navbar-form navbar-right" role="form" action="{{qiita_config.portal_dir}}/auth/login/" method="post">
+          <form class="navbar-form navbar-right" role="form" action="{% raw qiita_config.portal_dir %}/auth/login/" method="post">
             <div class="form-group">
               <input tabindex="1" type="text" id="username" name="username" placeholder="Email" class="form-control">
             </div>
@@ -235,10 +235,10 @@
               <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li>
-                  <a href="{{qiita_config.portal_dir}}/static/doc/html/index.html">Help</a>
+                  <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
                 </li>
                 <li>
-                  <a href="{{qiita_config.portal_dir}}/stats/">Stats</a>
+                  <a href="{% raw qiita_config.portal_dir %}/stats/">Stats</a>
                 </li>
                 <li>
                   <a href="http://github.com/biocore/qiita">GitHub</a>
@@ -278,7 +278,7 @@
       Thank you for using Qiita. For citations point to <a href="http://qiita.microbio.me">http://qiita.microbio.me</a>.
     </div>
     <div id="overlay" class="navbar-brand" style="visibility: hidden; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; font-size: 13px; text-align: center; z-index: 1000; background-color: #333333; color: #FFFFFF;">
-        <img src="{{qiita_config.portal_dir}}{{portal_styling.logo}}" alt="Qiita logo" id="small-logo"/>
+        <img src="{% raw qiita_config.portal_dir %}{{portal_styling.logo}}" alt="Qiita logo" id="small-logo"/>
         <h1>This site only works with the following browsers</h1>
         <p id="explanation"><strong>Chrome >= {{allowed_min_browser_versions['chrome']}}:</strong> You can download Chrome from <a href="https://www.google.com/chrome/browser/">here</a> or you can find instructions on how to update it <a href="https://support.google.com/chrome/answer/95414?hl=en">here</a></p>
         <p id="explanation"><strong>Safari >= {{allowed_min_browser_versions['safari']}}:</strong> You can update Safari following <a href="http://support.apple.com/en-us/HT6104">these</a> instructions.</p>
