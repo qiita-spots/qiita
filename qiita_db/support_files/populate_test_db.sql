@@ -331,7 +331,7 @@ INSERT INTO qiita.artifact (name, generated_timestamp, command_id, command_param
 -- Link the child artifacts with their parents artifacts
 INSERT INTO qiita.parent_artifact (parent_id, artifact_id)
     VALUES (1, 2), (1, 3),
-           (2, 4);
+           (2, 4), (2, 5);
 
 -- Insert the jobs that processed the previous artifacts
 INSERT INTO qiita.processing_job (processing_job_id, email, command_id, command_parameters, processing_job_status_id)
@@ -361,14 +361,14 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
     VALUES (1, 1), (1, 2),
            (2, 3), (2, 4), (2, 5),
-           (4, 9);
+           (4, 9), (5, 9);
 
 -- Link the artifact with the prep template
 UPDATE qiita.prep_template SET artifact_id = 1 WHERE prep_template_id = 1;
 
 -- Link the study with the artifacts
 INSERT INTO qiita.study_artifact (study_id, artifact_id)
-    VALUES (1, 1), (1, 2), (1, 3), (1, 4);
+    VALUES (1, 1), (1, 2), (1, 3), (1, 4), (1, 5);
 
 -- Insert EBI information for artifact 2
 INSERT INTO qiita.ebi_run_accession (sample_id, artifact_id, ebi_run_accession)
