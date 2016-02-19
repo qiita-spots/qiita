@@ -22,11 +22,13 @@ def submit_to_VAMPS(preprocessed_data_id):
 
 
 def run_analysis(analysis_id, commands, comm_opts=None,
-                 rarefaction_depth=None, **kwargs):
+                 rarefaction_depth=None, merge_duplicated_sample_ids=False,
+                 **kwargs):
     """Run an analysis"""
     analysis = Analysis(analysis_id)
     ar = RunAnalysis(**kwargs)
-    return ar(analysis, commands, comm_opts, rarefaction_depth)
+    return ar(analysis, commands, comm_opts, rarefaction_depth,
+              merge_duplicated_sample_ids)
 
 
 def create_raw_data(filetype, prep_template, filepaths):
