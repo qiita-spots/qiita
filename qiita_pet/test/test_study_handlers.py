@@ -76,6 +76,30 @@ class TestHelpers(TestHandlerBase):
                         '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
                         '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
                         '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
+        }, {
+            'pid': 6,
+            'processed_date': '2012-10-02 17:30:00',
+            'data_type': '16S',
+            'algorithm': 'sortmerna',
+            'reference_name': 'Silva',
+            'reference_version': 'test',
+            'taxonomy_filepath': 'Silva_97_otu_taxonomy.txt',
+            'sequence_filepath': 'Silva_97_otus.fasta',
+            'tree_filepath': '',
+            'similarity': 0.97,
+            'sortmerna_max_pos': 10000,
+            'sortmerna_e_value': 1,
+            'sortmerna_coverage': 0.97,
+            'threads': 1,
+            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
         }]
         self.single_exp = {
             'study_id': 1,
@@ -119,9 +143,10 @@ class TestHelpers(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_build_single_study_info(self):
-        study_proc = {1: {'18S': [4, 5]}}
+        study_proc = {1: {'18S': [4, 5, 6]}}
         proc_samples = {4: self.proc_data_exp[0]['samples'],
-                        5: self.proc_data_exp[1]['samples']}
+                        5: self.proc_data_exp[1]['samples'],
+                        6: self.proc_data_exp[2]['samples']}
         study_info = {
             'study_id': 1,
             'email': 'test@foo.bar',
@@ -146,7 +171,7 @@ class TestHelpers(TestHandlerBase):
             }
         obs = _build_single_study_info(Study(1), study_info, study_proc,
                                        proc_samples)
-        self.assertEqual(obs, self.single_exp)
+        self.assertItemsEqual(obs, self.single_exp)
 
     def test_build_single_proc_data_info(self):
         obs = _build_single_proc_data_info(4, '18S',
@@ -512,6 +537,30 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                 'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
                 'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
                 'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
+                'similarity': 0.97,
+                'sortmerna_max_pos': 10000,
+                'sortmerna_e_value': 1,
+                'sortmerna_coverage': 0.97,
+                'threads': 1,
+                'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
+                            '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
+                            '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
+                            '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+                            '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
+                            '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
+                            '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
+                            '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+                            '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
+                }, {
+                'pid': 6,
+                'processed_date': '2012-10-02 17:30:00',
+                'data_type': '16S',
+                'algorithm': 'sortmerna',
+                'reference_name': 'Silva',
+                'reference_version': 'test',
+                'taxonomy_filepath': 'Silva_97_otu_taxonomy.txt',
+                'sequence_filepath': 'Silva_97_otus.fasta',
+                'tree_filepath': '',
                 'similarity': 0.97,
                 'sortmerna_max_pos': 10000,
                 'sortmerna_e_value': 1,

@@ -5,10 +5,12 @@ from datetime import datetime
 from shutil import move
 import warnings
 
+from future.utils import viewitems
 from biom import load_table
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 from functools import partial
+import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
@@ -237,6 +239,10 @@ class TestAnalysis(TestCase):
 
     def test_retrieve_samples(self):
         exp = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                   '1.SKM9.640192', '1.SKM4.640180'],
+               5: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                   '1.SKM9.640192', '1.SKM4.640180'],
+               6: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
                    '1.SKM9.640192', '1.SKM4.640180']}
         self.assertItemsEqual(self.analysis.samples, exp)
 
@@ -336,6 +342,8 @@ class TestAnalysis(TestCase):
                    artifact.id: ['2.SKB8.640193', '2.SKD8.640184']}
         self.analysis._build_biom_tables(samples, 10000)
         exp = {4: {'1.SKM4.640180', '1.SKM9.640192'},
+               5: {'1.SKM4.640180', '1.SKM9.640192'},
+               6: {'1.SKM4.640180', '1.SKM9.640192'},
                artifact.id: {'2.SKB7.640196'}}
         self.assertEqual(self.analysis.dropped_samples, exp)
 
@@ -349,8 +357,8 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis._portals, ["QIITA"])
 
     def test_retrieve_data_types(self):
-        exp = ['18S']
-        self.assertEqual(self.analysis.data_types, exp)
+        exp = ['18S', '16S']
+        self.assertItemsEqual(self.analysis.data_types, exp)
 
     def test_retrieve_shared_with(self):
         self.assertEqual(self.analysis.shared_with,
@@ -361,8 +369,8 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.biom_tables, exp)
 
     def test_all_associated_filepaths(self):
-        exp = {10, 11, 12, 13}
-        self.assertEqual(self.analysis.all_associated_filepath_ids, exp)
+        exp = {13, 14, 15, 16}
+        self.assertItemsEqual(self.analysis.all_associated_filepath_ids, exp)
 
     def test_retrieve_biom_tables_empty(self):
         new = qdb.analysis.Analysis.create(
@@ -455,7 +463,7 @@ class TestAnalysis(TestCase):
     def test_summary_data(self):
         obs = self.analysis.summary_data()
         exp = {'studies': 1,
-               'artifacts': 1,
+               'artifacts': 3,
                'samples': 5}
         self.assertEqual(obs, exp)
 
@@ -471,19 +479,29 @@ class TestAnalysis(TestCase):
         self.analysis.remove_samples(artifacts=(qdb.artifact.Artifact(4), ),
                                      samples=('1.SKB8.640193', ))
         exp = {4: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
+                   '1.SKM4.640180'],
+               5: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
+                   '1.SKM4.640180'],
+               6: ['1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
                    '1.SKM4.640180']}
         self.assertItemsEqual(self.analysis.samples, exp)
 
     def test_remove_samples_samples(self):
         self.analysis.remove_samples(samples=('1.SKD8.640184', ))
         exp = {4: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
+                   '1.SKM4.640180'],
+               5: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
+                   '1.SKM4.640180'],
+               6: ['1.SKB8.640193', '1.SKB7.640196', '1.SKM9.640192',
                    '1.SKM4.640180']}
         self.assertItemsEqual(self.analysis.samples, exp)
 
     def test_remove_samples_artifact(self):
-        self.analysis.remove_samples(artifacts=(qdb.artifact.Artifact(4), ))
-        exp = {}
-        self.assertEqual(self.analysis.samples, exp)
+        self.analysis.remove_samples(
+            artifacts=(qdb.artifact.Artifact(4), qdb.artifact.Artifact(5)))
+        exp = {6: {'1.SKB7.640196', '1.SKB8.640193', '1.SKD8.640184',
+                   '1.SKM4.640180', '1.SKM9.640192'}}
+        self.assertItemsEqual(self.analysis.samples, exp)
 
     def test_share(self):
         self.analysis.share(qdb.user.User("admin@foo.bar"))
@@ -497,13 +515,17 @@ class TestAnalysis(TestCase):
     def test_build_mapping_file(self):
         new_id = qdb.util.get_count('qiita.filepath') + 1
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        self.analysis._build_mapping_file(samples)
+
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
+                         self.analysis._build_mapping_file, samples)
         obs = self.analysis.mapping_file
         self.assertEqual(obs, self.map_fp)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             obs, index='#SampleID')
-        exp = qdb.metadata_template.util.load_template_to_dataframe(
+        exp = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.util.load_template_to_dataframe,
             self.map_exp_fp, index='#SampleID')
         assert_frame_equal(obs, exp)
 
@@ -512,7 +534,7 @@ class TestAnalysis(TestCase):
         obs = self.conn_handler.execute_fetchall(
             sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
 
-        exp = [[13, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
+        exp = [[16, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
                [new_id, '1_analysis_mapping.txt', 9, '682183006', 1, 1]]
         self.assertItemsEqual(obs, exp)
 
@@ -524,21 +546,27 @@ class TestAnalysis(TestCase):
     def test_build_mapping_file_duplicated_samples_no_merge(self):
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
                    3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        self.analysis._build_mapping_file(samples, True)
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
+                         self.analysis._build_mapping_file, samples, True)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             self.analysis.mapping_file, index='#SampleID')
-        exp = qdb.metadata_template.util.load_template_to_dataframe(
+        exp = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.util.load_template_to_dataframe,
             self.duplicated_samples_not_merged, index='#SampleID')
         assert_frame_equal(obs, exp)
 
     def test_build_mapping_file_duplicated_samples_merge(self):
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
                    3: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        self.analysis._build_mapping_file(samples)
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
+                         self.analysis._build_mapping_file, samples)
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             self.analysis.mapping_file, index='#SampleID')
-        exp = qdb.metadata_template.util.load_template_to_dataframe(
+        exp = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.util.load_template_to_dataframe,
             self.map_exp_fp, index='#SampleID')
         assert_frame_equal(obs, exp)
 
@@ -568,7 +596,7 @@ class TestAnalysis(TestCase):
         sql = """SELECT * FROM qiita.analysis_filepath
                  WHERE analysis_id=%s ORDER BY filepath_id"""
         obs = self.conn_handler.execute_fetchall(sql, (self.analysis.id,))
-        exp = [[1L, 12L, 2L], [1L, 13L, None], [1L, new_id, 2L]]
+        exp = [[1L, 15L, 2L], [1L, 16L, None], [1L, new_id, 2L]]
         self.assertEqual(obs, exp)
 
     def test_build_biom_tables_duplicated_samples_not_merge(self):
@@ -584,7 +612,8 @@ class TestAnalysis(TestCase):
         self.assertItemsEqual(obs, exp)
 
     def test_build_files(self):
-        self.analysis.build_files()
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
+                         self.analysis.build_files)
 
         # testing that the generated files have the same sample ids
         biom_ids = load_table(
@@ -600,18 +629,25 @@ class TestAnalysis(TestCase):
         self.assertItemsEqual(biom_ids, exp)
 
     def test_build_files_merge_duplicated_sample_ids(self):
-        self.analysis.build_files(merge_duplicated_sample_ids=True)
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
+                         self.analysis.build_files,
+                         merge_duplicated_sample_ids=True)
 
         # testing that the generated files have the same sample ids
-        biom_ids = load_table(
-            self.analysis.biom_tables['18S']).ids(axis='sample')
+        biom_ids = []
+        for _, fp in viewitems(self.analysis.biom_tables):
+            biom_ids.extend(load_table(fp).ids(axis='sample'))
         mf_ids = qdb.metadata_template.util.load_template_to_dataframe(
             self.analysis.mapping_file, index='#SampleID').index
         self.assertItemsEqual(biom_ids, mf_ids)
 
         # now that the samples have been prefixed
         exp = ['4.1.SKM9.640192', '4.1.SKM4.640180', '4.1.SKD8.640184',
-               '4.1.SKB8.640193', '4.1.SKB7.640196']
+               '4.1.SKB8.640193', '4.1.SKB7.640196',
+               '5.1.SKM9.640192', '5.1.SKM4.640180', '5.1.SKD8.640184',
+               '5.1.SKB8.640193', '5.1.SKB7.640196',
+               '6.1.SKM9.640192', '6.1.SKM4.640180', '6.1.SKD8.640184',
+               '6.1.SKB8.640193', '6.1.SKB7.640196']
         self.assertItemsEqual(biom_ids, exp)
 
     def test_build_files_raises_type_error(self):

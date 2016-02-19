@@ -615,7 +615,7 @@ class DBUtilTests(TestCase):
     def test_check_access_to_analysis_result(self):
         obs = qdb.util.check_access_to_analysis_result('test@foo.bar',
                                                        '1_job_result.txt')
-        exp = [10]
+        exp = [13]
 
         self.assertEqual(obs, exp)
 
