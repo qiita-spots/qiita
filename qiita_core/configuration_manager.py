@@ -105,6 +105,10 @@ class ConfigurationManager(object):
         The VAMPS URL
     conf_fp : str
         The filepath for the configuration file that is loaded
+    portal : str
+        The portal under the Qiita instance is running under
+    portal_dir : str
+        The portal subdirectory used in the URL
     portal_fp : str
         The filepath to the portal styling config file
     plugin_launcher : str
