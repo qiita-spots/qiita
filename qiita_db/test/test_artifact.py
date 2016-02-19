@@ -335,7 +335,7 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):
             qdb.artifact.Artifact.delete(obs.id)
 
-    def test_delete_error_queued_job(self):
+    def test_delete_error_in_construction_job(self):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, 'FASTQ', prep_template=self.prep_template)
         self._clean_up_files.extend([fp for _, fp, _ in test.filepaths])

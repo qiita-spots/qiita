@@ -376,8 +376,8 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it has been submitted to VAMPS")
 
-            # Check if there is a job queued or running that will use/is using
-            # the artifact
+            # Check if there is a job queued, running. waiting or
+            # in_construction that will use/is using the artifact
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.artifact_processing_job
@@ -385,8 +385,9 @@ class Artifact(qdb.base.QiitaObject):
                             JOIN qiita.processing_job_status
                                 USING (processing_job_status_id)
                         WHERE artifact_id = %s
-                            AND processing_job_status IN ('queued', 'running'))
-                  """
+                            AND processing_job_status IN (
+                                'queued', 'running', 'waiting',
+                                'in_construction'))"""
             qdb.sql_connection.TRN.add(sql, [artifact_id])
             if qdb.sql_connection.TRN.execute_fetchlast():
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
