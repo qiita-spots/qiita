@@ -629,9 +629,11 @@ class TestPrepGraphs(TestHandlerBase):
                "node_labels": [[1, "Raw data 1 - FASTQ"],
                                [3, "Demultiplexed 2 - Demultiplexed"],
                                [2, "Demultiplexed 1 - Demultiplexed"],
-                               [4, "BIOM - BIOM"]], "message": "",
-               "edge_list": [[1, 3], [1, 2], [2, 4]]}
-        self.assertEqual(loads(response.body), exp)
+                               [4, "BIOM - BIOM"],
+                               [4, "BIOM - BIOM"]],
+               "message": "",
+               "edge_list": [[1, 3], [1, 2], [2, 4], [2, 5]]}
+        self.assertItemsEqual(loads(response.body), exp)
 
 
 class TestArtifactGraphs(TestHandlerBase):
@@ -653,10 +655,11 @@ class TestArtifactGraphs(TestHandlerBase):
                'node_labels': [[1, 'Raw data 1 - FASTQ'],
                                [3, 'Demultiplexed 2 - Demultiplexed'],
                                [2, 'Demultiplexed 1 - Demultiplexed'],
-                               [4, 'BIOM - BIOM']],
-               'edge_list': [[1, 3], [1, 2], [2, 4]]}
+                               [4, 'BIOM - BIOM'],
+                               [5, 'BIOM - BIOM']],
+               'edge_list': [[1, 3], [1, 2], [2, 4], [2, 5]]}
         self.assertEqual(response.code, 200)
-        self.assertEqual(loads(response.body), exp)
+        self.assertItemsEqual(loads(response.body), exp)
 
     def test_get_unknown(self):
         response = self.get('/artifact/graph/', {'direction': 'BAD',
@@ -688,10 +691,11 @@ class TestArtifact(TestHandlerBase):
                'node_labels': [[1, 'Raw data 1 - FASTQ'],
                                [3, 'Demultiplexed 2 - Demultiplexed'],
                                [2, 'Demultiplexed 1 - Demultiplexed'],
-                               [4, 'BIOM - BIOM']],
-               'edge_list': [[1, 3], [1, 2], [2, 4]]}
+                               [4, 'BIOM - BIOM'],
+                               [5, 'BIOM - BIOM']],
+               'edge_list': [[1, 3], [1, 2], [2, 4], [2, 5]]}
         self.assertEqual(response.code, 200)
-        self.assertEqual(loads(response.body), exp)
+        self.assertItemsEqual(loads(response.body), exp)
 
     def test_get_unknown(self):
         response = self.get('/artifact/graph/', {'direction': 'BAD',

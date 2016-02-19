@@ -110,7 +110,7 @@ class ArtifactAdminAJAX(BaseHandler):
                 # an admin, the processed data is waiting to be approved and
                 # the qiita config requires processed data approval
                 buttons.append(btn_base % ('private', 'Approve artifact'))
-        elif status == 'private':
+        if status == 'private':
             # The make public button only appears if the status is private
             buttons.append(btn_base % ('public', 'Make public'))
 
