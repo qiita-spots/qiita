@@ -1,7 +1,7 @@
 {% extends sitebase.html %}
 {%block head%}
-<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
-<script type="text/javascript" src="/static/js/password_validation.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/password_validation.js"></script>
 <script type="text/javascript">
 $( document ).ready(function() { dualpass_validator(); });
 </script>
@@ -10,7 +10,7 @@ $( document ).ready(function() { dualpass_validator(); });
 {%block content%}
 <h1>Enter User Information</h1>
 <div style="color:red;">{% raw error %}</div>
-<form class="form-horizontal dualpass" role="form" action="/auth/create/" method="post" id="createuser">
+<form class="form-horizontal dualpass" role="form" action="{% raw qiita_config.portal_dir %}/auth/create/" method="post" id="createuser">
 <div class="form-group">
     <label for="email" class="col-sm-2 control-label">Email</label>
     <div class="col-sm-10">

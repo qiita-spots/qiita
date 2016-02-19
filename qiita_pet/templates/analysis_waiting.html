@@ -1,8 +1,8 @@
 {% extends sitebase.html%}
 
 {%block head%}
-<script src="/static/vendor/js/moi.js"></script>
-<script src="/static/vendor/js/moi_list.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi_list.js"></script>
 <script type="text/javascript">
     $(document).ready(function() {
       moi_list.init("{{group_id}}");
