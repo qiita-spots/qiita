@@ -16,6 +16,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config
 
 
 class MetadataSummaryHandler(BaseHandler):
