@@ -38,8 +38,6 @@ Methods
 from __future__ import division
 from future.utils import viewitems, viewvalues
 from future.builtins import zip
-from os.path import join
-from functools import partial
 from itertools import chain
 from copy import deepcopy
 
