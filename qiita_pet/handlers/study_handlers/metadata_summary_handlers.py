@@ -16,6 +16,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config
 
 
 class MetadataSummaryHandler(BaseHandler):
@@ -65,14 +66,14 @@ class MetadataSummaryHandler(BaseHandler):
             # The prep template has been provided
             template = self._get_template(PrepTemplate, prep_template)
             back_button_path = (
-                "/study/description/%s?top_tab=prep_template_tab&sub_tab=%s"
-                % (study_id, template.id))
+                "%s/study/description/%s?top_tab=prep_template_tab&sub_tab=%s"
+                % (qiita_config.portal_dir, study_id, template.id))
         elif sample_template:
             # The sample template has been provided
             template = self._get_template(SampleTemplate, sample_template)
             back_button_path = (
-                "/study/description/%s"
-                % study_id)
+                "%s/study/description/%s"
+                % (qiita_config.portal_dir, study_id))
         else:
             # Neither a sample template or a prep template has been provided
             # Fail nicely
