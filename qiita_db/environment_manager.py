@@ -33,7 +33,8 @@ get_reference_fp = partial(join, reference_base_dir)
 
 SETTINGS_FP = get_support_file('qiita-db-settings.sql')
 LAYOUT_FP = get_support_file('qiita-db-unpatched.sql')
-POPULATE_FP = get_support_file('populate_test_db.sql')
+POPULATE_FP_SQL = get_support_file('populate_test_db.sql')
+POPULATE_FP_PY = get_support_file('populate_test_db.py')
 PATCHES_DIR = get_support_file('patches')
 
 
@@ -77,9 +78,10 @@ def create_layout_and_patch(verbose=False):
 def _populate_test_db():
     print('Populating database with demo data')
     with qdb.sql_connection.TRN:
-        with open(POPULATE_FP, 'U') as f:
+        with open(POPULATE_FP_SQL, 'U') as f:
             qdb.sql_connection.TRN.add(f.read())
         qdb.sql_connection.TRN.execute()
+    execfile(POPULATE_FP_PY)
 
 
 def _add_ontology_data():
@@ -317,10 +319,12 @@ def drop_and_rebuild_tst_database():
         # Create the database and apply patches
         create_layout_and_patch()
         # Populate the database
-        with open(POPULATE_FP, 'U') as f:
+        with open(POPULATE_FP_SQL, 'U') as f:
             qdb.sql_connection.TRN.add(f.read())
 
         qdb.sql_connection.TRN.execute()
+
+    execfile(POPULATE_FP_PY)
 
 
 def reset_test_database(wrapped_fn):
