@@ -1,3 +1,9 @@
+-- Populate.sql sets the increment to begin at 10000, but all tests expect it to start at 1, so set it back to 1 for the test DB population
+SELECT setval('qiita.study_study_id_seq', 1, false);
+
+-- Patch 33.sql sets the increment to begin at 2000, but all tests expect it to start at 1, so set it back to 1 for the test DB population
+SELECT setval('qiita.artifact_artifact_id_seq', 1, false);
+
 -- Add an ontology
 INSERT INTO qiita.ontology (ontology_id, ontology, fully_loaded, fullname, query_url, source_url, definition, load_date) VALUES (999999999, E'ENA', E'1', E'European Nucleotide Archive Submission Ontology', NULL, E'http://www.ebi.ac.uk/embl/Documentation/ENA-Reads.html', E'The ENA CV is to be used to annotate XML submissions to the ENA.', '2009-02-23 00:00:00');
 

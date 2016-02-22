@@ -53,6 +53,7 @@ setup(name='qiita-spots',
             'qiita_core': ['support_files/config_test.cfg'],
             'qiita_db': [
                 'support_files/*.sql',
+                'support_files/*.py',
                 'support_files/patches/*.sql',
                 'support_files/patches/python_patches/*.py',
                 'support_files/test_data/preprocessed_data/*',
