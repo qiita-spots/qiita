@@ -262,16 +262,14 @@ biom3.visibility = 'private'
 #
 
 analysis = Analysis.create(user_test, 'SomeAnalysis', 'A test analysis')
-to_add = ['%d.%s' % (study_id, s) for s in [
-    '1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
-    '1.SKM4.640180']]
+to_add = ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196', '1.SKM9.640192',
+          '1.SKM4.640180']
 analysis.add_samples({biom1.id: to_add, biom2.id: to_add, biom3.id: to_add})
 analysis.pmid = '121112'
 analysis.share(user_share)
 
 analysis = Analysis.create(user_test, 'SomeSecondAnalysis',
                            'Another test analysis')
-to_add = ['%d.%s' % (study_id, s) for s in [
-    '1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196', '1.SKM3.640197']]
+to_add = ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196', '1.SKM3.640197']
 analysis.add_samples({biom1.id: to_add, biom2.id: to_add, biom3.id: to_add})
 analysis.pmid = '22221112'
