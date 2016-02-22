@@ -332,7 +332,21 @@ class User(qdb.base.QiitaObject):
 
             return correct_code
 
-    # ---properties---
+    @classmethod
+    def show_levels(self):
+        """Retrive all user levels, their ids and descriptions
+
+        Returns
+        -------
+        dict of {str: str}, where the first string is the level and the second
+        the description
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name, description
+                     FROM qiita.user_level""".format(self._table)
+            qdb.sql_connection.TRN.add(sql)
+            return dict(qdb.sql_connection.TRN.execute_fetchindex())
+
     @property
     def email(self):
         """The email of the user"""
@@ -349,6 +363,30 @@ class User(qdb.base.QiitaObject):
                      WHERE u.email = %s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @level.setter
+    def level(self, level):
+        """Updates the user level
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If the user level doesn't exist
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT user_level_id FROM qiita.user_level
+                     WHERE name = %s"""
+            qdb.sql_connection.TRN.add(sql, [level])
+            level_id = qdb.sql_connection.TRN.execute_fetchflatten()
+            if not level_id:
+                raise qdb.exceptions.QiitaDBUnknownIDError(
+                    level, "qiita.user_level")
+
+            sql = """UPDATE qiita.{0}
+                     SET user_level_id = %s
+                     WHERE email = %s""".format(self._table)
+            qdb.sql_connection.TRN.add(sql, [level_id[0], self._id])
+            qdb.sql_connection.TRN.execute()
 
     @property
     def info(self):
@@ -474,7 +512,6 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchindex()
 
-    # ------- methods ---------
     def change_password(self, oldpass, newpass):
         """Changes the password from oldpass to newpass
 
