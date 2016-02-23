@@ -1078,7 +1078,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             return [(fp_id, fp)
                     for fp_id, fp, _ in qdb.util.retrieve_filepaths(
                         self._filepath_table, self._id_column, self.id,
-                        sort='descendent')]
+                        sort='descending')]
 
     def categories(self):
         """Identifies the metadata columns present in a template

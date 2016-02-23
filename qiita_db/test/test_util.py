@@ -242,7 +242,7 @@ class DBUtilTests(TestCase):
 
     def test_retrieve_filepaths_sort(self):
         obs = qdb.util.retrieve_filepaths(
-            'artifact_filepath', 'artifact_id', 1, sort='descendent')
+            'artifact_filepath', 'artifact_id', 1, sort='descending')
         path_builder = partial(
             join, qdb.util.get_db_files_base_dir(), "raw_data")
         exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),

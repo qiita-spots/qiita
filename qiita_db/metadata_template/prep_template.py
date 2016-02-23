@@ -504,7 +504,7 @@ class PrepTemplate(MetadataTemplate):
             # 3-tuple, in which the fp is the second element
             sample_template_fp = qdb.util.retrieve_filepaths(
                 "sample_template_filepath", "study_id", self.study_id,
-                sort='descendent')[0][1]
+                sort='descending')[0][1]
 
             # reading files via pandas
             st = qdb.metadata_template.util.load_template_to_dataframe(
@@ -605,7 +605,7 @@ class PrepTemplate(MetadataTemplate):
         """
         for _, fp, fp_type in qdb.util.retrieve_filepaths(
                 self._filepath_table, self._id_column, self.id,
-                sort='descendent'):
+                sort='descending'):
             if fp_type == 'qiime_map':
                 return fp
 

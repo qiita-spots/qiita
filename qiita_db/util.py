@@ -656,9 +656,9 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
         The name of the column that represents the object id
     obj_id : int
         The object id
-    sort : {'ascendent', 'descendent'}, optional
+    sort : {'ascending', 'descending'}, optional
         The direction in which the results are sorted, using the filepath id
-        as sorting key. Default: None, no sorting is applyed
+        as sorting key. Default: None, no sorting is applied
 
     Returns
     -------
@@ -674,14 +674,14 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
             return join(db_dir, mountpoint, filepath)
 
     sql_sort = ""
-    if sort == 'ascendent':
+    if sort == 'ascending':
         sql_sort = " ORDER BY filepath_id"
-    elif sort == 'descendent':
+    elif sort == 'descending':
         sql_sort = " ORDER BY filepath_id DESC"
     elif sort is not None:
         raise qdb.exceptions.QiitaDBError(
-            "Unknown sorting direction: %s. Please choose from 'ascendent' or "
-            "'descendent'" % sort)
+            "Unknown sorting direction: %s. Please choose from 'ascending' or "
+            "'descending'" % sort)
 
     with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
