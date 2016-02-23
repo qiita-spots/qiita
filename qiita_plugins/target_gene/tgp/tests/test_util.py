@@ -77,13 +77,15 @@ class UtilTests(TestCase):
 
     def test_format_payload(self):
         ainfo = [
-            ("Demultiplexed",
+            ("demultiplexed", "Demultiplexed",
              [("fp1", "preprocessed_fasta"), ("fp2", "preprocessed_fastq")])]
         obs = format_payload(True, artifacts_info=ainfo, error_msg="Ignored")
         exp = {'success': True, 'error': '',
-               'artifacts': [{'artifact_type': "Demultiplexed",
-                              'filepaths': [("fp1", "preprocessed_fasta"),
-                                            ("fp2", "preprocessed_fastq")]}]}
+               'artifacts':
+                   {'demultiplexed':
+                       {'artifact_type': "Demultiplexed",
+                        'filepaths': [("fp1", "preprocessed_fasta"),
+                                      ("fp2", "preprocessed_fastq")]}}}
         self.assertEqual(obs, exp)
 
     def test_format_payload_error(self):

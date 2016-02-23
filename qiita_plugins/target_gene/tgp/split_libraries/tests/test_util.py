@@ -139,7 +139,7 @@ class UtilTests(TestCase):
                ("/sl/output/seqs.fastq", "preprocessed_fastq"),
                ("/sl/output/seqs.demux", "preprocessed_demux"),
                ("/sl/output/split_library_log.txt", "log")]
-        exp = [['Demultiplexed', fps]]
+        exp = [['demultiplexed', 'Demultiplexed', fps]]
         self.assertEqual(obs, exp)
 
 
