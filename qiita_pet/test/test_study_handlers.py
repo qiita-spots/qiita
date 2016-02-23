@@ -12,6 +12,7 @@ from h5py import File
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.qiita_settings import qiita_config
 from qiita_db.artifact import Artifact
 from qiita_db.study import StudyPerson, Study
 from qiita_db.util import get_count, check_count
@@ -600,6 +601,11 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                       'iTotalDisplayRecords': 0,
                       'iTotalRecords': 0,
                       'sEcho': 1021}
+        self.portal = qiita_config.portal
+
+    def tearDown(self):
+        super(TestSearchStudiesAJAX, self).tearDown()
+        qiita_config.portal = self.portal
 
     def test_get(self):
         response = self.get('/study/search/', {
@@ -637,6 +643,16 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             'sEcho': '1021'
             })
         self.assertEqual(response.code, 403)
+
+    def test_get_emp_portal(self):
+        qiita_config.portal = "EMP"
+        response = self.get('/study/search/', {
+            'user': 'test@foo.bar',
+            'query': '',
+            'sEcho': '1021'
+            })
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), self.empty)
 
 
 class TestMetadataSummaryHandler(TestHandlerBase):
