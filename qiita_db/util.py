@@ -645,7 +645,7 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
             chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:])))
 
 
-def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
+def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
     """Retrieves the filepaths for the given object id
 
     Parameters
@@ -656,6 +656,9 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
         The name of the column that represents the object id
     obj_id : int
         The object id
+    sort : {'ascending', 'descending'}, optional
+        The direction in which the results are sorted, using the filepath id
+        as sorting key. Default: None, no sorting is applied
 
     Returns
     -------
@@ -670,6 +673,16 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
         else:
             return join(db_dir, mountpoint, filepath)
 
+    sql_sort = ""
+    if sort == 'ascending':
+        sql_sort = " ORDER BY filepath_id"
+    elif sort == 'descending':
+        sql_sort = " ORDER BY filepath_id DESC"
+    elif sort is not None:
+        raise qdb.exceptions.QiitaDBError(
+            "Unknown sorting direction: %s. Please choose from 'ascending' or "
+            "'descending'" % sort)
+
     with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
                         subdirectory
@@ -677,7 +690,8 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id):
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
                     JOIN qiita.{0} USING (filepath_id)
-                 WHERE {1} = %s""".format(obj_fp_table, obj_id_column)
+                 WHERE {1} = %s{2}""".format(obj_fp_table, obj_id_column,
+                                             sql_sort)
         qdb.sql_connection.TRN.add(sql, [obj_id])
         results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
