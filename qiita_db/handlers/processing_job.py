@@ -171,14 +171,14 @@ class CompleteHandler(OauthBaseHandler):
             job, success, error_msg = _get_job(job_id)
             if success:
                 payload = loads(self.request.body)
+                payload_success = payload['success']
+                if payload_success:
+                    artifacts = payload['artifacts']
+                    error = None
+                else:
+                    artifacts = None
+                    error = payload['error']
                 try:
-                    payload_success = payload['success']
-                    if payload_success:
-                        artifacts = payload['artifacts']
-                        error = None
-                    else:
-                        artifacts = None
-                        error = payload['error']
                     job.complete(payload_success, artifacts, error)
                 except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
                     success = False
