@@ -79,7 +79,7 @@
         });
 
         $("#analysis-drop-down").mouseover(function() {
-          $.getJSON("/analysis/dflt/sumary/", function(result){
+          $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result){
             if(parseInt(result.studies) > 0){
               $("#selected_samples_menu").removeClass('disabled');
               $("#selected_samples_link").attr('href', '{% raw qiita_config.portal_dir %}/analysis/selected/');
