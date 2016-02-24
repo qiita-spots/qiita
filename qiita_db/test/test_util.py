@@ -240,6 +240,22 @@ class DBUtilTests(TestCase):
                 "raw_barcodes")]
         self.assertEqual(obs, exp)
 
+    def test_retrieve_filepaths_sort(self):
+        obs = qdb.util.retrieve_filepaths(
+            'artifact_filepath', 'artifact_id', 1, sort='descending')
+        path_builder = partial(
+            join, qdb.util.get_db_files_base_dir(), "raw_data")
+        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                "raw_barcodes"),
+               (1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
+                "raw_forward_seqs")]
+        self.assertEqual(obs, exp)
+
+    def test_retrieve_filepaths_error(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.util.retrieve_filepaths('artifact_filepath', 'artifact_id', 1,
+                                        sort='Unknown')
+
     def _common_purge_filpeaths_test(self):
         # Get all the filepaths so we can test if they've been removed or not
         sql_fp = "SELECT filepath, data_directory_id FROM qiita.filepath"
@@ -599,7 +615,7 @@ class DBUtilTests(TestCase):
     def test_check_access_to_analysis_result(self):
         obs = qdb.util.check_access_to_analysis_result('test@foo.bar',
                                                        '1_job_result.txt')
-        exp = [10]
+        exp = [13]
 
         self.assertEqual(obs, exp)
 
