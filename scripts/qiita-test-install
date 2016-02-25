@@ -190,9 +190,9 @@ class QiitaConfig(TestCase):
         version = tuple(map(int, future_lib_version.split('.')))
 
         self.assertTrue(acceptable_version <= version,
-                        'Unsupported future version. You have %s but %s is '
-                        'requiered' % (future_lib_version,
-                                       string_acceptable_version))
+                        'Unsupported future version. You have %s but the '
+                        'minimum required version is %s'
+                        % (future_lib_version, string_acceptable_version))
 
     def test_pandas_library_version(self):
         acceptable_version = (0, 15)
@@ -200,9 +200,9 @@ class QiitaConfig(TestCase):
         version = tuple(map(int, pandas_lib_version.split('.')))
 
         self.assertTrue(acceptable_version <= version,
-                        'Unsupported pandas version. You have %s but %s is '
-                        'requiered' % (pandas_lib_version,
-                                       string_acceptable_version))
+                        'Unsupported pandas version. You have %s but the '
+                        'minimum required version is %s'
+                        % (pandas_lib_version, string_acceptable_version))
 
     def test_torando_library_version(self):
         acceptable_version = (3, 1, 1)
@@ -210,9 +210,9 @@ class QiitaConfig(TestCase):
         version = tuple(map(int, tornado_lib_version.split('.')))
 
         self.assertTrue(acceptable_version <= version,
-                        'Unsupported tornado version. You have %s but %s is '
-                        'requiered' % (tornado_lib_version,
-                                       string_acceptable_version))
+                        'Unsupported tornado version. You have %s but the '
+                        'minimum required version is %s'
+                        % (tornado_lib_version, string_acceptable_version))
 
     def test_pyparsing_library_version(self):
         acceptable_version = (2, 0, 2)
@@ -220,9 +220,9 @@ class QiitaConfig(TestCase):
         version = tuple(map(int, pyparsing_lib_version.split('.')))
 
         self.assertTrue(acceptable_version <= version,
-                        'Unsupported pyparsing version. You have %s but %s is '
-                        'requiered' % (pyparsing_lib_version,
-                                       string_acceptable_version))
+                        'Unsupported pyparsing version. You have %s but the '
+                        'minimum required version is %s'
+                        % (pyparsing_lib_version, string_acceptable_version))
 
     def test_wtforms_library_version(self):
         acceptable_version = (2, 0, 1)
@@ -230,9 +230,9 @@ class QiitaConfig(TestCase):
         version = tuple(map(int, wtforms_lib_version.split('.')))
 
         self.assertTrue(acceptable_version <= version,
-                        'Unsupported WTForms version. You have %s but %s is '
-                        'requiered' % (wtforms_lib_version,
-                                       string_acceptable_version))
+                        'Unsupported WTForms version. You have %s but the '
+                        'minimum required version is %s'
+                        % (wtforms_lib_version, string_acceptable_version))
 
     def test_postgresql_version(self):
         if not self.psql_version:
@@ -257,9 +257,10 @@ class QiitaConfig(TestCase):
         version = tuple(map(int, self.redis_version.split('.')))
 
         self.assertTrue(acceptable_version <= version,
-                        'Unsupported redis version. You have %s but %s is '
-                        'requiered' % ('.'.join(map(str, version)),
-                                       string_acceptable_version))
+                        'Unsupported redis version. You have %s but the '
+                        'minimum required version is %s'
+                        % ('.'.join(map(str, version)),
+                           string_acceptable_version))
 
     def test_ipython_version(self):
         acceptable_min_version = (2, 4, 1)
