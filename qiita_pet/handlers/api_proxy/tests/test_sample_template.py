@@ -358,7 +358,7 @@ class TestSampleAPI(TestCase):
         obs = sample_template_filepaths_get_req(1, 'test@foo.bar')
         exp = {'status': 'success',
                'message': '',
-               'filepaths': [(14, join(templates_dir,
+               'filepaths': [(17, join(templates_dir,
                               '1_19700101-000000.txt'))]}
         self.assertEqual(obs, exp)
 
