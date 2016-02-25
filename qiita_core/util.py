@@ -83,12 +83,17 @@ def qiita_test_checker(test=False):
         # Now, we decorate the setup and teardown functions
         class DecoratedClass(cls):
             def setUp(self):
+                # Add one to context so we can rollback in tearDown
+                qdb.sql_connection.TRN._contexts_entered = 1
+
                 super(DecoratedClass, self).setUp()
                 self.conn_handler = qdb.sql_connection.SQLConnectionHandler()
 
-            @qdb.environment_manager.reset_test_database
             def tearDown(self):
                 super(DecoratedClass, self).tearDown()
+                # Rollback the changes and force out of context to run clean up
+                qdb.sql_connection.TRN.rollback()
+                qdb.sql_connection.TRN.__exit__(None, None, None)
 
         return DecoratedClass
     return class_modifier
@@ -98,8 +103,7 @@ def execute_as_transaction(func):
     """Decorator to make a method execute inside a transaction"""
     @wraps(func)
     def wrapper(*args, **kwargs):
-        from qiita_db.sql_connection import TRN
-        with TRN:
+        with qdb.sql_connection.TRN:
             return func(*args, **kwargs)
     return wrapper
 
