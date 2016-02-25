@@ -773,7 +773,7 @@ class Artifact(qdb.base.QiitaObject):
             with the artifact
         """
         return qdb.util.retrieve_filepaths(
-            "artifact_filepath", "artifact_id", self.id)
+            "artifact_filepath", "artifact_id", self.id, sort='ascending')
 
     @property
     def parents(self):
