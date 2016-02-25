@@ -116,7 +116,7 @@ class ArtifactTests(TestCase):
                ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None]]
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
     def test_copy(self):
         src = qdb.artifact.Artifact(1)
