@@ -1,8 +1,6 @@
 from unittest import TestCase, main
 from datetime import datetime
 
-from future.utils import viewitems
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
