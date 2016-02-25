@@ -13,30 +13,12 @@ from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 
 from qiita_core.util import execute_as_transaction
-from qiita_core.qiita_settings import qiita_config
 from qiita_db.artifact import Artifact
-from qiita_db.util import infer_status
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import check_access
 
 
 html_error_message = "<b>An error occurred %s %s</b></br>%s"
-
-
-def _approve(level):
-    """Check if the study can be approved based on user level and configuration
-
-    Parameters
-    ----------
-    level : str
-        The level of the current user
-
-    Returns
-    -------
-    bool
-        Whether the study can be approved or not
-    """
-    return True if not qiita_config.require_approval else level == 'admin'
 
 
 def _to_int(value):
@@ -62,28 +44,6 @@ def _to_int(value):
     except ValueError:
         raise HTTPError(500, "%s cannot be converted to an integer" % value)
     return res
-
-
-def _propagate_visibility(artifact):
-    """Propagates the visibility of an artifact to all its ancestors
-
-    Parameters
-    ----------
-    artifact : qiita_db.artifact.Artifact
-        The artifact to propagate the visibility for
-
-    Notes
-    -----
-    This is emulating the previous functionality, in which the status of the
-    processed data was propagated to the preprocessed/raw data that was used
-    to generate such processed data. In the current interface, only the status
-    of the BIOM artifacts (processed data) can be changed, so this works as
-    expected.
-    """
-    for a in artifact.ancestors.nodes():
-        visibilities = [[c.visibility] for c in a.descendants.nodes()
-                        if c.artifact_type == 'BIOM']
-        a.visibility = infer_status(visibilities)
 
 
 class PreprocessingSummaryHandler(BaseHandler):
