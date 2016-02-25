@@ -26,6 +26,8 @@ from qiita_pet.handlers.api_proxy.artifact import (
 
 @qiita_test_checker()
 class TestArtifactAPI(TestCase):
+    database = True
+
     def setUp(self):
         uploads_path = get_mountpoint('uploads')[0][1]
         # Create prep test file to point at
@@ -192,7 +194,10 @@ class TestArtifactAPI(TestCase):
                          ['FASTQ', None],
                          ['SFF', None],
                          ['per_sample_FASTQ', None]]}
-        self.assertEqual(obs, exp)
+
+        self.assertEqual(obs['message'], exp['message'])
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertItemsEqual(obs['types'], exp['types'])
 
     def test_artifact_graph_get_req_bad_direction(self):
         obs = artifact_graph_get_req(1, 'WRONG', 'test@foo.bar')

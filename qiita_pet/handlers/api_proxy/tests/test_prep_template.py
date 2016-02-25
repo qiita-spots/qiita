@@ -187,7 +187,11 @@ class TestPrepAPI(TestCase):
                           'LinkerPrimerSequence, BarcodeSequence',
                'file': 'update.txt',
                'id': new_id}
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertItemsEqual(obs['message'].split('\n'),
+                              exp['message'].split('\n'))
+        self.assertEqual(obs['file'], exp['file'])
+        self.assertEqual(obs['id'], exp['id'])
 
         # Make sure new prep template added
         prep = PrepTemplate(new_id)
@@ -232,7 +236,10 @@ class TestPrepAPI(TestCase):
                           'differences between the data stored in the DB and '
                           'the new data provided',
                'file': 'update.txt'}
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertItemsEqual(obs['message'].split('\n'),
+                              exp['message'].split('\n'))
+        self.assertEqual(obs['file'], exp['file'])
 
     def test_prep_put_req_inv_type(self):
         randstr = ''.join([choice(ascii_letters) for x in range(30)])
