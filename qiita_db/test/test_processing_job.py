@@ -470,7 +470,7 @@ class ProcessingWorkflowTests(TestCase):
 
     def test_raise_if_not_in_construction(self):
         # We just need to test that the execution continues (i.e. no raise)
-        tester = qdb.processing_job.ProcessingWorkflow(1)
+        tester = qdb.processing_job.ProcessingWorkflow(2)
         tester._raise_if_not_in_construction()
 
     def test_raise_if_not_in_construction_error(self):
