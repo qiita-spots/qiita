@@ -256,7 +256,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(tester.start_script, 'start_target_gene')
 
     def test_default_software(self):
-        obs = qdb.software.Software(1).default_workflows
+        obs = list(qdb.software.Software(1).default_workflows)
         exp = [qdb.software.DefaultWorkflow(1),
                qdb.software.DefaultWorkflow(2),
                qdb.software.DefaultWorkflow(3)]

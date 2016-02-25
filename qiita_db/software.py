@@ -522,7 +522,9 @@ class Software(qdb.base.QiitaObject):
 
         Returns
         -------
-        generator of qiita_db.software.DefaultWorkflow"""
+        generator of qiita_db.software.DefaultWorkflow
+            The defaultworkflows attached to the software
+        """
         with qdb.sql_connection.TRN:
             sql = """SELECT default_workflow_id
                      FROM qiita.default_workflow
@@ -1012,11 +1014,7 @@ class DefaultWorkflow(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             db_nodes = qdb.sql_connection.TRN.execute_fetchflatten()
 
-            nodes = {}
-            for node_id in db_nodes:
-                n = DefaultWorkflowNode(node_id)
-                nodes[node_id] = n
-                g.add_node(n)
+            nodes = {n_id: DefaultWorkflowNode(n_id) for n_id in db_nodes}
 
             # Retrieve all graph edges
             sql = """SELECT DISTINCT default_workflow_edge_id, parent_id,

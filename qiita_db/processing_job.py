@@ -23,12 +23,18 @@ import qiita_db as qdb
 
 
 def _system_call(cmd):
-    """Call cmd and return (stdout, stderr, return_value)
+    """Execute the command `cmd`
 
     Parameters
     ----------
     cmd : str
         The string containing the command to be run.
+
+    Returns
+    -------
+    tuple of (str, str, int)
+        The standard output, standard error and exist status of the
+        executed command
 
     Notes
     -----
@@ -241,8 +247,10 @@ class ProcessingJob(qdb.base.QiitaObject):
 
         Returns
         -------
-        {'queued', 'running', 'success', 'error', 'in_construction', 'waiting'}
-            The current status of the job
+        str
+            The current status of the job, one of {'queued', 'running',
+            'success', 'error', 'in_construction', 'waiting'}
+
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT processing_job_status
@@ -311,10 +319,11 @@ class ProcessingJob(qdb.base.QiitaObject):
         QiitaDBOperationNotPermittedError
             If the job is not in 'waiting' or 'in_construction' status
         """
-        if self.status not in {'in_construction', 'waiting'}:
+        status = self.status
+        if status not in {'in_construction', 'waiting'}:
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 "Can't submit job, not in 'in_construction' or "
-                "'waiting' status")
+                "'waiting' status. Current status: %s" % status)
         cmd = self._generate_cmd()
         p = Process(target=_job_submitter, args=(self, cmd))
         p.start()
@@ -327,7 +336,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         success : bool
             Whether the job has completed successfully or not
         artifacts_data : dict of dicts, optional
-            The generated artifact information, if any, keyed by output name.
+            The generated artifact information keyed by output name.
             The format of each of the internal dictionaries must be
             {'filepaths': list of (str, str), 'artifact_type': str}
             where `filepaths` contains the list of filepaths and filepath types
@@ -344,7 +353,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             if success:
                 if self.status != 'running':
                     # If the job is not running, we only allow to complete it
-                    # if it did not success
+                    # if it did not succeed
                     raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                         "Can't complete job: not in a running state")
                 if artifacts_data:
@@ -704,7 +713,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             # submitted
             for n in nx.topological_sort(dflt_g):
                 if n in node_to_job:
-                    # We have already seend this node
+                    # We have already visited this node
                     # (because it is a root node)
                     continue
 
@@ -724,11 +733,10 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                     for out, in_param in connections:
                         # We take advantage of the fact the parameters are
                         # stored in JSON to encode the name of the output
-                        # artifact from
-                        # the previous job
+                        # artifact from the previous job
                         job_req_params[in_param] = [source_id, out]
 
-                # At this point we should have all the requried paramters for
+                # At this point we should have all the requried parameters for
                 # the current job, so create it
                 new_job = ProcessingJob.create(
                     user, qdb.software.Parameters.from_default_params(
@@ -814,7 +822,6 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             if edges:
                 nodes = {jid: ProcessingJob(jid)
                          for jid in set(chain.from_iterable(edges))}
-                g.add_nodes_from(nodes.values())
                 edges = [(nodes[s], nodes[d]) for s, d in edges]
                 g.add_edges_from(edges)
             else:
@@ -958,7 +965,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
 
             g = self.graph
             # In order to avoid potential race conditions, we are going to set
-            # all the childrens in 'waiting' status before submitting
+            # all the children in 'waiting' status before submitting
             # the root nodes
             in_degrees = g.in_degrees()
             roots = []
