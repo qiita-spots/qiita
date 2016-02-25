@@ -36,8 +36,8 @@ class TestPrepAPI(TestCase):
         with open(self.update_fp, 'w') as f:
             f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
 
-        def tear_down(self):
-            remove(self.update_fp)
+    def tear_down(self):
+        remove(self.update_fp)
 
         fp = join(qiita_config.base_data_dir, 'uploads', '1',
                   'uploaded_file.txt')
