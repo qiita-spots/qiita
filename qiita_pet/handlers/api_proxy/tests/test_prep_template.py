@@ -12,6 +12,7 @@ from string import ascii_letters
 from random import choice
 
 import pandas as pd
+import numpy.testing as npt
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
@@ -19,6 +20,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology
 from qiita_db.study import Study
 from qiita_db.util import get_count
+from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req, prep_template_get_req,
@@ -277,7 +279,8 @@ class TestPrepAPI(TestCase):
     def test_prep_template_delete_req(self):
         template = pd.read_csv(self.update_fp, sep='\t', index_col=0)
         new_id = get_count('qiita.prep_template') + 1
-        PrepTemplate.create(template, Study(1), '16S')
+        npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
+                         template, Study(1), '16S')
         obs = prep_template_delete_req(new_id, 'test@foo.bar')
         exp = {'status': 'success',
                'message': ''}

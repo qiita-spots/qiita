@@ -11,6 +11,7 @@ from os import remove
 from datetime import datetime
 
 import pandas as pd
+import numpy.testing as npt
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
@@ -18,7 +19,7 @@ from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
 from qiita_db.util import get_count, get_mountpoint
-from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
     artifact_delete_req, artifact_types_get_req, artifact_post_req)
@@ -99,8 +100,9 @@ class TestArtifactAPI(TestCase):
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to
         new_prep_id = get_count('qiita.prep_template') + 1
-        PrepTemplate.create(pd.DataFrame(
-            {'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
+        npt.assert_warns(
+            QiitaDBWarning, PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
 
         new_artifact_id = get_count('qiita.artifact') + 1
         obs = artifact_post_req(
@@ -117,8 +119,9 @@ class TestArtifactAPI(TestCase):
     def test_artifact_post_req_bad_file(self):
         # Create new prep template to attach artifact to
         new_prep_id = get_count('qiita.prep_template') + 1
-        PrepTemplate.create(pd.DataFrame(
-            {'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
+        npt.assert_warns(
+            QiitaDBWarning, PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
 
         obs = artifact_post_req(
             'test@foo.bar', {'raw_forward_seqs': ['NOEXIST']},
