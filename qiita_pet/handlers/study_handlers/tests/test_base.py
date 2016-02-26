@@ -38,16 +38,5 @@ class StudyDeleteAjaxTests(TestHandlerBase):
                           'erased because it has a sample template'}
         self.assertEqual(loads(response.body), exp)
 
-    def test_delete_sample_template(self):
-        response = self.post('/study/description/sample_template/',
-                             {'study_id': 1,
-                              'action': 'delete'})
-        self.assertEqual(response.code, 200)
-        exp = ('{"status": "error", '
-               '"message": "Sample template can not be erased because there '
-               'are prep templates associated."}')
-        # checking that the action was sent
-        self.assertEqual(response.body, exp)
-
 if __name__ == "__main__":
     main()

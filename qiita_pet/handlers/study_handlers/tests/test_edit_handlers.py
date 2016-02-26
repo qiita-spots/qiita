@@ -23,20 +23,16 @@ class TestStudyEditorExtendedForm(TestHandlerBase):
     pass
 
 
-class TestStudyEditHandler(TestHandlerBase):
-    database = True
-
+class TestStudyEditHandlerReadOnly(TestHandlerBase):
     def test_get(self):
         """Make sure the page loads when no arguments are passed"""
         response = self.get('/study/create/')
         self.assertEqual(response.code, 200)
         self.assertNotEqual(str(response.body), "")
 
-    def test_get_edit(self):
-        """Make sure the page loads when we want to edit a study"""
-        response = self.get('/study/edit/1')
-        self.assertEqual(response.code, 200)
-        self.assertNotEqual(str(response.body), "")
+
+class TestStudyEditHandler(TestHandlerBase):
+    database = True
 
     def test_get_edit_utf8(self):
         """Make sure the page loads when utf8 characters are present"""
@@ -114,10 +110,7 @@ class TestStudyEditHandler(TestHandlerBase):
 
 
 class TestCreateStudyAJAX(TestHandlerBase):
-    database = True
-
     def test_get(self):
-
         response = self.get('/check_study/', {'study_title': 'notreal'})
         self.assertEqual(response.code, 200)
         # make sure responds properly

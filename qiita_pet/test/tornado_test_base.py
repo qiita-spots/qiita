@@ -20,11 +20,10 @@ class TestHandlerBase(AsyncHTTPTestCase):
         self.app.settings['debug'] = False
         return self.app
 
-    def setUp(self):
+    def tearDown(self):
         if self.database:
             clean_test_environment()
-
-        super(TestHandlerBase, self).setUp()
+        super(TestHandlerBase, self).tearDown()
 
     # helpers from http://www.peterbe.com/plog/tricks-asynchttpclient-tornado
     def get(self, url, data=None, headers=None, doseq=True):

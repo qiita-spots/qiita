@@ -50,6 +50,14 @@ class ArtifactGraphAJAXTests(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
 
+class NewArtifactHandlerTestsReadOnly(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/add_prep/1')
+        self.assertEqual(response.code, 200)
+        self.assertIn('Select file type', response.body)
+        self.assertIn('uploaded_file.txt', response.body)
+
+
 class NewArtifactHandlerTests(TestHandlerBase):
     database = True
 
@@ -60,18 +68,6 @@ class NewArtifactHandlerTests(TestHandlerBase):
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
-
-    def test_get(self):
-        response = self.get('/study/add_prep/1')
-        self.assertEqual(response.code, 200)
-        self.assertIn('Select file type', response.body)
-        self.assertIn('uploaded_file.txt', response.body)
-
-    def test_get_files_not_allowed(self):
-        response = self.post(
-            '/study/prep_files/',
-            {'type': 'BIOM', 'prep_file': 'uploaded_file.txt', 'study_id': 1})
-        self.assertEqual(response.code, 405)
 
     def test_post_artifact(self):
         new_artifact_id = get_count('qiita.artifact') + 1
@@ -113,9 +109,7 @@ class ArtifactAJAXTests(TestHandlerBase):
                       response.body)
 
 
-class ArtifactAdminAJAXTests(TestHandlerBase):
-    databse = True
-
+class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):
     def test_get_admin(self):
         response = self.get('/admin/artifact/',
                             {'artifact_id': 3})
@@ -126,6 +120,10 @@ class ArtifactAdminAJAXTests(TestHandlerBase):
         self.assertIn("Revert to sandbox</button>", response.body)
         self.assertIn("Submit to EBI</a>", response.body)
         self.assertIn("Submit to VAMPS</a>", response.body)
+
+
+class ArtifactAdminAJAXTests(TestHandlerBase):
+    database = True
 
     def test_post_admin(self):
         response = self.post('/admin/artifact/',

@@ -53,17 +53,31 @@ class TestHelpers(TestHandlerBase):
 
 
 class TestSampleTemplateAJAX(TestHandlerBase):
-    # TODO: missing tests
-    pass
+    database = True
+
+    def test_delete_sample_template(self):
+        response = self.post('/study/description/sample_template/',
+                             {'study_id': 1,
+                              'action': 'delete'})
+        self.assertEqual(response.code, 200)
+        exp = ('{"status": "error", '
+               '"message": "Sample template can not be erased because there '
+               'are prep templates associated."}')
+        # checking that the action was sent
+        self.assertEqual(response.body, exp)
 
 
-class TestSampleAJAX(TestHandlerBase):
+class TestSampleAJAXReadOnly(TestHandlerBase):
     def test_get(self):
         res = self.get("/study/description/sample_summary/", {'study_id': 1})
         self.assertEqual(res.code, 200)
         # Make sure metadata read properly
         line = '<option value="altitude">altitude</option>'
         self.assertIn(line, res.body)
+
+
+class TestSampleAJAX(TestHandlerBase):
+    database = True
 
     def test_post(self):
         res = self.post("/study/description/sample_summary/", {

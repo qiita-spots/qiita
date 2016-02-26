@@ -27,14 +27,16 @@ class TestPrepTemplateGraphAJAX(TestHandlerBase):
         self.assertItemsEqual(loads(response.body), exp)
 
 
-class TestPrepTemplateAJAX(TestHandlerBase):
-    database = True
-
+class TestPrepTemplateAJAXReadOnly(TestHandlerBase):
     def test_get(self):
         response = self.get('/study/description/prep_template/',
                             {'prep_id': 1, 'study_id': 1})
         self.assertEqual(response.code, 200)
         self.assertIn('This analysis was done as in Caporaso', response.body)
+
+
+class TestPrepTemplateAJAX(TestHandlerBase):
+    database = True
 
     def test_post_update(self):
         response = self.post('/study/description/prep_template/',
@@ -69,8 +71,11 @@ class TestPrepTemplateAJAX(TestHandlerBase):
 
 
 class TestPrepFilesHandler(TestHandlerBase):
-    # TODO: missing tests
-    pass
+    def test_get_files_not_allowed(self):
+        response = self.post(
+            '/study/prep_files/',
+            {'type': 'BIOM', 'prep_file': 'uploaded_file.txt', 'study_id': 1})
+        self.assertEqual(response.code, 405)
 
 if __name__ == "__main__":
     main()

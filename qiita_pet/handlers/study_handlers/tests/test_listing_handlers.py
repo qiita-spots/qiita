@@ -22,9 +22,9 @@ from qiita_db.artifact import Artifact
 
 
 class TestHelpers(TestHandlerBase):
-    database = True
-
     def setUp(self):
+        super(TestHelpers, self).setUp()
+
         self.proc_data_exp = [{
             'pid': 4,
             'processed_date': '2012-10-02 17:30:00',
@@ -132,7 +132,6 @@ class TestHelpers(TestHandlerBase):
             'proc_data_info': self.proc_data_exp
         }
         self.exp = [self.single_exp]
-        super(TestHelpers, self).setUp()
 
     def test_get_shared_links_for_study(self):
         obs = _get_shared_links_for_study(Study(1))
@@ -175,34 +174,8 @@ class TestHelpers(TestHandlerBase):
                                            self.proc_data_exp[0]['samples'])
         self.assertItemsEqual(obs, self.proc_data_exp[0])
 
-    def test_build_study_info_new_study(self):
-        info = {
-            'timeseries_type_id': 1,
-            'lab_person_id': None,
-            'principal_investigator_id': 3,
-            'metadata_complete': False,
-            'mixs_compliant': True,
-            'study_description': 'desc',
-            'study_alias': 'alias',
-            'study_abstract': 'abstract'}
-        user = User('test@foo.bar')
-
-        Study.create(user, 'test_study_1', efo=[1], info=info)
-        obs = _build_study_info(user)
-        self.exp.append({
-            'study_id': 2,
-            'status': 'sandbox',
-            'study_abstract': 'abstract',
-            'metadata_complete': False,
-            'study_title': 'test_study_1',
-            'num_raw_data': 0,
-            'number_samples_collected': 0,
-            'shared': '',
-            'pmid': '',
-            'publication_doi': '',
-            'pi':
-                '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
-            'proc_data_info': []})
+    def test_build_study_info(self):
+        obs = _build_study_info(User('test@foo.bar'))
         self.assertEqual(obs, self.exp)
 
         with self.assertRaises(IncompetentQiitaDeveloperError):
@@ -279,8 +252,6 @@ class TestShareStudyAjax(TestHandlerBase):
 
 
 class TestSearchStudiesAJAX(TestHandlerBase):
-    database = True
-
     json = {
         'iTotalRecords': 1, 'sEcho': 1021, 'iTotalDisplayRecords': 1,
         'aaData': [{
