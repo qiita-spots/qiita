@@ -221,7 +221,7 @@ class JobTest(TestCase):
 
     def test_create_exists_return_existing(self):
         """Makes sure creation doesn't duplicate a job by returning existing"""
-        new_id = qdb.util.get_count("qiita.analysis") + 1
+        new_id = qdb.util.get_next_id("qiita.analysis")
         qdb.analysis.Analysis.create(qdb.user.User("demo@microbio.me"), "new",
                                      "desc")
         sql = """INSERT INTO qiita.analysis_sample
@@ -298,7 +298,7 @@ class JobTest(TestCase):
         self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):
-        fp_count = qdb.util.get_count('qiita.filepath')
+        fp_count = qdb.util.get_next_id('qiita.filepath')
         self.job.add_results([(join(self._job_folder, "1_job_result.txt"),
                              "plain_text")])
 
@@ -309,7 +309,7 @@ class JobTest(TestCase):
         self.assertEqual(obs, [[1, 13], [1, fp_count + 1]])
 
     def test_add_results_dir(self):
-        fp_count = qdb.util.get_count('qiita.filepath')
+        fp_count = qdb.util.get_next_id('qiita.filepath')
         # Create a test directory
         test_dir = join(self._job_folder, "2_test_folder")
 

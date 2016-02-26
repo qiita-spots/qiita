@@ -347,7 +347,7 @@ class TestStudy(TestCase):
     def test_create_study_min_data(self):
         """Insert a study into the database"""
         before = datetime.now()
-        new_id = qdb.util.get_count('qiita.study') + 1
+        new_id = qdb.util.get_next_id('qiita.study')
         obs = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), "Fried chicken microbiome", [1],
             self.info)
