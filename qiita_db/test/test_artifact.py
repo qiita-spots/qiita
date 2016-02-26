@@ -368,20 +368,6 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):
             qdb.artifact.Artifact.delete(test.id)
 
-    def test_delete(self):
-        test = qdb.artifact.Artifact.create(
-            self.filepaths_root, "FASTQ", prep_template=self.prep_template)
-
-        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
-                          str(test.study.id))
-        self._clean_up_files.extend(
-            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
-
-        qdb.artifact.Artifact.delete(test.id)
-
-        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.artifact.Artifact(test.id)
-
     def test_delete_with_jobs(self):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
@@ -410,12 +396,6 @@ class ArtifactTests(TestCase):
 
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.processing_job.ProcessingJob(job.id)
-
-    def test_name(self):
-        self.assertEqual(qdb.artifact.Artifact(1).name, "Raw data 1")
-        self.assertEqual(qdb.artifact.Artifact(2).name, "Demultiplexed 1")
-        self.assertEqual(qdb.artifact.Artifact(3).name, "Demultiplexed 2")
-        self.assertEqual(qdb.artifact.Artifact(4).name, "BIOM")
 
     def test_name_setter(self):
         a = qdb.artifact.Artifact(1)
@@ -462,9 +442,6 @@ class ArtifactTests(TestCase):
                          'min_per_read_length_fraction': 0.75,
                          'barcode_type': 'golay_12'})
         self.assertEqual(obs, exp)
-
-    def test_visibility(self):
-        self.assertEqual(qdb.artifact.Artifact(1).visibility, "private")
 
     def test_visibility_setter(self):
         a = qdb.artifact.Artifact.create(
@@ -604,16 +581,6 @@ class ArtifactTests(TestCase):
         self.assertFalse(a.is_submitted_to_vamps)
         a.is_submitted_to_vamps = True
         self.assertTrue(a.is_submitted_to_vamps)
-
-    def test_filepaths(self):
-        db_test_raw_dir = qdb.util.get_mountpoint('raw_data')[0][1]
-        path_builder = partial(join, db_test_raw_dir)
-        exp_fps = [
-            (1, path_builder('1_s_G1_L001_sequences.fastq.gz'),
-             "raw_forward_seqs"),
-            (2, path_builder('1_s_G1_L001_sequences_barcodes.fastq.gz'),
-             "raw_barcodes")]
-        self.assertEqual(qdb.artifact.Artifact(1).filepaths, exp_fps)
 
     def test_parents(self):
         self.assertEqual(qdb.artifact.Artifact(1).parents, [])

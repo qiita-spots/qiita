@@ -42,18 +42,10 @@ class DBUtilTests(TestCase):
         exp = '{"3":9,"opt1":"1","opt2":[2,"3"]}'
         self.assertEqual(qdb.util.params_dict_to_json(params_dict), exp)
 
-    def test_check_required_columns(self):
-        # Doesn't do anything if correct info passed, only errors if wrong info
-        qdb.util.check_required_columns(self.required, self.table)
-
     def test_check_required_columns_fail(self):
         self.required.remove('study_title')
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             qdb.util.check_required_columns(self.required, self.table)
-
-    def test_check_table_cols(self):
-        # Doesn't do anything if correct info passed, only errors if wrong info
-        qdb.util.check_table_cols(self.required, self.table)
 
     def test_check_table_cols_fail(self):
         self.required.append('BADTHINGNOINHERE')
@@ -72,12 +64,7 @@ class DBUtilTests(TestCase):
         # True cases
         self.assertTrue(qdb.util.exists_table("filepath"))
         self.assertTrue(qdb.util.exists_table("qiita_user"))
-        self.assertTrue(qdb.util.exists_table("analysis"))
-        self.assertTrue(qdb.util.exists_table("prep_1"))
-        self.assertTrue(qdb.util.exists_table("sample_1"))
         # False cases
-        self.assertFalse(qdb.util.exists_table("sample_2"))
-        self.assertFalse(qdb.util.exists_table("prep_2"))
         self.assertFalse(qdb.util.exists_table("foo_table"))
         self.assertFalse(qdb.util.exists_table("bar_table"))
 
@@ -127,21 +114,6 @@ class DBUtilTests(TestCase):
         """Tests that get_Filetypes fails with invalid argument"""
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             qdb.util.get_filepath_types(key='invalid')
-
-    def test_get_data_types(self):
-        """Tests that get_data_types works with valid arguments"""
-        obs = qdb.util.get_data_types()
-        exp = {'16S': 1, '18S': 2, 'ITS': 3, 'Proteomic': 4, 'Metabolomic': 5,
-               'Metagenomic': 6}
-        self.assertEqual(obs, exp)
-
-        obs = qdb.util.get_data_types(key='data_type_id')
-        exp = {v: k for k, v in exp.items()}
-        self.assertEqual(obs, exp)
-
-    def test_get_count(self):
-        """Checks that get_count retrieves proper count"""
-        self.assertEqual(qdb.util.get_count('qiita.study_person'), 3)
 
     def test_check_count(self):
         """Checks that check_count returns True and False appropriately"""
@@ -229,17 +201,6 @@ class DBUtilTests(TestCase):
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
 
-    def test_retrieve_filepaths(self):
-        obs = qdb.util.retrieve_filepaths('artifact_filepath',
-                                          'artifact_id', 1)
-        path_builder = partial(
-            join, qdb.util.get_db_files_base_dir(), "raw_data")
-        exp = [(1, path_builder("1_s_G1_L001_sequences.fastq.gz"),
-                "raw_forward_seqs"),
-               (2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
-                "raw_barcodes")]
-        self.assertEqual(obs, exp)
-
     def test_retrieve_filepaths_sort(self):
         obs = qdb.util.retrieve_filepaths(
             'artifact_filepath', 'artifact_id', 1, sort='descending')
@@ -320,9 +281,6 @@ class DBUtilTests(TestCase):
         for fp in fps:
             self.assertTrue(exists(fp))
 
-    def test_purge_filepaths(self):
-        self._common_purge_filpeaths_test()
-
     def test_purge_filepaths_null_cols(self):
         # For more details about the source of the issue that motivates this
         # test: http://www.depesz.com/2008/08/13/nulls-vs-not-in/
@@ -377,110 +335,9 @@ class DBUtilTests(TestCase):
 
             self.files_to_remove.append(new_fp)
 
-    def test_get_filepath_id(self):
-        _, base = qdb.util.get_mountpoint("raw_data")[0]
-        fp = join(base, '1_s_G1_L001_sequences.fastq.gz')
-        obs = qdb.util.get_filepath_id("raw_data", fp)
-        self.assertEqual(obs, 1)
-
     def test_get_filepath_id_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.util.get_filepath_id("raw_data", "Not_a_path")
-
-    def test_get_mountpoint(self):
-        exp = [(5, join(qdb.util.get_db_files_base_dir(), 'raw_data'))]
-        obs = qdb.util.get_mountpoint("raw_data")
-        self.assertEqual(obs, exp)
-
-        exp = [(1, join(qdb.util.get_db_files_base_dir(), 'analysis'))]
-        obs = qdb.util.get_mountpoint("analysis")
-        self.assertEqual(obs, exp)
-
-        exp = [(2, join(qdb.util.get_db_files_base_dir(), 'job'))]
-        obs = qdb.util.get_mountpoint("job")
-        self.assertEqual(obs, exp)
-
-        # inserting new ones so we can test that it retrieves these and
-        # doesn't alter other ones
-        self.conn_handler.execute(
-            "UPDATE qiita.data_directory SET active=false WHERE "
-            "data_directory_id=1")
-        count = qdb.util.get_count('qiita.data_directory')
-        sql = """INSERT INTO qiita.data_directory (data_type, mountpoint,
-                                                   subdirectory, active)
-                 VALUES ('analysis', 'analysis_tmp', true, true),
-                        ('raw_data', 'raw_data_tmp', true, false)"""
-        self.conn_handler.execute(sql)
-
-        # this should have been updated
-        exp = [(count + 1, join(qdb.util.get_db_files_base_dir(),
-                'analysis_tmp'))]
-        obs = qdb.util.get_mountpoint("analysis")
-        self.assertEqual(obs, exp)
-
-        # these 2 shouldn't
-        exp = [(5, join(qdb.util.get_db_files_base_dir(), 'raw_data'))]
-        obs = qdb.util.get_mountpoint("raw_data")
-        self.assertEqual(obs, exp)
-
-        exp = [(2, join(qdb.util.get_db_files_base_dir(), 'job'))]
-        obs = qdb.util.get_mountpoint("job")
-        self.assertEqual(obs, exp)
-
-        # testing multi returns
-        exp = [(5, join(qdb.util.get_db_files_base_dir(), 'raw_data')),
-               (count + 2, join(qdb.util.get_db_files_base_dir(),
-                'raw_data_tmp'))]
-        obs = qdb.util.get_mountpoint("raw_data", retrieve_all=True)
-        self.assertEqual(obs, exp)
-
-        # testing retrieve subdirectory
-        exp = [
-            (5, join(qdb.util.get_db_files_base_dir(), 'raw_data'), False),
-            (count + 2, join(qdb.util.get_db_files_base_dir(), 'raw_data_tmp'),
-             True)]
-        obs = qdb.util.get_mountpoint("raw_data", retrieve_all=True,
-                                      retrieve_subdir=True)
-        self.assertEqual(obs, exp)
-
-    def test_get_mountpoint_path_by_id(self):
-        exp = join(qdb.util.get_db_files_base_dir(), 'raw_data')
-        obs = qdb.util.get_mountpoint_path_by_id(5)
-        self.assertEqual(obs, exp)
-
-        exp = join(qdb.util.get_db_files_base_dir(), 'analysis')
-        obs = qdb.util.get_mountpoint_path_by_id(1)
-        self.assertEqual(obs, exp)
-
-        exp = join(qdb.util.get_db_files_base_dir(), 'job')
-        obs = qdb.util.get_mountpoint_path_by_id(2)
-        self.assertEqual(obs, exp)
-
-        # inserting new ones so we can test that it retrieves these and
-        # doesn't alter other ones
-        self.conn_handler.execute(
-            "UPDATE qiita.data_directory SET active=false WHERE "
-            "data_directory_id=1")
-        count = qdb.util.get_count('qiita.data_directory')
-        sql = """INSERT INTO qiita.data_directory (data_type, mountpoint,
-                                                   subdirectory, active)
-                 VALUES ('analysis', 'analysis_tmp', true, true),
-                        ('raw_data', 'raw_data_tmp', true, false)"""
-        self.conn_handler.execute(sql)
-
-        # this should have been updated
-        exp = join(qdb.util.get_db_files_base_dir(), 'analysis_tmp')
-        obs = qdb.util.get_mountpoint_path_by_id(count + 1)
-        self.assertEqual(obs, exp)
-
-        # these 2 shouldn't
-        exp = join(qdb.util.get_db_files_base_dir(), 'raw_data')
-        obs = qdb.util.get_mountpoint_path_by_id(5)
-        self.assertEqual(obs, exp)
-
-        exp = join(qdb.util.get_db_files_base_dir(), 'job')
-        obs = qdb.util.get_mountpoint_path_by_id(2)
-        self.assertEqual(obs, exp)
 
     def test_get_files_from_uploads_folders(self):
         # something has been uploaded and ignoring hidden files/folders
@@ -561,62 +418,6 @@ class DBUtilTests(TestCase):
                [8, 'mixed', 'single intervention'],
                [9, 'mixed', 'multiple intervention'],
                [10, 'mixed', 'combo intervention']]
-        self.assertEqual(obs, exp)
-
-    def test_filepath_id_to_rel_path(self):
-        obs = qdb.util.filepath_id_to_rel_path(1)
-        exp = 'raw_data/1_s_G1_L001_sequences.fastq.gz'
-        self.assertEqual(obs, exp)
-
-        obs = qdb.util.filepath_id_to_rel_path(3)
-        exp = 'preprocessed_data/1_seqs.fna'
-        self.assertEqual(obs, exp)
-
-        fd, fp = mkstemp()
-        close(fd)
-        with open(fp, 'w') as f:
-            f.write('\n')
-        self.files_to_remove.append(fp)
-        test = qdb.util.insert_filepaths(
-            [(fp, "raw_forward_seqs")], 1, "FASTQ", "filepath")[0]
-        with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.artifact_filepath
-                            (artifact_id, filepath_id)
-                        VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [1, test])
-            qdb.sql_connection.TRN.execute()
-
-        obs = qdb.util.filepath_id_to_rel_path(test)
-        exp = 'FASTQ/1/%s' % basename(fp)
-        self.assertEqual(obs, exp)
-
-    def test_filepath_ids_to_rel_paths(self):
-        fd, fp = mkstemp()
-        close(fd)
-        with open(fp, 'w') as f:
-            f.write('\n')
-        self.files_to_remove.append(fp)
-        test = qdb.util.insert_filepaths(
-            [(fp, "raw_forward_seqs")], 1, "FASTQ", "filepath")[0]
-        with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.artifact_filepath
-                            (artifact_id, filepath_id)
-                        VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [1, test])
-            qdb.sql_connection.TRN.execute()
-
-        obs = qdb.util.filepath_ids_to_rel_paths([1, 3, test])
-        exp = {1: 'raw_data/1_s_G1_L001_sequences.fastq.gz',
-               3: 'preprocessed_data/1_seqs.fna',
-               test: 'FASTQ/1/%s' % basename(fp)}
-
-        self.assertEqual(obs, exp)
-
-    def test_check_access_to_analysis_result(self):
-        obs = qdb.util.check_access_to_analysis_result('test@foo.bar',
-                                                       '1_job_result.txt')
-        exp = [13]
-
         self.assertEqual(obs, exp)
 
     def test_add_message(self):

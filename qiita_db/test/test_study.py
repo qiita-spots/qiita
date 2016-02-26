@@ -1,8 +1,6 @@
 from unittest import TestCase, main
 from datetime import datetime
 
-from future.utils import viewitems
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
@@ -60,18 +58,9 @@ class TestStudyPerson(TestCase):
         self.assertEqual(obs.name, 'LabDude')
         self.assertEqual(obs.email, 'lab_dude@foo.bar')
 
-    def test_retrieve_name(self):
-        self.assertEqual(self.studyperson.name, 'LabDude')
-
     def test_set_name_fail(self):
         with self.assertRaises(AttributeError):
             self.studyperson.name = 'Fail Dude'
-
-    def test_retrieve_email(self):
-        self.assertEqual(self.studyperson.email, 'lab_dude@foo.bar')
-
-    def test_retrieve_affiliation(self):
-        self.assertEqual(self.studyperson.affiliation, 'knight lab')
 
     def test_set_email_fail(self):
         with self.assertRaises(AttributeError):
@@ -81,9 +70,6 @@ class TestStudyPerson(TestCase):
         with self.assertRaises(AttributeError):
             self.studyperson.affiliation = 'squire lab'
 
-    def test_retrieve_address(self):
-        self.assertEqual(self.studyperson.address, '123 lab street')
-
     def test_retrieve_address_null(self):
         person = qdb.study.StudyPerson(2)
         self.assertEqual(person.address, None)
@@ -91,9 +77,6 @@ class TestStudyPerson(TestCase):
     def test_set_address(self):
         self.studyperson.address = '123 nonsense road'
         self.assertEqual(self.studyperson.address, '123 nonsense road')
-
-    def test_retrieve_phone(self):
-        self.assertEqual(self.studyperson.phone, '121-222-3333')
 
     def test_retrieve_phone_null(self):
         person = qdb.study.StudyPerson(3)
@@ -271,9 +254,6 @@ class TestStudy(TestCase):
         self._change_processed_data_status('public')
         self.assertFalse(
             self.study.has_access(qdb.user.User("demo@microbio.me"), True))
-
-    def test_owner(self):
-        self.assertEqual(self.study.owner, qdb.user.User("test@foo.bar"))
 
     def test_share(self):
         # Clear all sharing associations
@@ -501,10 +481,6 @@ class TestStudy(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.study.Study.delete(41)
 
-    def test_retrieve_title(self):
-        self.assertEqual(self.study.title, 'Identification of the Microbiomes'
-                         ' for Cannabis Soils')
-
     def test_set_title(self):
         new = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'),
@@ -512,9 +488,6 @@ class TestStudy(TestCase):
             self.info)
         new.title = "Cannabis soils"
         self.assertEqual(new.title, "Cannabis soils")
-
-    def test_get_efo(self):
-        self.assertEqual(self.study.efo, [1])
 
     def test_set_efo(self):
         """Set efo with list efo_id"""
@@ -561,14 +534,6 @@ class TestStudy(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             self.study.ebi_study_accession = 'EBI654321-BB'
 
-    def test_ebi_submission_status(self):
-        self.assertEqual(self.study.ebi_submission_status, 'submitted')
-        new = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'),
-            'NOT Identification of the Microbiomes for Cannabis Soils', [1],
-            self.info)
-        self.assertEqual(new.ebi_submission_status, 'not submitted')
-
     def test_ebi_submission_status_setter(self):
         new = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), 'Test', [1], self.info)
@@ -583,12 +548,6 @@ class TestStudy(TestCase):
 
         with self.assertRaises(ValueError):
             new.ebi_submission_status = "unknown"
-
-    def test_retrieve_info(self):
-        for key, val in viewitems(self.existingexp):
-            if isinstance(val, qdb.base.QiitaObject):
-                self.existingexp[key] = val.id
-        self.assertEqual(self.study.info, self.existingexp)
 
     def test_set_info(self):
         """Set info in a study"""
@@ -616,10 +575,6 @@ class TestStudy(TestCase):
 
         self.assertEqual(new.info, self.infoexp)
 
-    def test_set_info_public(self):
-        """Tests for fail if editing info of a public study"""
-        self.study.info = {"vamps_id": "12321312"}
-
     def test_set_info_public_error(self):
         """Tests for fail if trying to modify timeseries of a public study"""
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
@@ -642,17 +597,6 @@ class TestStudy(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             new.info = {}
 
-    def test_retrieve_status(self):
-        self.assertEqual(self.study.status, "private")
-
-    def test_retrieve_shared_with(self):
-        self.assertEqual(self.study.shared_with,
-                         [qdb.user.User('shared@foo.bar')])
-
-    def test_retrieve_publications(self):
-        exp = [['10.100/123456', '123456'], ['10.100/7891011', '7891011']]
-        self.assertEqual(self.study.publications, exp)
-
     def test_retrieve_publications_empty(self):
         new = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'),
@@ -672,24 +616,12 @@ class TestStudy(TestCase):
         with self.assertRaises(TypeError):
             self.study.publications = '123456'
 
-    def test_retrieve_investigation(self):
-        self.assertEqual(self.study.investigation,
-                         qdb.investigation.Investigation(1))
-
     def test_retrieve_investigation_empty(self):
         new = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'),
             'NOT Identification of the Microbiomes for Cannabis Soils', [1],
             self.info)
         self.assertEqual(new.investigation, None)
-
-    def test_retrieve_sample_template(self):
-        self.assertEqual(
-            self.study.sample_template,
-            qdb.metadata_template.sample_template.SampleTemplate(1))
-
-    def test_retrieve_data_types(self):
-        self.assertEqual(self.study.data_types, ['18S'])
 
     def test_retrieve_data_types_none(self):
         new = qdb.study.Study.create(
@@ -698,28 +630,12 @@ class TestStudy(TestCase):
             self.info)
         self.assertEqual(new.data_types, [])
 
-    def test_retrieve_artifacts(self):
-        exp = [qdb.artifact.Artifact(1),
-               qdb.artifact.Artifact(2),
-               qdb.artifact.Artifact(3),
-               qdb.artifact.Artifact(4),
-               qdb.artifact.Artifact(5),
-               qdb.artifact.Artifact(6)]
-        self.assertEqual(self.study.artifacts(), exp)
-        self.assertEqual(self.study.artifacts(dtype="16S"), [exp[-1]])
-        self.assertEqual(self.study.artifacts(dtype="18S"), exp[:-1])
-
     def test_retrieve_artifacts_none(self):
         new = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'),
             'NOT Identification of the Microbiomes for Cannabis Soils', [1],
             self.info)
         self.assertEqual(new.artifacts(), [])
-
-    def test_retrieve_prep_templates(self):
-        self.assertEqual(
-            self.study.prep_templates(),
-            [qdb.metadata_template.prep_template.PrepTemplate(1)])
 
     def test_retrieve_prep_templates_none(self):
         new = qdb.study.Study.create(
@@ -735,11 +651,6 @@ class TestStudy(TestCase):
                ['10.100/7891011', '7891011'],
                ['10.100/4544444', None]]
         self.assertEqual(self.study.publications, exp)
-
-    def test_environmental_packages(self):
-        obs = self.study.environmental_packages
-        exp = ['soil', 'plant-associated']
-        self.assertEqual(sorted(obs), sorted(exp))
 
     def test_environmental_packages_setter(self):
         new = qdb.study.Study.create(
