@@ -63,6 +63,20 @@ class CommandTests(TestCase):
                 self.software, "Split libraries",
                 "This is a command for testing", self.parameters)
 
+    def test_create(self):
+        obs = qdb.software.Command.create(
+            self.software, "Test Command", "This is a command for testing",
+            self.parameters)
+        self.assertEqual(obs.name, "Test Command")
+        self.assertEqual(obs.description, "This is a command for testing")
+        self.assertEqual(obs.parameters, self.parameters)
+        exp_required = {'req_param': 'string'}
+        self.assertEqual(obs.required_parameters, exp_required)
+        exp_optional = {
+            'opt_int_param': ['integer', '4'],
+            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
+        self.assertEqual(obs.optional_parameters, exp_optional)
+
     def test_software(self):
         self.assertEqual(qdb.software.Command(1).software,
                          qdb.software.Software(1))
@@ -114,9 +128,79 @@ class CommandTests(TestCase):
             'truncate_ambi_bases': ['bool', 'False']}
         self.assertEqual(qdb.software.Command(2).parameters, exp_params)
 
+    def test_required_parameters(self):
+        exp_params = {'input_data': 'artifact'}
+        self.assertEqual(qdb.software.Command(1).required_parameters,
+                         exp_params)
+        self.assertEqual(qdb.software.Command(2).required_parameters,
+                         exp_params)
+
+    def test_optional_parameters(self):
+        exp_params = {'barcode_type': ['string', 'golay_12'],
+                      'max_bad_run_length': ['integer', '3'],
+                      'max_barcode_errors': ['float', '1.5'],
+                      'min_per_read_length_fraction': ['float', '0.75'],
+                      'phred_quality_threshold': ['integer', '3'],
+                      'rev_comp': ['bool', 'False'],
+                      'rev_comp_barcode': ['bool', 'False'],
+                      'rev_comp_mapping_barcodes': ['bool', 'False'],
+                      'sequence_max_n': ['integer', '0']}
+        self.assertEqual(qdb.software.Command(1).optional_parameters,
+                         exp_params)
+        exp_params = exp_params = {
+            'barcode_type': ['string', 'golay_12'],
+            'disable_bc_correction': ['bool', 'False'],
+            'disable_primers': ['bool', 'False'],
+            'max_ambig': ['integer', '6'],
+            'max_barcode_errors': ['float', '1.5'],
+            'max_homopolymer': ['integer', '6'],
+            'max_primer_mismatch': ['integer', '0'],
+            'max_seq_len': ['integer', '1000'],
+            'min_qual_score': ['integer', '25'],
+            'min_seq_len': ['integer', '200'],
+            'qual_score_window': ['integer', '0'],
+            'reverse_primer_mismatches': ['integer', '0'],
+            'reverse_primers':
+                ['choice:["disable", "truncate_only", "truncate_remove"]',
+                 'disable'],
+            'trim_seq_length': ['bool', 'False'],
+            'truncate_ambi_bases': ['bool', 'False']}
+        self.assertEqual(qdb.software.Command(2).optional_parameters,
+                         exp_params)
+
+    def test_default_parameter_sets(self):
+        obs = list(qdb.software.Command(1).default_parameter_sets)
+        exp = [qdb.software.DefaultParameters(1),
+               qdb.software.DefaultParameters(2),
+               qdb.software.DefaultParameters(3),
+               qdb.software.DefaultParameters(4),
+               qdb.software.DefaultParameters(5),
+               qdb.software.DefaultParameters(6),
+               qdb.software.DefaultParameters(7)]
+        self.assertEqual(obs, exp)
+
+        obs = list(qdb.software.Command(2).default_parameter_sets)
+        exp = [qdb.software.DefaultParameters(8),
+               qdb.software.DefaultParameters(9)]
+        self.assertEqual(obs, exp)
+
 
 @qiita_test_checker()
 class SoftwareTests(TestCase):
+    def test_create(self):
+        obs = qdb.software.Software.create(
+            "New Software", "0.1.0",
+            "This is adding a new software for testing", "env_name",
+            "start_plugin")
+        self.assertEqual(obs.name, "New Software")
+        self.assertEqual(obs.version, "0.1.0")
+        self.assertEqual(obs.description,
+                         "This is adding a new software for testing")
+        self.assertEqual(obs.commands, [])
+        self.assertEqual(obs.publications, [])
+        self.assertEqual(obs.environment_script, 'env_name')
+        self.assertEqual(obs.start_script, 'start_plugin')
+
     def test_create_with_publications(self):
         exp_publications = [['10.1000/nmeth.f.101', '12345678']]
         obs = qdb.software.Software.create(
@@ -130,6 +214,27 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.publications, exp_publications)
         self.assertEqual(obs.environment_script, 'env_name')
         self.assertEqual(obs.start_script, 'start_plugin')
+
+    def test_name(self):
+        self.assertEqual(qdb.software.Software(1).name, "QIIME")
+
+    def test_version(self):
+        self.assertEqual(qdb.software.Software(1).version, "1.9.1")
+
+    def test_description(self):
+        exp = ("Quantitative Insights Into Microbial Ecology (QIIME) is an "
+               "open-source bioinformatics pipeline for performing microbiome "
+               "analysis from raw DNA sequencing data")
+        self.assertEqual(qdb.software.Software(1).description, exp)
+
+    def test_commands(self):
+        exp = [qdb.software.Command(1), qdb.software.Command(2),
+               qdb.software.Command(3)]
+        self.assertEqual(qdb.software.Software(1).commands, exp)
+
+    def test_publications(self):
+        self.assertEqual(qdb.software.Software(1).publications,
+                         [['10.1038/nmeth.f.303', '20383131']])
 
     def test_add_publications(self):
         tester = qdb.software.Software(1)
@@ -168,6 +273,24 @@ class DefaultParametersTests(TestCase):
             phred_quality_threshold=3, barcode_type="hamming_8",
             max_barcode_errors=1.5)
         self.assertFalse(obs)
+
+    def test_create(self):
+        cmd = qdb.software.Command(1)
+        obs = qdb.software.DefaultParameters.create(
+            "test_create", cmd, max_bad_run_length=3,
+            min_per_read_length_fraction=0.75, sequence_max_n=0,
+            rev_comp_barcode=False, rev_comp_mapping_barcodes=False,
+            rev_comp=False, phred_quality_threshold=3,
+            barcode_type="hamming_8", max_barcode_errors=1.5)
+        self.assertEqual(obs.name, "test_create")
+
+        exp = {'max_bad_run_length': 3, 'min_per_read_length_fraction': 0.75,
+               'sequence_max_n': 0, 'rev_comp_barcode': False,
+               'rev_comp_mapping_barcodes': False, 'rev_comp': False,
+               'phred_quality_threshold': 3, 'barcode_type': "hamming_8",
+               'max_barcode_errors': 1.5}
+        self.assertEqual(obs.values, exp)
+        self.assertEqual(obs.command, cmd)
 
     def test_name(self):
         self.assertEqual(qdb.software.DefaultParameters(1).name, "Defaults")
@@ -211,6 +334,24 @@ class ParametersTests(TestCase):
         b = qdb.software.Parameters.from_default_params(
             qdb.software.DefaultParameters(1), {'input_data': 1})
         self.assertTrue(a == b)
+
+    def test_load_json(self):
+        json_str = ('{"barcode_type": "golay_12", "input_data": 1, '
+                    '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
+                    '"min_per_read_length_fraction": 0.75, '
+                    '"phred_quality_threshold": 3, "rev_comp": false, '
+                    '"rev_comp_barcode": false, '
+                    '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
+        cmd = qdb.software.Command(1)
+        obs = qdb.software.Parameters.load(cmd, json_str=json_str)
+        exp_values = {
+            "barcode_type": "golay_12", "input_data": 1,
+            "max_bad_run_length": 3, "max_barcode_errors": 1.5,
+            "min_per_read_length_fraction": 0.75,
+            "phred_quality_threshold": 3, "rev_comp": False,
+            "rev_comp_barcode": False, "rev_comp_mapping_barcodes": False,
+            "sequence_max_n": 0}
+        self.assertEqual(obs.values, exp_values)
 
     def test_load_dictionary(self):
         exp_values = {
@@ -298,6 +439,22 @@ class ParametersTests(TestCase):
             qdb.software.Parameters.from_default_params(
                 qdb.software.DefaultParameters(1), {'input_data': 1},
                 opt_params={'Unknown': 'foo'})
+
+    def test_command(self):
+        obs = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1}).command
+        self.assertEqual(obs, qdb.software.Command(1))
+
+    def test_values(self):
+        obs = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1}).values
+        exp = {'min_per_read_length_fraction': 0.75,
+               'max_barcode_errors': 1.5, 'max_bad_run_length': 3,
+               'rev_comp': False, 'phred_quality_threshold': 3,
+               'rev_comp_barcode': False, 'sequence_max_n': 0,
+               'barcode_type': 'golay_12', 'rev_comp_mapping_barcodes': False,
+               'input_data': 1}
+        self.assertEqual(obs, exp)
 
     def test_dumps(self):
         obs = qdb.software.Parameters.from_default_params(

@@ -4,8 +4,11 @@ from os.path import exists
 from tempfile import mkstemp
 
 from psycopg2._psycopg import connection
+from psycopg2.extras import DictCursor
 from psycopg2 import connect
-from psycopg2.extensions import TRANSACTION_STATUS_IDLE
+from psycopg2.extensions import (ISOLATION_LEVEL_AUTOCOMMIT,
+                                 ISOLATION_LEVEL_READ_COMMITTED,
+                                 TRANSACTION_STATUS_IDLE)
 
 from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
@@ -34,6 +37,20 @@ class TestBase(TestCase):
             if exists(fp):
                 remove(fp)
 
+    def _populate_test_table(self):
+        """Aux function that populates the test table"""
+        sql = """INSERT INTO qiita.test_table
+                    (str_column, bool_column, int_column)
+                 VALUES (%s, %s, %s)"""
+        sql_args = [('test1', True, 1), ('test2', True, 2),
+                    ('test3', False, 3), ('test4', False, 4)]
+        with connect(user=qiita_config.user, password=qiita_config.password,
+                     host=qiita_config.host, port=qiita_config.port,
+                     database=qiita_config.database) as con:
+            with con.cursor() as cur:
+                cur.executemany(sql, sql_args)
+            con.commit()
+
     def _assert_sql_equal(self, exp):
         """Aux function for testing"""
         with connect(user=qiita_config.user, password=qiita_config.password,
@@ -45,6 +62,150 @@ class TestBase(TestCase):
             con.commit()
 
         self.assertEqual(obs, exp)
+
+
+class TestConnHandler(TestBase):
+    def test_init(self):
+        obs = qdb.sql_connection.SQLConnectionHandler()
+        self.assertEqual(obs.admin, 'no_admin')
+        self.assertEqual(obs.queues, {})
+        self.assertTrue(isinstance(obs._connection, connection))
+        self.assertEqual(self.conn_handler._user_conn.closed, 0)
+
+        # Let's close the connection and make sure that it gets reopened
+        obs.close()
+        obs = qdb.sql_connection.SQLConnectionHandler()
+        self.assertEqual(self.conn_handler._user_conn.closed, 0)
+
+    def test_init_admin_error(self):
+        with self.assertRaises(ValueError):
+            qdb.sql_connection.SQLConnectionHandler(admin='not a valid value')
+
+    def test_init_admin_with_database(self):
+        obs = qdb.sql_connection.SQLConnectionHandler(
+            admin='admin_with_database')
+        self.assertEqual(obs.admin, 'admin_with_database')
+        self.assertEqual(obs.queues, {})
+        self.assertTrue(isinstance(obs._connection, connection))
+        self.assertEqual(self.conn_handler._user_conn.closed, 0)
+
+    def test_init_admin_without_database(self):
+        obs = qdb.sql_connection.SQLConnectionHandler(
+            admin='admin_without_database')
+        self.assertEqual(obs.admin, 'admin_without_database')
+        self.assertEqual(obs.queues, {})
+        self.assertTrue(isinstance(obs._connection, connection))
+        self.assertEqual(self.conn_handler._user_conn.closed, 0)
+
+    def test_close(self):
+        self.assertEqual(self.conn_handler._user_conn.closed, 0)
+        self.conn_handler.close()
+        self.assertNotEqual(self.conn_handler._user_conn.closed, 0)
+
+    def test_get_postgres_cursor(self):
+        with self.conn_handler.get_postgres_cursor() as cur:
+            self.assertEqual(type(cur), DictCursor)
+
+    def test_autocommit(self):
+        self.assertFalse(self.conn_handler.autocommit)
+        self.conn_handler._connection.set_isolation_level(
+            ISOLATION_LEVEL_AUTOCOMMIT)
+        self.assertTrue(self.conn_handler.autocommit)
+        self.conn_handler._connection.set_isolation_level(
+            ISOLATION_LEVEL_READ_COMMITTED)
+        self.assertFalse(self.conn_handler.autocommit)
+
+    def test_autocommit_setter(self):
+        self.assertEqual(self.conn_handler._connection.isolation_level,
+                         ISOLATION_LEVEL_READ_COMMITTED)
+        self.conn_handler.autocommit = True
+        self.assertEqual(self.conn_handler._connection.isolation_level,
+                         ISOLATION_LEVEL_AUTOCOMMIT)
+        self.conn_handler.autocommit = False
+        self.assertEqual(self.conn_handler._connection.isolation_level,
+                         ISOLATION_LEVEL_READ_COMMITTED)
+
+    def test_autocommit_setter_error(self):
+        with self.assertRaises(TypeError):
+            self.conn_handler.autocommit = 'not a valid value'
+
+    def test_check_sql_args(self):
+        self.conn_handler._check_sql_args(['a', 'list'])
+        self.conn_handler._check_sql_args(('a', 'tuple'))
+        self.conn_handler._check_sql_args({'a': 'dict'})
+        self.conn_handler._check_sql_args(None)
+
+    def test_check_sql_args_error(self):
+        with self.assertRaises(TypeError):
+            self.conn_handler._check_sql_args("a string")
+
+        with self.assertRaises(TypeError):
+            self.conn_handler._check_sql_args(1)
+
+        with self.assertRaises(TypeError):
+            self.conn_handler._check_sql_args(1.2)
+
+    def test_sql_executor_no_sql_args(self):
+        sql = "INSERT INTO qiita.test_table (int_column) VALUES (1)"
+        with self.conn_handler._sql_executor(sql) as cur:
+            self.assertEqual(type(cur), DictCursor)
+
+        self._assert_sql_equal([('foo', True, 1)])
+
+    def test_sql_executor_with_sql_args(self):
+        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+        with self.conn_handler._sql_executor(sql, sql_args=(1,)) as cur:
+            self.assertEqual(type(cur), DictCursor)
+
+        self._assert_sql_equal([('foo', True, 1)])
+
+    def test_sql_executor_many(self):
+        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+        sql_args = [(1,), (2,)]
+        with self.conn_handler._sql_executor(sql, sql_args=sql_args,
+                                             many=True) as cur:
+            self.assertEqual(type(cur), DictCursor)
+
+        self._assert_sql_equal([('foo', True, 1), ('foo', True, 2)])
+
+    def test_execute_no_sql_args(self):
+        sql = "INSERT INTO qiita.test_table (int_column) VALUES (1)"
+        self.conn_handler.execute(sql)
+        self._assert_sql_equal([('foo', True, 1)])
+
+    def test_execute_with_sql_args(self):
+        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+        self.conn_handler.execute(sql, (1,))
+        self._assert_sql_equal([('foo', True, 1)])
+
+    def test_executemany(self):
+        sql = "INSERT INTO qiita.test_table (int_column) VALUES (%s)"
+        self.conn_handler.executemany(sql, [(1,), (2,)])
+        self._assert_sql_equal([('foo', True, 1), ('foo', True, 2)])
+
+    def test_execute_fetchone_no_sql_args(self):
+        self._populate_test_table()
+        sql = "SELECT str_column FROM qiita.test_table WHERE int_column = 1"
+        obs = self.conn_handler.execute_fetchone(sql)
+        self.assertEqual(obs, ['test1'])
+
+    def test_execute_fetchone_with_sql_args(self):
+        self._populate_test_table()
+        sql = "SELECT str_column FROM qiita.test_table WHERE int_column = %s"
+        obs = self.conn_handler.execute_fetchone(sql, (2,))
+        self.assertEqual(obs, ['test2'])
+
+    def test_execute_fetchall_no_sql_args(self):
+        self._populate_test_table()
+        sql = "SELECT * FROM qiita.test_table WHERE bool_column = False"
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(obs, [['test3', False, 3], ['test4', False, 4]])
+
+    def test_execute_fetchall_with_sql_args(self):
+        self._populate_test_table()
+        sql = "SELECT * FROM qiita.test_table WHERE bool_column = %s"
+        obs = self.conn_handler.execute_fetchall(sql, (True,))
+        self.assertEqual(obs, [['test1', True, 1], ['test2', True, 2]])
 
 
 class TestTransaction(TestBase):
