@@ -585,9 +585,6 @@ class TestStudy(TestCase):
         with self.assertRaises(ValueError):
             new.ebi_submission_status = "unknown"
 
-    def test_retrieve_info(self):
-        self.assertEqual(self.study.info, self.existingexp)
-
     def test_set_info(self):
         """Set info in a study"""
         newinfo = {

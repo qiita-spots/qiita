@@ -376,7 +376,7 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it has been submitted to VAMPS")
 
-            # Check if there is a job queued, running. waiting or
+            # Check if there is a job queued, running, waiting or
             # in_construction that will use/is using the artifact
             sql = """SELECT EXISTS(
                         SELECT *

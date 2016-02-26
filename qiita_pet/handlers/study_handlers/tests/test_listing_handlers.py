@@ -175,15 +175,6 @@ class TestHelpers(TestHandlerBase):
                                            self.proc_data_exp[0]['samples'])
         self.assertItemsEqual(obs, self.proc_data_exp[0])
 
-    def test_build_study_info(self):
-        obs = _build_study_info(User('test@foo.bar'))
-        self.assertEqual(obs, self.exp)
-
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            obs = _build_study_info(User('test@foo.bar'), study_proc={})
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            obs = _build_study_info(User('test@foo.bar'), proc_samples={})
-
     def test_build_study_info_new_study(self):
         info = {
             'timeseries_type_id': 1,
@@ -213,6 +204,11 @@ class TestHelpers(TestHandlerBase):
                 '<a target="_blank" href="mailto:PI_dude@foo.bar">PIDude</a>',
             'proc_data_info': []})
         self.assertEqual(obs, self.exp)
+
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            obs = _build_study_info(User('test@foo.bar'), study_proc={})
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            obs = _build_study_info(User('test@foo.bar'), proc_samples={})
 
 
 class TestListStudiesHandler(TestHandlerBase):
