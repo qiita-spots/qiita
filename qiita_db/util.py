@@ -960,6 +960,19 @@ def get_count(table):
         return qdb.sql_connection.TRN.execute_fetchlast()
 
 
+def get_next_id(table):
+    """Returns the next ID in the series for the table
+
+       Returns
+       int
+           The next ID that will be assigned in the table
+    """
+    with qdb.sql_connection.TRN:
+        sql = "SELECT nextval({0}_{0}_id_seq) FROM {0}".format(table)
+        qdb.sql_connection.TRN.add(sql)
+        return qdb.sql_connection.TRN.execute_fetchlast()
+
+
 def check_count(table, exp_count):
     """Checks that the number of rows in a table equals the expected count
 

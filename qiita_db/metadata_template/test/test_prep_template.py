@@ -861,7 +861,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
 
-        exp_id = qdb.util.get_count("qiita.prep_template") + 1
+        exp_id = qdb.util.get_next_id("qiita.prep_template")
 
         with self.assertRaises(ValueError):
             qdb.metadata_template.prep_template.PrepTemplate.create(
@@ -961,16 +961,16 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_create(self):
         """Creates a new PrepTemplate"""
-        fp_count = qdb.util.get_count('qiita.filepath')
-        new_id = qdb.util.get_count('qiita.prep_template') + 1
+        fp_count = qdb.util.get_next_id('qiita.filepath')
+        new_id = qdb.util.get_next_id('qiita.prep_template')
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
         self._common_creation_checks(new_id, pt, fp_count)
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
-        fp_count = qdb.util.get_count('qiita.filepath')
-        new_id = qdb.util.get_count('qiita.prep_template') + 1
+        fp_count = qdb.util.get_next_id('qiita.filepath')
+        new_id = qdb.util.get_next_id('qiita.prep_template')
         pt = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning,
             qdb.metadata_template.prep_template.PrepTemplate.create,
@@ -978,9 +978,9 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self._common_creation_checks(new_id, pt, fp_count)
 
     def test_generate_files(self):
-        fp_count = qdb.util.get_count("qiita.filepath")
+        fp_count = qdb.util.get_next_id("qiita.filepath")
         self.tester.generate_files()
-        obs = qdb.util.get_count("qiita.filepath")
+        obs = qdb.util.get_next_id("qiita.filepath")
         # We just make sure that the count has been increased by 2, since
         # the contents of the files have been tested elsewhere.
         self.assertEqual(obs, fp_count + 2)
@@ -1007,8 +1007,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
-        fp_count = qdb.util.get_count('qiita.filepath')
-        new_id = qdb.util.get_count('qiita.prep_template') + 1
+        fp_count = qdb.util.get_next_id('qiita.filepath')
+        new_id = qdb.util.get_next_id('qiita.prep_template')
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type_id)
         self._common_creation_checks(new_id, pt, fp_count)
@@ -1016,8 +1016,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
     def test_create_warning(self):
         """Warns if a required columns is missing for a given functionality
         """
-        fp_count = qdb.util.get_count("qiita.filepath")
-        new_id = qdb.util.get_count('qiita.prep_template') + 1
+        fp_count = qdb.util.get_next_id("qiita.filepath")
+        new_id = qdb.util.get_next_id('qiita.prep_template')
         del self.metadata['barcode']
         pt = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning,

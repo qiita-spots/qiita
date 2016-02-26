@@ -129,7 +129,7 @@ class TestAnalysis(TestCase):
     def test_create(self):
         sql = "SELECT EXTRACT(EPOCH FROM NOW())"
         time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
-        new_id = qdb.util.get_count("qiita.analysis") + 1
+        new_id = qdb.util.get_next_id("qiita.analysis")
         new = qdb.analysis.Analysis.create(
             qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis")
         self.assertEqual(new.id, new_id)
@@ -148,7 +148,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, [[new_id, 1]])
 
     def test_create_nonqiita_portal(self):
-        new_id = qdb.util.get_count("qiita.analysis") + 1
+        new_id = qdb.util.get_next_id("qiita.analysis")
         qiita_config.portal = "EMP"
         qdb.analysis.Analysis.create(
             qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis")
@@ -162,7 +162,7 @@ class TestAnalysis(TestCase):
     def test_create_parent(self):
         sql = "SELECT EXTRACT(EPOCH FROM NOW())"
         time1 = float(self.conn_handler.execute_fetchall(sql)[0][0])
-        new_id = qdb.util.get_count("qiita.analysis") + 1
+        new_id = qdb.util.get_next_id("qiita.analysis")
         new = qdb.analysis.Analysis.create(
             qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
             qdb.analysis.Analysis(1))
@@ -180,7 +180,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, [[1, new_id]])
 
     def test_create_from_default(self):
-        new_id = qdb.util.get_count("qiita.analysis") + 1
+        new_id = qdb.util.get_next_id("qiita.analysis")
         owner = qdb.user.User("test@foo.bar")
         new = qdb.analysis.Analysis.create(
             owner, "newAnalysis", "A New Analysis", from_default=True)
@@ -206,23 +206,23 @@ class TestAnalysis(TestCase):
     def test_exists(self):
         qiita_config.portal = 'QIITA'
         self.assertTrue(qdb.analysis.Analysis.exists(1))
-        new_id = qdb.util.get_count("qiita.analysis") + 1
+        new_id = qdb.util.get_next_id("qiita.analysis")
         self.assertFalse(qdb.analysis.Analysis.exists(new_id))
         qiita_config.portal = 'EMP'
         self.assertFalse(qdb.analysis.Analysis.exists(1))
-        new_id = qdb.util.get_count("qiita.analysis") + 1
+        new_id = qdb.util.get_next_id("qiita.analysis")
         self.assertFalse(qdb.analysis.Analysis.exists(new_id))
 
     def test_delete(self):
         # successful delete
-        total_analyses = qdb.util.get_count("qiita.analysis")
+        total_analyses = qdb.util.get_next_id("qiita.analysis")
         qdb.analysis.Analysis.delete(1)
         self.assertEqual(total_analyses - 1,
-                         qdb.util.get_count("qiita.analysis"))
+                         qdb.util.get_next_id("qiita.analysis"))
 
         # no possible to delete
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.analysis.Analysis.delete(total_analyses + 1)
+            qdb.analysis.Analysis.delete(total_analyses)
 
     def test_retrieve_owner(self):
         self.assertEqual(self.analysis.owner, qdb.user.User("test@foo.bar"))
@@ -379,7 +379,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(new.biom_tables, {})
 
     def test_set_step(self):
-        new_id = qdb.util.get_count("qiita.analysis") + 1
+        new_id = qdb.util.get_next_id("qiita.analysis")
         new = qdb.analysis.Analysis.create(
             qdb.user.User("admin@foo.bar"), "newAnalysis",
             "A New Analysis", qdb.analysis.Analysis(1))
@@ -389,7 +389,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, [[new_id, 2]])
 
     def test_set_step_twice(self):
-        new_id = qdb.util.get_count("qiita.analysis") + 1
+        new_id = qdb.util.get_next_id("qiita.analysis")
         new = qdb.analysis.Analysis.create(
             qdb.user.User("admin@foo.bar"), "newAnalysis", "A New Analysis",
             qdb.analysis.Analysis(1))
@@ -513,7 +513,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(self.analysis.shared_with, [])
 
     def test_build_mapping_file(self):
-        new_id = qdb.util.get_count('qiita.filepath') + 1
+        new_id = qdb.util.get_next_id('qiita.filepath')
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
 
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,
@@ -571,7 +571,7 @@ class TestAnalysis(TestCase):
         assert_frame_equal(obs, exp)
 
     def test_build_biom_tables(self):
-        new_id = qdb.util.get_count('qiita.filepath') + 1
+        new_id = qdb.util.get_next_id('qiita.filepath')
         samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
         self.analysis._build_biom_tables(samples, 100)
         obs = self.analysis.biom_tables
@@ -665,7 +665,7 @@ class TestAnalysis(TestCase):
             self.analysis.build_files(-10)
 
     def test_add_file(self):
-        new_id = qdb.util.get_count('qiita.filepath') + 1
+        new_id = qdb.util.get_next_id('qiita.filepath')
         fp = self.get_fp('testfile.txt')
         with open(fp, 'w') as f:
             f.write('testfile!')
