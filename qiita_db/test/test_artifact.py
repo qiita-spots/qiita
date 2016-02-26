@@ -22,6 +22,400 @@ from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 
 
+class ArtifactTestsReadOnly(TestCase):
+    def test_iter(self):
+        obs = list(qdb.artifact.Artifact.iter_by_visibility('public'))
+        self.assertEqual(obs, [])
+
+        obs = list(qdb.artifact.Artifact.iter_by_visibility('private'))
+        exp = [qdb.artifact.Artifact(1),
+               qdb.artifact.Artifact(2),
+               qdb.artifact.Artifact(3),
+               qdb.artifact.Artifact(4),
+               qdb.artifact.Artifact(5),
+               qdb.artifact.Artifact(6)]
+        self.assertEqual(obs, exp)
+
+    def test_iter_public(self):
+        obs = list(qdb.artifact.Artifact.iter_public())
+        exp = []
+        self.assertEqual(obs, exp)
+
+    def test_types(self):
+        obs = qdb.artifact.Artifact.types()
+        exp = [['BIOM', 'BIOM table'],
+               ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+               ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
+               ['SFF', None], ['per_sample_FASTQ', None]]
+        self.assertItemsEqual(obs, exp)
+
+    def test_name(self):
+        self.assertEqual(qdb.artifact.Artifact(1).name, "Raw data 1")
+        self.assertEqual(qdb.artifact.Artifact(2).name, "Demultiplexed 1")
+        self.assertEqual(qdb.artifact.Artifact(3).name, "Demultiplexed 2")
+        self.assertEqual(qdb.artifact.Artifact(4).name, "BIOM")
+
+    def test_timestamp(self):
+        self.assertEqual(qdb.artifact.Artifact(1).timestamp,
+                         datetime(2012, 10, 1, 9, 30, 27))
+        self.assertEqual(qdb.artifact.Artifact(2).timestamp,
+                         datetime(2012, 10, 1, 10, 30, 27))
+        self.assertEqual(qdb.artifact.Artifact(3).timestamp,
+                         datetime(2012, 10, 1, 11, 30, 27))
+        self.assertEqual(qdb.artifact.Artifact(4).timestamp,
+                         datetime(2012, 10, 2, 17, 30, 00))
+
+    def test_processing_parameters(self):
+        self.assertIsNone(qdb.artifact.Artifact(1).processing_parameters)
+        obs = qdb.artifact.Artifact(2).processing_parameters
+        exp = qdb.software.Parameters.load(
+            qdb.software.Command(1),
+            values_dict={'max_barcode_errors': 1.5, 'sequence_max_n': 0,
+                         'max_bad_run_length': 3, 'rev_comp': False,
+                         'phred_quality_threshold': 3, 'input_data': 1,
+                         'rev_comp_barcode': False,
+                         'rev_comp_mapping_barcodes': False,
+                         'min_per_read_length_fraction': 0.75,
+                         'barcode_type': 'golay_12'})
+        self.assertEqual(obs, exp)
+        obs = qdb.artifact.Artifact(3).processing_parameters
+        exp = qdb.software.Parameters.load(
+            qdb.software.Command(1),
+            values_dict={'max_barcode_errors': 1.5, 'sequence_max_n': 0,
+                         'max_bad_run_length': 3, 'rev_comp': False,
+                         'phred_quality_threshold': 3, 'input_data': 1,
+                         'rev_comp_barcode': False,
+                         'rev_comp_mapping_barcodes': True,
+                         'min_per_read_length_fraction': 0.75,
+                         'barcode_type': 'golay_12'})
+        self.assertEqual(obs, exp)
+
+    def test_visibility(self):
+        self.assertEqual(qdb.artifact.Artifact(1).visibility, "private")
+
+    def test_artifact_type(self):
+        self.assertEqual(qdb.artifact.Artifact(1).artifact_type, "FASTQ")
+        self.assertEqual(qdb.artifact.Artifact(2).artifact_type,
+                         "Demultiplexed")
+        self.assertEqual(qdb.artifact.Artifact(3).artifact_type,
+                         "Demultiplexed")
+        self.assertEqual(qdb.artifact.Artifact(4).artifact_type, "BIOM")
+
+    def test_data_type(self):
+        self.assertEqual(qdb.artifact.Artifact(1).data_type, "18S")
+        self.assertEqual(qdb.artifact.Artifact(2).data_type, "18S")
+        self.assertEqual(qdb.artifact.Artifact(3).data_type, "18S")
+        self.assertEqual(qdb.artifact.Artifact(4).data_type, "18S")
+
+    def test_can_be_submitted_to_ebi(self):
+        self.assertFalse(qdb.artifact.Artifact(1).can_be_submitted_to_ebi)
+        self.assertTrue(qdb.artifact.Artifact(2).can_be_submitted_to_ebi)
+        self.assertTrue(qdb.artifact.Artifact(3).can_be_submitted_to_ebi)
+        self.assertFalse(qdb.artifact.Artifact(4).can_be_submitted_to_ebi)
+
+    def test_is_submitted_to_ebi(self):
+        self.assertTrue(qdb.artifact.Artifact(2).is_submitted_to_ebi)
+        self.assertFalse(qdb.artifact.Artifact(3).is_submitted_to_ebi)
+
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            qdb.artifact.Artifact(1).is_submitted_to_ebi
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            qdb.artifact.Artifact(4).is_submitted_to_ebi
+
+    def test_ebi_run_accessions(self):
+        exp = {'1.SKB1.640202': 'ERR0000001',
+               '1.SKB2.640194': 'ERR0000002',
+               '1.SKB3.640195': 'ERR0000003',
+               '1.SKB4.640189': 'ERR0000004',
+               '1.SKB5.640181': 'ERR0000005',
+               '1.SKB6.640176': 'ERR0000006',
+               '1.SKB7.640196': 'ERR0000007',
+               '1.SKB8.640193': 'ERR0000008',
+               '1.SKB9.640200': 'ERR0000009',
+               '1.SKD1.640179': 'ERR0000010',
+               '1.SKD2.640178': 'ERR0000011',
+               '1.SKD3.640198': 'ERR0000012',
+               '1.SKD4.640185': 'ERR0000013',
+               '1.SKD5.640186': 'ERR0000014',
+               '1.SKD6.640190': 'ERR0000015',
+               '1.SKD7.640191': 'ERR0000016',
+               '1.SKD8.640184': 'ERR0000017',
+               '1.SKD9.640182': 'ERR0000018',
+               '1.SKM1.640183': 'ERR0000019',
+               '1.SKM2.640199': 'ERR0000020',
+               '1.SKM3.640197': 'ERR0000021',
+               '1.SKM4.640180': 'ERR0000022',
+               '1.SKM5.640177': 'ERR0000023',
+               '1.SKM6.640187': 'ERR0000024',
+               '1.SKM7.640188': 'ERR0000025',
+               '1.SKM8.640201': 'ERR0000026',
+               '1.SKM9.640192': 'ERR0000027'}
+        self.assertEqual(qdb.artifact.Artifact(2).ebi_run_accessions, exp)
+        self.assertEqual(qdb.artifact.Artifact(3).ebi_run_accessions, dict())
+
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            qdb.artifact.Artifact(1).ebi_run_accessions
+
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            qdb.artifact.Artifact(4).ebi_run_accessions
+
+    def test_can_be_submitted_to_vamps(self):
+        self.assertFalse(qdb.artifact.Artifact(1).can_be_submitted_to_vamps)
+        self.assertTrue(qdb.artifact.Artifact(2).can_be_submitted_to_vamps)
+        self.assertTrue(qdb.artifact.Artifact(3).can_be_submitted_to_vamps)
+        self.assertFalse(qdb.artifact.Artifact(4).can_be_submitted_to_vamps)
+
+    def test_is_submitted_to_vamps(self):
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            self.assertFalse(qdb.artifact.Artifact(1).is_submitted_to_vamps)
+        self.assertFalse(qdb.artifact.Artifact(2).is_submitted_to_vamps)
+        self.assertFalse(qdb.artifact.Artifact(3).is_submitted_to_vamps)
+        with self.assertRaises(
+                qdb.exceptions.QiitaDBOperationNotPermittedError):
+            self.assertFalse(qdb.artifact.Artifact(4).is_submitted_to_vamps)
+
+    def test_filepaths(self):
+        db_test_raw_dir = qdb.util.get_mountpoint('raw_data')[0][1]
+        path_builder = partial(join, db_test_raw_dir)
+        exp_fps = [
+            (1, path_builder('1_s_G1_L001_sequences.fastq.gz'),
+             "raw_forward_seqs"),
+            (2, path_builder('1_s_G1_L001_sequences_barcodes.fastq.gz'),
+             "raw_barcodes")]
+        self.assertEqual(qdb.artifact.Artifact(1).filepaths, exp_fps)
+
+    def test_parents(self):
+        self.assertEqual(qdb.artifact.Artifact(1).parents, [])
+
+        exp_parents = [qdb.artifact.Artifact(1)]
+        self.assertEqual(qdb.artifact.Artifact(2).parents, exp_parents)
+        self.assertEqual(qdb.artifact.Artifact(3).parents, exp_parents)
+
+        exp_parents = [qdb.artifact.Artifact(2)]
+        self.assertEqual(qdb.artifact.Artifact(4).parents, exp_parents)
+
+    def test_create_lineage_graph_from_edge_list_empty(self):
+        tester = qdb.artifact.Artifact(1)
+        obs = tester._create_lineage_graph_from_edge_list([])
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        self.assertEqual(obs.nodes(), [tester])
+        self.assertEqual(obs.edges(), [])
+
+    def test_create_lineage_graph_from_edge_list(self):
+        tester = qdb.artifact.Artifact(1)
+        obs = tester._create_lineage_graph_from_edge_list(
+            [(1, 2), (2, 4), (1, 3), (3, 4)])
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        exp = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
+               qdb.artifact.Artifact(3), qdb.artifact.Artifact(4)]
+        self.assertItemsEqual(obs.nodes(), exp)
+        exp = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
+               (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
+               (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
+               (qdb.artifact.Artifact(3), qdb.artifact.Artifact(4))]
+        self.assertItemsEqual(obs.edges(), exp)
+
+    def test_ancestors(self):
+        obs = qdb.artifact.Artifact(1).ancestors
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        self.assertEqual(obs_nodes, [qdb.artifact.Artifact(1)])
+        obs_edges = obs.edges()
+        self.assertEqual(obs_edges, [])
+
+        obs = qdb.artifact.Artifact(2).ancestors
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+        obs = qdb.artifact.Artifact(3).ancestors
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(3))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+        obs = qdb.artifact.Artifact(4).ancestors
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
+                     qdb.artifact.Artifact(4)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+    def test_descendants(self):
+        obs = qdb.artifact.Artifact(1).descendants
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
+                     qdb.artifact.Artifact(3), qdb.artifact.Artifact(4),
+                     qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
+                     (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+        obs = qdb.artifact.Artifact(2).descendants
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        exp_nodes = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(4),
+                     qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
+        self.assertItemsEqual(obs_nodes, exp_nodes)
+        obs_edges = obs.edges()
+        exp_edges = [(qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
+                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
+        self.assertItemsEqual(obs_edges, exp_edges)
+
+        obs = qdb.artifact.Artifact(3).descendants
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(3)])
+        obs_edges = obs.edges()
+        self.assertItemsEqual(obs_edges, [])
+
+        obs = qdb.artifact.Artifact(4).descendants
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(4)])
+        obs_edges = obs.edges()
+        self.assertItemsEqual(obs_edges, [])
+
+    def test_children(self):
+        exp = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)]
+        self.assertEqual(qdb.artifact.Artifact(1).children, exp)
+        exp = [qdb.artifact.Artifact(4), qdb.artifact.Artifact(5),
+               qdb.artifact.Artifact(6)]
+        self.assertEqual(qdb.artifact.Artifact(2).children, exp)
+        self.assertEqual(qdb.artifact.Artifact(3).children, [])
+        self.assertEqual(qdb.artifact.Artifact(4).children, [])
+
+    def test_youngest_artifact(self):
+        exp = qdb.artifact.Artifact(6)
+        self.assertEqual(qdb.artifact.Artifact(1).youngest_artifact, exp)
+        self.assertEqual(qdb.artifact.Artifact(2).youngest_artifact, exp)
+        self.assertEqual(qdb.artifact.Artifact(3).youngest_artifact,
+                         qdb.artifact.Artifact(3))
+        self.assertEqual(qdb.artifact.Artifact(6).youngest_artifact, exp)
+
+    def test_prep_templates(self):
+        self.assertEqual(
+            qdb.artifact.Artifact(1).prep_templates,
+            [qdb.metadata_template.prep_template.PrepTemplate(1)])
+        self.assertEqual(
+            qdb.artifact.Artifact(2).prep_templates,
+            [qdb.metadata_template.prep_template.PrepTemplate(1)])
+        self.assertEqual(
+            qdb.artifact.Artifact(3).prep_templates,
+            [qdb.metadata_template.prep_template.PrepTemplate(1)])
+        self.assertEqual(
+            qdb.artifact.Artifact(4).prep_templates,
+            [qdb.metadata_template.prep_template.PrepTemplate(1)])
+
+    def test_study(self):
+        self.assertEqual(qdb.artifact.Artifact(1).study, qdb.study.Study(1))
+
+    def test_jobs(self):
+        obs = qdb.artifact.Artifact(1).jobs()
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                '063e553b-327c-4818-ab4a-adfe58e49860'),
+            qdb.processing_job.ProcessingJob(
+                'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')
+            ]
+        self.assertEqual(obs, exp)
+
+    def test_jobs_cmd(self):
+        cmd = qdb.software.Command(1)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                '063e553b-327c-4818-ab4a-adfe58e49860'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')
+            ]
+        self.assertEqual(obs, exp)
+
+        cmd = qdb.software.Command(2)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
+        exp = [qdb.processing_job.ProcessingJob(
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')]
+        self.assertEqual(obs, exp)
+
+    def test_jobs_status(self):
+        obs = qdb.artifact.Artifact(1).jobs(status='success')
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')
+            ]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.artifact.Artifact(1).jobs(status='running')
+        exp = [qdb.processing_job.ProcessingJob(
+            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.artifact.Artifact(1).jobs(status='queued')
+        exp = [qdb.processing_job.ProcessingJob(
+            '063e553b-327c-4818-ab4a-adfe58e49860')]
+        self.assertEqual(obs, exp)
+
+    def test_jobs_cmd_and_status(self):
+        cmd = qdb.software.Command(1)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='success')
+        exp = [
+            qdb.processing_job.ProcessingJob(
+                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
+            qdb.processing_job.ProcessingJob(
+                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
+            qdb.processing_job.ProcessingJob(
+                'b72369f9-a886-4193-8d3d-f7b504168e75')
+            ]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')
+        exp = [qdb.processing_job.ProcessingJob(
+            '063e553b-327c-4818-ab4a-adfe58e49860')]
+        self.assertEqual(obs, exp)
+
+        cmd = qdb.software.Command(2)
+        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')
+        exp = []
+        self.assertEqual(obs, exp)
+
+
 @qiita_test_checker()
 class ArtifactTests(TestCase):
     def setUp(self):
@@ -80,44 +474,6 @@ class ArtifactTests(TestCase):
             if exists(f):
                 remove(f)
 
-    def test_iter(self):
-        obs = list(qdb.artifact.Artifact.iter_by_visibility('public'))
-        self.assertEqual(obs, [])
-
-        obs = list(qdb.artifact.Artifact.iter_by_visibility('private'))
-        exp = [qdb.artifact.Artifact(1),
-               qdb.artifact.Artifact(2),
-               qdb.artifact.Artifact(3),
-               qdb.artifact.Artifact(4),
-               qdb.artifact.Artifact(5),
-               qdb.artifact.Artifact(6)]
-        self.assertEqual(obs, exp)
-
-    def test_iter_public(self):
-        obs = list(qdb.artifact.Artifact.iter_public())
-        exp = []
-        self.assertEqual(obs, exp)
-
-        a4 = qdb.artifact.Artifact(4)
-        a4.visibility = 'public'
-        obs = list(qdb.artifact.Artifact.iter_public())
-        exp = [a4]
-        self.assertEqual(obs, exp)
-
-        a1 = qdb.artifact.Artifact(1)
-        a1.visibility = 'public'
-        obs = list(qdb.artifact.Artifact.iter_public())
-        exp = [a1, a4]
-        self.assertEqual(obs, exp)
-
-    def test_types(self):
-        obs = qdb.artifact.Artifact.types()
-        exp = [['BIOM', 'BIOM table'],
-               ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
-               ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
-               ['SFF', None], ['per_sample_FASTQ', None]]
-        self.assertItemsEqual(obs, exp)
-
     def test_copy(self):
         src = qdb.artifact.Artifact(1)
         # Create the files to the first artifact
@@ -154,28 +510,29 @@ class ArtifactTests(TestCase):
 
         self.assertEqual(obs.study, qdb.study.Study(1))
 
-    def test_create_error_no_filepaths(self):
+    def test_create_error(self):
+        # no filepaths
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactCreationError):
             qdb.artifact.Artifact.create(
                 [], "FASTQ", prep_template=self.prep_template)
 
-    def test_create_error_prep_template_and_parents(self):
+        # prep template and parents
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactCreationError):
             qdb.artifact.Artifact.create(
                 self.filepaths_root, "FASTQ", prep_template=self.prep_template,
                 parents=[qdb.artifact.Artifact(1)])
 
-    def test_create_error_no_prep_template_no_parents(self):
+        # no prep template no parents
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactCreationError):
             qdb.artifact.Artifact.create(self.filepaths_root, "FASTQ")
 
-    def test_create_error_parents_no_processing_parameters(self):
+        # parents no processing parameters
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactCreationError):
             qdb.artifact.Artifact.create(
                 self.filepaths_root, "FASTQ",
                 parents=[qdb.artifact.Artifact(1)])
 
-    def test_create_error_prep_template_and_processing_parameters(self):
+        # prep template and processing parameters
         parameters = qdb.software.Parameters.from_default_params(
             qdb.software.DefaultParameters(1), {'input_data': 1})
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactCreationError):
@@ -183,7 +540,7 @@ class ArtifactTests(TestCase):
                 self.filepaths_root, "FASTQ", prep_template=self.prep_template,
                 processing_parameters=parameters)
 
-    def test_create_error_different_data_types(self):
+        # different data types
         new = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
         parameters = qdb.software.Parameters.from_default_params(
@@ -436,60 +793,15 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(a_id)
 
-    def test_name(self):
-        self.assertEqual(qdb.artifact.Artifact(1).name, "Raw data 1")
-        self.assertEqual(qdb.artifact.Artifact(2).name, "Demultiplexed 1")
-        self.assertEqual(qdb.artifact.Artifact(3).name, "Demultiplexed 2")
-        self.assertEqual(qdb.artifact.Artifact(4).name, "BIOM")
-
     def test_name_setter(self):
         a = qdb.artifact.Artifact(1)
         self.assertEqual(a.name, "Raw data 1")
         a.name = "new name"
         self.assertEqual(a.name, "new name")
 
-    def test_name_setter_error(self):
         with self.assertRaises(ValueError):
             qdb.artifact.Artifact(1).name = (
                 "Some very large name to force the error to be raised")
-
-    def test_timestamp(self):
-        self.assertEqual(qdb.artifact.Artifact(1).timestamp,
-                         datetime(2012, 10, 1, 9, 30, 27))
-        self.assertEqual(qdb.artifact.Artifact(2).timestamp,
-                         datetime(2012, 10, 1, 10, 30, 27))
-        self.assertEqual(qdb.artifact.Artifact(3).timestamp,
-                         datetime(2012, 10, 1, 11, 30, 27))
-        self.assertEqual(qdb.artifact.Artifact(4).timestamp,
-                         datetime(2012, 10, 2, 17, 30, 00))
-
-    def test_processing_parameters(self):
-        self.assertIsNone(qdb.artifact.Artifact(1).processing_parameters)
-        obs = qdb.artifact.Artifact(2).processing_parameters
-        exp = qdb.software.Parameters.load(
-            qdb.software.Command(1),
-            values_dict={'max_barcode_errors': 1.5, 'sequence_max_n': 0,
-                         'max_bad_run_length': 3, 'rev_comp': False,
-                         'phred_quality_threshold': 3, 'input_data': 1,
-                         'rev_comp_barcode': False,
-                         'rev_comp_mapping_barcodes': False,
-                         'min_per_read_length_fraction': 0.75,
-                         'barcode_type': 'golay_12'})
-        self.assertEqual(obs, exp)
-        obs = qdb.artifact.Artifact(3).processing_parameters
-        exp = qdb.software.Parameters.load(
-            qdb.software.Command(1),
-            values_dict={'max_barcode_errors': 1.5, 'sequence_max_n': 0,
-                         'max_bad_run_length': 3, 'rev_comp': False,
-                         'phred_quality_threshold': 3, 'input_data': 1,
-                         'rev_comp_barcode': False,
-                         'rev_comp_mapping_barcodes': True,
-                         'min_per_read_length_fraction': 0.75,
-                         'barcode_type': 'golay_12'})
-        self.assertEqual(obs, exp)
-
-    def test_visibility(self):
-        self.assertEqual(qdb.artifact.Artifact(1).visibility, "private")
 
     def test_visibility_setter(self):
         a = qdb.artifact.Artifact.create(
@@ -501,78 +813,6 @@ class ArtifactTests(TestCase):
         self.assertEqual(a.visibility, "private")
         a.visibility = "public"
         self.assertEqual(a.visibility, "public")
-
-    def test_artifact_type(self):
-        self.assertEqual(qdb.artifact.Artifact(1).artifact_type, "FASTQ")
-        self.assertEqual(qdb.artifact.Artifact(2).artifact_type,
-                         "Demultiplexed")
-        self.assertEqual(qdb.artifact.Artifact(3).artifact_type,
-                         "Demultiplexed")
-        self.assertEqual(qdb.artifact.Artifact(4).artifact_type, "BIOM")
-
-    def test_data_type(self):
-        self.assertEqual(qdb.artifact.Artifact(1).data_type, "18S")
-        self.assertEqual(qdb.artifact.Artifact(2).data_type, "18S")
-        self.assertEqual(qdb.artifact.Artifact(3).data_type, "18S")
-        self.assertEqual(qdb.artifact.Artifact(4).data_type, "18S")
-
-    def test_can_be_submitted_to_ebi(self):
-        self.assertFalse(qdb.artifact.Artifact(1).can_be_submitted_to_ebi)
-        self.assertTrue(qdb.artifact.Artifact(2).can_be_submitted_to_ebi)
-        self.assertTrue(qdb.artifact.Artifact(3).can_be_submitted_to_ebi)
-        self.assertFalse(qdb.artifact.Artifact(4).can_be_submitted_to_ebi)
-
-    def test_is_submitted_to_ebi(self):
-        self.assertTrue(qdb.artifact.Artifact(2).is_submitted_to_ebi)
-        self.assertFalse(qdb.artifact.Artifact(3).is_submitted_to_ebi)
-
-    def test_is_submitted_to_ebi_error(self):
-        with self.assertRaises(
-                qdb.exceptions.QiitaDBOperationNotPermittedError):
-            qdb.artifact.Artifact(1).is_submitted_to_ebi
-        with self.assertRaises(
-                qdb.exceptions.QiitaDBOperationNotPermittedError):
-            qdb.artifact.Artifact(4).is_submitted_to_ebi
-
-    def test_ebi_run_accessions(self):
-        exp = {'1.SKB1.640202': 'ERR0000001',
-               '1.SKB2.640194': 'ERR0000002',
-               '1.SKB3.640195': 'ERR0000003',
-               '1.SKB4.640189': 'ERR0000004',
-               '1.SKB5.640181': 'ERR0000005',
-               '1.SKB6.640176': 'ERR0000006',
-               '1.SKB7.640196': 'ERR0000007',
-               '1.SKB8.640193': 'ERR0000008',
-               '1.SKB9.640200': 'ERR0000009',
-               '1.SKD1.640179': 'ERR0000010',
-               '1.SKD2.640178': 'ERR0000011',
-               '1.SKD3.640198': 'ERR0000012',
-               '1.SKD4.640185': 'ERR0000013',
-               '1.SKD5.640186': 'ERR0000014',
-               '1.SKD6.640190': 'ERR0000015',
-               '1.SKD7.640191': 'ERR0000016',
-               '1.SKD8.640184': 'ERR0000017',
-               '1.SKD9.640182': 'ERR0000018',
-               '1.SKM1.640183': 'ERR0000019',
-               '1.SKM2.640199': 'ERR0000020',
-               '1.SKM3.640197': 'ERR0000021',
-               '1.SKM4.640180': 'ERR0000022',
-               '1.SKM5.640177': 'ERR0000023',
-               '1.SKM6.640187': 'ERR0000024',
-               '1.SKM7.640188': 'ERR0000025',
-               '1.SKM8.640201': 'ERR0000026',
-               '1.SKM9.640192': 'ERR0000027'}
-        self.assertEqual(qdb.artifact.Artifact(2).ebi_run_accessions, exp)
-        self.assertEqual(qdb.artifact.Artifact(3).ebi_run_accessions, dict())
-
-    def test_ebi_run_accessions_error(self):
-        with self.assertRaises(
-                qdb.exceptions.QiitaDBOperationNotPermittedError):
-            qdb.artifact.Artifact(1).ebi_run_accessions
-
-        with self.assertRaises(
-                qdb.exceptions.QiitaDBOperationNotPermittedError):
-            qdb.artifact.Artifact(4).ebi_run_accessions
 
     def test_ebi_run_accessions_setter(self):
         a = qdb.artifact.Artifact(3)
@@ -608,263 +848,11 @@ class ArtifactTests(TestCase):
         a.ebi_run_accessions = new_vals
         self.assertEqual(a.ebi_run_accessions, new_vals)
 
-    def test_can_be_submitted_to_vamps(self):
-        self.assertFalse(qdb.artifact.Artifact(1).can_be_submitted_to_vamps)
-        self.assertTrue(qdb.artifact.Artifact(2).can_be_submitted_to_vamps)
-        self.assertTrue(qdb.artifact.Artifact(3).can_be_submitted_to_vamps)
-        self.assertFalse(qdb.artifact.Artifact(4).can_be_submitted_to_vamps)
-
-    def test_is_submitted_to_vamps(self):
-        with self.assertRaises(
-                qdb.exceptions.QiitaDBOperationNotPermittedError):
-            self.assertFalse(qdb.artifact.Artifact(1).is_submitted_to_vamps)
-        self.assertFalse(qdb.artifact.Artifact(2).is_submitted_to_vamps)
-        self.assertFalse(qdb.artifact.Artifact(3).is_submitted_to_vamps)
-        with self.assertRaises(
-                qdb.exceptions.QiitaDBOperationNotPermittedError):
-            self.assertFalse(qdb.artifact.Artifact(4).is_submitted_to_vamps)
-
     def test_is_submitted_to_vamps_setter(self):
         a = qdb.artifact.Artifact(2)
         self.assertFalse(a.is_submitted_to_vamps)
         a.is_submitted_to_vamps = True
         self.assertTrue(a.is_submitted_to_vamps)
-
-    def test_filepaths(self):
-        db_test_raw_dir = qdb.util.get_mountpoint('raw_data')[0][1]
-        path_builder = partial(join, db_test_raw_dir)
-        exp_fps = [
-            (1, path_builder('1_s_G1_L001_sequences.fastq.gz'),
-             "raw_forward_seqs"),
-            (2, path_builder('1_s_G1_L001_sequences_barcodes.fastq.gz'),
-             "raw_barcodes")]
-        self.assertEqual(qdb.artifact.Artifact(1).filepaths, exp_fps)
-
-    def test_parents(self):
-        self.assertEqual(qdb.artifact.Artifact(1).parents, [])
-
-        exp_parents = [qdb.artifact.Artifact(1)]
-        self.assertEqual(qdb.artifact.Artifact(2).parents, exp_parents)
-        self.assertEqual(qdb.artifact.Artifact(3).parents, exp_parents)
-
-        exp_parents = [qdb.artifact.Artifact(2)]
-        self.assertEqual(qdb.artifact.Artifact(4).parents, exp_parents)
-
-    def test_create_lineage_graph_from_edge_list_empty(self):
-        tester = qdb.artifact.Artifact(1)
-        obs = tester._create_lineage_graph_from_edge_list([])
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        self.assertEqual(obs.nodes(), [tester])
-        self.assertEqual(obs.edges(), [])
-
-    def test_create_lineage_graph_from_edge_list(self):
-        tester = qdb.artifact.Artifact(1)
-        obs = tester._create_lineage_graph_from_edge_list(
-            [(1, 2), (2, 4), (1, 3), (3, 4)])
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        exp = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
-               qdb.artifact.Artifact(3), qdb.artifact.Artifact(4)]
-        self.assertItemsEqual(obs.nodes(), exp)
-        exp = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
-               (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
-               (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
-               (qdb.artifact.Artifact(3), qdb.artifact.Artifact(4))]
-        self.assertItemsEqual(obs.edges(), exp)
-
-    def test_ancestors(self):
-        obs = qdb.artifact.Artifact(1).ancestors
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        obs_nodes = obs.nodes()
-        self.assertEqual(obs_nodes, [qdb.artifact.Artifact(1)])
-        obs_edges = obs.edges()
-        self.assertEqual(obs_edges, [])
-
-        obs = qdb.artifact.Artifact(2).ancestors
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        obs_nodes = obs.nodes()
-        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
-        obs_edges = obs.edges()
-        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2))]
-        self.assertItemsEqual(obs_edges, exp_edges)
-
-        obs = qdb.artifact.Artifact(3).ancestors
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        obs_nodes = obs.nodes()
-        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
-        obs_edges = obs.edges()
-        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(3))]
-        self.assertItemsEqual(obs_edges, exp_edges)
-
-        obs = qdb.artifact.Artifact(4).ancestors
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        obs_nodes = obs.nodes()
-        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
-                     qdb.artifact.Artifact(4)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
-        obs_edges = obs.edges()
-        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
-                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4))]
-        self.assertItemsEqual(obs_edges, exp_edges)
-
-    def test_descendants(self):
-        obs = qdb.artifact.Artifact(1).descendants
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        obs_nodes = obs.nodes()
-        exp_nodes = [qdb.artifact.Artifact(1), qdb.artifact.Artifact(2),
-                     qdb.artifact.Artifact(3), qdb.artifact.Artifact(4),
-                     qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
-        obs_edges = obs.edges()
-        exp_edges = [(qdb.artifact.Artifact(1), qdb.artifact.Artifact(2)),
-                     (qdb.artifact.Artifact(1), qdb.artifact.Artifact(3)),
-                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
-                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
-                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
-        self.assertItemsEqual(obs_edges, exp_edges)
-
-        obs = qdb.artifact.Artifact(2).descendants
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        obs_nodes = obs.nodes()
-        exp_nodes = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(4),
-                     qdb.artifact.Artifact(5), qdb.artifact.Artifact(6)]
-        self.assertItemsEqual(obs_nodes, exp_nodes)
-        obs_edges = obs.edges()
-        exp_edges = [(qdb.artifact.Artifact(2), qdb.artifact.Artifact(4)),
-                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(5)),
-                     (qdb.artifact.Artifact(2), qdb.artifact.Artifact(6))]
-        self.assertItemsEqual(obs_edges, exp_edges)
-
-        obs = qdb.artifact.Artifact(3).descendants
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        obs_nodes = obs.nodes()
-        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(3)])
-        obs_edges = obs.edges()
-        self.assertItemsEqual(obs_edges, [])
-
-        obs = qdb.artifact.Artifact(4).descendants
-        self.assertTrue(isinstance(obs, nx.DiGraph))
-        obs_nodes = obs.nodes()
-        self.assertItemsEqual(obs_nodes, [qdb.artifact.Artifact(4)])
-        obs_edges = obs.edges()
-        self.assertItemsEqual(obs_edges, [])
-
-    def test_children(self):
-        exp = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)]
-        self.assertEqual(qdb.artifact.Artifact(1).children, exp)
-        exp = [qdb.artifact.Artifact(4), qdb.artifact.Artifact(5),
-               qdb.artifact.Artifact(6)]
-        self.assertEqual(qdb.artifact.Artifact(2).children, exp)
-        self.assertEqual(qdb.artifact.Artifact(3).children, [])
-        self.assertEqual(qdb.artifact.Artifact(4).children, [])
-
-    def test_youngest_artifact(self):
-        exp = qdb.artifact.Artifact(6)
-        self.assertEqual(qdb.artifact.Artifact(1).youngest_artifact, exp)
-        self.assertEqual(qdb.artifact.Artifact(2).youngest_artifact, exp)
-        self.assertEqual(qdb.artifact.Artifact(3).youngest_artifact,
-                         qdb.artifact.Artifact(3))
-        self.assertEqual(qdb.artifact.Artifact(6).youngest_artifact, exp)
-
-    def test_prep_templates(self):
-        self.assertEqual(
-            qdb.artifact.Artifact(1).prep_templates,
-            [qdb.metadata_template.prep_template.PrepTemplate(1)])
-        self.assertEqual(
-            qdb.artifact.Artifact(2).prep_templates,
-            [qdb.metadata_template.prep_template.PrepTemplate(1)])
-        self.assertEqual(
-            qdb.artifact.Artifact(3).prep_templates,
-            [qdb.metadata_template.prep_template.PrepTemplate(1)])
-        self.assertEqual(
-            qdb.artifact.Artifact(4).prep_templates,
-            [qdb.metadata_template.prep_template.PrepTemplate(1)])
-
-    def test_study(self):
-        self.assertEqual(qdb.artifact.Artifact(1).study, qdb.study.Study(1))
-
-    def test_jobs(self):
-        obs = qdb.artifact.Artifact(1).jobs()
-        exp = [
-            qdb.processing_job.ProcessingJob(
-                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
-            qdb.processing_job.ProcessingJob(
-                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
-            qdb.processing_job.ProcessingJob(
-                '063e553b-327c-4818-ab4a-adfe58e49860'),
-            qdb.processing_job.ProcessingJob(
-                'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
-            qdb.processing_job.ProcessingJob(
-                'b72369f9-a886-4193-8d3d-f7b504168e75')
-            ]
-        self.assertEqual(obs, exp)
-
-    def test_jobs_cmd(self):
-        cmd = qdb.software.Command(1)
-        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
-        exp = [
-            qdb.processing_job.ProcessingJob(
-                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
-            qdb.processing_job.ProcessingJob(
-                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
-            qdb.processing_job.ProcessingJob(
-                '063e553b-327c-4818-ab4a-adfe58e49860'),
-            qdb.processing_job.ProcessingJob(
-                'b72369f9-a886-4193-8d3d-f7b504168e75')
-            ]
-        self.assertEqual(obs, exp)
-
-        cmd = qdb.software.Command(2)
-        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
-        exp = [qdb.processing_job.ProcessingJob(
-            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')]
-        self.assertEqual(obs, exp)
-
-    def test_jobs_status(self):
-        obs = qdb.artifact.Artifact(1).jobs(status='success')
-        exp = [
-            qdb.processing_job.ProcessingJob(
-                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
-            qdb.processing_job.ProcessingJob(
-                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
-            qdb.processing_job.ProcessingJob(
-                'b72369f9-a886-4193-8d3d-f7b504168e75')
-            ]
-        self.assertEqual(obs, exp)
-
-        obs = qdb.artifact.Artifact(1).jobs(status='running')
-        exp = [qdb.processing_job.ProcessingJob(
-            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')]
-        self.assertEqual(obs, exp)
-
-        obs = qdb.artifact.Artifact(1).jobs(status='queued')
-        exp = [qdb.processing_job.ProcessingJob(
-            '063e553b-327c-4818-ab4a-adfe58e49860')]
-        self.assertEqual(obs, exp)
-
-    def test_jobs_cmd_and_status(self):
-        cmd = qdb.software.Command(1)
-        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='success')
-        exp = [
-            qdb.processing_job.ProcessingJob(
-                '6d368e16-2242-4cf8-87b4-a5dc40bb890b'),
-            qdb.processing_job.ProcessingJob(
-                '4c7115e8-4c8e-424c-bf25-96c292ca1931'),
-            qdb.processing_job.ProcessingJob(
-                'b72369f9-a886-4193-8d3d-f7b504168e75')
-            ]
-        self.assertEqual(obs, exp)
-
-        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')
-        exp = [qdb.processing_job.ProcessingJob(
-            '063e553b-327c-4818-ab4a-adfe58e49860')]
-        self.assertEqual(obs, exp)
-
-        cmd = qdb.software.Command(2)
-        obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')
-        exp = []
-        self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
     main()
