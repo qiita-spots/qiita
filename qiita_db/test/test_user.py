@@ -74,11 +74,14 @@ class UserTest(TestCase):
             'user_verify_code': None
         }
 
+    def _check_pass(self, passwd):
+        obspass = self.conn_handler.execute_fetchone(
+            "SELECT password FROM qiita.qiita_user WHERE email = %s",
+            (self.user.id, ))[0]
+        self.assertEqual(qdb.util.hash_password(passwd, obspass), obspass)
+
     def tearDown(self):
         qiita_config.portal = self.portal
-
-    def test_instantiate_user(self):
-        qdb.user.User('admin@foo.bar')
 
     def test_instantiate_unknown_user(self):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
@@ -95,26 +98,6 @@ class UserTest(TestCase):
                 self.assertEqual(len(obs[key]), 60)
             else:
                 self.assertEqual(obs[key], exp[key])
-
-    def test_create_user(self):
-        user = qdb.user.User.create('new@test.bar', 'password')
-        self.assertEqual(user.id, 'new@test.bar')
-        sql = "SELECT * from qiita.qiita_user WHERE email = 'new@test.bar'"
-        obs = self.conn_handler.execute_fetchall(sql)
-        self.assertEqual(len(obs), 1)
-        obs = dict(obs[0])
-        exp = {
-            'password': '',
-            'name': None,
-            'pass_reset_timestamp': None,
-            'affiliation': None,
-            'pass_reset_code': None,
-            'phone': None,
-            'user_verify_code': '',
-            'address': None,
-            'user_level_id': 5,
-            'email': 'new@test.bar'}
-        self._check_correct_info(obs, exp)
 
     def test_create_user_info(self):
         user = qdb.user.User.create('new@test.bar', 'password', self.userinfo)
@@ -189,19 +172,6 @@ class UserTest(TestCase):
 
     def test_get_level(self):
         self.assertEqual(self.user.level, "admin")
-
-    def test_get_info(self):
-        expinfo = {
-            'name': 'Admin',
-            'affiliation': 'Owner University',
-            'address': '312 noname st, Apt K, Nonexistantown, CO 80302',
-            'phone': '222-444-6789',
-            'pass_reset_code': None,
-            'pass_reset_timestamp': None,
-            'user_verify_code': None,
-            'phone': '222-444-6789'
-        }
-        self.assertEqual(self.user.info, expinfo)
 
     def test_set_info(self):
         self.user.info = self.userinfo
@@ -311,12 +281,6 @@ class UserTest(TestCase):
         m_id = qdb.util.get_count('qiita.message')
         self.assertEqual(self.conn_handler.execute_fetchall(sql), [[m_id]])
 
-    def _check_pass(self, passwd):
-        obspass = self.conn_handler.execute_fetchone(
-            "SELECT password FROM qiita.qiita_user WHERE email = %s",
-            (self.user.id, ))[0]
-        self.assertEqual(qdb.util.hash_password(passwd, obspass), obspass)
-
     def test_change_pass(self):
         self.user._change_pass("newpassword")
         self._check_pass("newpassword")
@@ -361,34 +325,6 @@ class UserTest(TestCase):
         obsbool = self.user.change_forgot_password(code, "newpassword")
         self.assertEqual(obsbool, False)
         self._check_pass("password")
-
-    def test_messages(self):
-        qdb.util.add_system_message('SYS MESSAGE', datetime.now())
-        user = qdb.user.User('test@foo.bar')
-        obs = user.messages()
-        exp_msg = [
-            (4, 'SYS MESSAGE'),
-            (1, 'message 1'),
-            (2, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-                'Pellentesque sed auctor ex, non placerat sapien. Vestibulum '
-                'vestibulum massa ut sapien condimentum, cursus consequat diam'
-                ' sodales. Nulla aliquam arcu ut massa auctor, et vehicula '
-                'mauris tempor. In lacinia viverra ante quis pellentesque. '
-                'Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla'
-                ' ac nisi quis dui egestas malesuada vitae ut mauris. Morbi '
-                'blandit non nisl a finibus. In erat velit, congue at ipsum '
-                'sit amet, venenatis bibendum sem. Curabitur vel odio sed est '
-                'rutrum rutrum. Quisque efficitur ut purus in ultrices. '
-                'Pellentesque eu auctor justo.'),
-            (3, 'message <a href="#">3</a>')]
-        self.assertEqual([(x[0], x[1]) for x in obs], exp_msg)
-        self.assertTrue(all(x[2] < datetime.now() for x in obs))
-        self.assertFalse(all(x[3] for x in obs))
-        self.assertEqual([x[4] for x in obs], [True, False, False, False])
-
-        obs = user.messages(1)
-        exp_msg = ['SYS MESSAGE']
-        self.assertEqual([x[1] for x in obs], exp_msg)
 
     def test_mark_messages(self):
         user = qdb.user.User('test@foo.bar')
