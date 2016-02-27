@@ -21,6 +21,53 @@ from qiita_pet.handlers.api_proxy import (
     sample_template_meta_cats_get_req, sample_template_category_get_req)
 
 
+def _build_sample_summary(study_id, user_id):
+    """Builds the initial table of samples associated with prep templates
+
+    Parameters
+    ----------
+    study_id : int
+        Study to get samples from
+    user_id : str
+        User requesting the information
+
+    Returns
+    -------
+    columns : list of dict
+        SlickGrid formatted list of columns
+    samples_table : list of dict
+        SlickGrid formatted table information
+    """
+    # Load all samples available into dictionary and set
+    samps_table = {s: {'sample': s} for s in
+                   sample_template_samples_get_req(
+        study_id, user_id)['samples']}
+    all_samps = set(samps_table.keys())
+    columns = [{"id": "sample", "name": "Sample", "field": "sample",
+                "width": 240, "sortable": True}]
+    # Add one column per prep template highlighting what samples exist
+    preps = study_prep_get_req(study_id, user_id)["info"]
+    for dt in preps:
+        for prep in preps[dt]:
+            col_field = "prep%d" % prep["id"]
+            col_name = "%s - %d" % (prep["name"], prep["id"])
+            columns.append({"id": col_field,
+                            "name": col_name,
+                            "field": col_field,
+                            "sortable": True,
+                            "width": 240})
+
+            prep_samples = prep_template_samples_get_req(
+                prep['id'], user_id)['samples']
+            # Empty cell for samples not in the prep template
+            for s in all_samps.difference(prep_samples):
+                samps_table[s][col_field] = ""
+            # X in cell for samples in the prep template
+            for s in all_samps.intersection(prep_samples):
+                samps_table[s][col_field] = "X"
+    return columns, samps_table.values()
+
+
 class SampleTemplateAJAX(BaseHandler):
     @authenticated
     def get(self):
@@ -69,53 +116,6 @@ class SampleTemplateAJAX(BaseHandler):
             raise HTTPError(400, 'Unknown sample information action: %s'
                             % action)
         self.write(result)
-
-
-def _build_sample_summary(study_id, user_id):
-    """Builds the initial table of samples associated with prep templates
-
-    Parameters
-    ----------
-    study_id : int
-        Study to get samples from
-    user_id : str
-        User requesting the information
-
-    Returns
-    -------
-    columns : list of dict
-        SlickGrid formatted list of columns
-    samples_table : list of dict
-        SlickGrid formatted table information
-    """
-    # Load all samples available into dictionary and set
-    samps_table = {s: {'sample': s} for s in
-                   sample_template_samples_get_req(
-        study_id, user_id)['samples']}
-    all_samps = set(samps_table.keys())
-    columns = [{"id": "sample", "name": "Sample", "field": "sample",
-                "width": 240, "sortable": True}]
-    # Add one column per prep template highlighting what samples exist
-    preps = study_prep_get_req(study_id, user_id)["info"]
-    for dt in preps:
-        for prep in preps[dt]:
-            col_field = "prep%d" % prep["id"]
-            col_name = "%s - %d" % (prep["name"], prep["id"])
-            columns.append({"id": col_field,
-                            "name": col_name,
-                            "field": col_field,
-                            "sortable": True,
-                            "width": 240})
-
-            prep_samples = prep_template_samples_get_req(
-                prep['id'], user_id)['samples']
-            # Empty cell for samples not in the prep template
-            for s in all_samps.difference(prep_samples):
-                samps_table[s][col_field] = ""
-            # X in cell for samples in the prep template
-            for s in all_samps.intersection(prep_samples):
-                samps_table[s][col_field] = "X"
-    return columns, samps_table.values()
 
 
 class SampleAJAX(BaseHandler):

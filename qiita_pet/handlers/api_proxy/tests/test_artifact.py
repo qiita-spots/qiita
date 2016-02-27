@@ -11,6 +11,7 @@ from os import remove
 from datetime import datetime
 
 import pandas as pd
+import numpy.testing as npt
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
@@ -18,7 +19,7 @@ from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
 from qiita_db.util import get_count, get_mountpoint
-from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
     artifact_delete_req, artifact_types_get_req, artifact_post_req)
@@ -26,6 +27,8 @@ from qiita_pet.handlers.api_proxy.artifact import (
 
 @qiita_test_checker()
 class TestArtifactAPI(TestCase):
+    database = True
+
     def setUp(self):
         uploads_path = get_mountpoint('uploads')[0][1]
         # Create prep test file to point at
@@ -97,8 +100,9 @@ class TestArtifactAPI(TestCase):
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to
         new_prep_id = get_count('qiita.prep_template') + 1
-        PrepTemplate.create(pd.DataFrame(
-            {'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
+        npt.assert_warns(
+            QiitaDBWarning, PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
 
         new_artifact_id = get_count('qiita.artifact') + 1
         obs = artifact_post_req(
@@ -115,8 +119,9 @@ class TestArtifactAPI(TestCase):
     def test_artifact_post_req_bad_file(self):
         # Create new prep template to attach artifact to
         new_prep_id = get_count('qiita.prep_template') + 1
-        PrepTemplate.create(pd.DataFrame(
-            {'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
+        npt.assert_warns(
+            QiitaDBWarning, PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
 
         obs = artifact_post_req(
             'test@foo.bar', {'raw_forward_seqs': ['NOEXIST']},
@@ -170,9 +175,10 @@ class TestArtifactAPI(TestCase):
                'node_labels': [(1, 'Raw data 1 - FASTQ'),
                                (3, 'Demultiplexed 2 - Demultiplexed'),
                                (2, 'Demultiplexed 1 - Demultiplexed'),
-                               (4, 'BIOM - BIOM')],
-               'edge_list': [(1, 3), (1, 2), (2, 4)]}
-        self.assertEqual(obs, exp)
+                               (4, 'BIOM - BIOM'),
+                               (5, 'BIOM - BIOM')],
+               'edge_list': [(1, 3), (1, 2), (2, 5), (2, 4)]}
+        self.assertItemsEqual(obs, exp)
 
     def test_artifact_graph_get_req_no_access(self):
         obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')
@@ -191,7 +197,10 @@ class TestArtifactAPI(TestCase):
                          ['FASTQ', None],
                          ['SFF', None],
                          ['per_sample_FASTQ', None]]}
-        self.assertEqual(obs, exp)
+
+        self.assertEqual(obs['message'], exp['message'])
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertItemsEqual(obs['types'], exp['types'])
 
     def test_artifact_graph_get_req_bad_direction(self):
         obs = artifact_graph_get_req(1, 'WRONG', 'test@foo.bar')

@@ -177,7 +177,7 @@ class CompleteHandlerTests(OauthTestingBase):
         self.assertEqual(loads(obs.body), exp)
 
     def test_post_job_not_running(self):
-        payload = dumps({'success': False, 'error': 'Job failure'})
+        payload = dumps({'success': True, 'artifacts': []})
         obs = self.post(
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/complete/',
             payload, headers=self.header)

@@ -116,7 +116,7 @@ class ArtifactTests(TestCase):
                ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None]]
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
     def test_copy(self):
         src = qdb.artifact.Artifact(1)
@@ -336,7 +336,7 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):
             qdb.artifact.Artifact.delete(obs.id)
 
-    def test_delete_error_queued_job(self):
+    def test_delete_error_in_construction_job(self):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, 'FASTQ', prep_template=self.prep_template)
         self._clean_up_files.extend([fp for _, fp, _ in test.filepaths])

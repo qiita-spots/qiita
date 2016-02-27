@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
-from os import remove
+from os import remove, mkdir
 from os.path import join, exists
 
 from qiita_core.util import qiita_test_checker
@@ -40,9 +40,11 @@ class TestSampleAPI(TestCase):
             qdb.user.User('test@foo.bar'), "Some New Study", [1],
             info)
 
-        base_dir = qdb.util.get_mountpoint('uploads')[0][1]
-        self.new_study_fp = join(base_dir, str(self.new_study.id),
-                                 'uploaded_file.txt')
+        base_dir = join(qdb.util.get_mountpoint('uploads')[0][1],
+                        str(self.new_study.id))
+        if not exists(base_dir):
+            mkdir(base_dir)
+        self.new_study_fp = join(base_dir, 'uploaded_file.txt')
         if not exists(self.new_study_fp):
             with open(self.new_study_fp, 'w') as f:
                 f.write('')
@@ -356,7 +358,7 @@ class TestSampleAPI(TestCase):
         obs = sample_template_filepaths_get_req(1, 'test@foo.bar')
         exp = {'status': 'success',
                'message': '',
-               'filepaths': [(14, join(templates_dir,
+               'filepaths': [(17, join(templates_dir,
                               '1_19700101-000000.txt'))]}
         self.assertEqual(obs, exp)
 
