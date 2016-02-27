@@ -275,23 +275,22 @@ class TestPrepAPI(TestCase):
                                      '16S')
         exp = {'status': 'warning',
                'message': 'Sample names were already prefixed with the study '
-                          'id.; Some functionality will be disabled due to '
+                          'id.\nSome functionality will be disabled due to '
                           'missing columns:\n\tDemultiplexing with multiple '
                           'input files disabled. If your raw data includes '
                           'multiple raw input files, you will not be able to '
-                          'preprocess your raw data: primer, run_prefix, '
-                          'barcode;\n\tDemultiplexing disabled. You will not '
-                          'be able to preprocess your raw data: primer, '
-                          'barcode;\n\tEBI submission disabled: center_name, '
-                          'instrument_model, platform, '
-                          'library_construction_protocol, '
-                          'experiment_design_description, primer.\nSee the '
-                          'Templates tutorial for a description of these '
-                          'fields.; Some columns required to generate a '
+                          'preprocess your raw data: barcode, primer, '
+                          'run_prefix;\n\tDemultiplexing disabled. You will '
+                          'not be able to preprocess your raw data: barcode, '
+                          'primer;\n\tEBI submission disabled: center_name, '
+                          'experiment_design_description, instrument_model, '
+                          'library_construction_protocol, platform, primer.'
+                          '\nSee the Templates tutorial for a description of '
+                          'these fields.\nSome columns required to generate a '
                           'QIIME-compliant mapping file are not present in the'
                           ' template. A placeholder value (XXQIITAXX) has been'
                           ' used to populate these columns. Missing columns: '
-                          'LinkerPrimerSequence, BarcodeSequence',
+                          'BarcodeSequence, LinkerPrimerSequence',
                'file': 'update.txt',
                'id': new_id}
         self.assertItemsEqual(obs['message'].split('\n'),

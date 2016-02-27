@@ -563,7 +563,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             if missing:
                 warning_msg.append(
-                    "%s: %s" % (restriction.error_msg, ', '.join(missing)))
+                    "%s: %s" % (restriction.error_msg,
+                                ', '.join(sorted(missing))))
 
         if warning_msg:
             warnings.warn(
@@ -712,7 +713,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             if new_cols:
                 warnings.warn(
                     "The following columns have been added to the existing"
-                    " template: %s" % ", ".join(new_cols),
+                    " template: %s" % ", ".join(sorted(new_cols)),
                     qdb.exceptions.QiitaDBWarning)
                 # If we are adding new columns, add them first (simplifies
                 # code). Sorting the new columns to enforce an order
