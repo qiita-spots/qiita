@@ -59,6 +59,7 @@
       $(ft+'-div').removeClass('highlight');
       $("#"+ft).val(files);
     }
+    return true;
   }
 
   $(document).ready(function () {
@@ -148,7 +149,7 @@
           <option value="{{o}}">{{o}}</option>
         {% end %}
         </select></p>
-        <p id="user-ena-info"> User defined investigation type: 
+        <p id="user-ena-info"> User defined investigation type:
         <select id="user-ontology" name="user-ontology" value="user-ontology">
         <option value=""></option>
         {% for o in ontology['User'] %}
@@ -156,7 +157,7 @@
         {% end %}
         <option value="New Type">New Type</option>
         </select></p>
-        <p id="new-ena-info">New user defined term: 
+        <p id="new-ena-info">New user defined term:
         <input type="textbox" id="new-ontology" name="new-ontology"></p>
     </div>
     <div class="col-md-3">
@@ -184,7 +185,7 @@
   </div>
   <div class="row" id="submit-div" hidden>
     <div class="col-md-12">
-      <button class="btn btn-sm btn-danger" onclick="fill_new_prep(); return false;">Reset</button> <input type="submit" class="btn btn-sm btn-success" value="Create New Preperation">
+      <button class="btn btn-sm btn-danger" onclick="fill_new_prep(); return false;">Reset</button> <input type="submit" class="btn btn-sm btn-success" value="Create New Preparation">
     </div>
   </div>
 </form>
