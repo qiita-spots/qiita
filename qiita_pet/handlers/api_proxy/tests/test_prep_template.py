@@ -14,12 +14,11 @@ from random import choice
 import pandas as pd
 import numpy.testing as npt
 
-from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology
 from qiita_db.study import Study
-from qiita_db.util import get_count
+from qiita_db.util import get_count, get_mountpoint
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
@@ -119,10 +118,10 @@ class TestPrepAPIReadOnly(TestCase):
         exp = {'status': 'success',
                'message': '',
                'filepaths': [
-                   (15, join(qiita_config.base_data_dir,
-                             'templates/1_prep_1_19700101-000000.txt')),
-                   (16, join(qiita_config.base_data_dir,
-                             'templates/1_prep_1_qiime_19700101-000000.txt'))]}
+                   (15, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_19700101-000000.txt')),
+                   (16, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_qiime_19700101-000000.txt'))]}
         self.assertItemsEqual(obs, exp)
 
     def test_prep_template_filepaths_get_req_no_access(self):
@@ -224,7 +223,7 @@ class TestPrepAPIReadOnly(TestCase):
 class TestPrepAPI(TestCase):
     def setUp(self):
         # Create test file to point update tests at
-        self.update_fp = join(qiita_config.base_data_dir, 'uploads', '1',
+        self.update_fp = join(get_mountpoint("uploads")[0][1], '1',
                               'update.txt')
         with open(self.update_fp, 'w') as f:
             f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
@@ -232,8 +231,7 @@ class TestPrepAPI(TestCase):
     def tear_down(self):
         remove(self.update_fp)
 
-        fp = join(qiita_config.base_data_dir, 'uploads', '1',
-                  'uploaded_file.txt')
+        fp = join(get_mountpoint("uploads")[0][1], '1', 'uploaded_file.txt')
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')

@@ -13,7 +13,6 @@ from datetime import datetime
 import pandas as pd
 import numpy.testing as npt
 
-from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -47,9 +46,9 @@ class TestArtifactAPIReadOnly(TestCase):
                'is_submitted_vamps': False,
                'parents': [],
                'filepaths': [
-                   (1, join(qiita_config.base_data_dir, 'raw_data',
+                   (1, join(get_mountpoint('raw_data')[0][1],
                     '1_s_G1_L001_sequences.fastq.gz'), 'raw_forward_seqs'),
-                   (2,  join(qiita_config.base_data_dir, 'raw_data',
+                   (2,  join(get_mountpoint('raw_data')[0][1],
                     '1_s_G1_L001_sequences_barcodes.fastq.gz'),
                     'raw_barcodes')]
                }
