@@ -25,51 +25,9 @@ from qiita_pet.handlers.api_proxy.artifact import (
     artifact_delete_req, artifact_types_get_req, artifact_post_req)
 
 
-@qiita_test_checker()
-class TestArtifactAPI(TestCase):
-    database = True
-
-    def setUp(self):
-        uploads_path = get_mountpoint('uploads')[0][1]
-        # Create prep test file to point at
-        self.update_fp = join(uploads_path, '1', 'update.txt')
-        with open(self.update_fp, 'w') as f:
-            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
-
-    def tearDown(self):
-        Artifact(1).visibility = 'private'
-        if exists(self.update_fp):
-            remove(self.update_fp)
-
-        # Replace file if removed as part of function testing
-        uploads_path = get_mountpoint('uploads')[0][1]
-        fp = join(uploads_path, '1', 'uploaded_file.txt')
-        if not exists(fp):
-            with open(fp, 'w') as f:
-                f.write('')
-
+class TestArtifactAPIReadOnly(TestCase):
     def test_artifact_get_req_no_access(self):
         obs = artifact_get_req('demo@microbio.me', 1)
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-    def test_artifact_delete_req(self):
-        obs = artifact_delete_req(3, 'test@foo.bar')
-        exp = {'status': 'success', 'message': ''}
-        self.assertEqual(obs, exp)
-
-        with self.assertRaises(QiitaDBUnknownIDError):
-            Artifact(3)
-
-    def test_artifact_delete_req_error(self):
-        obs = artifact_delete_req(1, 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': 'Cannot delete artifact 1: it has children: 2, 3'}
-        self.assertEqual(obs, exp)
-
-    def test_artifact_delete_req_no_access(self):
-        obs = artifact_delete_req(3, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
@@ -95,6 +53,94 @@ class TestArtifactAPI(TestCase):
                     '1_s_G1_L001_sequences_barcodes.fastq.gz'),
                     'raw_barcodes')]
                }
+        self.assertEqual(obs, exp)
+
+    def test_artifact_graph_get_req_ancestors(self):
+        obs = artifact_graph_get_req(1, 'ancestors', 'test@foo.bar')
+        exp = {'status': 'success',
+               'message': '',
+               'edge_list': [],
+               'node_labels': [(1, 'Raw data 1 - FASTQ')]}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_graph_get_req_descendants(self):
+        obs = artifact_graph_get_req(1, 'descendants', 'test@foo.bar')
+        exp = {'status': 'success',
+               'message': '',
+               'node_labels': [(1, 'Raw data 1 - FASTQ'),
+                               (3, 'Demultiplexed 2 - Demultiplexed'),
+                               (2, 'Demultiplexed 1 - Demultiplexed'),
+                               (4, 'BIOM - BIOM'),
+                               (5, 'BIOM - BIOM')],
+               'edge_list': [(1, 3), (1, 2), (2, 5), (2, 4)]}
+        self.assertItemsEqual(obs, exp)
+
+    def test_artifact_graph_get_req_no_access(self):
+        obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_graph_get_req_bad_direction(self):
+        obs = artifact_graph_get_req(1, 'WRONG', 'test@foo.bar')
+        exp = {'status': 'error', 'message': 'Unknown directon WRONG'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_types_get_req(self):
+        obs = artifact_types_get_req()
+        exp = {'message': '',
+               'status': 'success',
+               'types': [['BIOM', 'BIOM table'],
+                         ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+                         ['FASTA', None],
+                         ['FASTA_Sanger', None],
+                         ['FASTQ', None],
+                         ['SFF', None],
+                         ['per_sample_FASTQ', None]]}
+
+        self.assertEqual(obs['message'], exp['message'])
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertItemsEqual(obs['types'], exp['types'])
+
+
+@qiita_test_checker()
+class TestArtifactAPI(TestCase):
+    def setUp(self):
+        uploads_path = get_mountpoint('uploads')[0][1]
+        # Create prep test file to point at
+        self.update_fp = join(uploads_path, '1', 'update.txt')
+        with open(self.update_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+
+    def tearDown(self):
+        if exists(self.update_fp):
+            remove(self.update_fp)
+
+        # Replace file if removed as part of function testing
+        uploads_path = get_mountpoint('uploads')[0][1]
+        fp = join(uploads_path, '1', 'uploaded_file.txt')
+        if not exists(fp):
+            with open(fp, 'w') as f:
+                f.write('')
+
+    def test_artifact_delete_req(self):
+        obs = artifact_delete_req(3, 'test@foo.bar')
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(obs, exp)
+
+        with self.assertRaises(QiitaDBUnknownIDError):
+            Artifact(3)
+
+    def test_artifact_delete_req_error(self):
+        obs = artifact_delete_req(1, 'test@foo.bar')
+        exp = {'status': 'error',
+               'message': 'Cannot delete artifact 1: it has children: 2, 3'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_delete_req_no_access(self):
+        obs = artifact_delete_req(3, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
     def test_artifact_post_req(self):
@@ -159,54 +205,6 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Unknown visiblity value: BADSTAT'}
         self.assertEqual(obs, exp)
-
-    def test_artifact_graph_get_req_ancestors(self):
-        obs = artifact_graph_get_req(1, 'ancestors', 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': '',
-               'edge_list': [],
-               'node_labels': [(1, 'Raw data 1 - FASTQ')]}
-        self.assertEqual(obs, exp)
-
-    def test_artifact_graph_get_req_descendants(self):
-        obs = artifact_graph_get_req(1, 'descendants', 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': '',
-               'node_labels': [(1, 'Raw data 1 - FASTQ'),
-                               (3, 'Demultiplexed 2 - Demultiplexed'),
-                               (2, 'Demultiplexed 1 - Demultiplexed'),
-                               (4, 'BIOM - BIOM'),
-                               (5, 'BIOM - BIOM')],
-               'edge_list': [(1, 3), (1, 2), (2, 5), (2, 4)]}
-        self.assertItemsEqual(obs, exp)
-
-    def test_artifact_graph_get_req_no_access(self):
-        obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-    def test_artifact_types_get_req(self):
-        obs = artifact_types_get_req()
-        exp = {'message': '',
-               'status': 'success',
-               'types': [['BIOM', 'BIOM table'],
-                         ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
-                         ['FASTA', None],
-                         ['FASTA_Sanger', None],
-                         ['FASTQ', None],
-                         ['SFF', None],
-                         ['per_sample_FASTQ', None]]}
-
-        self.assertEqual(obs['message'], exp['message'])
-        self.assertEqual(obs['status'], exp['status'])
-        self.assertItemsEqual(obs['types'], exp['types'])
-
-    def test_artifact_graph_get_req_bad_direction(self):
-        obs = artifact_graph_get_req(1, 'WRONG', 'test@foo.bar')
-        exp = {'status': 'error', 'message': 'Unknown directon WRONG'}
-        self.assertEqual(obs, exp)
-
 
 if __name__ == "__main__":
     main()
