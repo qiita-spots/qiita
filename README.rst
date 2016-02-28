@@ -46,6 +46,14 @@ Current features
 * Search over existing studies (see known issues).
 * Generate basic visualizations with the available studies and datasets.
 
+Accepted raw files
+------------------
+
+* Multiplexed SFF
+* Multiplexed FASTQ: forward, reverse (optional), and barcodes
+* Per sample FASTQ: forward
+* Multiplexed fasta/qual files.
+
 Known issues
 ------------
 
@@ -65,7 +73,7 @@ future.
   external sources. For example, metabolomics processing in
   `GNPS <http://gnps.ucsd.edu>`__ and data visualization in Qiita.
 * Creation of a REST API to query and access the data hosted by Qiita.
-* Improved analysis pipeline for 16S datasets.
+* Improved analysis pipeline for target gene datasets.
 * Crowd-sourced metadata curation of existing studies: improve the metadata of
   existing studies by submitting “fix proposals” to the authors of the study.
 
