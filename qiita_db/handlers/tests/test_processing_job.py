@@ -159,6 +159,7 @@ class CompleteHandlerTests(OauthTestingBase):
         super(CompleteHandlerTests, self).setUp()
 
     def tearDown(self):
+        super(CompleteHandlerTests, self).tearDown()
         for fp in self._clean_up_files:
             if exists(fp):
                 remove(fp)

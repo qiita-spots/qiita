@@ -14,12 +14,11 @@ from random import choice
 import pandas as pd
 import numpy.testing as npt
 
-from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology
 from qiita_db.study import Study
-from qiita_db.util import get_count
+from qiita_db.util import get_count, get_mountpoint
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
@@ -29,42 +28,7 @@ from qiita_pet.handlers.api_proxy.prep_template import (
     _check_prep_template_exists)
 
 
-@qiita_test_checker()
-class TestPrepAPI(TestCase):
-    def setUp(self):
-        # Create test file to point update tests at
-        self.update_fp = join(qiita_config.base_data_dir, 'uploads', '1',
-                              'update.txt')
-        with open(self.update_fp, 'w') as f:
-            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
-
-    def tear_down(self):
-        remove(self.update_fp)
-
-        fp = join(qiita_config.base_data_dir, 'uploads', '1',
-                  'uploaded_file.txt')
-        if not exists(fp):
-            with open(fp, 'w') as f:
-                f.write('')
-
-    def test_process_investigation_type(self):
-        obs = _process_investigation_type('Metagenomics', '', '')
-        self.assertEqual(obs, 'Metagenomics')
-
-    def test_process_investigation_type_user_term(self):
-        _process_investigation_type('Other', 'New Type', 'userterm')
-        obs = _process_investigation_type('Other', 'userterm', '')
-        self.assertEqual(obs, 'userterm')
-
-    def test_process_investigation_type_new_term(self):
-        randstr = ''.join([choice(ascii_letters) for x in range(30)])
-        obs = _process_investigation_type('Other', 'New Type', randstr)
-        self.assertEqual(obs, randstr)
-
-        # Make sure New Type added
-        ontology = Ontology(999999999)
-        self.assertIn(randstr, ontology.user_defined_terms)
-
+class TestPrepAPIReadOnly(TestCase):
     def test_check_prep_template_exists(self):
         obs = _check_prep_template_exists(1)
         self.assertEqual(obs, {'status': 'success', 'message': ''})
@@ -83,21 +47,6 @@ class TestPrepAPI(TestCase):
                        'Synthetic Genomics', 'Transcriptome Analysis',
                        'Whole Genome Sequencing', 'Other'],
                'User': [],
-               'status': 'success',
-               'message': ''}
-        self.assertEqual(obs, exp)
-
-    def test_ena_ontology_get_req_user_terms(self):
-        _process_investigation_type('Other', 'New Type', 'userterm')
-
-        obs = ena_ontology_get_req()
-        exp = {'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
-                       'Forensic or Paleo-genomics', 'Gene Regulation Study',
-                       'Metagenomics', 'Pooled Clone Sequencing',
-                       'Population Genomics', 'RNASeq', 'Resequencing',
-                       'Synthetic Genomics', 'Transcriptome Analysis',
-                       'Whole Genome Sequencing', 'Other'],
-               'User': ['userterm'],
                'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
@@ -164,157 +113,15 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs, {'status': 'error',
                                'message': 'Prep template 3100 does not exist'})
 
-    def test_prep_template_post_req(self):
-        new_id = get_count('qiita.prep_template') + 1
-        obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
-                                     '16S')
-        exp = {'status': 'warning',
-               'message': 'Sample names were already prefixed with the study '
-                          'id.; Some functionality will be disabled due to '
-                          'missing columns:\n\tDemultiplexing with multiple '
-                          'input files disabled. If your raw data includes '
-                          'multiple raw input files, you will not be able to '
-                          'preprocess your raw data: primer, run_prefix, '
-                          'barcode;\n\tDemultiplexing disabled. You will not '
-                          'be able to preprocess your raw data: primer, '
-                          'barcode;\n\tEBI submission disabled: center_name, '
-                          'instrument_model, platform, '
-                          'library_construction_protocol, '
-                          'experiment_design_description, primer.\nSee the '
-                          'Templates tutorial for a description of these '
-                          'fields.; Some columns required to generate a '
-                          'QIIME-compliant mapping file are not present in the'
-                          ' template. A placeholder value (XXQIITAXX) has been'
-                          ' used to populate these columns. Missing columns: '
-                          'LinkerPrimerSequence, BarcodeSequence',
-               'file': 'update.txt',
-               'id': new_id}
-        self.assertEqual(obs['status'], exp['status'])
-        self.assertItemsEqual(obs['message'].split('\n'),
-                              exp['message'].split('\n'))
-        self.assertEqual(obs['file'], exp['file'])
-        self.assertEqual(obs['id'], exp['id'])
-
-        # Make sure new prep template added
-        prep = PrepTemplate(new_id)
-        self.assertEqual(prep.data_type(), '16S')
-        self.assertEqual([x for x in prep.keys()], ['1.SKD6.640190'])
-        self.assertEqual([x._to_dict() for x in prep.values()],
-                         [{'new_col': 'new_value'}])
-
-    def test_prep_template_post_req_no_access(self):
-        obs = prep_template_post_req(1, 'demo@microbio.me', 'filepath', '16S')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-    def test_prep_template_post_req_bad_filepath(self):
-        obs = prep_template_post_req(1, 'test@foo.bar', 'badfilepath', '16S')
-        exp = {'status': 'error',
-               'message': 'file does not exist',
-               'file': 'badfilepath'}
-        self.assertEqual(obs, exp)
-
-    def test_prep_template_post_req_no_exists(self):
-        obs = prep_template_post_req(3100, 'test@foo.bar', 'update.txt',
-                                     '16S')
-        self.assertEqual(obs, {'status': 'error',
-                               'message': 'Study does not exist'})
-
-    def test_prep_template_put_req(self):
-        obs = prep_template_put_req(1, 'test@foo.bar',
-                                    'uploaded_file.txt')
-        exp = {'status': 'error',
-               'message': 'Empty file passed!',
-               'file': 'uploaded_file.txt'}
-        self.assertEqual(obs, exp)
-
-    def test_prep_template_put_req_warning(self):
-        obs = prep_template_put_req(1, 'test@foo.bar', 'update.txt')
-        exp = {'status': 'warning',
-               'message': 'Sample names were already prefixed with the study '
-                          'id.\nThe following columns have been added to the '
-                          'existing template: new_col\nThere are no '
-                          'differences between the data stored in the DB and '
-                          'the new data provided',
-               'file': 'update.txt'}
-        self.assertEqual(obs['status'], exp['status'])
-        self.assertItemsEqual(obs['message'].split('\n'),
-                              exp['message'].split('\n'))
-        self.assertEqual(obs['file'], exp['file'])
-
-    def test_prep_put_req_inv_type(self):
-        randstr = ''.join([choice(ascii_letters) for x in range(30)])
-        obs = prep_template_put_req(1, 'test@foo.bar',
-                                    investigation_type='Other',
-                                    user_defined_investigation_type='New Type',
-                                    new_investigation_type=randstr)
-        exp = {'status': 'success',
-               'message': '',
-               'file': None}
-        self.assertEqual(obs, exp)
-
-        # Make sure New Type added
-        ontology = Ontology(999999999)
-        self.assertIn(randstr, ontology.user_defined_terms)
-
-    def test_prep_template_put_req_no_access(self):
-        obs = prep_template_put_req(1, 'demo@microbio.me', 'filepath')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-    def test_prep_template_put_req_bad_filepath(self):
-        obs = prep_template_put_req(1, 'test@foo.bar', 'badfilepath')
-        exp = {'status': 'error',
-               'message': 'file does not exist',
-               'file': 'badfilepath'}
-        self.assertEqual(obs, exp)
-
-    def test_prep_template_put_req_no_exists(self):
-        obs = prep_template_put_req(3100, 'test@foo.bar')
-        self.assertEqual(obs, {'status': 'error',
-                               'message': 'Prep template 3100 does not exist'})
-
-    def test_prep_template_delete_req(self):
-        template = pd.read_csv(self.update_fp, sep='\t', index_col=0)
-        new_id = get_count('qiita.prep_template') + 1
-        npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
-                         template, Study(1), '16S')
-        obs = prep_template_delete_req(new_id, 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': ''}
-        self.assertEqual(obs, exp)
-
-    def test_prep_template_delete_req_attached_artifact(self):
-        obs = prep_template_delete_req(1, 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': "Couldn't remove prep template: Cannot remove prep "
-                          "template 1 because it has an artifact associated "
-                          "with it"}
-        self.assertEqual(obs, exp)
-
-    def test_prep_template_delete_req_no_access(self):
-        obs = prep_template_delete_req(1, 'demo@microbio.me')
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-    def test_prep_template_delete_req_no_prep(self):
-        obs = prep_template_delete_req(3100, 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': 'Prep template 3100 does not exist'}
-        self.assertEqual(obs, exp)
-
     def test_prep_template_filepaths_get_req(self):
         obs = prep_template_filepaths_get_req(1, 'test@foo.bar')
         exp = {'status': 'success',
                'message': '',
                'filepaths': [
-                   (15, join(qiita_config.base_data_dir,
-                             'templates/1_prep_1_19700101-000000.txt')),
-                   (16, join(qiita_config.base_data_dir,
-                             'templates/1_prep_1_qiime_19700101-000000.txt'))]}
+                   (15, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_19700101-000000.txt')),
+                   (16, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_qiime_19700101-000000.txt'))]}
         self.assertItemsEqual(obs, exp)
 
     def test_prep_template_filepaths_get_req_no_access(self):
@@ -410,6 +217,198 @@ class TestPrepAPI(TestCase):
         obs = prep_template_summary_get_req(3100, 'test@foo.bar')
         self.assertEqual(obs, {'status': 'error',
                                'message': 'Prep template 3100 does not exist'})
+
+
+@qiita_test_checker()
+class TestPrepAPI(TestCase):
+    def setUp(self):
+        # Create test file to point update tests at
+        self.update_fp = join(get_mountpoint("uploads")[0][1], '1',
+                              'update.txt')
+        with open(self.update_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+
+    def tear_down(self):
+        remove(self.update_fp)
+
+        fp = join(get_mountpoint("uploads")[0][1], '1', 'uploaded_file.txt')
+        if not exists(fp):
+            with open(fp, 'w') as f:
+                f.write('')
+
+    def test_process_investigation_type(self):
+        obs = _process_investigation_type('Metagenomics', '', '')
+        self.assertEqual(obs, 'Metagenomics')
+
+    def test_process_investigation_type_user_term(self):
+        _process_investigation_type('Other', 'New Type', 'userterm')
+        obs = _process_investigation_type('Other', 'userterm', '')
+        self.assertEqual(obs, 'userterm')
+
+    def test_process_investigation_type_new_term(self):
+        randstr = ''.join([choice(ascii_letters) for x in range(30)])
+        obs = _process_investigation_type('Other', 'New Type', randstr)
+        self.assertEqual(obs, randstr)
+
+        # Make sure New Type added
+        ontology = Ontology(999999999)
+        self.assertIn(randstr, ontology.user_defined_terms)
+
+    def test_ena_ontology_get_req_user_terms(self):
+        _process_investigation_type('Other', 'New Type', 'userterm')
+
+        obs = ena_ontology_get_req()
+        exp = {'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
+                       'Forensic or Paleo-genomics', 'Gene Regulation Study',
+                       'Metagenomics', 'Pooled Clone Sequencing',
+                       'Population Genomics', 'RNASeq', 'Resequencing',
+                       'Synthetic Genomics', 'Transcriptome Analysis',
+                       'Whole Genome Sequencing', 'Other'],
+               'User': ['userterm'],
+               'status': 'success',
+               'message': ''}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_post_req(self):
+        new_id = get_count('qiita.prep_template') + 1
+        obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
+                                     '16S')
+        exp = {'status': 'warning',
+               'message': 'Sample names were already prefixed with the study '
+                          'id.\nSome functionality will be disabled due to '
+                          'missing columns:\n\tDemultiplexing with multiple '
+                          'input files disabled. If your raw data includes '
+                          'multiple raw input files, you will not be able to '
+                          'preprocess your raw data: barcode, primer, '
+                          'run_prefix;\n\tDemultiplexing disabled. You will '
+                          'not be able to preprocess your raw data: barcode, '
+                          'primer;\n\tEBI submission disabled: center_name, '
+                          'experiment_design_description, instrument_model, '
+                          'library_construction_protocol, platform, primer.'
+                          '\nSee the Templates tutorial for a description of '
+                          'these fields.\nSome columns required to generate a '
+                          'QIIME-compliant mapping file are not present in the'
+                          ' template. A placeholder value (XXQIITAXX) has been'
+                          ' used to populate these columns. Missing columns: '
+                          'BarcodeSequence, LinkerPrimerSequence',
+               'file': 'update.txt',
+               'id': new_id}
+        self.assertItemsEqual(obs['message'].split('\n'),
+                              exp['message'].split('\n'))
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['file'], exp['file'])
+        self.assertEqual(obs['id'], exp['id'])
+
+        # Make sure new prep template added
+        prep = PrepTemplate(new_id)
+        self.assertEqual(prep.data_type(), '16S')
+        self.assertEqual([x for x in prep.keys()], ['1.SKD6.640190'])
+        self.assertEqual([x._to_dict() for x in prep.values()],
+                         [{'new_col': 'new_value'}])
+
+    def test_prep_template_post_req_no_access(self):
+        obs = prep_template_post_req(1, 'demo@microbio.me', 'filepath', '16S')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_post_req_bad_filepath(self):
+        obs = prep_template_post_req(1, 'test@foo.bar', 'badfilepath', '16S')
+        exp = {'status': 'error',
+               'message': 'file does not exist',
+               'file': 'badfilepath'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_post_req_no_exists(self):
+        obs = prep_template_post_req(3100, 'test@foo.bar', 'update.txt',
+                                     '16S')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Study does not exist'})
+
+    def test_prep_template_put_req(self):
+        obs = prep_template_put_req(1, 'test@foo.bar',
+                                    'uploaded_file.txt')
+        exp = {'status': 'error',
+               'message': 'Empty file passed!',
+               'file': 'uploaded_file.txt'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_put_req_warning(self):
+        obs = prep_template_put_req(1, 'test@foo.bar', 'update.txt')
+        exp = {'status': 'warning',
+               'message': 'Sample names were already prefixed with the study '
+                          'id.\nThe following columns have been added to the '
+                          'existing template: new_col\nThere are no '
+                          'differences between the data stored in the DB and '
+                          'the new data provided',
+               'file': 'update.txt'}
+        self.assertItemsEqual(obs['message'].split('\n'),
+                              exp['message'].split('\n'))
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['file'], exp['file'])
+
+    def test_prep_put_req_inv_type(self):
+        randstr = ''.join([choice(ascii_letters) for x in range(30)])
+        obs = prep_template_put_req(1, 'test@foo.bar',
+                                    investigation_type='Other',
+                                    user_defined_investigation_type='New Type',
+                                    new_investigation_type=randstr)
+        exp = {'status': 'success',
+               'message': '',
+               'file': None}
+        self.assertEqual(obs, exp)
+
+        # Make sure New Type added
+        ontology = Ontology(999999999)
+        self.assertIn(randstr, ontology.user_defined_terms)
+
+    def test_prep_template_put_req_no_access(self):
+        obs = prep_template_put_req(1, 'demo@microbio.me', 'filepath')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_put_req_bad_filepath(self):
+        obs = prep_template_put_req(1, 'test@foo.bar', 'badfilepath')
+        exp = {'status': 'error',
+               'message': 'file does not exist',
+               'file': 'badfilepath'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_put_req_no_exists(self):
+        obs = prep_template_put_req(3100, 'test@foo.bar')
+        self.assertEqual(obs, {'status': 'error',
+                               'message': 'Prep template 3100 does not exist'})
+
+    def test_prep_template_delete_req(self):
+        template = pd.read_csv(self.update_fp, sep='\t', index_col=0)
+        new_id = get_count('qiita.prep_template') + 1
+        npt.assert_warns(QiitaDBWarning, PrepTemplate.create,
+                         template, Study(1), '16S')
+        obs = prep_template_delete_req(new_id, 'test@foo.bar')
+        exp = {'status': 'success',
+               'message': ''}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_delete_req_attached_artifact(self):
+        obs = prep_template_delete_req(1, 'test@foo.bar')
+        exp = {'status': 'error',
+               'message': "Couldn't remove prep template: Cannot remove prep "
+                          "template 1 because it has an artifact associated "
+                          "with it"}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_delete_req_no_access(self):
+        obs = prep_template_delete_req(1, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_delete_req_no_prep(self):
+        obs = prep_template_delete_req(3100, 'test@foo.bar')
+        exp = {'status': 'error',
+               'message': 'Prep template 3100 does not exist'}
+        self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
     main()

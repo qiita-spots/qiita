@@ -3,7 +3,6 @@ from os import remove
 from os.path import exists, join
 from datetime import datetime
 from shutil import move
-import warnings
 
 from future.utils import viewitems
 from biom import load_table
@@ -321,8 +320,9 @@ class TestAnalysis(TestCase):
              'SKB7.640196': {'barcode': 'AAAAAAAAAAAG'}},
             orient='index')
 
-        warnings.simplefilter('ignore', qdb.exceptions.QiitaDBWarning)
-        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
             metadata, study, "16S")
 
         mp = qdb.util.get_mountpoint("processed_data")[0][1]

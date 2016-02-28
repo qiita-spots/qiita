@@ -18,8 +18,7 @@ import qiita_db as qdb
 from qiita_core.util import qiita_test_checker
 
 
-@qiita_test_checker()
-class ProcessingJobUtilTest(TestCase):
+class ProcessingJobUtilTestReadOnly(TestCase):
     def test_system_call(self):
         obs_out, obs_err, obs_status = qdb.processing_job._system_call(
             'echo "Test system call stdout"')
@@ -35,6 +34,9 @@ class ProcessingJobUtilTest(TestCase):
         self.assertEqual(obs_err, "Test system call stderr\n")
         self.assertEqual(obs_status, 1)
 
+
+@qiita_test_checker()
+class ProcessingJobUtilTest(TestCase):
     def test_job_submitter(self):
         # The cmd parameter of the function should be the command that
         # actually executes the function. However, in order to avoid executing
@@ -59,8 +61,7 @@ class ProcessingJobUtilTest(TestCase):
         self.assertEqual(job.log.msg, exp)
 
 
-@qiita_test_checker()
-class ProcessingJobTest(TestCase):
+class ProcessingJobTestReadOnly(TestCase):
     def setUp(self):
         self.tester1 = qdb.processing_job.ProcessingJob(
             "063e553b-327c-4818-ab4a-adfe58e49860")
@@ -71,11 +72,6 @@ class ProcessingJobTest(TestCase):
         self.tester4 = qdb.processing_job.ProcessingJob(
             "d19f76ee-274e-4c1b-b3a2-a12d73507c55")
         self._clean_up_files = []
-
-    def tearDown(self):
-        for fp in self._clean_up_files:
-            if exists(fp):
-                remove(fp)
 
     def test_exists(self):
         self.assertTrue(qdb.processing_job.ProcessingJob.exists(
@@ -90,27 +86,6 @@ class ProcessingJobTest(TestCase):
             "d19f76ee-274e-4c1b-b3a2-b12d73507c55"))
         self.assertFalse(qdb.processing_job.ProcessingJob.exists(
             "some-other-string"))
-
-    def test_create(self):
-        exp_command = qdb.software.Command(1)
-        json_str = (
-            '{"input_data": 1, "max_barcode_errors": 1.5, '
-            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
-            '"rev_comp": false, "phred_quality_threshold": 3, '
-            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
-            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
-        exp_params = qdb.software.Parameters.load(exp_command,
-                                                  json_str=json_str)
-        exp_user = qdb.user.User('test@foo.bar')
-        obs = qdb.processing_job.ProcessingJob.create(exp_user, exp_params)
-        self.assertEqual(obs.user, exp_user)
-        self.assertEqual(obs.command, exp_command)
-        self.assertEqual(obs.parameters, exp_params)
-        self.assertEqual(obs.status, 'in_construction')
-        self.assertEqual(obs.log, None)
-        self.assertEqual(obs.heartbeat, None)
-        self.assertEqual(obs.step, None)
-        self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
 
     def test_user(self):
         exp_user = qdb.user.User('test@foo.bar')
@@ -184,24 +159,6 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(self.tester3.status, 'success')
         self.assertEqual(self.tester4.status, 'error')
 
-    def test_set_status(self):
-        self.assertEqual(self.tester1.status, 'queued')
-        self.tester1._set_status('running')
-        self.assertEqual(self.tester1.status, 'running')
-        self.tester1._set_status('error')
-        self.assertEqual(self.tester1.status, 'error')
-        self.tester1._set_status('running')
-        self.assertEqual(self.tester1.status, 'running')
-        self.tester1._set_status('success')
-        self.assertEqual(self.tester1.status, 'success')
-
-    def test_set_status_error(self):
-        with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            self.tester2._set_status('queued')
-
-        with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            self.tester3._set_status('running')
-
     def test_generate_cmd(self):
         obs = self.tester1._generate_cmd()
         exp = ('qiita-plugin-launcher "source activate qiita" '
@@ -215,6 +172,93 @@ class ProcessingJobTest(TestCase):
         # In order to test a success, we need to actually run the job, which
         # will mean to run split libraries, for example.
         pass
+
+    def test_log(self):
+        self.assertIsNone(self.tester1.log)
+        self.assertIsNone(self.tester2.log)
+        self.assertIsNone(self.tester3.log)
+        self.assertEqual(self.tester4.log, qdb.logger.LogEntry(1))
+
+    def test_heartbeat(self):
+        self.assertIsNone(self.tester1.heartbeat)
+        self.assertEqual(self.tester2.heartbeat,
+                         datetime(2015, 11, 22, 21, 00, 00))
+        self.assertEqual(self.tester3.heartbeat,
+                         datetime(2015, 11, 22, 21, 15, 00))
+        self.assertEqual(self.tester4.heartbeat,
+                         datetime(2015, 11, 22, 21, 30, 00))
+
+    def test_step(self):
+        self.assertIsNone(self.tester1.step)
+        self.assertEqual(self.tester2.step, 'demultiplexing')
+        self.assertIsNone(self.tester3.step)
+        self.assertEqual(self.tester4.step, 'generating demux file')
+
+    def test_children(self):
+        self.assertEqual(list(self.tester1.children), [])
+        self.assertEqual(list(self.tester3.children), [self.tester4])
+
+    def test_update_and_launch_children(self):
+        # In order to test a success, we need to actually run the children
+        # jobs, which will mean to run split libraries, for example.
+        pass
+
+
+@qiita_test_checker()
+class ProcessingJobTest(TestCase):
+    def setUp(self):
+        self.tester1 = qdb.processing_job.ProcessingJob(
+            "063e553b-327c-4818-ab4a-adfe58e49860")
+        self.tester2 = qdb.processing_job.ProcessingJob(
+            "bcc7ebcd-39c1-43e4-af2d-822e3589f14d")
+        self.tester3 = qdb.processing_job.ProcessingJob(
+            "b72369f9-a886-4193-8d3d-f7b504168e75")
+        self.tester4 = qdb.processing_job.ProcessingJob(
+            "d19f76ee-274e-4c1b-b3a2-a12d73507c55")
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                remove(fp)
+
+    def test_create(self):
+        exp_command = qdb.software.Command(1)
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        exp_params = qdb.software.Parameters.load(exp_command,
+                                                  json_str=json_str)
+        exp_user = qdb.user.User('test@foo.bar')
+        obs = qdb.processing_job.ProcessingJob.create(exp_user, exp_params)
+        self.assertEqual(obs.user, exp_user)
+        self.assertEqual(obs.command, exp_command)
+        self.assertEqual(obs.parameters, exp_params)
+        self.assertEqual(obs.status, 'in_construction')
+        self.assertEqual(obs.log, None)
+        self.assertEqual(obs.heartbeat, None)
+        self.assertEqual(obs.step, None)
+        self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
+
+    def test_set_status(self):
+        self.assertEqual(self.tester1.status, 'queued')
+        self.tester1._set_status('running')
+        self.assertEqual(self.tester1.status, 'running')
+        self.tester1._set_status('error')
+        self.assertEqual(self.tester1.status, 'error')
+        self.tester1._set_status('running')
+        self.assertEqual(self.tester1.status, 'running')
+        self.tester1._set_status('success')
+        self.assertEqual(self.tester1.status, 'success')
+
+        with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
+            self.tester2._set_status('queued')
+
+        with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
+            self.tester3._set_status('running')
 
     def test_submit_error(self):
         with self.assertRaises(
@@ -251,12 +295,6 @@ class ProcessingJobTest(TestCase):
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             self.tester1.complete(True, artifacts_data={})
 
-    def test_log(self):
-        self.assertIsNone(self.tester1.log)
-        self.assertIsNone(self.tester2.log)
-        self.assertIsNone(self.tester3.log)
-        self.assertEqual(self.tester4.log, qdb.logger.LogEntry(1))
-
     def test_set_error(self):
         for t in [self.tester1, self.tester2]:
             t._set_error('Job failure')
@@ -264,49 +302,30 @@ class ProcessingJobTest(TestCase):
             self.assertEqual(
                 t.log, qdb.logger.LogEntry.newest_records(numrecords=1)[0])
 
-    def test_set_error_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             self.tester3._set_error("Job failure")
-
-    def test_heartbeat(self):
-        self.assertIsNone(self.tester1.heartbeat)
-        self.assertEqual(self.tester2.heartbeat,
-                         datetime(2015, 11, 22, 21, 00, 00))
-        self.assertEqual(self.tester3.heartbeat,
-                         datetime(2015, 11, 22, 21, 15, 00))
-        self.assertEqual(self.tester4.heartbeat,
-                         datetime(2015, 11, 22, 21, 30, 00))
 
     def test_update_heartbeat_state(self):
         before = datetime.now()
         self.tester2.update_heartbeat_state()
         self.assertTrue(before < self.tester2.heartbeat < datetime.now())
 
-    def test_update_heartbeat_state_queued(self):
         before = datetime.now()
         self.assertEqual(self.tester1.status, 'queued')
         self.tester1.update_heartbeat_state()
         self.assertTrue(before < self.tester1.heartbeat < datetime.now())
         self.assertEqual(self.tester1.status, 'running')
 
-    def test_update_heartbeat_state_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             self.tester3.update_heartbeat_state()
-
-    def test_step(self):
-        self.assertIsNone(self.tester1.step)
-        self.assertEqual(self.tester2.step, 'demultiplexing')
-        self.assertIsNone(self.tester3.step)
-        self.assertEqual(self.tester4.step, 'generating demux file')
 
     def test_step_setter(self):
         self.assertEqual(self.tester2.step, 'demultiplexing')
         self.tester2.step = 'generating demux file'
         self.assertEqual(self.tester2.step, 'generating demux file')
 
-    def test_step_setter_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             self.tester1.step = 'demultiplexing'
@@ -318,10 +337,6 @@ class ProcessingJobTest(TestCase):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             self.tester4.step = 'demultiplexing'
-
-    def test_children(self):
-        self.assertEqual(list(self.tester1.children), [])
-        self.assertEqual(list(self.tester3.children), [self.tester4])
 
     def test_update_children(self):
         # Create a workflow so we can test this functionality
@@ -351,95 +366,8 @@ class ProcessingJobTest(TestCase):
         exp = [child]
         self.assertTrue(obs, exp)
 
-    def test_update_and_launch_children(self):
-        # In order to test a success, we need to actually run the children
-        # jobs, which will mean to run split libraries, for example.
-        pass
 
-
-@qiita_test_checker()
-class ProcessingWorkflowTests(TestCase):
-    def test_from_default_workflow(self):
-        exp_user = qdb.user.User('test@foo.bar')
-        dflt_wf = qdb.software.DefaultWorkflow(1)
-        req_params = {qdb.software.Command(1): {'input_data': 1}}
-        name = "Test processing workflow"
-
-        obs = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-            exp_user, dflt_wf, req_params, name=name)
-        self.assertEqual(obs.name, name)
-        self.assertEqual(obs.user, exp_user)
-        obs_graph = obs.graph
-        self.assertTrue(isinstance(obs_graph, nx.DiGraph))
-        self.assertEqual(len(obs_graph.nodes()), 2)
-        obs_edges = obs_graph.edges()
-        self.assertEqual(len(obs_edges), 1)
-        obs_src = obs_edges[0][0]
-        obs_dst = obs_edges[0][1]
-        self.assertTrue(isinstance(obs_src, qdb.processing_job.ProcessingJob))
-        self.assertTrue(isinstance(obs_dst, qdb.processing_job.ProcessingJob))
-        self.assertTrue(obs_src.command, qdb.software.Command(1))
-        self.assertTrue(obs_dst.command, qdb.software.Command(1))
-        obs_params = obs_dst.parameters.values
-        exp_params = {
-            'input_data': [obs_src.id, u'demultiplexed'],
-            'reference': 1,
-            'similarity': 0.97,
-            'sortmerna_coverage': 0.97,
-            'sortmerna_e_value': 1,
-            'sortmerna_max_pos': 10000,
-            'threads': 1}
-        self.assertEqual(obs_params, exp_params)
-
-    def test_from_default_workflow_missing(self):
-        with self.assertRaises(qdb.exceptions.QiitaDBError) as err:
-            qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-                qdb.user.User('test@foo.bar'), qdb.software.DefaultWorkflow(1),
-                {}, name="Test name")
-
-        exp = ('Provided required parameters do not match the initial set of '
-               'commands for the workflow. Command(s) "Split libraries FASTQ"'
-               ' are missing the required parameter set.')
-        self.assertEqual(str(err.exception), exp)
-
-    def test_from_default_workflow_extra(self):
-        req_params = {qdb.software.Command(1): {'input_data': 1},
-                      qdb.software.Command(2): {'input_data': 2}}
-
-        with self.assertRaises(qdb.exceptions.QiitaDBError) as err:
-            qdb.processing_job.ProcessingWorkflow.from_default_workflow(
-                qdb.user.User('test@foo.bar'), qdb.software.DefaultWorkflow(1),
-                req_params, name="Test name")
-        exp = ('Provided required parameters do not match the initial set of '
-               'commands for the workflow. Paramters for command(s) '
-               '"Split libraries" have been provided, but they are not the '
-               'initial commands for the workflow.')
-        self.assertEqual(str(err.exception), exp)
-
-    def test_from_scratch(self):
-        exp_command = qdb.software.Command(1)
-        json_str = (
-            '{"input_data": 1, "max_barcode_errors": 1.5, '
-            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
-            '"rev_comp": false, "phred_quality_threshold": 3, '
-            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
-            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
-        exp_params = qdb.software.Parameters.load(exp_command,
-                                                  json_str=json_str)
-        exp_user = qdb.user.User('test@foo.bar')
-        name = "Test processing workflow"
-
-        obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
-            exp_user, exp_params, name=name)
-        self.assertEqual(obs.name, name)
-        self.assertEqual(obs.user, exp_user)
-        obs_graph = obs.graph
-        self.assertTrue(isinstance(obs_graph, nx.DiGraph))
-        nodes = obs_graph.nodes()
-        self.assertEqual(len(nodes), 1)
-        self.assertEqual(nodes[0].parameters, exp_params)
-        self.assertEqual(obs_graph.edges(), [])
-
+class ProcessingWorkflowTestsReadOnly(TestCase):
     def test_name(self):
         self.assertEqual(qdb.processing_job.ProcessingWorkflow(1).name,
                          'Testing processing workflow')
@@ -478,6 +406,94 @@ class ProcessingWorkflowTests(TestCase):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             tester._raise_if_not_in_construction()
+
+    def test_submit(self):
+        # In order to test a success, we need to actually run the jobs, which
+        # will mean to run split libraries, for example.
+        pass
+
+
+@qiita_test_checker()
+class ProcessingWorkflowTests(TestCase):
+    def test_from_default_workflow(self):
+        exp_user = qdb.user.User('test@foo.bar')
+        dflt_wf = qdb.software.DefaultWorkflow(1)
+        req_params = {qdb.software.Command(1): {'input_data': 1}}
+        name = "Test processing workflow"
+
+        obs = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
+            exp_user, dflt_wf, req_params, name=name)
+        self.assertEqual(obs.name, name)
+        self.assertEqual(obs.user, exp_user)
+        obs_graph = obs.graph
+        self.assertTrue(isinstance(obs_graph, nx.DiGraph))
+        self.assertEqual(len(obs_graph.nodes()), 2)
+        obs_edges = obs_graph.edges()
+        self.assertEqual(len(obs_edges), 1)
+        obs_src = obs_edges[0][0]
+        obs_dst = obs_edges[0][1]
+        self.assertTrue(isinstance(obs_src, qdb.processing_job.ProcessingJob))
+        self.assertTrue(isinstance(obs_dst, qdb.processing_job.ProcessingJob))
+        self.assertTrue(obs_src.command, qdb.software.Command(1))
+        self.assertTrue(obs_dst.command, qdb.software.Command(1))
+        obs_params = obs_dst.parameters.values
+        exp_params = {
+            'input_data': [obs_src.id, u'demultiplexed'],
+            'reference': 1,
+            'similarity': 0.97,
+            'sortmerna_coverage': 0.97,
+            'sortmerna_e_value': 1,
+            'sortmerna_max_pos': 10000,
+            'threads': 1}
+        self.assertEqual(obs_params, exp_params)
+
+    def test_from_default_workflow_error(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError) as err:
+            qdb.processing_job.ProcessingWorkflow.from_default_workflow(
+                qdb.user.User('test@foo.bar'), qdb.software.DefaultWorkflow(1),
+                {}, name="Test name")
+
+        exp = ('Provided required parameters do not match the initial set of '
+               'commands for the workflow. Command(s) "Split libraries FASTQ"'
+               ' are missing the required parameter set.')
+        self.assertEqual(str(err.exception), exp)
+
+        req_params = {qdb.software.Command(1): {'input_data': 1},
+                      qdb.software.Command(2): {'input_data': 2}}
+
+        with self.assertRaises(qdb.exceptions.QiitaDBError) as err:
+            qdb.processing_job.ProcessingWorkflow.from_default_workflow(
+                qdb.user.User('test@foo.bar'), qdb.software.DefaultWorkflow(1),
+                req_params, name="Test name")
+        exp = ('Provided required parameters do not match the initial set of '
+               'commands for the workflow. Paramters for command(s) '
+               '"Split libraries" have been provided, but they are not the '
+               'initial commands for the workflow.')
+        self.assertEqual(str(err.exception), exp)
+
+    def test_from_scratch(self):
+        exp_command = qdb.software.Command(1)
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        exp_params = qdb.software.Parameters.load(exp_command,
+                                                  json_str=json_str)
+        exp_user = qdb.user.User('test@foo.bar')
+        name = "Test processing workflow"
+
+        obs = qdb.processing_job.ProcessingWorkflow.from_scratch(
+            exp_user, exp_params, name=name)
+        self.assertEqual(obs.name, name)
+        self.assertEqual(obs.user, exp_user)
+        obs_graph = obs.graph
+        self.assertTrue(isinstance(obs_graph, nx.DiGraph))
+        nodes = obs_graph.nodes()
+        self.assertEqual(len(nodes), 1)
+        self.assertEqual(nodes[0].parameters, exp_params)
+        self.assertEqual(obs_graph.edges(), [])
 
     def test_add(self):
         exp_command = qdb.software.Command(1)
@@ -555,14 +571,13 @@ class ProcessingWorkflowTests(TestCase):
         self.assertEqual(obs_nodes[0], parent)
         self.assertEqual(g.edges(), [])
 
-    def test_remove_error_not_in_construction(self):
+    def test_remove_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             qdb.processing_job.ProcessingWorkflow(1).remove(
                 qdb.processing_job.ProcessingJob(
                     'b72369f9-a886-4193-8d3d-f7b504168e75'))
 
-    def test_remove_error_children(self):
         exp_user = qdb.user.User('test@foo.bar')
         dflt_wf = qdb.software.DefaultWorkflow(1)
         req_params = {qdb.software.Command(1): {'input_data': 1}}
@@ -575,10 +590,6 @@ class ProcessingWorkflowTests(TestCase):
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             tester.remove(tester.graph.edges()[0][0])
 
-    def test_submit(self):
-        # In order to test a success, we need to actually run the jobs, which
-        # will mean to run split libraries, for example.
-        pass
 
 if __name__ == '__main__':
     main()
