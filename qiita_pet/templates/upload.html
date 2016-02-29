@@ -11,7 +11,7 @@
         <li>fastq or fastq.gz (gziped fastq) for sequences. Note that zip files can not be processed</li>
         <li>tab separated text files for sample and prep templates, the extension should be txt</li>
       </ul>
-      <a href="/study/description/{{study_id}}">Go to study description</a>
+      <a href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}">Go to study description</a>
     </td>
   </tr>
 
@@ -62,10 +62,10 @@
 
 
 <!-- Upload required files and JS code -->
-<script src="/static/vendor/js/resumable.js"></script>
-<script src="/static/vendor/js/resumable-uploader.js"></script>
-<script src="/static/vendor/js/underscore.min.js"></script>
-<script src="/static/vendor/js/string.min.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/resumable.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/resumable-uploader.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/underscore.min.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/string.min.js"></script>
 
 <script>
   var meta = { fileType: [] };

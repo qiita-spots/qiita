@@ -36,6 +36,7 @@ from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.logger import LogEntry
 from qiita_db.reference import Reference
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -127,11 +128,13 @@ class AnalysisWaitHandler(BaseHandler):
         cmd_split = [x.split("#") for x in command_args]
 
         moi_user_id = get_id_from_user(self.current_user.id)
-        moi_group = create_info(analysis_id, 'group', url='/analysis/',
-                                parent=moi_user_id, store=True)
+        moi_group = create_info(
+            analysis_id, 'group', url='%s/analysis/' % qiita_config.portal_dir,
+            parent=moi_user_id, store=True)
         moi_name = ("Creating %s... When finished, please click the 'Success' "
                     "link to the right" % analysis.name)
-        moi_result_url = '/analysis/results/%d' % analysis_id
+        moi_result_url = '%s/analysis/results/%d' % (qiita_config.portal_dir,
+                                                     analysis_id)
 
         submit(ctx_default, moi_group['id'], moi_name,
                moi_result_url, run_analysis, analysis_id, cmd_split,
@@ -206,7 +209,8 @@ class AnalysisResultsHandler(BaseHandler):
             LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
                             (analysis_id, e))
 
-        self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
+        self.redirect(u"%s/analysis/show/?level=%s&message=%s"
+                      % (qiita_config.portal_dir, level, msg))
 
 
 class ShowAnalysesHandler(BaseHandler):
@@ -262,7 +266,8 @@ class ShowAnalysesHandler(BaseHandler):
             LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
                             (analysis_id, e))
 
-        self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
+        self.redirect(u"%s/analysis/show/?level=%s&message=%s"
+                      % (qiita_config.portal_dir, level, msg))
 
 
 class ResultsHandler(StaticFileHandler, BaseHandler):
