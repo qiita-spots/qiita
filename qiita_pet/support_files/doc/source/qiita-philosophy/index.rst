@@ -13,7 +13,7 @@ environments for each pipeline gives the freedom of adding any pipeline with
 any software dependencies to Qiita. Artifacts, basically any file in the
 system, from raw sequence to contingency tables or even data visualizations,
 permits the system to store any kind of data but also define within each
-pipelines which commands and parameter can applied to them.
+pipelines which commands and parameters can applied to them.
 
 The current plugins available are:
 

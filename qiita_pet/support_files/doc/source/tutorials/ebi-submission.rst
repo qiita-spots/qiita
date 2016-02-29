@@ -2,6 +2,8 @@
 
 .. index:: ebi-submission
 
+.. role:: red
+
 EBI submission via Qiita
 ========================
 
@@ -19,10 +21,11 @@ help send an email to `qiita.help@gmail.com <qiita.help@gmail.com>`__. Help will
 advice on additional fields to add to ensure MiXs compliance.
 
 Note that submissions are time consuming and need full collaboration from the user.
-Do not wait until the last minute to request help. In general, the best time to request a submission
-is when you are writing your paper. Remember that the data can be submitted to EBI and can be
-kept private and simply make public when the paper is accepted. Note that EBI/ENA takes up to 15 days to
-change the status from private to public, so consider this when submitting data and your manuscript.
+:red:`Do not wait until the last minute to request help.` In general, the best
+time to request a submission is when you are writing your paper. Remember that the
+data can be submitted to EBI and can be kept private and simply make public when
+the paper is accepted. Note that EBI/ENA takes up to 15 days to change the status
+from private to public, so consider this when submitting data and your manuscript.
 
 .. note::
    For convenience Qiita allows you to upload a QIIME mapping file to process your data. However,

@@ -57,7 +57,7 @@ named ``forward`` and all of our reverse reads are in a folder named
     cat forward/*.fastq > forward.fastq
     cat reverse/*.fastq > reverse.fastq
 
-While there is no requirement to comprass the generated files, it makes data
+While there is no requirement to compress the generated files, it makes data
 transfer and storage more convenient. The preferred and only supported
 compression program to use is ``gzip``:
 

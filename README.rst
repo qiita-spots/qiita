@@ -52,7 +52,7 @@ Accepted raw files
 * Multiplexed SFF
 * Multiplexed FASTQ: forward, reverse (optional), and barcodes
 * Per sample FASTQ: forward
-* Multiplexed fasta/qual files.
+* Multiplexed FASTA/qual files
 
 Known issues
 ------------
