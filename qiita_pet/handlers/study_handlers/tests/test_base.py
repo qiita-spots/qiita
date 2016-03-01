@@ -38,5 +38,18 @@ class StudyDeleteAjaxTests(TestHandlerBase):
                           'erased because it has a sample template'}
         self.assertEqual(loads(response.body), exp)
 
+
+class DataTypesMenuAJAXTests(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/description/data_type_menu/',
+                            {'study_id': '1'})
+        self.assertEqual(response.code, 200)
+        self.assertNotEqual(response.body, "")
+
+    def test_get_no_exists(self):
+        response = self.get('/study/description/data_type_menu/',
+                            {'study_id': '245'})
+        self.assertEqual(response.code, 404)
+
 if __name__ == "__main__":
     main()

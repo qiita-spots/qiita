@@ -12,7 +12,7 @@ from tornado.web import authenticated, HTTPError
 from qiita_pet.handlers.util import to_int, doi_linkifier
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    study_prep_get_req, data_types_get_req, study_get_req, study_delete_req)
+    study_prep_get_req, study_get_req, study_delete_req)
 
 
 class StudyIndexHandler(BaseHandler):
@@ -20,7 +20,12 @@ class StudyIndexHandler(BaseHandler):
     def get(self, study_id):
         study = to_int(study_id)
 
-        study_info = study_get_req(study, self.current_user.id)['info']
+        study_info = study_get_req(study, self.current_user.id)
+        if study_info['status'] != 'success':
+            raise HTTPError(404, study_info['message'])
+
+        study_info = study_info['info']
+
         editable = study_info['status'] == 'sandbox'
 
         self.render("study_base.html", study_info=study_info,
