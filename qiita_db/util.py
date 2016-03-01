@@ -444,6 +444,7 @@ def get_files_from_uploads_folders(study_id):
     list
         List of the filepaths for upload for that study
     """
+    study_id = str(study_id)
     fp = []
     for pid, p in get_mountpoint("uploads", retrieve_all=True):
         t = join(p, study_id)
