@@ -72,7 +72,11 @@
   var maxFileSize = {{max_upload_size}}; // in GB
 
   uploader = (function($){
-      return (new ResumableUploader(meta, $('.resumable-browse-metadata'), $('.resumable-drop-metadata'), $('.progress-metadata'), $('.uploader-list'), $('.file-edit-container'), maxFileSize, "{{study_id}}", "{{extensions}}"));
+      return (new ResumableUploader(meta, $('.resumable-browse-metadata'),
+                                    $('.resumable-drop-metadata'), $('.progress-metadata'),
+                                    $('.uploader-list'), $('.file-edit-container'),
+                                    maxFileSize, "{{study_id}}", "{{extensions}}",
+                                    {% raw qiita_config.portal_dir %}));
     })(jQuery);
 
   {% for dirid, filename in files %}
