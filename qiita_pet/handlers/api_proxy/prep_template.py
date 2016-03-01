@@ -14,10 +14,43 @@ from natsort import natsorted
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.metadata_template.util import load_template_to_dataframe
-from qiita_db.util import convert_to_id
+from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
+
+
+def new_prep_template_get_req(study_id):
+    """
+    Parameters
+    ----------
+    study_id : int
+        The study id
+
+    Returns
+    -------
+    (list of str, list of str, dict of {str: list of str})
+        The list of txt,csv files in the upload dir for the given study
+        The list of available data types
+        The investigation type ontology information
+    """
+    prep_files = [f for _, f in get_files_from_uploads_folders(study_id)
+                  if f.endswith(('txt', 'tsv'))]
+    data_types = sorted(Study.all_data_types())
+
+    # Get all the ENA terms for the investigation type
+    ontology = Ontology(convert_to_id('ENA', 'ontology'))
+    ena_terms = sorted(ontology.terms)
+    # make "Other" last on the list
+    ena_terms.remove('Other')
+    ena_terms.append('Other')
+
+    ontology_info = {'ENA': ena_terms,
+                     'User': sorted(ontology.user_defined_terms)}
+    return {'status': 'success',
+            'prep_files': prep_files,
+            'data_types': data_types,
+            'ontology': ontology_info}
 
 
 @execute_as_transaction
@@ -197,11 +230,10 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     prep = None
     try:
         with warnings.catch_warnings(record=True) as warns:
-            data_type_id = convert_to_id(data_type, 'data_type')
             # deleting previous uploads and inserting new one
-            prep = PrepTemplate.create(load_template_to_dataframe(fp_rpt),
-                                       Study(int(study_id)), int(data_type_id),
-                                       investigation_type=investigation_type)
+            prep = PrepTemplate.create(
+                load_template_to_dataframe(fp_rpt), Study(study_id), data_type,
+                investigation_type=investigation_type)
             remove(fp_rpt)
 
             # join all the warning messages into one. Note that this info

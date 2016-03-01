@@ -20,19 +20,10 @@ class StudyIndexHandler(BaseHandler):
     def get(self, study_id):
         study = to_int(study_id)
 
-        # Proxies for what will become API requests
-        prep_info = study_prep_get_req(study, self.current_user.id)
-        # Make sure study exists
-        if prep_info['status'] != 'success':
-            raise HTTPError(404, prep_info['message'])
-
-        prep_info = prep_info['info']
-        data_types = data_types_get_req()['data_types']
         study_info = study_get_req(study, self.current_user.id)['info']
         editable = study_info['status'] == 'sandbox'
 
-        self.render("study_base.html", prep_info=prep_info,
-                    data_types=data_types, study_info=study_info,
+        self.render("study_base.html", study_info=study_info,
                     editable=editable)
 
 
@@ -57,3 +48,18 @@ class StudyDeleteAjax(BaseHandler):
     def post(self):
         study_id = self.get_argument('study_id')
         self.write(study_delete_req(int(study_id), self.current_user.id))
+
+
+class DataTypesMenuAJAX(BaseHandler):
+    @authenticated
+    def get(self):
+        study_id = to_int(self.get_argument('study_id'))
+        # Retrieve the prep template information for the menu
+        prep_info = study_prep_get_req(study_id, self.current_user.id)
+        # Make sure study exists
+        if prep_info['status'] != 'success':
+            raise HTTPError(404, prep_info['message'])
+
+        prep_info = prep_info['info']
+
+        self.render('study_ajax/data_type_menu.html', prep_info=prep_info)

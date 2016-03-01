@@ -20,7 +20,20 @@ from qiita_pet.handlers.api_proxy import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req,
     prep_template_filepaths_get_req, data_types_get_req,
-    prep_template_graph_get_req, ena_ontology_get_req)
+    prep_template_graph_get_req, ena_ontology_get_req,
+    new_prep_template_get_req)
+
+
+class NewPrepTemplateAjax(BaseHandler):
+    @authenticated
+    def get(self):
+        study_id = to_int(self.get_argument('study_id'))
+        result = new_prep_template_get_req(study_id)
+        self.render('study_ajax/add_prep_template.html',
+                    prep_files=result['prep_files'],
+                    data_types=result['data_types'],
+                    ontology=result['ontology'],
+                    study_id=study_id)
 
 
 class PrepTemplateGraphAJAX(BaseHandler):

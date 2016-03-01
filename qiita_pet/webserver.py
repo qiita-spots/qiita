@@ -28,7 +28,8 @@ from qiita_pet.handlers.study_handlers import (
     PreprocessingSummaryHandler, VAMPSHandler, PrepTemplateGraphAJAX,
     ProcessArtifactHandler, ListCommandsHandler, ListOptionsHandler,
     PrepTemplateAJAX, NewArtifactHandler, PrepFilesHandler, SampleAJAX,
-    StudyDeleteAjax, ArtifactAdminAJAX, ArtifactAJAX)
+    StudyDeleteAjax, ArtifactAdminAJAX, ArtifactAJAX,
+    NewPrepTemplateAjax, DataTypesMenuAJAX)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
@@ -38,6 +39,7 @@ from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_pet.handlers.processing_handlers import ProcessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
+from qiita_pet.handlers.prep_template import PrepTemplateHandler
 from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
                                               ActiveStepHandler,
                                               CompleteHandler)
@@ -112,15 +114,18 @@ class Application(tornado.web.Application):
             (r"/study/process", ProcessHandler),
             (r"/study/job/", ListOptionsHandler),
             (r"/study/sharing/", ShareStudyAJAX),
+            (r"/study/new_prep_template/", NewPrepTemplateAjax),
             (r"/prep/graph/", PrepTemplateGraphAJAX),
             (r"/artifact/", ArtifactAJAX),
             (r"/artifact/graph/", ArtifactGraphAJAX),
+            (r"/prep_template/", PrepTemplateHandler),
             # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.
             # Same reasoning as below. /study/description/(.*) should be last.
             (r"/study/description/sample_template/", SampleTemplateAJAX),
             (r"/study/description/sample_summary/", SampleAJAX),
             (r"/study/description/prep_template/", PrepTemplateAJAX),
             (r"/study/description/baseinfo/", StudyBaseInfoAJAX),
+            (r"/study/description/data_type_menu/", DataTypesMenuAJAX),
             (r"/study/description/(.*)", StudyIndexHandler),
             (r"/study/delete/", StudyDeleteAjax),
             (r"/study/upload/(.*)", StudyUploadFileHandler),
