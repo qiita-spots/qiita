@@ -11,7 +11,8 @@ from datetime import datetime
 from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.studies import (
-    data_types_get_req, study_get_req, study_prep_get_req, study_delete_req)
+    data_types_get_req, study_get_req, study_prep_get_req, study_delete_req,
+    study_files_get_req)
 
 
 @qiita_test_checker()
@@ -146,6 +147,17 @@ class TestStudyAPI(TestCase):
         obs = study_delete_req(4, 'test@foo.bar')
         exp = {'status': 'error',
                'message': 'Study does not exist'}
+        self.assertEqual(obs, exp)
+
+    def test_study_files_get_req(self):
+        obs = study_files_get_req(1, 1, 'FASTQ')
+        exp = {'status': 'success',
+               'message': '',
+               'remaining': ['uploaded_file.txt'],
+               'file_types': [('raw_barcodes', True, []),
+                              ('raw_forward_seqs', True, []),
+                              ('raw_reverse_seqs', False, [])],
+               'num_prefixes': 1}
         self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
