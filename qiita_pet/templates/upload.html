@@ -76,7 +76,7 @@
                                     $('.resumable-drop-metadata'), $('.progress-metadata'),
                                     $('.uploader-list'), $('.file-edit-container'),
                                     maxFileSize, "{{study_id}}", "{{extensions}}",
-                                    {% raw qiita_config.portal_dir %}));
+                                    "{% raw qiita_config.portal_dir %}"));
     })(jQuery);
 
   {% for dirid, filename in files %}
