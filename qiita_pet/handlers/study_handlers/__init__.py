@@ -13,7 +13,7 @@ from .description_handlers import PreprocessingSummaryHandler
 from .ebi_handlers import EBISubmitHandler
 from .vamps_handlers import VAMPSHandler
 from .base import (StudyIndexHandler, StudyBaseInfoAJAX, StudyDeleteAjax,
-                   DataTypesMenuAJAX)
+                   DataTypesMenuAJAX, StudyFilesAJAX)
 from .prep_template import (
     PrepTemplateGraphAJAX, PrepTemplateAJAX, PrepFilesHandler,
     NewPrepTemplateAjax)
@@ -32,4 +32,4 @@ __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'NewArtifactHandler', 'PrepFilesHandler', 'ProcessArtifactHandler',
            'ListCommandsHandler', 'ListOptionsHandler', 'SampleAJAX',
            'StudyDeleteAjax', 'ArtifactAJAX', 'NewPrepTemplateAjax',
-           'DataTypesMenuAJAX']
+           'DataTypesMenuAJAX', 'StudyFilesAJAX']
