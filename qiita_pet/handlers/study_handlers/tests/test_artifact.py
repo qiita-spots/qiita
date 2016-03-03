@@ -18,7 +18,7 @@ import numpy.testing as npt
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.artifact import Artifact
 from qiita_db.study import Study
-from qiita_db.util import get_count, get_mountpoint
+from qiita_db.util import get_mountpoint
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBWarning
 

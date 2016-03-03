@@ -27,7 +27,7 @@ from qiita_pet.handlers.study_handlers import (
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
     PreprocessingSummaryHandler, VAMPSHandler, PrepTemplateGraphAJAX,
     ProcessArtifactHandler, ListCommandsHandler, ListOptionsHandler,
-    PrepTemplateAJAX, NewArtifactHandler, PrepFilesHandler, SampleAJAX,
+    PrepTemplateAJAX, NewArtifactHandler, SampleAJAX,
     StudyDeleteAjax, ArtifactAdminAJAX, ArtifactAJAX,
     NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX)
 from qiita_pet.handlers.websocket_handlers import (
