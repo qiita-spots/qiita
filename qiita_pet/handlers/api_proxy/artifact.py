@@ -6,6 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from os.path import join
+from functools import partial
+
+from future.utils import viewitems
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
@@ -73,8 +76,9 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     ----------
     user_id : str
         User adding the atrifact
-    filepaths : dict of {str: [str, ...], ...}
-        List of files to attach to the artifact, keyed to the file type
+    filepaths : dict of {str: str}
+        Comma-separated list of files to attach to the artifact,
+        keyed by file type
     artifact_type : str
         The type of the artifact
     name : str
@@ -92,23 +96,46 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     """
     prep = PrepTemplate(int(prep_template_id))
     study_id = prep.study_id
+
+    # First check if the user has access to the study
     access_error = check_access(study_id, user_id)
     if access_error:
         return access_error
-    uploads_path = get_mountpoint('uploads')[0][1]
-    cleaned_filepaths = []
-    for ftype in filepaths:
-        # Check if filepath being passed exists for study
-        for fp in filepaths[ftype]:
-            full_fp = join(uploads_path, str(study_id), fp)
-            exists = check_fp(study_id, full_fp)
-            if exists['status'] != 'success':
-                return {'status': 'error',
-                        'message': 'File does not exist: %s' % fp}
-            cleaned_filepaths.append((full_fp, ftype))
 
-    artifact = Artifact.create(cleaned_filepaths, artifact_type, name=name,
-                               prep_template=prep)
+    uploads_path = get_mountpoint('uploads')[0][1]
+    path_builder = partial(join, uploads_path, str(study_id))
+    cleaned_filepaths = []
+    for ftype, file_list in viewitems(filepaths):
+        # JavaScript sends us this list as a comma-separated list
+        for fp in file_list.split(','):
+            # If the list was initially empty, the elemnt fp will the empty
+            # string, which will make the check below for "exists" to check
+            # for the directory, instead than for the actual file
+            if fp:
+                # Check if filepath being passed exists for study
+                full_fp = path_builder(fp)
+                exists = check_fp(study_id, full_fp)
+                if exists['status'] != 'success':
+                    return {'status': 'error',
+                            'message': 'File does not exist: %s' % fp}
+                cleaned_filepaths.append((full_fp, ftype))
+
+    # This should never happen, but it doesn't hurt to actually have
+    # a explicit check, in case there is something odd with the JS
+    if not cleaned_filepaths:
+        return {'status': 'error',
+                'message': "Can't create artifact, no files provided."}
+
+    try:
+        artifact = Artifact.create(cleaned_filepaths, artifact_type, name=name,
+                                   prep_template=prep)
+    except Exception as e:
+        # We should hit this exception rarelly (that's why is an exception)
+        # since at this point we have done multiple checks. However, it can
+        # occur in weird cases, so better let the GUI know that this fail
+        return {'status': 'error',
+                'message': "Error creating artifact: %s" % str(e)}
+
     return {'status': 'success',
             'message': '',
             'artifact': artifact.id}
