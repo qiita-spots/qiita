@@ -69,23 +69,35 @@
     var num_children = this.children.length;
     var is_required = $(this).attr("data-file-required") === "True";
     var req_count = +$(this).attr("data-file-count");
-    var count_ok = num_children == req_count;
 
-    if (is_required) {
-      if (num_children === 0 || !count_ok) { mark_as_wrong(this); }
-      else { mark_as_correct(this); }
+    // If required count is > 0, then we have to check that the number of files
+    // in each list that is required or optional but populated, have the same
+    // number of files as specified by req_count. Otherwise, we just need to
+    // check that the required lists have at least on file
+    if (req_count > 0) {
+      var count_ok = num_children == req_count;
+      // If the count is correct, then it is always correct. If the count is not
+      // correct, it is correct if and only if it is not required and has no
+      // children
+      if (count_ok || (!is_required && num_children === 0)) { mark_as_correct(this); }
+      else { mask_as_wrong(this); }
     }
     else {
-      if (num_children !== 0) {
-        if (count_ok) { mark_as_correct(this); }
-        else { mark_as_wrong(this); }
-      }
-      else { mark_as_correct(this); }
+      // There is no required count. In this case, it is correct if the number
+      // of children is greater than 0 or if it is not required
+      if (num_children > 0 || !is_required) { mark_as_correct(this); }
+      else { mark_as_wrong(this); }
     }
     allow_submission();
   }
 
   /*
+   *
+   * Function to generate the list of files as form values
+   *
+   * This function generates the files lists for each of the filepath types
+   * and adds it as a form value. Note that although they are 2 loops
+   * (each calls) the complexity of this function is O(num_files)
    *
    */
   function build_file_lists() {

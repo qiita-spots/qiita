@@ -211,7 +211,9 @@ def study_files_get_req(study_id, prep_template_id, artifact_type):
 
     uploaded = get_files_from_uploads_folders(study_id)
     pt = PrepTemplate(prep_template_id).to_dataframe()
-    if 'run_prefix' in pt.columns:
+
+    if (any(ft.startswith('raw_') for ft, _ in supp_file_types) and
+            'run_prefix' in pt.columns):
         prep_prefixes = tuple(set(pt['run_prefix']))
         num_prefixes = len(prep_prefixes)
         for _, filename in uploaded:
@@ -220,7 +222,7 @@ def study_files_get_req(study_id, prep_template_id, artifact_type):
             else:
                 remaining.append(filename)
     else:
-        num_prefixes = False
+        num_prefixes = 0
         remaining = [f for _, f in uploaded]
 
     # At this point we can't make anything smart about selecting by default
