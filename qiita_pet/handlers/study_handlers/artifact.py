@@ -10,12 +10,10 @@ from __future__ import division
 from tornado.web import authenticated
 
 
-from qiita_db.util import get_files_from_uploads_folders
 from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    artifact_graph_get_req, artifact_types_get_req, data_types_get_req,
-    ena_ontology_get_req, prep_template_post_req, artifact_post_req,
+    artifact_graph_get_req, artifact_types_get_req, artifact_post_req,
     artifact_status_put_req, artifact_get_req, artifact_delete_req)
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
@@ -32,48 +30,29 @@ class ArtifactGraphAJAX(BaseHandler):
 
 class NewArtifactHandler(BaseHandler):
     @authenticated
-    def get(self, study_id):
-        prep_files = [f for _, f in get_files_from_uploads_folders(study_id)
-                      if f.endswith(('txt', 'tsv'))]
+    def get(self):
+        study_id = self.get_argument("study_id")
+        prep_id = self.get_argument("prep_template_id")
         artifact_types = artifact_types_get_req()['types']
-        data_types = sorted(data_types_get_req()['data_types'])
-        ontology = ena_ontology_get_req()
-        self.render("study_ajax/add_prep_artifact.html", prep_files=prep_files,
-                    artifact_types=artifact_types, data_types=data_types,
-                    ontology=ontology, study_id=study_id)
+
+        self.render("study_ajax/add_artifact.html",
+                    study_id=study_id, prep_id=prep_id,
+                    artifact_types=artifact_types)
 
     @authenticated
     @execute_as_transaction
-    def post(self, study_id):
-        study_id = int(study_id)
+    def post(self):
+        artifact_type = self.get_argument('artifact-type')
         name = self.get_argument('name')
-        data_type = self.get_argument('data-type')
-        ena_ontology = self.get_argument('ena-ontology', None)
-        user_ontology = self.get_argument('user-ontology', None)
-        new_ontology = self.get_argument('new-ontology', None)
-        artifact_type = self.get_argument('type')
-        prep_file = self.get_argument('prep-file')
+        prep_id = self.get_argument('prep-template-id')
 
-        # Remove known columns, leaving just file types and files
-        files = self.request.arguments
-        for arg in ['name', 'data-type', 'ena-ontology', 'user-ontology',
-                    'new-ontology', 'type', 'prep-file']:
-            files.pop(arg, None)
-
-        prep = prep_template_post_req(study_id, self.current_user.id,
-                                      prep_file, data_type, ena_ontology,
-                                      user_ontology, new_ontology)
-        if prep['status'] == 'error':
-            self.write(prep)
-            return
+        # Request the rest of the arguments, which will be the files
+        files = {arg: self.get_argument(arg) for arg in self.request.arguments
+                 if arg not in ['name', 'prep-template-id', 'artifact-type']}
 
         artifact = artifact_post_req(
-            self.current_user.id, files, artifact_type, name, prep['id'])
-        if artifact['status'] == 'success' and prep['status'] != 'warning':
-            self.write({'status': 'success',
-                        'message': 'Artifact created successfully'})
-        else:
-            self.write(prep)
+            self.current_user.id, files, artifact_type, name, prep_id)
+        self.write(artifact)
 
 
 class ArtifactAJAX(BaseHandler):

@@ -8,12 +8,19 @@
 
 from unittest import main
 from os.path import exists, join
+from os import remove, close
+from tempfile import mkstemp
 from json import loads
+
+import pandas as pd
+import numpy.testing as npt
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.artifact import Artifact
+from qiita_db.study import Study
 from qiita_db.util import get_count, get_mountpoint
 from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.exceptions import QiitaDBWarning
 
 
 class ArtifactGraphAJAXTests(TestHandlerBase):
@@ -52,16 +59,47 @@ class ArtifactGraphAJAXTests(TestHandlerBase):
 
 class NewArtifactHandlerTestsReadOnly(TestHandlerBase):
     def test_get(self):
-        response = self.get('/study/add_prep/1')
+        args = {'study_id': 1, 'prep_template_id': 1}
+        response = self.get('/study/new_artifact/', args)
         self.assertEqual(response.code, 200)
-        self.assertIn('Select file type', response.body)
-        self.assertIn('uploaded_file.txt', response.body)
+        self.assertNotEqual(response.body, "")
 
 
 class NewArtifactHandlerTests(TestHandlerBase):
     database = True
 
+    def setUp(self):
+        super(NewArtifactHandlerTests, self).setUp()
+        tmp_dir = join(get_mountpoint('uploads')[0][1], '1')
+
+        # Create prep test file to point at
+        fd, prep_fp = mkstemp(dir=tmp_dir, suffix='.txt')
+        close(fd)
+        with open(prep_fp, 'w') as f:
+            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
+        self.prep = npt.assert_warns(
+            QiitaDBWarning, PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), "16S")
+
+        fd, self.fwd_fp = mkstemp(dir=tmp_dir, suffix=".fastq")
+        close(fd)
+        with open(self.fwd_fp, 'w') as f:
+            f.write("@seq\nTACGA\n+ABBBB\n")
+
+        fd, self.barcodes_fp = mkstemp(dir=tmp_dir, suffix=".fastq")
+        close(fd)
+        with open(self.barcodes_fp, 'w') as f:
+            f.write("@seq\nTACGA\n+ABBBB\n")
+
+        self._files_to_remove = [prep_fp, self.fwd_fp, self.barcodes_fp]
+
     def tearDown(self):
+        super(NewArtifactHandlerTests, self).tearDown()
+
+        for fp in self._files_to_remove:
+            if exists(fp):
+                remove(fp)
+
         # Replace file if removed as part of function testing
         uploads_path = get_mountpoint('uploads')[0][1]
         fp = join(uploads_path, '1', 'uploaded_file.txt')
@@ -70,30 +108,19 @@ class NewArtifactHandlerTests(TestHandlerBase):
                 f.write('')
 
     def test_post_artifact(self):
-        new_artifact_id = get_count('qiita.artifact') + 1
-        new_prep_id = get_count('qiita.prep_template') + 1
-        uploads_path = get_mountpoint('uploads')[0][1]
-        # Create prep test file to point at
-        prep_fp = join(uploads_path, '1', 'prep_create.txt')
-        with open(prep_fp, 'w') as f:
-            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
-        prep_fp = join(uploads_path, '1', 'uploaded_file.txt')
-        with open(prep_fp, 'w') as f:
-            f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
-
-        response = self.post(
-            '/study/add_prep/1', {
-                'name': 'new prep', 'data-type': '16S',
-                'ena-ontology': 'Metagenomics', 'user-ontology': '',
-                'new-ontology': '', 'type': 'per_sample_FASTQ',
-                'prep-file': 'prep_create.txt',
-                'raw_forward_seqs': ['uploaded_file.txt'],
-                'raw_reverse_seqs': []})
+        args = {
+            'artifact-type': 'FASTQ',
+            'name': 'New Artifact Handler test',
+            'prep-template-id': self.prep.id,
+            'raw_forward_seqs': [self.fwd_fp],
+            'raw_barcodes': [self.barcodes_fp],
+            'raw_reverse_seqs': []}
+        response = self.post('/study/new_artifact/', args)
         self.assertEqual(response.code, 200)
         # make sure new artifact created
-        artifact = Artifact(new_artifact_id)
-        self.assertEqual(artifact.name, 'new prep')
-        PrepTemplate(new_prep_id)
+        artifact = Artifact(loads(response.body)['artifact'])
+        self.assertEqual(artifact.name, 'New Artifact Handler test')
+        self._files_to_remove.extend([fp for _, fp, _ in artifact.filepaths])
 
 
 class ArtifactAJAXTests(TestHandlerBase):
