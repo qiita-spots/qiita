@@ -6,9 +6,9 @@ No raw sequences
 ================
 
 In order to ensure a direct comparability between studies, Qiita
-enforces the usage of raw data files as the main input file, this is,
+enforces the use of raw data files as the main input file, i.e.
 sequence files as they come out of the sequencing instrument. However
-there are many reasons why this is not always possible and thus we've
+there are many reasons why this is not always possible so we have
 created the following guides to help you overcome this limitation and be
 able to use Qiita to process your data files.
 
@@ -39,7 +39,7 @@ them in a per-sample location:
 
     for i in `ls forward/*.fastq`; do extract_barcodes.py -f ${i} -c barcode_in_label --bc1_len "length_of_your_barcode" -o barcodes/${i}; done
 
-Once we have all the barcode files we should concatenate them into a
+Once you have all the barcode files concatenate them into a
 single ``barcodes.fastq`` file.
 
 .. code:: bash
@@ -47,7 +47,7 @@ single ``barcodes.fastq`` file.
     cat barcode/*/* > barcodes.fastq
 
 To create the forward reads file ``forward.fastq`` and the reverse reads
-file ``reverse.fastq``, we just need to concatenate the files. In the
+file ``reverse.fastq``, concatenate the files. In the
 following example we assume all of our forward reads are in a folder
 named ``forward`` and all of our reverse reads are in a folder named
 ``reverse``:
@@ -57,8 +57,8 @@ named ``forward`` and all of our reverse reads are in a folder named
     cat forward/*.fastq > forward.fastq
     cat reverse/*.fastq > reverse.fastq
 
-While you don't have to compress the generated files, it will make data
-transfer and storage more convenient, the preferred and only supported
+While there is no requirement to compress the generated files, it makes data
+transfer and storage more convenient. The preferred and only supported
 compression program to use is ``gzip``:
 
 .. code:: bash
@@ -78,7 +78,7 @@ files and that they do not have any barcode or primer information. This file typ
 normally is what you can download from `Illumina's BaseSpace <https://basespace.illumina.com/home/index>`__.
 
 
-The current system allows to upload this kind of files. The only requirement is
+The current system allows users to upload this kind of files. The only requirement is
 that the prep template should have the uploaded sequence file(s) name in the
 run_prefix field. This should be an exact match without extension (fastq or
 fastq.gz). For example, if your uploaded file is named sample1_L001_R1.fastq.gz
