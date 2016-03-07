@@ -103,7 +103,7 @@ def generate_artifact_info(pick_out):
     filepaths = [(path_builder('otu_table.biom'), 'biom'),
                  (path_builder('sortmerna_picked_otus'), 'directory'),
                  (glob(path_builder('log_*.txt'))[0], 'log')]
-    return [['BIOM', filepaths, True, True]]
+    return [['OTU table', 'BIOM', filepaths]]
 
 
 def pick_closed_reference_otus(qclient, job_id, parameters, out_dir):

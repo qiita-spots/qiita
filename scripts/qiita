@@ -142,18 +142,13 @@ def load_study(owner, title, info):
                    "process the new artifact, if different from the "
                    "defaults",
               type=str)
-@click.option('--ebi', is_flag=True,
-              help="Pass this flag if the artifact can be submitted to EBI")
-@click.option('--vamps', is_flag=True,
-              help="Pass this flag if the artifact can be submitted to VAMPS")
 def load_artifact(fp, fp_type, artifact_type, prep_template, parents,
-                  dflt_params, required_params, optional_params, ebi, vamps):
+                  dflt_params, required_params, optional_params):
     """Loads an artifact to the database"""
     artifact = qdb.commands.load_artifact_from_cmd(
         fp, fp_type, artifact_type, prep_template=prep_template,
         parents=parents, dflt_params_id=dflt_params,
-        required_params=required_params, optional_params=optional_params,
-        can_be_submitted_to_ebi=ebi, can_be_submitted_to_vamps=vamps)
+        required_params=required_params, optional_params=optional_params)
     click.echo("Artifact %s successfully created" % artifact.id)
 
 

@@ -563,7 +563,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             if missing:
                 warning_msg.append(
-                    "%s: %s" % (restriction.error_msg, ', '.join(missing)))
+                    "%s: %s" % (restriction.error_msg,
+                                ', '.join(sorted(missing))))
 
         if warning_msg:
             warnings.warn(
@@ -712,7 +713,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             if new_cols:
                 warnings.warn(
                     "The following columns have been added to the existing"
-                    " template: %s" % ", ".join(new_cols),
+                    " template: %s" % ", ".join(sorted(new_cols)),
                     qdb.exceptions.QiitaDBWarning)
                 # If we are adding new columns, add them first (simplifies
                 # code). Sorting the new columns to enforce an order
@@ -1301,6 +1302,31 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         % (category, value_str, value_types_str, column_type))
 
                 raise e
+
+    def get_category(self, category):
+        """Returns the values of all samples for the given category
+
+        Parameters
+        ----------
+        category : str
+            Metadata category to get information for
+
+        Returns
+        -------
+        dict
+            Sample metadata for the category in the form {sample_id: value}
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If category is not part of the template
+        """
+        with qdb.sql_connection.TRN:
+            qdb.util.check_table_cols([category], self._table_name(self._id))
+            sql = 'SELECT sample_id, {0} FROM qiita.{1}'.format(
+                category, self._table_name(self._id))
+            qdb.sql_connection.TRN.add(sql)
+            return dict(qdb.sql_connection.TRN.execute_fetchindex())
 
     def check_restrictions(self, restrictions):
         """Checks if the template fulfills the restrictions

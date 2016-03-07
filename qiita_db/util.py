@@ -25,6 +25,7 @@ Methods
     convert_from_id
     convert_to_id
     get_environmental_packages
+    get_visibilities
     purge_filepaths
     move_filepaths_to_upload_folder
     move_upload_files_to_trash
@@ -993,6 +994,19 @@ def get_environmental_packages():
         return qdb.sql_connection.TRN.execute_fetchindex()
 
 
+def get_visibilities():
+    """Get the list of available visibilities for artifacts
+
+    Returns
+    -------
+    list of str
+        The available visibilities
+    """
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT visibility FROM qiita.visibility")
+        return qdb.sql_connection.TRN.execute_fetchflatten()
+
+
 def get_timeseries_types():
     """Get the list of available timeseries types
 
@@ -1166,3 +1180,27 @@ def clear_system_messages():
             sql = "DELETE FROM qiita.message WHERE message_id IN %s"
             qdb.sql_connection.TRN.add(sql, [msg_ids])
             qdb.sql_connection.TRN.execute()
+
+
+def supported_filepath_types(artifact_type):
+    """Returns the list of supported filepath types for the given artifact type
+
+    Parameters
+    ----------
+    artifact_type : str
+        The artifact type to check the supported filepath types
+
+    Returns
+    -------
+    list of [str, bool]
+        The list of supported filepath types and whether it is required by the
+        artifact type or not
+    """
+    with qdb.sql_connection.TRN:
+        sql = """SELECT DISTINCT filepath_type, required
+                 FROM qiita.artifact_type_filepath_type
+                    JOIN qiita.artifact_type USING (artifact_type_id)
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                 WHERE artifact_type = %s"""
+        qdb.sql_connection.TRN.add(sql, [artifact_type])
+        return qdb.sql_connection.TRN.execute_fetchindex()
