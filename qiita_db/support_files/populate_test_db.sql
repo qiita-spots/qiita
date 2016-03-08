@@ -418,7 +418,15 @@ INSERT INTO qiita.filepath (filepath, filepath_type_id, checksum, checksum_algor
 ('2_test_folder', 8, '852952723', 1, 2);
 
 -- Insert jobs
-INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options) VALUES (2, 1, 1, '{"--otu_table_fp":1}'), (2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}'), (2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}');
+INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options, input_file_reference_id, input_file_software_command_id) VALUES
+(2, 1, 1, '{"--otu_table_fp":1}', 1, 3),
+(2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 2, 3),
+(2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 1, 3);
+
+INSERT INTO qiita.job (data_type_id, job_status_id, command_id, options, input_file_reference_id, input_file_software_command_id) VALUES
+(2, 1, 1, '{"--otu_table_fp":1}', 1, 3),
+(2, 3, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 2, 3),
+(2, 1, 2, '{"--mapping_fp":1,"--otu_table_fp":1}', 1, 3);
 
 -- Add job results
 INSERT INTO qiita.job_results_filepath (job_id, filepath_id) VALUES (1, 13), (2, 14);

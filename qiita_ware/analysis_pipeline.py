@@ -133,7 +133,10 @@ class RunAnalysis(ParallelWrapper):
             if command == "Alpha Rarefaction":
                 opts["-n"] = 4
 
-            Job.create(data_type, command, opts, analysis,
+            # These values are going to be changed in the next PR
+            # 1: GG
+            # 3: pick close reference
+            Job.create(data_type, command, opts, analysis, 1, 3,
                        return_existing=True)
 
         # Create the files for the jobs
