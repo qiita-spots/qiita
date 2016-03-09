@@ -7,8 +7,10 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 import warnings
+from json import loads
 
 from os import remove
+from os.path import basename
 from natsort import natsorted
 
 from qiita_core.util import execute_as_transaction
@@ -18,6 +20,16 @@ from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
+
+
+def _get_ENA_ontology():
+    ontology = Ontology(convert_to_id('ENA', 'ontology'))
+    ena_terms = sorted(ontology.terms)
+    # make "Other" last on the list
+    ena_terms.remove('Other')
+    ena_terms.append('Other')
+
+    return {'ENA': ena_terms, 'User': sorted(ontology.user_defined_terms)}
 
 
 def new_prep_template_get_req(study_id):
@@ -39,18 +51,65 @@ def new_prep_template_get_req(study_id):
     data_types = sorted(Study.all_data_types())
 
     # Get all the ENA terms for the investigation type
-    ontology = Ontology(convert_to_id('ENA', 'ontology'))
-    ena_terms = sorted(ontology.terms)
-    # make "Other" last on the list
-    ena_terms.remove('Other')
-    ena_terms.append('Other')
+    ontology_info = _get_ENA_ontology()
 
-    ontology_info = {'ENA': ena_terms,
-                     'User': sorted(ontology.user_defined_terms)}
     return {'status': 'success',
             'prep_files': prep_files,
             'data_types': data_types,
             'ontology': ontology_info}
+
+
+def prep_template_ajax_get_req(prep_id):
+    """
+    Parameters
+    ----------
+    prep_id : int
+        The prep template id
+
+    Returns
+    -------
+    """
+    # Currently there is no name attribute, but it will be soon
+    name = "Prep information %d" % prep_id
+    pt = PrepTemplate(prep_id)
+    artifact_attached = pt.artifact is not None
+    study_id = pt.study_id
+    files = [f for _, f in get_files_from_uploads_folders(study_id)
+             if f.endswith(('txt', 'tsv'))]
+
+    # The call to list is needed because keys is an iterator
+    num_samples = len(list(pt.keys()))
+    num_columns = len(pt.categories())
+    investigation_type = ena_ontology_get_req()
+
+    # Retrieve the information to download the prep template and QIIME
+    # mapping file. See issue https://github.com/biocore/qiita/issues/1675
+    download_prep = []
+    download_qiime = []
+    for fp_id, fp in pt.get_filepaths():
+        if 'qiime' in basename(fp):
+            download_qiime.append(fp_id)
+        else:
+            download_prep.append(fp_id)
+    download_prep = download_prep[0]
+    download_qiime = download_qiime[0]
+
+    ontology = _get_ENA_ontology()
+
+    # stats = prep_template_summary_get_req(prep_id, self.current_user.id)
+
+    return {'status': 'success',
+            'message': '',
+            'name': name,
+            'files': files,
+            'download_prep': download_prep,
+            'download_qiime': download_qiime,
+            'num_samples': num_samples,
+            'num_columns': num_columns,
+            'investigation_type': investigation_type,
+            'ontology': ontology,
+            'artifact_attached': artifact_attached,
+            'study_id': study_id}
 
 
 @execute_as_transaction
@@ -252,6 +311,68 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
             'id': prep.id if prep is not None else None}
 
     return info
+
+
+def prep_template_patch_req(user_id, action):
+    """Modifies an attribute of the prep template
+
+    Parameters
+    ----------
+    user_id : str
+        The id of the user performing the patch operation
+    action: str
+        JSON string containing the patch to apply using JSON PATCH [1]_
+
+    References
+    ----------
+    .. [1] https://tools.ietf.org/html/rfc6902
+    """
+    as_json = loads(action)
+    op = as_json['op']
+
+    # Currently we are only supporting the replace operation
+    if op != 'replace':
+        return {'status': 'error',
+                'message': 'Operation "%s" not supported. '
+                           'Current supported operations: replace' % (op)}
+
+    # Do some clean-up on the path for downstream easy handling
+    path_str = as_json['path']
+    if path_str.startswith('/'):
+        path_str = path_str[1:]
+    if path_str.endswith('/'):
+        path_str = path_str[:-1]
+
+    # The structure of the path should be /prep_id/attribute_to_modify/
+    # so if we don't have those 2 elements, we should return an error
+    path_list = path_str.split('/')
+    if len(path_list) != 2:
+        return {'status': 'error',
+                'message': 'Incorrect path parameter'}
+
+    # Extract all the parameters
+    prep_id = path_list[0]
+    attribute = path_list[1]
+    value = as_json['value']
+
+    # Check if the user actually has access to the prep template
+    prep = PrepTemplate(prep_id)
+    access_error = check_access(prep.study_id, user_id)
+    if access_error:
+        return access_error
+
+    # Build a dictionary to point to the functions that will execute the
+    # different operations
+    if attribute == 'investigation_type':
+        prep.investigation_type = value
+    else:
+        # We do not undertand the attribute so return an error
+        return {'status': 'error',
+                'message': 'Attribute "%s" not found. '
+                           'Please, check the path parameter' % attribute}
+
+    return {'status': 'success',
+            'message': ''}
 
 
 def prep_template_samples_get_req(prep_id, user_id):

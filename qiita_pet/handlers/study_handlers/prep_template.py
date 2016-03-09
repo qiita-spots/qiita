@@ -11,16 +11,13 @@ from os.path import join
 from tornado.web import authenticated, HTTPError
 import pandas as pd
 
-from qiita_pet.handlers.util import to_int, download_link_or_path
+from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.util import is_localhost
 from qiita_db.util import (get_files_from_uploads_folders, get_mountpoint,
                            supported_filepath_types)
 from qiita_pet.handlers.api_proxy import (
-    prep_template_summary_get_req, prep_template_post_req,
-    prep_template_put_req, prep_template_delete_req,
-    prep_template_filepaths_get_req, data_types_get_req,
-    prep_template_graph_get_req, ena_ontology_get_req,
+    prep_template_ajax_get_req, prep_template_post_req, prep_template_put_req,
+    prep_template_delete_req, prep_template_graph_get_req,
     new_prep_template_get_req)
 
 
@@ -47,24 +44,19 @@ class PrepTemplateAJAX(BaseHandler):
     @authenticated
     def get(self):
         """Send formatted summary page of prep template"""
-        study_id = self.get_argument('study_id')
-        prep_id = self.get_argument('prep_id')
-        files = [f for _, f in get_files_from_uploads_folders(str(study_id))
-                 if f.endswith(('txt', 'tsv'))]
-        data_types = sorted(data_types_get_req())
-        is_local = is_localhost(self.request.headers['host'])
-        # Get the most recent version for download and build the link
-        download = prep_template_filepaths_get_req(
-            study_id, self.current_user.id)['filepaths'][-1]
-        dl_path = download_link_or_path(
-            is_local, download[1], download[0], "Download prep information")
-        ontology = ena_ontology_get_req()
+        prep_id = to_int(self.get_argument('prep_id'))
 
-        stats = prep_template_summary_get_req(prep_id, self.current_user.id)
-        self.render('study_ajax/prep_summary.html', stats=stats['summary'],
-                    num_samples=stats['num_samples'], dl_path=dl_path,
-                    files=files, prep_id=prep_id, data_types=data_types,
-                    ontology=ontology)
+        res = prep_template_ajax_get_req(prep_id)
+
+        self.render('study_ajax/prep_summary.html', name=res['name'],
+                    files=res['files'], download_prep=res['download_prep'],
+                    download_qiime=res['download_qiime'],
+                    num_samples=res['num_samples'],
+                    num_columns=res['num_columns'],
+                    investigation_type=res['investigation_type'],
+                    artifact_attached=res['artifact_attached'],
+                    prep_id=prep_id, study_id=res['study_id'],
+                    ontology=res['ontology'])
 
     @authenticated
     def post(self):

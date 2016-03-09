@@ -1,115 +1,162 @@
-{% from future.utils import viewitems %}
-<div>
-    <p>{% raw dl_path %}</p>
-</div>
-
-<div>
-<h3>Update Prep Information</h3>
-    <p><select id="filepath" value="filepath">
-    {% for f in files %}
-      <option value="{{f}}">{{f}}</option>
-    {% end %}
-    </select>
-    {% if not stats %}
-    <button class="btn btn-info btn-sm" onclick="prep_action('create')">Create</button>
-    {% else %}
-    <button class="btn btn-info btn-sm" onclick="prep_action('update')">Update</button>
-    <button class="btn btn-danger btn-sm" onclick="prep_action('delete')">Delete</button>
-    {% end %}
-    </p>
-</div>
-
-<div>
-<h3>Update Investigation Type</h3>
-    <p id="ena-info"> Selected investigation type: 
-    <select id="ena-ontology" value="ena-ontology">
-    <option value=""></option>
-    {% for o in ontology['ENA'] %}
-      <option value="{{o}}">{{o}}</option>
-    {% end %}
-      <option value="Other">Other</option>
-    </select></p>
-
-    <p id="user-ena-info"> User defined investigation type: 
-    <select id="user-ontology" value="user-ontology">
-    <option value=""></option>
-    {% for o in ontology['User'] %}
-      <option value="{{o}}">{{o}}</option>
-    {% end %}
-    <option value="New Type">New Type</option>
-    </select></p>
-
-    <p id="new-ena-info">New user defined term: 
-    <input type="textbox" id="new-ontology" name="new-ontology"></p>
-
-    <button class="btn btn-info btn-sm" onclick="prep_action('ontology')">Update</button>
-</div>
-
-<div>
-    <h3>Prep information summary</h3>
-    <p>There are <strong>{{num_samples}}</strong> samples in this study.</p>
-</div>
-
-<div class="panel panel-default" id="summary">
-    <div class="panel-heading">
-        A summary of the prep information is below.
-    </div>
-
-    <table class="table">
-    {% for category, summary in viewitems(stats) %}
-        {% if len(summary) == 1 %}
-            <tr>
-                <td colspan="2">
-                    <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
-                </td>
-            </tr>
-        {% elif len(set([row[1] for row in summary])) == 1 %}
-            <tr>
-                <td colspan="2">
-                    <b>{{category}}</b>: All the values in this category are different.
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <th colspan="2" align="center">{{category}}</th>
-            </tr>
-            {% for row in summary %}
-            <tr>
-                <td>{{row[0]}}</td>
-                <td>{{row[1]}}</td>
-            </tr>
-            {% end %}
-        {% end %}
-    {% end %}
-    </table>
-</div>
-
 <script type="text/javascript">
-  function prep_action(act) {
-    $.post('/study/description/prep_template/', { prep_id: {{prep_id}}, action: act, filepath: $("#filepath").val(), ena: $("#ena-ontology").val(), ena_user: $("#user-ontology").val(), ena_new: $("#new-ontology").val() })
-      .done(function ( data ) {
-        if(data.status == "error") {
-          bootstrapAlert("<p>Error updating prep template</p>" + data.message, "danger", 4000);
-        } else if(data.status == "warning") {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "warning", 4000);
-        } else {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "info", 4000);
-        }
-        //reload section of the page with new info
-         fill_prep({{prep_id}})
-      })
+  /*
+   *
+   */
+  function add_new_investigation_type_term_and_update() {
+    console.log($("#new-ontology").val());
+    // $.ajax({
+    //   url: '',
+    //   type: 'PATCH'.
+    //   data: {'op': 'replace', 'path': '', 'value': term},
+    //   success: function(data) {
+    //     if(data.status == 'error') {bootstrapAlert(data.message,  "danger"); }
+    //     else { update_investigation_type(term); }
+    //   }
+    // });
+  }
+
+  /*
+   *
+   */
+  function update_investigation_type(value) {
+    $.ajax({
+      url: '/prep_template/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/{{prep_id}}/investigation_type', 'value': value},
+      success: function(data) {
+        if(data.status == 'error') { bootstrapAlert(data.message, "danger"); }
+      }
+    });
+  }
+
+  /*
+   *
+   */
+  function load_template_graph() {
+    show_loading("graph-or-new-artifact-div");
+    console.log("load template graph");
+  }
+
+  /*
+   *
+   */
+  function load_new_artifact() {
+    show_loading("graph-or-new-artifact-div");
+    $.get("/study/new_artifact/", {"study_id": {{study_id}}, "prep_template_id": {{prep_id}} })
+      .done(function(data) {
+        $("#graph-or-new-artifact-div").html(data);
+      });
   }
 
   $(document).ready(function () {
+    show_loading("summary-table-div");
+    // If the template already have an artifact attached, load the
+    // artifact graph, otherwise load the page to add a new artifact
+    if ("{{artifact_attached}}" == "True") { load_template_graph(); }
+    else { load_new_artifact(); }
+
+    // Hide the user and new ontology divs
     $("#user-ena-info").hide();
     $("#new-ena-info").hide();
-    $("#ena-info").change(function ( event ) {
-        if( $("#ena-ontology").val() == "Other" ) { $("#user-ena-info").show(); }
-        else { $("#user-ena-info").hide(); }
+    // If the ena-ontology select changes, check if we need to show the user list
+    $("#ena-ontology").change(function ( event ) {
+        if( $("#ena-ontology").val() == "Other" ) {
+          $("#user-ena-info").show();
+          $("#user-ena-info").trigger('change');
+        }
+        else {
+          $("#user-ena-info").hide();
+          $("#new-ena-info").hide();
+          update_investigation_type();
+        }
     });
+    // If the user-ena-info select changes, check if we need to show the
     $("#user-ena-info").change(function ( event ) {
         if( $("#user-ontology").val() == "New Type" ) { $("#new-ena-info").show(); }
-        else { $("#new-ena-info").hide(); }
+        else {
+          $("#new-ena-info").hide();
+          update_investigation_type();
+        }
     });
   });
 </script>
+
+<!-- Prep template title and buttons -->
+<div class="row">
+  <div class="col-md-12">
+    <h4>
+      {{name}} - ID {{prep_id}}
+      <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{download_prep}}" style="word-spacing: -10px;"> Prep info</a>
+      <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{download_qiime}}" style="word-spacing: -10px;"> Qiime map</a>
+    </h4>
+  </div>
+</div>
+
+<!-- #samples and #columns -->
+<div class="row">
+  <div class="col-md-12">
+    There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this preparation.
+  </div>
+</div>
+
+<!-- Update prep template -->
+<div class="row">
+  <div class="col-md-12">
+    <b>Update information:</b>
+    <select class="" name="">
+      <option value="">Choose file...</option>
+      {% for fp in files %}
+        <option value="{{fp}}">{{fp}}</option>
+      {% end %}
+    </select>
+    <button class="btn btn-info btn-sm" onclick="console.log('clicked');">Update</button>
+  </div>
+</div>
+
+<!-- Investigation type info -->
+<div class="row">
+  <!-- Ena ontology selector -->
+  <div class="col-md-4">
+    <b>Select Investigation Type:</b>
+    <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
+      <option value=""></option>
+      {% for o in ontology['ENA'] %}
+        <option value="{{o}}">{{o}}</option>
+      {% end %}
+    </select>
+  </div>
+  <!-- user-defined selector -->
+  <div class="col-md-4" id="user-ena-info"> User defined investigation type:
+    <select id="user-ontology" name="user-ontology" value="user-ontology">
+      <option value=""></option>
+      {% for o in ontology['User'] %}
+        <option value="{{o}}">{{o}}</option>
+      {% end %}
+      <option value="New Type">New Type</option>
+    </select>
+  </div>
+  <!-- new user-defined input -->
+  <div class="col-md-4" id="new-ena-info">New user defined term:
+    <input type="textbox" id="new-ontology" name="new-ontology">
+    <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
+  </div>
+</div>
+
+<!-- Files graph or add artifact -->
+<div class="row">
+  <div class="col-md-12" id="graph-or-new-artifact-div">
+  </div>
+</div>
+
+<!-- Prep information summary -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        Information summary
+      </div>
+      <div id="summary-table-div">
+      </div>
+    </div>
+  </div>
+</div>

@@ -80,7 +80,7 @@
       // correct, it is correct if and only if it is not required and has no
       // children
       if (count_ok || (!is_required && num_children === 0)) { mark_as_correct(this); }
-      else { mask_as_wrong(this); }
+      else { mark_as_wrong(this); }
     }
     else {
       // There is no required count. In this case, it is correct if the number
@@ -102,7 +102,7 @@
    */
   function build_file_lists() {
     $(".fileListParam").each( function(i, cont) {
-      var files = ['a'];
+      var files = [];
       $("#"+cont.id+"-list").children().each( function(j, c_cont) {
           files.push(c_cont.id);
       });

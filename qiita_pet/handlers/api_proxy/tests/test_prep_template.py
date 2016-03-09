@@ -25,7 +25,8 @@ from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_put_req, prep_template_delete_req, prep_template_get_req,
     prep_template_graph_get_req, prep_template_filepaths_get_req,
     ena_ontology_get_req, _process_investigation_type,
-    _check_prep_template_exists, new_prep_template_get_req)
+    _check_prep_template_exists, new_prep_template_get_req,
+    prep_template_ajax_get_req)
 
 
 class TestPrepAPIReadOnly(TestCase):
@@ -44,6 +45,21 @@ class TestPrepAPIReadOnly(TestCase):
                         'Synthetic Genomics', 'Transcriptome Analysis',
                         'Whole Genome Sequencing', 'Other'],
                 'User': []}}
+        self.assertEqual(obs, exp)
+
+    def test_prep_template_ajax_get_req(self):
+        obs = prep_template_ajax_get_req(1)
+        exp = {'status': 'success',
+               'message': '',
+               'name': "Prep information 1",
+               'files': ["uploaded_file.txt"],
+               'download_prep': 18,
+               'download_qiime': 19,
+               'num_samples': 27,
+               'num_columns': 23,
+               'investigation_type': [],
+               'artifact_attached': True,
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
     def test_check_prep_template_exists(self):
