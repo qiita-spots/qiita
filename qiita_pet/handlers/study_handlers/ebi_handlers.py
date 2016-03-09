@@ -45,7 +45,7 @@ class EBISubmitHandler(BaseHandler):
         # If allow_submission is already false, we technically don't need to
         # do the following work. However, there is no clean way to fix this
         # using the current structure, so we perform the work as we
-        # did not fail.
+        # did so it doesn't fail.
         # We currently support only one prep template for submission, so
         # grabbing the first one
         prep_template = prep_templates[0]

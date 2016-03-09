@@ -155,7 +155,7 @@ from another page.
 Once your file(s) have been uploaded, you can process them in Qiita.
 From the upload tool, click on “Go to study description” and, once
 there, click on the “Sample template” tab.  Select your sample template
-from the dropdown menu and, lastly, click “Process sample template”. 
+from the dropdown menu and, lastly, click “Process sample template”.
 
 .. figure::  images/process-sample-template.png
    :align:   center
@@ -230,9 +230,8 @@ Preprocessing data
 
 Once you have linked files to your raw data and your prep template has
 been processed, you can then proceed to preprocessing your data.
-Currently we only support fastq files for target gene preprocessing
-(including reverse complementing the prep template barcodes). We are
-working on adding more options and preprocessing pipelines.
+`Here <https://github.com/biocore/qiita/blob/master/README.rst#accepted-raw-files>__`
+a list of currently supported raw files files.
 
 .. figure::  images/image08.png
    :align:   center
@@ -309,7 +308,8 @@ Study status
 
 -  Sandbox. When a study is in this status, all the required metadata
    columns must be present in the metadata files (sample and prep), but
-   the values don't have to be filled in or finalized yet. The purpose
+   the values don't have to be filled in or finalized yet. We suggest adding
+   TBD as the temporal values of these fields. The purpose
    of this status is so that users can quickly upload their sequence
    files and some (possibly incomplete) metadata in order to have a
    preliminary look at their data.
@@ -323,5 +323,6 @@ Study status
 -  Public. Once a study is made administrator-approved and becomes
    private, the user can choose when to make it public. Making a study
    public means that it will be available to anyone with a Qiita user
-   account (e.g., for data downloads and meta-analyses).
-
+   account (e.g., for data downloads and meta-analyses). When a study
+   is public it cannot be changed. All associated templates will be public
+   as well.
