@@ -49,7 +49,8 @@ class JobTest(TestCase):
         self.conn_handler.execute(sql)
         self.assertTrue(qdb.job.Job.exists(
             "18S", "Beta Diversity", {"--otu_table_fp": 1, "--mapping_fp": 1},
-            qdb.analysis.Analysis(1), 2, 3))
+            qdb.analysis.Analysis(1), qdb.reference.Reference(2),
+            qdb.software.Command(3)))
 
     def test_exists_return_jobid(self):
         """tests that existing job returns true"""
@@ -64,7 +65,8 @@ class JobTest(TestCase):
         self.conn_handler.execute(sql)
         exists, jid = qdb.job.Job.exists(
             "18S", "Beta Diversity", {"--otu_table_fp": 1, "--mapping_fp": 1},
-            qdb.analysis.Analysis(1), 2, 3, return_existing=True)
+            qdb.analysis.Analysis(1), qdb.reference.Reference(2),
+            qdb.software.Command(3), return_existing=True)
         self.assertTrue(exists)
         self.assertEqual(jid, qdb.job.Job(2))
 
@@ -82,13 +84,15 @@ class JobTest(TestCase):
         self.conn_handler.execute(sql)
         self.assertFalse(qdb.job.Job.exists(
             "18S", "Beta Diversity", {"--otu_table_fp": 1, "--mapping_fp": 27},
-            qdb.analysis.Analysis(1), 1, 3))
+            qdb.analysis.Analysis(1), qdb.reference.Reference(2),
+            qdb.software.Command(3)))
 
     def test_exists_noexist_return_jobid(self):
         """tests that non-existant job with bad samples returns false"""
         exists, jid = qdb.job.Job.exists(
             "16S", "Beta Diversity", {"--otu_table_fp": 1, "--mapping_fp": 27},
-            qdb.analysis.Analysis(1), 1, 3, return_existing=True)
+            qdb.analysis.Analysis(1), qdb.reference.Reference(2),
+            qdb.software.Command(3), return_existing=True)
         self.assertFalse(exists)
         self.assertEqual(jid, None)
 
@@ -181,7 +185,9 @@ class JobTest(TestCase):
         """Makes sure creation works as expected"""
         # make first job
         new = qdb.job.Job.create("18S", "Alpha Rarefaction", {"opt1": 4},
-                                 qdb.analysis.Analysis(1), 1, 3)
+                                 qdb.analysis.Analysis(1),
+                                 qdb.reference.Reference(1),
+                                 qdb.software.Command(3))
         self.assertEqual(new.id, self.job_id)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
@@ -200,7 +206,9 @@ class JobTest(TestCase):
         self.job_id += 1
         # make second job with diff datatype and command to test column insert
         new = qdb.job.Job.create("16S", "Beta Diversity", {"opt1": 4},
-                                 qdb.analysis.Analysis(1), 2, 3)
+                                 qdb.analysis.Analysis(1),
+                                 qdb.reference.Reference(2),
+                                 qdb.software.Command(3))
         self.assertEqual(new.id, self.job_id)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
@@ -221,7 +229,8 @@ class JobTest(TestCase):
             qdb.job.Job.create(
                 "18S", "Beta Diversity",
                 {"--otu_table_fp": 1, "--mapping_fp": 1},
-                qdb.analysis.Analysis(1), 2, 3)
+                qdb.analysis.Analysis(1), qdb.reference.Reference(2),
+                qdb.software.Command(3))
 
     def test_create_exists_return_existing(self):
         """Makes sure creation doesn't duplicate a job by returning existing"""
@@ -235,7 +244,8 @@ class JobTest(TestCase):
         self.conn_handler.execute(sql)
         new = qdb.job.Job.create(
             "18S", "Beta Diversity", {"--otu_table_fp": 1, "--mapping_fp": 1},
-            analysis, 1, 3, return_existing=True)
+            analysis, qdb.reference.Reference(2), qdb.software.Command(3),
+            return_existing=True)
         self.assertEqual(new.id, self.job_id)
 
     def test_retrieve_datatype(self):
@@ -256,7 +266,9 @@ class JobTest(TestCase):
 
     def test_set_options(self):
         new = qdb.job.Job.create("18S", "Alpha Rarefaction",
-                                 {"opt1": 4}, qdb.analysis.Analysis(1), 1, 3)
+                                 {"opt1": 4}, qdb.analysis.Analysis(1),
+                                 qdb.reference.Reference(2),
+                                 qdb.software.Command(3))
         new.options = self.options
         self.options['--output_dir'] = join(
             self._job_folder,
@@ -273,7 +285,9 @@ class JobTest(TestCase):
 
     def test_retrieve_results_empty(self):
         new = qdb.job.Job.create("18S", "Beta Diversity", {"opt1": 4},
-                                 qdb.analysis.Analysis(1), 1, 3)
+                                 qdb.analysis.Analysis(1),
+                                 qdb.reference.Reference(2),
+                                 qdb.software.Command(3))
         self.assertEqual(new.results, [])
 
     def test_set_error(self):

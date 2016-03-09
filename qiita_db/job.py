@@ -79,7 +79,7 @@ class Job(qdb.base.QiitaStatusObject):
 
     @classmethod
     def exists(cls, datatype, command, options, analysis,
-               input_file_reference_id, input_file_software_command_id,
+               input_file_reference, input_file_software_command,
                return_existing=False):
         """Checks if the given job already exists
 
@@ -93,10 +93,10 @@ class Job(qdb.base.QiitaStatusObject):
             Options for the command in the format {option: value}
         analysis : Analysis object
             The analysis the job will be attached to on creation
-        input_file_reference_id : int
-            The refernce id used to create the input file
-        input_file_software_command_id : int
-            The software command id used to create the input file
+        input_file_reference : Reference object
+            The reference object used to create the input file
+        input_file_software_command: Software.Command object
+            The software command object used to create the input file
         return_existing : bool, optional
             If True, function will return the instatiated Job object for the
             matching job. Default False
@@ -128,8 +128,8 @@ class Job(qdb.base.QiitaStatusObject):
                   """.format(cls._table)
             qdb.sql_connection.TRN.add(
                 sql, [datatype_id, command_id, opts_json,
-                      input_file_reference_id,
-                      input_file_software_command_id])
+                      input_file_reference.id,
+                      input_file_software_command.id])
             analyses = qdb.sql_connection.TRN.execute_fetchindex()
 
             if not analyses and return_existing:
@@ -223,7 +223,7 @@ class Job(qdb.base.QiitaStatusObject):
 
     @classmethod
     def create(cls, datatype, command, options, analysis,
-               input_file_reference_id, input_file_software_command_id,
+               input_file_reference, input_file_software_command,
                return_existing=False):
         """Creates a new job on the database
 
@@ -235,10 +235,10 @@ class Job(qdb.base.QiitaStatusObject):
             The name of the command executed in this job
         analysis : Analysis object
             The analysis which this job belongs to
-        input_file_reference_id : int
-            The refernce id used to create the input file
-        input_file_software_command_id : int
-            The software command id used to create the input file
+        input_file_reference : Reference object
+            The reference object used to create the input file
+        input_file_software_command: Software.Command object
+            The software command object used to create the input file
         return_existing : bool, optional
             If True, returns an instantiated Job object pointing to an already
             existing job with the given parameters. Default False
@@ -258,8 +258,8 @@ class Job(qdb.base.QiitaStatusObject):
             analysis_sql = """INSERT INTO qiita.analysis_job
                                 (analysis_id, job_id) VALUES (%s, %s)"""
             exists, job = cls.exists(datatype, command, options, analysis,
-                                     input_file_reference_id,
-                                     input_file_software_command_id,
+                                     input_file_reference,
+                                     input_file_software_command,
                                      return_existing=True)
 
             if exists:
@@ -291,8 +291,8 @@ class Job(qdb.base.QiitaStatusObject):
                      RETURNING job_id""".format(cls._table)
             qdb.sql_connection.TRN.add(
                 sql, [datatype_id, 1, command_id, opts_json,
-                      input_file_reference_id,
-                      input_file_software_command_id])
+                      input_file_reference.id,
+                      input_file_software_command.id])
             job_id = qdb.sql_connection.TRN.execute_fetchlast()
 
             # add job to analysis

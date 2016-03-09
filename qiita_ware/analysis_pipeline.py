@@ -7,9 +7,10 @@ from future.utils import viewitems
 from biom import load_table
 
 from qiita_db.job import Job
+from qiita_db.reference import Reference
+from qiita_db.software import Command
 from qiita_db.logger import LogEntry
 from qiita_db.util import get_db_files_base_dir
-from qiita_db.reference import Reference
 from qiita_ware.wrapper import ParallelWrapper, system_call_from_job
 
 
@@ -145,8 +146,8 @@ class RunAnalysis(ParallelWrapper):
                 if command == "Alpha Rarefaction":
                     opts["-n"] = 4
 
-                Job.create(data_type, command, opts, analysis, reference_id,
-                           software_command_id, return_existing=True)
+                Job.create(data_type, command, opts, analysis, reference,
+                           Command(software_command_id), return_existing=True)
 
         # Create the files for the jobs
         files_node_name = "%d_ANALYSISFILES" % analysis.id
