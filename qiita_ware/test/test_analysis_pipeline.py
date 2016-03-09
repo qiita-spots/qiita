@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from os.path import join
 from os import remove, rename
+import numpy.testing as npt
 
 from moi.group import get_id_from_user
 from moi import ctx_default
@@ -9,6 +10,7 @@ from qiita_core.util import qiita_test_checker
 from qiita_db.analysis import Analysis
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir
+from qiita_db.exceptions import QiitaDBWarning
 from qiita_ware.analysis_pipeline import RunAnalysis
 
 
@@ -53,10 +55,11 @@ class TestRun(TestCase):
 
     def test_add_jobs_in_construct_job_graphs(self):
         analysis = Analysis(2)
+        npt.assert_warns(QiitaDBWarning, analysis.build_files)
         RunAnalysis()._construct_job_graph(
             analysis, [('18S', 'Summarize Taxa')],
             comm_opts={'Summarize Taxa': {'opt1': 5}})
-        self.assertEqual(analysis.jobs, [Job(3), Job(4)])
+        self.assertEqual(analysis.jobs, [Job(3), Job(4), Job(5)])
         job = Job(4)
         self.assertEqual(job.datatype, '18S')
         self.assertEqual(job.command,

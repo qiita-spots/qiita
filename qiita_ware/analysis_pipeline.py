@@ -3,9 +3,13 @@ from __future__ import division
 from os.path import join
 from sys import stderr
 
+from future.utils import viewitems
+from biom import load_table
+
 from qiita_db.job import Job
 from qiita_db.logger import LogEntry
 from qiita_db.util import get_db_files_base_dir
+from qiita_db.reference import Reference
 from qiita_ware.wrapper import ParallelWrapper, system_call_from_job
 
 
@@ -114,30 +118,35 @@ class RunAnalysis(ParallelWrapper):
         if comm_opts is None:
             comm_opts = {}
 
-        for data_type, command in commands:
-            # get opts set by user, else make it empty dict
-            opts = comm_opts.get(command, {})
+        tree_commands = ["Beta Diversity", "Alpha Rarefaction"]
+        for data_type, biom_fp in viewitems(analysis.biom_tables):
+            biom_table = load_table(biom_fp)
+            # getting reference_id and software_command_id from the first
+            # sample of the biom. This decision was discussed on the qiita
+            # meeting on 02/24/16
+            metadata = biom_table.metadata(biom_table.ids()[0])
+            reference_id = metadata['reference_id']
+            software_command_id = metadata['command_id']
 
-            # Add commands to analysis as jobs
-            # HARD CODED HACKY THING FOR DEMO, FIX  Issue #164
-            if (command == "Beta Diversity" or command == "Alpha Rarefaction"):
-                if data_type in {'16S', '18S'}:
-                    opts["--tree_fp"] = join(get_db_files_base_dir(),
-                                             "reference",
-                                             "gg_97_otus_4feb2011.tre")
-                else:
-                    opts["--parameter_fp"] = join(
-                        get_db_files_base_dir(), "reference",
-                        "params_qiime.txt")
+            reference = Reference(reference_id)
+            tree = reference.tree_fp
 
-            if command == "Alpha Rarefaction":
-                opts["-n"] = 4
+            for data_type, command in commands:
+                # get opts set by user, else make it empty dict
+                opts = comm_opts.get(command, {})
+                if command in tree_commands:
+                    if tree != '':
+                        opts["--tree_fp"] = tree
+                    else:
+                        opts["--parameter_fp"] = join(
+                            get_db_files_base_dir(), "reference",
+                            "params_qiime.txt")
 
-            # These values are going to be changed in the next PR
-            # 1: GG
-            # 3: pick close reference
-            Job.create(data_type, command, opts, analysis, 1, 3,
-                       return_existing=True)
+                if command == "Alpha Rarefaction":
+                    opts["-n"] = 4
+
+                Job.create(data_type, command, opts, analysis, reference_id,
+                           software_command_id, return_existing=True)
 
         # Create the files for the jobs
         files_node_name = "%d_ANALYSISFILES" % analysis.id

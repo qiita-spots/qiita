@@ -901,8 +901,8 @@ class Analysis(qdb.base.QiitaStatusObject):
                             'artifact_ids': ', '.join(artifact_ids),
                             'reference_id': reference_id,
                             'command_id': command_id}
-                samples_md = {sid: study_md for sid in selected_samples}
-                biom_table.add_metadata(samples_md, axis='sample')
+                samples_md = {sid: study_md for sid in new_table.ids()}
+                new_table.add_metadata(samples_md, axis='sample')
 
                 if rarefaction_depth is not None:
                     new_table = new_table.subsample(rarefaction_depth)
