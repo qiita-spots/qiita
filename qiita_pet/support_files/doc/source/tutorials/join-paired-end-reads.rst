@@ -1,9 +1,9 @@
-.. _join-pair-ends:
+.. _join-paired-end-reads:
 
-.. index:: join-pair-ends
+.. index:: join-paired-end-reads
 
-Join pair ends
-==============
+Join paired end reads
+=====================
 
 Having high quality, longer reads helps with taxonomy assignment and classification.
 Thus, if your forward and reverse reads overlap you should join them. Note that this
@@ -20,7 +20,7 @@ Joining forward and reverse reads for raw files
 
 You could use `join_paired_ends.py <http://qiime.org/scripts/join_paired_ends.html>`__
 and then upload your joined sequence and barcode files for processing. Then you
-will upload your resulted joined file to Qiita.
+will upload the resulting joined file to Qiita.
 
 .. _join_forward_and_reverse_reads_for_per_sample_fastq_files_without_barcodes_and_primers:
 
@@ -29,7 +29,7 @@ Joining forward and reverse reads for per sample FASTQ files without barcodes an
 
 You could use `multiple_join_paired_ends.py <http://qiime.org/scripts/multiple_join_paired_ends.html>`__
 and then upload your joined sequence and barcode files for processing. Then you
-will upload your resulted joined per sample files to Qiita.
+will upload the resulting joined per sample files to Qiita.
 
 
 .. _per_sample_fastq_files_without_barcodes_but_with_primer_information_with_overlapping_regions:
@@ -41,7 +41,8 @@ To process this kind of files you will need to run two steps:
 
 #. Run multiple_join_paired_ends.py to stitch the reads. See
    `multiple_join_paired_ends.py <http://qiime.org/scripts/multiple_join_paired_ends.html>`__.
-#. Run multiple_extract_barcodes.py to strip out the primers. You need to use a parameter file with:
+#. Run multiple_extract_barcodes.py to strip out the primers. You will need to use a
+   parameter file with:
 
    .. code:: bash
 
