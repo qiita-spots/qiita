@@ -888,7 +888,7 @@ class Analysis(qdb.base.QiitaStatusObject):
                     if len(biom_table.ids()) == 0:
                         raise RuntimeError(
                             "All samples filtered out from Artifact %s due "
-                            "to sample selected" % aid)
+                            "to selected samples" % aid)
 
                     if rename_dup_samples:
                         ids_map = {_id: "%d.%s" % (aid, _id)
