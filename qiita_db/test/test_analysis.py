@@ -621,6 +621,19 @@ class TestAnalysis(TestCase):
                '5.1.SKB8.640193', '5.1.SKB7.640196', '5.1.SKD8.640184'}
         self.assertItemsEqual(obs, exp)
 
+    def test_build_biom_tables_raise_error_due_to_sample_selection(self):
+        grouped_samples = {'18S.1.3': [
+            (4, ['sample_name_1', 'sample_name_2', 'sample_name_3'])]}
+        with self.assertRaises(RuntimeError):
+            self.analysis._build_biom_tables(grouped_samples)
+
+    def test_build_biom_tables_raise_error_due_to_rarefaction_level(self):
+        grouped_samples = {'18S.1.3': [
+            (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
+            (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+        with self.assertRaises(RuntimeError):
+            self.analysis._build_biom_tables(grouped_samples, 100000)
+
     def test_build_files(self):
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,
                          self.analysis.build_files)

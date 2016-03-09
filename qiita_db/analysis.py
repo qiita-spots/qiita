@@ -875,7 +875,7 @@ class Analysis(qdb.base.QiitaStatusObject):
                             break
                     if not biom_table_fp:
                         raise RuntimeError(
-                            "Artifact %s do not have a biom table associated"
+                            "Artifact %s does not have a biom table associated"
                             % aid)
 
                     # loading the found biom table
@@ -885,6 +885,11 @@ class Analysis(qdb.base.QiitaStatusObject):
                     selected_samples = biom_table_samples.intersection(samples)
                     biom_table.filter(selected_samples, axis='sample',
                                       inplace=True)
+                    if len(biom_table.ids()) == 0:
+                        raise RuntimeError(
+                            "All samples filtered out from Artifact %s due "
+                            "to sample selected" % aid)
+
                     if rename_dup_samples:
                         ids_map = {_id: "%d.%s" % (aid, _id)
                                    for _id in biom_table.ids()}
@@ -905,7 +910,16 @@ class Analysis(qdb.base.QiitaStatusObject):
                 new_table.add_metadata(samples_md, axis='sample')
 
                 if rarefaction_depth is not None:
-                    new_table = new_table.subsample(rarefaction_depth)
+                    try:
+                        new_table = new_table.subsample(rarefaction_depth)
+                    except IndexError:
+                        # this error means that it was possible to apply the
+                        # requested rarefaction level. Overwritting error to
+                        # make it human readable
+                        raise RuntimeError(
+                            "All samples filtered out due to rarefaction "
+                            "level")
+
                 # write out the file
                 fn = "%d_analysis_dt-%s_r-%s_c-%s.biom" % (
                     self._id, data_type, reference_id, command_id)
