@@ -876,6 +876,8 @@
 			<column name="log_id" type="bigint" jt="-5" >
 				<comment><![CDATA[Reference to error if status is error]]></comment>
 			</column>
+			<column name="input_file_reference_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="input_file_software_command_id" type="bigint" jt="-5" mandatory="y" />
 			<index name="pk_job" unique="PRIMARY_KEY" >
 				<column name="job_id" />
 			</index>
@@ -891,6 +893,12 @@
 			<index name="idx_job" unique="NORMAL" >
 				<column name="log_id" />
 			</index>
+			<index name="idx_job_0" unique="NORMAL" >
+				<column name="input_file_reference_id" />
+			</index>
+			<index name="idx_job_1" unique="NORMAL" >
+				<column name="input_file_software_command_id" />
+			</index>
 			<fk name="fk_job_function" to_schema="qiita" to_table="command" >
 				<fk_column name="command_id" pk="command_id" />
 			</fk>
@@ -902,6 +910,12 @@
 			</fk>
 			<fk name="fk_job" to_schema="qiita" to_table="logging" >
 				<fk_column name="log_id" pk="logging_id" />
+			</fk>
+			<fk name="fk_job_reference" to_schema="qiita" to_table="reference" >
+				<fk_column name="input_file_reference_id" pk="reference_id" />
+			</fk>
+			<fk name="fk_job_software_command" to_schema="qiita" to_table="software_command" >
+				<fk_column name="input_file_software_command_id" pk="command_id" />
 			</fk>
 		</table>
 		<table name="job_results_filepath" >
@@ -1183,7 +1197,7 @@
 			</column>
 			<column name="sample_id" type="varchar" jt="12" mandatory="y" />
 			<column name="ebi_experiment_accession" type="varchar" jt="12" />
-			<index name="idx_required_prep_info_2" unique="NORMAL" >
+			<index name="idx_common_prep_info_0" unique="NORMAL" >
 				<column name="sample_id" />
 			</index>
 			<index name="idx_common_prep_info_0" unique="NORMAL" >
@@ -1788,7 +1802,7 @@ Controlled Vocabulary]]></comment>
 		</table>
 	</schema>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-9.2-1003.jdbc3.jar" host="localhost" port="5432" instance="qiita_test" user="mcdonadt" schema_mapping="" />
-	<layout id="Layout669806" name="qiita" show_relation_columns="y" >
+	<layout id="Layout669806" name="qiita" confirmed="y" show_relation_columns="y" >
 		<entity schema="qiita" name="controlled_vocab_values" color="d0def5" x="45" y="1695" />
 		<entity schema="qiita" name="job_results_filepath" color="c0d4f3" x="405" y="1020" />
 		<entity schema="qiita" name="analysis_job" color="d0def5" x="285" y="1095" />
@@ -1809,7 +1823,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="225" />
 		<entity schema="qiita" name="job_status" color="d0def5" x="210" y="1185" />
 		<entity schema="qiita" name="severity" color="c0d4f3" x="870" y="1515" />
-		<entity schema="qiita" name="job" color="d0def5" x="405" y="1170" />
 		<entity schema="qiita" name="filepath" color="c0d4f3" x="645" y="825" />
 		<entity schema="qiita" name="term" color="d0def5" x="540" y="1785" />
 		<entity schema="qiita" name="analysis_status" color="d0def5" x="45" y="990" />
@@ -1878,6 +1891,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="processing_job_workflow" color="b2cdf7" x="2235" y="1620" />
 		<entity schema="qiita" name="processing_job_workflow_root" color="b2cdf7" x="2220" y="1500" />
 		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1965" y="1260" />
+		<entity schema="qiita" name="job" color="d0def5" x="405" y="1155" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
