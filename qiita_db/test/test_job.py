@@ -26,7 +26,7 @@ class JobTest(TestCase):
         self._delete_path = []
         self._delete_dir = []
         _, self._job_folder = qdb.util.get_mountpoint("job")[0]
-        self.job_id = 7
+        self.job_id = 4
 
     def tearDown(self):
         # needs to be this way because map does not play well with remove and

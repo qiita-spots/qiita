@@ -56,15 +56,15 @@ class TestRun(TestCase):
         RunAnalysis()._construct_job_graph(
             analysis, [('18S', 'Summarize Taxa')],
             comm_opts={'Summarize Taxa': {'opt1': 5}})
-        self.assertEqual(analysis.jobs, [Job(3), Job(7)])
-        job = Job(7)
+        self.assertEqual(analysis.jobs, [Job(3), Job(4)])
+        job = Job(4)
         self.assertEqual(job.datatype, '18S')
         self.assertEqual(job.command,
                          ['Summarize Taxa', 'summarize_taxa_through_plots.py'])
         expopts = {
             '--output_dir': join(
                 get_db_files_base_dir(), 'job',
-                '7_summarize_taxa_through_plots.py_output_dir'),
+                '4_summarize_taxa_through_plots.py_output_dir'),
             'opt1': 5}
         self.assertEqual(job.options, expopts)
 
