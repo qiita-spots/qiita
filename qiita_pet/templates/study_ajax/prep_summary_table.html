@@ -1,28 +1,35 @@
 {% from future.utils import viewitems %}
-<table class="table">
-{% for category, summary in viewitems(stats) %}
-    {% if len(summary) == 1 %}
-        <tr>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    Information summary
+  </div>
+  <div id="summary-table-div">
+    <table class="table">
+      {% for category, summary in viewitems(stats) %}
+        {% if len(summary) == 1 %}
+          <tr>
             <td colspan="2">
-                <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
+              <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
             </td>
-        </tr>
-    {% elif len(set([row[1] for row in summary])) == 1 %}
-        <tr>
+          </tr>
+        {% elif len(set([row[1] for row in summary])) == 1 %}
+          <tr>
             <td colspan="2">
-                <b>{{category}}</b>: All the values in this category are different.
+              <b>{{category}}</b>: All the values in this category are different.
             </td>
-        </tr>
-    {% else %}
-        <tr>
+          </tr>
+        {% else %}
+          <tr>
             <th colspan="2" align="center">{{category}}</th>
-        </tr>
-        {% for row in summary %}
-        <tr>
-            <td>{{row[0]}}</td>
-            <td>{{row[1]}}</td>
-        </tr>
+          </tr>
+          {% for row in summary %}
+            <tr>
+              <td>{{row[0]}}</td>
+              <td>{{row[1]}}</td>
+            </tr>
+          {% end %}
         {% end %}
-    {% end %}
-{% end %}
-</table>
+      {% end %}
+    </table>
+  </div>
+</div>

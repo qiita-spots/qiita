@@ -155,8 +155,9 @@
 
         $("#graph-or-new-artifact-div").html("<div class='row'><div class='col-md-12'><h4><a class='btn btn-info' id='show-hide-btn' onclick='toggle_graphs();'>-</a><i> Files network</i></h4></div></div><div class='row'><div class='col-md-12 graph' id='graph-network-div'></div></div>");
         draw_graph(nodes, edges, "graph-network-div", function(params) {
-          if(+params.nodes !== 0) {
-            console.log(params.nodes);
+          if(params.nodes.length === 1) {
+            var artifact_id = +params.nodes[0];
+            load_artifact_summary(artifact_id);
           }
         });
       });
@@ -182,15 +183,28 @@
    *
    * Load the prep information summary table
    *
-   * This function executes an AJAX call topopulate the summary-table-div
+   * This function executes an AJAX call to populate the prep-artifact-summary-div
    * with a table containing a summary of the prep information
    */
   function load_information_summary() {
-    show_loading("summary-table-div");
+    show_loading("prep-artifact-summary-div");
     $.get('/study/description/prep_summary/', {'prep_id': {{prep_id}} })
       .done(function ( data ) {
-        $("#summary-table-div").html(data);
+        $("#prep-artifact-summary-div").html(data);
       });
+  }
+
+  /*
+   * Load the artifact summary page
+   *
+   * @param artifact_id integer with the artifact id to load
+   *
+   * This function executes an AJAX call to populate the prep-artifact-summary-div
+   *
+   */
+  function load_artifact_summary(artifact_id) {
+    show_loading("prep-artifact-summary-div");
+    console.log("Load artifact summary " + artifact_id);
   }
 
   $(document).ready(function () {
@@ -332,13 +346,6 @@
 
 <!-- Prep information summary -->
 <div class="row">
-  <div class="col-md-12">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        Information summary
-      </div>
-      <div id="summary-table-div">
-      </div>
-    </div>
+  <div class="col-md-12" id="prep-artifact-summary-div">
   </div>
 </div>
