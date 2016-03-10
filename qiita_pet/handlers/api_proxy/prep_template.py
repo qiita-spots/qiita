@@ -80,7 +80,7 @@ def prep_template_ajax_get_req(prep_id):
     # The call to list is needed because keys is an iterator
     num_samples = len(list(pt.keys()))
     num_columns = len(pt.categories())
-    investigation_type = ena_ontology_get_req()
+    investigation_type = pt.investigation_type
 
     # Retrieve the information to download the prep template and QIIME
     # mapping file. See issue https://github.com/biocore/qiita/issues/1675
@@ -313,66 +313,55 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     return info
 
 
-def prep_template_patch_req(user_id, action):
+def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
+                            req_from=None):
     """Modifies an attribute of the prep template
 
     Parameters
     ----------
     user_id : str
         The id of the user performing the patch operation
-    action: str
-        JSON string containing the patch to apply using JSON PATCH [1]_
+    req_op : str
+        The operation to perform on the ontology
+    req_path : str
+        The ontology to patch
+    req_value : str, optional
+        The value that needs to be modified
+    req_from : str, optional
+        The original path of the element
 
-    References
-    ----------
-    .. [1] https://tools.ietf.org/html/rfc6902
+    Returns
+    -------
     """
-    as_json = loads(action)
-    op = as_json['op']
+    if req_op == 'replace':
+        req_path = [v for v in req_path.split('/') if v]
+        # The structure of the path should be /prep_id/attribute_to_modify/
+        # so if we don't have those 2 elements, we should return an error
+        if len(req_path) != 2:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter'}
+        prep_id = req_path[0]
+        attribute = req_path[1]
 
-    # Currently we are only supporting the replace operation
-    if op != 'replace':
+        # Check if the user actually has access to the prep template
+        prep = PrepTemplate(prep_id)
+        access_error = check_access(prep.study_id, user_id)
+        if access_error:
+            return access_error
+
+        if attribute == 'investigation_type':
+            prep.investigation_type = req_value
+        else:
+            # We don't understand the attribute so return an error
+            return {'status': 'error',
+                    'message': 'Attribute "%s" not found. '
+                               'Please, check the path parameter' % attribute}
+
+        return {'status': 'success', 'message': ''}
+    else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '
-                           'Current supported operations: replace' % (op)}
-
-    # Do some clean-up on the path for downstream easy handling
-    path_str = as_json['path']
-    if path_str.startswith('/'):
-        path_str = path_str[1:]
-    if path_str.endswith('/'):
-        path_str = path_str[:-1]
-
-    # The structure of the path should be /prep_id/attribute_to_modify/
-    # so if we don't have those 2 elements, we should return an error
-    path_list = path_str.split('/')
-    if len(path_list) != 2:
-        return {'status': 'error',
-                'message': 'Incorrect path parameter'}
-
-    # Extract all the parameters
-    prep_id = path_list[0]
-    attribute = path_list[1]
-    value = as_json['value']
-
-    # Check if the user actually has access to the prep template
-    prep = PrepTemplate(prep_id)
-    access_error = check_access(prep.study_id, user_id)
-    if access_error:
-        return access_error
-
-    # Build a dictionary to point to the functions that will execute the
-    # different operations
-    if attribute == 'investigation_type':
-        prep.investigation_type = value
-    else:
-        # We do not undertand the attribute so return an error
-        return {'status': 'error',
-                'message': 'Attribute "%s" not found. '
-                           'Please, check the path parameter' % attribute}
-
-    return {'status': 'success',
-            'message': ''}
+                           'Current supported operations: replace'}
 
 
 def prep_template_samples_get_req(prep_id, user_id):

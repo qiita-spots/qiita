@@ -1,6 +1,12 @@
 <script type="text/javascript">
   /*
    *
+   * Function to create a new ENA investigation type term and update the template
+   *
+   * This function executes an AJAX query to add a new user-defined term to the
+   * ENA ontology, then updates the current prep information to have the newly
+   * added term and it updates the interface accordingly
+   *
    */
   function add_new_investigation_type_term_and_update() {
     $.ajax({
@@ -27,19 +33,38 @@
 
   /*
    *
+   * Updates the investigation type of the prep information
+   *
+   * @param value string with the new investigation type value
+   *
+   * This function executes an AJAX call to update the investigation type
+   * of the current prep information
+   *
    */
   function update_investigation_type(value) {
+    // Once we update the investigation_type we can't put it back to undefined
+    // so remove the empty values
+    $("#ena-ontology option[value='']").remove();
+    $("#user-ena-info option[value='']").remove();
+
     $.ajax({
       url: '/prep_template/',
       type: 'PATCH',
       data: {'op': 'replace', 'path': '/{{prep_id}}/investigation_type', 'value': value},
       success: function(data) {
-        if(data.status == 'error') { bootstrapAlert(data.message, "danger"); }
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        }
       }
     });
   }
 
   /*
+   *
+   * Load the interface with the artifact graph
+   *
+   * This function executes an AJAX call to populate the graph-or-new-artifact-div
+   * with the interface showing the artifact graph attached to this prep information
    *
    */
   function load_template_graph() {
@@ -48,6 +73,11 @@
   }
 
   /*
+   *
+   * Load the interface to add an artifact to the prep information
+   *
+   * This function executes an AJAX call to populate the graph-or-new-artifact-div
+   * with the interface needed to add a new artifact to the prep information
    *
    */
   function load_new_artifact() {
@@ -59,33 +89,59 @@
   }
 
   $(document).ready(function () {
+    if("{{investigation_type}}" !== "None") {
+      // The prep information already has an investigation type
+      // Delete the entries from the select that correspond to no values
+      $("#ena-ontology option[value='']").remove();
+      $("#user-ena-info option[value='']").remove();
+      // Update the selects to point to the correct value
+      var v = $("#ena-ontology option[value='{{investigation_type}}']");
+      if (v.length == 1) {
+        // Set the value
+        $("#ena-ontology").val('{{investigation_type}}');
+      }
+      else {
+        // It is a user defined value
+        $("#user-ena-info").show();
+        $("#ena-ontology").val('Other');
+        $("#user-ontology").val('{{investigation_type}}');
+      }
+    }
+
     show_loading("summary-table-div");
     // If the template already have an artifact attached, load the
     // artifact graph, otherwise load the page to add a new artifact
-    if ("{{artifact_attached}}" == "True") { load_template_graph(); }
-    else { load_new_artifact(); }
+    if ("{{artifact_attached}}" == "True") {
+      load_template_graph();
+    }
+    else {
+      load_new_artifact();
+    }
 
-    // Hide the user and new ontology divs
-    $("#user-ena-info").hide();
-    $("#new-ena-info").hide();
     // If the ena-ontology select changes, check if we need to show the user list
     $("#ena-ontology").change(function ( event ) {
-        if( $("#ena-ontology").val() == "Other" ) {
-          $("#user-ena-info").show();
-          $("#user-ena-info").trigger('change');
-        }
-        else {
-          $("#user-ena-info").hide();
-          $("#new-ena-info").hide();
-          update_investigation_type();
-        }
+      var value = $("#ena-ontology").val();
+      if( value == "Other" ) {
+        $("#user-ena-info").show();
+        $("#user-ena-info").trigger('change');
+      }
+      else {
+        $("#user-ena-info").hide();
+        $("#new-ena-info").hide();
+        update_investigation_type(value);
+      }
     });
     // If the user-ena-info select changes, check if we need to show the
     $("#user-ena-info").change(function ( event ) {
-        if( $("#user-ontology").val() == "New Type" ) { $("#new-ena-info").show(); }
+        var value = $("#user-ontology").val();
+        if( value == "New Type" ) {
+          $("#new-ena-info").show();
+        }
         else {
           $("#new-ena-info").hide();
-          update_investigation_type();
+          if( value !== "" ) {
+            update_investigation_type(value);
+          }
         }
     });
   });
@@ -136,7 +192,7 @@
     </select>
   </div>
   <!-- user-defined selector -->
-  <div class="col-md-4" id="user-ena-info"> User defined investigation type:
+  <div class="col-md-4" id="user-ena-info" hidden> User defined investigation type:
     <select id="user-ontology" name="user-ontology" value="user-ontology">
       <option value=""></option>
       {% for o in ontology['User'] %}
@@ -146,7 +202,7 @@
     </select>
   </div>
   <!-- new user-defined input -->
-  <div class="col-md-4" id="new-ena-info">New user defined term:
+  <div class="col-md-4" id="new-ena-info" hidden> New user defined term:
     <input type="textbox" id="new-ontology" name="new-ontology">
     <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
   </div>

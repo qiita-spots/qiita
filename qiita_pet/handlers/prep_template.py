@@ -34,12 +34,15 @@ class PrepTemplateHandler(BaseHandler):
     def patch(self):
         """Patches a prep template in the system
 
-        According to http://www.restapitutorial.com/lessons/httpmethods.html
-        the patch request should be used when the object representation
-        included in the request is not complete. However, this requires the
-        usage of a specific language. We decided to use JSON PATCH, which is
-        outlined here: https://tools.ietf.org/html/rfc6902
+        Follows the JSON PATCH specification:
+        https://tools.ietf.org/html/rfc6902
         """
-        action = self.get_argument('action')
-        response = prep_template_patch_req(action)
+        req_op = self.get_argument('op')
+        req_path = self.get_argument('path')
+        req_value = self.get_argument('value', None)
+        req_from = self.get_argument('from', None)
+
+        response = prep_template_patch_req(
+            self.current_user.id, req_op, req_path, req_value, req_from)
+
         self.write(response)
