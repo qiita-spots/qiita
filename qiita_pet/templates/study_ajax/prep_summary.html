@@ -1,4 +1,36 @@
 <script type="text/javascript">
+  var network;
+
+  function draw_graph(nodes, edges, target, on_select_f) {
+    var container = document.getElementById(target);
+    container.innerHTML = "";
+    var data = {
+      nodes: nodes,
+      edges: edges
+    };
+    var options = {
+      nodes: {
+        color: '#ffffff',
+        font: '16px arial black'
+      },
+      layout : {
+        hierarchical: {
+          direction: "LR",
+          sortMethod: "directed",
+          levelSeparation: 260
+        }
+      },
+      interaction: {
+        dragNodes: false,
+        dragView: false,
+        zoomView: false
+      }
+    };
+    network = new vis.Network(container, data, options);
+
+    network.on('select', on_select_f);
+  }
+
   /*
    * Function to update the prep information contents
    *
@@ -88,6 +120,16 @@
     });
   }
 
+  function toggle_graphs() {
+    if($("#graph-network-div").css('display') == 'none' ) {
+      $("#graph-network-div").show();
+      $("#show-hide-btn").text("-");
+    } else {
+      $("#graph-network-div").hide();
+       $("#show-hide-btn").text("+");
+    }
+  }
+
   /*
    *
    * Load the interface with the artifact graph
@@ -98,7 +140,26 @@
    */
   function load_template_graph() {
     show_loading("graph-or-new-artifact-div");
-    console.log("load template graph");
+    $.get("/prep/graph/", {"prep_id": {{prep_id}} })
+      .done(function(data) {
+        var edges = [];
+        var nodes = [];
+
+        for(i=0; i<data.edge_list.length; i++) {
+          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1]});
+        }
+        // format nore depth data
+        for(i=0; i<data.node_labels.length; i++) {
+          nodes.push({id: data.node_labels[i][0], label: data.node_labels[i][1], shape: 'box'});
+        }
+
+        $("#graph-or-new-artifact-div").html("<div class='row'><div class='col-md-12'><h4><a class='btn btn-info' id='show-hide-btn' onclick='toggle_graphs();'>-</a><i> Files network</i></h4></div></div><div class='row'><div class='col-md-12 graph' id='graph-network-div'></div></div>");
+        draw_graph(nodes, edges, "graph-network-div", function(params) {
+          if(+params.nodes !== 0) {
+            console.log(params.nodes);
+          }
+        });
+      });
   }
 
   /*
