@@ -21,7 +21,8 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 
 
 def new_prep_template_get_req(study_id):
-    """
+    """Returns the information needed to populate the new prep info template
+
     Parameters
     ----------
     study_id : int
@@ -30,12 +31,12 @@ def new_prep_template_get_req(study_id):
     Returns
     -------
     (list of str, list of str, dict of {str: list of str})
-        The list of txt,csv files in the upload dir for the given study
+        The list of txt, tsv files in the upload dir for the given study
         The list of available data types
         The investigation type ontology information
     """
     prep_files = [f for _, f in get_files_from_uploads_folders(study_id)
-                  if f.endswith(('txt', 'tsv'))]
+                  if f.endswith(('.txt', '.tsv'))]
     data_types = sorted(Study.all_data_types())
 
     # Get all the ENA terms for the investigation type
