@@ -25,10 +25,27 @@ from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_put_req, prep_template_delete_req, prep_template_get_req,
     prep_template_graph_get_req, prep_template_filepaths_get_req,
     ena_ontology_get_req, _process_investigation_type,
-    _check_prep_template_exists)
+    _check_prep_template_exists, new_prep_template_get_req)
 
 
 class TestPrepAPIReadOnly(TestCase):
+    def test_new_prep_template_get_req(self):
+        obs = new_prep_template_get_req(1)
+        exp = {
+            'status': 'success',
+            'prep_files': ['uploaded_file.txt'],
+            'data_types': ['16S', '18S', 'ITS', 'Metabolomic', 'Metagenomic',
+                           'Proteomic'],
+            'ontology': {
+                'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
+                        'Forensic or Paleo-genomics', 'Gene Regulation Study',
+                        'Metagenomics', 'Pooled Clone Sequencing',
+                        'Population Genomics', 'RNASeq', 'Resequencing',
+                        'Synthetic Genomics', 'Transcriptome Analysis',
+                        'Whole Genome Sequencing', 'Other'],
+                'User': []}}
+        self.assertEqual(obs, exp)
+
     def test_check_prep_template_exists(self):
         obs = _check_prep_template_exists(1)
         self.assertEqual(obs, {'status': 'success', 'message': ''})
@@ -228,8 +245,9 @@ class TestPrepAPI(TestCase):
         with open(self.update_fp, 'w') as f:
             f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
 
-    def tear_down(self):
-        remove(self.update_fp)
+    def tearDown(self):
+        if exists(self.update_fp):
+            remove(self.update_fp)
 
         fp = join(get_mountpoint("uploads")[0][1], '1', 'uploaded_file.txt')
         if not exists(fp):

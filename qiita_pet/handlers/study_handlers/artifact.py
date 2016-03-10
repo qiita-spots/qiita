@@ -70,8 +70,8 @@ class NewArtifactHandler(BaseHandler):
         artifact = artifact_post_req(
             self.current_user.id, files, artifact_type, name, prep['id'])
         if artifact['status'] == 'success' and prep['status'] != 'warning':
-                self.write({'status': 'success',
-                            'message': 'Artifact created successfully'})
+            self.write({'status': 'success',
+                        'message': 'Artifact created successfully'})
         else:
             self.write(prep)
 

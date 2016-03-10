@@ -148,18 +148,23 @@ def study_prep_get_req(study_id, user_id):
         prep_info[dtype] = []
         for prep in study.prep_templates(dtype):
             start_artifact = prep.artifact
-            youngest_artifact = prep.artifact.youngest_artifact
             info = {
                 'name': 'PREP %d NAME' % prep.id,
                 'id': prep.id,
                 'status': prep.status,
-                'start_artifact': start_artifact.artifact_type,
-                'start_artifact_id': start_artifact.id,
-                'youngest_artifact': ' - '.join(
-                    [youngest_artifact.name, youngest_artifact.artifact_type])
             }
+            if start_artifact is not None:
+                youngest_artifact = prep.artifact.youngest_artifact
+                info['start_artifact'] = start_artifact.artifact_type
+                info['start_artifact_id'] = start_artifact.id
+                info['youngest_artifact'] = '%s - %s' % (
+                    youngest_artifact.name, youngest_artifact.artifact_type)
+            else:
+                info['start_artifact'] = None
+                info['start_artifact_id'] = None
+                info['youngest_artifact'] = None
+
             prep_info[dtype].append(info)
     return {'status': 'success',
             'message': '',
-            'info': prep_info
-            }
+            'info': prep_info}

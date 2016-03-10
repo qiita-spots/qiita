@@ -12,6 +12,12 @@ from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.ontology import Ontology
 
 
+class TestNewPrepTemplateAjax(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/study/new_prep_template/', {'study_id': '1'})
+        self.assertEqual(response.code, 200)
+
+
 class TestPrepTemplateGraphAJAX(TestHandlerBase):
     def test_get(self):
         response = self.get('/prep/graph/', {'prep_id': 1})
