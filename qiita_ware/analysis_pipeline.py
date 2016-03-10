@@ -4,6 +4,8 @@ from os.path import join
 from sys import stderr
 
 from qiita_db.job import Job
+from qiita_db.reference import Reference
+from qiita_db.software import Command
 from qiita_db.logger import LogEntry
 from qiita_db.util import get_db_files_base_dir
 from qiita_ware.wrapper import ParallelWrapper, system_call_from_job
@@ -133,8 +135,11 @@ class RunAnalysis(ParallelWrapper):
             if command == "Alpha Rarefaction":
                 opts["-n"] = 4
 
-            Job.create(data_type, command, opts, analysis,
-                       return_existing=True)
+            # These values are going to be changed in the next PR
+            # 1: GG
+            # 3: pick close reference
+            Job.create(data_type, command, opts, analysis, Reference(1),
+                       Command(3), return_existing=True)
 
         # Create the files for the jobs
         files_node_name = "%d_ANALYSISFILES" % analysis.id
