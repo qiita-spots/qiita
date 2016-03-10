@@ -18,7 +18,7 @@ from qiita_db.util import (get_files_from_uploads_folders, get_mountpoint,
 from qiita_pet.handlers.api_proxy import (
     prep_template_ajax_get_req, prep_template_post_req, prep_template_put_req,
     prep_template_delete_req, prep_template_graph_get_req,
-    new_prep_template_get_req)
+    new_prep_template_get_req, prep_template_summary_get_req)
 
 
 class NewPrepTemplateAjax(BaseHandler):
@@ -38,6 +38,15 @@ class PrepTemplateGraphAJAX(BaseHandler):
     def get(self):
         prep = to_int(self.get_argument('prep_id'))
         self.write(prep_template_graph_get_req(prep, self.current_user.id))
+
+
+class PrepTemplateSummaryAJAX(BaseHandler):
+    @authenticated
+    def get(self):
+        prep_id = to_int(self.get_argument('prep_id'))
+        res = prep_template_summary_get_req(prep_id, self.current_user.id)
+        self.render('study_ajax/prep_summary_table.html',
+                    stats=res['summary'])
 
 
 class PrepTemplateAJAX(BaseHandler):

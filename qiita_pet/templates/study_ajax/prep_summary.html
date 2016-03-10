@@ -117,6 +117,17 @@
       });
   }
 
+  /*
+   *
+   */
+  function load_information_summary() {
+    show_loading("summary-table-div");
+    $.get('/study/description/prep_summary/', {'prep_id': {{prep_id}} })
+      .done(function ( data ) {
+        $("#summary-table-div").html(data);
+      });
+  }
+
   $(document).ready(function () {
     if("{{investigation_type}}" !== "None") {
       // The prep information already has an investigation type
@@ -137,7 +148,7 @@
       }
     }
 
-    show_loading("summary-table-div");
+    load_information_summary();
     // If the template already have an artifact attached, load the
     // artifact graph, otherwise load the page to add a new artifact
     if ("{{artifact_attached}}" == "True") {
