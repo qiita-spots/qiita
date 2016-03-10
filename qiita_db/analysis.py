@@ -910,12 +910,8 @@ class Analysis(qdb.base.QiitaStatusObject):
                 new_table.add_metadata(samples_md, axis='sample')
 
                 if rarefaction_depth is not None:
-                    try:
-                        new_table = new_table.subsample(rarefaction_depth)
-                    except IndexError:
-                        # this error means that it was possible to apply the
-                        # requested rarefaction level. Overwritting error to
-                        # make it human readable
+                    new_table = new_table.subsample(rarefaction_depth)
+                    if len(biom_table.ids()) == 0:
                         raise RuntimeError(
                             "All samples filtered out due to rarefaction "
                             "level")
