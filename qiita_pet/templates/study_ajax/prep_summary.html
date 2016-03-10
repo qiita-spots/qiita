@@ -1,5 +1,34 @@
 <script type="text/javascript">
   /*
+   * Function to update the prep information contents
+   *
+   * This function executes an AJAX query to modify the contents of the
+   * prep information and updates the interface accordingly
+   *
+   */
+  function update_prep_information() {
+    var fp = $("#file-selector").val();
+    $.ajax({
+      url: '/prep_template/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/{{prep_id}}/data', 'value': fp},
+      success: function(data) {
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        }
+        else {
+          if(data.status == 'warning') {
+            bootstrapAlert(data.message.replace("\n", "<br/>"), "warning");
+          }
+          $("#file-selector option[value='" + fp +"']").remove();
+          $("#file-selector").val("");
+          $("#update-button-div").hide();
+        }
+      }
+    });
+  }
+
+  /*
    *
    * Function to create a new ENA investigation type term and update the template
    *
@@ -117,6 +146,15 @@
     else {
       load_new_artifact();
     }
+    // If the file-selector select changes, check if we need to show the update button
+    $("#file-selector").change(function ( event ) {
+      if ( $("#file-selector").val() === "" ) {
+        $("#update-button-div").hide();
+      }
+      else {
+        $("#update-button-div").show();
+      }
+    });
 
     // If the ena-ontology select changes, check if we need to show the user list
     $("#ena-ontology").change(function ( event ) {
@@ -131,7 +169,7 @@
         update_investigation_type(value);
       }
     });
-    // If the user-ena-info select changes, check if we need to show the
+    // If the user-ena-info select changes, check if we need to show the input box
     $("#user-ena-info").change(function ( event ) {
         var value = $("#user-ontology").val();
         if( value == "New Type" ) {
@@ -169,13 +207,15 @@
 <div class="row">
   <div class="col-md-12">
     <b>Update information:</b>
-    <select class="" name="">
+    <select id="file-selector">
       <option value="">Choose file...</option>
       {% for fp in files %}
         <option value="{{fp}}">{{fp}}</option>
       {% end %}
     </select>
-    <button class="btn btn-info btn-sm" onclick="console.log('clicked');">Update</button>
+    <div id="update-button-div" hidden>
+      <button class="btn btn-info btn-sm" onclick="update_prep_information();" hidden>Update</button>
+    </div>
   </div>
 </div>
 

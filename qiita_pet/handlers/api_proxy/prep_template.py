@@ -322,9 +322,9 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
     user_id : str
         The id of the user performing the patch operation
     req_op : str
-        The operation to perform on the ontology
+        The operation to perform on the prep information
     req_path : str
-        The ontology to patch
+        The prep information and attribute to patch
     req_value : str, optional
         The value that needs to be modified
     req_from : str, optional
@@ -349,15 +349,31 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         if access_error:
             return access_error
 
+        status = 'success'
+        msg = ''
         if attribute == 'investigation_type':
             prep.investigation_type = req_value
+        elif attribute == 'data':
+            fp = check_fp(prep.study_id, req_value)
+            if fp['status'] != 'success':
+                return fp
+            fp = fp['file']
+            df = load_template_to_dataframe(fp)
+            with warnings.catch_warnings(record=True) as warns:
+                prep.extend(df)
+                prep.update(df)
+                remove(fp)
+
+                if warns:
+                    msg = '\n'.join(set(str(w.message) for w in warns))
+                    status = 'warning'
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',
                     'message': 'Attribute "%s" not found. '
                                'Please, check the path parameter' % attribute}
 
-        return {'status': 'success', 'message': ''}
+        return {'status': status, 'message': msg}
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '
