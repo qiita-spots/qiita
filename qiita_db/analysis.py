@@ -911,10 +911,9 @@ class Analysis(qdb.base.QiitaStatusObject):
 
                 if rarefaction_depth is not None:
                     new_table = new_table.subsample(rarefaction_depth)
-                    if len(biom_table.ids()) == 0:
+                    if len(new_table.ids()) == 0:
                         raise RuntimeError(
-                            "All samples filtered out due to rarefaction "
-                            "level")
+                            "All samples filtered out due to rarefacion level")
 
                 # write out the file
                 fn = "%d_analysis_dt-%s_r-%s_c-%s.biom" % (
