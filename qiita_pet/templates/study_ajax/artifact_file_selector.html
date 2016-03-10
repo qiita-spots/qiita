@@ -52,7 +52,9 @@
       --error_count;
       $(container).attr("data-correct", "true");
       // Make sure that the error_count variable is always >= 0.
-      if (error_count < 0) { error_count = 0; }
+      if (error_count < 0) {
+        error_count = 0;
+      }
     }
   }
 
@@ -79,14 +81,22 @@
       // If the count is correct, then it is always correct. If the count is not
       // correct, it is correct if and only if it is not required and has no
       // children
-      if (count_ok || (!is_required && num_children === 0)) { mark_as_correct(this); }
-      else { mask_as_wrong(this); }
+      if (count_ok || (!is_required && num_children === 0)) {
+        mark_as_correct(this);
+      }
+      else {
+        mark_as_wrong(this);
+      }
     }
     else {
       // There is no required count. In this case, it is correct if the number
       // of children is greater than 0 or if it is not required
-      if (num_children > 0 || !is_required) { mark_as_correct(this); }
-      else { mark_as_wrong(this); }
+      if (num_children > 0 || !is_required) {
+        mark_as_correct(this);
+      }
+      else {
+        mark_as_wrong(this);
+      }
     }
     allow_submission();
   }
