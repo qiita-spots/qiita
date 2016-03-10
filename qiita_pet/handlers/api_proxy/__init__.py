@@ -29,6 +29,7 @@ from .studies import (
 from .artifact import (artifact_graph_get_req, artifact_types_get_req,
                        artifact_post_req, artifact_get_req,
                        artifact_status_put_req, artifact_delete_req)
+from .ontology import ontology_patch_handler
 
 __version__ = "0.2.0-dev"
 

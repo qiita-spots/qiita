@@ -40,6 +40,7 @@ from qiita_pet.handlers.processing_handlers import ProcessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
 from qiita_pet.handlers.prep_template import PrepTemplateHandler
+from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
                                               ActiveStepHandler,
                                               CompleteHandler)
@@ -119,6 +120,7 @@ class Application(tornado.web.Application):
             (r"/artifact/", ArtifactAJAX),
             (r"/artifact/graph/", ArtifactGraphAJAX),
             (r"/prep_template/", PrepTemplateHandler),
+            (r"/ontology/", OntologyHandler),
             # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.
             # Same reasoning as below. /study/description/(.*) should be last.
             (r"/study/description/sample_template/", SampleTemplateAJAX),
