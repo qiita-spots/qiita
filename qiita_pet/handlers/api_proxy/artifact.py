@@ -76,7 +76,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     ----------
     user_id : str
         User adding the atrifact
-    filepaths : dict of {str: str}
+    filepaths : str
         Comma-separated list of files to attach to the artifact,
         keyed by file type
     artifact_type : str
@@ -108,9 +108,11 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     for ftype, file_list in viewitems(filepaths):
         # JavaScript sends us this list as a comma-separated list
         for fp in file_list.split(','):
-            # If the list was initially empty, the elemnt fp will the empty
-            # string, which will make the check below for "exists" to check
-            # for the directory, instead than for the actual file
+            # JavaScript will send this value as an empty string if the
+            # list of files was empty. In such case, the split will generate
+            # a single element containing the empty string. Check for that case
+            # here and, if fp is not the empty string, proceed to check if
+            # the file exists
             if fp:
                 # Check if filepath being passed exists for study
                 full_fp = path_builder(fp)
