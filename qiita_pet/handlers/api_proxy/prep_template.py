@@ -67,7 +67,8 @@ def new_prep_template_get_req(study_id):
 
 
 def prep_template_ajax_get_req(prep_id):
-    """
+    """Returns the prep tempalte information needed for the AJAX handler
+
     Parameters
     ----------
     prep_id : int
@@ -75,6 +76,21 @@ def prep_template_ajax_get_req(prep_id):
 
     Returns
     -------
+    dict of {str: object}
+        A dictionary with the following keys:
+        - status: str, whether if the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
+        - name: str, the name of the prep template
+        - files: list of str, the files available to update the prep template
+        - download_prep: int, the filepath_id of the prep file
+        - download_qiime, int, the filepath_id of the qiime mapping file
+        - num_samples: int, the number of samples present in the template
+        - num_columns: int, the number of columns present in the template
+        - investigation_type: str, the investigation type of the template
+        - ontology: str, dict of {str, list of str} conataining the information
+        of the ENA ontology
+        - artifact_attached: bool, whethe the template has an artifact attached
+        - study_id: int, the study id of the template
     """
     # Currently there is no name attribute, but it will be soon
     name = "Prep information %d" % prep_id
@@ -337,6 +353,10 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
 
     Returns
     -------
+    dict of {str, str}
+        A dictionary with the following keys:
+        - status: str, whether if the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
     """
     if req_op == 'replace':
         req_path = [v for v in req_path.split('/') if v]
