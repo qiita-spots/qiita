@@ -54,4 +54,4 @@ def ontology_patch_handler(req_op, req_path, req_value=None, req_from=None):
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '
-                           'Current supported operations: add' % 'req_op'}
+                           'Current supported operations: add' % req_op}
