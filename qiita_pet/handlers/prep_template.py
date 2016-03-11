@@ -9,8 +9,8 @@
 from tornado.web import authenticated
 
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.handlers.api_proxy import (prep_template_post_req,
-                                          prep_template_patch_req)
+from qiita_pet.handlers.api_proxy import (
+    prep_template_post_req, prep_template_patch_req, prep_template_delete_req)
 
 
 class PrepTemplateHandler(BaseHandler):
@@ -46,3 +46,9 @@ class PrepTemplateHandler(BaseHandler):
             self.current_user.id, req_op, req_path, req_value, req_from)
 
         self.write(response)
+
+    @authenticated
+    def delete(self):
+        """Deletes a prep template from the system"""
+        prep_id = self.get_argument('prep-template-id')
+        self.write(prep_template_delete_req(prep_id, self.current_user.id))

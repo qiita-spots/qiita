@@ -207,6 +207,31 @@
     console.log("Load artifact summary " + artifact_id);
   }
 
+  /*
+   *
+   */
+  function delete_prep_info(prep_id) {
+    if(confirm("Are you sure you want to delete prep template " + prep_id + "?")) {
+      // Perform the AJAX call to delete
+      $.ajax({
+        url: '/prep_template/',
+        type: 'DELETE',
+        data: {'prep-template-id': prep_id},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            // If success, populate the main div with the study info
+            // and regenerate the data type menu div (there is one prep less)
+            populate_main_div("/study/description/baseinfo/", { study_id: {{study_id}} });
+            populate_data_type_menu_div();
+          }
+        }
+      });
+    }
+  }
+
   $(document).ready(function () {
     if("{{investigation_type}}" !== "None") {
       // The prep information already has an investigation type
@@ -282,6 +307,7 @@
       {{name}} - ID {{prep_id}}
       <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{download_prep}}" style="word-spacing: -10px;"> Prep info</a>
       <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{download_qiime}}" style="word-spacing: -10px;"> Qiime map</a>
+      <a class="btn btn-danger glyphicon glyphicon-trash" style="word-spacing: -10px;" onclick="delete_prep_info({{prep_id}});"> Delete</a>
     </h4>
   </div>
 </div>
