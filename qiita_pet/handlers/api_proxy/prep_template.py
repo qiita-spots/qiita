@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 import warnings
-from json import loads
 
 from os import remove
 from os.path import basename
@@ -23,6 +22,14 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 
 
 def _get_ENA_ontology():
+    """Returns the information of the ENA ontology
+
+    Returns
+    -------
+    dict of {str: list of strings}
+        A dictionary of the form {'ENA': list of str.], 'User': list of str}
+        with the ENA-defined terms and the User-defined terms, respectivelly.
+    """
     ontology = Ontology(convert_to_id('ENA', 'ontology'))
     ena_terms = sorted(ontology.terms)
     # make "Other" last on the list
@@ -95,8 +102,6 @@ def prep_template_ajax_get_req(prep_id):
     download_qiime = download_qiime[0]
 
     ontology = _get_ENA_ontology()
-
-    # stats = prep_template_summary_get_req(prep_id, self.current_user.id)
 
     return {'status': 'success',
             'message': '',
@@ -554,31 +559,6 @@ def prep_template_filepaths_get_req(prep_id, user_id):
     return {'status': 'success',
             'message': '',
             'filepaths': prep.get_filepaths()
-            }
-
-
-def ena_ontology_get_req():
-    """Returns all system and user defined terms for prep template type
-
-    Returns
-    -------
-    dict of objects
-        {'status': status,
-         'message': message,
-         'ENA': [term1, term2, ...],
-         'User': [userterm1, userterm2, ...]}
-    """
-    # Get all the ENA terms for the investigation type
-    ontology = Ontology(convert_to_id('ENA', 'ontology'))
-    ena_terms = sorted(ontology.terms)
-    # make "Other" last on the list
-    ena_terms.remove('Other')
-    ena_terms.append('Other')
-
-    return {'status': 'success',
-            'message': '',
-            'ENA': ena_terms,
-            'User': sorted(ontology.user_defined_terms)
             }
 
 

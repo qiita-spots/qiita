@@ -24,12 +24,24 @@ from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
     prep_template_put_req, prep_template_delete_req, prep_template_get_req,
     prep_template_graph_get_req, prep_template_filepaths_get_req,
-    ena_ontology_get_req, _process_investigation_type,
+    _process_investigation_type,
     _check_prep_template_exists, new_prep_template_get_req,
-    prep_template_ajax_get_req)
+    prep_template_ajax_get_req, _get_ENA_ontology)
 
 
 class TestPrepAPIReadOnly(TestCase):
+    def test_get_ENA_ontology(self):
+        obs = _get_ENA_ontology()
+        exp = {
+            'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
+                    'Forensic or Paleo-genomics', 'Gene Regulation Study',
+                    'Metagenomics', 'Pooled Clone Sequencing',
+                    'Population Genomics', 'RNASeq', 'Resequencing',
+                    'Synthetic Genomics', 'Transcriptome Analysis',
+                    'Whole Genome Sequencing', 'Other'],
+            'User': []}
+        self.assertEqual(obs, exp)
+
     def test_new_prep_template_get_req(self):
         obs = new_prep_template_get_req(1)
         exp = {
@@ -56,8 +68,17 @@ class TestPrepAPIReadOnly(TestCase):
                'download_prep': 18,
                'download_qiime': 19,
                'num_samples': 27,
-               'num_columns': 23,
-               'investigation_type': [],
+               'num_columns': 22,
+               'investigation_type': 'Metagenomics',
+               'ontology': {
+                   'ENA': ['Cancer Genomics', 'Epigenetics',
+                           'Exome Sequencing', 'Forensic or Paleo-genomics',
+                           'Gene Regulation Study', 'Metagenomics',
+                           'Pooled Clone Sequencing', 'Population Genomics',
+                           'RNASeq', 'Resequencing', 'Synthetic Genomics',
+                           'Transcriptome Analysis', 'Whole Genome Sequencing',
+                           'Other'],
+                   'User': []},
                'artifact_attached': True,
                'study_id': 1}
         self.assertEqual(obs, exp)
@@ -70,19 +91,6 @@ class TestPrepAPIReadOnly(TestCase):
         obs = _check_prep_template_exists(3100)
         self.assertEqual(obs, {'status': 'error',
                                'message': 'Prep template 3100 does not exist'})
-
-    def test_ena_ontology_get_req(self):
-        obs = ena_ontology_get_req()
-        exp = {'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
-                       'Forensic or Paleo-genomics', 'Gene Regulation Study',
-                       'Metagenomics', 'Pooled Clone Sequencing',
-                       'Population Genomics', 'RNASeq', 'Resequencing',
-                       'Synthetic Genomics', 'Transcriptome Analysis',
-                       'Whole Genome Sequencing', 'Other'],
-               'User': [],
-               'status': 'success',
-               'message': ''}
-        self.assertEqual(obs, exp)
 
     def test_prep_template_get_req(self):
         obs = prep_template_get_req(1, 'test@foo.bar')
@@ -287,21 +295,6 @@ class TestPrepAPI(TestCase):
         # Make sure New Type added
         ontology = Ontology(999999999)
         self.assertIn(randstr, ontology.user_defined_terms)
-
-    def test_ena_ontology_get_req_user_terms(self):
-        _process_investigation_type('Other', 'New Type', 'userterm')
-
-        obs = ena_ontology_get_req()
-        exp = {'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
-                       'Forensic or Paleo-genomics', 'Gene Regulation Study',
-                       'Metagenomics', 'Pooled Clone Sequencing',
-                       'Population Genomics', 'RNASeq', 'Resequencing',
-                       'Synthetic Genomics', 'Transcriptome Analysis',
-                       'Whole Genome Sequencing', 'Other'],
-               'User': ['userterm'],
-               'status': 'success',
-               'message': ''}
-        self.assertEqual(obs, exp)
 
     def test_prep_template_post_req(self):
         new_id = get_count('qiita.prep_template') + 1
