@@ -8,7 +8,7 @@
 from __future__ import division
 from os.path import join
 
-from tornado.web import authenticated, HTTPError
+from tornado.web import authenticated
 import pandas as pd
 
 from qiita_pet.handlers.util import to_int
@@ -16,8 +16,7 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import (get_files_from_uploads_folders, get_mountpoint,
                            supported_filepath_types)
 from qiita_pet.handlers.api_proxy import (
-    prep_template_ajax_get_req, prep_template_post_req, prep_template_put_req,
-    prep_template_delete_req, prep_template_graph_get_req,
+    prep_template_ajax_get_req, prep_template_graph_get_req,
     new_prep_template_get_req, prep_template_summary_get_req)
 
 
@@ -66,34 +65,6 @@ class PrepTemplateAJAX(BaseHandler):
                     artifact_attached=res['artifact_attached'],
                     prep_id=prep_id, study_id=res['study_id'],
                     ontology=res['ontology'])
-
-    @authenticated
-    def post(self):
-        """Edit/delete/recreate prep template"""
-        action = self.get_argument('action')
-        prep_id = self.get_argument('prep_id')
-        if action == 'create':
-            filepath = self.get_argument('filepath')
-            data_type = self.get_argument('data_type')
-            result = prep_template_post_req(prep_id, self.current_user.id,
-                                            data_type, filepath)
-        elif action == 'update':
-            filepath = self.get_argument('filepath')
-            result = prep_template_put_req(prep_id, self.current_user.id,
-                                           prep_template=filepath)
-        elif action == 'delete':
-            result = prep_template_delete_req(prep_id, self.current_user.id)
-        elif action == 'ontology':
-            inv_type = self.get_argument('ena')
-            user_inv_type = self.get_argument('ena_user', None)
-            new_inv_type = self.get_argument('ena_new', None)
-            result = prep_template_put_req(
-                prep_id, self.current_user.id, investigation_type=inv_type,
-                user_defined_investigation_type=user_inv_type,
-                new_investigation_type=new_inv_type)
-        else:
-            raise HTTPError(400, 'Unknown prep template action: %s' % action)
-        self.write(result)
 
 
 class PrepFilesHandler(BaseHandler):

@@ -22,9 +22,9 @@ from qiita_db.util import get_count, get_mountpoint
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.prep_template import (
     prep_template_summary_get_req, prep_template_post_req,
-    prep_template_put_req, prep_template_delete_req, prep_template_get_req,
+    prep_template_delete_req, prep_template_get_req,
     prep_template_graph_get_req, prep_template_filepaths_get_req,
-    _process_investigation_type,
+    _process_investigation_type, prep_template_patch_req,
     _check_prep_template_exists, new_prep_template_get_req,
     prep_template_ajax_get_req, _get_ENA_ontology)
 
@@ -333,79 +333,86 @@ class TestPrepAPI(TestCase):
         self.assertEqual([x._to_dict() for x in prep.values()],
                          [{'new_col': 'new_value'}])
 
-    def test_prep_template_post_req_no_access(self):
+    def test_prep_template_post_req_errors(self):
+        # User doesn't have access
         obs = prep_template_post_req(1, 'demo@microbio.me', 'filepath', '16S')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_prep_template_post_req_bad_filepath(self):
+        # The file does not exist
         obs = prep_template_post_req(1, 'test@foo.bar', 'badfilepath', '16S')
         exp = {'status': 'error',
                'message': 'file does not exist',
                'file': 'badfilepath'}
         self.assertEqual(obs, exp)
 
-    def test_prep_template_post_req_no_exists(self):
+        # Prep template does not exist
         obs = prep_template_post_req(3100, 'test@foo.bar', 'update.txt',
                                      '16S')
         self.assertEqual(obs, {'status': 'error',
                                'message': 'Study does not exist'})
 
-    def test_prep_template_put_req(self):
-        obs = prep_template_put_req(1, 'test@foo.bar',
-                                    'uploaded_file.txt')
+    def test_prep_template_patch_req(self):
+        pt = PrepTemplate(1)
+        # Update investigation type
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'replace', '/1/investigation_type',
+            'Cancer Genomics')
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(obs, exp)
+        self.assertEqual(pt.investigation_type, 'Cancer Genomics')
+        # Update prep template data
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'replace', '/1/data', 'update.txt')
+        self.assertEqual(obs['status'], 'warning')
+        exp = [
+            'Sample names were already prefixed with the study id.',
+            'The following columns have been added to the existing template: '
+            'new_col',
+            'There are no differences between the data stored in the DB and '
+            'the new data provided']
+        self.assertItemsEqual(obs['message'].split('\n'), exp)
+        self.assertEqual(pt['1.SKD6.640190']['new_col'], 'new_value')
+
+    def test_prep_template_patch_req_errors(self):
+        # Operation not supported
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'add', '/1/investigation_type',
+            'Cancer Genomics')
         exp = {'status': 'error',
-               'message': 'Empty file passed!',
-               'file': 'uploaded_file.txt'}
+               'message': 'Operation "add" not supported. '
+                          'Current supported operations: replace'}
         self.assertEqual(obs, exp)
-
-    def test_prep_template_put_req_warning(self):
-        obs = prep_template_put_req(1, 'test@foo.bar', 'update.txt')
-        exp = {'status': 'warning',
-               'message': 'Sample names were already prefixed with the study '
-                          'id.\nThe following columns have been added to the '
-                          'existing template: new_col\nThere are no '
-                          'differences between the data stored in the DB and '
-                          'the new data provided',
-               'file': 'update.txt'}
-        self.assertItemsEqual(obs['message'].split('\n'),
-                              exp['message'].split('\n'))
-        self.assertEqual(obs['status'], exp['status'])
-        self.assertEqual(obs['file'], exp['file'])
-
-    def test_prep_put_req_inv_type(self):
-        randstr = ''.join([choice(ascii_letters) for x in range(30)])
-        obs = prep_template_put_req(1, 'test@foo.bar',
-                                    investigation_type='Other',
-                                    user_defined_investigation_type='New Type',
-                                    new_investigation_type=randstr)
-        exp = {'status': 'success',
-               'message': '',
-               'file': None}
+        # Incorrect path parameter
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'replace', '/investigation_type',
+            'Cancer Genomics')
+        exp = {'status': 'error',
+               'message': 'Incorrect path parameter'}
         self.assertEqual(obs, exp)
-
-        # Make sure New Type added
-        ontology = Ontology(999999999)
-        self.assertIn(randstr, ontology.user_defined_terms)
-
-    def test_prep_template_put_req_no_access(self):
-        obs = prep_template_put_req(1, 'demo@microbio.me', 'filepath')
+        # Incorrect attribute
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'replace', '/1/other_attribute',
+            'Cancer Genomics')
+        exp = {'status': 'error',
+               'message': 'Attribute "other_attribute" not found. '
+                          'Please, check the path parameter'}
+        self.assertEqual(obs, exp)
+        # User doesn't have access
+        obs = prep_template_patch_req(
+            'demo@microbio.me', 'replace', '/1/investigation_type',
+            'Cancer Genomics')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
-
-    def test_prep_template_put_req_bad_filepath(self):
-        obs = prep_template_put_req(1, 'test@foo.bar', 'badfilepath')
+        # File does not exists
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'replace', '/1/data', 'unknown_file.txt')
         exp = {'status': 'error',
                'message': 'file does not exist',
-               'file': 'badfilepath'}
+               'file': 'unknown_file.txt'}
         self.assertEqual(obs, exp)
-
-    def test_prep_template_put_req_no_exists(self):
-        obs = prep_template_put_req(3100, 'test@foo.bar')
-        self.assertEqual(obs, {'status': 'error',
-                               'message': 'Prep template 3100 does not exist'})
 
     def test_prep_template_delete_req(self):
         template = pd.read_csv(self.update_fp, sep='\t', index_col=0)

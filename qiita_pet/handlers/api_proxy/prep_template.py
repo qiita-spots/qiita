@@ -402,7 +402,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '
-                           'Current supported operations: replace'}
+                           'Current supported operations: replace' % req_op}
 
 
 def prep_template_samples_get_req(prep_id, user_id):
@@ -435,83 +435,6 @@ def prep_template_samples_get_req(prep_id, user_id):
             'message': '',
             'samples': sorted(x for x in PrepTemplate(int(prep_id)))
             }
-
-
-@execute_as_transaction
-def prep_template_put_req(prep_id, user_id, prep_template=None,
-                          investigation_type=None,
-                          user_defined_investigation_type=None,
-                          new_investigation_type=None):
-    """Updates the prep template with the changes in the given file
-
-    Parameters
-    ----------
-    prep_id : int
-        The prep template to update
-    user_id : str
-        The current user object id
-    prep_template : str, optional
-        filepath to use for updating
-    investigation_type: str, optional
-        Existing investigation type to attach to the prep template
-    user_defined_investigation_type: str, optional
-        Existing user added investigation type to attach to the prep template
-    new_investigation_type: str, optional
-        Investigation type to add to the system
-
-    Returns
-    -------
-    dict of str
-        {'status': status,
-         'message': message,
-         'file': prep_template}
-    """
-    exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
-        return exists
-
-    prep = PrepTemplate(int(prep_id))
-    study_id = prep.study_id
-    access_error = check_access(study_id, user_id)
-    if access_error:
-        return access_error
-
-    if investigation_type:
-        investigation_type = _process_investigation_type(
-            investigation_type, user_defined_investigation_type,
-            new_investigation_type)
-        prep.investigation_type = investigation_type
-
-    msg = ''
-    status = 'success'
-    if prep_template:
-        fp = check_fp(study_id, prep_template)
-        if fp['status'] != 'success':
-            # Unknown filepath, so return the error message
-            return fp
-        fp = fp['file']
-        try:
-            with warnings.catch_warnings(record=True) as warns:
-                pt = PrepTemplate(int(prep_id))
-                df = load_template_to_dataframe(fp)
-                pt.extend(df)
-                pt.update(df)
-                remove(fp)
-
-                # join all the warning messages into one. Note that this info
-                # will be ignored if an exception is raised
-                if warns:
-                    msg = '\n'.join(set(str(w.message) for w in warns))
-                    status = 'warning'
-
-        except Exception as e:
-            # Some error occurred while processing the sample template
-            # Show the error to the user so they can fix the template
-            status = 'error'
-            msg = str(e)
-    return {'status': status,
-            'message': msg,
-            'file': prep_template}
 
 
 def prep_template_delete_req(prep_id, user_id):
