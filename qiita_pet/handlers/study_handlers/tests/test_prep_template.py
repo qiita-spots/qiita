@@ -38,7 +38,7 @@ class TestPrepTemplateAJAXReadOnly(TestHandlerBase):
         response = self.get('/study/description/prep_template/',
                             {'prep_id': 1, 'study_id': 1})
         self.assertEqual(response.code, 200)
-        self.assertIn('This analysis was done as in Caporaso', response.body)
+        self.assertNotEqual(response.body, '')
 
 
 class TestPrepTemplateAJAX(TestHandlerBase):
