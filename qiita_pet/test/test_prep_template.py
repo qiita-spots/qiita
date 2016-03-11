@@ -9,6 +9,7 @@
 from unittest import main
 from os.path import join, exists
 from os import remove
+from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.util import get_count, get_mountpoint
@@ -39,6 +40,28 @@ class TestPrepTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         # Check that the new prep template has been created
         self.assertTrue(PrepTemplate.exists(new_prep_id))
+
+    def test_patch(self):
+        # TODO: issue #1682
+        # arguments = {'op': 'replace',
+        #              'path': '/1/investigation_type/',
+        #              'value': 'Cancer Genomics'}
+        # response = self.patch('/prep_template/', data=arguments)
+        # self.assertEqual(response.code, 200)
+        # exp = {'status': 'success', 'message': ''}
+        # self.assertEqual(laods(response.body), exp)
+        pass
+
+    def test_delete(self):
+        # Create a new prep template so we can delete it
+        response = self.delete('/prep_template/', data={'prep-template-id': 1})
+        self.assertEqual(response.code, 200)
+        exp = {
+            "status": "error",
+            "message": "Couldn't remove prep template: Cannot remove prep "
+                       "template 1 because it has an artifact associated "
+                       "with it"}
+        self.assertEqual(loads(response.body), exp)
 
 if __name__ == '__main__':
     main()

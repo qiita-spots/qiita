@@ -42,6 +42,27 @@ class TestHandlerBase(AsyncHTTPTestCase):
                 data = urlencode(data, doseq=doseq)
         return self._fetch(url, 'POST', data, headers)
 
+    def patch(self, url, data=None, headers=None, doseq=True):
+        # TODO: issue #1682
+        if data is not None:
+            if isinstance(data, dict):
+                data = urlencode(data, doseq=doseq)
+            if '?' in url:
+                url += '&amp;%s' % data
+            else:
+                url += '?%s' % data
+        return self._fetch(url, 'PATCH', headers=headers)
+
+    def delete(self, url, data=None, headers=None, doseq=True):
+        if data is not None:
+            if isinstance(data, dict):
+                data = urlencode(data, doseq=doseq)
+            if '?' in url:
+                url += '&amp;%s' % data
+            else:
+                url += '?%s' % data
+        return self._fetch(url, 'DELETE', headers=headers)
+
     def _fetch(self, url, method, data=None, headers=None):
         self.http_client.fetch(self.get_url(url), self.stop, method=method,
                                body=data, headers=headers)
