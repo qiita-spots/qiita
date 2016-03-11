@@ -1,6 +1,18 @@
 <script type="text/javascript">
   var network;
 
+  /*
+   * Function to draw a vis.Network
+   *
+   * @param nodes list of nodes
+   * @param edges list of edges
+   * @param target div name to draw the netword
+   * @param on_select_f callback function for the 'select' event in the network nodes
+   *
+   * This function creates a new instance of vis.Network and draws the graph
+   * in the target div
+   *
+   */
   function draw_graph(nodes, edges, target, on_select_f) {
     var container = document.getElementById(target);
     container.innerHTML = "";
@@ -120,6 +132,12 @@
     });
   }
 
+  /*
+   * Toggle the graph view
+   *
+   * Show/hide the graph div and update GUI accordingly
+   *
+   */
   function toggle_graphs() {
     if($("#graph-network-div").css('display') == 'none' ) {
       $("#graph-network-div").show();
@@ -208,6 +226,12 @@
   }
 
   /*
+   * Delete a prep template from the system
+   *
+   * @param prep_id The prep template id
+   *
+   * This function executes an AJAX call to delete the provided prep template
+   * and updates the interface accordingly
    *
    */
   function delete_prep_info(prep_id) {

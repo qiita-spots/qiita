@@ -64,12 +64,8 @@
           if(data.status == 'error') {bootstrapAlert(data.message, "danger"); }
           else {
             if(data.status == 'warning') { bootstrapAlert(data.message, "warning"); }
-            // This reloads needs to be changed to:
-            // 1) Reload the datatpyes div
-            // populate_data_type_menu_div();
-            // 2) Reload the main div to show the new artifact
-            // populate_main_div()?
-            window.location.reload();
+            populate_data_type_menu_div();
+            populate_main_div('/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
           }
         }
       });
