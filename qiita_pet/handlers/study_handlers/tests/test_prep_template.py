@@ -9,7 +9,6 @@ from unittest import main
 from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
-from qiita_db.ontology import Ontology
 
 
 class TestNewPrepTemplateAjax(TestHandlerBase):
