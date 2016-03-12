@@ -162,7 +162,7 @@
    * @param url string with the URL to perform the AJAX get call
    * @param parameters the parameters for the AJAX call
    *
-   * This function ejecutes an AJAX get against the URL provided with the given
+   * This function executes an AJAX get against the URL provided with the given
    * parameters, and inserts the returned data as HTML in the study-main div
    *
    */
@@ -229,7 +229,6 @@
     {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
     <a href="#" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })">Add New Preparation</a><br />
-    <!-- <a href="#" onclick="populate_main_div('/study/add_prep/{{study_info['study_id']}}')">Add New Preparation</a><br /> -->
     <a href="/study/edit/{{study_info['study_id']}}">Edit Study Information</a><br />
     <a href="#" data-toggle="modal" data-target="#delete-study">Delete Study</a>
     {% end %}

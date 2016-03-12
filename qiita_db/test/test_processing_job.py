@@ -16,6 +16,7 @@ import networkx as nx
 
 import qiita_db as qdb
 from qiita_core.util import qiita_test_checker
+from qiita_core.qiita_settings import qiita_config
 
 
 class ProcessingJobUtilTestReadOnly(TestCase):
@@ -162,10 +163,11 @@ class ProcessingJobTestReadOnly(TestCase):
     def test_generate_cmd(self):
         obs = self.tester1._generate_cmd()
         exp = ('qiita-plugin-launcher "source activate qiita" '
-               '"start_target_gene" "https://localhost" '
+               '"start_target_gene" "%s" '
                '"063e553b-327c-4818-ab4a-adfe58e49860" "%s"'
-               % join(qdb.util.get_work_base_dir(),
-                      "063e553b-327c-4818-ab4a-adfe58e49860"))
+               % (qiita_config.base_url,
+                  join(qdb.util.get_work_base_dir(),
+                       "063e553b-327c-4818-ab4a-adfe58e49860")))
         self.assertEqual(obs, exp)
 
     def test_submit(self):

@@ -6,13 +6,22 @@ $(document).ready(function () {
   $("#new-ena-info").hide();
   // If the ena-ontology select changes, check if we need to show the user list
   $("#ena-ontology").change(function ( event ) {
-      if( $("#ena-ontology").val() == "Other" ) { $("#user-ena-info").show(); }
-      else { $("#user-ena-info").hide(); $("#new-ena-info").hide(); }
+    if( $("#ena-ontology").val() == "Other" ) {
+      $("#user-ena-info").show();
+    }
+    else {
+      $("#user-ena-info").hide();
+      $("#new-ena-info").hide();
+    }
   });
   // If the user-ena-info select changes, check if we need to show the
   $("#user-ena-info").change(function ( event ) {
-      if( $("#user-ontology").val() == "New Type" ) { $("#new-ena-info").show(); }
-      else { $("#new-ena-info").hide(); }
+    if( $("#user-ontology").val() == "New Type" ) {
+      $("#new-ena-info").show();
+    }
+    else {
+      $("#new-ena-info").hide();
+    }
   });
 
   // Make sure that the form gets validated prior submission
