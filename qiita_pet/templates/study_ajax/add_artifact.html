@@ -11,8 +11,12 @@
    *
    */
   function allow_submission() {
-    if (error_count === 0) { $("#submit-div").show(); }
-    else { $("#submit-div").hide(); }
+    if (error_count === 0) {
+      $("#submit-div").show();
+    }
+    else {
+      $("#submit-div").hide();
+    }
   }
 
   /**
@@ -41,7 +45,9 @@
       if( $("#artifact-type").val() !== "") {
           populate_files_list($("#artifact-type").val());
       }
-      else{ $("#files-selector").hide(); }
+      else{
+        $("#files-selector").hide();
+      }
     });
 
     // Modify the submit action of the form to use AJAX
@@ -61,9 +67,13 @@
         type: "POST",
         data: $("#create-artifact-form").serialize(),
         success: function(data) {
-          if(data.status == 'error') {bootstrapAlert(data.message, "danger"); }
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
           else {
-            if(data.status == 'warning') { bootstrapAlert(data.message, "warning"); }
+            if(data.status == 'warning') {
+              bootstrapAlert(data.message, "warning");
+            }
             populate_data_type_menu_div();
             populate_main_div('/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
           }
