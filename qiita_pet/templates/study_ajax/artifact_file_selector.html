@@ -4,13 +4,13 @@
    * Function that validates all the files lists
    *
    * This function triggers the sortupdate event in all the elements
-   * that are "checkeable"
+   * that are "checkable"
    */
   function check_files_lists() {
       // Reset the error counter
-      error_count = 0;
+      $('#files-selector').attr("data-error-count", 0);
       // initialize the error count to the number of file types
-      $(".checkeable").trigger("sortupdate");
+      $(".checkable").trigger("sortupdate");
       allow_submission();
   }
 
@@ -29,7 +29,7 @@
     $(container).addClass("highlightWrong");
     if ( $(container).attr("data-correct") === "true" ) {
       // It changed value - update the counters and the value
-      ++error_count;
+      $('#files-selector').attr("data-error-count", +$('#files-selector').attr("data-error-count") + 1);
       $(container).attr("data-correct", "false");
     }
   }
@@ -49,12 +49,14 @@
     $(container).addClass("highlightCorrect");
     if ( $(container).attr("data-correct") === "false" ) {
       // It changed value - update the counters and the value
-      --error_count;
+      var count = $('#files-selector').attr("data-error-count");
+      --count;
       $(container).attr("data-correct", "true");
-      // Make sure that the error_count variable is always >= 0.
-      if (error_count < 0) {
-        error_count = 0;
+      // Make sure that the error counter variable is always >= 0.
+      if (count < 0) {
+        count = 0;
       }
+      $('#files-selector').attr("data-error-count", count);
     }
   }
 
@@ -127,7 +129,7 @@
     }).disableSelection();
 
     // Add the event listener to all the lists that can be checked
-    $(".checkeable").on( "sortupdate", on_change_validation );
+    $(".checkable").on( "sortupdate", on_change_validation );
 
     // Perform the first check to all the lists, given that we may be
     // prepopulating some of them
@@ -176,7 +178,7 @@
     <div class="col-md-3" id="{{ft}}-div">
       <input type="hidden" name="{{ft}}" id="{{ft}}" value="" class="fileListParam">
       <p style="text-align: center;"><i>{{ ft.replace('_', ' ') }}</i></p>
-      <ul id="{{ft}}-list" data-file-required="{{req}}" data-file-count="{{num_prefixes}}" data-correct="true" class="connectedSortable checkeable">
+      <ul id="{{ft}}-list" data-file-required="{{req}}" data-file-count="{{num_prefixes}}" data-correct="true" class="connectedSortable checkable">
         {% for fp in files %}
           <li id="{{fp}}">{{fp}}</li>
         {% end %}

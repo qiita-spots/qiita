@@ -1,7 +1,4 @@
 <script type="text/javascript">
-  // Global counter used to check if the form can be submitted or not
-  var error_count = 0;
-
   /**
    *
    * Function that shows the submission button if there are no errors
@@ -11,7 +8,7 @@
    *
    */
   function allow_submission() {
-    if (error_count === 0) {
+    if ( $('#files-selector').attr("data-error-count") == 0) {
       $("#submit-div").show();
     }
     else {
@@ -104,7 +101,7 @@
   </div>
   <div id="files-selector" hidden>
   </div>
-  <div class="row" id="submit-div" hidden>
+  <div class="row" id="submit-div" data-error-count="0" hidden>
     <div class="col-md-12" style="margin-top: 5px;">
       <input type="submit" class="btn btn-sm btn-success" value="Add files">
     </div>

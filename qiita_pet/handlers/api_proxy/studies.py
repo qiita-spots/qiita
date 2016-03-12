@@ -225,7 +225,7 @@ def study_files_get_req(study_id, prep_template_id, artifact_type):
         num_prefixes = 0
         remaining = [f for _, f in uploaded]
 
-    # At this point we can't make anything smart about selecting by default
+    # At this point we can't do anything smart about selecting by default
     # the files for each type. The only thing that we can do is assume that
     # the first in the supp_file_types list is the default one where files
     # should be added in case of 'run_prefix' being present
