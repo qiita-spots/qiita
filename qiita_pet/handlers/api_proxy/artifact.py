@@ -76,7 +76,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     ----------
     user_id : str
         User adding the atrifact
-    filepaths : str
+    filepaths : dict of str
         Comma-separated list of files to attach to the artifact,
         keyed by file type
     artifact_type : str
@@ -132,9 +132,9 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         artifact = Artifact.create(cleaned_filepaths, artifact_type, name=name,
                                    prep_template=prep)
     except Exception as e:
-        # We should hit this exception rarelly (that's why is an exception)
+        # We should hit this exception rarely (that's why it is an exception)
         # since at this point we have done multiple checks. However, it can
-        # occur in weird cases, so better let the GUI know that this fail
+        # occur in weird cases, so better let the GUI know that this failed
         return {'status': 'error',
                 'message': "Error creating artifact: %s" % str(e)}
 
