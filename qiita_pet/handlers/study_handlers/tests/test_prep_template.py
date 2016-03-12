@@ -41,41 +41,6 @@ class TestPrepTemplateAJAXReadOnly(TestHandlerBase):
         self.assertNotEqual(response.body, '')
 
 
-class TestPrepTemplateAJAX(TestHandlerBase):
-    database = True
-
-    def test_post_update(self):
-        response = self.post('/study/description/prep_template/',
-                             {'prep_id': 1, 'action': 'update',
-                              'filepath': 'uploaded_file.txt'})
-        exp = {'status': 'error',
-               'message': 'Empty file passed!',
-               'file': 'uploaded_file.txt'}
-        self.assertEqual(response.code, 200)
-        self.assertEqual(loads(response.body), exp)
-
-    def test_post_ontology(self):
-        response = self.post('/study/description/prep_template/',
-                             {'prep_id': 1, 'action': 'ontology',
-                              'ena': 'Other', 'ena_user': 'New Type',
-                              'ena_new': 'NEW THING'})
-        exp = {'status': 'success', 'message': '', 'file': None}
-        self.assertEqual(response.code, 200)
-        self.assertEqual(loads(response.body), exp)
-        # Make sure New Type added
-        ontology = Ontology(999999999)
-        self.assertIn('NEW THING', ontology.user_defined_terms)
-
-    def test_post_delete(self):
-        response = self.post('/study/description/prep_template/',
-                             {'prep_id': 1,
-                              'action': 'delete'})
-        self.assertEqual(response.code, 200)
-
-        # checking that the action was sent
-        self.assertIn("Couldn't remove prep template:", response.body)
-
-
 class TestPrepFilesHandler(TestHandlerBase):
     def test_get_files_not_allowed(self):
         response = self.post(
