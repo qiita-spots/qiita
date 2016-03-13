@@ -8,12 +8,33 @@
 
 from unittest import TestCase, main
 from os.path import exists
-from os import remove, environ, close
+from os import remove, close
 from tempfile import mkstemp
 
 import httpretty
 
-from tgp.qiita_client import QiitaClient
+from qiita_client.qiita_client import QiitaClient, format_payload
+
+
+class UtilTests(TestCase):
+    def test_format_payload(self):
+        ainfo = [
+            ("demultiplexed", "Demultiplexed",
+             [("fp1", "preprocessed_fasta"), ("fp2", "preprocessed_fastq")])]
+        obs = format_payload(True, artifacts_info=ainfo, error_msg="Ignored")
+        exp = {'success': True, 'error': '',
+               'artifacts':
+                   {'demultiplexed':
+                       {'artifact_type': "Demultiplexed",
+                        'filepaths': [("fp1", "preprocessed_fasta"),
+                                      ("fp2", "preprocessed_fastq")]}}}
+        self.assertEqual(obs, exp)
+
+    def test_format_payload_error(self):
+        obs = format_payload(False, error_msg="Some error",
+                             artifacts_info=['ignored'])
+        exp = {'success': False, 'error': 'Some error', 'artifacts': None}
+        self.assertEqual(obs, exp)
 
 
 class QiitaClientTests(TestCase):
@@ -24,18 +45,14 @@ class QiitaClientTests(TestCase):
             "https://test_server.com/qiita_db/authenticate/",
             body='{"access_token": "token", "token_type": "Bearer", '
                  '"expires_in": "3600"}')
-        self.tester = QiitaClient("https://test_server.com")
+        self.tester = QiitaClient(
+            "https://test_server.com", 'client_id', 'client_secret')
         self._clean_up_files = []
-        self._old_fp = environ.get('QP_TARGET_GENE_CONFIG_FP')
 
     def tearDown(self):
         for fp in self._clean_up_files:
             if exists(fp):
                 remove(fp)
-        if self._old_fp:
-            environ['QP_TARGET_GENE_CONFIG_FP'] = self._old_fp
-        else:
-            del environ['QP_TARGET_GENE_CONFIG_FP']
 
     @httpretty.activate
     def test_init(self):
@@ -44,8 +61,11 @@ class QiitaClientTests(TestCase):
             "https://test_server.com/qiita_db/authenticate/",
             body='{"access_token": "token", "token_type": "Bearer", '
                  '"expires_in": "3600"}')
-        obs = QiitaClient("https://test_server.com")
+        obs = QiitaClient(
+            "https://test_server.com", 'client_id', 'client_secret')
         self.assertEqual(obs._server_url, "https://test_server.com")
+        self.assertEqual(obs._client_id, "client_id")
+        self.assertEqual(obs._client_secret, "client_secret")
         self.assertTrue(obs._verify)
 
     @httpretty.activate
@@ -59,17 +79,16 @@ class QiitaClientTests(TestCase):
         close(fd)
         with open(cert_fp, 'w') as f:
             f.write(CERT_FP)
-        fd, conf_fp = mkstemp()
-        close(fd)
-        with open(conf_fp, 'w') as f:
-            f.write(CONF_FP % cert_fp)
 
-        self._clean_up_files.append(conf_fp)
+        self._clean_up_files.append(cert_fp)
 
-        environ['QP_TARGET_GENE_CONFIG_FP'] = conf_fp
-        obs = QiitaClient("https://test_server.com")
+        obs = QiitaClient(
+            "https://test_server.com", 'client_id', 'client_secret',
+            server_cert=cert_fp)
 
         self.assertEqual(obs._server_url, "https://test_server.com")
+        self.assertEqual(obs._client_id, "client_id")
+        self.assertEqual(obs._client_secret, "client_secret")
         self.assertEqual(obs._verify, cert_fp)
 
     @httpretty.activate
@@ -110,24 +129,54 @@ class QiitaClientTests(TestCase):
         obs = self.tester.post("/qiita_db/artifacts/1/type/")
         self.assertIsNone(obs)
 
-CONF_FP = """
-# -----------------------------------------------------------------------------
-# Copyright (c) 2014--, The Qiita Development Team.
-#
-# Distributed under the terms of the BSD 3-clause License.
-#
-# The full license is in the file LICENSE, distributed with this software.
-# -----------------------------------------------------------------------------
+    @httpretty.activate
+    def test_start_heartbeat(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/jobs/example-job/heartbeat/",
+            body='{"success": false, "error": ""}'
+        )
+        job_id = "example-job"
+        self.tester.start_heartbeat(job_id)
 
-[main]
-# If the Qiita server certificate is not a valid certificate,
-# put here the path to the certificate so it can be verified
-SERVER_CERT = %s
+    @httpretty.activate
+    def test_get_job_info(self):
+        httpretty.register_uri(
+            httpretty.GET,
+            "https://test_server.com/qiita_db/jobs/example-job",
+            body='{"success": false, "error": ""}'
+        )
+        job_id = "example-job"
+        self.tester.get_job_info(job_id)
 
-# Oauth2 plugin configuration
-CLIENT_ID = client_id
-CLIENT_SECRET = client_secret
-"""
+    @httpretty.activate
+    def test_update_job_step(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/jobs/example-job/step/",
+            body='{"success": true, "error": ""}'
+        )
+        job_id = "example-job"
+        new_step = "some new step"
+        self.tester.update_job_step(job_id, new_step)
+
+    @httpretty.activate
+    def test_complete_job(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/jobs/example-job/complete/",
+            body='{"success": true, "error": ""}'
+        )
+        job_id = "example-job"
+        payload = {
+            'success': True, 'error': '',
+            'artifacts': [
+                {'artifact_type': "Demultiplexed",
+                 'filepaths': [("fp1", "preprocessed_fasta"),
+                               ("fp2", "preprocessed_fastq")]}]}
+
+        self.tester.complete_job(job_id, payload)
+
 
 CERT_FP = """-----BEGIN CERTIFICATE-----
 MIIDVjCCAj4CCQCP4XnDqToF2zANBgkqhkiG9w0BAQUFADBtMQswCQYDVQQGEwJV
