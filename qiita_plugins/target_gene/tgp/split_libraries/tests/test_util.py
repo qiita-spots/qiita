@@ -13,8 +13,8 @@ from os import remove, close
 from tempfile import mkdtemp, mkstemp
 
 import httpretty
+from qiita_client import QiitaClient
 
-from tgp.qiita_client import QiitaClient
 from tgp.split_libraries.util import (
     get_artifact_information, split_mapping_file, generate_demux_file,
     generate_artifact_info)
@@ -29,7 +29,8 @@ class UtilTests(TestCase):
             body='{"access_token": "token", "token_type": "Bearer", '
                  '"expires_in": "3600"}')
 
-        self.qclient = QiitaClient("https://test_server.com")
+        self.qclient = QiitaClient("https://test_server.com", 'client_id',
+                                   'client_secret')
         self._clean_up_files = []
 
     def tearDown(self):

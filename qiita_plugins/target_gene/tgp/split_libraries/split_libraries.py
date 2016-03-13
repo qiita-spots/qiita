@@ -8,7 +8,9 @@
 
 from os.path import join, basename, splitext
 
-from tgp.util import update_job_step, system_call, format_payload
+from qiita_client import format_payload
+
+from tgp.util import system_call
 from .util import (get_artifact_information, split_mapping_file,
                    generate_demux_file, generate_artifact_info)
 
@@ -184,13 +186,13 @@ def split_libraries(qclient, job_id, parameters, out_dir):
         If there is an error merging the results
     """
     # Step 1 get the rest of the information need to run split libraries
-    update_job_step(qclient, job_id, "Step 1 of 4: Collecting information")
+    qclient.update_job_step(job_id, "Step 1 of 4: Collecting information")
     artifact_id = parameters['input_data']
     filepaths, mapping_file, atype = get_artifact_information(
         qclient, artifact_id)
 
     # Step 2 generate the split libraries command
-    update_job_step(qclient, job_id, "Step 2 of 4: preparing files")
+    qclient.update_job_step(job_id, "Step 2 of 4: preparing files")
     sffs = []
     seqs = []
     quals = []
@@ -222,8 +224,8 @@ def split_libraries(qclient, job_id, parameters, out_dir):
         cmds, seqs, quals = generate_process_sff_commands(sffs, out_dir)
         len_cmds = len(cmds)
         for i, cmd in enumerate(cmds):
-            update_job_step(
-                qclient, job_id,
+            qclient.update_job_step(
+                job_id,
                 "Step 2 of 4: preparing files (processing sff file %d of %d)"
                 % (i, len_cmds))
             std_out, std_err, return_value = system_call(cmd)
@@ -240,8 +242,8 @@ def split_libraries(qclient, job_id, parameters, out_dir):
     # Step 3 execute split libraries
     cmd_len = len(commands)
     for i, cmd in enumerate(commands):
-        update_job_step(
-            qclient, job_id,
+        qclient.update_job_step(
+            job_id,
             "Step 3 of 4: Executing demultiplexing and quality control "
             "(%d of %d)" % (i, cmd_len))
         std_out, std_err, return_value = system_call(cmd)
@@ -252,8 +254,8 @@ def split_libraries(qclient, job_id, parameters, out_dir):
 
     # Step 4 merging results
     if cmd_len > 1:
-        update_job_step(
-            qclient, job_id,
+        qclient.update_job_step(
+            job_id,
             "Step 4 of 4: Merging results (concatenating files)")
         to_cat = ['split_library_log.txt', 'seqs.fna']
         if quals:
@@ -267,8 +269,8 @@ def split_libraries(qclient, job_id, parameters, out_dir):
                     "Error concatenating %s files:\nStd output: %s\n"
                     "Std error:%s" % (tc, std_out, std_err))
     if quals:
-        update_job_step(
-            qclient, job_id,
+        qclient.update_job_step(
+            job_id,
             "Step 4 of 4: Merging results (converting fastqual to fastq)")
         cmd = ("convert_fastaqual_fastq.py -f %s -q %s -o %s -F"
                % (join(output_dir, 'seqs.fna'),
@@ -278,9 +280,8 @@ def split_libraries(qclient, job_id, parameters, out_dir):
         if return_value != 0:
             raise RuntimeError(
                 "Error converting the fasta/qual files to fastq")
-    update_job_step(
-        qclient, job_id,
-        "Step 4 of 4: Merging results (generating demux file)")
+    qclient.update_job_step(
+        job_id, "Step 4 of 4: Merging results (generating demux file)")
 
     generate_demux_file(output_dir)
 
