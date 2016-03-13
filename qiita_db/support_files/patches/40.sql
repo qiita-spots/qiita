@@ -68,7 +68,7 @@ ALTER TABLE qiita.software ALTER COLUMN software_type_id SET NOT NULL;
 -- are specific for the target gene plugin.
 INSERT INTO qiita.software (name, version, description, environment_script, start_script, software_type_id)
     VALUES ('BIOM type plugin', '2.1.4', 'The Biological Observation Matrix format', 'source activate qiita', 'start_biom', 2),
-           ('Target Gene type plugin', '0.2.0', 'Target gene artifact types plugin', 'source activate qiita', 'start_target_gene_types', 2);
+           ('Target Gene type plugin', '0.1.0', 'Target gene artifact types plugin', 'source activate qiita', 'start_target_gene_types', 2);
 -- Add BIOM publication
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1186/2047-217X-1-7', '23587224');
 INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (2, '10.1186/2047-217X-1-7');
