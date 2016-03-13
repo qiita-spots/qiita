@@ -8,7 +8,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from setuptools import setup
-from glob import glob
 
 __version__ = "0.1.0-dev"
 
@@ -41,7 +40,6 @@ setup(name='qiita-client',
       test_suite='nose.collector',
       packages=['qiita-client'],
       extras_require={'test': ["nose >= 0.10.1", "pep8", 'httpretty']},
-      install_requires=['click >= 3.3', 'future', 'requests', 'pandas >= 0.15',
-                        'h5py >= 2.3.1', 'qiime >= 1.9.0, < 1.10.0'],
+      install_requires=['click >= 3.3', 'requests'],
       classifiers=classifiers
       )
