@@ -12,7 +12,8 @@ from tornado.web import authenticated, HTTPError
 from qiita_pet.handlers.util import to_int, doi_linkifier
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    study_prep_get_req, study_get_req, study_delete_req)
+    study_prep_get_req, study_get_req, study_delete_req,
+    study_files_get_req)
 
 
 class StudyIndexHandler(BaseHandler):
@@ -68,3 +69,18 @@ class DataTypesMenuAJAX(BaseHandler):
         prep_info = prep_info['info']
 
         self.render('study_ajax/data_type_menu.html', prep_info=prep_info)
+
+
+class StudyFilesAJAX(BaseHandler):
+    @authenticated
+    def get(self):
+        study_id = to_int(self.get_argument('study_id'))
+        atype = self.get_argument('artifact_type')
+        pt_id = self.get_argument('prep_template_id')
+
+        res = study_files_get_req(study_id, pt_id, atype)
+
+        self.render('study_ajax/artifact_file_selector.html',
+                    remaining=res['remaining'],
+                    file_types=res['file_types'],
+                    num_prefixes=res['num_prefixes'])

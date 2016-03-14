@@ -111,9 +111,12 @@ class TestArtifactAPI(TestCase):
         with open(self.update_fp, 'w') as f:
             f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
 
+        self._files_to_remove = [self.update_fp]
+
     def tearDown(self):
-        if exists(self.update_fp):
-            remove(self.update_fp)
+        for fp in self._files_to_remove:
+            if exists(fp):
+                remove(fp)
 
         # Replace file if removed as part of function testing
         uploads_path = get_mountpoint('uploads')[0][1]
@@ -144,35 +147,65 @@ class TestArtifactAPI(TestCase):
 
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to
-        new_prep_id = get_count('qiita.prep_template') + 1
-        npt.assert_warns(
+        pt = npt.assert_warns(
             QiitaDBWarning, PrepTemplate.create,
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
+        self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
 
         new_artifact_id = get_count('qiita.artifact') + 1
+        filepaths = {'raw_forward_seqs': 'uploaded_file.txt',
+                     'raw_barcodes': 'update.txt'}
         obs = artifact_post_req(
-            'test@foo.bar', {'raw_forward_seqs': ['uploaded_file.txt'],
-                             'raw_reverse_seqs': []},
-            'per_sample_FASTQ', 'New Test Artifact', new_prep_id)
+            'test@foo.bar', filepaths, 'FASTQ', 'New Test Artifact', pt.id)
         exp = {'status': 'success',
                'message': '',
                'artifact': new_artifact_id}
         self.assertEqual(obs, exp)
-        # Instantiate the artifact to make sure it was made
-        Artifact(new_artifact_id)
+        # Instantiate the artifact to make sure it was made and
+        # to clean the environment
+        a = Artifact(new_artifact_id)
+        self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
 
-    def test_artifact_post_req_bad_file(self):
-        # Create new prep template to attach artifact to
-        new_prep_id = get_count('qiita.prep_template') + 1
-        npt.assert_warns(
+    def test_artifact_post_req_error(self):
+        # Create a new prep template to attach the artifact to
+        pt = npt.assert_warns(
             QiitaDBWarning, PrepTemplate.create,
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
+        self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
 
-        obs = artifact_post_req(
-            'test@foo.bar', {'raw_forward_seqs': ['NOEXIST']},
-            'per_sample_FASTQ', 'New Test Artifact', new_prep_id)
+        user_id = 'test@foo.bar'
+        filepaths = {'raw_barcodes': 'uploaded_file.txt',
+                     'raw_forward_seqs': 'update.txt'}
+        artifact_type = "FASTQ"
+        name = "TestArtifact"
+
+        # The user doesn't have access to the study
+        obs = artifact_post_req("demo@microbio.me", filepaths, artifact_type,
+                                name, pt.id)
         exp = {'status': 'error',
-               'message': 'File does not exist: NOEXIST'}
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+        # A file does not exist
+        missing_fps = {'raw_barcodes': 'NOTEXISTS'}
+        obs = artifact_post_req(user_id, missing_fps, artifact_type,
+                                name, pt.id)
+        exp = {'status': 'error',
+               'message': 'File does not exist: NOTEXISTS'}
+        self.assertEqual(obs, exp)
+
+        # Cleaned filepaths is empty
+        empty_fps = {'raw_barcodes': '', 'raw_forward_seqs': ''}
+        obs = artifact_post_req(user_id, empty_fps, artifact_type, name, pt.id)
+        exp = {'status': 'error',
+               'message': "Can't create artifact, no files provided."}
+        self.assertEqual(obs, exp)
+
+        # Exception
+        obs = artifact_post_req(user_id, filepaths, artifact_type, name, 1)
+        exp = {'status': 'error',
+               'message': "Error creating artifact: Prep template 1 already "
+                          "has an artifact associated"}
         self.assertEqual(obs, exp)
 
     def test_artifact_status_put_req(self):

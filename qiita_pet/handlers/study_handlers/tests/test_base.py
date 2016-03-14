@@ -51,5 +51,13 @@ class DataTypesMenuAJAXTests(TestHandlerBase):
                             {'study_id': '245'})
         self.assertEqual(response.code, 404)
 
+
+class StudyFilesAJAXTests(TestHandlerBase):
+    def test_get(self):
+        args = {'study_id': 1, 'artifact_type': 'FASTQ', 'prep_template_id': 1}
+        response = self.get('/study/files/', args)
+        self.assertEqual(response.code, 200)
+        self.assertNotEqual(response.body, "")
+
 if __name__ == "__main__":
     main()

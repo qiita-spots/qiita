@@ -8,6 +8,9 @@
 from __future__ import division
 
 from qiita_db.study import Study
+from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.util import (supported_filepath_types,
+                           get_files_from_uploads_folders)
 from qiita_pet.handlers.api_proxy.util import check_access
 
 
@@ -168,3 +171,72 @@ def study_prep_get_req(study_id, user_id):
     return {'status': 'success',
             'message': '',
             'info': prep_info}
+
+
+def study_files_get_req(study_id, prep_template_id, artifact_type):
+    """Returns the uploaded files for the study id categorized by artifact_type
+
+    It retrieves the files uploaded for the given study and tries to do a
+    guess on how those files should be added to the artifact of the given
+    type. Uses information on the prep template to try to do a better guess.
+
+    Parameters
+    ----------
+    study_id : int
+        The study id
+    prep_template_id : int
+        The prep template id
+    artifact_type : str
+        The artifact type
+
+    Returns
+    -------
+    dict of {str: object}
+        A dict of the form {'status': str,
+                            'message': str,
+                            'remaining': list of str,
+                            'file_types': list of (str, bool, list of str),
+                            'num_prefixes': int}
+        where 'status' is a string specifying whether the query is successfull,
+        'message' is a human-readable description of the error (optional),
+        'remaining' is the list of files that could not be categorized,
+        'file_types' is a list of the available filetypes, if it is required
+        or not and the list of categorized files for the given artifact type
+        and 'num_prefixes' is the number of different run prefix values in
+        the given prep template.
+    """
+    supp_file_types = supported_filepath_types(artifact_type)
+    selected = []
+    remaining = []
+
+    uploaded = get_files_from_uploads_folders(study_id)
+    pt = PrepTemplate(prep_template_id).to_dataframe()
+
+    if (any(ft.startswith('raw_') for ft, _ in supp_file_types) and
+            'run_prefix' in pt.columns):
+        prep_prefixes = tuple(set(pt['run_prefix']))
+        num_prefixes = len(prep_prefixes)
+        for _, filename in uploaded:
+            if filename.startswith(prep_prefixes):
+                selected.append(filename)
+            else:
+                remaining.append(filename)
+    else:
+        num_prefixes = 0
+        remaining = [f for _, f in uploaded]
+
+    # At this point we can't do anything smart about selecting by default
+    # the files for each type. The only thing that we can do is assume that
+    # the first in the supp_file_types list is the default one where files
+    # should be added in case of 'run_prefix' being present
+    file_types = [(fp_type, req, []) for fp_type, req in supp_file_types[1:]]
+    first = supp_file_types[0]
+    # Note that this works even if `run_prefix` is not in the prep template
+    # because selected is initialized to the empty list
+    file_types.insert(0, (first[0], first[1], selected))
+
+    return {'status': 'success',
+            'message': '',
+            'remaining': remaining,
+            'file_types': file_types,
+            'num_prefixes': num_prefixes}
