@@ -82,26 +82,32 @@
    *
    */
   function add_new_investigation_type_term_and_update() {
-    $.ajax({
-      url: '/ontology/',
-      type: 'PATCH',
-      data: {'op': 'add', 'path': '/ENA/', 'value': $("#new-ontology").val()},
-      success: function(data) {
-        if(data.status == 'error') {
-          bootstrapAlert(data.message,  "danger");
+    var new_val = $("#new-ontology").val();
+    if (!new_val.match(/^[0-9a-zA-Z ]+$/)) {
+      bootstrapAlert("Only alphanumeric characters and space are allowed.", "danger", 4000);
+    }
+    else {
+      $.ajax({
+        url: '/ontology/',
+        type: 'PATCH',
+        data: {'op': 'add', 'path': '/ENA/', 'value': new_val},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message,  "danger");
+          }
+          else {
+            // Add the new term to the user defined list, mark it as selected,
+            // clean the text box and hide it
+            var v = $("#new-ontology").val();
+            $('#user-ontology option').last().before($('<option>').attr({'value': v}).text(v));
+            $('#user-ontology').val(v);
+            $('#new-ontology').val('');
+            $("#new-ena-info").hide();
+            update_investigation_type(v);
+          }
         }
-        else {
-          // Add the new term to the user defined list, mark it as selected,
-          // clean the text box and hide it
-          var v = $("#new-ontology").val();
-          $('#user-ontology option').last().before($('<option>').attr({'value': v}).text(v));
-          $('#user-ontology').val(v);
-          $('#new-ontology').val('');
-          $("#new-ena-info").hide();
-          update_investigation_type(v);
-        }
-      }
-    });
+      });
+    }
   }
 
   /*
