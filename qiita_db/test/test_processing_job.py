@@ -290,6 +290,7 @@ class ProcessingJobTest(TestCase):
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             metadata, qdb.study.Study(1), "16S")
+        self._clean_up_files.extend([ptfp for _, ptfp in pt.get_filepaths()])
         params = qdb.software.Parameters.load(
             qdb.software.Command(4),
             values_dict={'template': pt.id, 'files': fp,
