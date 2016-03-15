@@ -9,7 +9,6 @@ from unittest import main
 from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
-from qiita_db.ontology import Ontology
 
 
 class TestNewPrepTemplateAjax(TestHandlerBase):
@@ -38,42 +37,7 @@ class TestPrepTemplateAJAXReadOnly(TestHandlerBase):
         response = self.get('/study/description/prep_template/',
                             {'prep_id': 1, 'study_id': 1})
         self.assertEqual(response.code, 200)
-        self.assertIn('This analysis was done as in Caporaso', response.body)
-
-
-class TestPrepTemplateAJAX(TestHandlerBase):
-    database = True
-
-    def test_post_update(self):
-        response = self.post('/study/description/prep_template/',
-                             {'prep_id': 1, 'action': 'update',
-                              'filepath': 'uploaded_file.txt'})
-        exp = {'status': 'error',
-               'message': 'Empty file passed!',
-               'file': 'uploaded_file.txt'}
-        self.assertEqual(response.code, 200)
-        self.assertEqual(loads(response.body), exp)
-
-    def test_post_ontology(self):
-        response = self.post('/study/description/prep_template/',
-                             {'prep_id': 1, 'action': 'ontology',
-                              'ena': 'Other', 'ena_user': 'New Type',
-                              'ena_new': 'NEW THING'})
-        exp = {'status': 'success', 'message': '', 'file': None}
-        self.assertEqual(response.code, 200)
-        self.assertEqual(loads(response.body), exp)
-        # Make sure New Type added
-        ontology = Ontology(999999999)
-        self.assertIn('NEW THING', ontology.user_defined_terms)
-
-    def test_post_delete(self):
-        response = self.post('/study/description/prep_template/',
-                             {'prep_id': 1,
-                              'action': 'delete'})
-        self.assertEqual(response.code, 200)
-
-        # checking that the action was sent
-        self.assertIn("Couldn't remove prep template:", response.body)
+        self.assertNotEqual(response.body, '')
 
 
 class TestPrepFilesHandler(TestHandlerBase):

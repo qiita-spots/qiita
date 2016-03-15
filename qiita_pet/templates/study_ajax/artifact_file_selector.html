@@ -114,7 +114,7 @@
    */
   function build_file_lists() {
     $(".fileListParam").each( function(i, cont) {
-      var files = ['a'];
+      var files = [];
       $("#"+cont.id+"-list").children().each( function(j, c_cont) {
           files.push(c_cont.id);
       });

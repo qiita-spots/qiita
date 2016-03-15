@@ -9,6 +9,7 @@ from __future__ import division
 import warnings
 
 from os import remove
+from os.path import basename
 from natsort import natsorted
 
 from qiita_core.util import execute_as_transaction
@@ -18,6 +19,24 @@ from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
+
+
+def _get_ENA_ontology():
+    """Returns the information of the ENA ontology
+
+    Returns
+    -------
+    dict of {str: list of strings}
+        A dictionary of the form {'ENA': list of str, 'User': list of str}
+        with the ENA-defined terms and the User-defined terms, respectivelly.
+    """
+    ontology = Ontology(convert_to_id('ENA', 'ontology'))
+    ena_terms = sorted(ontology.terms)
+    # make "Other" last on the list
+    ena_terms.remove('Other')
+    ena_terms.append('Other')
+
+    return {'ENA': ena_terms, 'User': sorted(ontology.user_defined_terms)}
 
 
 def new_prep_template_get_req(study_id):
@@ -40,18 +59,80 @@ def new_prep_template_get_req(study_id):
     data_types = sorted(Study.all_data_types())
 
     # Get all the ENA terms for the investigation type
-    ontology = Ontology(convert_to_id('ENA', 'ontology'))
-    ena_terms = sorted(ontology.terms)
-    # make "Other" last on the list
-    ena_terms.remove('Other')
-    ena_terms.append('Other')
+    ontology_info = _get_ENA_ontology()
 
-    ontology_info = {'ENA': ena_terms,
-                     'User': sorted(ontology.user_defined_terms)}
     return {'status': 'success',
             'prep_files': prep_files,
             'data_types': data_types,
             'ontology': ontology_info}
+
+
+def prep_template_ajax_get_req(prep_id):
+    """Returns the prep tempalte information needed for the AJAX handler
+
+    Parameters
+    ----------
+    prep_id : int
+        The prep template id
+
+    Returns
+    -------
+    dict of {str: object}
+        A dictionary with the following keys:
+        - status: str, whether the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
+        - name: str, the name of the prep template
+        - files: list of str, the files available to update the prep template
+        - download_prep: int, the filepath_id of the prep file
+        - download_qiime, int, the filepath_id of the qiime mapping file
+        - num_samples: int, the number of samples present in the template
+        - num_columns: int, the number of columns present in the template
+        - investigation_type: str, the investigation type of the template
+        - ontology: str, dict of {str, list of str} containing the information
+        of the ENA ontology
+        - artifact_attached: bool, whether the template has an artifact
+        attached
+        - study_id: int, the study id of the template
+    """
+    # Currently there is no name attribute, but it will be soon
+    name = "Prep information %d" % prep_id
+    pt = PrepTemplate(prep_id)
+    artifact_attached = pt.artifact is not None
+    study_id = pt.study_id
+    files = [f for _, f in get_files_from_uploads_folders(study_id)
+             if f.endswith(('.txt', '.tsv'))]
+
+    # The call to list is needed because keys is an iterator
+    num_samples = len(list(pt.keys()))
+    num_columns = len(pt.categories())
+    investigation_type = pt.investigation_type
+
+    # Retrieve the information to download the prep template and QIIME
+    # mapping file. See issue https://github.com/biocore/qiita/issues/1675
+    download_prep = []
+    download_qiime = []
+    for fp_id, fp in pt.get_filepaths():
+        if 'qiime' in basename(fp):
+            download_qiime.append(fp_id)
+        else:
+            download_prep.append(fp_id)
+    download_prep = download_prep[0]
+    download_qiime = download_qiime[0]
+
+    ontology = _get_ENA_ontology()
+
+    return {'status': 'success',
+            'message': '',
+            'name': name,
+            'files': files,
+            'download_prep': download_prep,
+            'download_qiime': download_qiime,
+            'num_samples': num_samples,
+            'num_columns': num_columns,
+            'investigation_type': investigation_type,
+            'ontology': ontology,
+            'artifact_attached': artifact_attached,
+            'study_id': study_id}
 
 
 @execute_as_transaction
@@ -255,6 +336,77 @@ def prep_template_post_req(study_id, user_id, prep_template, data_type,
     return info
 
 
+def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
+                            req_from=None):
+    """Modifies an attribute of the prep template
+
+    Parameters
+    ----------
+    user_id : str
+        The id of the user performing the patch operation
+    req_op : str
+        The operation to perform on the prep information
+    req_path : str
+        The prep information and attribute to patch
+    req_value : str, optional
+        The value that needs to be modified
+    req_from : str, optional
+        The original path of the element
+
+    Returns
+    -------
+    dict of {str, str}
+        A dictionary with the following keys:
+        - status: str, whether if the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
+    """
+    if req_op == 'replace':
+        req_path = [v for v in req_path.split('/') if v]
+        # The structure of the path should be /prep_id/attribute_to_modify/
+        # so if we don't have those 2 elements, we should return an error
+        if len(req_path) != 2:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter'}
+        prep_id = req_path[0]
+        attribute = req_path[1]
+
+        # Check if the user actually has access to the prep template
+        prep = PrepTemplate(prep_id)
+        access_error = check_access(prep.study_id, user_id)
+        if access_error:
+            return access_error
+
+        status = 'success'
+        msg = ''
+        if attribute == 'investigation_type':
+            prep.investigation_type = req_value
+        elif attribute == 'data':
+            fp = check_fp(prep.study_id, req_value)
+            if fp['status'] != 'success':
+                return fp
+            fp = fp['file']
+            df = load_template_to_dataframe(fp)
+            with warnings.catch_warnings(record=True) as warns:
+                prep.extend(df)
+                prep.update(df)
+                remove(fp)
+
+                if warns:
+                    msg = '\n'.join(set(str(w.message) for w in warns))
+                    status = 'warning'
+        else:
+            # We don't understand the attribute so return an error
+            return {'status': 'error',
+                    'message': 'Attribute "%s" not found. '
+                               'Please, check the path parameter' % attribute}
+
+        return {'status': status, 'message': msg}
+    else:
+        return {'status': 'error',
+                'message': 'Operation "%s" not supported. '
+                           'Current supported operations: replace' % req_op}
+
+
 def prep_template_samples_get_req(prep_id, user_id):
     """Returns list of samples in the prep template
 
@@ -285,83 +437,6 @@ def prep_template_samples_get_req(prep_id, user_id):
             'message': '',
             'samples': sorted(x for x in PrepTemplate(int(prep_id)))
             }
-
-
-@execute_as_transaction
-def prep_template_put_req(prep_id, user_id, prep_template=None,
-                          investigation_type=None,
-                          user_defined_investigation_type=None,
-                          new_investigation_type=None):
-    """Updates the prep template with the changes in the given file
-
-    Parameters
-    ----------
-    prep_id : int
-        The prep template to update
-    user_id : str
-        The current user object id
-    prep_template : str, optional
-        filepath to use for updating
-    investigation_type: str, optional
-        Existing investigation type to attach to the prep template
-    user_defined_investigation_type: str, optional
-        Existing user added investigation type to attach to the prep template
-    new_investigation_type: str, optional
-        Investigation type to add to the system
-
-    Returns
-    -------
-    dict of str
-        {'status': status,
-         'message': message,
-         'file': prep_template}
-    """
-    exists = _check_prep_template_exists(int(prep_id))
-    if exists['status'] != 'success':
-        return exists
-
-    prep = PrepTemplate(int(prep_id))
-    study_id = prep.study_id
-    access_error = check_access(study_id, user_id)
-    if access_error:
-        return access_error
-
-    if investigation_type:
-        investigation_type = _process_investigation_type(
-            investigation_type, user_defined_investigation_type,
-            new_investigation_type)
-        prep.investigation_type = investigation_type
-
-    msg = ''
-    status = 'success'
-    if prep_template:
-        fp = check_fp(study_id, prep_template)
-        if fp['status'] != 'success':
-            # Unknown filepath, so return the error message
-            return fp
-        fp = fp['file']
-        try:
-            with warnings.catch_warnings(record=True) as warns:
-                pt = PrepTemplate(int(prep_id))
-                df = load_template_to_dataframe(fp)
-                pt.extend(df)
-                pt.update(df)
-                remove(fp)
-
-                # join all the warning messages into one. Note that this info
-                # will be ignored if an exception is raised
-                if warns:
-                    msg = '\n'.join(set(str(w.message) for w in warns))
-                    status = 'warning'
-
-        except Exception as e:
-            # Some error occurred while processing the sample template
-            # Show the error to the user so they can fix the template
-            status = 'error'
-            msg = str(e)
-    return {'status': status,
-            'message': msg,
-            'file': prep_template}
 
 
 def prep_template_delete_req(prep_id, user_id):
@@ -429,31 +504,6 @@ def prep_template_filepaths_get_req(prep_id, user_id):
     return {'status': 'success',
             'message': '',
             'filepaths': prep.get_filepaths()
-            }
-
-
-def ena_ontology_get_req():
-    """Returns all system and user defined terms for prep template type
-
-    Returns
-    -------
-    dict of objects
-        {'status': status,
-         'message': message,
-         'ENA': [term1, term2, ...],
-         'User': [userterm1, userterm2, ...]}
-    """
-    # Get all the ENA terms for the investigation type
-    ontology = Ontology(convert_to_id('ENA', 'ontology'))
-    ena_terms = sorted(ontology.terms)
-    # make "Other" last on the list
-    ena_terms.remove('Other')
-    ena_terms.append('Other')
-
-    return {'status': 'success',
-            'message': '',
-            'ENA': ena_terms,
-            'User': sorted(ontology.user_defined_terms)
             }
 
 

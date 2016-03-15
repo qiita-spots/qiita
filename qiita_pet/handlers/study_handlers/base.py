@@ -68,7 +68,8 @@ class DataTypesMenuAJAX(BaseHandler):
 
         prep_info = prep_info['info']
 
-        self.render('study_ajax/data_type_menu.html', prep_info=prep_info)
+        self.render('study_ajax/data_type_menu.html', prep_info=prep_info,
+                    study_id=study_id)
 
 
 class StudyFilesAJAX(BaseHandler):

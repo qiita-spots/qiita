@@ -47,12 +47,8 @@ $(document).ready(function () {
             // Note - the warning get's lost due to the reload below
             bootstrapAlert(data.message, "warning");
           }
-          // This reload needs to be changed to:
-          // 1) Reload the datatypes div
-          // populate_data_type_menu_div();
-          // 2) Reload the main div to show the new prep template
-          // populate_main_div('/study/description/prep_template/', { prep_id: pid, study_id: {{study_id}} });
-          window.location.reload();
+          populate_data_type_menu_div();
+          populate_main_div('/study/description/prep_template/', { prep_id: data.id, study_id: {{study_id}} });
         }
       }
     });
