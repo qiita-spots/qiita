@@ -169,11 +169,11 @@
         var edges = [];
         var nodes = [];
 
-        for(i=0; i<data.edge_list.length; i++) {
+        for(var i=0; i<data.edge_list.length; i++) {
           edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1]});
         }
         // format nore depth data
-        for(i=0; i<data.node_labels.length; i++) {
+        for(var i=0; i<data.node_labels.length; i++) {
           nodes.push({id: data.node_labels[i][0], label: data.node_labels[i][1], shape: 'box'});
         }
 
@@ -228,7 +228,6 @@
    */
   function load_artifact_summary(artifact_id) {
     show_loading("prep-artifact-summary-div");
-    console.log("Load artifact summary " + artifact_id);
   }
 
   /*
