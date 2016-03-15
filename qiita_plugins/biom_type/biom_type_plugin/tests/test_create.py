@@ -24,7 +24,7 @@ from biom_type_plugin.create import create_artifact
 class CreateTests(TestCase):
     @httpretty.activate
     def setUp(self):
-        # Registewr the URIs for the QiitaClient
+        # Register the URIs for the QiitaClient
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/authenticate/",
