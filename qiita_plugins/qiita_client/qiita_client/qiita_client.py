@@ -250,7 +250,7 @@ class QiitaClient(object):
     # need to implement.
 
     def start_heartbeat(self, job_id):
-        """Crete and start a thread that would send the heartbeats to the server
+        """Create and start a thread that would send heartbeats to the server
 
         Parameters
         ----------

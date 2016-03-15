@@ -38,7 +38,7 @@ setup(name='qiita-client',
       author_email="qiita.help@gmail.com",
       url='https://github.com/biocore/qiita',
       test_suite='nose.collector',
-      packages=['qiita-client'],
+      packages=['qiita_client'],
       extras_require={'test': ["nose >= 0.10.1", "pep8", 'httpretty']},
       install_requires=['click >= 3.3', 'requests'],
       classifiers=classifiers
