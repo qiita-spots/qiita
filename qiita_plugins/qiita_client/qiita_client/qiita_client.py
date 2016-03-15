@@ -6,14 +6,68 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import join, dirname, abspath
-from os import environ
-from future import standard_library
-
+import time
 import requests
+import threading
+from json import dumps
 
-with standard_library.hooks():
-    from configparser import ConfigParser
+JOB_COMPLETED = False
+
+
+def heartbeat(qclient, url):
+    """Send the heartbeat calls to the server
+
+    Parameters
+    ----------
+    qclient : tgp.qiita_client.QiitaClient
+        The Qiita server client
+    url : str
+        The url to issue the heartbeat
+    """
+    while not JOB_COMPLETED:
+        json_reply = qclient.post(url, data='')
+        if not json_reply or not json_reply['success']:
+            # The server did not accept our heartbeat - stop doing it
+            break
+        # Perform the heartbeat every 5 seconds
+        time.sleep(5)
+
+
+def format_payload(success, error_msg=None, artifacts_info=None):
+    """Generates the payload dictionary for the job
+
+    Parameters
+    ----------
+    success : bool
+        Whether if the job completed successfully or not
+    error_msg : str, optional
+        If `success` is False, ther error message to include in the optional.
+        If `success` is True, it is ignored
+    artifacts_info : list of (str, str, list of (str, str))
+        For each artifact that needs to be created, the command output name,
+        the artifact type and the list of files attached to the artifact.
+
+    Returns
+    -------
+    dict
+        Format:
+        {'success': bool,
+         'error': str,
+         'artifacts': dict of {str: {'artifact_type': str,
+                                     'filepaths': list of (str, str)}}
+    """
+    if success:
+        error_msg = ''
+        artifacts = {out_name: {'artifact_type': atype,
+                                'filepaths': filepaths}
+                     for out_name, atype, filepaths in artifacts_info}
+    else:
+        artifacts = None
+
+    payload = {'success': success,
+               'error': error_msg if not success else '',
+               'artifacts': artifacts}
+    return payload
 
 
 class QiitaClient(object):
@@ -23,26 +77,22 @@ class QiitaClient(object):
     ----------
     server_url : str
         The url of the Qiita server
+    client_id : str
+        The client id to conenct to the Qiita server
+    client_secret : str
+        The client secret id to connect to the Qiita server
+    server_cert : str, optional
+        The server certificate, in case that it is not verified
+
 
     Methods
     -------
     get
     post
     """
-    def __init__(self, server_url):
+    def __init__(self, server_url, client_id, client_secret, server_cert=None):
         self._server_url = server_url
 
-        try:
-            conf_fp = environ['QP_TARGET_GENE_CONFIG_FP']
-        except KeyError:
-            conf_fp = join(dirname(abspath(__file__)), 'support_files',
-                           'config_file.cfg')
-
-        config = ConfigParser()
-        with open(conf_fp, 'U') as conf_file:
-            config.readfp(conf_file)
-
-        server_cert = config.get('main', 'SERVER_CERT')
         # The attribute self._verify is used to provide the parameter `verify`
         # to the get/post requests. According to their documentation (link:
         # http://docs.python-requests.org/en/latest/user/
@@ -62,8 +112,8 @@ class QiitaClient(object):
             self._verify = server_cert
 
         # Set up oauth2
-        self._client_id = config.get('main', 'CLIENT_ID')
-        self._client_secret = config.get('main', 'CLIENT_SECRET')
+        self._client_id = client_id
+        self._client_secret = client_secret
         self._authenticate_url = "%s/qiita_db/authenticate/" % self._server_url
 
         # Fetch the access token
@@ -195,3 +245,68 @@ class QiitaClient(object):
             The JSON response from the server
         """
         return self._request_retry(requests.post, url, **kwargs)
+
+    # The functions are shortcuts for common functionality that all plugins
+    # need to implement.
+
+    def start_heartbeat(self, job_id):
+        """Create and start a thread that would send heartbeats to the server
+
+        Parameters
+        ----------
+        job_id : str
+            The job id
+        """
+        url = "/qiita_db/jobs/%s/heartbeat/" % job_id
+        heartbeat_thread = threading.Thread(target=heartbeat, args=(self, url))
+        heartbeat_thread.daemon = True
+        heartbeat_thread.start()
+
+    def get_job_info(self, job_id):
+        """Retrieve the job information from the server
+
+        Parameters
+        ----------
+        job_id : str
+            The job id
+
+        Returns
+        -------
+        dict
+            The JSON response from the server with the job information
+        """
+        return self.get("/qiita_db/jobs/%s" % job_id)
+
+    def update_job_step(self, job_id, new_step):
+        """Updates the current step of the job in the server
+
+        Parameters
+        ----------
+        jon_id : str
+            The job id
+        new_step : str
+            The new step
+        """
+        json_payload = dumps({'step': new_step})
+        self.post("/qiita_db/jobs/%s/step/" % job_id, data=json_payload)
+
+    def complete_job(self, job_id, payload):
+        """Stops the heartbeat thread and send the job results to the server
+
+        Parameters
+        ----------
+        job_id : str
+            The job id
+        payload : dict
+            The job's results
+
+        See Also
+        --------
+        format_payload
+        """
+        # Stop the heartbeat thread
+        global JOB_COMPLETED
+        JOB_COMPLETED = True
+        # Create the URL where we have to post the results
+        json_payload = dumps(payload)
+        self.post("/qiita_db/jobs/%s/complete/" % job_id, data=json_payload)

@@ -10,7 +10,9 @@ from os.path import join
 from functools import partial
 from glob import glob
 
-from tgp.util import update_job_step, system_call, format_payload
+from qiita_client import format_payload
+
+from tgp.util import system_call
 
 
 def write_parameters_file(fp, parameters):
@@ -130,7 +132,7 @@ def pick_closed_reference_otus(qclient, job_id, parameters, out_dir):
     ValueError
         If there is any error gathering the information from the server
     """
-    update_job_step(qclient, job_id, "Step 1 of 3: Collecting information")
+    qclient.update_job_step(job_id, "Step 1 of 3: Collecting information")
     artifact_id = parameters['input_data']
     fps_info = qclient.get("/qiita_db/artifacts/%s/filepaths/" % artifact_id)
     if not fps_info or not fps_info['success']:
@@ -153,11 +155,11 @@ def pick_closed_reference_otus(qclient, job_id, parameters, out_dir):
         raise ValueError(error_msg)
     reference_fps = ref_info['filepaths']
 
-    update_job_step(qclient, job_id, "Step 2 of 3: Generating command")
+    qclient.update_job_step(job_id, "Step 2 of 3: Generating command")
     command, pick_out = generate_pick_closed_reference_otus_cmd(
         fps, out_dir, parameters, reference_fps)
 
-    update_job_step(qclient, job_id, "Step 3 of 3: Executing OTU picking")
+    qclient.update_job_step(job_id, "Step 3 of 3: Executing OTU picking")
     std_out, std_err, return_value = system_call(command)
     if return_value != 0:
         error_msg = ("Error running OTU picking:\nStd out: %s\nStd err: %s"
