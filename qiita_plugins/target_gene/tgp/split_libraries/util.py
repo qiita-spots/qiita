@@ -103,7 +103,8 @@ def split_mapping_file(mapping_file, out_dir):
         for prefix, df in mf.groupby('run_prefix'):
             out_fp = path_builder('%s_mapping_file.txt' % prefix)
             output_fps.append(out_fp)
-            df.to_csv(out_fp, index_label='#SampleID', sep='\t')
+            df.to_csv(out_fp, index_label='#SampleID', sep='\t',
+                      encoding='utf-8')
     else:
         output_fps = [mapping_file]
 
