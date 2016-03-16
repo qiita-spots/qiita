@@ -539,7 +539,7 @@ class Software(qdb.base.QiitaObject):
 
     @property
     def type(self):
-        """Returns the tyoe of the software
+        """Returns the type of the software
 
         Returns
         -------

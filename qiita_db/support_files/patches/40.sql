@@ -3,9 +3,9 @@
 -- plugins. Here, we will introduce a new type, the "type plugin", and define
 -- the previous type as the "processing plugin" type. The new group "type plugin"
 -- define plugins that do not perform any processing on the artifacts but they
--- are able to validate that they're correct and generate they summary page.
+-- are able to validate that they're correct and generate their summary page.
 -- These new plugins are special. They are not directly visible by the end Qiita
--- user by they are useful to plugin developers so they do not need to re-define
+-- user but they are useful to plugin developers so they do not need to re-define
 -- types if they already exist. This way, multiple plugins can share the same
 -- type of artifacts without depending in another "processing" plugin.
 
