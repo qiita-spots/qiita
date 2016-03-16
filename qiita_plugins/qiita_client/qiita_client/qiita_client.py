@@ -261,7 +261,8 @@ class QiitaClient(object):
             The target location within the endpoint in which the operation
             should be performed
         value : str, optional
-            If `op in ['add', 'replace', 'test']`, the new value
+            If `op in ['add', 'replace', 'test']`, the new value for the given
+            path
         from_p : str, optional
             If `op in ['move', 'copy']`, the original path
         kwargs : dict
