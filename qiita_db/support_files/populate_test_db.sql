@@ -528,6 +528,13 @@ INSERT INTO qiita.artifact_processing_job (artifact_id, processing_job_id)
 
 INSERT INTO qiita.oauth_identifiers (client_id) VALUES ('DWelYzEYJYcZ4wlqUp0bHGXojrvZVz0CNBJvOqUKcrPQ5p4UqE');
 INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4', 'J7FfQ7CQdOxuKhQAf1eoGgBAE81Ns8Gu3EKaWFm3IO2JKhAmmCWZuabe0O5Mp28s1');
+INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u', '9xhU5rvzq8dHCEI5sSN95jesUULrZi6pT6Wuc71fDbFbsrnWarcSq56TJLN4kP4hH');
+INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('dHgaXDwq665ksFPqfIoD3Jt8KRXdSioTRa4lGa5mGDnz6JTIBf', 'xqx61SD4M2EWbaS0WYv3H1nIemkvEAMIn16XMLjy5rTCqi7opCcWbfLINEwtV48bQ');
+INSERT INTO qiita.oauth_identifiers (client_id, client_secret) VALUES ('4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h', 'rFb7jwAb3UmSUN57Bjlsi4DTl2owLwRpwCc0SggRNEVb2Ebae2p5Umnq20rNMhmqN');
+
+UPDATE qiita.oauth_software SET client_id = 'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u' WHERE software_id = 1;
+UPDATE qiita.oauth_software SET client_id = 'dHgaXDwq665ksFPqfIoD3Jt8KRXdSioTRa4lGa5mGDnz6JTIBf' WHERE software_id = 2;
+UPDATE qiita.oauth_software SET client_id = '4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h' WHERE software_id = 3;
 
 -- Add a processing workflow
 INSERT INTO qiita.processing_job_workflow (email, name)
