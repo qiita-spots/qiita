@@ -13,6 +13,7 @@ from os import remove, close
 from tempfile import mkstemp
 
 import networkx as nx
+import pandas as pd
 
 import qiita_db as qdb
 from qiita_core.util import qiita_test_checker
@@ -266,6 +267,44 @@ class ProcessingJobTest(TestCase):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             self.tester1.submit()
+
+    def test_complete_type(self):
+        fd, fp = mkstemp(suffix="_table.biom")
+        self._clean_up_files.append(fp)
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+
+        exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
+        artifacts_data = {'ignored': {'filepaths': [(fp, 'biom')],
+                                      'artifact_type': 'BIOM'}}
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, qdb.study.Study(1), "16S")
+        self._clean_up_files.extend([ptfp for _, ptfp in pt.get_filepaths()])
+        params = qdb.software.Parameters.load(
+            qdb.software.Command(4),
+            values_dict={'template': pt.id, 'files': fp,
+                         'artifact_type': 'BIOM'})
+        obs = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params)
+        obs._set_status('running')
+        obs.complete(True, artifacts_data=artifacts_data)
+        self.assertEqual(obs.status, 'success')
+        self.assertEqual(qdb.util.get_count('qiita.artifact'),
+                         exp_artifact_count)
+        self._clean_up_files.extend(
+            [afp for _, afp, _ in
+             qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_success(self):
         fd, fp = mkstemp(suffix='_table.biom')
