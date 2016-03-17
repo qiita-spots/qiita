@@ -130,6 +130,44 @@ class QiitaClientTests(TestCase):
         self.assertIsNone(obs)
 
     @httpretty.activate
+    def test_patch(self):
+        httpretty.register_uri(
+            httpretty.PATCH,
+            "https://test_server.com/qiita_db/artifacts/1/filepaths/",
+            body='{"success": true, "error": ""}'
+        )
+        obs = self.tester.patch(
+            '/qiita_db/artifacts/1/filepaths/', 'add',
+            '/html_summary/', value='/path/to/html_summary')
+        exp = {"success": True, "error": ""}
+        self.assertEqual(obs, exp)
+
+    @httpretty.activate
+    def test_patch_error(self):
+        httpretty.register_uri(
+            httpretty.PATCH,
+            "https://test_server.com/qiita_db/artifacts/1/filepaths/",
+            status=500
+        )
+        obs = self.tester.patch(
+            '/qiita_db/artifacts/1/filepaths/', 'test',
+            '/html_summary/', value='/path/to/html_summary')
+        self.assertIsNone(obs)
+
+    def test_patch_value_error(self):
+        # Add, replace or test
+        with self.assertRaises(ValueError):
+            self.tester.patch(
+                '/qiita_db/artifacts/1/filepaths/', 'add', '/html_summary/',
+                from_p='/fastq/')
+
+        # move or copy
+        with self.assertRaises(ValueError):
+            self.tester.patch(
+                '/qiita_db/artifacts/1/filepaths/', 'move',
+                '/html_summary/', value='/path/to/html_summary')
+
+    @httpretty.activate
     def test_start_heartbeat(self):
         httpretty.register_uri(
             httpretty.POST,

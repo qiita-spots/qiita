@@ -357,7 +357,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                         "Can't complete job: not in a running state")
                 if artifacts_data:
-                    if self.command.software.type == 'type plugin':
+                    if self.command.software.type == 'artifact definition':
                         # In this case, the behavior of artifact_data is
                         # slightly different: we know that there is only 1
                         # new artifact and it doesn't have a parent
