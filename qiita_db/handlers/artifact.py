@@ -69,6 +69,46 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
 
         self.write(response)
 
+    @authenticate_oauth
+    def patch(self, artifact_id):
+        """Patches the filepaths of the artifact
+
+        Parameter
+        ---------
+        artifact_id : str
+            The id of the artifact whole filepaths information is being updated
+
+        Returns
+        -------
+        dict
+            Format:
+            {'success': bool,
+             'error': str}
+            - success: whether the request is successful or not
+            - error: in case that success is false, it contains the error msg
+        """
+        req_op = self.get_argument('op')
+        req_path = self.get_argument('path')
+        req_value = self.get_argument('value')
+
+        if req_op == 'add':
+            req_path = [v for v in req_path.split('/') if v]
+            if len(req_path) != 1 or req_path[0] != 'html_summary':
+                success = False
+                error_msg = 'Incorrect path parameter value'
+            else:
+                artifact, success, error_msg = _get_artifact(artifact_id)
+                if success:
+                    artifact.html_summary_fp = req_value
+        else:
+            success = False
+            error_msg = ('Operation "%s" not supported. Current supported '
+                         'operations: add' % req_op)
+
+        response = {'success': success, 'error': error_msg}
+
+        self.write(response)
+
 
 class ArtifactMappingHandler(OauthBaseHandler):
     @authenticate_oauth
