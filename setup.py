@@ -102,6 +102,6 @@ setup(name='qiita-spots',
                         'scikit-bio >= 0.2.3, < 0.3.0', 'wtforms == 2.0.1',
                         'qiime >= 1.9.0, < 1.10.0', 'moi >= 0.2.0, < 0.3.0',
                         'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
-                        'gitpython'],
+                        'gitpython', 'seaborn'],
       classifiers=classifiers
       )
