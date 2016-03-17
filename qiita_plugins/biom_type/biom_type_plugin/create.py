@@ -12,6 +12,7 @@ from json import loads
 
 from biom import load_table
 from biom.util import biom_open
+from biom.exception import TableException
 from qiita_client import format_payload
 
 
@@ -91,7 +92,16 @@ def create_artifact(qclient, job_id, parameters, out_dir):
                               'the prep information sample ids.')
 
         # Fix the sample ids
-        table.update_ids(id_map, axis='sample')
+        try:
+            table.update_ids(id_map, axis='sample')
+        except TableException:
+            missing = biom_sample_ids - set(id_map)
+            return format_payload(
+                False,
+                error_msg='Your prep information is missing samples that are '
+                          'present in your BIOM table: %s'
+                          % ', '.join(missing))
+
         new_biom_fp = join(out_dir, basename(biom_fp))
         with biom_open(new_biom_fp, 'w') as f:
             table.to_hdf5(f, "Qiita BIOM type plugin")

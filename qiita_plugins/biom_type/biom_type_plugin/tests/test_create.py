@@ -127,6 +127,26 @@ class CreateTests(TestCase):
         self.assertEqual(obs, exp)
 
     @httpretty.activate
+    def test_create_artifact_missing_samples(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/jobs/job-id/step/",
+            body='{"success": true, "error": ""}'
+        )
+        httpretty.register_uri(
+            httpretty.GET,
+            "https://test_server.com/qiita_db/prep_template/1/data",
+            body='{"data": {"1.S11": {"run_prefix": "1.S1"}, "1.S22": '
+                 '{"run_prefix": "1.S2"}}, "success": true, "error": ""}')
+        obs = create_artifact(self.qclient, 'job-id', self.parameters,
+                              self.out_dir)
+        exp = {'success': False,
+               'error': 'Your prep information is missing samples that are '
+                        'present in your BIOM table: 1.S3',
+               'artifacts': None}
+        self.assertEqual(obs, exp)
+
+    @httpretty.activate
     def test_create_artifact_run_prefix(self):
         httpretty.register_uri(
             httpretty.POST,
