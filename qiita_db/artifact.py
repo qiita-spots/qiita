@@ -776,6 +776,29 @@ class Artifact(qdb.base.QiitaObject):
             "artifact_filepath", "artifact_id", self.id, sort='ascending')
 
     @property
+    def html_summary_fp(self):
+        """Returns the HTML summary filepath
+
+        Returns
+        -------
+        tuple of (int, str)
+            The filepath id and the path to the HTML summary
+        """
+        fps = qdb.util.retrieve_filepaths("artifact_filepath", "artifact_id",
+                                          self.id, fp_type='html_summary')
+        if fps:
+            # If fps is not the empty list, then we have exactly one file
+            # retrieve_filepaths returns a list of lists of 3 values: the
+            # filepath id, the filepath and the filepath type. We don't want
+            # to return the filepath type here, so just grabbing the first and
+            # second element of the list
+            res = (fps[0][0], fps[0][1])
+        else:
+            res = None
+
+        return res
+
+    @property
     def parents(self):
         """Returns the parents of the artifact
 

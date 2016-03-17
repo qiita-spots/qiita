@@ -189,6 +189,9 @@ class ArtifactTestsReadOnly(TestCase):
              "raw_barcodes")]
         self.assertEqual(qdb.artifact.Artifact(1).filepaths, exp_fps)
 
+    def test_html_summary(self):
+        self.assertIsNone(qdb.artifact.Artifact(1).html_summary_fp)
+
     def test_parents(self):
         self.assertEqual(qdb.artifact.Artifact(1).parents, [])
 
