@@ -342,7 +342,7 @@ class Software(qdb.base.QiitaObject):
 
     @classmethod
     def create(cls, name, version, description, environment_script,
-               start_script, publications=None):
+               start_script, software_type, publications=None):
         r"""Creates a new software in the system
 
         Parameters
@@ -357,6 +357,8 @@ class Software(qdb.base.QiitaObject):
             The script used to start the environment in which the plugin runs
         start_script : str
             The script used to start the plugin
+        software_type : str
+            The type of the software
         publications : list of (str, str), optional
             A list with the (DOI, pubmed_id) of the publications attached to
             the software
@@ -364,11 +366,12 @@ class Software(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.software
                             (name, version, description, environment_script,
-                             start_script)
-                        VALUES (%s, %s, %s, %s, %s)
+                             start_script, software_type_id)
+                        VALUES (%s, %s, %s, %s, %s, %s)
                         RETURNING software_id"""
+            type_id = qdb.util.convert_to_id(software_type, "software_type")
             sql_params = [name, version, description, environment_script,
-                          start_script]
+                          start_script, type_id]
             qdb.sql_connection.TRN.add(sql, sql_params)
             s_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -533,6 +536,23 @@ class Software(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             for wf_id in qdb.sql_connection.TRN.execute_fetchflatten():
                 yield DefaultWorkflow(wf_id)
+
+    @property
+    def type(self):
+        """Returns the type of the software
+
+        Returns
+        -------
+        str
+            The type of the software
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT software_type
+                     FROM qiita.software_type
+                        JOIN qiita.software USING (software_type_id)
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
 
 class DefaultParameters(qdb.base.QiitaObject):

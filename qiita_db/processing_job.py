@@ -357,29 +357,43 @@ class ProcessingJob(qdb.base.QiitaObject):
                     raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                         "Can't complete job: not in a running state")
                 if artifacts_data:
-                    artifact_ids = {}
-                    for out_name, a_data in viewitems(artifacts_data):
-                        filepaths = a_data['filepaths']
+                    if self.command.software.type == 'artifact definition':
+                        # In this case, the behavior of artifact_data is
+                        # slightly different: we know that there is only 1
+                        # new artifact and it doesn't have a parent
+                        _, a_data = artifacts_data.popitem()
                         atype = a_data['artifact_type']
-                        parents = self.input_artifacts
-                        params = self.parameters
+                        filepaths = a_data['filepaths']
+                        pt_id = self.parameters.values['template']
+                        pt = qdb.metadata_template.prep_template.PrepTemplate(
+                            pt_id)
                         a = qdb.artifact.Artifact.create(
-                            filepaths, atype, parents=parents,
-                            processing_parameters=params)
-                        cmd_out_id = qdb.util.convert_to_id(
-                            out_name, "command_output", "name")
-                        artifact_ids[cmd_out_id] = a.id
-                    if artifact_ids:
-                        sql = """INSERT INTO
-                                    qiita.artifact_output_processing_job
-                                    (artifact_id, processing_job_id,
-                                     command_output_id)
-                                 VALUES (%s, %s, %s)"""
-                        sql_params = [[aid, self.id, out_id]
-                                      for out_id, aid in viewitems(
-                                          artifact_ids)]
-                        qdb.sql_connection.TRN.add(sql, sql_params, many=True)
-                        self._update_and_launch_children(artifact_ids)
+                            filepaths, atype, prep_template=pt)
+                    else:
+                        artifact_ids = {}
+                        for out_name, a_data in viewitems(artifacts_data):
+                            filepaths = a_data['filepaths']
+                            atype = a_data['artifact_type']
+                            parents = self.input_artifacts
+                            params = self.parameters
+                            a = qdb.artifact.Artifact.create(
+                                filepaths, atype, parents=parents,
+                                processing_parameters=params)
+                            cmd_out_id = qdb.util.convert_to_id(
+                                out_name, "command_output", "name")
+                            artifact_ids[cmd_out_id] = a.id
+                        if artifact_ids:
+                            sql = """INSERT INTO
+                                        qiita.artifact_output_processing_job
+                                        (artifact_id, processing_job_id,
+                                         command_output_id)
+                                     VALUES (%s, %s, %s)"""
+                            sql_params = [[aid, self.id, out_id]
+                                          for out_id, aid in viewitems(
+                                              artifact_ids)]
+                            qdb.sql_connection.TRN.add(sql, sql_params,
+                                                       many=True)
+                            self._update_and_launch_children(artifact_ids)
                 self._set_status('success')
             else:
                 self._set_error(error)
