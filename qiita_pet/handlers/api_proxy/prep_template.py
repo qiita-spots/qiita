@@ -27,7 +27,7 @@ def _get_ENA_ontology():
     Returns
     -------
     dict of {str: list of strings}
-        A dictionary of the form {'ENA': list of str.], 'User': list of str}
+        A dictionary of the form {'ENA': list of str, 'User': list of str}
         with the ENA-defined terms and the User-defined terms, respectivelly.
     """
     ontology = Ontology(convert_to_id('ENA', 'ontology'))
@@ -79,7 +79,7 @@ def prep_template_ajax_get_req(prep_id):
     -------
     dict of {str: object}
         A dictionary with the following keys:
-        - status: str, whether if the request is successful or not
+        - status: str, whether the request is successful or not
         - message: str, if the request is unsuccessful, a human readable error
         - name: str, the name of the prep template
         - files: list of str, the files available to update the prep template
@@ -88,9 +88,10 @@ def prep_template_ajax_get_req(prep_id):
         - num_samples: int, the number of samples present in the template
         - num_columns: int, the number of columns present in the template
         - investigation_type: str, the investigation type of the template
-        - ontology: str, dict of {str, list of str} conataining the information
+        - ontology: str, dict of {str, list of str} containing the information
         of the ENA ontology
-        - artifact_attached: bool, whethe the template has an artifact attached
+        - artifact_attached: bool, whether the template has an artifact
+        attached
         - study_id: int, the study id of the template
     """
     # Currently there is no name attribute, but it will be soon
@@ -99,7 +100,7 @@ def prep_template_ajax_get_req(prep_id):
     artifact_attached = pt.artifact is not None
     study_id = pt.study_id
     files = [f for _, f in get_files_from_uploads_folders(study_id)
-             if f.endswith(('txt', 'tsv'))]
+             if f.endswith(('.txt', '.tsv'))]
 
     # The call to list is needed because keys is an iterator
     num_samples = len(list(pt.keys()))

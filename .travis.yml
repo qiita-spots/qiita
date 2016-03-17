@@ -31,6 +31,9 @@ install:
   - pushd qiita_plugins/target_gene
   - travis_retry pip install .
   - popd
+  - pushd qiita_plugins/qiita_client
+  - travis_retry pip install .
+  - popd
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then

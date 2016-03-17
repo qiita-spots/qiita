@@ -239,7 +239,8 @@ class SoftwareTestsReadOnly(TestCase):
         self.assertEqual(obs, exp)
 
     def test_type(self):
-        self.assertEqual(qdb.software.Software(1).type, "processing plugin")
+        self.assertEqual(qdb.software.Software(1).type,
+                         "artifact transformation")
 
 
 @qiita_test_checker()
@@ -248,7 +249,7 @@ class SoftwareTests(TestCase):
         obs = qdb.software.Software.create(
             "New Software", "0.1.0",
             "This is adding a new software for testing", "env_name",
-            "start_plugin", "processing plugin")
+            "start_plugin", "artifact transformation")
         self.assertEqual(obs.name, "New Software")
         self.assertEqual(obs.version, "0.1.0")
         self.assertEqual(obs.description,
@@ -257,13 +258,13 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.publications, [])
         self.assertEqual(obs.environment_script, 'env_name')
         self.assertEqual(obs.start_script, 'start_plugin')
-        self.assertEqual(obs.type, 'processing plugin')
+        self.assertEqual(obs.type, 'artifact transformation')
 
         # create with publications
         exp_publications = [['10.1000/nmeth.f.101', '12345678']]
         obs = qdb.software.Software.create(
             "Published Software", "1.0.0", "Another testing software",
-            "env_name", "start_plugin", "processing plugin",
+            "env_name", "start_plugin", "artifact transformation",
             publications=exp_publications)
         self.assertEqual(obs.name, "Published Software")
         self.assertEqual(obs.version, "1.0.0")
@@ -272,7 +273,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.publications, exp_publications)
         self.assertEqual(obs.environment_script, 'env_name')
         self.assertEqual(obs.start_script, 'start_plugin')
-        self.assertEqual(obs.type, 'processing plugin')
+        self.assertEqual(obs.type, 'artifact transformation')
 
     def test_add_publications(self):
         tester = qdb.software.Software(1)
