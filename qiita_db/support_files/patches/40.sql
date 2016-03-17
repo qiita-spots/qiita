@@ -3,9 +3,9 @@
 -- plugins. Here, we will introduce a new type, the "type plugin", and define
 -- the previous type as the "processing plugin" type. The new group "type plugin"
 -- define plugins that do not perform any processing on the artifacts but they
--- are able to validate that they're correct and generate they summary page.
+-- are able to validate that they're correct and generate their summary page.
 -- These new plugins are special. They are not directly visible by the end Qiita
--- user by they are useful to plugin developers so they do not need to re-define
+-- user but they are useful to plugin developers so they do not need to re-define
 -- types if they already exist. This way, multiple plugins can share the same
 -- type of artifacts without depending in another "processing" plugin.
 
@@ -52,10 +52,10 @@ ALTER TABLE qiita.prep_template_processing_job ADD CONSTRAINT fk_prep_template_p
 
 -- Populate the table software_type with the 2 types of plugins
 INSERT INTO qiita.software_type (software_type, description)
-    VALUES ('processing plugin', 'A plugin that performs some kind of processing over an artifact.'),
-           ('type plugin', 'A plugin that defines new artifact types.');
+    VALUES ('artifact transformation', 'A plugin that performs some kind of processing/transformation/manipulation over an artifact.'),
+           ('artifact definition', 'A plugin that defines new artifact types.');
 
--- All the software presente in the system belong to type 1 (processing plugin)
+-- All the software present in the system belong to type 1 (artifact transformation)
 UPDATE qiita.software SET software_type_id = 1;
 -- Setting up NOT NULL attribute here since the value was null until the previous statement
 ALTER TABLE qiita.software ALTER COLUMN software_type_id SET NOT NULL;
@@ -67,8 +67,8 @@ ALTER TABLE qiita.software ALTER COLUMN software_type_id SET NOT NULL;
 -- analysis and almost all plugins will need. However, the rest of the types
 -- are specific for the target gene plugin.
 INSERT INTO qiita.software (name, version, description, environment_script, start_script, software_type_id)
-    VALUES ('BIOM type plugin', '2.1.4', 'The Biological Observation Matrix format', 'source activate qiita', 'start_biom', 2),
-           ('Target Gene type plugin', '0.1.0', 'Target gene artifact types plugin', 'source activate qiita', 'start_target_gene_types', 2);
+    VALUES ('BIOM type', '2.1.4', 'The Biological Observation Matrix format', 'source activate qiita', 'start_biom', 2),
+           ('Target Gene type', '0.1.0', 'Target gene artifact types plugin', 'source activate qiita', 'start_target_gene_types', 2);
 -- Add BIOM publication
 INSERT INTO qiita.publication (doi, pubmed_id) VALUES ('10.1186/2047-217X-1-7', '23587224');
 INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (2, '10.1186/2047-217X-1-7');
