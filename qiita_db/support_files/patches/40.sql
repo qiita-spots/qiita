@@ -76,11 +76,11 @@ INSERT INTO qiita.software_publication (software_id, publication_doi) VALUES (2,
 -- Add the commands - these will not be visible by the user as they're used internally
 INSERT INTO qiita.software_command (software_id, name, description) VALUES
     -- This will have the ID 4
-    (2, 'Create artifact', 'Creates a new artifact of type BIOM'),
+    (2, 'Validate', 'Validates a new artifact of type BIOM'),
     -- This will have the ID 5
     (2, 'Generate HTML summary', 'Generates the HTML summary of a BIOM artifact'),
     -- This will have the ID 6
-    (3, 'Create artifact', 'Creates a new artifact of the given target gene type'),
+    (3, 'Validate', 'Validates a new artifact of the given target gene type'),
     -- This will have the ID 7
     (3, 'Generate HTML summary', 'Generates the HTML summary of a given target gene type artifact');
 
