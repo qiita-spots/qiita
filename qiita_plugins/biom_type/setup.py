@@ -43,6 +43,6 @@ setup(name='qiita-type-plugin-biom',
       package_data={'biom_type_plugin': ['support_files/config_file.cfg']},
       scripts=glob('scripts/*'),
       extras_require={'test': ["nose >= 0.10.1", "pep8", 'httpretty']},
-      install_requires=['click >= 3.3', 'biom == 2.1.4'],
+      install_requires=['click >= 3.3', 'biom-format >= 2.1.4, < 2.2.0'],
       classifiers=classifiers
       )

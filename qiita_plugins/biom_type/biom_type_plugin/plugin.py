@@ -14,14 +14,14 @@ import sys
 
 from qiita_client import QiitaClient, format_payload
 
-from biom_type_plugin.create import create_artifact
+from biom_type_plugin.validate import validate
 from biom_type_plugin.summary import generate_html_summary
 
 with standard_library.hooks():
     from configparser import ConfigParser
 
 TASK_DICT = {
-    'Create artifact': create_artifact,
+    'Validate': validate,
     'Generate HTML summary': generate_html_summary
 }
 
@@ -42,11 +42,9 @@ def execute_job(server_url, job_id, output_dir):
         If there is a problem gathering the job information
     """
     # Set up the Qiita Client
-    try:
-        conf_fp = environ['QP_BIOM_TYPE_CONFIG_FP']
-    except KeyError:
-        conf_fp = join(dirname(abspath(__file__)), 'support_files',
-                       'config_file.cfg')
+    dflt_conf_fp = join(dirname(abspath(__file__)), 'support_files',
+                        'config_file.cfg')
+    conf_fp = environ.get('QP_BIOM_TYPE_CONFIG_FP', dflt_conf_fp)
     config = ConfigParser()
     with open(conf_fp, 'U') as conf_file:
         config.readfp(conf_file)
