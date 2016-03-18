@@ -14,14 +14,14 @@ import sys
 
 from qiita_client import QiitaClient, format_payload
 
-from target_gene_type.create import create_artifact
+from target_gene_type.validate import validate
 from target_gene_type.summary import generate_html_summary
 
 with standard_library.hooks():
     from configparser import ConfigParser
 
 TASK_DICT = {
-    'Create artifact': create_artifact,
+    'Validate': validate,
     'Generate HTML summary': generate_html_summary
 }
 
@@ -72,7 +72,7 @@ def execute_job(server_url, job_id, output_dir):
         except Exception:
             exc_str = repr(traceback.format_exception(*sys.exc_info()))
             error_msg = ("Error executing %s: \n%s" % (task_name, exc_str))
-            payload = format_payload(False, error_msg=error_msg)
+            payload = format_payload(success=False, error_msg=error_msg)
         # The job completed
         qclient.complete_job(job_id, payload)
     else:
