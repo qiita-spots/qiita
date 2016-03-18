@@ -16,7 +16,7 @@ from biom.exception import TableException
 from qiita_client import format_payload
 
 
-def create_artifact(qclient, job_id, parameters, out_dir):
+def validate(qclient, job_id, parameters, out_dir):
     """Validate and fix a new BIOM artifact
 
     Parameters
@@ -46,8 +46,9 @@ def create_artifact(qclient, job_id, parameters, out_dir):
 
     if a_type != "BIOM":
         return format_payload(
-            False, error_msg="Unknown artifact type %s. Supported types: BIOM"
-                             % a_type)
+            success=False,
+            error_msg="Unknown artifact type %s. Supported types: BIOM"
+                      % a_type)
 
     qclient.update_job_step(job_id, "Step 1: Collecting prep information")
     prep_info = qclient.get("/qiita_db/prep_template/%s/data" % prep_id)
@@ -60,13 +61,14 @@ def create_artifact(qclient, job_id, parameters, out_dir):
         raise ValueError(error_msg)
     prep_info = prep_info['data']
 
-    # Check if the biom table have the same sample ids than the prep info
+    # Check if the biom table has the same sample ids as the prep info
     qclient.update_job_step(job_id, "Step 2: Validting BIOM file")
     new_biom_fp = biom_fp = files['BIOM'][0]
     table = load_table(biom_fp)
-    pt_sample_ids = set(prep_info.keys())
+    pt_sample_ids = set(prep_info)
     biom_sample_ids = set(table.ids())
-    if biom_sample_ids != pt_sample_ids:
+
+    if not pt_sample_ids.issubset(biom_sample_ids):
         # The BIOM sample ids are different from the ones in the prep template
         qclient.update_job_step(job_id, "Step 3: Fixing BIOM sample ids")
         # Attempt 1: the user provided the run prefix column - in this case
@@ -84,7 +86,7 @@ def create_artifact(qclient, job_id, parameters, out_dir):
                 # There is nothing we can do. The samples in the BIOM table do
                 # not match the ones in the prep template and we can't fix it
                 return format_payload(
-                    False,
+                    success=False,
                     error_msg='The sample ids in the BIOM table do not match '
                               'the ones in the prep information. Please, '
                               'provide the column "run_prefix" in the prep '
@@ -97,7 +99,7 @@ def create_artifact(qclient, job_id, parameters, out_dir):
         except TableException:
             missing = biom_sample_ids - set(id_map)
             return format_payload(
-                False,
+                success=False,
                 error_msg='Your prep information is missing samples that are '
                           'present in your BIOM table: %s'
                           % ', '.join(missing))
@@ -107,4 +109,4 @@ def create_artifact(qclient, job_id, parameters, out_dir):
             table.to_hdf5(f, "Qiita BIOM type plugin")
 
     return format_payload(
-        True, artifacts_info=[[None, 'BIOM', [new_biom_fp, 'biom']]])
+        success=True, artifacts_info=[[None, 'BIOM', [new_biom_fp, 'biom']]])

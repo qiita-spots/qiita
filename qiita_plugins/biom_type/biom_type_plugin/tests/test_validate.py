@@ -18,7 +18,7 @@ from biom.util import biom_open
 from qiita_client import QiitaClient
 import httpretty
 
-from biom_type_plugin.create import create_artifact
+from biom_type_plugin.validate import validate
 
 
 class CreateTests(TestCase):
@@ -56,7 +56,7 @@ class CreateTests(TestCase):
                     remove(fp)
 
     @httpretty.activate
-    def test_create_artifact_error(self):
+    def test_validate_error(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -68,20 +68,18 @@ class CreateTests(TestCase):
             body='{"data": "", "success": false, "error": "Some error"}')
 
         with self.assertRaises(ValueError):
-            create_artifact(self.qclient, 'job-id', self.parameters,
-                            self.out_dir)
+            validate(self.qclient, 'job-id', self.parameters, self.out_dir)
 
-    def test_create_artifact_unknown_type(self):
+    def test_validate_unknown_type(self):
         self.parameters['artifact_type'] = 'UNKNOWN'
-        obs = create_artifact(self.qclient, 'job-id', self.parameters,
-                              self.out_dir)
+        obs = validate(self.qclient, 'job-id', self.parameters, self.out_dir)
         exp = {'success': False,
                'error': 'Unknown artifact type UNKNOWN. Supported types: BIOM',
                'artifacts': None}
         self.assertEqual(obs, exp)
 
     @httpretty.activate
-    def test_create_artifact_no_changes(self):
+    def test_validate_no_changes(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -94,8 +92,7 @@ class CreateTests(TestCase):
                  '{"run_prefix": "S2"}, "1.S3": {"run_prefix": "S3"}}, '
                  '"success": true, "error": ""}')
 
-        obs = create_artifact(self.qclient, 'job-id', self.parameters,
-                              self.out_dir)
+        obs = validate(self.qclient, 'job-id', self.parameters, self.out_dir)
         exp = {'success': True,
                'error': '',
                'artifacts': {None: {'artifact_type': 'BIOM',
@@ -103,7 +100,7 @@ class CreateTests(TestCase):
         self.assertEqual(obs, exp)
 
     @httpretty.activate
-    def test_create_artifact_unknown_samples(self):
+    def test_validate_unknown_samples(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -115,8 +112,7 @@ class CreateTests(TestCase):
             body='{"data": {"1.S11": {"orig_name": "S1"}, "1.S22": '
                  '{"orig_name": "S2"}, "1.S33": {"orig_name": "S3"}}, '
                  '"success": true, "error": ""}')
-        obs = create_artifact(self.qclient, 'job-id', self.parameters,
-                              self.out_dir)
+        obs = validate(self.qclient, 'job-id', self.parameters, self.out_dir)
         exp = {'success': False,
                'error': 'The sample ids in the BIOM table do not match the '
                         'ones in the prep information. Please, provide the '
@@ -127,7 +123,7 @@ class CreateTests(TestCase):
         self.assertEqual(obs, exp)
 
     @httpretty.activate
-    def test_create_artifact_missing_samples(self):
+    def test_validate_missing_samples(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -138,8 +134,7 @@ class CreateTests(TestCase):
             "https://test_server.com/qiita_db/prep_template/1/data",
             body='{"data": {"1.S11": {"run_prefix": "1.S1"}, "1.S22": '
                  '{"run_prefix": "1.S2"}}, "success": true, "error": ""}')
-        obs = create_artifact(self.qclient, 'job-id', self.parameters,
-                              self.out_dir)
+        obs = validate(self.qclient, 'job-id', self.parameters, self.out_dir)
         exp = {'success': False,
                'error': 'Your prep information is missing samples that are '
                         'present in your BIOM table: 1.S3',
@@ -147,7 +142,7 @@ class CreateTests(TestCase):
         self.assertEqual(obs, exp)
 
     @httpretty.activate
-    def test_create_artifact_run_prefix(self):
+    def test_validate_run_prefix(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -160,8 +155,7 @@ class CreateTests(TestCase):
                  '{"run_prefix": "1.S2"}, "1.S33": {"run_prefix": "1.S3"}}, '
                  '"success": true, "error": ""}')
 
-        obs = create_artifact(self.qclient, 'job-id', self.parameters,
-                              self.out_dir)
+        obs = validate(self.qclient, 'job-id', self.parameters, self.out_dir)
         exp_biom_fp = join(self.out_dir, basename(self.biom_fp))
         self._clean_up_files.append(exp_biom_fp)
         exp = {'success': True,
@@ -173,7 +167,7 @@ class CreateTests(TestCase):
         self.assertItemsEqual(obs_t.ids(), ["1.S11", "1.S22", "1.S33"])
 
     @httpretty.activate
-    def test_create_artifact_prefix(self):
+    def test_validate_prefix(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -197,8 +191,7 @@ class CreateTests(TestCase):
 
         self.parameters['files'] = '{"BIOM": ["%s"]}' % biom_fp
 
-        obs = create_artifact(self.qclient, 'job-id', self.parameters,
-                              self.out_dir)
+        obs = validate(self.qclient, 'job-id', self.parameters, self.out_dir)
         exp_biom_fp = join(self.out_dir, basename(biom_fp))
         self._clean_up_files.append(exp_biom_fp)
         exp = {'success': True,
