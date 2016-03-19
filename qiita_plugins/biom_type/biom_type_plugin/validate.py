@@ -68,7 +68,7 @@ def validate(qclient, job_id, parameters, out_dir):
     pt_sample_ids = set(prep_info)
     biom_sample_ids = set(table.ids())
 
-    if not pt_sample_ids.issubset(biom_sample_ids):
+    if not pt_sample_ids.issuperset(biom_sample_ids):
         # The BIOM sample ids are different from the ones in the prep template
         qclient.update_job_step(job_id, "Step 3: Fixing BIOM sample ids")
         # Attempt 1: the user provided the run prefix column - in this case
