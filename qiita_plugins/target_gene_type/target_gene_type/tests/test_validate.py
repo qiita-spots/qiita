@@ -22,7 +22,7 @@ from target_gene_type.validate import (
     _validate_demultiplexed, validate)
 
 
-class CreateTests(TestCase):
+class ValidateTests(TestCase):
     @httpretty.activate
     def setUp(self):
         # Register the URIs for the QiitaClient
@@ -445,6 +445,8 @@ class CreateTests(TestCase):
                                         [[exp_demux_fp], 'preprocessed_demux'],
                                         ]}}}
         self.assertEqual(obs, exp)
+        with File(exp_demux_fp) as f:
+            self.assertItemsEqual(f.keys(), ["1.s1", "1.s2"])
 
     @httpretty.activate
     def test_validate_demux_file_error(self):
