@@ -85,8 +85,8 @@ class SummaryTestsWith(TestCase):
             body=('{"success": true, "error": "", '
                   '"filepaths": [["%s", "biom"]]}' % self.biom_fp))
         with self.assertRaises(ValueError):
-             generate_html_summary(self.qclient, 'job-id', self.parameters,
-                                   self.out_dir, True)
+            generate_html_summary(self.qclient, 'job-id', self.parameters,
+                                  self.out_dir, True)
 
     def test_count_summary(self):
         biom = load_table(self.biom_fp)

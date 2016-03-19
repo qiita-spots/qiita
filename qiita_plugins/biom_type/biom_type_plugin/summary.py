@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-import pandas as pd
 
 from biom import load_table
 from urllib import quote
