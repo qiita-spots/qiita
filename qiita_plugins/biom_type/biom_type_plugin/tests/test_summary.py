@@ -13,15 +13,16 @@ from os.path import exists, isdir
 from shutil import rmtree
 
 import numpy as np
-from biom import Table
+from biom import Table, load_table
+
 from biom.util import biom_open
 from qiita_client import QiitaClient
 import httpretty
 
-from biom_type_plugin.summary import generate_html_summary
+from biom_type_plugin.summary import generate_html_summary, count_summary
 
 
-class CreateTests(TestCase):
+class SummaryTestsWith(TestCase):
     @httpretty.activate
     def setUp(self):
         # Registewr the URIs for the QiitaClient
@@ -74,6 +75,28 @@ class CreateTests(TestCase):
 
         # asserting content of html
         self.assertItemsEqual(html, EXT_HTML)
+
+    @httpretty.activate
+    def test_generate_html_summary_error(self):
+        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
+                         "%s/filepaths/" % self.artifact_id)
+        httpretty.register_uri(
+            httpretty.GET, httpretty_url,
+            body=('{"success": true, "error": "", '
+                  '"filepaths": [["%s", "biom"]]}' % self.biom_fp))
+        with self.assertRaises(ValueError):
+             generate_html_summary(self.qclient, 'job-id', self.parameters,
+                                   self.out_dir, True)
+
+    def test_count_summary(self):
+        biom = load_table(self.biom_fp)
+        obs = count_summary(biom)
+        exp_summary = {'Mean count': 15.666666666666666, 'Minimum count': 1.0,
+                       'Maximum count': 43.0, 'Median count': 3.0}
+        exp_counts = [1.0, 3.0, 43.0]
+        self. assertItemsEqual(obs[0], exp_summary)
+        self. assertItemsEqual(obs[1], exp_counts)
+
 
 EXT_HTML = [
     '<b>Number of samples:</b> 3<br/>',

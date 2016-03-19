@@ -12,6 +12,7 @@ from biom import load_table
 from urllib import quote
 from base64 import b64encode
 from os.path import join, basename
+from numpy import mean, median, asarray
 
 from StringIO import StringIO
 import seaborn as sns
@@ -66,7 +67,6 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     num_features, num_samples = biom.shape
 
     sample_count_summary, sample_counts = count_summary(biom, axis='sample')
-    sample_count_summary = sample_count_summary.to_dict()
     ax = sns.distplot(sample_counts)
     ax.set_xlabel("Number of sequences per sample")
     ax.set_ylabel("Frequency")
@@ -96,27 +96,28 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     of.write('\n'.join(artifact_information))
 
     # Step 3: add the new file to the artifact using REST api
-    reply = qclient.patch(qclient_url, 'add', '/html_summary/', value='of_fp')
+    reply = qclient.patch(qclient_url, 'add', '/html_summary/', value=of_fp)
 
     return reply if not return_html else (reply, artifact_information)
 
 
-# Help methods taken from: https://goo.gl/8uebr7
-# Not adding tests as this will be implemented and tested in QIIME2
+# Based on methods from: https://goo.gl/8uebr7
 
-def _counts(table, axis):
+def _counts(table, axis='sample'):
     result = {}
     for count_vector, id_, _ in table.iter(axis=axis):
         result[id_] = float(count_vector.sum())
-    return pd.Series(result)
+    return result
 
 
 def count_summary(table, axis='sample'):
     counts = _counts(table, axis=axis)
+    counts_values = asarray(counts.values())
 
-    summary = pd.Series([counts.min(), counts.quantile(0.25), counts.median(),
-                         counts.quantile(0.75), counts.max(), counts.mean()],
-                        index=['Minimum count', '1st quartile', 'Median count',
-                               '3rd quartile', 'Maximum count', 'Mean count'])
-    summary.sort()
-    return summary, counts
+    summary = {
+        'Minimum count': min(counts_values),
+        'Maximum count': max(counts_values),
+        'Mean count': mean(counts_values),
+        'Median count': median(counts_values),
+    }
+    return summary, counts_values
