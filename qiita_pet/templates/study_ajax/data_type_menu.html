@@ -1,0 +1,25 @@
+<h3>Data Types</h3>
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    {% for dt in prep_info %}
+    {% set cleaned_dt = dt.replace(' ', '_') %}
+      <div class="panel-heading" role="tab" id="heading{{cleaned_dt}}">
+        <h4 class="panel-title">
+          <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{cleaned_dt}}" aria-expanded="true" aria-controls="collapse{{cleaned_dt}}">{{dt}}</a>
+        </h4>
+      </div>
+      <div id="collapse{{cleaned_dt}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{cleaned_dt}}">
+        <div class="panel-body">
+          {% for prep in prep_info[dt] %}
+            <a href="#" style="display:block;color:black;" onclick="populate_main_div('/study/description/prep_template/', { prep_id: {{prep['id']}}, study_id: {{study_id}} });">
+              <span id="prep-header-{{prep['id']}}">{{prep['name']}} - ID {{prep['id']}} - {{prep['status']}}</span><br/>
+              {{prep['start_artifact']}} - ID {{prep['start_artifact_id']}}<br/>
+              {{prep['youngest_artifact']}}
+            </a>
+            <hr>
+          {% end %}
+        </div>
+      </div>
+    {% end %}
+  </div>
+</div>

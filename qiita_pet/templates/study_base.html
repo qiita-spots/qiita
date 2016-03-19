@@ -1,0 +1,271 @@
+{% extends sitebase.html %}
+{% block head %}
+<link rel="stylesheet" src="/static/vendor/css/vis.css" type="text/css">
+<script type="text/javascript" src="/static/vendor/js/vis.js"></script>
+<script type="text/javascript">
+  var network = null;
+  // Track what prep template is currently being shown.
+  var curr_prep = -1;
+  function togglegraphs(id) {
+    if($("#study-prep-graph-row").css('display') == 'none' ) {
+      $("#study-prep-graph-row").show();
+      $("#graph-toggle-link").text("Hide files");
+    } else {
+      $("#study-prep-graph-row").hide();
+       $("#graph-toggle-link").text("Show files");
+    }
+  }
+
+  function fill_artifact(aid) {
+    $("#study-main").html("<p><button onclick='process_from(" + aid + ")' class='btn btn-sm'>Process from here</button></p>ARTIFACT " + aid + " HTML STUFF");
+  $.get("/admin/artifact/", {artifact_id: +aid })
+      .done(function ( data ) {
+        $("#study-admin").html(data);
+      });
+  }
+
+  function process_from(aid) {
+    $.get("/study/process/", { artifact_id: aid })
+      .done(function ( data ){
+        $("#study-prep-graph-row").hide();
+        $("#graph-toggle-link").text("Show files");
+        $("#study-main").html(data);
+      });
+  }
+
+  function delete_artifact(aid, pid) {
+    $.post("/artifact/", {artifact_id: +aid })
+      .done(function ( data ) {
+        if( data.status == "success"  && curr_prep != -1 ) { fill_prep(curr_prep); }
+        if( data.status == "error") { bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000); }
+      });
+  }
+
+  function fill_prep(pid) {
+    $("#study-main").empty();
+    $("#study-admin").empty();
+    $.get( "/prep/graph/", { prep_id: pid} )
+      .done(function( data ) {
+        curr_prep = pid;
+        var edges = [];
+        var nodes = [];
+        // format edge list data
+        for(i=0;i<data.edge_list.length;i++) {
+          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1]});
+        }
+        //format node depth data
+        for(i=0;i<data.node_labels.length;i++) {
+          nodes.push({id: data.node_labels[i][0], label: data.node_labels[i][1], shape: 'box'});
+        }
+        $("#study-prep-graph-row").show();
+        draw_graph(nodes, edges, "study-prep-graph");
+        // add event listeners
+        network.on('select', function(params) {
+          //render the information for the selected artifact ID
+          if(+params.nodes !== 0) { fill_artifact(params.nodes); }
+        });
+        // Copy existing formatted prep info to header position
+        $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="togglegraphs(); return false;" id="graph-toggle-link">Hide files</a>');
+    });
+    $.get( "/study/description/prep_template/", { prep_id: pid, study_id: {{study_info['study_id']}} } )
+      .done(function( data ) {
+        $("#study-main").html(data);
+    });
+  }
+
+  function draw_graph(nodes, edges, target) {
+    var container = document.getElementById(target);
+    container.innerHTML = "";
+    var data = {
+      nodes: nodes,
+      edges: edges
+    };
+    var options = {
+      nodes: {
+        color: '#ffffff',
+        font: '16px arial black'
+      },
+      layout: {
+        hierarchical: {
+          direction: "LR",
+          sortMethod: "directed",
+          levelSeparation: 260
+        }
+      },
+      interaction: {
+        dragNodes: false,
+        dragView: false,
+        zoomView: false
+      }
+    };
+    network = new vis.Network(container, data, options);
+  }
+
+  function fill_sample(sid) {
+    $.get( "/study/description/sample_template/", { study_id: sid } )
+      .done(function( data ) {
+        curr_prep = -1;
+        $("#study-main").html(data);
+        $("#study-admin").empty();
+        $("#study-prep-graph").empty();
+        $("#study-prep-graph-row").hide();
+        $("#study-file-breadcrumbs").empty();
+        $("#study-file-breadcrumbs-row").hide();
+        $("#study-prep-subheader").empty();
+      });
+  }
+
+  function validate_delete_study_text() {
+    if ($("#study-alias").val() == "{{study_info['study_alias']}}") {
+      $('#delete-study-button').prop('disabled', false);
+    } else {
+      $('#delete-study-button').prop('disabled', true);
+    }
+  }
+
+  function delete_study() {
+    if($("#study-alias").val() != "{{study_info['study_alias']}}") {
+      alert("The entered study alias doesn't match the study");
+      return false;
+    }
+    else if(confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
+      $.post('/study/delete/', { study_id: {{study_info['study_id']}} })
+        .done(function ( data ) {
+          if(data.status == "error") {
+            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+          } else {
+            window.location.replace = '/';
+          }
+        });
+    }
+  }
+
+  function set_admin_visibility(visibility, aid) {
+    $.post('/admin/artifact/', {artifact_id: +aid, visibility: visibility})
+      .done(function ( data ) {
+        var status = "info";
+        if(data["status"] == "error") { status = "danger"; }
+        //Show for 4 seconds (4000 ms), then remove
+        bootstrapAlert(data.message.replace("\n", "<br/>"), status, 4000);
+        //update buttons to match new status
+        $.get("/admin/artifact/", {artifact_id: +aid })
+          .done(function ( data ) {
+            $("#study-admin").html(data);
+          });
+      });
+  }
+
+  /**
+   *
+   * Function to populate the main div of the screen
+   *
+   * @param url string with the URL to perform the AJAX get call
+   * @param parameters the parameters for the AJAX call
+   *
+   * This function executes an AJAX get against the URL provided with the given
+   * parameters, and inserts the returned data as HTML in the study-main div
+   *
+   */
+  function populate_main_div(url, parameters) {
+    show_loading("study-main");
+    $.get(url, parameters)
+      .done(function(data) {
+          $("#study-main").html(data);
+      });
+  }
+
+  /**
+   *
+   * Function to populate the data-types-menu div
+   *
+   * This function executes an AJAX get against the URL
+   * "/study/description/data_type_menu/" and inserts the returned data as
+   * HTML in the data-types-menu div
+   *
+   */
+  function populate_data_type_menu_div() {
+    show_loading("data-types-menu");
+    $.get("/study/description/data_type_menu/", {study_id: {{study_info['study_id']}} })
+      .done(function(data) {
+        $("#data-types-menu").html(data);
+      });
+  }
+
+  /**
+   *
+   * Function to show the loading gif in a given div
+   *
+   * @param div_name string with the name of the div to populate with the loading gif
+   *
+   * This function replaces the content of the given div with the
+   * gif to show that the section of page is loading
+   *
+   */
+  function show_loading(div_name) {
+      $("#" + div_name).html("<img src='/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
+  }
+
+  $(document).ready(function() {
+    // Populate the different sections of the page
+    populate_data_type_menu_div();
+    // The initial page to be shown is the base information of the study
+    populate_main_div("/study/description/baseinfo/", { study_id: {{study_info['study_id']}}});
+  });
+</script>
+<style>
+.graph {
+  width:100%;
+  height:300px;
+  border: 1px solid #ccc;
+}
+</style>
+{% end %}
+{% block content %}
+<div class="row">
+  <div class="col-md-3">
+  <h3><a href="#" onclick="populate_main_div('/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })">Study Information</a></h3>
+    <a href="#" onclick="populate_main_div('/study/description/sample_template/', { study_id: {{study_info['study_id']}} })">Sample Template</a><br />
+    <a href="#" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })">Sample Summary</a><br />
+    {% if editable %}
+    <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
+    <a href="#" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })">Add New Preparation</a><br />
+    <a href="/study/edit/{{study_info['study_id']}}">Edit Study Information</a><br />
+    <a href="#" data-toggle="modal" data-target="#delete-study">Delete Study</a>
+    {% end %}
+
+    <div id="data-types-menu"></div>
+  </div>
+
+  <div class="col-md-9">
+    <!-- Study ID and study alias always on top -->
+    <div class="row">
+      <div class="col-md-12" id="study-base-info">
+        <h2>{{study_info['study_title']}} - ID {{study_info['study_id']}}</h2>
+        <h3>{{study_info['study_alias']}}</h3>
+      </div>
+    </div>
+    <!-- Dynamic div that changes based on what information is shown -->
+    <div class="row"><div class="col-md-12" id="study-main"></div></div>
+  </div>
+</div>
+
+<!-- Modal used to delete the study -->
+<div class="modal fade delete-study" tabindex="-1" role="dialog" id="delete-study">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Deleting:<br/></h3><h4>{{study_info['study_title']}}</h4>
+      </div>
+      <div class="modal-body">
+        You will only be able to delete a study that has no data associated with it.
+      </div>
+      <div class="modal-footer">
+        To continue you need to write the alias name of the study:
+        <input type="text" name="study-alias" id="study-alias" onkeyup="validate_delete_study_text();">
+        <button class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_study();" id="delete-study-button" disabled></button>
+      </div>
+    </div>
+  </div>
+</div>
+{% end %}

@@ -3,7 +3,6 @@ from os import remove
 from os.path import exists, join
 from datetime import datetime
 from shutil import move
-import warnings
 
 from future.utils import viewitems
 from biom import load_table
@@ -33,7 +32,7 @@ class TestAnalysis(TestCase):
         _, self.fp = qdb.util.get_mountpoint("analysis")[0]
 
         self.get_fp = partial(join, self.fp)
-        self.biom_fp = self.get_fp("1_analysis_18S.biom")
+        self.biom_fp = self.get_fp("1_analysis_dt-18S_r-1_c-3.biom")
         self.map_fp = self.get_fp("1_analysis_mapping.txt")
         self._old_portal = qiita_config.portal
         self.table_fp = None
@@ -321,8 +320,9 @@ class TestAnalysis(TestCase):
              'SKB7.640196': {'barcode': 'AAAAAAAAAAAG'}},
             orient='index')
 
-        warnings.simplefilter('ignore', qdb.exceptions.QiitaDBWarning)
-        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
             metadata, study, "16S")
 
         mp = qdb.util.get_mountpoint("processed_data")[0][1]
@@ -338,9 +338,10 @@ class TestAnalysis(TestCase):
                         (1, %s, '2.SKB7.640196')"""
         self.conn_handler.execute(sql, [artifact.id, artifact.id, artifact.id])
 
-        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
-                   artifact.id: ['2.SKB8.640193', '2.SKD8.640184']}
-        self.analysis._build_biom_tables(samples, 10000)
+        grouped_samples = {'18S.1.3': [
+            (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
+            (artifact.id, ['2.SKB8.640193', '2.SKD8.640184'])]}
+        self.analysis._build_biom_tables(grouped_samples, 10000)
         exp = {4: {'1.SKM4.640180', '1.SKM9.640192'},
                5: {'1.SKM4.640180', '1.SKM9.640192'},
                6: {'1.SKM4.640180', '1.SKM9.640192'},
@@ -555,6 +556,11 @@ class TestAnalysis(TestCase):
             qdb.exceptions.QiitaDBWarning,
             qdb.metadata_template.util.load_template_to_dataframe,
             self.duplicated_samples_not_merged, index='#SampleID')
+
+        # assert_frame_equal assumes same order on the rows, thus sorting
+        # frames by index
+        obs.sort_index(inplace=True)
+        exp.sort_index(inplace=True)
         assert_frame_equal(obs, exp)
 
     def test_build_mapping_file_duplicated_samples_merge(self):
@@ -572,8 +578,9 @@ class TestAnalysis(TestCase):
 
     def test_build_biom_tables(self):
         new_id = qdb.util.get_count('qiita.filepath') + 1
-        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        self.analysis._build_biom_tables(samples, 100)
+        grouped_samples = {'18S.1.3': [(
+            4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+        self.analysis._build_biom_tables(grouped_samples, 100)
         obs = self.analysis.biom_tables
         self.assertEqual(obs, {'18S': self.biom_fp})
 
@@ -583,9 +590,11 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
 
         obs = table.metadata('1.SKB8.640193')
-        exp = {'Study':
+        exp = {'study':
                'Identification of the Microbiomes for Cannabis Soils',
-               'Artifact_id': 4}
+               'artifact_ids': '4',
+               'reference_id': '1',
+               'command_id': '3'}
         self.assertEqual(obs, exp)
 
         sql = """SELECT EXISTS(SELECT * FROM qiita.filepath
@@ -600,9 +609,10 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs, exp)
 
     def test_build_biom_tables_duplicated_samples_not_merge(self):
-        samples = {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'],
-                   5: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']}
-        self.analysis._build_biom_tables(samples, 100, True)
+        grouped_samples = {'18S.1.3': [
+            (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
+            (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+        self.analysis._build_biom_tables(grouped_samples, 100, True)
         obs = self.analysis.biom_tables
 
         table = load_table(self.biom_fp)
@@ -610,6 +620,19 @@ class TestAnalysis(TestCase):
         exp = {'4.1.SKD8.640184', '4.1.SKB7.640196', '4.1.SKB8.640193',
                '5.1.SKB8.640193', '5.1.SKB7.640196', '5.1.SKD8.640184'}
         self.assertItemsEqual(obs, exp)
+
+    def test_build_biom_tables_raise_error_due_to_sample_selection(self):
+        grouped_samples = {'18S.1.3': [
+            (4, ['sample_name_1', 'sample_name_2', 'sample_name_3'])]}
+        with self.assertRaises(RuntimeError):
+            self.analysis._build_biom_tables(grouped_samples)
+
+    def test_build_biom_tables_raise_error_due_to_rarefaction_level(self):
+        grouped_samples = {'18S.1.3': [
+            (4, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196']),
+            (5, ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196'])]}
+        with self.assertRaises(RuntimeError):
+            self.analysis._build_biom_tables(grouped_samples, 100000)
 
     def test_build_files(self):
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,

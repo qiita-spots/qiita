@@ -64,3 +64,28 @@ pubmed_linkifier = partial(
 
 doi_linkifier = partial(
     linkify, "<a target=\"_blank\" href=\"http://dx.doi.org/{0}\">{0}</a>")
+
+
+def to_int(value):
+    """Transforms `value` to an integer
+
+    Parameters
+    ----------
+    value : str or int
+        The value to transform
+
+    Returns
+    -------
+    int
+        `value` as an integer
+
+    Raises
+    ------
+    HTTPError
+        If `value` cannot be transformed to an integer
+    """
+    try:
+        res = int(value)
+    except ValueError:
+        raise HTTPError(400, "%s cannot be converted to an integer" % value)
+    return res

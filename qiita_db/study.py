@@ -166,6 +166,20 @@ class Study(qdb.base.QiitaObject):
             return qdb.util.infer_status(
                 qdb.sql_connection.TRN.execute_fetchindex())
 
+    @staticmethod
+    def all_data_types():
+        """Returns list of all the data types available in the system
+
+        Returns
+        -------
+        list of str
+            All the data types available in the system
+        """
+        with qdb.sql_connection.TRN:
+            sql = "SELECT DISTINCT data_type FROM qiita.data_type"
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchflatten()
+
     @classmethod
     def get_by_status(cls, status):
         """Returns study id for all Studies with given status
@@ -500,9 +514,23 @@ class Study(qdb.base.QiitaObject):
             # remove non-info items from info
             for item in self._non_info:
                 info.pop(item)
-            # This is an optional column, but should not be considered part
-            # of the info
+            # removed because redundant to the id already stored in the object
             info.pop('study_id')
+
+            if info['principal_investigator_id']:
+                info['principal_investigator'] = qdb.study.StudyPerson(
+                    info["principal_investigator_id"])
+            else:
+                info['principal_investigator'] = None
+            del info['principal_investigator_id']
+
+            if info['lab_person_id']:
+                info['lab_person'] = qdb.study.StudyPerson(
+                    info["lab_person_id"])
+            else:
+                info['lab_person'] = None
+            del info['lab_person_id']
+
             return info
 
     @info.setter
