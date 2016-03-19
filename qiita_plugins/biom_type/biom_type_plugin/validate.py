@@ -80,7 +80,7 @@ def validate(qclient, job_id, parameters, out_dir):
             # the prep template but without the prefix
             prefix = next(iter(pt_sample_ids)).split('.', 1)[0]
             prefixed = set("%s.%s" % (prefix, s) for s in biom_sample_ids)
-            if prefixed == pt_sample_ids:
+            if pt_sample_ids.issuperset(prefixed):
                 id_map = {s: "%s.%s" % (prefix, s) for s in biom_sample_ids}
             else:
                 # There is nothing we can do. The samples in the BIOM table do

@@ -7,13 +7,19 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+from tempfile import mkdtemp, mkstemp
+from os import remove, close
+from os.path import exists, isdir, basename, splitext, join
+from shutil import rmtree
 
 import httpretty
 from qiita_client import QiitaClient
+from h5py import File
+from qiita_ware.demux import to_hdf5
 
-from target_gene_type.create import (
-    _create_artifact_run_prefix, _create_artifact_per_sample,
-    _create_artifact_demultiplexed, create_artifact)
+from target_gene_type.validate import (
+    _validate_multiple, _validate_per_sample_FASTQ, _validate_demux_file,
+    _validate_demultiplexed, validate)
 
 
 class CreateTests(TestCase):
@@ -29,8 +35,18 @@ class CreateTests(TestCase):
         self.qclient = QiitaClient('https://test_server.com', 'client_id',
                                    'client_secret')
 
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
+
     @httpretty.activate
-    def test_create_artifact_run_prefix(self):
+    def test_validate_multiple(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -45,7 +61,7 @@ class CreateTests(TestCase):
                  'raw_barcodes': ['/path/to/prefix1_b.fastq',
                                   '/path/to/prefix2_b.fastq']}
         atype = "FASTQ"
-        obs = _create_artifact_run_prefix(
+        obs = _validate_multiple(
             self.qclient, 'job-id', prep_info, files, atype)
         exp = {'success': True,
                'error': "",
@@ -59,7 +75,7 @@ class CreateTests(TestCase):
         self.assertItemsEqual(obs, exp)
 
     @httpretty.activate
-    def test_create_artifact_run_prefix_single_lane(self):
+    def test_validate_multiple_single_lane(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -72,7 +88,7 @@ class CreateTests(TestCase):
         files = {'raw_forward_seqs': ['/path/to/prefix1.fastq'],
                  'raw_barcodes': ['/path/to/prefix1_b.fastq']}
         atype = "FASTQ"
-        obs = _create_artifact_run_prefix(
+        obs = _validate_multiple(
             self.qclient, 'job-id', prep_info, files, atype)
         exp = {'success': True,
                'error': "",
@@ -84,7 +100,7 @@ class CreateTests(TestCase):
         self.assertItemsEqual(obs, exp)
 
     @httpretty.activate
-    def test_create_artifact_run_prefix_error(self):
+    def test_validate_multiple_error(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -97,7 +113,7 @@ class CreateTests(TestCase):
                      "1.S3": {"run_prefix": "prefix2"}}
         files = {'Unknown': ['/path/to/file1.fastq']}
         atype = "FASTQ"
-        obs = _create_artifact_run_prefix(
+        obs = _validate_multiple(
             self.qclient, 'job-id', prep_info, files, atype)
         exp = {'success': False,
                'error': "Filepath type(s) Unknown not supported by artifact "
@@ -111,7 +127,7 @@ class CreateTests(TestCase):
                  'raw_barcodes': ['/path/to/file1_b.fastq',
                                   '/path/to/file2_b.fastq',
                                   '/path/to/file3_b.fastq']}
-        obs = _create_artifact_run_prefix(
+        obs = _validate_multiple(
             self.qclient, 'job-id', prep_info, files, atype)
         error = ("Error creating artifact. Offending files:\nraw_forward_seqs:"
                  " The number of provided files (1) doesn't match the number "
@@ -128,7 +144,7 @@ class CreateTests(TestCase):
                                       '/path/to/prefix2.fastq'],
                  'raw_barcodes': ['/path/to/file1_b.fastq',
                                   '/path/to/prefix2_b.fastq']}
-        obs = _create_artifact_run_prefix(
+        obs = _validate_multiple(
             self.qclient, 'job-id', prep_info, files, atype)
         error = ("Error creating artifact. Offending files:\nraw_forward_seqs:"
                  " The provided files do not match the run prefix values in "
@@ -144,7 +160,7 @@ class CreateTests(TestCase):
                                       '/path/to/prefix2.fastq'],
                  'raw_reverse_seqs': ['/path/to/prefix1_rev.fastq',
                                       '/path/to/prefix2_rev.fastq']}
-        obs = _create_artifact_run_prefix(
+        obs = _validate_multiple(
             self.qclient, 'job-id', prep_info, files, atype)
         exp = {'success': False,
                'error': "Missing required filepath type(s): raw_barcodes",
@@ -159,7 +175,7 @@ class CreateTests(TestCase):
                                       '/path/to/prefix2.fastq'],
                  'raw_barcodes': ['/path/to/prefix1_b.fastq',
                                   '/path/to/prefix2_b.fastq']}
-        obs = _create_artifact_run_prefix(
+        obs = _validate_multiple(
             self.qclient, 'job-id', prep_info, files, atype)
         error = ("Error creating artifact. Offending files:\nraw_forward_seqs:"
                  " Only one file per type is allowed. Please provide the "
@@ -173,7 +189,7 @@ class CreateTests(TestCase):
         self.assertItemsEqual(obs['error'].split('\n'), error.split('\n'))
 
     @httpretty.activate
-    def test_create_artifact_per_sample_run_prefix(self):
+    def test_validate_per_sample_FASTQ_run_prefix(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -186,7 +202,7 @@ class CreateTests(TestCase):
         files = {'raw_forward_seqs': ['/path/to/prefix1_file.fastq',
                                       '/path/to/prefix2_file.fastq',
                                       '/path/to/prefix3_file.fastq']}
-        obs = _create_artifact_per_sample(
+        obs = _validate_per_sample_FASTQ(
             self.qclient, 'job-id', prep_info, files)
         exp = {'success': True,
                'error': "",
@@ -201,7 +217,7 @@ class CreateTests(TestCase):
         self.assertEqual(obs, exp)
 
     @httpretty.activate
-    def test_create_artifact_per_sample(self):
+    def test_validate_per_sample_FASTQ(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -214,7 +230,7 @@ class CreateTests(TestCase):
         files = {'raw_forward_seqs': ['/path/to/S1_file.fastq',
                                       '/path/to/S2_file.fastq',
                                       '/path/to/S3_file.fastq']}
-        obs = _create_artifact_per_sample(
+        obs = _validate_per_sample_FASTQ(
             self.qclient, 'job-id', prep_info, files)
         exp = {'success': True,
                'error': "",
@@ -228,7 +244,7 @@ class CreateTests(TestCase):
         self.assertEqual(obs, exp)
 
     @httpretty.activate
-    def test_create_artifact_per_sample_error(self):
+    def test_validate_per_sample_FASTQ_error(self):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/job-id/step/",
@@ -240,7 +256,7 @@ class CreateTests(TestCase):
                      "1.S2": {"run_prefix": "prefix2"},
                      "1.S3": {"run_prefix": "prefix3"}}
         files = {'Unknown': ['/path/to/file1.fastq']}
-        obs = _create_artifact_per_sample(
+        obs = _validate_per_sample_FASTQ(
             self.qclient, 'job-id', prep_info, files)
         exp = {'success': False,
                'error': "Filepath type(s) Unknown not supported by artifact "
@@ -251,7 +267,7 @@ class CreateTests(TestCase):
 
         # Missing raw_forward_seqs
         files = {'raw_reverse_seqs': ['/path/to/file1.fastq']}
-        obs = _create_artifact_per_sample(
+        obs = _validate_per_sample_FASTQ(
             self.qclient, 'job-id', prep_info, files)
         exp = {'success': False,
                'error': "Missing required filepath type: raw_forward_seqs",
@@ -262,7 +278,7 @@ class CreateTests(TestCase):
         files = {'raw_forward_seqs': ['/path/to/file1.fastq'],
                  'raw_reverse_seqs': ['/path/to/file1.fastq',
                                       '/path/to/file1.fastq']}
-        obs = _create_artifact_per_sample(
+        obs = _validate_per_sample_FASTQ(
             self.qclient, 'job-id', prep_info, files)
         exp = {'success': False,
                'error': "The number of provided files doesn't match the "
@@ -275,7 +291,7 @@ class CreateTests(TestCase):
         files = {'raw_forward_seqs': ['/path/to/prefix1_fwd.fastq',
                                       '/path/to/prefix2_fwd.fastq',
                                       '/path/to/Aprefix3_fwd.fastq']}
-        obs = _create_artifact_per_sample(
+        obs = _validate_per_sample_FASTQ(
             self.qclient, 'job-id', prep_info, files)
         exp = {'success': False,
                'error': "The provided files do not match the run prefix values"
@@ -289,7 +305,7 @@ class CreateTests(TestCase):
         prep_info = {"1.S1": {"run_prefix": "prefix1"},
                      "1.S2": {"run_prefix": "prefix1"},
                      "1.S3": {"run_prefix": "prefix3"}}
-        obs = _create_artifact_per_sample(
+        obs = _validate_per_sample_FASTQ(
             self.qclient, 'job-id', prep_info, files)
         exp = {'success': False,
                'error': "The values for the column 'run_prefix' are not "
@@ -301,7 +317,7 @@ class CreateTests(TestCase):
         prep_info = {"1.S1": {"not_a_run_prefix": "prefix1"},
                      "1.S2": {"not_a_run_prefix": "prefix1"},
                      "1.S3": {"not_a_run_prefix": "prefix3"}}
-        obs = _create_artifact_per_sample(
+        obs = _validate_per_sample_FASTQ(
             self.qclient, 'job-id', prep_info, files)
         exp = {'success': False,
                'error': "The provided files are not prefixed by sample id. "
@@ -320,13 +336,16 @@ class CreateTests(TestCase):
             body='{"success": true, "error": ""}'
         )
 
+        out_dir = mkdtemp()
+        self._clean_up_files.append(out_dir)
+
         # Filepath type not supported
         prep_info = {"1.S1": {"run_prefix": "prefix1"},
                      "1.S2": {"run_prefix": "prefix2"},
                      "1.S3": {"run_prefix": "prefix3"}}
         files = {'Unknown': ['/path/to/file1.fastq']}
-        obs = _create_artifact_demultiplexed(
-            self.qclient, 'job-id', prep_info, files)
+        obs = _validate_demultiplexed(
+            self.qclient, 'job-id', prep_info, files, out_dir)
         exp = {'success': False,
                'error': "Filepath type(s) Unknown not supported by artifact "
                         "type Demultiplexed. Supported filepath types: "
@@ -335,6 +354,174 @@ class CreateTests(TestCase):
                'artifacts': None}
         self.assertEqual(obs, exp)
 
+        # More than a single filepath type
+        files = {'preprocessed_fastq': ['/path/to/file1.fastq',
+                                        '/path/to/file2.fastq']}
+        obs = _validate_demultiplexed(
+            self.qclient, 'job-id', prep_info, files, out_dir)
+        exp = {'success': False,
+               'error': "Only one file of each filepath type is supported. "
+                        "preprocessed_fastq (2): /path/to/file1.fastq, "
+                        "/path/to/file2.fastq",
+               'artifacts': None}
+        self.assertEqual(obs, exp)
+
+        # demux, fasta and fastq not provided
+        files = {'log': ['/path/to/file1.log']}
+        obs = _validate_demultiplexed(
+            self.qclient, 'job-id', prep_info, files, out_dir)
+        exp = {'success': False,
+               'error': "Either a 'preprocessed_demux', 'preprocessed_fastq' "
+                        "or 'preprocessed_fasta' file should be provided.",
+               'artifacts': None}
+        self.assertEqual(obs, exp)
+
+    def _generate_files(self):
+        fd, fastq_fp = mkstemp(suffix=".fastq")
+        close(fd)
+        with open(fastq_fp, 'w') as f:
+            f.write(FASTQ_SEQS)
+
+        demux_fp = "%s.demux" % fastq_fp
+        with File(demux_fp) as f:
+            to_hdf5(fastq_fp, f)
+
+        out_dir = mkdtemp()
+
+        self._clean_up_files.extend([fastq_fp, demux_fp, out_dir])
+
+        return demux_fp, fastq_fp, out_dir
+
+    @httpretty.activate
+    def test_validate_demux_file(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/jobs/job-id/step/",
+            body='{"success": true, "error": ""}')
+        demux_fp, _, out_dir = self._generate_files()
+        prep_info = {"1.S11": {"run_prefix": "s1"},
+                     "1.S22": {"run_prefix": "s2"},
+                     "1.S33": {"run_prefix": "s3"},
+                     "1.S34": {"run_prefix": "s4"}}
+        obs = _validate_demux_file(self.qclient, 'job-id', prep_info, out_dir,
+                                   demux_fp)
+        name = splitext(basename(demux_fp))[0]
+        exp_fastq_fp = join(out_dir, "%s.fastq" % name)
+        exp_fasta_fp = join(out_dir, "%s.fasta" % name)
+        exp_demux_fp = join(out_dir, basename(demux_fp))
+        exp = {'success': True,
+               'error': '',
+               'artifacts': {None: {'artifact_type': 'Demultiplexed',
+                                    'filepaths': [
+                                        [[exp_fastq_fp], 'preprocessed_fastq'],
+                                        [[exp_fasta_fp], 'preprocessed_fasta'],
+                                        [[exp_demux_fp], 'preprocessed_demux'],
+                                        ]}}}
+        self.assertEqual(obs, exp)
+
+    @httpretty.activate
+    def test_validate_demux_file_infer(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/jobs/job-id/step/",
+            body='{"success": true, "error": ""}')
+        demux_fp, _, out_dir = self._generate_files()
+        prep_info = {"1.s1": {"not_a_run_prefix": "s1"},
+                     "1.s2": {"not_a_run_prefix": "s2"},
+                     "1.s3": {"not_a_run_prefix": "s3"},
+                     "1.s4": {"not_a_run_prefix": "s4"}}
+        obs = _validate_demux_file(self.qclient, 'job-id', prep_info, out_dir,
+                                   demux_fp)
+        name = splitext(basename(demux_fp))[0]
+        exp_fastq_fp = join(out_dir, "%s.fastq" % name)
+        exp_fasta_fp = join(out_dir, "%s.fasta" % name)
+        exp_demux_fp = join(out_dir, basename(demux_fp))
+        exp = {'success': True,
+               'error': '',
+               'artifacts': {None: {'artifact_type': 'Demultiplexed',
+                                    'filepaths': [
+                                        [[exp_fastq_fp], 'preprocessed_fastq'],
+                                        [[exp_fasta_fp], 'preprocessed_fasta'],
+                                        [[exp_demux_fp], 'preprocessed_demux'],
+                                        ]}}}
+        self.assertEqual(obs, exp)
+
+    @httpretty.activate
+    def test_validate_demux_file_error(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/jobs/job-id/step/",
+            body='{"success": true, "error": ""}')
+
+        demux_fp, _, out_dir = self._generate_files()
+
+        # Run prefix not provided and demux samples do not match
+        prep_info = {"1.S11": {"not_a_run_prefix": "prefix1"},
+                     "1.S22": {"not_a_run_prefix": "prefix2"},
+                     "1.S33": {"not_a_run_prefix": "prefix3"}}
+        obs = _validate_demux_file(self.qclient, 'job-id', prep_info,
+                                   out_dir, demux_fp)
+        exp = {'success': False,
+               'error': 'The sample ids in the demultiplexed files do not '
+                        'match the ones in the prep information. Please, '
+                        'provide the column "run_prefix" in the prep '
+                        'information to map the existing sample ids to the '
+                        'prep information sample ids.',
+               'artifacts': None}
+        self.assertEqual(obs, exp)
+
+        # Incorrect run prefix column
+        prep_info = {"1.S11": {"run_prefix": "prefix1"},
+                     "1.S22": {"run_prefix": "prefix2"},
+                     "1.S33": {"run_prefix": "prefix3"}}
+        obs = _validate_demux_file(self.qclient, 'job-id', prep_info,
+                                   out_dir, demux_fp)
+        exp = {'success': False,
+               'error': 'The sample ids in the "run_prefix" columns from the '
+                        'prep information do not match the ones in the demux '
+                        'file. Please, correct the column "run_prefix" in '
+                        'the prep information to map the existing sample ids '
+                        'to the prep information sample ids.',
+               'artifacts': None}
+        self.assertEqual(obs, exp)
+
+    @httpretty.activate
+    def test_validate_error(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/jobs/job-id/step/",
+            body='{"success": true, "error": ""}')
+        httpretty.register_uri(
+            httpretty.GET,
+            "https://test_server.com/qiita_db/prep_template/1/data/",
+            body='{"data": {"1.S1": {"orig_name": "S1"}, "1.S2": '
+                 '{"orig_name": "S2"}, "1.S3": {"orig_name": "S3"}}, '
+                 '"success": true, "error": ""}')
+
+        parameters = {'template': 1,
+                      'files': '{"preprocessed_demux": ["/path/file1.demux"]}',
+                      'artifact_type': 'UNKNOWN'}
+        obs = validate(self.qclient, 'job-id', parameters, '')
+        exp = {'success': False,
+               'error': "Unknown artifact_type UNKNOWN. Supported types: "
+                        "'SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger', "
+                        "'per_sample_FASTQ', 'Demultiplexed'",
+               'artifacts': None}
+        self.assertEqual(obs, exp)
+
+FASTQ_SEQS = """@s1_1 orig_bc=abc new_bc=abc bc_diffs=0
+xyz
++
+ABC
+@s2_1 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
++
+DFG
+@s1_2 orig_bc=abw new_bc=wbc bc_diffs=4
+qwe
++
+DEF
+"""
 
 if __name__ == '__main__':
     main()

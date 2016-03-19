@@ -43,6 +43,6 @@ setup(name='qiita-type-plugin-target-gene',
       package_data={'target_gene_type': ['support_files/config_file.cfg']},
       scripts=glob('scripts/*'),
       extras_require={'test': ["nose >= 0.10.1", "pep8", 'httpretty']},
-      install_requires=['click >= 3.3'],
+      install_requires=['click >= 3.3', 'h5py >= 2.3.1'],
       classifiers=classifiers
       )
