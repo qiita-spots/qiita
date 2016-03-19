@@ -100,6 +100,28 @@ class CreateTests(TestCase):
         self.assertEqual(obs, exp)
 
     @httpretty.activate
+    def test_validate_no_changes_superset(self):
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/jobs/job-id/step/",
+            body='{"success": true, "error": ""}'
+        )
+        httpretty.register_uri(
+            httpretty.GET,
+            "https://test_server.com/qiita_db/prep_template/1/data",
+            body='{"data": {"1.S1": {"run_prefix": "S1"}, "1.S2": '
+                 '{"run_prefix": "S2"}, "1.S3": {"run_prefix": "S3"}, '
+                 '"1.S4": {"run_prefix": "S4"}}, "success": true, '
+                 '"error": ""}')
+
+        obs = validate(self.qclient, 'job-id', self.parameters, self.out_dir)
+        exp = {'success': True,
+               'error': '',
+               'artifacts': {None: {'artifact_type': 'BIOM',
+                                    'filepaths': [self.biom_fp, 'biom']}}}
+        self.assertEqual(obs, exp)
+
+    @httpretty.activate
     def test_validate_unknown_samples(self):
         httpretty.register_uri(
             httpretty.POST,

@@ -68,7 +68,7 @@ def validate(qclient, job_id, parameters, out_dir):
     pt_sample_ids = set(prep_info)
     biom_sample_ids = set(table.ids())
 
-    if not pt_sample_ids.issubset(biom_sample_ids):
+    if not pt_sample_ids.issuperset(biom_sample_ids):
         # The BIOM sample ids are different from the ones in the prep template
         qclient.update_job_step(job_id, "Step 3: Fixing BIOM sample ids")
         # Attempt 1: the user provided the run prefix column - in this case
@@ -80,7 +80,7 @@ def validate(qclient, job_id, parameters, out_dir):
             # the prep template but without the prefix
             prefix = next(iter(pt_sample_ids)).split('.', 1)[0]
             prefixed = set("%s.%s" % (prefix, s) for s in biom_sample_ids)
-            if prefixed == pt_sample_ids:
+            if pt_sample_ids.issuperset(prefixed):
                 id_map = {s: "%s.%s" % (prefix, s) for s in biom_sample_ids}
             else:
                 # There is nothing we can do. The samples in the BIOM table do
