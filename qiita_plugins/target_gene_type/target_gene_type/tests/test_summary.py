@@ -1,0 +1,199 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+from unittest import TestCase, main
+from tempfile import mkdtemp
+from os import remove
+from os.path import exists, isdir, join
+from shutil import rmtree
+
+from qiita_client import QiitaClient
+from gzip import GzipFile
+import httpretty
+
+from target_gene_type.summary import generate_html_summary
+
+
+class SummaryTestsWith(TestCase):
+    @httpretty.activate
+    def setUp(self):
+        # Registewr the URIs for the QiitaClient
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/authenticate/",
+            body='{"access_token": "token", "token_type": "Bearer", '
+                 '"expires_in": "3600"}')
+
+        self.qclient = QiitaClient('https://test_server.com', 'client_id',
+                                   'client_secret')
+        # creating files
+        self.out_dir = mkdtemp()
+        gz_file = join(self.out_dir, "file1.fastq.gz")
+        with GzipFile(gz_file, mode='w', mtime=1) as fh:
+            fh.write(READS)
+        fastq_file = join(self.out_dir, "file1.fastq")
+        with open(fastq_file, mode='w') as fh:
+            fh.write(READS)
+        self.filepaths = (
+            '[["%s", "raw_forward_seqs"], ["%s", "raw_barcodes"]]' % (
+                gz_file, fastq_file))
+        self.artifact_id = 4
+        self.parameters = {'input_data': self.artifact_id}
+
+        self._clean_up_files = [gz_file, fastq_file, self.out_dir]
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
+
+    @httpretty.activate
+    def test_generate_html_summary(self):
+        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
+                         "%s/filepaths/" % self.artifact_id)
+        httpretty.register_uri(
+            httpretty.GET, httpretty_url,
+            body=('{"success": true, "error": "", '
+                  '"filepaths": %s}' % self.filepaths))
+        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
+                         "%s/type/" % self.artifact_id)
+        httpretty.register_uri(
+            httpretty.GET, httpretty_url,
+            body=('{"success": true, "error": "", "type": "FASTQ"}'))
+        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
+                         "%s/filepaths/" % self.artifact_id)
+        httpretty.register_uri(
+            httpretty.PATCH, httpretty_url,
+            body='{"success": true, "error": ""}')
+        obs, html = generate_html_summary(self.qclient, 'job-id',
+                                          self.parameters,
+                                          self.out_dir, True)
+
+        # asserting reply
+        self.assertItemsEqual(obs, {"success": True, "error": ""})
+
+        # asserting content of html
+        self.assertItemsEqual(html, EXT_HTML)
+
+    @httpretty.activate
+    def test_generate_html_summary_error(self):
+        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
+                         "%s/filepaths/" % self.artifact_id)
+        httpretty.register_uri(
+            httpretty.GET, httpretty_url,
+            body=('{"success": true, "error": "", '
+                  '"filepaths": %s}' % self.filepaths))
+        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
+                         "%s/type/" % self.artifact_id)
+        httpretty.register_uri(
+            httpretty.GET, httpretty_url,
+            body=('{"success": true, "error": "", "type": "FASTQ"}'))
+        with self.assertRaises(ValueError):
+            generate_html_summary(self.qclient, 'job-id', self.parameters,
+                                  self.out_dir, True)
+
+READS = """@MISEQ03:123:000000000-A40KM:1:1101:14149:1572 1:N:0:TCCACAGGAGT
+GGGGGGTGCCAGCCGCCGCGGTAATACGGGGGGGGCAAGCGTTGTTCGGAATTACTGGGCGTAAAGGGCTCGTAGGCG\
+GCCCACTAAGTCAGACGTGAAATCCCTCGGCTTAACCGGGGAACTGCGTCTGATACTGGATGGCTTGAGGTTGGGAGA\
+GGGATGCGGAATTCCAGGTGTAGCGGTGAAATGCGTAGATATCTGGAGGAACACCGGTGGCGAAGGCGGCATCCTGGA\
+CCAATTCTGACGCTGAG
++
+CCCCCCCCCFFFGGGGGGGGGGGGHHHHGGGGGFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF\
+FFF-.;FFFFFFFFF9@EFFFFFFFFFFFFFFFFFFF9CFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFF\
+FFFFFFECFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFFFFFFFFFFFF;CDEA@FFFFFFFFF\
+FFFFFFFFFFFFFFFFF
+@MISEQ03:123:000000000-A40KM:1:1101:14170:1596 1:N:0:TCCACAGGAGT
+ATGGCGTGCCAGCAGCCGCGGTAATACGGAGGGGGCTAGCGTTGTTCGGAATTACTGGGCGTAAAGCGCACGTAGGCG\
+GCTTTGTAAGTTAGAGGTGAAAGCCCGGGGCTCAACTCCGGAACTGCCTTTAAGACTGCATCGCTAGAATTGTGGAGA\
+GGTGAGTGGAATTCCGAGTGTAGAGGTGAAATTCGTAGATATTCGGAAGAACACCAGTGGCGAAGGCGACTCACTGGA\
+CACATATTGACGCTGAG
++
+CCCCCCCCCCFFGGGGGGGGGGGGGHHHGGGGGGGGGHHHGGGGGHHGGGGGHHHHHHHHGGGGHHHGGGGGHHHGHG\
+GGGGHHHHHHHHGHGHHHHHHGHHHHGGGGGGHHHHHHHGGGGGHHHHHHHHHGGFGGGGGGGGGGGGGGGGGGGGGG\
+GGFGGFFFFFFFFFFFFFFFFFF0BFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFDFAFCFFFFFFFF\
+FFFFFFFFFFBDFFFFF
+@MISEQ03:123:000000000-A40KM:1:1101:14740:1607 1:N:0:TCCACAGGAGT
+AGTGTGTGCCAGCAGCCGCGGTAATACGTAGGGTGCGAGCGTTAATCGGAATTACTGGGCGTAAAGCGTGCGCAGGCG\
+GTTCGTTGTGTCTGCTGTGAAATCCCCGGGCTCAACCTGGGAATGGCAGTGGAAACTGGCGAGCTTGAGTGTGGCAGA\
+GGGGGGGGGAATTCCGCGTGTAGCAGTGAAATGCGTAGAGATGCGGAGGAACACCGATGGCGAAGGCAACCCCCTGGG\
+ATAATATTTACGCTCAT
++
+AABCCFFFFFFFGGGGGGGGGGGGHHHHHHHEGGFG2EEGGGGGGHHGGGGGHGHHHHHHGGGGHHHGGGGGGGGGGG\
+GEGGGGHEG?GBGGFHFGFFHHGHHHGGGGCCHHHHHFCGG01GGHGHGGGEFHH/DDHFCCGCGHGAF;B0;DGF9A\
+EEGGGF-=C;.FFFF/.-@B9BFB/BB/;BFBB/..9=.9//:/:@---./.BBD-@CFD/=A-::.9AFFFFFCEFF\
+./FBB############
+@MISEQ03:123:000000000-A40KM:1:1101:14875:1613 1:N:0:TCCACAGGAGT
+GGTGGGTGCCAGCCGCCGCGGTAATACAGAGGGTGCAAGCGTTAATCGGAATTACTGGGCGTAAAGCGCGCGTAGGTG\
+GTTTGTTAAGTTGGATGTGAAATCCCCGGGCTCAACCTGGGAACTGCATTCAAAACTGACAAGCTAGAGTATGGTAGA\
+GGGTGGTGGAATTTCCTGTGTAGCGGTGAAATGCGTAGATATAGGAAGGAACACCAGTGGCGAAGGCGACCACCTGGA\
+CTGATACTGACACTGAG
++
+CCCCCCCCCFFFGGGGGGGGGGGGGHHHHHHGGGGGHHHHGGGGGHHGGGGGHHHHHHHHGGGGHHHGGGGGGGGGHH\
+GGGHGHHHHHHHHHHHHHHHHHGHHHGGGGGGHHHHHHHHGGHGGHHGHHHHHHHHHFHHHHHHHHHHHHHHHGHHHG\
+HHGEGGDGGFFFGGGFGGGGGGGGGGGFFFFFFFDFFFAFFFFFFFFFFFFFFFFFFFFFFFFFFDFFFFFFFEFFFF\
+FFFFFB:FFFFFFFFFF
+"""
+
+EXT_HTML = [
+    '<h3>file1.fastq.gz (raw_forward_seqs)</h3>',
+    '<b>MD5:</b>: eb3203ab33442b168c274b32c5624961</br>',
+    '<p style="font-family:\'Courier New\', Courier, monospace;font-size:10;'
+    '">@MISEQ03:123:000000000-A40KM:1:1101:14149:1572 1:N:0:TCCACAGGAGT\n<br'
+    '/>GGGGGGTGCCAGCCGCCGCGGTAATACGGGGGGGGCAAGCGTTGTTCGGAATTACTGGGCGTAAAGGGC'
+    'TCGTAGGCGGCCCACTAAGTCAGACGTGAAATCCCTCGGCTTAACCGGGGAACTGCGTCTGATACTGGATG'
+    'GCTTGAGGTTGGGAGAGGGATGCGGAATTCCAGGTGTAGCGGTGAAATGCGTAGATATCTGGAGGAACACC'
+    'GGTGGCGAAGGCGGCATCCTGGACCAATTCTGACGCTGAG\n<br/>+\n<br/>CCCCCCCCCFFFGGGG'
+    'GGGGGGGGHHHHGGGGGFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF-.;FFF'
+    'FFFFFF9@EFFFFFFFFFFFFFFFFFFF9CFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFFFF'
+    'FFFFECFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFFFFFFFFFFFF;CDEA@FFFF'
+    'FFFFFFFFFFFFFFFFFFFFFF\n<br/>@MISEQ03:123:000000000-A40KM:1:1101:14170:'
+    '1596 1:N:0:TCCACAGGAGT\n<br/>ATGGCGTGCCAGCAGCCGCGGTAATACGGAGGGGGCTAGCGT'
+    'TGTTCGGAATTACTGGGCGTAAAGCGCACGTAGGCGGCTTTGTAAGTTAGAGGTGAAAGCCCGGGGCTCAA'
+    'CTCCGGAACTGCCTTTAAGACTGCATCGCTAGAATTGTGGAGAGGTGAGTGGAATTCCGAGTGTAGAGGTG'
+    'AAATTCGTAGATATTCGGAAGAACACCAGTGGCGAAGGCGACTCACTGGACACATATTGACGCTGAG\n<b'
+    'r/>+\n<br/>CCCCCCCCCCFFGGGGGGGGGGGGGHHHGGGGGGGGGHHHGGGGGHHGGGGGHHHHHHHH'
+    'GGGGHHHGGGGGHHHGHGGGGGHHHHHHHHGHGHHHHHHGHHHHGGGGGGHHHHHHHGGGGGHHHHHHHHH'
+    'GGFGGGGGGGGGGGGGGGGGGGGGGGGFGGFFFFFFFFFFFFFFFFFF0BFFFFFFFFFFFFEFFFFFFFF'
+    'FFFFFFFFFFFFFFFFFFFDFAFCFFFFFFFFFFFFFFFFFFBDFFFFF\n<br/>@MISEQ03:123:00'
+    '0000000-A40KM:1:1101:14740:1607 1:N:0:TCCACAGGAGT\n<br/>AGTGTGTGCCAGCAG'
+    'CCGCGGTAATACGTAGGGTGCGAGCGTTAATCGGAATTACTGGGCGTAAAGCGTGCGCAGGCGGTTCGTTG'
+    'TGTCTGCTGTGAAATCCCCGGGCTCAACCTGGGAATGGCAGTGGAAACTGGCGAGCTTGAGTGTGGCAGAG'
+    'GGGGGGGGAATTCCGCGTGTAGCAGTGAAATGCGTAGAGATGCGGAGGAACACCGATGGCGAAGGCAACCC'
+    'CCTGGGATAATATTTACGCTCAT\n<br/>+\n</p><hr/>',
+    '<h3>file1.fastq (raw_barcodes)</h3>',
+    '<b>MD5:</b>: 97328e860ef506f7b029997b12bf9885</br>',
+    '<p style="font-family:\'Courier New\', Courier, monospace;font-size:10;'
+    '">@MISEQ03:123:000000000-A40KM:1:1101:14149:1572 1:N:0:TCCACAGGAGT\n<br'
+    '/>GGGGGGTGCCAGCCGCCGCGGTAATACGGGGGGGGCAAGCGTTGTTCGGAATTACTGGGCGTAAAGGGC'
+    'TCGTAGGCGGCCCACTAAGTCAGACGTGAAATCCCTCGGCTTAACCGGGGAACTGCGTCTGATACTGGATG'
+    'GCTTGAGGTTGGGAGAGGGATGCGGAATTCCAGGTGTAGCGGTGAAATGCGTAGATATCTGGAGGAACACC'
+    'GGTGGCGAAGGCGGCATCCTGGACCAATTCTGACGCTGAG\n<br/>+\n<br/>CCCCCCCCCFFFGGGG'
+    'GGGGGGGGHHHHGGGGGFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF-.;FFF'
+    'FFFFFF9@EFFFFFFFFFFFFFFFFFFF9CFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFFFF'
+    'FFFFECFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFFFFFFFFFFFF;CDEA@FFFF'
+    'FFFFFFFFFFFFFFFFFFFFFF\n<br/>@MISEQ03:123:000000000-A40KM:1:1101:14170:'
+    '1596 1:N:0:TCCACAGGAGT\n<br/>ATGGCGTGCCAGCAGCCGCGGTAATACGGAGGGGGCTAGCGT'
+    'TGTTCGGAATTACTGGGCGTAAAGCGCACGTAGGCGGCTTTGTAAGTTAGAGGTGAAAGCCCGGGGCTCAA'
+    'CTCCGGAACTGCCTTTAAGACTGCATCGCTAGAATTGTGGAGAGGTGAGTGGAATTCCGAGTGTAGAGGTG'
+    'AAATTCGTAGATATTCGGAAGAACACCAGTGGCGAAGGCGACTCACTGGACACATATTGACGCTGAG\n<b'
+    'r/>+\n<br/>CCCCCCCCCCFFGGGGGGGGGGGGGHHHGGGGGGGGGHHHGGGGGHHGGGGGHHHHHHHH'
+    'GGGGHHHGGGGGHHHGHGGGGGHHHHHHHHGHGHHHHHHGHHHHGGGGGGHHHHHHHGGGGGHHHHHHHHH'
+    'GGFGGGGGGGGGGGGGGGGGGGGGGGGFGGFFFFFFFFFFFFFFFFFF0BFFFFFFFFFFFFEFFFFFFFF'
+    'FFFFFFFFFFFFFFFFFFFDFAFCFFFFFFFFFFFFFFFFFFBDFFFFF\n<br/>@MISEQ03:123:00'
+    '0000000-A40KM:1:1101:14740:1607 1:N:0:TCCACAGGAGT\n<br/>AGTGTGTGCCAGCAG'
+    'CCGCGGTAATACGTAGGGTGCGAGCGTTAATCGGAATTACTGGGCGTAAAGCGTGCGCAGGCGGTTCGTTG'
+    'TGTCTGCTGTGAAATCCCCGGGCTCAACCTGGGAATGGCAGTGGAAACTGGCGAGCTTGAGTGTGGCAGAG'
+    'GGGGGGGGAATTCCGCGTGTAGCAGTGAAATGCGTAGAGATGCGGAGGAACACCGATGGCGAAGGCAACCC'
+    'CCTGGGATAATATTTACGCTCAT\n<br/>+\n</p><hr/>']
+
+
+if __name__ == '__main__':
+    main()

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -167,20 +169,20 @@ MAPPING_FILE_SINGLE = (
 MAPPING_FILE_MULT = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\trun_prefix\t"
     "Description\n"
-    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tprefix_1\tTGP test\n"
-    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tprefix_2\tTGP test\n"
+    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tprefix_1\tTGP øtest\n"
+    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tprefix_2\tTGP øtest\n"
 )
 
 EXP_MAPPING_FILE_1 = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\trun_prefix\t"
     "Description\n"
-    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tprefix_1\tTGP test\n"
+    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tprefix_1\tTGP øtest\n"
 )
 
 EXP_MAPPING_FILE_2 = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\trun_prefix\t"
     "Description\n"
-    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tprefix_2\tTGP test\n"
+    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tprefix_2\tTGP øtest\n"
 )
 
 if __name__ == '__main__':
