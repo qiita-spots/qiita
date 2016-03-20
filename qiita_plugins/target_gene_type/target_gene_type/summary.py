@@ -6,12 +6,19 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+import matplotlib.pyplot as plt
+
 from hashlib import md5
 from gzip import open as gopen
 from os.path import basename, join
+from urllib import quote
+from base64 import b64encode
+from StringIO import StringIO
+
+from qiita_ware.demux import stats as demux_stats
 
 
-FILEPATH_TYPE_TO_SHOW_HEAD = ['FASTQ', 'FASTA', 'FASTA_Sanger']
+FILEPATH_TYPE_TO_NOT_SHOW_HEAD = ['SFF']
 LINES_TO_READ_FOR_HEAD = 10
 
 
@@ -40,7 +47,8 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     Raises
     ------
     ValueError
-        If there is any error gathering the information from the server
+        - If there is any error gathering the information from the server
+        - If there artifact is 'Demultiplexed' but it doesn't have a demux file
     """
     # Step 1: gather file information from qiita using REST api
     # 1a. getting the file paths
@@ -65,9 +73,32 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
         raise ValueError(error_msg)
     artifact_type = type_info['type']
 
+    # we have 2 main cases: Demultiplexed and everything else, splitting on
+    # those
+    if artifact_type == 'Demultiplexed':
+        artifact_information = _summary_demultiplexed(
+            artifact_type, fps_info['filepaths'])
+        if artifact_information is None:
+            raise ValueError("We couldn't find a demux file in your artifact")
+    else:
+        artifact_information = _summary_not_demultiplexed(
+            artifact_type, fps_info['filepaths'])
+
+    of_fp = join(out_dir, "artifact_%d.html" % artifact_id)
+    of = open(of_fp, 'w')
+    of.write('\n'.join(artifact_information))
+
+    # Step 3: add the new file to the artifact using REST api
+    reply = qclient.patch(qclient_url, 'add', '/html_summary/',
+                          value=of_fp)
+
+    return reply if not return_html else (reply, artifact_information)
+
+
+def _summary_not_demultiplexed(artifact_type, filepaths):
     # loop over each of the fps/fps_type pairs
     artifact_information = []
-    for (fps, fps_type) in fps_info['filepaths']:
+    for (fps, fps_type) in filepaths:
         # Step 2: generate HTML summary
         # md5, from http://stackoverflow.com/a/3431838
         with open(fps, "rb") as f:
@@ -77,7 +108,7 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
 
         # getting head of the files
         header = []
-        if artifact_type in FILEPATH_TYPE_TO_SHOW_HEAD:
+        if artifact_type not in FILEPATH_TYPE_TO_NOT_SHOW_HEAD:
             # we need to encapsulate the full for loop because gzip will not
             # raise an error until you try to read
             try:
@@ -101,12 +132,42 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
                 "<p style=\"font-family:'Courier New', Courier, monospace;"
                 "font-size:10;\">%s</p><hr/>" % ("<br/>".join(header)))
 
-    of_fp = join(out_dir, "%s.html" % filename)
-    of = open(of_fp, 'w')
-    of.write('\n'.join(artifact_information))
+    return artifact_information
 
-    # Step 3: add the new file to the artifact using REST api
-    reply = qclient.patch(qclient_url, 'add', '/html_summary/',
-                          value=of_fp)
 
-    return reply if not return_html else (reply, artifact_information)
+def _summary_demultiplexed(artifact_type, filepaths):
+    # loop over each of the fps/fps_type pairs to find the demux_fp
+    demux_fp = None
+    for (fps, fps_type) in filepaths:
+        if fps_type == 'preprocessed_demux':
+            demux_fp = fps
+            break
+    if demux_fp is None:
+        return None
+
+    # generating html summary
+    artifact_information = []
+    sn, smax, smin, smean, sstd, smedian, shist, shist_edge = demux_stats(
+        demux_fp)
+    artifact_information.append("<h3>Features</h3>")
+    artifact_information.append('<b>Total</b>: %d' % sn)
+    artifact_information.append("<br/>")
+    artifact_information.append('<b>Max</b>: %d' % smax)
+    artifact_information.append("<br/>")
+    artifact_information.append('<b>Mean</b>: %d' % smean)
+    artifact_information.append("<br/>")
+    artifact_information.append('<b>Standard deviation</b>: %d' % sstd)
+    artifact_information.append("<br/>")
+    artifact_information.append('<b>Median</b>: %d' % smedian)
+    artifact_information.append("<br/>")
+
+    # taken from http://stackoverflow.com/a/9141911
+    plt.bar(shist_edge[:-1], shist, width=1)
+    plt.xlim(min(shist_edge), max(shist_edge))
+    plot = StringIO()
+    plt.savefig(plot, format='png')
+    plot.seek(0)
+    uri = 'data:image/png;base64,' + quote(b64encode(plot.buf))
+    artifact_information.append('<img src = "%s"/>' % uri)
+
+    return artifact_information
