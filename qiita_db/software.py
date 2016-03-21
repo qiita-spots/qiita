@@ -36,6 +36,41 @@ class Command(qdb.base.QiitaObject):
     """
     _table = "software_command"
 
+    @classmethod
+    def get_html_generator(cls, artifact_type):
+        """Returns the command that genearete the HTML for the given artifact
+
+        Parameters
+        ----------
+        artifact : str
+            The artifact type to search the HTML generator for
+
+        Returns
+        -------
+        qiita_db.software.Command
+            The newly created command
+
+        Raises
+        ------
+        qdb.exceptions.QiitaDBError
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT command_id
+                     FROM qiita.software_command
+                        JOIN qiita.software_artifact_type USING (software_id)
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE artifact_type = %s
+                        AND name = 'Generate HTML summary'"""
+            qdb.sql_connection.TRN.add(sql, [artifact_type])
+            try:
+                res = qdb.sql_connection.TRN.execute_fetchlast()
+            except IndexError:
+                raise qdb.exceptions.QiitaDBError(
+                    "There is no command to generate the HTML summary for "
+                    "artifact type '%s'" % artifact_type)
+
+            return cls(res)
+
     def _check_id(self, id_):
         """Check that the provided ID actually exists in the database
 
