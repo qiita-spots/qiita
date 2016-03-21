@@ -23,7 +23,7 @@ install:
   # install a few of the dependencies that pip would otherwise try to install
   # when intalling scikit-bio
   - travis_retry conda create --yes -n env_name python=$PYTHON_VERSION pip nose flake8
-    pyzmq networkx pyparsing natsort mock future libgfortran
+    pyzmq networkx pyparsing natsort mock future libgfortran seaborn
     'pandas>=0.15' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate env_name
   - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
