@@ -18,7 +18,8 @@ from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBArtifactDeletionError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import get_mountpoint, get_visibilities
-from qiita_db.software import Command
+from qiita_db.software import Command, Parameters
+from qiita_db.processing_job import ProcessingJob
 
 
 def artifact_summary_get_request(user_id, artifact_id):
@@ -35,9 +36,11 @@ def artifact_summary_get_request(user_id, artifact_id):
     -------
     dict of objects
         A dictionary containing the artifact summary information
-        {'status': bool,
+        {'status': str,
          'message': str,
-         'summary': str}
+         'name': str,
+         'summary': str,
+         'job': list of [str, str, str]}
     """
     artifact_id = int(artifact_id)
     artifact = Artifact(artifact_id)
@@ -57,14 +60,14 @@ def artifact_summary_get_request(user_id, artifact_id):
         command = Command.get_html_generator(artifact.artifact_type)
         jobs = artifact.jobs(cmd=command)
         jobs = [j for j in jobs if j.status in ['queued', 'running']]
-        if len(jobs) > 0:
+        if jobs:
             # There is already a job generating the HTML. Also, there should be
             # at most one job, because we are not allowing here to start more
             # than one
             job = jobs[0]
             job_info = [job.id, job.status, job.step]
 
-    return {'status': True,
+    return {'status': 'success',
             'message': '',
             'name': artifact.name,
             'summary': summary,
@@ -85,10 +88,37 @@ def artifact_summary_post_request(user_id, artifact_id):
     -------
     dict of objects
         A dictionary containing the artifact summary information
-        {'status': bool,
-         'message': str}
+        {'status': str,
+         'message': str,
+         'job': list of [str, str, str]}
     """
-    pass
+    artifact_id = int(artifact_id)
+    artifact = Artifact(artifact_id)
+
+    access_error = check_access(artifact.study.id, user_id)
+    if access_error:
+        return access_error
+
+    # Check if the summary is being generated or has been already generated
+    command = Command.get_html_generator(artifact.artifact_type)
+    jobs = artifact.jobs(cmd=command)
+    jobs = [j for j in jobs if j.status in ['queued', 'running', 'success']]
+    if jobs:
+        # The HTML summary is either being generated or already generated.
+        # Return the information of that job so we only generate the HTML
+        # once
+        job = jobs[0]
+    else:
+        # Create a new job to generate the HTML summary and return the newly
+        # created job information
+        job = ProcessingJob.create(
+            User(user_id),
+            Parameters.load(command, values_dict={'input_data': artifact_id}))
+        job.submit()
+
+    return {'status': 'success',
+            'message': '',
+            'job': [job.id, job.status, job.step]}
 
 
 def artifact_get_req(user_id, artifact_id):

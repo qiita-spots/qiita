@@ -26,7 +26,7 @@ from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
     artifact_delete_req, artifact_types_get_req, artifact_post_req,
-    artifact_summary_get_request)
+    artifact_summary_get_request, artifact_summary_post_request)
 
 
 class TestArtifactAPIReadOnly(TestCase):
@@ -133,7 +133,7 @@ class TestArtifactAPI(TestCase):
     def test_artifact_summary_get_request(self):
         # Artifact w/o summary
         obs = artifact_summary_get_request('test@foo.bar', 1)
-        exp = {'status': True,
+        exp = {'status': 'success',
                'message': '',
                'name': 'Raw data 1',
                'summary': None,
@@ -147,7 +147,7 @@ class TestArtifactAPI(TestCase):
         )
         job._set_status('queued')
         obs = artifact_summary_get_request('test@foo.bar', 1)
-        exp = {'status': True,
+        exp = {'status': 'success',
                'message': '',
                'name': 'Raw data 1',
                'summary': None,
@@ -163,11 +163,36 @@ class TestArtifactAPI(TestCase):
         a.html_summary_fp = fp
         self._files_to_remove.extend([fp, a.html_summary_fp[1]])
         obs = artifact_summary_get_request('test@foo.bar', 1)
-        exp = {'status': True,
+        exp = {'status': 'success',
                'message': '',
                'name': 'Raw data 1',
                'summary': '<b>HTML TEST - not important</b>\n',
                'job': None}
+        self.assertEqual(obs, exp)
+
+        # No access
+        obs = artifact_summary_get_request('demo@microbio.me', 1)
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_summary_post_request(self):
+        # No access
+        obs = artifact_summary_post_request('demo@microbio.me', 1)
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+        # Returns already existing job
+        job = ProcessingJob.create(
+            User('test@foo.bar'),
+            Parameters.load(Command(7), values_dict={'input_data': 1})
+        )
+        job._set_status('queued')
+        obs = artifact_summary_post_request('test@foo.bar', 1)
+        exp = {'status': 'success',
+               'message': '',
+               'job': [job.id, 'queued', None]}
         self.assertEqual(obs, exp)
 
     def test_artifact_delete_req(self):
