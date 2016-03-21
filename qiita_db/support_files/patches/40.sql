@@ -9,6 +9,12 @@
 -- types if they already exist. This way, multiple plugins can share the same
 -- type of artifacts without depending in another "processing" plugin.
 
+-- Add the type HTML summary to the list of supported filepath types
+-- Note that we are not linking this filepath type with any specific artifact
+-- type. The reason is that all artifacts should have it and users are not
+-- allowed to upload this file, since it is internally generated
+INSERT INTO qiita.filepath_type (filepath_type) VALUES ('html_summary');
+
 -- Create the new table to hold the software types
 CREATE TABLE qiita.software_type (
     software_type_id     bigserial   NOT NULL,

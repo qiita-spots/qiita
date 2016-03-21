@@ -647,7 +647,8 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
             chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:])))
 
 
-def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
+def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
+                       fp_type=None):
     """Retrieves the filepaths for the given object id
 
     Parameters
@@ -661,6 +662,8 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
     sort : {'ascending', 'descending'}, optional
         The direction in which the results are sorted, using the filepath id
         as sorting key. Default: None, no sorting is applied
+    fp_type: str, optional
+        Retrieve only the filepaths of the matching filepath type
 
     Returns
     -------
@@ -685,6 +688,13 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
             "Unknown sorting direction: %s. Please choose from 'ascending' or "
             "'descending'" % sort)
 
+    sql_args = [obj_id]
+
+    sql_type = ""
+    if fp_type:
+        sql_type = " AND filepath_type=%s"
+        sql_args.append(fp_type)
+
     with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
                         subdirectory
@@ -692,14 +702,14 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
                     JOIN qiita.{0} USING (filepath_id)
-                 WHERE {1} = %s{2}""".format(obj_fp_table, obj_id_column,
-                                             sql_sort)
-        qdb.sql_connection.TRN.add(sql, [obj_id])
+                 WHERE {1} = %s{2}{3}""".format(obj_fp_table, obj_id_column,
+                                                sql_type, sql_sort)
+        qdb.sql_connection.TRN.add(sql, sql_args)
         results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
 
-        return [(fpid, path_builder(db_dir, fp, m, s, obj_id), fp_type)
-                for fpid, fp, fp_type, m, s in results]
+        return [(fpid, path_builder(db_dir, fp, m, s, obj_id), fp_type_)
+                for fpid, fp, fp_type_, m, s in results]
 
 
 def purge_filepaths():
