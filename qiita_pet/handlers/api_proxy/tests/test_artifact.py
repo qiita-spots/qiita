@@ -7,8 +7,9 @@
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from os.path import join, exists
-from os import remove
+from os import remove, close
 from datetime import datetime
+from tempfile import mkstemp
 
 import pandas as pd
 import numpy.testing as npt
@@ -18,10 +19,14 @@ from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
 from qiita_db.util import get_count, get_mountpoint
+from qiita_db.processing_job import ProcessingJob
+from qiita_db.user import User
+from qiita_db.software import Command, Parameters
 from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
-    artifact_delete_req, artifact_types_get_req, artifact_post_req)
+    artifact_delete_req, artifact_types_get_req, artifact_post_req,
+    artifact_summary_get_request)
 
 
 class TestArtifactAPIReadOnly(TestCase):
@@ -124,6 +129,46 @@ class TestArtifactAPI(TestCase):
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
+
+    def test_artifact_summary_get_request(self):
+        # Artifact w/o summary
+        obs = artifact_summary_get_request('test@foo.bar', 1)
+        exp = {'status': True,
+               'message': '',
+               'name': 'Raw data 1',
+               'summary': None,
+               'job': None}
+        self.assertEqual(obs, exp)
+
+        # Artifact with summary being generated
+        job = ProcessingJob.create(
+            User('test@foo.bar'),
+            Parameters.load(Command(7), values_dict={'input_data': 1})
+        )
+        job._set_status('queued')
+        obs = artifact_summary_get_request('test@foo.bar', 1)
+        exp = {'status': True,
+               'message': '',
+               'name': 'Raw data 1',
+               'summary': None,
+               'job': [job.id, 'queued', None]}
+        self.assertEqual(obs, exp)
+
+        # Artifact with summary
+        fd, fp = mkstemp(suffix=".html")
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('<b>HTML TEST - not important</b>\n')
+        a = Artifact(1)
+        a.html_summary_fp = fp
+        self._files_to_remove.extend([fp, a.html_summary_fp[1]])
+        obs = artifact_summary_get_request('test@foo.bar', 1)
+        exp = {'status': True,
+               'message': '',
+               'name': 'Raw data 1',
+               'summary': '<b>HTML TEST - not important</b>\n',
+               'job': None}
+        self.assertEqual(obs, exp)
 
     def test_artifact_delete_req(self):
         obs = artifact_delete_req(3, 'test@foo.bar')

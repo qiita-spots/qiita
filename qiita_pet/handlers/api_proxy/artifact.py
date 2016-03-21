@@ -18,6 +18,77 @@ from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBArtifactDeletionError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import get_mountpoint, get_visibilities
+from qiita_db.software import Command
+
+
+def artifact_summary_get_request(user_id, artifact_id):
+    """Returns the information for the artifact summary page
+
+    Parameters
+    ----------
+    user_id : str
+        The user making the request
+    artifact_id : int or str
+        The artifact id
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the artifact summary information
+        {'status': bool,
+         'message': str,
+         'summary': str}
+    """
+    artifact_id = int(artifact_id)
+    artifact = Artifact(artifact_id)
+
+    access_error = check_access(artifact.study.id, user_id)
+    if access_error:
+        return access_error
+
+    summary = artifact.html_summary_fp
+    job_info = None
+    # Check if the HTML summary exists
+    if summary:
+        with open(summary[1]) as f:
+            summary = f.read()
+    else:
+        # Check if the summary is being generated
+        command = Command.get_html_generator(artifact.artifact_type)
+        jobs = artifact.jobs(cmd=command)
+        jobs = [j for j in jobs if j.status in ['queued', 'running']]
+        if len(jobs) > 0:
+            # There is already a job generating the HTML. Also, there should be
+            # at most one job, because we are not allowing here to start more
+            # than one
+            job = jobs[0]
+            job_info = [job.id, job.status, job.step]
+
+    return {'status': True,
+            'message': '',
+            'name': artifact.name,
+            'summary': summary,
+            'job': job_info}
+
+
+def artifact_summary_post_request(user_id, artifact_id):
+    """Launches the HTML summary generation and returns the job information
+
+    Parameters
+    ----------
+    user_id : str
+        The user making the request
+    artifact_id : int or str
+        The artifact id
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the artifact summary information
+        {'status': bool,
+         'message': str}
+    """
+    pass
 
 
 def artifact_get_req(user_id, artifact_id):
