@@ -854,5 +854,33 @@ class ArtifactTests(TestCase):
         a.is_submitted_to_vamps = True
         self.assertTrue(a.is_submitted_to_vamps)
 
+    def test_html_summary_setter(self):
+        a = qdb.artifact.Artifact(1)
+
+        # Check that returns None when it doesn't exist
+        self.assertIsNone(a.html_summary_fp)
+
+        fd, fp = mkstemp(suffix=".html")
+        close(fd)
+        self._clean_up_files.append(fp)
+
+        db_fastq_dir = qdb.util.get_mountpoint('FASTQ')[0][1]
+        path_builder = partial(join, db_fastq_dir, str(a.id))
+
+        # Check the setter works when the artifact does not have the summary
+        a.html_summary_fp = fp
+        exp1 = path_builder(basename(fp))
+        self.assertEqual(a.html_summary_fp[1], exp1)
+
+        fd, fp = mkstemp(suffix=".html")
+        close(fd)
+        self._clean_up_files.append(fp)
+
+        # Check the setter works when the artifact already has a summary
+        a.html_summary_fp = fp
+        exp2 = path_builder(basename(fp))
+        self.assertEqual(a.html_summary_fp[1], exp2)
+        self.assertFalse(exists(exp1))
+
 if __name__ == '__main__':
     main()

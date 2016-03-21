@@ -10,6 +10,7 @@ from __future__ import division
 from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
+from os import remove
 
 import networkx as nx
 
@@ -774,6 +775,66 @@ class Artifact(qdb.base.QiitaObject):
         """
         return qdb.util.retrieve_filepaths(
             "artifact_filepath", "artifact_id", self.id, sort='ascending')
+
+    @property
+    def html_summary_fp(self):
+        """Returns the HTML summary filepath
+
+        Returns
+        -------
+        tuple of (int, str)
+            The filepath id and the path to the HTML summary
+        """
+        fps = qdb.util.retrieve_filepaths("artifact_filepath", "artifact_id",
+                                          self.id, fp_type='html_summary')
+        if fps:
+            # If fps is not the empty list, then we have exactly one file
+            # retrieve_filepaths returns a list of lists of 3 values: the
+            # filepath id, the filepath and the filepath type. We don't want
+            # to return the filepath type here, so just grabbing the first and
+            # second element of the list
+            res = (fps[0][0], fps[0][1])
+        else:
+            res = None
+
+        return res
+
+    @html_summary_fp.setter
+    def html_summary_fp(self, value):
+        """Sets the HTML summary of the artifact
+
+        Parameters
+        ----------
+        value : str
+            Path to the new HTML summary
+        """
+        with qdb.sql_connection.TRN:
+            current = self.html_summary_fp
+            if current:
+                # Delete the current HTML summary
+                fp_id = current[0]
+                fp = current[1]
+                # From the artifact_filepath table
+                sql = """DELETE FROM qiita.artifact_filepath
+                         WHERE filepath_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [fp_id])
+                # From the filepath table
+                sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
+                qdb.sql_connection.TRN.add(sql, [fp_id])
+                # And from the filesystem only after the transaction is
+                # successfully completed (after commit)
+                qdb.sql_connection.TRN.add_post_commit_func(remove, fp)
+
+            # Add the new HTML summary
+            fp_ids = qdb.util.insert_filepaths(
+                [(value, 'html_summary')], self.id, self.artifact_type,
+                "filepath")
+            sql = """INSERT INTO qiita.artifact_filepath
+                        (artifact_id, filepath_id)
+                     VALUES (%s, %s)"""
+            # We only inserted a single filepath, so using index 0
+            qdb.sql_connection.TRN.add(sql, [self.id, fp_ids[0]])
+            qdb.sql_connection.TRN.execute()
 
     @property
     def parents(self):
