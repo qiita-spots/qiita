@@ -1,0 +1,27 @@
+<script type="text/javascript">
+  /*
+   *
+   */
+  function generate_html_summary(artifact_id) {
+    $.post('/study/description/artifact_summary/', {'artifact_id': artifact_id})
+      .done( function ( data ) {
+        console.log(data);
+      });
+  }
+</script>
+<div class='row'>
+  <div class='col-md-12'>
+    <h4><i>{{name}} (ID: {{artifact_id}})</i></h4>
+  </div>
+</div>
+<div class='row'>
+  <div class='col-md-12'>
+    {% if summary is not None %}
+      {% raw summary %}
+    {% elif job is not None %}
+      Job <b>{{ job[0] }}</b>: <i>{{ job[1] }}</i> {{ job[2] }}
+    {% else %}
+      Currently, no summary exists. <button class="btn btn-info btn-sm" onclick="console.log('hit');">Generate summary</button>
+    {% end %}
+  </div>
+</div>

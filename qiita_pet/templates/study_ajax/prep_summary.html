@@ -228,6 +228,10 @@
    */
   function load_artifact_summary(artifact_id) {
     show_loading("prep-artifact-summary-div");
+    $.get('/study/description/artifact_summary/', {'artifact_id': artifact_id})
+      .done(function ( data ) {
+        $("#prep-artifact-summary-div").html(data);
+      });
   }
 
   /*

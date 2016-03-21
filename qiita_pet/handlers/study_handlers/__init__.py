@@ -20,7 +20,7 @@ from .prep_template import (
 from .processing import (ProcessArtifactHandler, ListCommandsHandler,
                          ListOptionsHandler)
 from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
-                       ArtifactAdminAJAX, ArtifactAJAX)
+                       ArtifactAdminAJAX, ArtifactAJAX, ArtifactSummaryAJAX)
 from .sample_template import SampleTemplateAJAX, SampleAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
@@ -32,4 +32,5 @@ __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'NewArtifactHandler', 'PrepFilesHandler', 'ProcessArtifactHandler',
            'ListCommandsHandler', 'ListOptionsHandler', 'SampleAJAX',
            'StudyDeleteAjax', 'ArtifactAJAX', 'NewPrepTemplateAjax',
-           'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX']
+           'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX',
+           'ArtifactSummaryAJAX']

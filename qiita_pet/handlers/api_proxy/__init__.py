@@ -28,7 +28,9 @@ from .studies import (
     study_files_get_req)
 from .artifact import (artifact_graph_get_req, artifact_types_get_req,
                        artifact_post_req, artifact_get_req,
-                       artifact_status_put_req, artifact_delete_req)
+                       artifact_status_put_req, artifact_delete_req,
+                       artifact_summary_get_request,
+                       artifact_summary_post_request)
 from .ontology import ontology_patch_handler
 
 __version__ = "0.2.0-dev"
@@ -49,4 +51,5 @@ __all__ = ['prep_template_summary_get_req', 'sample_template_post_req',
            'sample_template_samples_get_req', 'prep_template_samples_get_req',
            'sample_template_category_get_req', 'new_prep_template_get_req',
            'study_files_get_req', 'prep_template_ajax_get_req',
-           'prep_template_patch_req', 'ontology_patch_handler']
+           'prep_template_patch_req', 'ontology_patch_handler',
+           'artifact_summary_get_request', 'artifact_summary_post_request']
