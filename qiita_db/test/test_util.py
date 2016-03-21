@@ -251,6 +251,30 @@ class DBUtilTests(TestCase):
                 "raw_forward_seqs")]
         self.assertEqual(obs, exp)
 
+    def test_retrieve_filepaths_type(self):
+        obs = qdb.util.retrieve_filepaths(
+            'artifact_filepath', 'artifact_id', 1, sort='descending',
+            fp_type='raw_barcodes')
+        path_builder = partial(
+            join, qdb.util.get_db_files_base_dir(), "raw_data")
+        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                "raw_barcodes")]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.util.retrieve_filepaths(
+            'artifact_filepath', 'artifact_id', 1, fp_type='raw_barcodes')
+        path_builder = partial(
+            join, qdb.util.get_db_files_base_dir(), "raw_data")
+        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                "raw_barcodes")]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.util.retrieve_filepaths(
+            'artifact_filepath', 'artifact_id', 1, fp_type='biom')
+        path_builder = partial(
+            join, qdb.util.get_db_files_base_dir(), "raw_data")
+        self.assertEqual(obs, [])
+
     def test_retrieve_filepaths_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.util.retrieve_filepaths('artifact_filepath', 'artifact_id', 1,
