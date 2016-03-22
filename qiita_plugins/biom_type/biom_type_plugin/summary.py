@@ -14,7 +14,7 @@ from os.path import join, basename
 import numpy as np
 
 from StringIO import StringIO
-from matplotlib import use
+import matplotlib.pyplot as plt
 import seaborn as sns
 
 
@@ -78,7 +78,7 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
         'Median count': np.median(sample_counts),
     }
 
-    use('Agg')
+    plt.switch_backend('agg')
     ax = sns.distplot(sample_counts)
     ax.set_xlabel("Number of sequences per sample")
     ax.set_ylabel("Frequency")
