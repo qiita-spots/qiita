@@ -29,7 +29,7 @@ class SummaryTestsNotDemux(TestCase):
             body='{"access_token": "token", "token_type": "Bearer", '
                  '"expires_in": "3600"}')
 
-        self.qclient = QiitaClient('https://test_server.com', 'client_id',
+        self.qclient = QiitaClient('https://test_server.com/', 'client_id',
                                    'client_secret')
         # creating files
         self.out_dir = mkdtemp()
@@ -111,7 +111,7 @@ class SummaryTestsDemux(TestCase):
             body='{"access_token": "token", "token_type": "Bearer", '
                  '"expires_in": "3600"}')
 
-        self.qclient = QiitaClient('https://test_server.com', 'client_id',
+        self.qclient = QiitaClient('https://test_server.com/', 'client_id',
                                    'client_secret')
         # creating files
         self.out_dir = mkdtemp()
