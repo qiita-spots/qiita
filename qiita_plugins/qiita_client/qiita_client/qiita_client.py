@@ -130,6 +130,7 @@ class QiitaClient(object):
         data = {'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'grant_type': 'client'}
+        print type(requests), self._verify
         r = requests.post(self._authenticate_url, verify=self._verify,
                           data=data)
         if r.status_code != 200:
