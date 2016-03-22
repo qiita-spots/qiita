@@ -26,8 +26,7 @@ install:
     pyzmq networkx pyparsing natsort mock future libgfortran seaborn
     'pandas>=0.15' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate env_name
-  - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
-  - conda install --yes -c https://conda.anaconda.org/ulmo httpretty
+  - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1 HTTPretty
   - travis_retry pip install .
   - pushd qiita_plugins/target_gene
   - travis_retry pip install .

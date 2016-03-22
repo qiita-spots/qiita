@@ -14,6 +14,7 @@ from shutil import rmtree
 
 import numpy as np
 import matplotlib as mpl
+mpl.use('Agg')
 from biom import Table
 
 from biom.util import biom_open
@@ -21,8 +22,6 @@ from qiita_client import QiitaClient
 import httpretty
 
 from biom_type_plugin.summary import generate_html_summary
-
-mpl.use('Agg')
 
 
 class SummaryTestsWith(TestCase):
