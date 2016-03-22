@@ -38,6 +38,7 @@ install:
   - pushd qiita_plugins/biom_type
   - travis_retry pip install .
   - popd
+  - ls
   - pushd qiita_plugins/target_gene_type
   - travis_retry pip install .
   - popd
