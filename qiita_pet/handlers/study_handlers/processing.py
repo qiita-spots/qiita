@@ -4,7 +4,6 @@ from tornado.web import authenticated
 
 from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.handlers.api_proxy import artifact_get_req
 
 
 class ProcessArtifactHandler(BaseHandler):
@@ -12,9 +11,9 @@ class ProcessArtifactHandler(BaseHandler):
     def get(self):
         artifact_id = to_int(self.get_argument('artifact_id'))
 
-        info = artifact_get_req(self.current_user.id, artifact_id)
-        self.render('study_ajax/processing_study.html', artifact_id=info['id'],
-                    artifact_type=info['type'])
+        self.render('study_ajax/processing_artifact.html',
+                    artifact_id=artifact_id,
+                    name="NAME IT")
 
 
 class ListCommandsHandler(BaseHandler):
