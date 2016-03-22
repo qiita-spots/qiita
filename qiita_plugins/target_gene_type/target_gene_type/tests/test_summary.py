@@ -14,7 +14,6 @@ from shutil import rmtree
 
 from qiita_client import QiitaClient
 from gzip import GzipFile
-import matplotlib as mpl
 import httpretty
 
 from target_gene_type.summary import generate_html_summary
@@ -74,7 +73,6 @@ class SummaryTestsNotDemux(TestCase):
         httpretty.register_uri(
             httpretty.PATCH, httpretty_url,
             body='{"success": true, "error": ""}')
-        mpl.use('Agg')
         obs, html = generate_html_summary(self.qclient, 'job-id',
                                           self.parameters,
                                           self.out_dir, True)

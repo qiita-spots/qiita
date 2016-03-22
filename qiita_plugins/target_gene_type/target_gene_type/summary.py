@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from matplotlib import use
 import matplotlib.pyplot as plt
 
 from hashlib import md5
@@ -162,6 +163,7 @@ def _summary_demultiplexed(artifact_type, filepaths):
     artifact_information.append("<br/>")
 
     # taken from http://stackoverflow.com/a/9141911
+    use('Agg')
     plt.bar(shist_edge[:-1], shist, width=1)
     plt.xlim(min(shist_edge), max(shist_edge))
     plot = StringIO()
