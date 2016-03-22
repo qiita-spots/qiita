@@ -117,6 +117,8 @@ class QiitaClient(object):
         self._authenticate_url = "%s/qiita_db/authenticate/" % self._server_url
 
         # Fetch the access token
+        print type(requests), self._verify
+        print requests.__version__
         self._fetch_token()
 
     def _fetch_token(self):
@@ -130,7 +132,6 @@ class QiitaClient(object):
         data = {'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'grant_type': 'client'}
-        print type(requests), self._verify
         r = requests.post(self._authenticate_url, verify=self._verify,
                           data=data)
         if r.status_code != 200:
