@@ -14,9 +14,12 @@ from shutil import rmtree
 
 from qiita_client import QiitaClient
 from gzip import GzipFile
+import matplotlib as mpl
 import httpretty
 
 from target_gene_type.summary import generate_html_summary
+
+mpl.use('Agg')
 
 
 class SummaryTestsNotDemux(TestCase):
