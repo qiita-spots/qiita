@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+import click
+
+from target_gene_type.plugin import execute_job
+
+
+@click.command()
+@click.argument('url', required=True)
+@click.argument('job_id', required=True, type=click.UUID)
+@click.argument('output_dir', required=True, type=click.Path(file_okay=False))
+def execute(url, job_id, output_dir):
+    """Executes the task given by job_id and puts the output in output_dir"""
+    execute_job(url, job_id, output_dir)
+
+if __name__ == '__main__':
+    execute()
