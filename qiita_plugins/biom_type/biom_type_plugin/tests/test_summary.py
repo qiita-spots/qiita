@@ -32,7 +32,7 @@ class SummaryTestsWith(TestCase):
             body='{"access_token": "token", "token_type": "Bearer", '
                  '"expires_in": "3600"}')
 
-        self.qclient = QiitaClient('https://test_server.com', 'client_id',
+        self.qclient = QiitaClient('https://test_server.com/', 'client_id',
                                    'client_secret')
         # Create a biom table
         fd, self.biom_fp = mkstemp(suffix=".biom")
