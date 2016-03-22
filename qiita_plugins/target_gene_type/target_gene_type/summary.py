@@ -6,8 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-import matplotlib.pyplot as plt
-
 from hashlib import md5
 from gzip import open as gopen
 from os.path import basename, join
@@ -16,6 +14,7 @@ from base64 import b64encode
 from StringIO import StringIO
 
 from qiita_ware.demux import stats as demux_stats
+import matplotlib.pyplot as plt
 
 
 FILEPATH_TYPE_TO_NOT_SHOW_HEAD = ['SFF']
@@ -24,7 +23,7 @@ LINES_TO_READ_FOR_HEAD = 10
 
 def generate_html_summary(qclient, job_id, parameters, out_dir,
                           return_html=False):
-    """Generates the HTML summary of a BIOM artifact
+    """Generates the HTML summary of a target gene type artifact
 
     Parameters
     ----------
@@ -48,7 +47,7 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     ------
     ValueError
         - If there is any error gathering the information from the server
-        - If there artifact is 'Demultiplexed' but it doesn't have a demux file
+        - If the artifact is 'Demultiplexed' but it doesn't have a demux file
     """
     # Step 1: gather file information from qiita using REST api
     # 1a. getting the file paths
@@ -85,8 +84,8 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
             artifact_type, fps_info['filepaths'])
 
     of_fp = join(out_dir, "artifact_%d.html" % artifact_id)
-    of = open(of_fp, 'w')
-    of.write('\n'.join(artifact_information))
+    with open(of_fp, 'w') as of:
+        of.write('\n'.join(artifact_information))
 
     # Step 3: add the new file to the artifact using REST api
     reply = qclient.patch(qclient_url, 'add', '/html_summary/',
@@ -96,6 +95,21 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
 
 
 def _summary_not_demultiplexed(artifact_type, filepaths):
+    """Generates the HTML summary for non Demultiplexed artifacts
+
+    Parameters
+    ----------
+    artifact_type : str
+        The artifact type
+    filepaths : [(str, str)]
+        A list of string pairs where the first element is the filepath and the
+        second is the filepath type
+
+    Returns
+    -------
+    list
+        A list of strings with the html summary
+    """
     # loop over each of the fps/fps_type pairs
     artifact_information = []
     for (fps, fps_type) in filepaths:
@@ -113,16 +127,12 @@ def _summary_not_demultiplexed(artifact_type, filepaths):
             # raise an error until you try to read
             try:
                 with gopen(fps, 'r') as fin:
-                    for i, line in enumerate(fin):
-                        header.append(line)
-                        if i >= LINES_TO_READ_FOR_HEAD:
-                            break
-            except:
+                    header = [
+                        next(fin) for x in xrange(LINES_TO_READ_FOR_HEAD)]
+            except IOError:
                 with open(fps, 'r') as fin:
-                    for i, line in enumerate(fin):
-                        header.append(line)
-                        if i >= LINES_TO_READ_FOR_HEAD:
-                            break
+                    header = [
+                        next(fin) for x in xrange(LINES_TO_READ_FOR_HEAD)]
         filename = basename(fps)
         artifact_information.append("<h3>%s (%s)</h3>" % (filename, fps_type))
         artifact_information.append("<b>MD5:</b>: %s</br>" %
@@ -136,6 +146,21 @@ def _summary_not_demultiplexed(artifact_type, filepaths):
 
 
 def _summary_demultiplexed(artifact_type, filepaths):
+    """Generates the HTML summary for Demultiplexed artifacts
+
+    Parameters
+    ----------
+    artifact_type : str
+        The artifact type
+    filepaths : [(str, str)]
+        A list of string pairs where the first element is the filepath and the
+        second is the filepath type
+
+    Returns
+    -------
+    list
+        A list of strings with the html summary
+    """
     # loop over each of the fps/fps_type pairs to find the demux_fp
     demux_fp = None
     for (fps, fps_type) in filepaths:
