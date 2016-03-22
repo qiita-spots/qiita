@@ -15,8 +15,8 @@ from target_gene_type.plugin import execute_job
 
 @click.command()
 @click.argument('url', required=True)
-@click.argument('job_id', required=True)
-@click.argument('output_dir', required=True)
+@click.argument('job_id', required=True, type=click.UUID)
+@click.argument('output_dir', required=True, type=click.Path(file_okay=False))
 def execute(url, job_id, output_dir):
     """Executes the task given by job_id and puts the output in output_dir"""
     execute_job(url, job_id, output_dir)

@@ -35,6 +35,8 @@ def execute_job(server_url, job_id, output_dir):
         The url of the server
     job_id : str
         The job id
+    output_dir : str
+        The output directory
 
     Raises
     ------

@@ -27,7 +27,7 @@ FILEPATH_TYPE_DICT = {
 
 
 def _validate_multiple(qclient, job_id, prep_info, files, atype):
-    """Validae and fix a new 'SFF', 'FASTQ', 'FASTA' or 'FASTA_Sanger' artifact
+    """Validate and fix a new 'SFF', 'FASTQ', 'FASTA' or 'FASTA_Sanger' artifact
 
     Parameters
     ----------
@@ -122,7 +122,7 @@ def _validate_multiple(qclient, job_id, prep_info, files, atype):
 
 
 def _validate_per_sample_FASTQ(qclient, job_id, prep_info, files):
-    """Validae and fix a new 'per_sample_FASTQ' artifact
+    """Validate and fix a new 'per_sample_FASTQ' artifact
 
     Parameters
     ----------
@@ -236,6 +236,8 @@ def _validate_demux_file(qclient, job_id, prep_info, out_dir, demux_fp,
         The Qiita server client
     job_id : str
         The job id
+    prep_info : dict of {str: dict of {str: str}}
+        The prep information keyed by sample id
     out_dir : str
         The output directory
     demux_fp : str
@@ -375,7 +377,8 @@ def _validate_demultiplexed(qclient, job_id, prep_info, files, out_dir):
                   for fp_t in sorted(offending)]
         return format_payload(
             success=False,
-            error_msg="Only one file of each filepath type is supported. %s"
+            error_msg="Only one filepath of each file type is supported, "
+                      "offending types:\n%s"
                       % "; ".join(errors))
 
     # Check which files we have available:
