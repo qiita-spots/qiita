@@ -189,6 +189,8 @@ def _summary_demultiplexed(artifact_type, filepaths):
     # taken from http://stackoverflow.com/a/9141911
     plt.bar(shist_edge[:-1], shist, width=1)
     plt.xlim(min(shist_edge), max(shist_edge))
+    plt.xlabel('Sequence Length')
+    plt.ylabel('Number of sequences')
     plot = StringIO()
     plt.savefig(plot, format='png')
     plot.seek(0)
