@@ -13,13 +13,13 @@ from os.path import exists, isdir
 from shutil import rmtree
 
 import numpy as np
-from biom import Table, load_table
+from biom import Table
 
 from biom.util import biom_open
 from qiita_client import QiitaClient
 import httpretty
 
-from biom_type_plugin.summary import generate_html_summary, count_summary
+from biom_type_plugin.summary import generate_html_summary
 
 
 class SummaryTestsWith(TestCase):
@@ -87,16 +87,6 @@ class SummaryTestsWith(TestCase):
         with self.assertRaises(ValueError):
             generate_html_summary(self.qclient, 'job-id', self.parameters,
                                   self.out_dir, True)
-
-    def test_count_summary(self):
-        biom = load_table(self.biom_fp)
-        obs = count_summary(biom)
-        exp_summary = {'Mean count': 15.666666666666666, 'Minimum count': 1.0,
-                       'Maximum count': 43.0, 'Median count': 3.0}
-        exp_counts = [1.0, 3.0, 43.0]
-        self. assertItemsEqual(obs[0], exp_summary)
-        self. assertItemsEqual(obs[1], exp_counts)
-
 
 EXT_HTML = [
     '<b>Number of samples:</b> 3<br/>',

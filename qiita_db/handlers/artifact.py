@@ -76,7 +76,7 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
         Parameter
         ---------
         artifact_id : str
-            The id of the artifact whole filepaths information is being updated
+            The id of the artifact whose filepaths information is being updated
 
         Returns
         -------

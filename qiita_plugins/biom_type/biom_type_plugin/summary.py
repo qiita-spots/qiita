@@ -11,7 +11,7 @@ from biom import load_table
 from urllib import quote
 from base64 import b64encode
 from os.path import join, basename
-from numpy import mean, median, asarray
+import numpy as np
 
 from StringIO import StringIO
 import seaborn as sns
@@ -36,8 +36,8 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
 
     Returns
     -------
-    dict
-        The results of the job
+    dict(, [str])
+        The results of the job and if return_html is True an array of str
 
     Raises
     ------
@@ -65,7 +65,18 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     biom = load_table(fps)
     num_features, num_samples = biom.shape
 
-    sample_count_summary, sample_counts = count_summary(biom, axis='sample')
+    sample_counts = []
+    for count_vector, id_, _ in biom.iter(axis='sample'):
+        sample_counts.append(float(count_vector.sum()))
+    sample_counts = np.asarray(sample_counts)
+
+    sample_count_summary = {
+        'Minimum count': sample_counts.min(),
+        'Maximum count': sample_counts.max(),
+        'Mean count': np.mean(sample_counts),
+        'Median count': np.median(sample_counts),
+    }
+
     ax = sns.distplot(sample_counts)
     ax.set_xlabel("Number of sequences per sample")
     ax.set_ylabel("Frequency")
@@ -91,32 +102,10 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     ]
 
     of_fp = join(out_dir, "%s.html" % basename(fps))
-    of = open(of_fp, 'w')
-    of.write('\n'.join(artifact_information))
+    with open(of_fp, 'w') as of:
+        of.write('\n'.join(artifact_information))
 
     # Step 3: add the new file to the artifact using REST api
     reply = qclient.patch(qclient_url, 'add', '/html_summary/', value=of_fp)
 
     return reply if not return_html else (reply, artifact_information)
-
-
-# Based on methods from: https://goo.gl/8uebr7
-
-def _counts(table, axis='sample'):
-    result = {}
-    for count_vector, id_, _ in table.iter(axis=axis):
-        result[id_] = float(count_vector.sum())
-    return result
-
-
-def count_summary(table, axis='sample'):
-    counts = _counts(table, axis=axis)
-    counts_values = asarray(counts.values())
-
-    summary = {
-        'Minimum count': min(counts_values),
-        'Maximum count': max(counts_values),
-        'Mean count': mean(counts_values),
-        'Median count': median(counts_values),
-    }
-    return summary, counts_values
