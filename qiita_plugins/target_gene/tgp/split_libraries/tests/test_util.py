@@ -25,6 +25,7 @@ from tgp.split_libraries.util import (
 class UtilTests(TestCase):
     @httpretty.activate
     def setUp(self):
+        httpretty.enable()
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/authenticate/",

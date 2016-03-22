@@ -40,7 +40,6 @@ install:
   - pushd qiita_plugins/target_gene_type
   - travis_retry pip install .
   - popd
-  - pip freeze
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
