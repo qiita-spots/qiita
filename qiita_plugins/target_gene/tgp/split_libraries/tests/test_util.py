@@ -23,19 +23,16 @@ from tgp.split_libraries.util import (
 
 
 class UtilTests(TestCase):
+    @httpretty.activate
     def setUp(self):
-        @httpretty.activate
-        def init_httpretty(self):
-            httpretty.register_uri(
-                httpretty.POST,
-                "https://test_server.com/qiita_db/authenticate/",
-                body='{"access_token": "token", "token_type": "Bearer", '
-                     '"expires_in": "3600"}')
+        httpretty.register_uri(
+            httpretty.POST,
+            "https://test_server.com/qiita_db/authenticate/",
+            body='{"access_token": "token", "token_type": "Bearer", '
+                 '"expires_in": "3600"}')
 
-            self.qclient = QiitaClient("https://test_server.com", 'client_id',
-                                       'client_secret')
-
-        init_httpretty(self)
+        self.qclient = QiitaClient("https://test_server.com", 'client_id',
+                                   'client_secret')
         self._clean_up_files = []
 
     def tearDown(self):
