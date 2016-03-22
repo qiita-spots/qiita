@@ -49,8 +49,11 @@ def artifact_summary_get_request(user_id, artifact_id):
     if access_error:
         return access_error
 
+    user = User(user_id)
+    visibility = artifact.visibility
     summary = artifact.html_summary_fp
     job_info = None
+    errored_jobs = []
     # Check if the HTML summary exists
     if summary:
         with open(summary[1]) as f:
@@ -58,8 +61,10 @@ def artifact_summary_get_request(user_id, artifact_id):
     else:
         # Check if the summary is being generated
         command = Command.get_html_generator(artifact.artifact_type)
-        jobs = artifact.jobs(cmd=command)
-        jobs = [j for j in jobs if j.status in ['queued', 'running']]
+        all_jobs = set(artifact.jobs(cmd=command))
+        jobs = [j for j in all_jobs if j.status in ['queued', 'running']]
+        errored_jobs = [(j.id, j.log.msg)
+                        for j in all_jobs if j.status in ['error']]
         if jobs:
             # There is already a job generating the HTML. Also, there should be
             # at most one job, because we are not allowing here to start more
@@ -67,11 +72,53 @@ def artifact_summary_get_request(user_id, artifact_id):
             job = jobs[0]
             job_info = [job.id, job.status, job.step]
 
+    buttons = []
+    btn_base = (
+        '<button onclick="set_artifact_visibility(\'%s\', {0})" '
+        'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
+
+    if qiita_config.require_approval:
+        if visibility == 'sandbox':
+            # The request approval button only appear if the artifact is
+            # sandboxed and the qiita_config specifies that the approval should
+            # be requested
+            buttons.append(
+                btn_base % ('awaiting_approval', 'Request approval'))
+        elif user.level == 'admin' and visibility == 'awaiting_approval':
+            # The approve artifact button only appears if the user is an admin
+            # the artifact is waiting to be approvaed and the qiita config
+            # requires artifact approval
+            buttons.append(btn_base % ('private', 'Approve artifact'))
+    if visibility == 'private':
+        # The make public button only appears if the artifact is private
+        buttons.append(btn_base % ('public', 'Make public'))
+
+    # The revert to sandbox button only appears if the artifact is not
+    # sandboxed nor public
+    if visibility not in {'sandbox', 'public'}:
+        buttons.append(btn_base % ('sandbox', 'Revert to sandbox'))
+
+    if artifact.can_be_submitted_to_ebi:
+        if not artifact.is_submitted_to_ebi:
+            buttons.append(
+                '<a class="btn btn-primary btn-sm glyphicon glyphicon-export" '
+                'href="/ebi_submission/{{ppd_id}}" style="word-spacing: '
+                '-10px;"> Submit to EBI</a>')
+    if artifact.can_be_submitted_to_vamps:
+        if not artifact.is_submitted_to_vamps:
+            buttons.append(
+                '<a class="btn btn-primary btn-sm glyphicon glyphicon-export" '
+                'href="/vamps/{{ppd_id}}" style="word-spacing: -10px;"> '
+                'Submit to VAMPS</a>')
+
     return {'status': 'success',
             'message': '',
             'name': artifact.name,
             'summary': summary,
-            'job': job_info}
+            'job': job_info,
+            'errored_jobs': errored_jobs,
+            'visibility': visibility,
+            'buttons': ' '.join(buttons)}
 
 
 def artifact_summary_post_request(user_id, artifact_id):

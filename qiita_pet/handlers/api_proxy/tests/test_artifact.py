@@ -137,7 +137,15 @@ class TestArtifactAPI(TestCase):
                'message': '',
                'name': 'Raw data 1',
                'summary': None,
-               'job': None}
+               'job': None,
+               'errored_jobs': [],
+               'visibility': 'private',
+               'buttons': '<button onclick="set_artifact_visibility'
+                          '(\'public\', 1)" class="btn btn-primary btn-sm">'
+                          'Make public</button> <button onclick="'
+                          'set_artifact_visibility(\'sandbox\', 1)" '
+                          'class="btn btn-primary btn-sm">Revert to '
+                          'sandbox</button>'}
         self.assertEqual(obs, exp)
 
         # Artifact with summary being generated
@@ -151,7 +159,15 @@ class TestArtifactAPI(TestCase):
                'message': '',
                'name': 'Raw data 1',
                'summary': None,
-               'job': [job.id, 'queued', None]}
+               'job': [job.id, 'queued', None],
+               'errored_jobs': [],
+               'visibility': 'private',
+               'buttons': '<button onclick="set_artifact_visibility'
+                          '(\'public\', 1)" class="btn btn-primary btn-sm">'
+                          'Make public</button> <button onclick="'
+                          'set_artifact_visibility(\'sandbox\', 1)" '
+                          'class="btn btn-primary btn-sm">Revert to '
+                          'sandbox</button>'}
         self.assertEqual(obs, exp)
 
         # Artifact with summary
@@ -167,7 +183,15 @@ class TestArtifactAPI(TestCase):
                'message': '',
                'name': 'Raw data 1',
                'summary': '<b>HTML TEST - not important</b>\n',
-               'job': None}
+               'job': None,
+               'errored_jobs': [],
+               'visibility': 'private',
+               'buttons': '<button onclick="set_artifact_visibility'
+                          '(\'public\', 1)" class="btn btn-primary btn-sm">'
+                          'Make public</button> <button onclick="'
+                          'set_artifact_visibility(\'sandbox\', 1)" '
+                          'class="btn btn-primary btn-sm">Revert to '
+                          'sandbox</button>'}
         self.assertEqual(obs, exp)
 
         # No access
