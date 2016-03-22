@@ -10,6 +10,8 @@ from hashlib import md5
 from gzip import open as gopen
 from os.path import basename, join
 
+from qiita_client import format_payload
+
 
 FILEPATH_TYPE_TO_SHOW_HEAD = ['FASTQ', 'FASTA', 'FASTA_Sanger']
 LINES_TO_READ_FOR_HEAD = 10
@@ -109,4 +111,7 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     reply = qclient.patch(qclient_url, 'add', '/html_summary/',
                           value=of_fp)
 
-    return reply if not return_html else (reply, artifact_information)
+    payload = format_payload(
+        success=reply['success'], error_msg=reply['error'], artifacts_info=[])
+
+    return payload if not return_html else (payload, artifact_information)

@@ -78,7 +78,8 @@ class SummaryTestsWith(TestCase):
                                           self.out_dir, True)
 
         # asserting reply
-        self.assertItemsEqual(obs, {"success": True, "error": ""})
+        exp = {"success": True, "error": "", "artifacts": []}
+        self.assertItemsEqual(obs, exp)
 
         # asserting content of html
         self.assertItemsEqual(html, EXT_HTML)
