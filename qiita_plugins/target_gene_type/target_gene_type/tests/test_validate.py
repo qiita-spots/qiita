@@ -360,7 +360,8 @@ class ValidateTests(TestCase):
         obs = _validate_demultiplexed(
             self.qclient, 'job-id', prep_info, files, out_dir)
         exp = {'success': False,
-               'error': "Only one file of each filepath type is supported. "
+               'error': "Only one filepath of each file type is supported, "
+                        "offending types:\n"
                         "preprocessed_fastq (2): /path/to/file1.fastq, "
                         "/path/to/file2.fastq",
                'artifacts': None}
