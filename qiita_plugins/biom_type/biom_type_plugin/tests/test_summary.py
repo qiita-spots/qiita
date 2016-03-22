@@ -14,7 +14,6 @@ from shutil import rmtree
 
 import numpy as np
 import matplotlib as mpl
-mpl.use('Agg')
 from biom import Table
 
 from biom.util import biom_open
@@ -68,6 +67,7 @@ class SummaryTestsWith(TestCase):
         httpretty.register_uri(
             httpretty.PATCH, httpretty_url,
             body='{"success": true, "error": ""}')
+        mpl.use('Agg')
         obs, html = generate_html_summary(self.qclient, 'job-id',
                                           self.parameters,
                                           self.out_dir, True)
