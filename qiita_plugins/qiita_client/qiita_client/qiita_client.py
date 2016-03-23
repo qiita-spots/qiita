@@ -9,6 +9,7 @@
 import time
 import requests
 import threading
+import sys
 from json import dumps
 
 JOB_COMPLETED = False
