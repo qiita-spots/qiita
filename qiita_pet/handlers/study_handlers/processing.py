@@ -5,7 +5,8 @@ from tornado.web import authenticated
 from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    list_commands_handler_get_req, process_artifact_handler_get_req)
+    list_commands_handler_get_req, process_artifact_handler_get_req,
+    list_options_handler_get_req)
 
 
 class ProcessArtifactHandler(BaseHandler):
@@ -30,17 +31,4 @@ class ListOptionsHandler(BaseHandler):
     @authenticated
     def get(self):
         command_id = self.get_argument("command_id")
-        self.write({'status': 'success',
-                    'message': '',
-                    'options': [{'name': 'com_int', 'value': 2,
-                                 'type': 'integer', 'required': True},
-                                {'name': 'com_bool', 'value': True,
-                                 'type': 'bool', 'required': False},
-                                {'name': 'com_string', 'value': 'blarg',
-                                 'type': 'string', 'required': False},
-                                {'name': 'com_float', 'value': 6.2,
-                                 'type': 'float', 'required': False},
-                                {'name': 'com_ref', 'value': 1,
-                                 'type': 'reference', 'required': True},
-                                {'name': 'com_artifact', 'value': 2,
-                                 'type': 'reference', 'required': True}]})
+        self.write(list_options_handler_get_req(command_id))

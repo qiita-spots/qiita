@@ -11,6 +11,10 @@
       console.log("add_job");
   }
 
+  function load_command_options(cmd_id) {
+    console.log("TEST");
+  }
+
   function load_artifact_type(p_nodes) {
     var types = []
     var rx = /\w*- \(([a-zA-Z ]*)\)$/g;
@@ -28,10 +32,18 @@
         commands = data.commands;
         $("#processing-info-div").html("<h4><i>Available commands</i></h4>");
         var sel = $('<select>').appendTo('#processing-info-div');
-        sel.attr('id', 'command').attr('name', 'command');
-        for(i=0;i<commands.length;i++) {
-         sel.append($("<option>").attr('value',i).text(commands[i].command));
+        sel.attr('id', 'command-sel').attr('name', 'command');
+        sel.append($("<option>").attr('value', "").text("Choose command..."));
+        for(var i=0;i<commands.length;i++) {
+          console.log(commands[i]);
+          sel.append($("<option>").attr('value', commands[i].id).text(commands[i].command));
         }
+        sel.change(function(event) {
+          var v = $("#command-sel").val()
+          if (v !== "") {
+            load_command_options(v);
+          }
+        });
         var select = $('<button>').appendTo('#processing-info-div');
         select.addClass('btn btn-xs').text('Add Command').click(function () { add_job(p_nodes); });
       });
