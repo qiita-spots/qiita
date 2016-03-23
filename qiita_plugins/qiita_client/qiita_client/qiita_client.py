@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 import time
-from requests import get, post, patch
+import requests
 import threading
 from json import dumps
 
@@ -117,6 +117,8 @@ class QiitaClient(object):
         self._authenticate_url = "%s/qiita_db/authenticate/" % self._server_url
 
         # Fetch the access token
+        print type(requests), self._verify
+        print dir(requests)
         self._fetch_token()
 
     def _fetch_token(self):
@@ -130,8 +132,8 @@ class QiitaClient(object):
         data = {'client_id': self._client_id,
                 'client_secret': self._client_secret,
                 'grant_type': 'client'}
-        r = post(self._authenticate_url, verify=self._verify,
-                 data=data)
+        r = requests.post(self._authenticate_url, verify=self._verify,
+                          data=data)
         if r.status_code != 200:
             raise ValueError("Can't authenticate with the Qiita server")
         self._token = r.json()['access_token']
@@ -227,7 +229,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
-        return self._request_retry(get, url, **kwargs)
+        return self._request_retry(requests.get, url, **kwargs)
 
     def post(self, url, **kwargs):
         """Execute a post request against the Qiita server
@@ -244,7 +246,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
-        return self._request_retry(post, url, **kwargs)
+        return self._request_retry(requests.post, url, **kwargs)
 
     def patch(self, url, op, path, value=None, from_p=None, **kwargs):
         """Executes a patch request against the Qiita server
@@ -297,7 +299,7 @@ class QiitaClient(object):
         # we made sure that data is correctly formatted here
         kwargs['data'] = data
 
-        return self._request_retry(patch, url, **kwargs)
+        return self._request_retry(requests.patch, url, **kwargs)
 
     # The functions are shortcuts for common functionality that all plugins
     # need to implement.
