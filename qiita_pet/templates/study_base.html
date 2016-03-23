@@ -140,21 +140,6 @@
     }
   }
 
-  function set_admin_visibility(visibility, aid) {
-    $.post('/admin/artifact/', {artifact_id: +aid, visibility: visibility})
-      .done(function ( data ) {
-        var status = "info";
-        if(data["status"] == "error") { status = "danger"; }
-        //Show for 4 seconds (4000 ms), then remove
-        bootstrapAlert(data.message.replace("\n", "<br/>"), status, 4000);
-        //update buttons to match new status
-        $.get("/admin/artifact/", {artifact_id: +aid })
-          .done(function ( data ) {
-            $("#study-admin").html(data);
-          });
-      });
-  }
-
   /**
    *
    * Function to populate the main div of the screen

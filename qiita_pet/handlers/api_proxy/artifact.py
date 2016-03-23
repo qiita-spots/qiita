@@ -18,6 +18,155 @@ from qiita_db.user import User
 from qiita_db.exceptions import QiitaDBArtifactDeletionError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import get_mountpoint, get_visibilities
+from qiita_db.software import Command, Parameters
+from qiita_db.processing_job import ProcessingJob
+
+
+def artifact_summary_get_request(user_id, artifact_id):
+    """Returns the information for the artifact summary page
+
+    Parameters
+    ----------
+    user_id : str
+        The user making the request
+    artifact_id : int or str
+        The artifact id
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the artifact summary information
+        {'status': str,
+         'message': str,
+         'name': str,
+         'summary': str,
+         'job': list of [str, str, str]}
+    """
+    artifact_id = int(artifact_id)
+    artifact = Artifact(artifact_id)
+
+    access_error = check_access(artifact.study.id, user_id)
+    if access_error:
+        return access_error
+
+    user = User(user_id)
+    visibility = artifact.visibility
+    summary = artifact.html_summary_fp
+    job_info = None
+    errored_jobs = []
+    # Check if the HTML summary exists
+    if summary:
+        with open(summary[1]) as f:
+            summary = f.read()
+    else:
+        # Check if the summary is being generated
+        command = Command.get_html_generator(artifact.artifact_type)
+        all_jobs = set(artifact.jobs(cmd=command))
+        jobs = [j for j in all_jobs if j.status in ['queued', 'running']]
+        errored_jobs = [(j.id, j.log.msg)
+                        for j in all_jobs if j.status in ['error']]
+        if jobs:
+            # There is already a job generating the HTML. Also, there should be
+            # at most one job, because we are not allowing here to start more
+            # than one
+            job = jobs[0]
+            job_info = [job.id, job.status, job.step]
+
+    buttons = []
+    btn_base = (
+        '<button onclick="set_artifact_visibility(\'%s\', {0})" '
+        'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
+
+    if qiita_config.require_approval:
+        if visibility == 'sandbox':
+            # The request approval button only appears if the artifact is
+            # sandboxed and the qiita_config specifies that the approval should
+            # be requested
+            buttons.append(
+                btn_base % ('awaiting_approval', 'Request approval'))
+        elif user.level == 'admin' and visibility == 'awaiting_approval':
+            # The approve artifact button only appears if the user is an admin
+            # the artifact is waiting to be approvaed and the qiita config
+            # requires artifact approval
+            buttons.append(btn_base % ('private', 'Approve artifact'))
+    if visibility == 'private':
+        # The make public button only appears if the artifact is private
+        buttons.append(btn_base % ('public', 'Make public'))
+
+    # The revert to sandbox button only appears if the artifact is not
+    # sandboxed nor public
+    if visibility not in {'sandbox', 'public'}:
+        buttons.append(btn_base % ('sandbox', 'Revert to sandbox'))
+
+    if artifact.can_be_submitted_to_ebi:
+        if not artifact.is_submitted_to_ebi:
+            buttons.append(
+                '<a class="btn btn-primary btn-sm" '
+                'href="/ebi_submission/{{ppd_id}}">'
+                '<span class="glyphicon glyphicon-export"></span>'
+                ' Submit to EBI</a>')
+    if artifact.can_be_submitted_to_vamps:
+        if not artifact.is_submitted_to_vamps:
+            buttons.append(
+                '<a class="btn btn-primary btn-sm" href="/vamps/{{ppd_id}}">'
+                '<span class="glyphicon glyphicon-export"></span>'
+                ' Submit to VAMPS</a>')
+
+    return {'status': 'success',
+            'message': '',
+            'name': artifact.name,
+            'summary': summary,
+            'job': job_info,
+            'errored_jobs': errored_jobs,
+            'visibility': visibility,
+            'buttons': ' '.join(buttons)}
+
+
+def artifact_summary_post_request(user_id, artifact_id):
+    """Launches the HTML summary generation and returns the job information
+
+    Parameters
+    ----------
+    user_id : str
+        The user making the request
+    artifact_id : int or str
+        The artifact id
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the artifact summary information
+        {'status': str,
+         'message': str,
+         'job': list of [str, str, str]}
+    """
+    artifact_id = int(artifact_id)
+    artifact = Artifact(artifact_id)
+
+    access_error = check_access(artifact.study.id, user_id)
+    if access_error:
+        return access_error
+
+    # Check if the summary is being generated or has been already generated
+    command = Command.get_html_generator(artifact.artifact_type)
+    jobs = artifact.jobs(cmd=command)
+    jobs = [j for j in jobs if j.status in ['queued', 'running', 'success']]
+    if jobs:
+        # The HTML summary is either being generated or already generated.
+        # Return the information of that job so we only generate the HTML
+        # once
+        job = jobs[0]
+    else:
+        # Create a new job to generate the HTML summary and return the newly
+        # created job information
+        job = ProcessingJob.create(
+            User(user_id),
+            Parameters.load(command, values_dict={'input_data': artifact_id}))
+        job.submit()
+
+    return {'status': 'success',
+            'message': '',
+            'job': [job.id, job.status, job.step]}
 
 
 def artifact_get_req(user_id, artifact_id):

@@ -13,6 +13,8 @@ from urllib import quote
 from base64 import b64encode
 from StringIO import StringIO
 
+
+from qiita_client import format_payload
 from qiita_ware.demux import stats as demux_stats
 import matplotlib.pyplot as plt
 
@@ -91,7 +93,10 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     reply = qclient.patch(qclient_url, 'add', '/html_summary/',
                           value=of_fp)
 
-    return reply if not return_html else (reply, artifact_information)
+    payload = format_payload(
+        success=reply['success'], error_msg=reply['error'], artifacts_info=[])
+
+    return payload if not return_html else (payload, artifact_information)
 
 
 def _summary_not_demultiplexed(artifact_type, filepaths):

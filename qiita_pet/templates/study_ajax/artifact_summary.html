@@ -1,0 +1,73 @@
+<script type="text/javascript">
+  /*
+   * Function to generate the artifact HTML summary
+   *
+   * @param artifact_id int the artifact id
+   *
+   * This function executes an AJAX query to fire off the generation of the
+   * artifact's HTML summary
+   *
+   */
+  function generate_html_summary(artifact_id) {
+    $.post('/study/description/artifact_summary/', {'artifact_id': artifact_id})
+      .done( function ( data ) {
+        if(data.status == "success") {
+          var html_contents = "Job <b>" + data.job[0] + "</b>: <i>" + data.job[1] + "</i> ";
+          if (data.job[2]) {
+            html_contents = html_contents + data.job[2];
+          }
+          $("#artifact-summary-content").html(html_contents);
+        }
+        else {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+        }
+      });
+  }
+
+  /*
+   * Function to change the visibility of an artifact
+   *
+   * @param visibility str the new visibility
+   * @param aid int the artifact id
+   *
+   * The function executes an AJAX query to update the visibility of the
+   * artifact
+   *
+   */
+  function set_artifact_visibility(visibility, aid) {
+    $.post('/admin/artifact/', {artifact_id: +aid, visibility: visibility})
+      .done(function ( data ) {
+        var status = "info";
+        if(data["status"] == "error") { status = "danger"; }
+        //Show for 4 seconds (4000 ms), then remove
+        bootstrapAlert(data.message.replace("\n", "<br/>"), status, 4000);
+        //update buttons to match new status
+        load_artifact_summary(aid);
+      });
+  }
+</script>
+<div class='row'>
+  <div class='col-md-12'>
+    <h4><i>Summary: {{name}} (ID: {{artifact_id}})</i></h4>
+  </div>
+</div>
+<div class='row'>
+  <div class='col-md-12'>
+    Visibility: {{visibility}} {% raw buttons %}
+  </div>
+</div>
+<div class='row'>
+  <div class='col-md-12' id='artifact-summary-content'>
+    {% if summary is not None %}
+      {% raw summary %}
+    {% elif job is not None %}
+      Job <b>{{ job[0] }}</b>: <i>{{ job[1] }}</i> {{ job[2] }}
+    {% else %}
+      Currently, no summary exists. </br>
+      <button class="btn btn-info btn-sm" onclick="generate_html_summary({{artifact_id}});">Generate summary</button></br>
+      {% for j_id, j_error in errored_jobs %}
+        Job <b>{{ j_id }}</b>: <i>{% raw j_error.replace('\n', '</br>') %}</i></br>
+      {% end %}
+    {% end %}
+  </div>
+</div>

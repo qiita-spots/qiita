@@ -23,6 +23,19 @@ class CommandTestsReadOnly(TestCase):
             'opt_int_param': ['integer', '4'],
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
 
+    def test_get_html_artifact(self):
+        obs = qdb.software.Command.get_html_generator('BIOM')
+        exp = qdb.software.Command(5)
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.Command.get_html_generator('Demultiplexed')
+        exp = qdb.software.Command(7)
+        self.assertEqual(obs, exp)
+
+    def test_get_html_artifact_error(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_html_generator('Unknown')
+
     def test_exists(self):
         self.assertFalse(qdb.software.Command.exists(
             self.software, "donotexists"))
