@@ -332,12 +332,19 @@ class Command(qdb.base.QiitaObject):
             Dictionary of {parameter_name: ptype}
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT parameter_name, parameter_type
+            sql = """SELECT command_parameter_id, parameter_name,
+                            parameter_type, array_agg(
+                                artifact_type ORDER BY artifact_type) AS
+                            artifact_type
                      FROM qiita.command_parameter
-                     WHERE command_id = %s AND required = true"""
+                        LEFT JOIN qiita.parameter_artifact_type
+                            USING (command_parameter_id)
+                        LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE command_id = %s AND required = True
+                     GROUP BY command_parameter_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
-            return {pname: ptype for pname, ptype in res}
+            return {pname: (ptype, atype) for _, pname, ptype, atype in res}
 
     @property
     def optional_parameters(self):
