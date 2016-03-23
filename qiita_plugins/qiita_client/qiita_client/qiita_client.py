@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 import time
-import requests
+import requests as python_requests
 import threading
 from json import dumps
 
@@ -119,9 +119,7 @@ class QiitaClient(object):
         # Fetch the access token
         self._fetch_token()
 
-        print '>>>', requests
-        import requests
-        print '<<<', requests
+        print '<<<', python_requests
 
     def _fetch_token(self):
         """Retrieves an access token from the Qiita server
@@ -135,9 +133,9 @@ class QiitaClient(object):
                 'client_secret': self._client_secret,
                 'grant_type': 'client'}
         print self._authenticate_url
-        print type(requests)
-        r = requests.post(self._authenticate_url, verify=self._verify,
-                          data=data)
+        print type(python_requests)
+        r = python_requests.post(self._authenticate_url, verify=self._verify,
+                                 data=data)
         if r.status_code != 200:
             raise ValueError("Can't authenticate with the Qiita server")
         self._token = r.json()['access_token']
@@ -233,7 +231,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
-        return self._request_retry(requests.get, url, **kwargs)
+        return self._request_retry(python_requests.get, url, **kwargs)
 
     def post(self, url, **kwargs):
         """Execute a post request against the Qiita server
@@ -250,7 +248,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
-        return self._request_retry(requests.post, url, **kwargs)
+        return self._request_retry(python_requests.post, url, **kwargs)
 
     def patch(self, url, op, path, value=None, from_p=None, **kwargs):
         """Executes a patch request against the Qiita server
@@ -303,7 +301,7 @@ class QiitaClient(object):
         # we made sure that data is correctly formatted here
         kwargs['data'] = data
 
-        return self._request_retry(requests.patch, url, **kwargs)
+        return self._request_retry(python_requests.patch, url, **kwargs)
 
     # The functions are shortcuts for common functionality that all plugins
     # need to implement.
