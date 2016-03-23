@@ -119,6 +119,10 @@ class QiitaClient(object):
         # Fetch the access token
         self._fetch_token()
 
+        print '>>>', requests
+        import requests
+        print '<<<', requests
+
     def _fetch_token(self):
         """Retrieves an access token from the Qiita server
 
