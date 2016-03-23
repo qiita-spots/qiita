@@ -79,7 +79,7 @@ def artifact_summary_get_request(user_id, artifact_id):
 
     if qiita_config.require_approval:
         if visibility == 'sandbox':
-            # The request approval button only appear if the artifact is
+            # The request approval button only appears if the artifact is
             # sandboxed and the qiita_config specifies that the approval should
             # be requested
             buttons.append(
@@ -101,15 +101,16 @@ def artifact_summary_get_request(user_id, artifact_id):
     if artifact.can_be_submitted_to_ebi:
         if not artifact.is_submitted_to_ebi:
             buttons.append(
-                '<a class="btn btn-primary btn-sm glyphicon glyphicon-export" '
-                'href="/ebi_submission/{{ppd_id}}" style="word-spacing: '
-                '-10px;"> Submit to EBI</a>')
+                '<a class="btn btn-primary btn-sm" '
+                'href="/ebi_submission/{{ppd_id}}">'
+                '<span class="glyphicon glyphicon-export"></span>'
+                ' Submit to EBI</a>')
     if artifact.can_be_submitted_to_vamps:
         if not artifact.is_submitted_to_vamps:
             buttons.append(
-                '<a class="btn btn-primary btn-sm glyphicon glyphicon-export" '
-                'href="/vamps/{{ppd_id}}" style="word-spacing: -10px;"> '
-                'Submit to VAMPS</a>')
+                '<a class="btn btn-primary btn-sm" href="/vamps/{{ppd_id}}">'
+                '<span class="glyphicon glyphicon-export"></span>'
+                ' Submit to VAMPS</a>')
 
     return {'status': 'success',
             'message': '',

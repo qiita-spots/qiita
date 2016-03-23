@@ -338,9 +338,9 @@
   <div class="col-md-12">
     <h4>
       {{name}} - ID {{prep_id}}
-      <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{download_prep}}" style="word-spacing: -10px;"> Prep info</a>
-      <a class="btn btn-default glyphicon glyphicon-download-alt" href="/download/{{download_qiime}}" style="word-spacing: -10px;"> Qiime map</a>
-      <a class="btn btn-danger glyphicon glyphicon-trash" style="word-spacing: -10px;" onclick="delete_prep_info({{prep_id}});"> Delete</a>
+      <a class="btn btn-default" href="/download/{{download_prep}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
+      <a class="btn btn-default" href="/download/{{download_qiime}}"><span class="glyphicon glyphicon-download-alt"></span> Qiime map</a>
+      <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
     </h4>
   </div>
 </div>

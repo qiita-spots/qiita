@@ -13,7 +13,6 @@
       .done( function ( data ) {
         if(data.status == "success") {
           var html_contents = "Job <b>" + data.job[0] + "</b>: <i>" + data.job[1] + "</i> ";
-          console.log(data.job[2])
           if (data.job[2]) {
             html_contents = html_contents + data.job[2];
           }

@@ -3,7 +3,7 @@
 </style>
 
 <p><table style='width:100%'><tr><td><h3>Sample Summary</h3></td><td style="text-align: right">
-Add sample column information to table 
+Add sample column information to table
 <select id="meta_col" name="meta_col">
   <option value=""></option>
 {% for col in meta_available %}
@@ -45,7 +45,6 @@ function addColumn(header, values)
     var sample = table[i]['sample'];
     table[i][header] = values[sample];
   }
-  console.log(table[0])
 ;  //add new column header
   var columns = grid.getColumns();
   columns.push({id: header, name: header, field: header, width: 240, sortable: true});
