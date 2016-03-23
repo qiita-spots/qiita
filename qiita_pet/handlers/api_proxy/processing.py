@@ -61,3 +61,28 @@ def list_commands_handler_get_req(artifact_types):
     return {'status': 'success',
             'message': '',
             'commands': cmd_info}
+
+
+def list_options_handler_get_req(command_id):
+    """Returns the available default parameters set for the given command
+
+    Parameters
+    ----------
+    command_id : int
+        The command id
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the commands information
+        {'status': str,
+         'message': str,
+         'options': TODO}
+    """
+    command = Command(command_id)
+    options = []
+    for p in command.default_parameter_sets:
+        options.append([p.id, p.name, p.values])
+    return {'status': 'success',
+            'message': '',
+            'options': options}
