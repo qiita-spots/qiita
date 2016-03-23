@@ -80,9 +80,8 @@ def list_options_handler_get_req(command_id):
          'options': TODO}
     """
     command = Command(command_id)
-    options = []
-    for p in command.default_parameter_sets:
-        options.append([p.id, p.name, p.values])
+    options = [[p.id, p.name, p.values]
+               for p in command.default_parameter_sets]
     return {'status': 'success',
             'message': '',
             'options': options}

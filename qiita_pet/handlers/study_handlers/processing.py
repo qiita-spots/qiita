@@ -12,12 +12,9 @@ class ProcessArtifactHandler(BaseHandler):
     @authenticated
     def get(self):
         artifact_id = to_int(self.get_argument('artifact_id'))
-
         res = process_artifact_handler_get_req(artifact_id)
-
-        self.render('study_ajax/processing_artifact.html',
-                    artifact_id=artifact_id, name=res["name"],
-                    type=res["type"])
+        res['artifact_id'] = artifact_id
+        self.render('study_ajax/processing_artifact.html', **res)
 
 
 class ListCommandsHandler(BaseHandler):
@@ -26,15 +23,13 @@ class ListCommandsHandler(BaseHandler):
         # Fun fact - if the argument is a list, JS adds '[]' to the
         # argument name
         artifact_types = self.get_argument("artifact_types[]")
-
         self.write(list_commands_handler_get_req(artifact_types))
 
 
 class ListOptionsHandler(BaseHandler):
     @authenticated
     def get(self):
-        # TODO: callback to get optons for job
-        # job_id = self.get_argument("job_id")
+        command_id = self.get_argument("command_id")
         self.write({'status': 'success',
                     'message': '',
                     'options': [{'name': 'com_int', 'value': 2,
