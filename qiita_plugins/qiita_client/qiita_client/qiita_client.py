@@ -131,6 +131,7 @@ class QiitaClient(object):
                 'client_secret': self._client_secret,
                 'grant_type': 'client'}
         print self._authenticate_url
+        import requests
         print type(requests)
         r = requests.post(self._authenticate_url, verify=self._verify,
                           data=data)
@@ -203,7 +204,7 @@ class QiitaClient(object):
         communication problems.
         """
         url = self._server_url + url
-        retries = 10
+        retries = 2
         json_reply = None
         while retries > 0:
             retries -= 1
@@ -229,6 +230,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
+        import requests
         return self._request_retry(requests.get, url, **kwargs)
 
     def post(self, url, **kwargs):
@@ -246,6 +248,7 @@ class QiitaClient(object):
         dict
             The JSON response from the server
         """
+        import requests
         return self._request_retry(requests.post, url, **kwargs)
 
     def patch(self, url, op, path, value=None, from_p=None, **kwargs):
@@ -298,6 +301,7 @@ class QiitaClient(object):
         # it is ok to overwrite given that otherwise the call will fail and
         # we made sure that data is correctly formatted here
         kwargs['data'] = data
+        import requests
 
         return self._request_retry(requests.patch, url, **kwargs)
 
