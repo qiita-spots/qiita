@@ -7,9 +7,10 @@
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 
+from qiita_db.util import get_count
 from qiita_pet.handlers.api_proxy.processing import (
     process_artifact_handler_get_req, list_commands_handler_get_req,
-    list_options_handler_get_req)
+    list_options_handler_get_req, workflow_handler_post_req)
 
 
 class TestProcessingAPIReadOnly(TestCase):
@@ -57,6 +58,13 @@ class TestProcessingAPIReadOnly(TestCase):
                                        'threads': 1}}]}
         self.assertItemsEqual(obs, exp)
 
+    def test_workflow_handler_post_req(self):
+        next_id = get_count('qiita.processing_job_workflow_root') + 1
+        obs = workflow_handler_post_req("test@foo.bar", 1, '{"input_data": 1}')
+        exp = {'status': 'success',
+               'message': '',
+               'workflow_id': next_id}
+        self.assertEqual(obs, exp)
 
 if __name__ == '__main__':
     main()

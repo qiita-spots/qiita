@@ -6,8 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita_db.software import Command
+from json import loads
+
+from qiita_db.user import User
+from qiita_db.software import Command, Parameters, DefaultParameters
 from qiita_db.artifact import Artifact
+from qiita_db.processing_job import ProcessingWorkflow
 
 
 def process_artifact_handler_get_req(artifact_id):
@@ -77,7 +81,8 @@ def list_options_handler_get_req(command_id):
         A dictionary containing the commands information
         {'status': str,
          'message': str,
-         'options': TODO}
+         'options': list of dicts of {'id: str', 'name': str,
+                                      'values': dict of {str: str}}}
     """
     command = Command(command_id)
     options = [{'id': p.id, 'name': p.name, 'values': p.values}
@@ -85,3 +90,33 @@ def list_options_handler_get_req(command_id):
     return {'status': 'success',
             'message': '',
             'options': options}
+
+
+def workflow_handler_post_req(user_id, dflt_params_id, req_params):
+    """Creates a new workflow in the system
+
+    Parameters
+    ----------
+    user_id : str
+        The user creating the workflow
+    dflt_params_id : int
+        The default parameters to use for the first command of the workflow
+    req_params : str
+        JSON representations of the required parameters for the first
+        command of the workflow
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the commands information
+        {'status': str,
+         'message': str,
+         'workflow_id': int}
+    """
+    dflt_params = DefaultParameters(dflt_params_id)
+    req_params = loads(req_params)
+    parameters = Parameters.from_default_params(dflt_params, req_params)
+    wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
+    return {'status': 'success',
+            'message': '',
+            'workflow_id': wf.id}
