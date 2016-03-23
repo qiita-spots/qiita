@@ -42,7 +42,7 @@ class Command(qdb.base.QiitaObject):
 
         Parameters
         ----------
-        artifact : str
+        artifact_type : str
             The artifact type to search the HTML generator for
 
         Returns
