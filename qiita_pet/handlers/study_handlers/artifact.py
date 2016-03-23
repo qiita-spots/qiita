@@ -60,12 +60,8 @@ class ArtifactSummaryAJAX(BaseHandler):
     def get(self):
         artifact_id = self.get_argument('artifact_id')
         res = artifact_summary_get_request(self.current_user.id, artifact_id)
-        self.render("study_ajax/artifact_summary.html",
-                    artifact_id=artifact_id, name=res['name'],
-                    summary=res['summary'], job=res['job'],
-                    visibility=res['visibility'],
-                    errored_jobs=res['errored_jobs'],
-                    buttons=res['buttons'])
+        res['artifact_id'] = artifact_id
+        self.render("study_ajax/artifact_summary.html", **res)
 
     def post(self):
         artifact_id = self.get_argument('artifact_id')
