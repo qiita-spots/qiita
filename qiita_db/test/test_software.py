@@ -23,6 +23,21 @@ class CommandTestsReadOnly(TestCase):
             'opt_int_param': ['integer', '4'],
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
 
+    def test_get_commands_by_input_type(self):
+        obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
+        exp = [qdb.software.Command(1)]
+        self.assertItemsEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'per_sample_FASTQ']))
+        exp = [qdb.software.Command(1)]
+        self.assertItemsEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'SFF']))
+        exp = [qdb.software.Command(1), qdb.software.Command(2)]
+        self.assertItemsEqual(obs, exp)
+
     def test_get_html_artifact(self):
         obs = qdb.software.Command.get_html_generator('BIOM')
         exp = qdb.software.Command(5)

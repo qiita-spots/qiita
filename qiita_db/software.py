@@ -37,6 +37,31 @@ class Command(qdb.base.QiitaObject):
     _table = "software_command"
 
     @classmethod
+    def get_commands_by_input_type(cls, artifact_types):
+        """Returns the commands that can process the given artifact types
+
+        Parameters
+        ----------
+        artifact_type : list of str
+            The artifact types
+
+        Returns
+        -------
+        generator of qiita_db.software.Command
+            The commands that can process the given artifact tyoes
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT command_id
+                     FROM qiita.command_parameter
+                        JOIN qiita.parameter_artifact_type
+                            USING (command_parameter_id)
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE artifact_type IN %s"""
+            qdb.sql_connection.TRN.add(sql, [tuple(artifact_types)])
+            for c_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield cls(c_id)
+
+    @classmethod
     def get_html_generator(cls, artifact_type):
         """Returns the command that genearete the HTML for the given artifact
 
