@@ -47,12 +47,14 @@ class TestProcessingAPIReadOnly(TestCase):
         obs = list_options_handler_get_req(3)
         exp = {'status': 'success',
                'message': '',
-               'options': [10, 'Defaults', {'reference': 1,
-                                            'similarity': 0.97,
-                                            'sortmerna_coverage': 0.97,
-                                            'sortmerna_e_value': 1,
-                                            'sortmerna_max_pos': 10000,
-                                            'threads': 1}]}
+               'options': [{'id': 10,
+                            'name': 'Defaults',
+                            'values': {'reference': 1,
+                                       'similarity': 0.97,
+                                       'sortmerna_coverage': 0.97,
+                                       'sortmerna_e_value': 1,
+                                       'sortmerna_max_pos': 10000,
+                                       'threads': 1}}]}
         self.assertItemsEqual(obs, exp)
 
 

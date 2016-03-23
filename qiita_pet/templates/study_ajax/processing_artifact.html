@@ -12,7 +12,33 @@
   }
 
   function load_command_options(cmd_id) {
-    console.log("TEST");
+    $.get('/study/process/commands/options/', {command_id: cmd_id})
+      .done(function(data){
+          $('<i>').appendTo("#cmd-opts-div").text("Choose parameter set:");
+          // Create a select dropdown for the default parameter sets
+          var sel = $('<select>').appendTo("#cmd-opts-div").attr('id', 'params-sel').attr('name', 'params-sel');
+          sel.append($("<option>").attr('value', "").text("Choose parameter set..."));
+          for(var i=0; i<data.options.length; i++) {
+            sel.append($("<option>").attr('value', data.options[i].id).attr('data-vals', JSON.stringify(data.options[i].values)).text(data.options[i].name));
+          }
+          $("<div>").appendTo("#cmd-opts-div").attr('id', 'opt-vals-div').attr('name', 'opt-vals-div');
+          sel.change(function(event){
+            var v = $("#params-sel").val();
+            if (v !== "") {
+              // Show the specific parameters
+              var opt_vals = JSON.parse($("#params-sel option[value='" + v + "']").attr("data-vals"));
+              $("#opt-vals-div").empty();
+              for(var key in opt_vals) {
+                $("#opt-vals-div").append("<b>" + key + "</b> " + opt_vals[key] + "</br>");
+              }
+              $("#add-cmd-btn-div").show();
+            }
+            else {
+              $("#opt-vals-div").empty();
+              $("#add-cmd-btn-div").hide();
+            }
+          });
+      });
   }
 
   function load_artifact_type(p_nodes) {
@@ -29,23 +55,30 @@
     $.get('/study/process/commands/', {artifact_types: types})
       .done(function (data) {
         $("#processing-info-div").empty();
-        commands = data.commands;
-        $("#processing-info-div").html("<h4><i>Available commands</i></h4>");
-        var sel = $('<select>').appendTo('#processing-info-div');
-        sel.attr('id', 'command-sel').attr('name', 'command');
+        $("#processing-info-div").html("<i>Choose command: </i>");
+        // Create the command select dropdown
+        var sel = $('<select>').appendTo('#processing-info-div').attr('id', 'command-sel').attr('name', 'command');
         sel.append($("<option>").attr('value', "").text("Choose command..."));
-        for(var i=0;i<commands.length;i++) {
-          console.log(commands[i]);
-          sel.append($("<option>").attr('value', commands[i].id).text(commands[i].command));
+        for(var i=0; i<data.commands.length; i++) {
+          sel.append($("<option>").attr('value', data.commands[i].id).text(data.commands[i].command));
         }
         sel.change(function(event) {
           var v = $("#command-sel").val()
           if (v !== "") {
             load_command_options(v);
           }
+          else {
+            $("#cmd-opts-div").empty();
+            $("#add-cmd-btn-div").hide();
+          }
         });
-        var select = $('<button>').appendTo('#processing-info-div');
-        select.addClass('btn btn-xs').text('Add Command').click(function () { add_job(p_nodes); });
+
+        // Create the div in which the command options will be shown
+        $('<div>').appendTo('#processing-info-div').attr('id', 'cmd-opts-div').attr('name', 'cmd-opts-div');
+
+        // Create the add command button - but not show it yet
+        $('<div hidden>').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
+        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(function () { add_job(p_nodes); });
       });
 
   }
