@@ -375,6 +375,23 @@ class Command(qdb.base.QiitaObject):
             for pid in res:
                 yield DefaultParameters(pid)
 
+    @property
+    def outputs(self):
+        """Returns the list of output artifact types
+
+        Returns
+        -------
+        list of str
+            The output artifact types
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name, artifact_type
+                     FROM qiita.command_output
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchindex()
+
 
 class Software(qdb.base.QiitaObject):
     r"""A software package available in the system

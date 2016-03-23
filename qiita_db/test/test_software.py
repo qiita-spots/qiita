@@ -164,6 +164,19 @@ class CommandTestsReadOnly(TestCase):
                qdb.software.DefaultParameters(9)]
         self.assertEqual(obs, exp)
 
+    def test_outputs(self):
+        obs = qdb.software.Command(1).outputs
+        exp = [['demultiplexed', 'Demultiplexed']]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.Command(2).outputs
+        exp = [['demultiplexed', 'Demultiplexed']]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.Command(3).outputs
+        exp = [['OTU table', 'BIOM']]
+        self.assertEqual(obs, exp)
+
 
 @qiita_test_checker()
 class CommandTests(TestCase):
