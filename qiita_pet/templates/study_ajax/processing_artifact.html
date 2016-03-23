@@ -1,14 +1,41 @@
 <script type="text/javascript">
   var processing_network;
-  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}}", group: "type"}]);
+  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type"}]);
   var edges = new vis.DataSet();
 
   function load_job(p_nodes) {
     console.log("load_job");
   }
 
+  function add_job(p_nodes) {
+      console.log("add_job");
+  }
+
   function load_artifact_type(p_nodes) {
-    console.log("load_artifact_type");
+    var types = []
+    var rx = /\w*- \(([a-zA-Z ]*)\)$/g;
+    var t;
+    for(var i=0; i < p_nodes.length; i++) {
+      t = rx.exec(nodes.get(p_nodes[i]).label);
+      t = t[1];
+      if(types.indexOf(t) === -1) {
+        types.push(t);
+      }
+    }
+    $.get('/study/process/commands/', {artifact_types: types})
+      .done(function (data) {
+        $("#processing-info-div").empty();
+        commands = data.commands;
+        $("#processing-info-div").html("<h4><i>Available commands</i></h4>");
+        var sel = $('<select>').appendTo('#processing-info-div');
+        sel.attr('id', 'command').attr('name', 'command');
+        for(i=0;i<commands.length;i++) {
+         sel.append($("<option>").attr('value',i).text(commands[i].command));
+        }
+        var select = $('<button>').appendTo('#processing-info-div');
+        select.addClass('btn btn-xs').text('Add Command').click(function () { add_job(p_nodes); });
+      });
+
   }
 
   $(document).ready(function() {
@@ -32,8 +59,8 @@
       },
       interaction: {
         dragNodes: false,
-        dragView: true,
-        zoomView: true,
+        dragView: false,
+        zoomView: false,
         selectConnectedEdges: false,
         multiselect: true,
         navigationButtons: true,

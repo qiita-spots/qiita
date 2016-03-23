@@ -32,6 +32,8 @@ from .artifact import (artifact_graph_get_req, artifact_types_get_req,
                        artifact_summary_get_request,
                        artifact_summary_post_request)
 from .ontology import ontology_patch_handler
+from .processing import (
+    list_commands_handler_get_req, process_artifact_handler_get_req)
 
 __version__ = "0.2.0-dev"
 
@@ -52,4 +54,5 @@ __all__ = ['prep_template_summary_get_req', 'sample_template_post_req',
            'sample_template_category_get_req', 'new_prep_template_get_req',
            'study_files_get_req', 'prep_template_ajax_get_req',
            'prep_template_patch_req', 'ontology_patch_handler',
-           'artifact_summary_get_request', 'artifact_summary_post_request']
+           'artifact_summary_get_request', 'artifact_summary_post_request',
+           'list_commands_handler_get_req', 'process_artifact_handler_get_req']

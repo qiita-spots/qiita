@@ -105,7 +105,7 @@ class Application(tornado.web.Application):
             (r"/study/create/", StudyEditHandler),
             (r"/study/edit/(.*)", StudyEditHandler),
             (r"/study/list/", ListStudiesHandler),
-            (r"/study/commands/", ListCommandsHandler),
+            (r"/study/process/commands/", ListCommandsHandler),
             (r"/study/process/", ProcessArtifactHandler),
             (r"/study/list/socket/", SelectSamplesHandler),
             (r"/study/search/(.*)", SearchStudiesAJAX),
