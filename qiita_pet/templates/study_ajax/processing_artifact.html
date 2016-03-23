@@ -1,3 +1,74 @@
+<script type="text/javascript">
+  var processing_network;
+  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}}", group: "type"}]);
+  var edges = new vis.DataSet();
+
+  function load_job(p_nodes) {
+    console.log("load_job");
+  }
+
+  function load_artifact_type(p_nodes) {
+    console.log("load_artifact_type");
+  }
+
+  $(document).ready(function() {
+    // Create the network object
+    var container = document.getElementById('graph-network-div');
+    var data = {nodes: nodes, edges: edges};
+    var options = {
+      nodes: {
+        color: {highlight: {border: "yellow"}},
+        font: '14px arial black'
+      },
+      edges: {
+        color: 'grey'
+      },
+      layout: {
+        hierarchical: {
+          direction: "LR",
+          sortMethod: "directed",
+          levelSeparation: 150
+        }
+      },
+      interaction: {
+        dragNodes: false,
+        dragView: true,
+        zoomView: true,
+        selectConnectedEdges: false,
+        multiselect: true,
+        navigationButtons: true,
+        keyboard: true
+      },
+      groups: {
+        type: {shape: "ellipse", color: "#cef"},
+        job: {shape: "box", color: "#9fd"}
+      }
+    };
+    processing_network = new vis.Network(container, data, options);
+    processing_network.on('select', function(params) {
+      // Update the GUI with the information for the selected node type
+      if(params.nodes.length !== 0) {
+        // Make sure all selcted nodes are of same group
+        var group = nodes.get(params.nodes[0]).group;
+        for(var i=0; i<params.nodes.length; i++) {
+          if(nodes.get(params.nodes[i]).group != group) {
+            $("#processing-info-div").empty();
+          }
+        }
+        if(group == 'job') {
+          load_job(params.nodes);
+        }
+        else if(group == 'type') {
+          load_artifact_type(params.nodes);
+        }
+        else {
+          $("#processing-info-div").empty();
+        }
+      }
+    });
+  });
+</script>
+
 <!-- Title -->
 <div class="row">
   <div class="col-md-12">
@@ -14,5 +85,10 @@
 
 <div class="row">
   <div class="col-md-12 graph" id="graph-network-div">
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12" id="processing-info-div">
   </div>
 </div>
