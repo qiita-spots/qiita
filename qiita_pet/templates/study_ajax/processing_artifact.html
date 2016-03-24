@@ -25,8 +25,9 @@
           }
           else {
             remove_job_node_from_graph(job_id);
-            var job_count = +$("#graph-network-div").attr("data-wf-job-count");
-            job_count -= 1;
+            var job_count = nodes.get({filter: function(item) {
+              return item.group == "job";
+            }}).length;
             $("#graph-network-div").attr("data-wf-job-count", job_count);
             if (job_count == 0) {
               $('#run-btn').prop('disabled', true);
