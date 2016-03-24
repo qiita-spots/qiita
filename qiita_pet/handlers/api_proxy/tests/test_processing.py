@@ -66,17 +66,25 @@ class TestProcessingAPIReadOnly(TestCase):
                                ('artifact', ['per_sample_FASTQ', 'FASTQ'])}}
         self.assertItemsEqual(obs, exp)
 
-    def test_workflow_handler_post_req(self):
-        next_id = get_count('qiita.processing_job_workflow_root') + 1
-        obs = workflow_handler_post_req("test@foo.bar", 1, '{"input_data": 1}')
-        exp = {'status': 'success',
-               'message': '',
-               'workflow_id': next_id}
-        self.assertEqual(obs, exp)
-
 
 @qiita_test_checker()
 class TestProcessingAPI(TestCase):
+    def test_workflow_handler_post_req(self):
+        next_id = get_count('qiita.processing_job_workflow_root') + 1
+        obs = workflow_handler_post_req("test@foo.bar", 1, '{"input_data": 1}')
+        wf = ProcessingWorkflow(next_id)
+        nodes = wf.graph.nodes()
+        self.assertEqual(len(nodes), 1)
+        job = nodes[0]
+        exp = {'status': 'success',
+               'message': '',
+               'workflow_id': next_id,
+               'job': {'id': job.id,
+                       'inputs': [1],
+                       'label': "Split libraries FASTQ",
+                       'outputs': [['demultiplexed', 'Demultiplexed']]}}
+        self.assertEqual(obs, exp)
+
     def test_workflow_handler_patch_req(self):
         # Create a new workflow so it is in construction
         exp_command = Command(1)
