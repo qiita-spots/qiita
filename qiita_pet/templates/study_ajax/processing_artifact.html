@@ -7,31 +7,69 @@
     console.log("load_job");
   }
 
+  function add_job_node_to_graph(job_info) {
+    // Fun fact - although it seems counterintuitive, in vis.Network we
+    // first need to add the edge and then we can add the node. It doesn't
+    // make sense, but it is how it works
+    $(job_info.inputs).each(function(){
+      edges.add({id: edges.length + 1, from: this, to: job_info.id});
+    });
+    nodes.add({id: job_info.id, group: "job", label: job_info.label});
+    $(job_info.outputs).each(function(){
+      var out_name = this[0];
+      var out_type = this[1];
+      var n_id = job_info.id + ":" + out_name;
+      edges.add({id: edges.length + 1, from: job_info.id, to: n_id });
+      nodes.add({id: n_id, label: out_name + " - (" + out_type + ")", group: "type", name: out_name, type: out_type});
+    });
+    processing_network.redraw();
+  }
+
+  function create_job(command_id, params_id, req_params, workflow_id) {
+    var value = {'dflt_params': params_id};
+    var connections = {}
+    for (var param in req_params) {
+      var vs = req_params[param].split(':');
+      if(!connections.hasOwnProperty(vs[0])){
+        connections[vs[0]] = {};
+      }
+      connections[vs[0]][vs[1]] = param;
+    }
+    value['connections'] = connections;
+    $.ajax({
+      url: '/study/process/workflow/',
+      type: 'PATCH',
+      data: {'op': 'add', 'path': workflow_id, 'value': JSON.stringify(value)},
+      success: function(data) {
+        if(data.stats == 'error') {
+          bootstrapAlert(data.message, "danger");
+        }
+        else {
+          var inputs = [];
+          for(var k in req_params) {
+            inputs.push(req_params[k]);
+          }
+          data.job.inputs = inputs;
+          add_job_node_to_graph(data.job);
+        }
+      }
+    });
+  }
+
   function create_workflow(command_id, params_id, req_params) {
     $.post('/study/process/workflow/', {dflt_params_id: params_id, req_params: JSON.stringify(req_params) })
       .done(function(data) {
         if (data.status == 'success') {
           $("#graph-network-div").attr("data-wf-id", data.workflow_id);
-          // Fun fact - although it seems counterintuitive, in vis.Network we
-          // first need to add the edge and then we can add the node. It doesn't
-          // make sense, but it is how it works
-          $(data.job.inputs).each(function(){
-            edges.add({id: edges.length + 1, from: this, to: data.job.id});
-          });
-          nodes.add({id: data.job.id, group: "job", label: data.job.label});
-          $(data.job.outputs).each(function(){
-            var out_name = this[0];
-            var out_type = this[1];
-            var n_id = data.job.id + ":" + out_name;
-            edges.add({id: edges.length + 1, from: data.job.id, to: n_id });
-            nodes.add({id: n_id, label: out_name + " - (" + out_type + ")", group: "type", name: out_name, type: out_type});
-          });
-          processing_network.redraw();
+          add_job_node_to_graph(data.job);
+        }
+        else {
+          bootstrapAlert(data.message, "danger");
         }
       });
   }
 
-  function add_job() {
+  function add_command() {
     var command_id = $("#command-sel").val();
     var params_id = $("#params-sel").val();
     // Collect the required parameters
@@ -46,8 +84,9 @@
       create_workflow(command_id, params_id, req_params);
     }
     else {
-      // TODO: add job callback
+      create_job(command_id, params_id, req_params, workflow_id);
     }
+    $("#processing-info-div").empty();
   }
 
   function load_parameter_gui(p_name, param_info, sel_artifacts_info) {
@@ -137,7 +176,7 @@
 
         // Create the add command button - but not show it yet
         $('<div hidden>').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
-        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(function () { add_job(); });
+        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(function () { add_command(); });
       });
 
   }
@@ -209,8 +248,7 @@
 
 <div class="row">
   <div class="col-md-12">
-    <!-- <h4><a class="btn btn-info" id="show-hide-btn" onclick="toggle_graphs();">-</a><i> Processing workflow</i></h4> -->
-    <h4><a class="btn btn-info" id="show-hide-btn" onclick="console.log('clicked');">-</a><i> Processing workflow</i></h4>
+    <h4><i> Processing workflow</i></h4>
   </div>
 </div>
 
