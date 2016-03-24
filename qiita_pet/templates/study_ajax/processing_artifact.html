@@ -4,7 +4,22 @@
   var edges = new vis.DataSet();
 
   function load_job(p_nodes) {
-    console.log("load_job");
+    if(p_nodes.length > 1) {
+      $("#processing-info-div").empty();
+      alert("Please choose only one job node at a time");
+    }
+    else {
+      j_id = p_nodes[0];
+      $.get('/study/process/job/', {job_id: j_id})
+        .done(function(data) {
+          if (data.status == 'success') {
+            console.log(data);
+          }
+          else {
+            bootstrapAlert(data.message, "danger");
+          }
+        });
+    }
   }
 
   function add_job_node_to_graph(job_info) {

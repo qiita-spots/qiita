@@ -185,3 +185,23 @@ def workflow_handler_patch_req(req_op, req_path, req_value=None,
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. Current supported '
                            'operations: add' % req_op}
+
+
+def job_ajax_get_req(job_id):
+    """Returns the job information
+
+    Parameters
+    ----------
+    job_id : str
+        The job id
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the commands information
+        {'status': str,
+         'message': str,
+         'workflow_id': int}
+    """
+    return {'status': 'success',
+            'message': ''}
