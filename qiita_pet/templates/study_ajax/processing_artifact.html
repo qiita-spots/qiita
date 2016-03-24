@@ -4,7 +4,22 @@
   var edges = new vis.DataSet();
 
   function remove_job(job_id) {
-    console.log("Remove job " + job_id);
+    var workflow_id = $("#graph-network-div").attr("data-wf-id");
+    if(confirm("Are you sure you want to delete the job " + job_id + "? All jobs depending on this job will also be removed.")) {
+      $.ajax({
+        url: '/study/process/workflow/',
+        type: 'PATCH',
+        data: {'op': 'remove', 'path': '/' + workflow_id + '/' + job_id},
+        success: function(data) {
+          if(data.stats == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            remove_job_node_from_graph(job_id);
+          }
+        }
+      });
+    }
   }
 
   function run_workflow() {
@@ -49,6 +64,10 @@
           }
         });
     }
+  }
+
+  function remove_job_node_from_graph(job_id) {
+      console.log("remove job from graph " + job_id);
   }
 
   function add_job_node_to_graph(job_info) {

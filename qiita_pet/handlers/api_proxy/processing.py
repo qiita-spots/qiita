@@ -181,6 +181,18 @@ def workflow_handler_patch_req(req_op, req_path, req_value=None,
                         'inputs': req_value['connections'].keys(),
                         'label': job_cmd.name,
                         'outputs': job_cmd.outputs}}
+    elif req_op == 'remove':
+        req_path = [v for v in req_path.split('/') if v]
+        if len(req_path) != 1:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter'}
+        wf_id = req_path[0]
+        job_id = req_path[1]
+        wf = ProcessingWorkflow(wf_id)
+        job = ProcessingJob(job_id)
+        wf.remove(job, cascade=True)
+        return {'status': 'success',
+                'message': ''}
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. Current supported '
