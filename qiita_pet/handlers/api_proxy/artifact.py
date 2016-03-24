@@ -54,6 +54,9 @@ def artifact_summary_get_request(user_id, artifact_id):
     summary = artifact.html_summary_fp
     job_info = None
     errored_jobs = []
+    processing_jobs = [
+        [j.id, j.command.name, j.status, j.step] for j in artifact.jobs()
+        if j.command.software.type == "artifact transformation"]
     # Check if the HTML summary exists
     if summary:
         with open(summary[1]) as f:
@@ -118,6 +121,7 @@ def artifact_summary_get_request(user_id, artifact_id):
             'summary': summary,
             'job': job_info,
             'errored_jobs': errored_jobs,
+            'processing_jobs': processing_jobs,
             'visibility': visibility,
             'buttons': ' '.join(buttons)}
 
