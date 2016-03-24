@@ -16,6 +16,12 @@
           }
           else {
             remove_job_node_from_graph(job_id);
+            var job_count = +$("#graph-network-div").attr("data-wf-job-count");
+            job_count -= 1;
+            $("#graph-network-div").attr("data-wf-job-count", job_count);
+            if (job_count == 0) {
+              $('#run-btn').prop('disabled', true);
+            }
             $("#processing-info-div").empty();
           }
         }
@@ -160,7 +166,6 @@
         if (data.status == 'success') {
           $("#graph-network-div").attr("data-wf-id", data.workflow_id);
           add_job_node_to_graph(data.job);
-          $('#run-btn').prop('disabled', false);
         }
         else {
           bootstrapAlert(data.message, "danger");
@@ -186,6 +191,8 @@
       create_job(command_id, params_id, req_params, workflow_id);
     }
     $("#processing-info-div").empty();
+    $('#run-btn').prop('disabled', false);
+    $("#graph-network-div").attr("data-wf-job-count", +$("#graph-network-div").attr("data-wf-job-count") + 1);
   }
 
   function load_parameter_gui(p_name, param_info, sel_artifacts_info) {
@@ -352,7 +359,7 @@
 </div>
 
 <div class="row">
-  <div class="col-md-12 graph" id="graph-network-div" data-wf-id="-1">
+  <div class="col-md-12 graph" id="graph-network-div" data-wf-id="-1" data-wf-job-count="0">
   </div>
 </div>
 
