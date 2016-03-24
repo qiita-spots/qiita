@@ -391,13 +391,15 @@
 
         // Create the add command button - but not show it yet
         $('<div hidden>').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
-        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(function () { add_job(); });
+        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(add_job);
       });
   }
 
   $(document).ready(function() {
     // Create the network object
-    var container = document.getElementById('graph-network-div');
+    // 'get(0)' is used to return the actual DOM element, which is what
+    // vis.Network needs.
+    var container = $('#graph-network-div').get(0);
     var data = {nodes: nodes, edges: edges};
     var options = {
       nodes: {
