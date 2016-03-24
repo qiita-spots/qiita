@@ -399,7 +399,7 @@ class ProcessingJobTest(TestCase):
         parent = tester.graph.nodes()[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
-        tester.add(connections, dflt_params)
+        tester.add(dflt_params, connections=connections)
         child = tester.graph.nodes()[1]
 
         mapping = {1: 3}
@@ -555,11 +555,12 @@ class ProcessingWorkflowTests(TestCase):
         parent = obs.graph.nodes()[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
-        obs.add(connections, dflt_params)
+        obs.add(dflt_params, connections=connections)
 
         obs_graph = obs.graph
         self.assertTrue(isinstance(obs_graph, nx.DiGraph))
-        self.assertEqual(len(obs_graph.nodes()), 2)
+        obs_nodes = obs_graph.nodes()
+        self.assertEqual(len(obs_nodes), 2)
         obs_edges = obs_graph.edges()
         self.assertEqual(len(obs_edges), 1)
         obs_src = obs_edges[0][0]
@@ -576,6 +577,33 @@ class ProcessingWorkflowTests(TestCase):
             'sortmerna_max_pos': 10000,
             'threads': 1}
         self.assertEqual(obs_params, exp_params)
+
+        # Adding a new root job
+        # This also tests that the `graph` property returns the graph correctly
+        # when there are root nodes that don't have any children
+        dflt_params = qdb.software.DefaultParameters(1)
+        obs.add(dflt_params, req_params={'input_data': 1})
+
+        obs_graph = obs.graph
+        self.assertTrue(isinstance(obs_graph, nx.DiGraph))
+        root_obs_nodes = obs_graph.nodes()
+        self.assertEqual(len(root_obs_nodes), 3)
+        obs_edges = obs_graph.edges()
+        self.assertEqual(len(obs_edges), 1)
+        obs_new_jobs = set(root_obs_nodes) - set(obs_nodes)
+        self.assertEqual(len(obs_new_jobs), 1)
+        obs_job = obs_new_jobs.pop()
+        exp_params = {'barcode_type': u'golay_12',
+                      'input_data': 1,
+                      'max_bad_run_length': 3,
+                      'max_barcode_errors': 1.5,
+                      'min_per_read_length_fraction': 0.75,
+                      'phred_quality_threshold': 3,
+                      'rev_comp': False,
+                      'rev_comp_barcode': False,
+                      'rev_comp_mapping_barcodes': False,
+                      'sequence_max_n': 0}
+        self.assertEqual(obs_job.parameters.values, exp_params)
 
     def test_add_error(self):
         with self.assertRaises(
@@ -601,7 +629,7 @@ class ProcessingWorkflowTests(TestCase):
         parent = tester.graph.nodes()[0]
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
-        tester.add(connections, dflt_params)
+        tester.add(dflt_params, connections=connections)
 
         self.assertEqual(len(tester.graph.nodes()), 2)
         tester.remove(tester.graph.edges()[0][1])
