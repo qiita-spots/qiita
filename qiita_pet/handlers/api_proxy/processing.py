@@ -41,7 +41,7 @@ def process_artifact_handler_get_req(artifact_id):
 
 
 def list_commands_handler_get_req(artifact_types):
-    """Retrieves the commands that can process the given artifat types
+    """Retrieves the commands that can process the given artifact types
 
     Parameters
     ----------
