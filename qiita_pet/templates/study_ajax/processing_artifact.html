@@ -3,6 +3,19 @@
   var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
   var edges = new vis.DataSet();
 
+  function run_workflow() {
+    var w_id = $("#graph-network-div").attr("data-wf-id");
+    $.post("/study/process/workflow/run/", {workflow_id: w_id})
+      .done(function(data) {
+        if (data.status == 'success') {
+          bootstrapAlert("Workflow " + w_id + " submitted", "success");
+        }
+        else {
+          bootstrapAlert(data.message, "danger");
+        }
+      });
+  }
+
   function load_job(p_nodes) {
     if(p_nodes.length > 1) {
       $("#processing-info-div").empty();
@@ -95,6 +108,7 @@
         if (data.status == 'success') {
           $("#graph-network-div").attr("data-wf-id", data.workflow_id);
           add_job_node_to_graph(data.job);
+          $('#run-btn').prop('disabled', false);
         }
         else {
           bootstrapAlert(data.message, "danger");
@@ -281,7 +295,7 @@
 
 <div class="row">
   <div class="col-md-12">
-    <h4><i> Processing workflow</i></h4>
+    <h4><i> Processing workflow</i> <button class="btn btn-primary btn-sm" onclick="run_workflow();" id='run-btn' disabled><span class="glyphicon glyphicon-play"></span> Run</button></h4>
   </div>
 </div>
 

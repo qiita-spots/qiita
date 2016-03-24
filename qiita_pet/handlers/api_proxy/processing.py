@@ -187,6 +187,31 @@ def workflow_handler_patch_req(req_op, req_path, req_value=None,
                            'operations: add' % req_op}
 
 
+def workflow_run_post_req(workflow_id):
+    """Submits the workflow for execution
+
+    Parameters
+    ----------
+    w_id : str
+        The workflow id
+
+    Returns
+    -------
+    dict of {str: str}
+        A dictionary of the form: {'status': str, 'message': str} in which
+        status is the status of the request ('error' or 'success') and message
+        is a human readable string with the error message in case that status
+        is 'error'.
+    """
+    try:
+        wf = ProcessingWorkflow(workflow_id)
+    except QiitaDBUnknownIDError:
+        return {'status': 'error',
+                'message': 'Workflow %s does not exist' % workflow_id}
+    wf.submit()
+    return {'status': 'success', 'message': ''}
+
+
 def job_ajax_get_req(job_id):
     """Returns the job information
 
