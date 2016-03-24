@@ -89,7 +89,8 @@ def list_options_handler_get_req(command_id):
                for p in command.default_parameter_sets]
     return {'status': 'success',
             'message': '',
-            'options': options}
+            'options': options,
+            'req_options': command.required_parameters}
 
 
 def workflow_handler_post_req(user_id, dflt_params_id, req_params):

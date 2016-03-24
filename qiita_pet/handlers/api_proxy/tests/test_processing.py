@@ -55,7 +55,9 @@ class TestProcessingAPIReadOnly(TestCase):
                                        'sortmerna_coverage': 0.97,
                                        'sortmerna_e_value': 1,
                                        'sortmerna_max_pos': 10000,
-                                       'threads': 1}}]}
+                                       'threads': 1}}],
+               'req_options': {'input_data':
+                               ('artifact', ['per_sample_FASTQ', 'FASTQ'])}}
         self.assertItemsEqual(obs, exp)
 
     def test_workflow_handler_post_req(self):
