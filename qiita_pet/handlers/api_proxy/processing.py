@@ -201,7 +201,10 @@ def job_ajax_get_req(job_id):
         A dictionary containing the job information
         {'status': str,
          'message': str,
-         'workflow_id': int}
+         'job_id': str,
+         'job_status': str,
+         'job_step': str,
+         'job_parameters': dict of {str: str}}
     """
     job = ProcessingJob(job_id)
     return {'status': 'success',
