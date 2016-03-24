@@ -183,7 +183,7 @@ def workflow_handler_patch_req(req_op, req_path, req_value=None,
                         'outputs': job_cmd.outputs}}
     elif req_op == 'remove':
         req_path = [v for v in req_path.split('/') if v]
-        if len(req_path) != 1:
+        if len(req_path) != 2:
             return {'status': 'error',
                     'message': 'Incorrect path parameter'}
         wf_id = req_path[0]
@@ -204,7 +204,7 @@ def workflow_run_post_req(workflow_id):
 
     Parameters
     ----------
-    w_id : str
+    workflow_id : str
         The workflow id
 
     Returns
