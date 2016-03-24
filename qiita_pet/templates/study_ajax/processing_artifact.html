@@ -76,7 +76,7 @@
       alert("Please choose only one job node at a time");
     }
     else {
-      j_id = p_nodes[0];
+      var j_id = p_nodes[0];
       $.get('/study/process/job/', {job_id: j_id})
         .done(function(data) {
           $("#processing-info-div").empty();
