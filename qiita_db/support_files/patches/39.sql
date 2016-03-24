@@ -3,9 +3,9 @@
 
 -- Changes to tables
 
-ALTER TABLE qiita.job ADD input_file_reference_id bigint  NOT NULL;
+ALTER TABLE qiita.job ADD input_file_reference_id bigint;
 
-ALTER TABLE qiita.job ADD input_file_software_command_id bigint  NOT NULL;
+ALTER TABLE qiita.job ADD input_file_software_command_id bigint;
 
 CREATE INDEX idx_job_0 ON qiita.job ( input_file_reference_id ) ;
 
@@ -20,5 +20,7 @@ ALTER TABLE qiita.job ADD CONSTRAINT fk_job_software_command FOREIGN KEY ( input
 -- input_file_software_command_id = 3 as it's close reference picking.
 
 UPDATE qiita.job SET input_file_reference_id = 1;
+ALTER TABLE qiita.job ALTER COLUMN input_file_reference_id SET NOT NULL;
 
 UPDATE qiita.job SET input_file_software_command_id = 3;
+ALTER TABLE qiita.job ALTER COLUMN input_file_software_command_id SET NOT NULL;
