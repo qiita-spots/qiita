@@ -16,7 +16,7 @@ from qiita_db.user import User
 from qiita_pet.handlers.api_proxy.processing import (
     process_artifact_handler_get_req, list_commands_handler_get_req,
     list_options_handler_get_req, workflow_handler_post_req,
-    workflow_handler_patch_req)
+    workflow_handler_patch_req, job_ajax_get_req)
 
 
 class TestProcessingAPIReadOnly(TestCase):
@@ -65,6 +65,25 @@ class TestProcessingAPIReadOnly(TestCase):
                'req_options': {'input_data':
                                ('artifact', ['per_sample_FASTQ', 'FASTQ'])}}
         self.assertItemsEqual(obs, exp)
+
+    def test_job_ajax_get_req(self):
+        obs = job_ajax_get_req("063e553b-327c-4818-ab4a-adfe58e49860")
+        exp = {'status': 'success',
+               'message': '',
+               'job_id': "063e553b-327c-4818-ab4a-adfe58e49860",
+               'job_status': "queued",
+               'job_step': None,
+               'job_parameters': {'barcode_type': u'golay_12',
+                                  'input_data': 1,
+                                  'max_bad_run_length': 3,
+                                  'max_barcode_errors': 1.5,
+                                  'min_per_read_length_fraction': 0.75,
+                                  'phred_quality_threshold': 3,
+                                  'rev_comp': False,
+                                  'rev_comp_barcode': False,
+                                  'rev_comp_mapping_barcodes': False,
+                                  'sequence_max_n': 0}}
+        self.assertEqual(obs, exp)
 
 
 @qiita_test_checker()
