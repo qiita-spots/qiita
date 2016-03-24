@@ -923,6 +923,8 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
+            return new_job
+
     def remove(self, job):
         """Removes a given job from the workflow
 

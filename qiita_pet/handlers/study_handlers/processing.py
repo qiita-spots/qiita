@@ -6,7 +6,8 @@ from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
     list_commands_handler_get_req, process_artifact_handler_get_req,
-    list_options_handler_get_req, workflow_handler_post_req)
+    list_options_handler_get_req, workflow_handler_post_req,
+    workflow_handler_patch_req)
 
 
 class ProcessArtifactHandler(BaseHandler):
@@ -41,3 +42,13 @@ class WorkflowHandler(BaseHandler):
         req_params = self.get_argument('req_params')
         self.write(workflow_handler_post_req(
             self.current_user.id, dflt_params_id, req_params))
+
+    @authenticated
+    def patch(self):
+        req_op = self.get_argument('op')
+        req_path = self.get_argument('path')
+        req_value = self.get_argument('value', None)
+        req_from = self.get_argument('from', None)
+
+        self.write(workflow_handler_patch_req(
+            req_op, req_path, req_value, req_from))

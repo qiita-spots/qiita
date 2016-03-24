@@ -6,11 +6,17 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
+from json import dumps
 
+from qiita_core.util import qiita_test_checker
 from qiita_db.util import get_count
+from qiita_db.processing_job import ProcessingWorkflow
+from qiita_db.software import Command, Parameters
+from qiita_db.user import User
 from qiita_pet.handlers.api_proxy.processing import (
     process_artifact_handler_get_req, list_commands_handler_get_req,
-    list_options_handler_get_req, workflow_handler_post_req)
+    list_options_handler_get_req, workflow_handler_post_req,
+    workflow_handler_patch_req)
 
 
 class TestProcessingAPIReadOnly(TestCase):
@@ -66,6 +72,62 @@ class TestProcessingAPIReadOnly(TestCase):
         exp = {'status': 'success',
                'message': '',
                'workflow_id': next_id}
+        self.assertEqual(obs, exp)
+
+
+@qiita_test_checker()
+class TestProcessingAPI(TestCase):
+    def test_workflow_handler_patch_req(self):
+        # Create a new workflow so it is in construction
+        exp_command = Command(1)
+        json_str = (
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
+            '"barcode_type": "golay_12", "max_bad_run_length": 3, '
+            '"rev_comp": false, "phred_quality_threshold": 3, '
+            '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        exp_params = Parameters.load(exp_command, json_str=json_str)
+        exp_user = User('test@foo.bar')
+        name = "Test processing workflow"
+
+        wf = ProcessingWorkflow.from_scratch(exp_user, exp_params, name=name)
+
+        graph = wf.graph
+        nodes = graph.nodes()
+        job_id = nodes[0].id
+        value = {'dflt_params': 10,
+                 'connections': {job_id: {'demultiplexed': 'input_data'}}}
+        obs = workflow_handler_patch_req(
+            'add', '/%s/' % wf.id, req_value=dumps(value))
+        new_jobs = set(wf.graph.nodes()) - set(nodes)
+        self.assertEqual(len(new_jobs), 1)
+        new_job = new_jobs.pop()
+        exp = {'status': 'success',
+               'message': '',
+               'job': {'id': new_job.id,
+                       'inputs': [job_id],
+                       'label': 'Pick closed-reference OTUs',
+                       'outputs': [['OTU table', 'BIOM']]}}
+        self.assertEqual(obs, exp)
+
+    def test_workflow_handler_patch_req_error(self):
+        # Incorrect path parameter
+        obs = workflow_handler_patch_req('add', '/1/extra/')
+        exp = {'status': 'error',
+               'message': 'Incorrect path parameter'}
+        self.assertEqual(obs, exp)
+
+        # Workflow does not exist
+        obs = workflow_handler_patch_req('add', '/1000/')
+        exp = {'status': 'error',
+               'message': 'Workflow 1000 does not exist'}
+        self.assertEqual(obs, exp)
+
+        # Operation not supported
+        obs = workflow_handler_patch_req('replace', '/1/')
+        exp = {'status': 'error',
+               'message': 'Operation "replace" not supported. '
+                          'Current supported operations: add'}
         self.assertEqual(obs, exp)
 
 if __name__ == '__main__':

@@ -11,7 +11,8 @@ from json import loads
 from qiita_db.user import User
 from qiita_db.software import Command, Parameters, DefaultParameters
 from qiita_db.artifact import Artifact
-from qiita_db.processing_job import ProcessingWorkflow
+from qiita_db.processing_job import ProcessingWorkflow, ProcessingJob
+from qiita_db.exceptions import QiitaDBUnknownIDError
 
 
 def process_artifact_handler_get_req(artifact_id):
@@ -128,3 +129,59 @@ def workflow_handler_post_req(user_id, dflt_params_id, req_params):
                     'inputs': inputs,
                     'label': job_cmd.name,
                     'outputs': job_cmd.outputs}}
+
+
+def workflow_handler_patch_req(req_op, req_path, req_value=None,
+                               req_from=None):
+    """Patches an ontology
+
+    Parameters
+    ----------
+    req_op : str
+        The operation to perform on the ontology
+    req_path : str
+        The ontology to patch
+    req_value : str, optional
+        The value that needs to be modified
+    req_from : str, optional
+        The original path of the element
+
+    Returns
+    -------
+    dict of {str: str}
+        A dictionary of the form: {'status': str, 'message': str} in which
+        status is the status of the request ('error' or 'success') and message
+        is a human readable string with the error message in case that status
+        is 'error'.
+    """
+    if req_op == 'add':
+        req_path = [v for v in req_path.split('/') if v]
+        if len(req_path) != 1:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter'}
+        req_path = req_path[0]
+        try:
+            wf = ProcessingWorkflow(req_path)
+        except QiitaDBUnknownIDError:
+            return {'status': 'error',
+                    'message': 'Workflow %s does not exist' % req_path}
+
+        req_value = loads(req_value)
+        dflt_params = DefaultParameters(req_value['dflt_params'])
+        req_params = req_value.get('req_params', None)
+        opt_params = req_value.get('opt_params', None)
+        connections = {ProcessingJob(k): v
+                       for k, v in req_value['connections'].items()}
+        job = wf.add(connections, dflt_params,
+                     req_params=req_params, opt_params=opt_params)
+        job_cmd = job.command
+        return {'status': 'success',
+                'message': '',
+                'job': {'id': job.id,
+                        'inputs': req_value['connections'].keys(),
+                        'label': job_cmd.name,
+                        'outputs': job_cmd.outputs}}
+    else:
+        return {'status': 'error',
+                'message': 'Operation "%s" not supported. Current supported '
+                           'operations: add' % req_op}
