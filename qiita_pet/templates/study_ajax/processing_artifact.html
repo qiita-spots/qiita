@@ -12,8 +12,19 @@
       j_id = p_nodes[0];
       $.get('/study/process/job/', {job_id: j_id})
         .done(function(data) {
+          $("#processing-info-div").empty();
           if (data.status == 'success') {
-            console.log(data);
+            var keys = ['job_id', 'job_status', "job_step"];
+            var d = $("<div>").appendTo("#processing-info-div");
+            for(var i in keys) {
+              if (data[keys[i]]) {
+                d.append("<b>" + keys[i].replace('_', ' ') + ": </b> " + data[keys[i]] + "</br>");
+              }
+            }
+            d.append("<b> job parameters: </b></br>");
+            for(var key in data.job_parameters) {
+              d.append("<i>" + key + ":</i> " + data.job_parameters[key] + "</br>");
+            }
           }
           else {
             bootstrapAlert(data.message, "danger");

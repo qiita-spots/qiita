@@ -198,10 +198,15 @@ def job_ajax_get_req(job_id):
     Returns
     -------
     dict of objects
-        A dictionary containing the commands information
+        A dictionary containing the job information
         {'status': str,
          'message': str,
          'workflow_id': int}
     """
+    job = ProcessingJob(job_id)
     return {'status': 'success',
-            'message': ''}
+            'message': '',
+            'job_id': job.id,
+            'job_status': job.status,
+            'job_step': job.step,
+            'job_parameters': job.parameters.values}
