@@ -172,7 +172,7 @@ def workflow_handler_patch_req(req_op, req_path, req_value=None,
         opt_params = req_value.get('opt_params', None)
         connections = {ProcessingJob(k): v
                        for k, v in req_value['connections'].items()}
-        job = wf.add(connections, dflt_params,
+        job = wf.add(dflt_params, connections=connections,
                      req_params=req_params, opt_params=opt_params)
         job_cmd = job.command
         return {'status': 'success',
