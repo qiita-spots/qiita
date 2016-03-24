@@ -640,6 +640,19 @@ class ProcessingWorkflowTests(TestCase):
         self.assertEqual(obs_nodes[0], parent)
         self.assertEqual(g.edges(), [])
 
+        # Test with cascade = true
+        exp_user = qdb.user.User('test@foo.bar')
+        dflt_wf = qdb.software.DefaultWorkflow(1)
+        req_params = {qdb.software.Command(1): {'input_data': 1}}
+        name = "Test processing workflow"
+
+        tester = qdb.processing_job.ProcessingWorkflow.from_default_workflow(
+            exp_user, dflt_wf, req_params, name=name)
+
+        tester.remove(tester.graph.edges()[0][0], cascade=True)
+
+        self.assertEqual(tester.graph.nodes(), [])
+
     def test_remove_error(self):
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):

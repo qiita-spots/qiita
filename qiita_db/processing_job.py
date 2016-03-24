@@ -945,31 +945,36 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
 
             return new_job
 
-    def remove(self, job):
+    def remove(self, job, cascade=False):
         """Removes a given job from the workflow
 
         Parameters
         ----------
         job : qiita_db.processing_job.ProcessingJob
             The job to be removed
+        cascade : bool, optional
+            If true, remove the also the input job's children. Default: False.
 
         Raises
         ------
         qiita_db.exceptions.QiitaDBOperationNotPermittedError
             If the workflow is not in construction
-            If the job to be removed has children
+            If the job to be removed has children and `cascade` is `False`
         """
         with qdb.sql_connection.TRN:
             self._raise_if_not_in_construction()
 
             # Check if the given job has children
-            sql = """SELECT EXISTS(SELECT *
-                                   FROM qiita.parent_processing_job
-                                   WHERE parent_id=%s)"""
-            qdb.sql_connection.TRN.add(sql, [job.id])
-            if qdb.sql_connection.TRN.execute_fetchlast():
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Can't remove job '%s': it has children" % job.id)
+            children = list(job.children)
+            if children:
+                if not cascade:
+                    raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                        "Can't remove job '%s': it has children" % job.id)
+                else:
+                    # We need to remove all job's children, remove them first
+                    # and then remove the current job
+                    for c in children:
+                        self.remove(c, cascade=True)
 
             # Remove any edges (it can only appear as a child)
             sql = """DELETE FROM qiita.parent_processing_job
@@ -978,6 +983,11 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
 
             # Remove as root job
             sql = """DELETE FROM qiita.processing_job_workflow_root
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [job.id])
+
+            # Remove the input reference
+            sql = """DELETE FROM qiita.artifact_processing_job
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [job.id])
 

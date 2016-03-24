@@ -3,6 +3,10 @@
   var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
   var edges = new vis.DataSet();
 
+  function remove_job(job_id) {
+    console.log("Remove job " + job_id);
+  }
+
   function run_workflow() {
     var w_id = $("#graph-network-div").attr("data-wf-id");
     $.post("/study/process/workflow/run/", {workflow_id: w_id})
@@ -38,6 +42,7 @@
             for(var key in data.job_parameters) {
               d.append("<i>" + key + ":</i> " + data.job_parameters[key] + "</br>");
             }
+            d.append('<button class="btn btn-danger btn-sm" onclick="remove_job(\'' + j_id + '\');"><span class="glyphicon glyphicon-trash"></span> Remove job</button>');
           }
           else {
             bootstrapAlert(data.message, "danger");
