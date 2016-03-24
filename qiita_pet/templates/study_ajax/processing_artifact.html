@@ -28,14 +28,21 @@
   function create_job(command_id, params_id, req_params, workflow_id) {
     var value = {'dflt_params': params_id};
     var connections = {}
+    var r_params = {}
     for (var param in req_params) {
       var vs = req_params[param].split(':');
-      if(!connections.hasOwnProperty(vs[0])){
-        connections[vs[0]] = {};
+      if (vs.length == 2) {
+        if(!connections.hasOwnProperty(vs[0])){
+          connections[vs[0]] = {};
+        }
+        connections[vs[0]][vs[1]] = param;
       }
-      connections[vs[0]][vs[1]] = param;
+      else {
+        r_params[param] = req_params[param];
+      }
     }
     value['connections'] = connections;
+    value['req_params'] = r_params;
     $.ajax({
       url: '/study/process/workflow/',
       type: 'PATCH',
