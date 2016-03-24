@@ -118,6 +118,13 @@ def workflow_handler_post_req(user_id, dflt_params_id, req_params):
     req_params = loads(req_params)
     parameters = Parameters.from_default_params(dflt_params, req_params)
     wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
+    job = wf.graph.nodes()[0]
+    inputs = [a.id for a in job.input_artifacts]
+    job_cmd = job.command
     return {'status': 'success',
             'message': '',
-            'workflow_id': wf.id}
+            'workflow_id': wf.id,
+            'job': {'id': job.id,
+                    'inputs': inputs,
+                    'label': job_cmd.name,
+                    'outputs': job_cmd.outputs}}

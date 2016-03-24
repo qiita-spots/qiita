@@ -1,19 +1,77 @@
 <script type="text/javascript">
   var processing_network;
-  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type"}]);
+  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
   var edges = new vis.DataSet();
 
   function load_job(p_nodes) {
     console.log("load_job");
   }
 
-  function add_job(p_nodes) {
-      console.log("add_job");
+  function create_workflow(command_id, params_id, req_params) {
+    $.post('/study/process/workflow/', {dflt_params_id: params_id, req_params: JSON.stringify(req_params) })
+      .done(function(data) {
+        if (data.status == 'success') {
+          $("#graph-network-div").attr("data-wf-id", data.workflow_id);
+          // Fun fact - although it seems counterintuitive, in vis.Network we
+          // first need to add the edge and then we can add the node. It doesn't
+          // make sense, but it is how it works
+          $(data.job.inputs).each(function(){
+            edges.add({id: edges.length + 1, from: this, to: data.job.id});
+          });
+          nodes.add({id: data.job.id, group: "job", label: data.job.label});
+          $(data.job.outputs).each(function(){
+            var out_name = this[0];
+            var out_type = this[1];
+            var n_id = data.job.id + ":" + out_name;
+            edges.add({id: edges.length + 1, from: data.job.id, to: n_id });
+            nodes.add({id: n_id, label: out_name + " - (" + out_type + ")", group: "type", name: out_name, type: out_type});
+          });
+          processing_network.redraw();
+        }
+      });
   }
 
-  function load_command_options(cmd_id) {
+  function add_job() {
+    var command_id = $("#command-sel").val();
+    var params_id = $("#params-sel").val();
+    // Collect the required parameters
+    var req_params = {}
+    $(".required-parameter").each( function () {
+      req_params[this.id] = this.value;
+    })
+    var workflow_id = $("#graph-network-div").attr("data-wf-id");
+    if (workflow_id == -1) {
+      // This is the first command to be run, so the workflow still doesn't
+      // exist in the system.
+      create_workflow(command_id, params_id, req_params);
+    }
+    else {
+      // TODO: add job callback
+    }
+  }
+
+  function load_parameter_gui(p_name, param_info, sel_artifacts_info) {
+    $('<i>').appendTo("#cmd-opts-div").text(p_name.replace('_', ' ') + ': ');
+    p_type = param_info[0];
+    allowed_types = param_info[1];
+    if (p_type == 'artifact') {
+      var sel = $('<select>').appendTo("#cmd-opts-div").attr('id', p_name).attr('name', p_name).addClass('required-parameter');
+      for(var key in sel_artifacts_info) {
+         if(allowed_types.indexOf(sel_artifacts_info[key].type) !== -1) {
+           sel.append($('<option>').attr('value', key).text(sel_artifacts_info[key].name));
+         }
+      }
+    }
+    $('<br>').appendTo("#cmd-opts-div")
+  }
+
+  function load_command_options(cmd_id, sel_artifacts_info) {
     $.get('/study/process/commands/options/', {command_id: cmd_id})
       .done(function(data){
+          // Put first the required parameters
+          for(var key in data.req_options) {
+            load_parameter_gui(key, data.req_options[key], sel_artifacts_info);
+          }
           $('<i>').appendTo("#cmd-opts-div").text("Choose parameter set:");
           // Create a select dropdown for the default parameter sets
           var sel = $('<select>').appendTo("#cmd-opts-div").attr('id', 'params-sel').attr('name', 'params-sel');
@@ -25,7 +83,7 @@
           sel.change(function(event){
             var v = $("#params-sel").val();
             if (v !== "") {
-              // Show the specific parameters
+              // Show the specific parameter values
               var opt_vals = JSON.parse($("#params-sel option[value='" + v + "']").attr("data-vals"));
               $("#opt-vals-div").empty();
               for(var key in opt_vals) {
@@ -43,14 +101,15 @@
 
   function load_artifact_type(p_nodes) {
     var types = []
-    var rx = /\w*- \(([a-zA-Z ]*)\)$/g;
+    var sel_artifacts_info = {};
     var t;
+    var node;
     for(var i=0; i < p_nodes.length; i++) {
-      t = rx.exec(nodes.get(p_nodes[i]).label);
-      t = t[1];
-      if(types.indexOf(t) === -1) {
-        types.push(t);
+      node = nodes.get(p_nodes[i]);
+      if(types.indexOf(node.type) === -1) {
+        types.push(node.type);
       }
+      sel_artifacts_info[node.id] = {'type': node.type, 'name': node.name}
     }
     $.get('/study/process/commands/', {artifact_types: types})
       .done(function (data) {
@@ -63,9 +122,9 @@
           sel.append($("<option>").attr('value', data.commands[i].id).text(data.commands[i].command));
         }
         sel.change(function(event) {
-          var v = $("#command-sel").val()
+          var v = $("#command-sel").val();
           if (v !== "") {
-            load_command_options(v);
+            load_command_options(v, sel_artifacts_info);
           }
           else {
             $("#cmd-opts-div").empty();
@@ -78,7 +137,7 @@
 
         // Create the add command button - but not show it yet
         $('<div hidden>').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
-        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(function () { add_job(p_nodes); });
+        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(function () { add_job(); });
       });
 
   }
@@ -99,13 +158,13 @@
         hierarchical: {
           direction: "LR",
           sortMethod: "directed",
-          levelSeparation: 150
+          levelSeparation: 300
         }
       },
       interaction: {
         dragNodes: false,
-        dragView: false,
-        zoomView: false,
+        dragView: true,
+        zoomView: true,
         selectConnectedEdges: false,
         multiselect: true,
         navigationButtons: true,
@@ -156,7 +215,7 @@
 </div>
 
 <div class="row">
-  <div class="col-md-12 graph" id="graph-network-div">
+  <div class="col-md-12 graph" id="graph-network-div" data-wf-id="-1">
   </div>
 </div>
 
