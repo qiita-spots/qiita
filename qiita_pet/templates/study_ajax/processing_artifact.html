@@ -285,8 +285,8 @@
    */
   function load_parameter_gui(p_name, param_info, sel_artifacts_info) {
     $('<i>').appendTo("#cmd-opts-div").text(p_name.replace('_', ' ') + ': ');
-    p_type = param_info[0];
-    allowed_types = param_info[1];
+    var p_type = param_info[0];
+    var allowed_types = param_info[1];
     if (p_type == 'artifact') {
       var sel = $('<select>').appendTo("#cmd-opts-div").attr('id', p_name).attr('name', p_name).addClass('required-parameter');
       for(var key in sel_artifacts_info) {
