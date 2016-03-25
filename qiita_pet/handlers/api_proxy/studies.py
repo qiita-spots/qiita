@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from collections import defaultdict
 
 from qiita_db.user import User
 from qiita_db.study import Study
@@ -149,10 +150,12 @@ def study_prep_get_req(study_id, user_id):
         return access_error
     # Can only pass ids over API, so need to instantiate object
     study = Study(int(study_id))
-    prep_info = {}
+    prep_info = defaultdict(list)
+    editable = study.can_edit(User(user_id))
     for dtype in study.data_types:
-        prep_info[dtype] = []
         for prep in study.prep_templates(dtype):
+            if prep.status != 'public' and not editable:
+                continue
             start_artifact = prep.artifact
             info = {
                 'name': 'PREP %d NAME' % prep.id,
@@ -171,6 +174,7 @@ def study_prep_get_req(study_id, user_id):
                 info['youngest_artifact'] = None
 
             prep_info[dtype].append(info)
+
     return {'status': 'success',
             'message': '',
             'info': prep_info}

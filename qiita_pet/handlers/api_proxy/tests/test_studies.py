@@ -8,6 +8,9 @@
 from unittest import TestCase, main
 from datetime import datetime
 
+import pandas as pd
+import numpy.testing as npt
+
 from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.studies import (
@@ -151,6 +154,43 @@ class TestStudyAPI(TestCase):
                    'start_artifact_id': 1,
                    'start_artifact': 'FASTQ',
                    'youngest_artifact': 'BIOM - BIOM'}]}}
+        self.assertEqual(obs, exp)
+
+        # Add a new prep template
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
+            qdb.study.Study(1), '16S')
+        obs = study_prep_get_req(1, 'test@foo.bar')
+        exp = {'status': 'success',
+               'message': '',
+               'info': {
+                   '18S': [{'id': 1,
+                            'status': 'private',
+                            'name': 'PREP 1 NAME',
+                            'start_artifact_id': 1,
+                            'start_artifact': 'FASTQ',
+                            'youngest_artifact': 'BIOM - BIOM'}],
+                   '16S': [{'id': pt.id,
+                            'status': 'sandbox',
+                            'name': 'PREP %d NAME' % pt.id,
+                            'start_artifact_id': None,
+                            'start_artifact': None,
+                            'youngest_artifact': None}]}}
+        self.assertEqual(obs, exp)
+
+        qdb.artifact.Artifact(1).visibility = 'public'
+        obs = study_prep_get_req(1, 'demo@microbio.me')
+        exp = {'status': 'success',
+               'message': '',
+               'info': {
+                   '18S': [{'id': 1,
+                            'status': 'public',
+                            'name': 'PREP 1 NAME',
+                            'start_artifact_id': 1,
+                            'start_artifact': 'FASTQ',
+                            'youngest_artifact': 'BIOM - BIOM'}]}}
         self.assertEqual(obs, exp)
 
     def test_study_prep_get_req_no_access(self):
