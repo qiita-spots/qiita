@@ -5,7 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from os.path import join
+from os.path import join, basename
 from functools import partial
 
 from future.utils import viewitems
@@ -115,6 +115,9 @@ def artifact_summary_get_request(user_id, artifact_id):
                 '<span class="glyphicon glyphicon-export"></span>'
                 ' Submit to VAMPS</a>')
 
+    files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')))
+             for f_id, fp, f_type in artifact.filepaths]
+
     return {'status': 'success',
             'message': '',
             'name': artifact.name,
@@ -123,7 +126,8 @@ def artifact_summary_get_request(user_id, artifact_id):
             'errored_jobs': errored_jobs,
             'processing_jobs': processing_jobs,
             'visibility': visibility,
-            'buttons': ' '.join(buttons)}
+            'buttons': ' '.join(buttons),
+            'files': files}
 
 
 def artifact_summary_post_request(user_id, artifact_id):
