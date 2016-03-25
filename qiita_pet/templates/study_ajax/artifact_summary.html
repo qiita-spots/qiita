@@ -61,6 +61,14 @@
 </div>
 <div class='row'>
   <div class='col-md-12'>
+    Available files:
+    {% for f_id, f_name in files %}
+      </br><a class="btn btn-default" href="/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a>
+    {% end %}
+  </div>
+</div>
+<div class='row'>
+  <div class='col-md-12'>
     {% if processing_jobs %}
       <b>Jobs using this set of files:</b></br>
     {% end %}
