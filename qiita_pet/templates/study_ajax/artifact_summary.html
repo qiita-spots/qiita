@@ -50,13 +50,18 @@
   <div class='col-md-12'>
     <h4>
       <i>Summary: {{name}} (ID: {{artifact_id}})</i>
-      <a class="btn btn-default btn-sm" onclick="populate_main_div('/study/process/', {artifact_id: {{artifact_id}} });"><span class="glyphicon glyphicon-play"></span> Process</a>
+      {% if editable %}
+        <a class="btn btn-default btn-sm" onclick="populate_main_div('/study/process/', {artifact_id: {{artifact_id}} });"><span class="glyphicon glyphicon-play"></span> Process</a>
+      {% end %}
     </h4>
   </div>
 </div>
 <div class='row'>
   <div class='col-md-12'>
-    Visibility: {{visibility}} {% raw buttons %}
+    Visibility: {{visibility}}
+    {% if editable %}
+      {% raw buttons %}
+    {% end %}
   </div>
 </div>
 <div class='row'>

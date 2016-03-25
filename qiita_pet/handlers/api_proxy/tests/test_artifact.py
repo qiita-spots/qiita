@@ -161,7 +161,8 @@ class TestArtifactAPI(TestCase):
                           'set_artifact_visibility(\'sandbox\', 1)" '
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
-               'files': exp_files}
+               'files': exp_files,
+               'editable': True}
         self.assertItemsEqual(obs, exp)
 
         # Artifact with summary being generated
@@ -185,7 +186,8 @@ class TestArtifactAPI(TestCase):
                           'set_artifact_visibility(\'sandbox\', 1)" '
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
-               'files': exp_files}
+               'files': exp_files,
+               'editable': True}
         self.assertItemsEqual(obs, exp)
 
         # Artifact with summary
@@ -211,7 +213,8 @@ class TestArtifactAPI(TestCase):
                           'set_artifact_visibility(\'sandbox\', 1)" '
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
-               'files': exp_files}
+               'files': exp_files,
+               'editable': True}
         self.assertItemsEqual(obs, exp)
 
         # No access
