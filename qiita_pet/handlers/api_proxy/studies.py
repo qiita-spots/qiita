@@ -88,15 +88,10 @@ def study_get_req(study_id, user_id):
     samples = study.sample_template
     study_info['num_samples'] = 0 if samples is None else len(list(samples))
 
-    # The study is editable only if the user is the owner, is in the shared
-    # list or the user is an admin
-    user = User(user_id)
-    editable = (user.level == 'admin' or study.owner == user or
-                user in study.shared_with)
     return {'status': 'success',
             'message': '',
             'study_info': study_info,
-            'editable': editable}
+            'editable': study.can_edit(User(user_id))}
 
 
 def study_delete_req(study_id, user_id):

@@ -270,6 +270,13 @@ class TestStudy(TestCase):
         self.assertFalse(
             self.study.has_access(qdb.user.User("demo@microbio.me"), True))
 
+    def test_can_edit(self):
+        self.assertTrue(self.study.can_edit(qdb.user.User('test@foo.bar')))
+        self.assertTrue(self.study.can_edit(qdb.user.User('shared@foo.bar')))
+        self.assertTrue(self.study.can_edit(qdb.user.User('admin@foo.bar')))
+        self.assertFalse(
+            self.study.can_edit(qdb.user.User('demo@microbio.me')))
+
     def test_owner(self):
         self.assertEqual(self.study.owner, qdb.user.User("test@foo.bar"))
 

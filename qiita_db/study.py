@@ -1040,6 +1040,24 @@ class Study(qdb.base.QiitaObject):
 
             return self in study_set
 
+    def can_edit(self, user):
+        """Returns whether the given user can edit the study
+
+        Parameters
+        ----------
+        user : User object
+            User we are checking edit permissions for
+
+        Returns
+        -------
+        bool
+            Whether user can edit the study or not
+        """
+        # The study is editable only if the user is the owner, is in the shared
+        # list or the user is an admin
+        return (user.level in {'superuser', 'admin'} or self.owner == user or
+                user in self.shared_with)
+
     def share(self, user):
         """Share the study with another user
 
