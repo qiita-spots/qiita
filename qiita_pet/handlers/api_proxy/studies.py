@@ -79,10 +79,11 @@ def study_get_req(study_id, user_id):
         'affiliation': pi.affiliation}
 
     lab_person = study_info['lab_person']
-    study_info['lab_person'] = {
-        'name': lab_person.name,
-        'email': lab_person.email,
-        'affiliation': lab_person.affiliation}
+    if lab_person:
+        study_info['lab_person'] = {
+            'name': lab_person.name,
+            'email': lab_person.email,
+            'affiliation': lab_person.affiliation}
 
     samples = study.sample_template
     study_info['num_samples'] = 0 if samples is None else len(list(samples))
