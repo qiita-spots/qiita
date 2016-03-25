@@ -31,7 +31,7 @@ class TestStudyAPI(TestCase):
         exp = {
             'status': 'success',
             'message': '',
-            'info': {
+            'study_info': {
                 'mixs_compliant': True,
                 'metadata_complete': True,
                 'reprocess': False,
@@ -71,7 +71,8 @@ class TestStudyAPI(TestCase):
                     'num_samples': 27,
                     'study_title': 'Identification of the Microbiomes for '
                                    'Cannabis Soils',
-                    'number_samples_collected': 27}}
+                    'number_samples_collected': 27},
+            'editable': True}
         self.assertEqual(obs, exp)
 
     def test_study_get_req_no_access(self):

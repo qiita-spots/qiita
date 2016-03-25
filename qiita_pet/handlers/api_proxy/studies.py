@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+from qiita_db.user import User
 from qiita_db.study import Study
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import (supported_filepath_types,
@@ -85,10 +86,16 @@ def study_get_req(study_id, user_id):
 
     samples = study.sample_template
     study_info['num_samples'] = 0 if samples is None else len(list(samples))
+
+    # The study is editable only if the user is the owner, is in the shared
+    # list or the user is an admin
+    user = User(user_id)
+    editable = (user.level == 'admin' or study.owner == user or
+                user in study.shared_with)
     return {'status': 'success',
             'message': '',
-            'info': study_info
-            }
+            'study_info': study_info,
+            'editable': editable}
 
 
 def study_delete_req(study_id, user_id):
