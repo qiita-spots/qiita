@@ -324,6 +324,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 "Can't submit job, not in 'in_construction' or "
                 "'waiting' status. Current status: %s" % status)
+        self._set_status = 'queued'
         cmd = self._generate_cmd()
         p = Process(target=_job_submitter, args=(self, cmd))
         p.start()
