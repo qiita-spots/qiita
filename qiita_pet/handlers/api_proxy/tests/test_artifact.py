@@ -144,6 +144,9 @@ class TestArtifactAPI(TestCase):
              'running', 'demultiplexing'],
             ['b72369f9-a886-4193-8d3d-f7b504168e75', 'Split libraries FASTQ',
              'success', None]]
+        exp_files = [
+            (1L, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)'),
+            (2L, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
         exp = {'status': 'success',
                'message': '',
                'name': 'Raw data 1',
@@ -157,8 +160,9 @@ class TestArtifactAPI(TestCase):
                           'Make public</button> <button onclick="'
                           'set_artifact_visibility(\'sandbox\', 1)" '
                           'class="btn btn-primary btn-sm">Revert to '
-                          'sandbox</button>'}
-        self.assertEqual(obs, exp)
+                          'sandbox</button>',
+               'files': exp_files}
+        self.assertItemsEqual(obs, exp)
 
         # Artifact with summary being generated
         job = ProcessingJob.create(
@@ -180,7 +184,8 @@ class TestArtifactAPI(TestCase):
                           'Make public</button> <button onclick="'
                           'set_artifact_visibility(\'sandbox\', 1)" '
                           'class="btn btn-primary btn-sm">Revert to '
-                          'sandbox</button>'}
+                          'sandbox</button>',
+               'files': exp_files}
         self.assertItemsEqual(obs, exp)
 
         # Artifact with summary
@@ -205,8 +210,9 @@ class TestArtifactAPI(TestCase):
                           'Make public</button> <button onclick="'
                           'set_artifact_visibility(\'sandbox\', 1)" '
                           'class="btn btn-primary btn-sm">Revert to '
-                          'sandbox</button>'}
-        self.assertEqual(obs, exp)
+                          'sandbox</button>',
+               'files': exp_files}
+        self.assertItemsEqual(obs, exp)
 
         # No access
         obs = artifact_summary_get_request('demo@microbio.me', 1)
