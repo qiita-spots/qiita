@@ -180,6 +180,9 @@ class TestStudyAPI(TestCase):
                             'youngest_artifact': None}]}}
         self.assertEqual(obs, exp)
 
+        obs = study_prep_get_req(1, 'admin@foo.bar')
+        self.assertEqual(obs, exp)
+
         qdb.artifact.Artifact(1).visibility = 'public'
         obs = study_prep_get_req(1, 'demo@microbio.me')
         exp = {'status': 'success',
