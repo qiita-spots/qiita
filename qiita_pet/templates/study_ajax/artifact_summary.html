@@ -50,13 +50,27 @@
   <div class='col-md-12'>
     <h4>
       <i>Summary: {{name}} (ID: {{artifact_id}})</i>
-      <a class="btn btn-default glyphicon glyphicon-play" style="word-spacing: -10px;" onclick="populate_main_div('/study/process/', {artifact_id: {{artifact_id}} });"> Process</a>
+      <a class="btn btn-default btn-sm" onclick="populate_main_div('/study/process/', {artifact_id: {{artifact_id}} });"><span class="glyphicon glyphicon-play"></span> Process</a>
     </h4>
   </div>
 </div>
 <div class='row'>
   <div class='col-md-12'>
     Visibility: {{visibility}} {% raw buttons %}
+  </div>
+</div>
+<div class='row'>
+  <div class='col-md-12'>
+    {% if processing_jobs %}
+      <b>Jobs using this set of files:</b></br>
+    {% end %}
+    {% for j_id, c_name, j_status, s_step in processing_jobs %}
+      Job <b>{{j_id}}</b> ({{c_name}}). Status: <i>{{j_status}}</i>.
+      {% if s_step %}
+        Step: <i>{{s_step}}</i>
+      {% end %}
+      </br>
+    {% end %}
   </div>
 </div>
 <div class='row'>

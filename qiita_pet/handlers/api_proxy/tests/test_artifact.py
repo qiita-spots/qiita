@@ -133,11 +133,23 @@ class TestArtifactAPI(TestCase):
     def test_artifact_summary_get_request(self):
         # Artifact w/o summary
         obs = artifact_summary_get_request('test@foo.bar', 1)
+        exp_p_jobs = [
+            ['6d368e16-2242-4cf8-87b4-a5dc40bb890b', 'Split libraries FASTQ',
+             'success', None],
+            ['4c7115e8-4c8e-424c-bf25-96c292ca1931', 'Split libraries FASTQ',
+             'success', None],
+            ['063e553b-327c-4818-ab4a-adfe58e49860', 'Split libraries FASTQ',
+             'queued', None],
+            ['bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'Split libraries',
+             'running', 'demultiplexing'],
+            ['b72369f9-a886-4193-8d3d-f7b504168e75', 'Split libraries FASTQ',
+             'success', None]]
         exp = {'status': 'success',
                'message': '',
                'name': 'Raw data 1',
                'summary': None,
                'job': None,
+               'processing_jobs': exp_p_jobs,
                'errored_jobs': [],
                'visibility': 'private',
                'buttons': '<button onclick="set_artifact_visibility'
@@ -160,6 +172,7 @@ class TestArtifactAPI(TestCase):
                'name': 'Raw data 1',
                'summary': None,
                'job': [job.id, 'queued', None],
+               'processing_jobs': exp_p_jobs,
                'errored_jobs': [],
                'visibility': 'private',
                'buttons': '<button onclick="set_artifact_visibility'
@@ -168,7 +181,7 @@ class TestArtifactAPI(TestCase):
                           'set_artifact_visibility(\'sandbox\', 1)" '
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>'}
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
         # Artifact with summary
         fd, fp = mkstemp(suffix=".html")
@@ -184,6 +197,7 @@ class TestArtifactAPI(TestCase):
                'name': 'Raw data 1',
                'summary': '<b>HTML TEST - not important</b>\n',
                'job': None,
+               'processing_jobs': exp_p_jobs,
                'errored_jobs': [],
                'visibility': 'private',
                'buttons': '<button onclick="set_artifact_visibility'
