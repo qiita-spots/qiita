@@ -43,7 +43,10 @@ class StudyBaseInfoAJAX(BaseHandler):
             [doi_linkifier(p) for p in study_info['publications']])
         email = '<a href="mailto:{email}">{name} ({affiliation})</a>'
         pi = email.format(**study_info['principal_investigator'])
-        contact = email.format(**study_info['lab_person'])
+        if study_info['lab_person']:
+            contact = email.format(**study_info['lab_person'])
+        else:
+            contact = None
 
         self.render('study_ajax/base_info.html',
                     study_info=study_info, publications=study_doi, pi=pi,
