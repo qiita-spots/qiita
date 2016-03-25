@@ -137,6 +137,12 @@ class TestProcessingAPI(TestCase):
                        'outputs': [['OTU table', 'BIOM']]}}
         self.assertEqual(obs, exp)
 
+        obs = workflow_handler_patch_req(
+            'remove', '/%s/%s/' % (wf.id, new_job.id))
+        exp = {'status': 'success', 'message': ''}
+        jobs = set(wf.graph.nodes()) - set(nodes)
+        self.assertEqual(jobs, set())
+
     def test_workflow_handler_patch_req_error(self):
         # Incorrect path parameter
         obs = workflow_handler_patch_req('add', '/1/extra/')
@@ -155,6 +161,12 @@ class TestProcessingAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Operation "replace" not supported. '
                           'Current supported operations: add'}
+        self.assertEqual(obs, exp)
+
+        # Incorrect path parameter (op = remove)
+        obs = workflow_handler_patch_req('remove', '/1/')
+        exp = {'status': 'error',
+               'message': 'Incorrect path parameter'}
         self.assertEqual(obs, exp)
 
 if __name__ == '__main__':

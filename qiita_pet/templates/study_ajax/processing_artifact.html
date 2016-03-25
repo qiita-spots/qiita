@@ -76,7 +76,7 @@
       alert("Please choose only one job node at a time");
     }
     else {
-      j_id = p_nodes[0];
+      var j_id = p_nodes[0];
       $.get('/study/process/job/', {job_id: j_id})
         .done(function(data) {
           $("#processing-info-div").empty();
@@ -285,8 +285,8 @@
    */
   function load_parameter_gui(p_name, param_info, sel_artifacts_info) {
     $('<i>').appendTo("#cmd-opts-div").text(p_name.replace('_', ' ') + ': ');
-    p_type = param_info[0];
-    allowed_types = param_info[1];
+    var p_type = param_info[0];
+    var allowed_types = param_info[1];
     if (p_type == 'artifact') {
       var sel = $('<select>').appendTo("#cmd-opts-div").attr('id', p_name).attr('name', p_name).addClass('required-parameter');
       for(var key in sel_artifacts_info) {
@@ -348,7 +348,7 @@
    *
    * @param p_nodes list The ids of the selected artifacts
    *
-   * This function executes and AJAX call to retrieve all the commands that can
+   * This function executes an AJAX call to retrieve all the commands that can
    * process the selected artifacts. It generates the interface so the user
    * can select which command should be added to the workflow
    *
@@ -391,13 +391,15 @@
 
         // Create the add command button - but not show it yet
         $('<div hidden>').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
-        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(function () { add_job(); });
+        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(add_job);
       });
   }
 
   $(document).ready(function() {
     // Create the network object
-    var container = document.getElementById('graph-network-div');
+    // 'get(0)' is used to return the actual DOM element, which is what
+    // vis.Network needs.
+    var container = $('#graph-network-div').get(0);
     var data = {nodes: nodes, edges: edges};
     var options = {
       nodes: {
