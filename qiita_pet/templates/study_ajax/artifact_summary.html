@@ -48,7 +48,10 @@
 </script>
 <div class='row'>
   <div class='col-md-12'>
-    <h4><i>Summary: {{name}} (ID: {{artifact_id}})</i></h4>
+    <h4>
+      <i>Summary: {{name}} (ID: {{artifact_id}})</i>
+      <a class="btn btn-default glyphicon glyphicon-play" style="word-spacing: -10px;" onclick="populate_main_div('/study/process/', {artifact_id: {{artifact_id}} });"> Process</a>
+    </h4>
   </div>
 </div>
 <div class='row'>

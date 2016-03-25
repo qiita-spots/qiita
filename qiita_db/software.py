@@ -37,6 +37,31 @@ class Command(qdb.base.QiitaObject):
     _table = "software_command"
 
     @classmethod
+    def get_commands_by_input_type(cls, artifact_types):
+        """Returns the commands that can process the given artifact types
+
+        Parameters
+        ----------
+        artifact_type : list of str
+            The artifact types
+
+        Returns
+        -------
+        generator of qiita_db.software.Command
+            The commands that can process the given artifact tyoes
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT command_id
+                     FROM qiita.command_parameter
+                        JOIN qiita.parameter_artifact_type
+                            USING (command_parameter_id)
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE artifact_type IN %s"""
+            qdb.sql_connection.TRN.add(sql, [tuple(artifact_types)])
+            for c_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield cls(c_id)
+
+    @classmethod
     def get_html_generator(cls, artifact_type):
         """Returns the command that genearete the HTML for the given artifact
 
@@ -307,12 +332,19 @@ class Command(qdb.base.QiitaObject):
             Dictionary of {parameter_name: ptype}
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT parameter_name, parameter_type
+            sql = """SELECT command_parameter_id, parameter_name,
+                            parameter_type, array_agg(
+                                artifact_type ORDER BY artifact_type) AS
+                            artifact_type
                      FROM qiita.command_parameter
-                     WHERE command_id = %s AND required = true"""
+                        LEFT JOIN qiita.parameter_artifact_type
+                            USING (command_parameter_id)
+                        LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE command_id = %s AND required = True
+                     GROUP BY command_parameter_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
-            return {pname: ptype for pname, ptype in res}
+            return {pname: (ptype, atype) for _, pname, ptype, atype in res}
 
     @property
     def optional_parameters(self):
@@ -349,6 +381,23 @@ class Command(qdb.base.QiitaObject):
             res = qdb.sql_connection.TRN.execute_fetchflatten()
             for pid in res:
                 yield DefaultParameters(pid)
+
+    @property
+    def outputs(self):
+        """Returns the list of output artifact types
+
+        Returns
+        -------
+        list of str
+            The output artifact types
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name, artifact_type
+                     FROM qiita.command_output
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchindex()
 
 
 class Software(qdb.base.QiitaObject):

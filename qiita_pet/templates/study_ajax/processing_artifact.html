@@ -1,0 +1,479 @@
+<script type="text/javascript">
+  var processing_network;
+  var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
+  var edges = new vis.DataSet();
+
+  /*
+   * Remove a job from the workflow
+   *
+   * @param job_id str The id of the job to be removed
+   *
+   * This function executes an AJAX call to remove the given job from the
+   * current workflow and updates the graph accordingly
+   *
+   */
+  function remove_job(job_id) {
+    var workflow_id = $("#graph-network-div").attr("data-wf-id");
+    if(confirm("Are you sure you want to delete the job " + job_id + "? All jobs depending on this job will also be removed.")) {
+      $.ajax({
+        url: '/study/process/workflow/',
+        type: 'PATCH',
+        data: {'op': 'remove', 'path': '/' + workflow_id + '/' + job_id},
+        success: function(data) {
+          if(data.stats == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            remove_job_node_from_graph(job_id);
+            var job_count = nodes.get({filter: function(item) {
+              return item.group == "job";
+            }}).length;
+            $("#graph-network-div").attr("data-wf-job-count", job_count);
+            if (job_count == 0) {
+              $('#run-btn').prop('disabled', true);
+            }
+            $("#processing-info-div").empty();
+          }
+        }
+      });
+    }
+  }
+
+  /*
+   * Submit the current workflow for execution
+   *
+   * This function executes an AJAX call to submit the current workflow
+   * for execution
+   *
+   */
+  function run_workflow() {
+    var w_id = $("#graph-network-div").attr("data-wf-id");
+    $.post("/study/process/workflow/run/", {workflow_id: w_id})
+      .done(function(data) {
+        if (data.status == 'success') {
+          bootstrapAlert("Workflow " + w_id + " submitted", "success");
+        }
+        else {
+          bootstrapAlert(data.message, "danger");
+        }
+      });
+  }
+
+  /*
+   * Load the GUI for the selected job
+   *
+   * @param p_nodes list the ids of the selecting nodes
+   *
+   * Only one job node can be selected at a time. If the user tries to select
+   * more than one, an alert is shown. Otherwise, this function executes an
+   * AJAX call to retrieve the information of the selecting job and udpates
+   * the GUI to show such information
+   *
+   */
+  function load_job(p_nodes) {
+    if(p_nodes.length > 1) {
+      $("#processing-info-div").empty();
+      alert("Please choose only one job node at a time");
+    }
+    else {
+      var j_id = p_nodes[0];
+      $.get('/study/process/job/', {job_id: j_id})
+        .done(function(data) {
+          $("#processing-info-div").empty();
+          if (data.status == 'success') {
+            var keys = ['job_id', 'job_status', "job_step"];
+            var d = $("<div>").appendTo("#processing-info-div");
+            for(var i in keys) {
+              if (data[keys[i]]) {
+                d.append("<b>" + keys[i].replace('_', ' ') + ": </b> " + data[keys[i]] + "</br>");
+              }
+            }
+            d.append("<b> job parameters: </b></br>");
+            for(var key in data.job_parameters) {
+              d.append("<i>" + key + ":</i> " + data.job_parameters[key] + "</br>");
+            }
+            d.append('<button class="btn btn-danger btn-sm" onclick="remove_job(\'' + j_id + '\');"><span class="glyphicon glyphicon-trash"></span> Remove job</button>');
+          }
+          else {
+            bootstrapAlert(data.message, "danger");
+          }
+        });
+    }
+  }
+
+  /*
+   * Remove a job node from the network visualization
+   *
+   * @param job_id str The id of the job
+   *
+   * This function removes the given job and its children from the
+   * network visualization
+   *
+   */
+  function remove_job_node_from_graph(job_id) {
+    var queue = [job_id];
+    var edge_list = edges.get();
+    var current;
+    var edge;
+    while(queue.length !== 0) {
+      current = queue.pop();
+      for(var i in edge_list) {
+        edge = edge_list[i];
+        if(edge.from == current) {
+          if($.inArray(edge.to, queue) == -1) {
+            queue.push(edge.to);
+          }
+          edges.remove(edge.id);
+        }
+      }
+      nodes.remove(current);
+    }
+    var edges_to_remove = edges.get(
+      {filter: function(item) {
+        return item.to == job_id;
+      }});
+    var edge_ids = [];
+    $(edges_to_remove).each(function(i){
+      edge_ids.push(edges_to_remove[i].id);
+    });
+
+    edges.remove(edge_ids);
+    processing_network.redraw();
+  }
+
+  /*
+   * Add a job node to the network visualization
+   *
+   * @param job_info object The information of the new job to be added
+   *
+   * This function adds a new job node to the network visualization, as well as
+   * adding the needed children and edges between its inputs and outputs (children)
+   *
+   */
+  function add_job_node_to_graph(job_info) {
+    // Fun fact - although it seems counterintuitive, in vis.Network we
+    // first need to add the edge and then we can add the node. It doesn't
+    // make sense, but it is how it works
+    $(job_info.inputs).each(function(){
+      edges.add({id: edges.length + 1, from: this, to: job_info.id});
+    });
+    nodes.add({id: job_info.id, group: "job", label: job_info.label});
+    $(job_info.outputs).each(function(){
+      var out_name = this[0];
+      var out_type = this[1];
+      var n_id = job_info.id + ":" + out_name;
+      edges.add({id: edges.length + 1, from: job_info.id, to: n_id });
+      nodes.add({id: n_id, label: out_name + " - (" + out_type + ")", group: "type", name: out_name, type: out_type});
+    });
+    processing_network.redraw();
+  }
+
+  /*
+   * Adds a new job to the current workflow
+   *
+   * @param command_id int the command to execute on the new job
+   * @param params_id int the id of the default parameter set to be used in the new job
+   * @param req_params object the required parameters of the new job
+   * @param workflow_id int the current workflow id
+   *
+   * This function formats the data correctly and executes an AJAX call to
+   * create and add a new job to the current workflow
+   *
+   */
+  function create_job(command_id, params_id, req_params, workflow_id) {
+    var value = {'dflt_params': params_id};
+    var connections = {}
+    var r_params = {}
+    for (var param in req_params) {
+      var vs = req_params[param].split(':');
+      if (vs.length == 2) {
+        if(!connections.hasOwnProperty(vs[0])){
+          connections[vs[0]] = {};
+        }
+        connections[vs[0]][vs[1]] = param;
+      }
+      else {
+        r_params[param] = req_params[param];
+      }
+    }
+    value['connections'] = connections;
+    value['req_params'] = r_params;
+    $.ajax({
+      url: '/study/process/workflow/',
+      type: 'PATCH',
+      data: {'op': 'add', 'path': workflow_id, 'value': JSON.stringify(value)},
+      success: function(data) {
+        if(data.stats == 'error') {
+          bootstrapAlert(data.message, "danger");
+        }
+        else {
+          var inputs = [];
+          for(var k in req_params) {
+            inputs.push(req_params[k]);
+          }
+          data.job.inputs = inputs;
+          add_job_node_to_graph(data.job);
+        }
+      }
+    });
+  }
+
+  /*
+   * Create a new workflow
+   *
+   * @param command_id int the command to execute on the first job of the workflow
+   * @param params_id int the id of the default parameter set to be used in first job of the workflow
+   * @param req_params object the required parameters of the first job of the workflow
+   *
+   * This function executes an AJAX call to create a new workflow by providing
+   * the first job in the workflow. It then stores the workflow id in the
+   * "data-wf-id" attribute of the "graph-network-div" div.
+   *
+   */
+  function create_workflow(command_id, params_id, req_params) {
+    $.post('/study/process/workflow/', {dflt_params_id: params_id, req_params: JSON.stringify(req_params) })
+      .done(function(data) {
+        if (data.status == 'success') {
+          $("#graph-network-div").attr("data-wf-id", data.workflow_id);
+          add_job_node_to_graph(data.job);
+        }
+        else {
+          bootstrapAlert(data.message, "danger");
+        }
+      });
+  }
+
+  /*
+   * Adds a new job to the workflow
+   *
+   * This function retrieves the information to add a new job to the workflow.
+   * If the workflow still doesn't exist, it calls 'create_workflow'. Otherwise
+   * it calls "create_job".
+   *
+   */
+  function add_job() {
+    var command_id = $("#command-sel").val();
+    var params_id = $("#params-sel").val();
+    // Collect the required parameters
+    var req_params = {}
+    $(".required-parameter").each( function () {
+      req_params[this.id] = this.value;
+    })
+    var workflow_id = $("#graph-network-div").attr("data-wf-id");
+    if (workflow_id == -1) {
+      // This is the first command to be run, so the workflow still doesn't
+      // exist in the system.
+      create_workflow(command_id, params_id, req_params);
+    }
+    else {
+      create_job(command_id, params_id, req_params, workflow_id);
+    }
+    $("#processing-info-div").empty();
+    $('#run-btn').prop('disabled', false);
+    $("#graph-network-div").attr("data-wf-job-count", +$("#graph-network-div").attr("data-wf-job-count") + 1);
+  }
+
+  /*
+   * Load the GUI for a given command parameter
+   *
+   * @param p_name str the name of the parameter
+   * @param param_info object the information of the parameter
+   * @param sel_artifacts_info object with the information of the currently selected artifacts
+   *
+   * This function generates the needed GUI specific to the given parameter type
+   *
+   */
+  function load_parameter_gui(p_name, param_info, sel_artifacts_info) {
+    $('<i>').appendTo("#cmd-opts-div").text(p_name.replace('_', ' ') + ': ');
+    var p_type = param_info[0];
+    var allowed_types = param_info[1];
+    if (p_type == 'artifact') {
+      var sel = $('<select>').appendTo("#cmd-opts-div").attr('id', p_name).attr('name', p_name).addClass('required-parameter');
+      for(var key in sel_artifacts_info) {
+         if(allowed_types.indexOf(sel_artifacts_info[key].type) !== -1) {
+           sel.append($('<option>').attr('value', key).text(sel_artifacts_info[key].name));
+         }
+      }
+    }
+    $('<br>').appendTo("#cmd-opts-div")
+  }
+
+  /*
+   * Load the GUI for the options of a command
+   *
+   * @param cmd_id int the command to load the options from
+   * @param sel_artifacts_info object with the information of the currently selected artifacts
+   *
+   * This function executes an AJAX call to retrieve the information about the
+   * options of the given command and generates the GUI to present those options
+   * to the user
+   *
+   */
+  function load_command_options(cmd_id, sel_artifacts_info) {
+    $.get('/study/process/commands/options/', {command_id: cmd_id})
+      .done(function(data){
+          // Put first the required parameters
+          for(var key in data.req_options) {
+            load_parameter_gui(key, data.req_options[key], sel_artifacts_info);
+          }
+          $('<i>').appendTo("#cmd-opts-div").text("Choose parameter set:");
+          // Create a select dropdown for the default parameter sets
+          var sel = $('<select>').appendTo("#cmd-opts-div").attr('id', 'params-sel').attr('name', 'params-sel');
+          sel.append($("<option>").attr('value', "").text("Choose parameter set..."));
+          for(var i=0; i<data.options.length; i++) {
+            sel.append($("<option>").attr('value', data.options[i].id).attr('data-vals', JSON.stringify(data.options[i].values)).text(data.options[i].name));
+          }
+          $("<div>").appendTo("#cmd-opts-div").attr('id', 'opt-vals-div').attr('name', 'opt-vals-div');
+          sel.change(function(event){
+            var v = $("#params-sel").val();
+            if (v !== "") {
+              // Show the specific parameter values
+              var opt_vals = JSON.parse($("#params-sel option[value='" + v + "']").attr("data-vals"));
+              $("#opt-vals-div").empty();
+              for(var key in opt_vals) {
+                $("#opt-vals-div").append("<b>" + key + "</b> " + opt_vals[key] + "</br>");
+              }
+              $("#add-cmd-btn-div").show();
+            }
+            else {
+              $("#opt-vals-div").empty();
+              $("#add-cmd-btn-div").hide();
+            }
+          });
+      });
+  }
+
+  /*
+   * Generates the GUI for selecting the commands to apply to the given artifacts
+   *
+   * @param p_nodes list The ids of the selected artifacts
+   *
+   * This function executes an AJAX call to retrieve all the commands that can
+   * process the selected artifacts. It generates the interface so the user
+   * can select which command should be added to the workflow
+   *
+   */
+  function load_artifact_type(p_nodes) {
+    var types = []
+    var sel_artifacts_info = {};
+    var t;
+    var node;
+    for(var i=0; i < p_nodes.length; i++) {
+      node = nodes.get(p_nodes[i]);
+      if(types.indexOf(node.type) === -1) {
+        types.push(node.type);
+      }
+      sel_artifacts_info[node.id] = {'type': node.type, 'name': node.name}
+    }
+    $.get('/study/process/commands/', {artifact_types: types})
+      .done(function (data) {
+        $("#processing-info-div").empty();
+        $("#processing-info-div").html("<i>Choose command: </i>");
+        // Create the command select dropdown
+        var sel = $('<select>').appendTo('#processing-info-div').attr('id', 'command-sel').attr('name', 'command');
+        sel.append($("<option>").attr('value', "").text("Choose command..."));
+        for(var i=0; i<data.commands.length; i++) {
+          sel.append($("<option>").attr('value', data.commands[i].id).text(data.commands[i].command));
+        }
+        sel.change(function(event) {
+          var v = $("#command-sel").val();
+          if (v !== "") {
+            load_command_options(v, sel_artifacts_info);
+          }
+          else {
+            $("#cmd-opts-div").empty();
+            $("#add-cmd-btn-div").hide();
+          }
+        });
+
+        // Create the div in which the command options will be shown
+        $('<div>').appendTo('#processing-info-div').attr('id', 'cmd-opts-div').attr('name', 'cmd-opts-div');
+
+        // Create the add command button - but not show it yet
+        $('<div hidden>').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
+        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(add_job);
+      });
+  }
+
+  $(document).ready(function() {
+    // Create the network object
+    // 'get(0)' is used to return the actual DOM element, which is what
+    // vis.Network needs.
+    var container = $('#graph-network-div').get(0);
+    var data = {nodes: nodes, edges: edges};
+    var options = {
+      nodes: {
+        color: {highlight: {border: "yellow"}},
+        font: '14px arial black'
+      },
+      edges: {
+        color: 'grey'
+      },
+      layout: {
+        hierarchical: {
+          direction: "LR",
+          sortMethod: "directed",
+          levelSeparation: 300
+        }
+      },
+      interaction: {
+        dragNodes: false,
+        dragView: true,
+        zoomView: true,
+        selectConnectedEdges: false,
+        multiselect: true,
+        navigationButtons: true,
+        keyboard: true
+      },
+      groups: {
+        type: {shape: "ellipse", color: "#cef"},
+        job: {shape: "box", color: "#9fd"}
+      }
+    };
+    processing_network = new vis.Network(container, data, options);
+    processing_network.on('select', function(params) {
+      // Update the GUI with the information for the selected node type
+      if(params.nodes.length !== 0) {
+        // Make sure all selcted nodes are of same group
+        var group = nodes.get(params.nodes[0]).group;
+        for(var i=0; i<params.nodes.length; i++) {
+          if(nodes.get(params.nodes[i]).group != group) {
+            $("#processing-info-div").empty();
+          }
+        }
+        if(group == 'job') {
+          load_job(params.nodes);
+        }
+        else if(group == 'type') {
+          load_artifact_type(params.nodes);
+        }
+        else {
+          $("#processing-info-div").empty();
+        }
+      }
+    });
+  });
+</script>
+
+<!-- Title -->
+<div class="row">
+  <div class="col-md-12">
+    <h4>Processing {{name}} (ID: {{artifact_id}})</h4>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <h4><i> Processing workflow</i> <button class="btn btn-primary btn-sm" onclick="run_workflow();" id='run-btn' disabled><span class="glyphicon glyphicon-play"></span> Run</button></h4>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12 graph" id="graph-network-div" data-wf-id="-1" data-wf-job-count="0">
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12" id="processing-info-div">
+  </div>
+</div>
