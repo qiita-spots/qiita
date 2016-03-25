@@ -60,7 +60,7 @@ class TestPrepAPIReadOnly(TestCase):
         self.assertEqual(obs, exp)
 
     def test_prep_template_ajax_get_req(self):
-        obs = prep_template_ajax_get_req(1)
+        obs = prep_template_ajax_get_req('test@foo.bar', 1)
         exp = {'status': 'success',
                'message': '',
                'name': "Prep information 1",
@@ -80,7 +80,15 @@ class TestPrepAPIReadOnly(TestCase):
                            'Other'],
                    'User': []},
                'artifact_attached': True,
-               'study_id': 1}
+               'study_id': 1,
+               'editable': True}
+        self.assertEqual(obs, exp)
+
+        obs = prep_template_ajax_get_req('admin@foo.bar', 1)
+        self.assertEqual(obs, exp)
+
+        obs = prep_template_ajax_get_req('demo@microbio.me', 1)
+        exp['editable'] = False
         self.assertEqual(obs, exp)
 
     def test_check_prep_template_exists(self):

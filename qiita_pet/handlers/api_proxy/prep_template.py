@@ -17,6 +17,7 @@ from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
+from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
 
@@ -67,11 +68,13 @@ def new_prep_template_get_req(study_id):
             'ontology': ontology_info}
 
 
-def prep_template_ajax_get_req(prep_id):
+def prep_template_ajax_get_req(user_id, prep_id):
     """Returns the prep tempalte information needed for the AJAX handler
 
     Parameters
     ----------
+    user_id : str
+        The user id
     prep_id : int
         The prep template id
 
@@ -132,7 +135,8 @@ def prep_template_ajax_get_req(prep_id):
             'investigation_type': investigation_type,
             'ontology': ontology,
             'artifact_attached': artifact_attached,
-            'study_id': study_id}
+            'study_id': study_id,
+            'editable': Study(study_id).can_edit(User(user_id))}
 
 
 @execute_as_transaction
