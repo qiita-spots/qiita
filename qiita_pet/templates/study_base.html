@@ -214,8 +214,6 @@
     {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
     <a href="#" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })">Add New Preparation</a><br />
-    <a href="/study/edit/{{study_info['study_id']}}">Edit Study Information</a><br />
-    <a href="#" data-toggle="modal" data-target="#delete-study">Delete Study</a>
     {% end %}
 
     <div id="data-types-menu"></div>
