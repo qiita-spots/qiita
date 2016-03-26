@@ -9,8 +9,6 @@
 from tornado.web import authenticated, HTTPError
 
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.util import is_localhost
-from qiita_pet.handlers.util import download_link_or_path
 from qiita_db.util import get_files_from_uploads_folders
 from qiita_pet.handlers.api_proxy import (
     sample_template_summary_get_req,
@@ -76,25 +74,22 @@ class SampleTemplateAJAX(BaseHandler):
         files = [f for _, f in get_files_from_uploads_folders(study_id)
                  if f.endswith(('txt', 'tsv'))]
         data_types = sorted(data_types_get_req()['data_types'])
-        is_local = is_localhost(self.request.headers['host'])
         # Get the most recent version for download and build the link
         download = sample_template_filepaths_get_req(
             study_id, self.current_user.id)
 
-        if download['status'] == 'success':
-            download = download['filepaths'][-1]
-            dl_path = download_link_or_path(
-                is_local, download[1], download[0],
-                "Download sample information")
-        else:
-            dl_path = 'No sample information added'
+        download_id = (download['filepaths'][0][0]
+                       if download['status'] == 'success' else None)
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
         summary = stats['summary'] if 'summary' in stats else {}
         num_samples = stats['num_samples'] if 'num_samples' in stats else 0
+        num_columns = stats['num_columns'] if 'num_columns' in stats else 0
+        editable = stats['editable'] if 'editable' in stats else False
         self.render('study_ajax/sample_summary.html', stats=summary,
-                    num_samples=num_samples, dl_path=dl_path,
-                    files=files, study_id=study_id, data_types=data_types)
+                    num_samples=num_samples, num_columns=num_columns,
+                    download_id=download_id, files=files, study_id=study_id,
+                    data_types=data_types, editable=editable)
 
     @authenticated
     def post(self):
