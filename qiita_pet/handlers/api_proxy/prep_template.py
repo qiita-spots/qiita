@@ -551,8 +551,10 @@ def prep_template_graph_get_req(prep_id, user_id):
     node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
                    for n in G.nodes()
                    if full_access or n.visibility == 'public']
+    node_ids = [id_ for id_, label in node_labels]
     edge_list = [(n.id, m.id) for n, m in G.edges()
-                 if n.id in node_labels and m.id in node_labels]
+                 if n.id in node_ids and m.id in node_ids]
+
     return {'status': 'success',
             'message': '',
             'edge_list': edge_list,
