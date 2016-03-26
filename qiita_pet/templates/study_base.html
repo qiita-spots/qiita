@@ -211,7 +211,9 @@
   <div class="col-md-3">
   <h3><a href="#" onclick="populate_main_div('/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })">Study Information</a></h3>
     <a href="#" onclick="populate_main_div('/study/description/sample_template/', { study_id: {{study_info['study_id']}} })">Sample Template</a><br />
-    <a href="#" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })">Sample Summary</a><br />
+    {% if study_info['num_samples'] != 0 %}
+      <a href="#" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })">Sample Summary</a><br />
+    {% end %}
     {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
     <a href="#" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })">Add New Preparation</a><br />
