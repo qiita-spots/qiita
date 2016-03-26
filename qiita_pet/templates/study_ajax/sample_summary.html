@@ -1,18 +1,37 @@
 {% from future.utils import viewitems %}
 
 <script type="text/javascript">
+  function delete_sample_template() {
+    if(confirm("Are you sure you want to delete the sample information?")) {
+      sample_action('delete');
+    }
+  }
+
   function sample_action(act) {
     $.post('/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#file-selector").val(), data_type: $("#data_types").val() })
       .done(function ( data ) {
+        var msg_type = "info";
         if(data.status == "error") {
-          bootstrapAlert("<p>Error updating sample template</p>" + data.message, "danger", 4000);
+          msg_type = "danger";
         } else if(data.status == "warning") {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "warning", 4000);
-        } else {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "info", 4000);
+          msg_type = "warning";
         }
-        //reload section of the page with new info
-         fill_sample({{study_id}})
+
+        if (data.message) {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), msg_type);
+        }
+
+        if (data.status != 'error') {
+          //reload section of the page with new info
+          populate_main_div('/study/description/sample_template/', { study_id: {{study_id}} });
+          populate_data_type_menu_div();
+          if (act == 'delete') {
+            $("#sample-summary-btn").hide();
+          }
+          else if(act == 'create') {
+            $("#sample-summary-btn").show();
+          }
+        }
       })
   }
 
@@ -38,7 +57,7 @@
       {% if download_id %}
         <a class="btn btn-default" href="/download/{{download_id}}"><span class="glyphicon glyphicon-download-alt"></span> Sample info</a>
         {% if editable %}
-          <a class="btn btn-danger" onclick="sample_action('delete');"><span class="glyphicon glyphicon-trash"></span> Delete</a>
+          <a class="btn btn-danger" onclick="delete_sample_template();"><span class="glyphicon glyphicon-trash"></span> Delete</a>
         {% end %}
       {% end %}
     </h4>
@@ -58,7 +77,7 @@
 {% if editable %}
   <div class="row">
     <div class="col-md-12">
-      <b>Upload information</b>
+      <b>Upload information:</b>
       <select id="file-selector">
         <option value="">Choose file...</option>
         {% for fp in files %}

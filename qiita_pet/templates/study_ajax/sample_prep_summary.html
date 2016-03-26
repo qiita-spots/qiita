@@ -33,7 +33,7 @@ Add sample column information to table
         if(data.status == "success"){
           addColumn(meta_val, data.values);
         } else {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
         }
       });
   }

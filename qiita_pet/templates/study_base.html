@@ -37,7 +37,7 @@
     $.post("/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
         if( data.status == "success"  && curr_prep != -1 ) { fill_prep(curr_prep); }
-        if( data.status == "error") { bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000); }
+        if( data.status == "error") { bootstrapAlert(data.message.replace("\n", "<br/>"), "danger"); }
       });
   }
 
@@ -132,7 +132,7 @@
       $.post('/study/delete/', { study_id: {{study_info['study_id']}} })
         .done(function ( data ) {
           if(data.status == "error") {
-            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
             $("#delete-study").modal('hide');
           } else {
             window.location.replace('/study/list/');
@@ -196,6 +196,12 @@
     populate_data_type_menu_div();
     // The initial page to be shown is the base information of the study
     populate_main_div("/study/description/baseinfo/", { study_id: {{study_info['study_id']}}});
+
+    {% if study_info['num_samples'] > 0 %}
+      $("#sample-summary-btn").show();
+    {% else %}
+      $("#sample-summary-btn").hide();
+    {% end %}
   });
 </script>
 <style>
@@ -209,14 +215,12 @@
 {% block content %}
 <div class="row">
   <div class="col-md-3">
-  <h3><a href="#" onclick="populate_main_div('/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })">Study Information</a></h3>
-    <a href="#" onclick="populate_main_div('/study/description/sample_template/', { study_id: {{study_info['study_id']}} })">Sample Template</a><br />
-    {% if study_info['num_samples'] != 0 %}
-      <a href="#" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })">Sample Summary</a><br />
-    {% end %}
+    <button class="btn btn-info btn-block" onclick="populate_main_div('/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Study Information</button>
+    <button class="btn btn-info btn-block" onclick="populate_main_div('/study/description/sample_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Sample Template</button>
+    <button class="btn btn-info btn-block" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })" id="sample-summary-btn"><span class="glyphicon glyphicon-th-list"></span> Sample Summary</button>
     {% if editable %}
-    <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
-    <a href="#" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })">Add New Preparation</a><br />
+      <a class="btn btn-info btn-block" href="/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
+      <button class="btn btn-info btn-block" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
     {% end %}
 
     <div id="data-types-menu"></div>
