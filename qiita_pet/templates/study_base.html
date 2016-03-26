@@ -37,7 +37,7 @@
     $.post("/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
         if( data.status == "success"  && curr_prep != -1 ) { fill_prep(curr_prep); }
-        if( data.status == "error") { bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000); }
+        if( data.status == "error") { bootstrapAlert(data.message.replace("\n", "<br/>"), "danger"); }
       });
   }
 
@@ -132,7 +132,7 @@
       $.post('/study/delete/', { study_id: {{study_info['study_id']}} })
         .done(function ( data ) {
           if(data.status == "error") {
-            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
             $("#delete-study").modal('hide');
           } else {
             window.location.replace('/study/list/');

@@ -11,11 +11,11 @@
     $.post('/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#file-selector").val(), data_type: $("#data_types").val() })
       .done(function ( data ) {
         if(data.status == "error") {
-          bootstrapAlert("<p>An error occurred processing your request:</p>" + data.message, "danger", 4000);
+          bootstrapAlert("<p>An error occurred processing your request:</p>" + data.message, "danger");
         } else if(data.status == "warning") {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "warning", 4000);
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "warning");
         } else {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "info", 4000);
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "info");
         }
         //reload section of the page with new info
          fill_sample({{study_id}})

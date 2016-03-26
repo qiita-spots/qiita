@@ -84,7 +84,7 @@
   function add_new_investigation_type_term_and_update() {
     var new_val = $("#new-ontology").val();
     if (!new_val.match(/^[0-9a-zA-Z ]+$/)) {
-      bootstrapAlert("Only alphanumeric characters and space are allowed.", "danger", 4000);
+      bootstrapAlert("Only alphanumeric characters and space are allowed.", "danger");
     }
     else {
       $.ajax({

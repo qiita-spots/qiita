@@ -19,7 +19,7 @@
           $("#artifact-summary-content").html(html_contents);
         }
         else {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
         }
       });
   }
@@ -40,7 +40,7 @@
         var status = "info";
         if(data["status"] == "error") { status = "danger"; }
         //Show for 4 seconds (4000 ms), then remove
-        bootstrapAlert(data.message.replace("\n", "<br/>"), status, 4000);
+        bootstrapAlert(data.message.replace("\n", "<br/>"), status);
         //update buttons to match new status
         load_artifact_summary(aid);
       });
