@@ -15,6 +15,7 @@ import pandas as pd
 import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
+from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology
 from qiita_db.study import Study
@@ -179,18 +180,6 @@ class TestPrepAPIReadOnly(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
-    def test_prep_template_graph_get_req(self):
-        obs = prep_template_graph_get_req(1, 'test@foo.bar')
-        exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5)],
-               'node_labels': [(1, 'Raw data 1 - FASTQ'),
-                               (2, 'Demultiplexed 1 - Demultiplexed'),
-                               (3, 'Demultiplexed 2 - Demultiplexed'),
-                               (4, 'BIOM - BIOM'),
-                               (5, 'BIOM - BIOM')],
-               'status': 'success',
-               'message': ''}
-        self.assertItemsEqual(obs, exp)
-
     def test_prep_template_graph_get_req_no_access(self):
         obs = prep_template_graph_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
@@ -285,6 +274,28 @@ class TestPrepAPI(TestCase):
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
+
+    def test_prep_template_graph_get_req(self):
+        obs = prep_template_graph_get_req(1, 'test@foo.bar')
+        exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5)],
+               'node_labels': [(1, 'Raw data 1 - FASTQ'),
+                               (2, 'Demultiplexed 1 - Demultiplexed'),
+                               (3, 'Demultiplexed 2 - Demultiplexed'),
+                               (4, 'BIOM - BIOM'),
+                               (5, 'BIOM - BIOM')],
+               'status': 'success',
+               'message': ''}
+        self.assertItemsEqual(obs, exp)
+
+        Artifact(4).visibility = "public"
+        obs = prep_template_graph_get_req(1, 'demo@microbio.me')
+        exp = {'edge_list': [(1, 2), (2, 4)],
+               'node_labels': [(1, 'Raw data 1 - FASTQ'),
+                               (2, 'Demultiplexed 1 - Demultiplexed'),
+                               (4, 'BIOM - BIOM')],
+               'status': 'success',
+               'message': ''}
+        self.assertItemsEqual(obs, exp)
 
     def test_process_investigation_type(self):
         obs = _process_investigation_type('Metagenomics', '', '')
