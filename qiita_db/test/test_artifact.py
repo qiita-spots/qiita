@@ -596,7 +596,7 @@ class ArtifactTests(TestCase):
             self.filepaths_processed, "Demultiplexed",
             parents=[qdb.artifact.Artifact(1)],
             processing_parameters=exp_params)
-        self.assertEqual(obs.name, 'dflt_name')
+        self.assertEqual(obs.name, 'noname')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
@@ -627,7 +627,7 @@ class ArtifactTests(TestCase):
         obs = qdb.artifact.Artifact.create(
             self.filepaths_biom, "BIOM", parents=[qdb.artifact.Artifact(2)],
             processing_parameters=exp_params)
-        self.assertEqual(obs.name, 'dflt_name')
+        self.assertEqual(obs.name, 'noname')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
