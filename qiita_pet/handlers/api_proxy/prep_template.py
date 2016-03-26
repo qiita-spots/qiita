@@ -136,7 +136,8 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'ontology': ontology,
             'artifact_attached': artifact_attached,
             'study_id': study_id,
-            'editable': Study(study_id).can_edit(User(user_id))}
+            'editable': Study(study_id).can_edit(User(user_id)),
+            'data_type': pt.data_type()}
 
 
 @execute_as_transaction
