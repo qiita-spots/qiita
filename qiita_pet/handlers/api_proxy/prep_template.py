@@ -17,6 +17,7 @@ from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
+from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
 
@@ -67,11 +68,13 @@ def new_prep_template_get_req(study_id):
             'ontology': ontology_info}
 
 
-def prep_template_ajax_get_req(prep_id):
+def prep_template_ajax_get_req(user_id, prep_id):
     """Returns the prep tempalte information needed for the AJAX handler
 
     Parameters
     ----------
+    user_id : str
+        The user id
     prep_id : int
         The prep template id
 
@@ -132,7 +135,8 @@ def prep_template_ajax_get_req(prep_id):
             'investigation_type': investigation_type,
             'ontology': ontology,
             'artifact_attached': artifact_attached,
-            'study_id': study_id}
+            'study_id': study_id,
+            'editable': Study(study_id).can_edit(User(user_id))}
 
 
 @execute_as_transaction
@@ -539,10 +543,19 @@ def prep_template_graph_get_req(prep_id, user_id):
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
+
+    # We should filter for only the public artifacts if the user
+    # doesn't have full access to the study
+    full_access = Study(prep.study_id).can_edit(User(user_id))
     G = prep.artifact.descendants
     node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
-                   for n in G.nodes()]
+                   for n in G.nodes()
+                   if full_access or n.visibility == 'public']
+    node_ids = [id_ for id_, label in node_labels]
+    edge_list = [(n.id, m.id) for n, m in G.edges()
+                 if n.id in node_ids and m.id in node_ids]
+
     return {'status': 'success',
             'message': '',
-            'edge_list': [(n.id, m.id) for n, m in G.edges()],
+            'edge_list': edge_list,
             'node_labels': node_labels}

@@ -127,7 +127,8 @@ def artifact_summary_get_request(user_id, artifact_id):
             'processing_jobs': processing_jobs,
             'visibility': visibility,
             'buttons': ' '.join(buttons),
-            'files': files}
+            'files': files,
+            'editable': artifact.study.can_edit(user)}
 
 
 def artifact_summary_post_request(user_id, artifact_id):

@@ -205,6 +205,8 @@ class TestSampleAPI(TestCase):
                                 ('SKM4', 1), ('SKM5', 1), ('SKM6', 1),
                                 ('SKM7', 1), ('SKM8', 1), ('SKM9', 1)]},
                'num_samples': 27,
+               'num_columns': 30,
+               'editable': True,
                'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)

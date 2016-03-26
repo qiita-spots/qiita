@@ -25,12 +25,7 @@ class StudyIndexHandler(BaseHandler):
         if study_info['status'] != 'success':
             raise HTTPError(404, study_info['message'])
 
-        study_info = study_info['info']
-
-        editable = study_info['status'] == 'sandbox'
-
-        self.render("study_base.html", study_info=study_info,
-                    editable=editable)
+        self.render("study_base.html", **study_info)
 
 
 class StudyBaseInfoAJAX(BaseHandler):
@@ -38,7 +33,7 @@ class StudyBaseInfoAJAX(BaseHandler):
     def get(self):
         study_id = self.get_argument('study_id')
         study = to_int(study_id)
-        study_info = study_get_req(study, self.current_user.id)['info']
+        study_info = study_get_req(study, self.current_user.id)['study_info']
         study_doi = ' '.join(
             [doi_linkifier(p) for p in study_info['publications']])
         email = '<a href="mailto:{email}">{name} ({affiliation})</a>'

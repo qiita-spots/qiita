@@ -340,7 +340,9 @@
       {{name}} - ID {{prep_id}}
       <a class="btn btn-default" href="/download/{{download_prep}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
       <a class="btn btn-default" href="/download/{{download_qiime}}"><span class="glyphicon glyphicon-download-alt"></span> Qiime map</a>
-      <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
+      {% if editable %}
+        <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
+      {% end %}
     </h4>
   </div>
 </div>
@@ -352,50 +354,52 @@
   </div>
 </div>
 
-<!-- Update prep template -->
-<div class="row">
-  <div class="col-md-12">
-    <b>Update information:</b>
-    <select id="file-selector">
-      <option value="">Choose file...</option>
-      {% for fp in files %}
-        <option value="{{fp}}">{{fp}}</option>
-      {% end %}
-    </select>
-    <div id="update-button-div" hidden>
-      <button class="btn btn-info btn-sm" onclick="update_prep_information();" hidden>Update</button>
+{% if editable %}
+  <!-- Update prep template -->
+  <div class="row">
+    <div class="col-md-12">
+      <b>Update information:</b>
+      <select id="file-selector">
+        <option value="">Choose file...</option>
+        {% for fp in files %}
+          <option value="{{fp}}">{{fp}}</option>
+        {% end %}
+      </select>
+      <div id="update-button-div" hidden>
+        <button class="btn btn-info btn-sm" onclick="update_prep_information();" hidden>Update</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Investigation type info -->
-<div class="row">
-  <!-- Ena ontology selector -->
-  <div class="col-md-4">
-    <b>Select Investigation Type:</b>
-    <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
-      <option value=""></option>
-      {% for o in ontology['ENA'] %}
-        <option value="{{o}}">{{o}}</option>
-      {% end %}
-    </select>
+  <!-- Investigation type info -->
+  <div class="row">
+    <!-- Ena ontology selector -->
+    <div class="col-md-4">
+      <b>Select Investigation Type:</b>
+      <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
+        <option value=""></option>
+        {% for o in ontology['ENA'] %}
+          <option value="{{o}}">{{o}}</option>
+        {% end %}
+      </select>
+    </div>
+    <!-- user-defined selector -->
+    <div class="col-md-4" id="user-ena-info" hidden> User defined investigation type:
+      <select id="user-ontology" name="user-ontology" value="user-ontology">
+        <option value=""></option>
+        {% for o in ontology['User'] %}
+          <option value="{{o}}">{{o}}</option>
+        {% end %}
+        <option value="New Type">New Type</option>
+      </select>
+    </div>
+    <!-- new user-defined input -->
+    <div class="col-md-4" id="new-ena-info" hidden> New user defined term:
+      <input type="textbox" id="new-ontology" name="new-ontology">
+      <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
+    </div>
   </div>
-  <!-- user-defined selector -->
-  <div class="col-md-4" id="user-ena-info" hidden> User defined investigation type:
-    <select id="user-ontology" name="user-ontology" value="user-ontology">
-      <option value=""></option>
-      {% for o in ontology['User'] %}
-        <option value="{{o}}">{{o}}</option>
-      {% end %}
-      <option value="New Type">New Type</option>
-    </select>
-  </div>
-  <!-- new user-defined input -->
-  <div class="col-md-4" id="new-ena-info" hidden> New user defined term:
-    <input type="textbox" id="new-ontology" name="new-ontology">
-    <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
-  </div>
-</div>
+{% end %}
 
 <!-- Files graph or add artifact -->
 <div class="row">

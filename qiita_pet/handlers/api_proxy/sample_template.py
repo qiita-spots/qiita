@@ -18,6 +18,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_db.metadata_template.util import (load_template_to_dataframe,
                                              looks_like_qiime_mapping_file)
 from qiita_db.exceptions import QiitaDBColumnError
+from qiita_db.user import User
 
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
@@ -229,6 +230,8 @@ def sample_template_summary_get_req(samp_id, user_id):
     out = {'status': 'success',
            'message': '',
            'num_samples': df.shape[0],
+           'num_columns': df.shape[1],
+           'editable': Study(template.study_id).can_edit(User(user_id)),
            'summary': {}}
 
     # drop the samp_id column if it exists

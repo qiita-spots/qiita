@@ -552,6 +552,11 @@ class Artifact(qdb.base.QiitaObject):
         ----------
         value : str
             The new visibility of the artifact
+
+        Notes
+        -----
+        The visibility of an artifact is propagated to its ancestors, but it
+        only applies when the new visibility is more open than before.
         """
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.artifact
@@ -560,6 +565,13 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(
                 sql, [qdb.util.convert_to_id(value, "visibility"), self.id])
             qdb.sql_connection.TRN.execute()
+            # In order to correctly propagate the visibility upstream, we need
+            # to go one step at a time. By setting up the visibility of our
+            # parents first, we accomplish that, since they will propagate
+            # the changes to its parents
+            for p in self.parents:
+                visibilites = [[d.visibility] for d in p.descendants.nodes()]
+                p.visibility = qdb.util.infer_status(visibilites)
 
     @property
     def artifact_type(self):

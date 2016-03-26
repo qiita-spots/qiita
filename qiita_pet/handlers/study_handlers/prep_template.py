@@ -54,17 +54,10 @@ class PrepTemplateAJAX(BaseHandler):
         """Send formatted summary page of prep template"""
         prep_id = to_int(self.get_argument('prep_id'))
 
-        res = prep_template_ajax_get_req(prep_id)
+        res = prep_template_ajax_get_req(self.current_user.id, prep_id)
+        res['prep_id'] = prep_id
 
-        self.render('study_ajax/prep_summary.html', name=res['name'],
-                    files=res['files'], download_prep=res['download_prep'],
-                    download_qiime=res['download_qiime'],
-                    num_samples=res['num_samples'],
-                    num_columns=res['num_columns'],
-                    investigation_type=res['investigation_type'],
-                    artifact_attached=res['artifact_attached'],
-                    prep_id=prep_id, study_id=res['study_id'],
-                    ontology=res['ontology'])
+        self.render('study_ajax/prep_summary.html', **res)
 
 
 class PrepFilesHandler(BaseHandler):
