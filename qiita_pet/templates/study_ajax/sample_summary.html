@@ -10,15 +10,28 @@
   function sample_action(act) {
     $.post('/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#file-selector").val(), data_type: $("#data_types").val() })
       .done(function ( data ) {
+        var msg_type = "info";
         if(data.status == "error") {
-          bootstrapAlert("<p>An error occurred processing your request:</p>" + data.message, "danger");
+          msg_type = "danger";
         } else if(data.status == "warning") {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "warning");
-        } else {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "info");
+          msg_type = "warning";
         }
-        //reload section of the page with new info
-         fill_sample({{study_id}})
+
+        if (data.message) {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), msg_type);
+        }
+
+        if (data.status != 'error') {
+          //reload section of the page with new info
+          populate_main_div('/study/description/sample_template/', { study_id: {{study_id}} });
+          populate_data_type_menu_div();
+          if (act == 'delete') {
+            $("#sample-summary-btn").hide();
+          }
+          else if(act == 'create') {
+            $("#sample-summary-btn").show();
+          }
+        }
       })
   }
 
@@ -64,7 +77,7 @@
 {% if editable %}
   <div class="row">
     <div class="col-md-12">
-      <b>Upload information</b>
+      <b>Upload information:</b>
       <select id="file-selector">
         <option value="">Choose file...</option>
         {% for fp in files %}
