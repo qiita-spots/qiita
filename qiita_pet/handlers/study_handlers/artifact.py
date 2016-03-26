@@ -91,15 +91,13 @@ class ArtifactAJAX(BaseHandler):
         Follows the JSON PATCH specification:
         https://tools.ietf.org/html/rfc6902
         """
-        artifact_id = to_int(self.get_argument('artifact_id'))
         req_op = self.get_argument('op')
         req_path = self.get_argument('path')
         req_value = self.get_argument('value', None)
         req_from = self.get_argument('from', None)
 
         response = artifact_patch_request(
-            self.current_user.id, artifact_id, req_op, req_path,
-            req_value, req_from)
+            self.current_user.id, req_op, req_path, req_value, req_from)
 
         self.write(response)
 

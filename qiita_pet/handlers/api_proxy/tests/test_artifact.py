@@ -245,7 +245,7 @@ class TestArtifactAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_artifact_patch_request(self):
-        obs = artifact_patch_request('test@foo.bar', 1, 'replace', '/name/',
+        obs = artifact_patch_request('test@foo.bar', 'replace', '/1/name/',
                                      req_value='NEW_NAME')
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
@@ -254,31 +254,31 @@ class TestArtifactAPI(TestCase):
 
     def test_artifact_patch_request_errors(self):
         # No access to the study
-        obs = artifact_patch_request('demo@microbio.me', 1, 'replace',
-                                     '/name/', req_value='NEW_NAME')
+        obs = artifact_patch_request('demo@microbio.me', 'replace',
+                                     '/1/name/', req_value='NEW_NAME')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
         # Incorrect path parameter
-        obs = artifact_patch_request('test@foo.bar', 1, 'replace',
-                                     '/name/oops/', req_value='NEW_NAME')
+        obs = artifact_patch_request('test@foo.bar', 'replace',
+                                     '/1/name/oops/', req_value='NEW_NAME')
         exp = {'status': 'error',
                'message': 'Incorrect path parameter'}
         self.assertEqual(obs, exp)
         # Missing value
-        obs = artifact_patch_request('test@foo.bar', 1, 'replace', '/name/')
+        obs = artifact_patch_request('test@foo.bar', 'replace', '/1/name/')
         exp = {'status': 'error',
                'message': 'A value is required'}
         self.assertEqual(obs, exp)
         # Wrong attribute
-        obs = artifact_patch_request('test@foo.bar', 1, 'replace', '/oops/',
+        obs = artifact_patch_request('test@foo.bar', 'replace', '/1/oops/',
                                      req_value='NEW_NAME')
         exp = {'status': 'error',
                'message': 'Attribute "oops" not found. Please, check the '
                           'path parameter'}
         self.assertEqual(obs, exp)
         # Wrong operation
-        obs = artifact_patch_request('test@foo.bar', 1, 'add', '/name/',
+        obs = artifact_patch_request('test@foo.bar', 'add', '/1/name/',
                                      req_value='NEW_NAME')
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. Current supported '
