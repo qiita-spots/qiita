@@ -814,6 +814,41 @@ class ArtifactTests(TestCase):
         a.visibility = "public"
         self.assertEqual(a.visibility, "public")
 
+        # Testing that the visibility inference works as expected
+        # The current artifact network that we have in the db looks as follows:
+        #                              /- 4 (private)
+        #              /- 2 (private) -|- 5 (private)
+        # 1 (private) -|               \- 6 (private)
+        #              \- 3 (private)
+        # By changing the visibility of 4 to public, the visibility of 1 and
+        # 2 also changes to public
+        a1 = qdb.artifact.Artifact(1)
+        a2 = qdb.artifact.Artifact(2)
+        a3 = qdb.artifact.Artifact(3)
+        a4 = qdb.artifact.Artifact(4)
+        a5 = qdb.artifact.Artifact(5)
+        a6 = qdb.artifact.Artifact(6)
+
+        a4.visibility = 'public'
+
+        self.assertEqual(a1.visibility, "public")
+        self.assertEqual(a2.visibility, "public")
+        self.assertEqual(a3.visibility, "private")
+        self.assertEqual(a4.visibility, "public")
+        self.assertEqual(a5.visibility, "private")
+        self.assertEqual(a6.visibility, "private")
+
+        # However, if we change it back to private,
+        # it should remain public
+        a4.visibility = 'private'
+
+        self.assertEqual(a1.visibility, "public")
+        self.assertEqual(a2.visibility, "public")
+        self.assertEqual(a3.visibility, "private")
+        self.assertEqual(a4.visibility, "private")
+        self.assertEqual(a5.visibility, "private")
+        self.assertEqual(a6.visibility, "private")
+
     def test_ebi_run_accessions_setter(self):
         a = qdb.artifact.Artifact(3)
         self.assertEqual(a.ebi_run_accessions, dict())
