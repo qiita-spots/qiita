@@ -25,14 +25,16 @@ class TestProcessingAPIReadOnly(TestCase):
         exp = {'status': 'success',
                'message': '',
                'name': 'Raw data 1',
-               'type': 'FASTQ'}
+               'type': 'FASTQ',
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
         obs = process_artifact_handler_get_req(2)
         exp = {'status': 'success',
                'message': '',
                'name': 'Demultiplexed 1',
-               'type': 'Demultiplexed'}
+               'type': 'Demultiplexed',
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
     def test_list_commands_handler_get_req(self):

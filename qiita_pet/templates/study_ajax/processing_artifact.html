@@ -52,6 +52,7 @@
       .done(function(data) {
         if (data.status == 'success') {
           bootstrapAlert("Workflow " + w_id + " submitted", "success");
+          populate_main_div('/study/description/baseinfo/', { study_id: {{study_id}} });
         }
         else {
           bootstrapAlert(data.message, "danger");
