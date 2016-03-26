@@ -116,7 +116,7 @@
   }
 
   function validate_delete_study_text() {
-    if ($("#study-alias").val() == "{{study_info['study_alias']}}") {
+    if ($("#study-alias").val() == "{{study_info['study_title']}}") {
       $('#delete-study-button').prop('disabled', false);
     } else {
       $('#delete-study-button').prop('disabled', true);
@@ -124,7 +124,7 @@
   }
 
   function delete_study() {
-    if($("#study-alias").val() != "{{study_info['study_alias']}}") {
+    if($("#study-alias").val() != "{{study_info['study_title']}}") {
       alert("The entered study alias doesn't match the study");
       return false;
     }
@@ -133,8 +133,9 @@
         .done(function ( data ) {
           if(data.status == "error") {
             bootstrapAlert(data.message.replace("\n", "<br/>"), "danger", 4000);
+            $("#delete-study").modal('hide');
           } else {
-            window.location.replace = '/';
+            window.location.replace('/study/list/');
           }
         });
     }
@@ -210,12 +211,12 @@
   <div class="col-md-3">
   <h3><a href="#" onclick="populate_main_div('/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })">Study Information</a></h3>
     <a href="#" onclick="populate_main_div('/study/description/sample_template/', { study_id: {{study_info['study_id']}} })">Sample Template</a><br />
-    <a href="#" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })">Sample Summary</a><br />
+    {% if study_info['num_samples'] != 0 %}
+      <a href="#" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })">Sample Summary</a><br />
+    {% end %}
     {% if editable %}
     <a href="/study/upload/{{study_info['study_id']}}">Upload Files</a><br />
     <a href="#" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })">Add New Preparation</a><br />
-    <a href="/study/edit/{{study_info['study_id']}}">Edit Study Information</a><br />
-    <a href="#" data-toggle="modal" data-target="#delete-study">Delete Study</a>
     {% end %}
 
     <div id="data-types-menu"></div>
@@ -243,12 +244,12 @@
         <h3>Deleting:<br/></h3><h4>{{study_info['study_title']}}</h4>
       </div>
       <div class="modal-body">
-        You will only be able to delete a study that has no data associated with it.
+        You will only be able to delete a study that has no data associated with it.<br/>
+        To continue you need to write the title of the study:<br/>
+        <input type="text" name="study-alias" id="study-alias" onkeyup="validate_delete_study_text();" size="{{ len(study_info['study_title']) }}">
+        <button class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_study();" id="delete-study-button" disabled></button>
       </div>
       <div class="modal-footer">
-        To continue you need to write the alias name of the study:
-        <input type="text" name="study-alias" id="study-alias" onkeyup="validate_delete_study_text();">
-        <button class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_study();" id="delete-study-button" disabled></button>
       </div>
     </div>
   </div>

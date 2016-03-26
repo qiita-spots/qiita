@@ -33,7 +33,8 @@ class StudyBaseInfoAJAX(BaseHandler):
     def get(self):
         study_id = self.get_argument('study_id')
         study = to_int(study_id)
-        study_info = study_get_req(study, self.current_user.id)['study_info']
+        res = study_get_req(study, self.current_user.id)
+        study_info = res['study_info']
         study_doi = ' '.join(
             [doi_linkifier(p) for p in study_info['publications']])
         email = '<a href="mailto:{email}">{name} ({affiliation})</a>'
@@ -45,7 +46,7 @@ class StudyBaseInfoAJAX(BaseHandler):
 
         self.render('study_ajax/base_info.html',
                     study_info=study_info, publications=study_doi, pi=pi,
-                    contact=contact)
+                    contact=contact, editable=res['editable'])
 
 
 class StudyDeleteAjax(BaseHandler):

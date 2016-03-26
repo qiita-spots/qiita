@@ -85,7 +85,7 @@ class SampleTemplateAJAX(BaseHandler):
         summary = stats['summary'] if 'summary' in stats else {}
         num_samples = stats['num_samples'] if 'num_samples' in stats else 0
         num_columns = stats['num_columns'] if 'num_columns' in stats else 0
-        editable = stats['editable'] if 'editable' in stats else False
+        editable = stats['editable'] if 'editable' in stats else True
         self.render('study_ajax/sample_summary.html', stats=summary,
                     num_samples=num_samples, num_columns=num_columns,
                     download_id=download_id, files=files, study_id=study_id,

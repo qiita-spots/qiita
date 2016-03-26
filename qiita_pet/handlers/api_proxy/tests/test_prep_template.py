@@ -82,7 +82,8 @@ class TestPrepAPIReadOnly(TestCase):
                    'User': []},
                'artifact_attached': True,
                'study_id': 1,
-               'editable': True}
+               'editable': True,
+               'data_type': '18S'}
         self.assertEqual(obs, exp)
 
         obs = prep_template_ajax_get_req('admin@foo.bar', 1)

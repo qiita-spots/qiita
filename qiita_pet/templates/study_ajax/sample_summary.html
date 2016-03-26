@@ -15,6 +15,18 @@
          fill_sample({{study_id}})
       })
   }
+
+  $(document).ready(function() {
+    $('#file-btn').prop('disabled', true);
+    $("#file-selector").change(function (event){
+      if($("#file-selector").val() === "" ){
+        $('#file-btn').prop('disabled', true);
+      }
+      else {
+        $('#file-btn').prop('disabled', false);
+      }
+    });
+  });
 </script>
 
 
@@ -46,7 +58,7 @@
 {% if editable %}
   <div class="row">
     <div class="col-md-12">
-      <b>Update information</b>
+      <b>Upload information</b>
       <select id="file-selector">
         <option value="">Choose file...</option>
         {% for fp in files %}
@@ -54,9 +66,9 @@
         {% end %}
       </select>
       {% if stats %}
-        <button class="btn btn-info btn-sm" onclick="sample_action('update')">Update</button>
+        <button class="btn btn-info btn-sm" id="file-btn" onclick="sample_action('update')">Update</button>
       {% else %}
-        <button class="btn btn-info btn-sm" onclick="sample_action('create')">Create</button>
+        <button class="btn btn-info btn-sm" id="file-btn" onclick="sample_action('create')">Create</button><br/>
         If uploading a qiime mapping file, select data type:
         <select id="data_types" value="data_types">
           <option value="">Choose a data type...</option>

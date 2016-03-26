@@ -297,7 +297,7 @@ def sample_template_post_req(study_id, user_id, data_type,
         with warnings.catch_warnings(record=True) as warns:
             if is_mapping_file:
                 create_templates_from_qiime_mapping_file(fp_rsp, study,
-                                                         int(data_type))
+                                                         data_type)
             else:
                 SampleTemplate.create(load_template_to_dataframe(fp_rsp),
                                       study)

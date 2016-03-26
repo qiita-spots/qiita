@@ -37,7 +37,8 @@ def process_artifact_handler_get_req(artifact_id):
     return {'status': 'success',
             'message': '',
             'name': artifact.name,
-            'type': artifact.artifact_type}
+            'type': artifact.artifact_type,
+            'study_id': artifact.study.id}
 
 
 def list_commands_handler_get_req(artifact_types):
