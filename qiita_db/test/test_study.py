@@ -214,7 +214,7 @@ class TestStudy(TestCase):
             'Soils', 'number_samples_collected': 27,
             'ebi_submission_status': 'submitted',
             'ebi_study_accession': 'EBI123456-BB'}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
         # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
@@ -228,7 +228,7 @@ class TestStudy(TestCase):
             'publication_doi': ['10.100/123456', '10.100/7891011'],
             'study_title': 'Identification of the Microbiomes for Cannabis '
             'Soils'}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
         # Test get specific keys for all studies
         info = {
