@@ -64,9 +64,11 @@ class TestProcessingAPIReadOnly(TestCase):
                                        'sortmerna_e_value': 1,
                                        'sortmerna_max_pos': 10000,
                                        'threads': 1}}],
-               'req_options': {'input_data':
-                               ('artifact', ['per_sample_FASTQ', 'FASTQ'])}}
-        self.assertItemsEqual(obs, exp)
+               'req_options': {'input_data': ('artifact', ['Demultiplexed'])}}
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['message'], exp['message'])
+        self.assertEqual(obs['options'], exp['options'])
+        self.assertEqual(obs['req_options'], exp['req_options'])
 
     def test_job_ajax_get_req(self):
         obs = job_ajax_get_req("063e553b-327c-4818-ab4a-adfe58e49860")
