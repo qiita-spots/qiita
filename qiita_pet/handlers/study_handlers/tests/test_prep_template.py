@@ -26,10 +26,15 @@ class TestPrepTemplateGraphAJAX(TestHandlerBase):
                                [3, "Demultiplexed 2 - Demultiplexed"],
                                [2, "Demultiplexed 1 - Demultiplexed"],
                                [4, "BIOM - BIOM"],
-                               [4, "BIOM - BIOM"]],
+                               [5, "BIOM - BIOM"],
+                               [6, "BIOM - BIOM"]],
                "message": "",
-               "edge_list": [[1, 3], [1, 2], [2, 4], [2, 5]]}
-        self.assertItemsEqual(loads(response.body), exp)
+               "edge_list": [[1, 3], [1, 2], [2, 4], [2, 5], [2, 6]]}
+        obs = loads(response.body)
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['message'], exp['message'])
+        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
+        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
 
 
 class TestPrepTemplateAJAXReadOnly(TestHandlerBase):
