@@ -46,7 +46,7 @@
 {% if editable %}
   <div class="row">
     <div class="col-md-12">
-      <b>Update information</b>
+      <b>Upload information</b>
       <select id="file-selector">
         <option value="">Choose file...</option>
         {% for fp in files %}
@@ -56,7 +56,7 @@
       {% if stats %}
         <button class="btn btn-info btn-sm" onclick="sample_action('update')">Update</button>
       {% else %}
-        <button class="btn btn-info btn-sm" onclick="sample_action('create')">Create</button>
+        <button class="btn btn-info btn-sm" onclick="sample_action('create')">Create</button><br/>
         If uploading a qiime mapping file, select data type:
         <select id="data_types" value="data_types">
           <option value="">Choose a data type...</option>
