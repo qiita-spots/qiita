@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
-from os.path import join, exists
+from os.path import join, exists, basename
 from os import remove, close
 from datetime import datetime
 from tempfile import mkstemp
@@ -134,16 +134,10 @@ class TestArtifactAPI(TestCase):
         # Artifact w/o summary
         obs = artifact_summary_get_request('test@foo.bar', 1)
         exp_p_jobs = [
-            ['6d368e16-2242-4cf8-87b4-a5dc40bb890b', 'Split libraries FASTQ',
-             'success', None],
-            ['4c7115e8-4c8e-424c-bf25-96c292ca1931', 'Split libraries FASTQ',
-             'success', None],
             ['063e553b-327c-4818-ab4a-adfe58e49860', 'Split libraries FASTQ',
-             'queued', None],
+             'queued', None, None],
             ['bcc7ebcd-39c1-43e4-af2d-822e3589f14d', 'Split libraries',
-             'running', 'demultiplexing'],
-            ['b72369f9-a886-4193-8d3d-f7b504168e75', 'Split libraries FASTQ',
-             'success', None]]
+             'running', 'demultiplexing', None]]
         exp_files = [
             (1L, '1_s_G1_L001_sequences.fastq.gz (raw forward seqs)'),
             (2L, '1_s_G1_L001_sequences_barcodes.fastq.gz (raw barcodes)')]
@@ -163,7 +157,7 @@ class TestArtifactAPI(TestCase):
                           'sandbox</button>',
                'files': exp_files,
                'editable': True}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
         # Artifact with summary being generated
         job = ProcessingJob.create(
@@ -188,7 +182,7 @@ class TestArtifactAPI(TestCase):
                           'sandbox</button>',
                'files': exp_files,
                'editable': True}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
         # Artifact with summary
         fd, fp = mkstemp(suffix=".html")
@@ -198,6 +192,9 @@ class TestArtifactAPI(TestCase):
         a = Artifact(1)
         a.html_summary_fp = fp
         self._files_to_remove.extend([fp, a.html_summary_fp[1]])
+        exp_files.append(
+            (a.html_summary_fp[0],
+             '%s (html summary)' % basename(a.html_summary_fp[1])))
         obs = artifact_summary_get_request('test@foo.bar', 1)
         exp = {'status': 'success',
                'message': '',
@@ -215,7 +212,7 @@ class TestArtifactAPI(TestCase):
                           'sandbox</button>',
                'files': exp_files,
                'editable': True}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
         # No access
         obs = artifact_summary_get_request('demo@microbio.me', 1)

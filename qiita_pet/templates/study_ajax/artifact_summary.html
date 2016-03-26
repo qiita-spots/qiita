@@ -77,10 +77,13 @@
     {% if processing_jobs %}
       <b>Jobs using this set of files:</b></br>
     {% end %}
-    {% for j_id, c_name, j_status, s_step in processing_jobs %}
+    {% for j_id, c_name, j_status, j_step, j_error in processing_jobs %}
       Job <b>{{j_id}}</b> ({{c_name}}). Status: <i>{{j_status}}</i>.
-      {% if s_step %}
-        Step: <i>{{s_step}}</i>
+      {% if j_step %}
+        Step: <i>{{j_step}}</i>
+      {% end %}
+      {% if j_error %}
+        Erro message: <i>{{j_error}}</i>
       {% end %}
       </br>
     {% end %}
