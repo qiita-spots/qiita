@@ -111,12 +111,19 @@ class CommandTestsReadOnly(TestCase):
     def test_required_parameters(self):
         exp_params = {
             'input_data': ('artifact', ['FASTQ', 'per_sample_FASTQ'])}
-        self.assertItemsEqual(qdb.software.Command(1).required_parameters,
-                              exp_params)
+        obs = qdb.software.Command(1).required_parameters
+        self.assertItemsEqual(obs.keys(), exp_params.keys())
+        self.assertEqual(obs['input_data'][0],  exp_params['input_data'][0])
+        self.assertItemsEqual(obs['input_data'][1],
+                              exp_params['input_data'][1])
+
         exp_params = {
             'input_data': ('artifact', ['SFF', 'FASTA', 'FASTA_Sanger'])}
-        self.assertItemsEqual(qdb.software.Command(2).required_parameters,
-                              exp_params)
+        obs = qdb.software.Command(2).required_parameters
+        self.assertItemsEqual(obs.keys(), exp_params.keys())
+        self.assertEqual(obs['input_data'][0],  exp_params['input_data'][0])
+        self.assertItemsEqual(obs['input_data'][1],
+                              exp_params['input_data'][1])
 
     def test_optional_parameters(self):
         exp_params = {'barcode_type': ['string', 'golay_12'],

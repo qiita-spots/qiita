@@ -169,11 +169,11 @@ class TestPrepAPIReadOnly(TestCase):
         exp = {'status': 'success',
                'message': '',
                'filepaths': [
-                   (15, join(get_mountpoint('templates')[0][1],
-                             '1_prep_1_19700101-000000.txt')),
-                   (16, join(get_mountpoint('templates')[0][1],
-                             '1_prep_1_qiime_19700101-000000.txt'))]}
-        self.assertItemsEqual(obs, exp)
+                   (19, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_qiime_19700101-000000.txt')),
+                   (18, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_19700101-000000.txt'))]}
+        self.assertEqual(obs, exp)
 
     def test_prep_template_filepaths_get_req_no_access(self):
         obs = prep_template_filepaths_get_req(1, 'demo@microbio.me')
@@ -278,15 +278,19 @@ class TestPrepAPI(TestCase):
 
     def test_prep_template_graph_get_req(self):
         obs = prep_template_graph_get_req(1, 'test@foo.bar')
-        exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5)],
+        exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5), (2, 6)],
                'node_labels': [(1, 'Raw data 1 - FASTQ'),
                                (2, 'Demultiplexed 1 - Demultiplexed'),
                                (3, 'Demultiplexed 2 - Demultiplexed'),
                                (4, 'BIOM - BIOM'),
-                               (5, 'BIOM - BIOM')],
+                               (5, 'BIOM - BIOM'),
+                               (6, 'BIOM - BIOM')],
                'status': 'success',
                'message': ''}
-        self.assertItemsEqual(obs, exp)
+        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
+        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['message'], exp['message'])
 
         Artifact(4).visibility = "public"
         obs = prep_template_graph_get_req(1, 'demo@microbio.me')
@@ -296,7 +300,10 @@ class TestPrepAPI(TestCase):
                                (4, 'BIOM - BIOM')],
                'status': 'success',
                'message': ''}
-        self.assertItemsEqual(obs, exp)
+        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
+        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['message'], exp['message'])
 
     def test_process_investigation_type(self):
         obs = _process_investigation_type('Metagenomics', '', '')

@@ -75,9 +75,13 @@ class TestArtifactAPIReadOnly(TestCase):
                                (3, 'Demultiplexed 2 - Demultiplexed'),
                                (2, 'Demultiplexed 1 - Demultiplexed'),
                                (4, 'BIOM - BIOM'),
-                               (5, 'BIOM - BIOM')],
-               'edge_list': [(1, 3), (1, 2), (2, 5), (2, 4)]}
-        self.assertItemsEqual(obs, exp)
+                               (5, 'BIOM - BIOM'),
+                               (6, 'BIOM - BIOM')],
+               'edge_list': [(1, 3), (1, 2), (2, 5), (2, 4), (2, 6)]}
+        self.assertEqual(obs['message'], exp['message'])
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
+        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
 
     def test_artifact_graph_get_req_no_access(self):
         obs = artifact_graph_get_req(1, 'ancestors', 'demo@microbio.me')

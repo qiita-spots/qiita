@@ -43,10 +43,15 @@ class ArtifactGraphAJAXTests(TestHandlerBase):
                                [3, 'Demultiplexed 2 - Demultiplexed'],
                                [2, 'Demultiplexed 1 - Demultiplexed'],
                                [4, 'BIOM - BIOM'],
-                               [5, 'BIOM - BIOM']],
-               'edge_list': [[1, 3], [1, 2], [2, 4], [2, 5]]}
+                               [5, 'BIOM - BIOM'],
+                               [6, 'BIOM - BIOM']],
+               'edge_list': [[1, 3], [1, 2], [2, 4], [2, 5], [2, 6]]}
         self.assertEqual(response.code, 200)
-        self.assertItemsEqual(loads(response.body), exp)
+        obs = loads(response.body)
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['message'], exp['message'])
+        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
+        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
 
     def test_get_unknown(self):
         response = self.get('/artifact/graph/', {'direction': 'BAD',
