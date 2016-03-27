@@ -45,12 +45,52 @@
         load_artifact_summary(aid);
       });
   }
+
+  /*
+   *
+   * Function to update the artifact name
+   *
+   * @param artifact_id int the artifact to be changed
+   * @param new_name str the new artifact name
+   *
+   * This function executes an AJAX call to update the artifact name
+   * and updates the interface accordingly
+   *
+   */
+  function change_artifact_name(artifact_id, new_name) {
+    $.ajax({
+      url: '/artifact/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/' + artifact_id + '/name/', 'value': new_name, 'artifact_id': artifact_id},
+      success: function(data) {
+        $("#update-artifact-name").modal('hide');
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        }
+        else {
+          $("#summary-title").text('Summary: ' + new_name + ' (ID: ' + artifact_id + ')');
+          load_template_graph();
+        }
+      }
+    });
+      console.log('clicked ' + artifact_id + ' ' + new_name);
+  }
+
+  /*
+   *
+   * Allows updating the artifact name if the new artifact name is not empty
+   *
+   */
+  function validate_new_name() {
+    $("#update-name-btn").prop('disabled', $("#new-artifact-name").val() === "");
+  }
 </script>
 <div class='row'>
   <div class='col-md-12'>
     <h4>
-      <i>Summary: {{name}} (ID: {{artifact_id}})</i>
+      <i id='summary-title'>Summary: {{name}} (ID: {{artifact_id}})</i>
       {% if editable %}
+        <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit</a>
         <a class="btn btn-default btn-sm" onclick="populate_main_div('/study/process/', {artifact_id: {{artifact_id}} });"><span class="glyphicon glyphicon-play"></span> Process</a>
       {% end %}
     </h4>
@@ -102,5 +142,24 @@
         Job <b>{{ j_id }}</b>: <i>{% raw j_error.replace('\n', '</br>') %}</i></br>
       {% end %}
     {% end %}
+  </div>
+</div>
+
+<!-- Modal to update the artifact name -->
+<div class="modal fade update-artifact-name" tabindex="-1" role="dialog" id="update-artifact-name">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Updating artifact {{artifact_id}} name</h3>
+      </div>
+      <div class="modal-body">
+        Introduce the new name:<br/>
+        <input type="text" name="new-artifact-name" id="new-artifact-name" size="35" maxlength="35" onkeyup="validate_new_name();">
+        <button id="update-name-btn" class="btn btn-default" onclick="change_artifact_name({{artifact_id}}, $('#new-artifact-name').val());" disabled>Update</button>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
   </div>
 </div>
