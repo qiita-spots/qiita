@@ -215,12 +215,12 @@
 {% block content %}
 <div class="row">
   <div class="col-md-3">
-    <button class="btn btn-info btn-block" onclick="populate_main_div('/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Study Information</button>
-    <button class="btn btn-info btn-block" onclick="populate_main_div('/study/description/sample_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Sample Template</button>
-    <button class="btn btn-info btn-block" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })" id="sample-summary-btn"><span class="glyphicon glyphicon-th-list"></span> Sample Summary</button>
+    <button class="btn btn-default btn-block" onclick="populate_main_div('/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Study Information</button>
+    <button class="btn btn-default btn-block" onclick="populate_main_div('/study/description/sample_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Sample Template</button>
+    <button class="btn btn-default btn-block" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })" id="sample-summary-btn"><span class="glyphicon glyphicon-th-list"></span> Sample Summary</button>
     {% if editable %}
-      <a class="btn btn-info btn-block" href="/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
-      <button class="btn btn-info btn-block" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
+      <a class="btn btn-default btn-block" href="/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
+      <button class="btn btn-default btn-block" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
     {% end %}
 
     <div id="data-types-menu"></div>

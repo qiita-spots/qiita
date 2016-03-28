@@ -308,6 +308,64 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             'artifact': artifact.id}
 
 
+def artifact_patch_request(user_id, req_op, req_path, req_value=None,
+                           req_from=None):
+    """Modifies an attribute of the artifact
+
+    Parameters
+    ----------
+    user_id : str
+        The id of the user performing the patch operation
+    req_op : str
+        The operation to perform on the artifact
+    req_path : str
+        The prep information and attribute to patch
+    req_value : str, optional
+        The value that needs to be modified
+    req_from : str, optional
+        The original path of the element
+
+    Returns
+    -------
+    dict of {str, str}
+        A dictionary with the following keys:
+        - status: str, whether if the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
+    """
+    if req_op == 'replace':
+        req_path = [v for v in req_path.split('/') if v]
+        if len(req_path) != 2:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter'}
+
+        artifact_id = req_path[0]
+        attribute = req_path[1]
+
+        # Check if the user actually has access to the artifact
+        artifact = Artifact(artifact_id)
+        access_error = check_access(artifact.study.id, user_id)
+        if access_error:
+            return access_error
+
+        if not req_value:
+            return {'status': 'error',
+                    'message': 'A value is required'}
+
+        if attribute == 'name':
+            artifact.name = req_value
+            return {'status': 'success',
+                    'message': ''}
+        else:
+            # We don't understand the attribute so return an error
+            return {'status': 'error',
+                    'message': 'Attribute "%s" not found. '
+                               'Please, check the path parameter' % attribute}
+    else:
+        return {'status': 'error',
+                'message': 'Operation "%s" not supported. '
+                           'Current supported operations: replace' % req_op}
+
+
 def artifact_types_get_req():
     """Gets artifact types and descriptions available
 
