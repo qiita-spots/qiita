@@ -68,12 +68,11 @@
           bootstrapAlert(data.message, "danger");
         }
         else {
-          $("#summary-title").text('Summary: ' + new_name + ' (ID: ' + artifact_id + ')');
+          $("#summary-title").text(new_name + ' (ID: ' + artifact_id + ')');
           load_template_graph();
         }
       }
     });
-      console.log('clicked ' + artifact_id + ' ' + new_name);
   }
 
   /*
@@ -88,7 +87,7 @@
 <div class='row'>
   <div class='col-md-12'>
     <h4>
-      <i id='summary-title'>Summary: {{name}} (ID: {{artifact_id}})</i>
+      <i id='summary-title'>{{name}} (ID: {{artifact_id}})</i>
       {% if editable %}
         <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit</a>
         <a class="btn btn-default btn-sm" onclick="populate_main_div('/study/process/', {artifact_id: {{artifact_id}} });"><span class="glyphicon glyphicon-play"></span> Process</a>
