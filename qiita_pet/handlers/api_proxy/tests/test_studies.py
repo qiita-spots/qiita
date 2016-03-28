@@ -247,14 +247,16 @@ class TestStudyAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_study_files_get_req(self):
-        obs = study_files_get_req(1, 1, 'FASTQ')
+        obs = study_files_get_req('test@foo.bar', 1, 1, 'FASTQ')
         exp = {'status': 'success',
                'message': '',
                'remaining': ['uploaded_file.txt'],
                'file_types': [('raw_barcodes', True, []),
                               ('raw_forward_seqs', True, []),
                               ('raw_reverse_seqs', False, [])],
-               'num_prefixes': 1}
+               'num_prefixes': 1,
+               'artifacts': [(1, 'Identification of the Microbiomes for '
+                                 'Cannabis Soils (1) - Raw data 1 (1)')]}
         self.assertEqual(obs, exp)
 
 if __name__ == '__main__':

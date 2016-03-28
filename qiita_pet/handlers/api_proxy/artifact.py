@@ -234,7 +234,7 @@ def artifact_get_req(user_id, artifact_id):
 
 @execute_as_transaction
 def artifact_post_req(user_id, filepaths, artifact_type, name,
-                      prep_template_id):
+                      prep_template_id, artifact_id=None):
     """Creates the initial artifact for the prep template
 
     Parameters
@@ -250,6 +250,8 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         Name to give the artifact
     prep_template_id : int or str castable to int
         Prep template to attach the artifact to
+    artifact_id : str, optional
+        The id of the imported artifact
 
     Returns
     -------
@@ -267,41 +269,55 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     if access_error:
         return access_error
 
-    uploads_path = get_mountpoint('uploads')[0][1]
-    path_builder = partial(join, uploads_path, str(study_id))
-    cleaned_filepaths = []
-    for ftype, file_list in viewitems(filepaths):
-        # JavaScript sends us this list as a comma-separated list
-        for fp in file_list.split(','):
-            # JavaScript will send this value as an empty string if the
-            # list of files was empty. In such case, the split will generate
-            # a single element containing the empty string. Check for that case
-            # here and, if fp is not the empty string, proceed to check if
-            # the file exists
-            if fp:
-                # Check if filepath being passed exists for study
-                full_fp = path_builder(fp)
-                exists = check_fp(study_id, full_fp)
-                if exists['status'] != 'success':
-                    return {'status': 'error',
-                            'message': 'File does not exist: %s' % fp}
-                cleaned_filepaths.append((full_fp, ftype))
+    if artifact_id:
+        # if the artifact id has been provided, import the artifact
+        try:
+            artifact = Artifact.copy(Artifact(artifact_id), prep)
+        except Exception as e:
+            # We should hit this exception rarely (that's why it is an
+            # exception)  since at this point we have done multiple checks.
+            # However, it can occur in weird cases, so better let the GUI know
+            # that this failed
+            return {'status': 'error',
+                    'message': "Error creating artifact: %s" % str(e)}
 
-    # This should never happen, but it doesn't hurt to actually have
-    # a explicit check, in case there is something odd with the JS
-    if not cleaned_filepaths:
-        return {'status': 'error',
-                'message': "Can't create artifact, no files provided."}
+    else:
+        uploads_path = get_mountpoint('uploads')[0][1]
+        path_builder = partial(join, uploads_path, str(study_id))
+        cleaned_filepaths = []
+        for ftype, file_list in viewitems(filepaths):
+            # JavaScript sends us this list as a comma-separated list
+            for fp in file_list.split(','):
+                # JavaScript will send this value as an empty string if the
+                # list of files was empty. In such case, the split will
+                # generate a single element containing the empty string. Check
+                # for that case here and, if fp is not the empty string,
+                # proceed to check if the file exists
+                if fp:
+                    # Check if filepath being passed exists for study
+                    full_fp = path_builder(fp)
+                    exists = check_fp(study_id, full_fp)
+                    if exists['status'] != 'success':
+                        return {'status': 'error',
+                                'message': 'File does not exist: %s' % fp}
+                    cleaned_filepaths.append((full_fp, ftype))
 
-    try:
-        artifact = Artifact.create(cleaned_filepaths, artifact_type, name=name,
-                                   prep_template=prep)
-    except Exception as e:
-        # We should hit this exception rarely (that's why it is an exception)
-        # since at this point we have done multiple checks. However, it can
-        # occur in weird cases, so better let the GUI know that this failed
-        return {'status': 'error',
-                'message': "Error creating artifact: %s" % str(e)}
+        # This should never happen, but it doesn't hurt to actually have
+        # a explicit check, in case there is something odd with the JS
+        if not cleaned_filepaths:
+            return {'status': 'error',
+                    'message': "Can't create artifact, no files provided."}
+
+        try:
+            artifact = Artifact.create(cleaned_filepaths, artifact_type,
+                                       name=name, prep_template=prep)
+        except Exception as e:
+            # We should hit this exception rarely (that's why it is an
+            # exception)  since at this point we have done multiple checks.
+            # However, it can occur in weird cases, so better let the GUI know
+            # that this failed
+            return {'status': 'error',
+                    'message': "Error creating artifact: %s" % str(e)}
 
     return {'status': 'success',
             'message': '',

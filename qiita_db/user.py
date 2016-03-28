@@ -506,7 +506,8 @@ class User(qdb.base.QiitaObject):
                         JOIN qiita.artifact USING (artifact_id)
                         JOIN qiita.artifact_type USING (artifact_type_id)
                         WHERE email = %s AND portal = %s{0}
-                        GROUP BY study_id""".format(sql_a_type)
+                        GROUP BY study_id
+                        ORDER BY study_id""".format(sql_a_type)
             qdb.sql_connection.TRN.add(sql, sql_args)
             db_res = dict(qdb.sql_connection.TRN.execute_fetchindex())
             res = {}
