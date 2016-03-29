@@ -1,8 +1,10 @@
 from subprocess import Popen, PIPE
 from uuid import uuid4
 from functools import partial
+from time import sleep
 
 from IPython.parallel import Client
+from moi import r_client
 
 from .exceptions import ComputeError
 
@@ -262,3 +264,23 @@ def _submit(ctx, channel, f, *args, **kwargs):
 # likely want this in qiita_ware.__init__
 context = Dispatch()
 submit = partial(_submit, context)
+
+
+def safe_submit(*args, **kwargs):
+    """Safe wraper for the submit function
+
+    There are cases in which a race condition may occur: submit returns the
+    job id but moi still did not had time to actually submit the job. In some
+    cases this is not acceptable, so this wrapper makes sure that the job_id
+    is returned only once the job has been already submitted.
+
+    From previous tests, the while loop is executed ~2 times, so there is no
+    much time lost in here
+    """
+    job_id = submit(*args, **kwargs)
+    payload = r_client.get(job_id)
+    while not payload:
+        sleep(0.005)
+        payload = r_client.get(job_id)
+
+    return job_id
