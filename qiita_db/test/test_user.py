@@ -418,5 +418,21 @@ class UserTest(TestCase):
         obs = self.conn_handler.execute_fetchall(sql)
         self.assertItemsEqual(obs, [[1], [3]])
 
+    def test_user_artifacts(self):
+        user = qdb.user.User('test@foo.bar')
+        obs = user.user_artifacts()
+        exp = {qdb.study.Study(1): [qdb.artifact.Artifact(1),
+                                    qdb.artifact.Artifact(2),
+                                    qdb.artifact.Artifact(3),
+                                    qdb.artifact.Artifact(4),
+                                    qdb.artifact.Artifact(5),
+                                    qdb.artifact.Artifact(6)]}
+        self.assertEqual(obs, exp)
+        obs = user.user_artifacts(artifact_type='BIOM')
+        exp = {qdb.study.Study(1): [qdb.artifact.Artifact(4),
+                                    qdb.artifact.Artifact(5),
+                                    qdb.artifact.Artifact(6)]}
+        self.assertEqual(obs, exp)
+
 if __name__ == "__main__":
     main()

@@ -199,8 +199,10 @@
 
     {% if study_info['num_samples'] > 0 %}
       $("#sample-summary-btn").show();
+      $("#add-new-preparation-btn").show();
     {% else %}
       $("#sample-summary-btn").hide();
+      $("#add-new-preparation-btn").hide();
     {% end %}
   });
 </script>
@@ -220,7 +222,7 @@
     <button class="btn btn-default btn-block" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })" id="sample-summary-btn"><span class="glyphicon glyphicon-th-list"></span> Sample Summary</button>
     {% if editable %}
       <a class="btn btn-default btn-block" href="/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
-      <button class="btn btn-default btn-block" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
+      <button class="btn btn-default btn-block" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })" id="add-new-preparation-btn"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
     {% end %}
 
     <div id="data-types-menu"></div>

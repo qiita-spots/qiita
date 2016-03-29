@@ -78,9 +78,6 @@ class StudyFilesAJAX(BaseHandler):
         atype = self.get_argument('artifact_type')
         pt_id = self.get_argument('prep_template_id')
 
-        res = study_files_get_req(study_id, pt_id, atype)
+        res = study_files_get_req(self.current_user.id, study_id, pt_id, atype)
 
-        self.render('study_ajax/artifact_file_selector.html',
-                    remaining=res['remaining'],
-                    file_types=res['file_types'],
-                    num_prefixes=res['num_prefixes'])
+        self.render('study_ajax/artifact_file_selector.html', **res)

@@ -119,7 +119,8 @@ class NewArtifactHandlerTests(TestHandlerBase):
             'prep-template-id': self.prep.id,
             'raw_forward_seqs': [self.fwd_fp],
             'raw_barcodes': [self.barcodes_fp],
-            'raw_reverse_seqs': []}
+            'raw_reverse_seqs': [],
+            'import-artifact': ''}
         response = self.post('/study/new_artifact/', args)
         self.assertEqual(response.code, 200)
         # make sure new artifact created

@@ -326,6 +326,26 @@ class TestArtifactAPI(TestCase):
         a = Artifact(new_artifact_id)
         self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
 
+        # Test importing an artifact
+        # Create new prep template to attach artifact to
+        pt = npt.assert_warns(
+            QiitaDBWarning, PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
+        self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
+
+        new_artifact_id_2 = get_count('qiita.artifact') + 1
+        obs = artifact_post_req(
+            'test@foo.bar', {}, 'FASTQ', 'New Test Artifact 2', pt.id,
+            new_artifact_id)
+        exp = {'status': 'success',
+               'message': '',
+               'artifact': new_artifact_id_2}
+        self.assertEqual(obs, exp)
+        # Instantiate the artifact to make sure it was made and
+        # to clean the environment
+        a = Artifact(new_artifact_id)
+        self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
+
     def test_artifact_post_req_error(self):
         # Create a new prep template to attach the artifact to
         pt = npt.assert_warns(
@@ -363,6 +383,13 @@ class TestArtifactAPI(TestCase):
 
         # Exception
         obs = artifact_post_req(user_id, filepaths, artifact_type, name, 1)
+        exp = {'status': 'error',
+               'message': "Error creating artifact: Prep template 1 already "
+                          "has an artifact associated"}
+        self.assertEqual(obs, exp)
+
+        # Exception
+        obs = artifact_post_req(user_id, {}, artifact_type, name, 1, 1)
         exp = {'status': 'error',
                'message': "Error creating artifact: Prep template 1 already "
                           "has an artifact associated"}
