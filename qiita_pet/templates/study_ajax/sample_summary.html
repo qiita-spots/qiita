@@ -27,9 +27,11 @@
           populate_data_type_menu_div();
           if (act == 'delete') {
             $("#sample-summary-btn").hide();
+            $("#add-new-preparation-btn").hide();
           }
           else if(act == 'create') {
             $("#sample-summary-btn").show();
+            $("#add-new-preparation-btn").show();
           }
         }
       })

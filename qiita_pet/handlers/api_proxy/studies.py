@@ -8,6 +8,8 @@
 from __future__ import division
 from collections import defaultdict
 
+from future.utils import viewitems
+
 from qiita_db.user import User
 from qiita_db.study import Study
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -180,7 +182,7 @@ def study_prep_get_req(study_id, user_id):
             'info': prep_info}
 
 
-def study_files_get_req(study_id, prep_template_id, artifact_type):
+def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     """Returns the uploaded files for the study id categorized by artifact_type
 
     It retrieves the files uploaded for the given study and tries to do a
@@ -189,6 +191,8 @@ def study_files_get_req(study_id, prep_template_id, artifact_type):
 
     Parameters
     ----------
+    user_id : str
+        The id of the user making the request
     study_id : int
         The study id
     prep_template_id : int
@@ -242,8 +246,23 @@ def study_files_get_req(study_id, prep_template_id, artifact_type):
     # because selected is initialized to the empty list
     file_types.insert(0, (first[0], first[1], selected))
 
+    # Create a list of artifacts that the user has access to, in case that
+    # he wants to import the files from another artifact
+    user = User(user_id)
+    artifact_options = []
+    user_artifacts = user.user_artifacts(artifact_type=artifact_type)
+    study = Study(study_id)
+    if study not in user_artifacts:
+        user_artifacts[study] = study.artifacts(artifact_type=artifact_type)
+    for study, artifacts in viewitems(user_artifacts):
+        study_label = "%s (%d)" % (study.title, study.id)
+        for a in artifacts:
+            artifact_options.append(
+                (a.id, "%s - %s (%d)" % (study_label, a.name, a.id)))
+
     return {'status': 'success',
             'message': '',
             'remaining': remaining,
             'file_types': file_types,
-            'num_prefixes': num_prefixes}
+            'num_prefixes': num_prefixes,
+            'artifacts': artifact_options}

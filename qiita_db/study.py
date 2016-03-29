@@ -952,7 +952,7 @@ class Study(qdb.base.QiitaObject):
     ebi_submission_status.__doc__.format(', '.join(_VALID_EBI_STATUS))
 
     # --- methods ---
-    def artifacts(self, dtype=None):
+    def artifacts(self, dtype=None, artifact_type=None):
         """Returns the list of artifacts associated with the study
 
         Parameters
@@ -960,25 +960,33 @@ class Study(qdb.base.QiitaObject):
         dtype : str, optional
             If given, retrieve only artifacts for given data type. Default,
             return all artifacts associated with the study.
+        artifact_type : str, optional
+            If given, retrieve only artifacts of given data type. Default,
+            return all artifacts associated with the study
 
         Returns
         -------
         list of qiita_db.artifact.Artifact
         """
         with qdb.sql_connection.TRN:
+            sql_args = [self._id]
+            sql_where = ""
             if dtype:
-                sql = """SELECT artifact_id
-                         FROM qiita.artifact
-                            JOIN qiita.data_type USING (data_type_id)
-                            JOIN qiita.study_artifact USING (artifact_id)
-                         WHERE study_id = %s AND data_type = %s"""
-                sql_args = [self._id, dtype]
-            else:
-                sql = """SELECT artifact_id
-                         FROM qiita.artifact
-                            JOIN qiita.study_artifact USING (artifact_id)
-                         WHERE study_id = %s"""
-                sql_args = [self._id]
+                sql_args.append(dtype)
+                sql_where = " AND data_type = %s"
+
+            if artifact_type:
+                sql_args.append(artifact_type)
+                sql_where += "AND artifact_type = %s"
+
+            sql = """SELECT artifact_id
+                     FROM qiita.artifact
+                        JOIN qiita.data_type USING (data_type_id)
+                        JOIN qiita.study_artifact USING (artifact_id)
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE study_id = %s{0}
+                     ORDER BY artifact_id""".format(sql_where)
+
             qdb.sql_connection.TRN.add(sql, sql_args)
             return [qdb.artifact.Artifact(aid)
                     for aid in qdb.sql_connection.TRN.execute_fetchflatten()]
