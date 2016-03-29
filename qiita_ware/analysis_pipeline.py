@@ -89,6 +89,41 @@ def _finish_analysis(analysis, **kwargs):
         analysis.status = "error"
 
 
+def _generate_analysis_tgz(analysis, **kwargs):
+    """Generates the analysis tgz
+
+    Parameters
+    ----------
+    analysis: Analysis
+        Analysis to generate the tgz command from
+    kwargs : ignored
+        Necessary to have in parameters to support execution via moi.
+    """
+    from qiita_db.sql_connection import TRN
+    from qiita_db.util import get_mountpoint, get_mountpoint_path_by_id
+    from os.path import join
+    from subprocess import Popen, PIPE
+
+    fps_ids = analysis.all_associated_filepath_ids
+    with TRN:
+        sql = """SELECT filepath, data_directory_id FROM qiita.filepath
+                    WHERE filepath_id IN %s"""
+        TRN.add(sql, [tuple(fps_ids)])
+
+        full_fps = [join(get_mountpoint_path_by_id(mid), f)
+                    for f, mid in TRN.execute_fetchindex()]
+
+        _, analysis_mp = get_mountpoint('analysis')[0]
+        tgz = join(analysis_mp, '%d_files.tgz' % analysis.id)
+        cmd = 'tar zcf %s %s' % (tgz, ' '.join(full_fps))
+
+        proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
+                     stderr=PIPE)
+        stdout, stderr = proc.communicate()
+
+    return stdout, stderr, proc.returncode
+
+
 class RunAnalysis(ParallelWrapper):
     def _construct_job_graph(self, analysis, commands, comm_opts=None,
                              rarefaction_depth=None,
@@ -114,6 +149,7 @@ class RunAnalysis(ParallelWrapper):
         """
         self._logger = stderr
         self.analysis = analysis
+        analysis_id = analysis.id
 
         # Add jobs to analysis
         if comm_opts is None:
@@ -150,7 +186,7 @@ class RunAnalysis(ParallelWrapper):
                            Command(software_command_id), return_existing=True)
 
         # Create the files for the jobs
-        files_node_name = "%d_ANALYSISFILES" % analysis.id
+        files_node_name = "%d_ANALYSISFILES" % analysis_id
         self._job_graph.add_node(files_node_name,
                                  func=_build_analysis_files,
                                  args=(analysis, rarefaction_depth,
@@ -161,7 +197,7 @@ class RunAnalysis(ParallelWrapper):
         # Add the jobs
         job_nodes = []
         for job in analysis.jobs:
-            node_name = "%d_JOB_%d" % (analysis.id, job.id)
+            node_name = "%d_JOB_%d" % (analysis_id, job.id)
             job_nodes.append(node_name)
             job_name = "%s: %s" % (job.datatype, job.command[0])
             self._job_graph.add_node(node_name,
@@ -173,6 +209,18 @@ class RunAnalysis(ParallelWrapper):
             # Adding the dependency edges to the graph
             self._job_graph.add_edge(files_node_name, node_name)
 
+        # tgz-ing the analysis results
+        tgz_node_name = "TGZ_ANALYSIS_%d" % (analysis_id)
+        job_name = "tgz_analysis_%d" % (analysis_id)
+        self._job_graph.add_node(tgz_node_name,
+                                 func=_generate_analysis_tgz,
+                                 args=(analysis,),
+                                 job_name=job_name,
+                                 requires_deps=False)
+        # Adding the dependency edges to the graph
+        for job_node_name in job_nodes:
+            self._job_graph.add_edge(job_node_name, tgz_node_name)
+
         # Finalize the analysis.
         node_name = "FINISH_ANALYSIS_%d" % analysis.id
         self._job_graph.add_node(node_name,
@@ -180,10 +228,7 @@ class RunAnalysis(ParallelWrapper):
                                  args=(analysis,),
                                  job_name='Finalize analysis',
                                  requires_deps=False)
-
-        # Adding the dependency edges to the graph
-        for job_node_name in job_nodes:
-            self._job_graph.add_edge(job_node_name, node_name)
+        self._job_graph.add_edge(tgz_node_name, node_name)
 
     def _failure_callback(self, msg=None):
         """Executed if something fails"""

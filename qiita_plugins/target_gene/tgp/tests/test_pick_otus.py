@@ -13,7 +13,8 @@ from shutil import rmtree
 from tempfile import mkstemp, mkdtemp
 
 from tgp.pick_otus import (write_parameters_file, generate_artifact_info,
-                           generate_pick_closed_reference_otus_cmd)
+                           generate_pick_closed_reference_otus_cmd,
+                           generate_sortmerna_tgz)
 
 
 class PickOTUsTests(TestCase):
@@ -66,6 +67,14 @@ class PickOTUsTests(TestCase):
         self.assertEqual(obs, exp)
         self.assertEqual(obs_dir, join(output_dir, 'cr_otus'))
 
+    def test_generate_sortmerna_tgz(self):
+        outdir = mkdtemp()
+        self._clean_up_files.append(outdir)
+        obs = generate_sortmerna_tgz(outdir)
+        exp = ("tar zcf %s/sortmerna_picked_otus.tgz "
+               "%s/sortmerna_picked_otus" % (outdir, outdir))
+        self.assertEqual(obs, exp)
+
     def test_generate_pick_closed_reference_otus_cmd_valueerror(self):
         filepaths = [('/directory/seqs.log', 'log'),
                      ('/directory/seqs.demux', 'preprocessed_demux')]
@@ -93,6 +102,7 @@ class PickOTUsTests(TestCase):
         obs = generate_artifact_info(outdir)
         fps = [(join(outdir, "otu_table.biom"), "biom"),
                (join(outdir, "sortmerna_picked_otus"), "directory"),
+               (join(outdir, "sortmerna_picked_otus.tgz"), "tgz"),
                (log_fp, "log")]
         exp = [['OTU table', 'BIOM', fps]]
         self.assertEqual(obs, exp)
