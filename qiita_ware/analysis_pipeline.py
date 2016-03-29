@@ -120,8 +120,12 @@ def _generate_analysis_tgz(analysis, **kwargs):
         proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
                      stderr=PIPE)
         stdout, stderr = proc.communicate()
+        return_value = proc.returncode
 
-    return stdout, stderr, proc.returncode
+        if return_value == 0:
+            analysis._add_file(tgz, 'tgz')
+
+    return stdout, stderr, return_value
 
 
 class RunAnalysis(ParallelWrapper):

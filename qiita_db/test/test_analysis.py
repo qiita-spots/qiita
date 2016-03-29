@@ -455,6 +455,19 @@ class TestAnalysis(TestCase):
         obs = new.mapping_file
         self.assertEqual(obs, None)
 
+    def test_retrieve_tgz(self):
+        # generating here as the tgz is only generated once the analysis runs
+        # to completion (un)successfully
+        analysis = qdb.analysis.Analysis(1)
+        fp = self.get_fp('test.tgz')
+        with open(fp, 'w') as f:
+            f.write('')
+        analysis._add_file(fp, 'tgz')
+        self.assertEqual(self.analysis.tgz, fp)
+
+    def test_retrieve_tgz_none(self):
+        self.assertIsNone(self.analysis.tgz)
+
     # def test_get_parent(self):
     #     raise NotImplementedError()
 

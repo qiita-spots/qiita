@@ -508,6 +508,29 @@ class Analysis(qdb.base.QiitaStatusObject):
             return join(base_fp, mapping_fp[0][0])
 
     @property
+    def tgz(self):
+        """Returns the tgz file of the analysis
+
+        Returns
+        -------
+        str or None
+            full filepath to the mapping file or None if not generated
+        """
+        with qdb.sql_connection.TRN:
+            fptypeid = qdb.util.convert_to_id("tgz", "filepath_type")
+            sql = """SELECT filepath
+                     FROM qiita.filepath
+                        JOIN qiita.analysis_filepath USING (filepath_id)
+                     WHERE analysis_id = %s AND filepath_type_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self._id, fptypeid])
+            tgz_fp = qdb.sql_connection.TRN.execute_fetchindex()
+            if not tgz_fp:
+                return None
+
+            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
+            return join(base_fp, tgz_fp[0][0])
+
+    @property
     def step(self):
         """Returns the current step of the analysis
 

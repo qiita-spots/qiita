@@ -225,20 +225,29 @@ class ShowAnalysesHandler(BaseHandler):
         dlop = partial(download_link_or_path, is_local_request)
         mappings = {}
         bioms = {}
+        tgzs = {}
         for analysis in analyses:
             _id = analysis.id
+            # getting mapping file
             mapping = analysis.mapping_file
             if mapping is not None:
                 mappings[_id] = dlop(mapping, gfi(mapping), 'mapping file')
             else:
                 mappings[_id] = ''
+            # getting biom tables
             links = [dlop(f, gfi(f), l)
                      for l, f in viewitems(analysis.biom_tables)]
             bioms[_id] = '\n'.join(links)
+            # getting tgz file
+            tgz = analysis.tgz
+            if tgz is not None:
+                tgzs[_id] = dlop(tgz, gfi(tgz), 'tgz file')
+            else:
+                tgzs[_id] = ''
 
         self.render("show_analyses.html", analyses=analyses, message=message,
                     level=level, is_local_request=is_local_request,
-                    mappings=mappings, bioms=bioms)
+                    mappings=mappings, bioms=bioms, tgz=tgzs)
 
     @authenticated
     @execute_as_transaction
