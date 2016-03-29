@@ -712,6 +712,16 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.artifacts(dtype="16S"), [exp[-1]])
         self.assertEqual(self.study.artifacts(dtype="18S"), exp[:-1])
 
+        self.assertEqual(self.study.artifacts(artifact_type="BIOM"),
+                         [qdb.artifact.Artifact(4),
+                          qdb.artifact.Artifact(5),
+                          qdb.artifact.Artifact(6)])
+
+        self.assertEqual(self.study.artifacts(dtype="18S",
+                                              artifact_type="BIOM"),
+                         [qdb.artifact.Artifact(4),
+                          qdb.artifact.Artifact(5)])
+
     def test_retrieve_artifacts_none(self):
         new = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'),

@@ -388,6 +388,13 @@ class TestArtifactAPI(TestCase):
                           "has an artifact associated"}
         self.assertEqual(obs, exp)
 
+        # Exception
+        obs = artifact_post_req(user_id, {}, artifact_type, name, 1, 1)
+        exp = {'status': 'error',
+               'message': "Error creating artifact: Prep template 1 already "
+                          "has an artifact associated"}
+        self.assertEqual(obs, exp)
+
     def test_artifact_status_put_req(self):
         obs = artifact_status_put_req(1, 'test@foo.bar', 'sandbox')
         exp = {'status': 'success',

@@ -250,8 +250,11 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     # he wants to import the files from another artifact
     user = User(user_id)
     artifact_options = []
-    for study, artifacts in viewitems(user.user_artifacts(
-                                      artifact_type=artifact_type)):
+    user_artifacts = user.user_artifacts(artifact_type=artifact_type)
+    study = Study(study_id)
+    if study not in user_artifacts:
+        user_artifacts[study] = study.artifacts(artifact_type=artifact_type)
+    for study, artifacts in viewitems(user_artifacts):
         study_label = "%s (%d)" % (study.title, study.id)
         for a in artifacts:
             artifact_options.append(

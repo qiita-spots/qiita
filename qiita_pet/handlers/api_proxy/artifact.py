@@ -250,7 +250,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         Name to give the artifact
     prep_template_id : int or str castable to int
         Prep template to attach the artifact to
-    artifact_id : str, optional
+    artifact_id : int or str castable to int, optional
         The id of the imported artifact
 
     Returns

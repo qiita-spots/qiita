@@ -259,5 +259,58 @@ class TestStudyAPI(TestCase):
                                  'Cannabis Soils (1) - Raw data 1 (1)')]}
         self.assertEqual(obs, exp)
 
+        obs = study_files_get_req('admin@foo.bar', 1, 1, 'FASTQ')
+        exp = {'status': 'success',
+               'message': '',
+               'remaining': ['uploaded_file.txt'],
+               'file_types': [('raw_barcodes', True, []),
+                              ('raw_forward_seqs', True, []),
+                              ('raw_reverse_seqs', False, [])],
+               'num_prefixes': 1,
+               'artifacts': [(1, 'Identification of the Microbiomes for '
+                                 'Cannabis Soils (1) - Raw data 1 (1)')]}
+        self.assertEqual(obs, exp)
+
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "FCM",
+            "study_description": "DESC",
+            "study_abstract": "ABS",
+            "emp_person_id": qdb.study.StudyPerson(2),
+            "principal_investigator_id": qdb.study.StudyPerson(3),
+            "lab_person_id": qdb.study.StudyPerson(1)
+        }
+
+        new_study = qdb.study.Study.create(
+            qdb.user.User('test@foo.bar'), "Some New Study", [1],
+            info)
+
+        obs = study_files_get_req('test@foo.bar', new_study.id, 1, 'FASTQ')
+        exp = {'status': 'success',
+               'message': '',
+               'remaining': [],
+               'file_types': [('raw_barcodes', True, []),
+                              ('raw_forward_seqs', True, []),
+                              ('raw_reverse_seqs', False, [])],
+               'num_prefixes': 1,
+               'artifacts': [(1, 'Identification of the Microbiomes for '
+                                 'Cannabis Soils (1) - Raw data 1 (1)')]}
+        self.assertEqual(obs, exp)
+
+        obs = study_files_get_req('admin@foo.bar', new_study.id, 1, 'FASTQ')
+        exp = {'status': 'success',
+               'message': '',
+               'remaining': [],
+               'file_types': [('raw_barcodes', True, []),
+                              ('raw_forward_seqs', True, []),
+                              ('raw_reverse_seqs', False, [])],
+               'num_prefixes': 1,
+               'artifacts': []}
+        self.assertEqual(obs, exp)
+
 if __name__ == '__main__':
     main()
