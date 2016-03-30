@@ -247,7 +247,7 @@ class ShowAnalysesHandler(BaseHandler):
 
         self.render("show_analyses.html", analyses=analyses, message=message,
                     level=level, is_local_request=is_local_request,
-                    mappings=mappings, bioms=bioms, tgz=tgzs)
+                    mappings=mappings, bioms=bioms, tgzs=tgzs)
 
     @authenticated
     @execute_as_transaction
