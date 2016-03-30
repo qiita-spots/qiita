@@ -44,7 +44,7 @@ def copy_raw_data(prep_template, artifact_id):
     Artifact.copy(Artifact(artifact_id), prep_template)
 
 
-def create_sample_template(fp, study, is_mapping_file, data_type):
+def create_sample_template(fp, study, is_mapping_file, data_type=None):
     """Creates a sample template
 
     Parameters
@@ -55,7 +55,7 @@ def create_sample_template(fp, study, is_mapping_file, data_type):
         The study to add the sample template to
     is_mapping_file : bool
         Whether `fp` contains a mapping file or a sample template
-    data_type : str
+    data_type : str, optional
         If `is_mapping_file` is True, the data type of the prep template to be
         created
 
@@ -170,7 +170,20 @@ def delete_sample_template(study_id):
 
 
 def update_prep_template(prep_id, fp):
-    """Updates a prep template"""
+    """Updates a prep template
+
+    Parameters
+    ----------
+    prep_id : int
+        Prep template id to be updated
+    fp : str
+        The file path to the template file
+
+    Returns
+    -------
+    dict of {str: str}
+        A dict of the form {'status': str, 'message': str}
+    """
     import warnings
     from os import remove
     from qiita_db.metadata_template.util import load_template_to_dataframe
