@@ -7,19 +7,25 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 import warnings
-
 from os import remove
 from os.path import basename
+from json import loads
+
 from natsort import natsorted
+from moi import r_client
 
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
+from qiita_ware.context import safe_submit
+from qiita_ware.dispatchable import update_prep_template
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
 from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
+
+PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
 
 def _get_ENA_ontology():
@@ -124,6 +130,25 @@ def prep_template_ajax_get_req(user_id, prep_id):
 
     ontology = _get_ENA_ontology()
 
+    job_id = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
+    if job_id:
+        redis_info = loads(r_client.get(job_id))
+        processing = redis_info['status_msg'] == 'Running'
+        if processing:
+            alert_type = 'info'
+            alert_msg = 'This prep template is currently being updated'
+        else:
+            alert_type = redis_info['return']['status']
+            alert_msg = redis_info['return']['message']
+    else:
+        processing = False
+        alert_type = ''
+        alert_msg = ''
+
+    alert_msg = alert_msg.replace('\n', '</br>')
+
+    editable = Study(study_id).can_edit(User(user_id)) and not processing
+
     return {'status': 'success',
             'message': '',
             'name': name,
@@ -136,8 +161,10 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'ontology': ontology,
             'artifact_attached': artifact_attached,
             'study_id': study_id,
-            'editable': Study(study_id).can_edit(User(user_id)),
-            'data_type': pt.data_type()}
+            'editable': editable,
+            'data_type': pt.data_type(),
+            'alert_type': alert_type,
+            'alert_message': alert_msg}
 
 
 @execute_as_transaction
@@ -372,7 +399,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         if len(req_path) != 2:
             return {'status': 'error',
                     'message': 'Incorrect path parameter'}
-        prep_id = req_path[0]
+        prep_id = int(req_path[0])
         attribute = req_path[1]
 
         # Check if the user actually has access to the prep template
@@ -390,15 +417,8 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             if fp['status'] != 'success':
                 return fp
             fp = fp['file']
-            df = load_template_to_dataframe(fp)
-            with warnings.catch_warnings(record=True) as warns:
-                prep.extend(df)
-                prep.update(df)
-                remove(fp)
-
-                if warns:
-                    msg = '\n'.join(set(str(w.message) for w in warns))
-                    status = 'warning'
+            job_id = safe_submit(user_id, update_prep_template, prep_id, fp)
+            r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id, job_id)
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',

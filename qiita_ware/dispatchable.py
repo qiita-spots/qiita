@@ -167,3 +167,32 @@ def delete_sample_template(study_id):
         msg = str(e)
 
     return {'status': status, 'message': msg}
+
+
+def update_prep_template(prep_id, fp):
+    """Updates a prep template"""
+    import warnings
+    from os import remove
+    from qiita_db.metadata_template.util import load_template_to_dataframe
+    from qiita_db.metadata_template.prep_template import PrepTemplate
+
+    msg = ''
+    status = 'success'
+
+    prep = PrepTemplate(prep_id)
+
+    try:
+        with warnings.catch_warnings(record=True) as warns:
+            df = load_template_to_dataframe(fp)
+            prep.extend(df)
+            prep.update(df)
+            remove(fp)
+
+            if warns:
+                msg = '\n'.join(set(str(w.message) for w in warns))
+                status = 'warning'
+    except Exception as e:
+            status = 'danger'
+            msg = str(e)
+
+    return {'status': status, 'message': msg}
