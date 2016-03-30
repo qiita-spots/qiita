@@ -479,7 +479,7 @@ BEGIN
         INSERT INTO qiita.software_artifact_type (software_id, artifact_type_id)
             VALUES (3, at_id);
     END LOOP;
-END $do$
+END $do$;
 
 -- Mar 28, 2016
-INSERT INTO qiita.filepath_type (filepath_type) VALUES ('tgz')
+INSERT INTO qiita.filepath_type (filepath_type) VALUES ('tgz');
