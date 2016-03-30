@@ -82,14 +82,18 @@ class SampleTemplateAJAX(BaseHandler):
                        if download['status'] == 'success' else None)
 
         stats = sample_template_summary_get_req(study_id, self.current_user.id)
-        summary = stats['summary'] if 'summary' in stats else {}
-        num_samples = stats['num_samples'] if 'num_samples' in stats else 0
-        num_columns = stats['num_columns'] if 'num_columns' in stats else 0
-        editable = stats['editable'] if 'editable' in stats else True
-        self.render('study_ajax/sample_summary.html', stats=summary,
-                    num_samples=num_samples, num_columns=num_columns,
-                    download_id=download_id, files=files, study_id=study_id,
-                    data_types=data_types, editable=editable)
+        if stats['status'] != 'success':
+            if 'does not exist' in stats['message']:
+                raise HTTPError(404, stats['message'])
+            if 'User does not have access to study' in stats['message']:
+                raise HTTPError(403, stats['message'])
+
+        stats['download_id'] = download_id
+        stats['files'] = files
+        stats['study_id'] = study_id
+        stats['data_types'] = data_types
+
+        self.render('study_ajax/sample_summary.html', **stats)
 
     @authenticated
     def post(self):

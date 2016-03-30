@@ -61,12 +61,7 @@
           bootstrapAlert(data.message, "danger");
         }
         else {
-          if(data.status == 'warning') {
-            bootstrapAlert(data.message.replace("\n", "<br/>"), "warning");
-          }
-          $("#file-selector option[value='" + fp +"']").remove();
-          $("#file-selector").val("");
-          $("#update-button-div").hide();
+          populate_main_div('/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
         }
       }
     });
@@ -330,6 +325,12 @@
           }
         }
     });
+
+    {% if alert_type != 'success' and alert_message != '' %}
+      bootstrapAlert("{% raw alert_message %}", "{{alert_type}}");
+    {% else %}
+      $('#bootstrap-alert').alert('close');
+    {% end %}
   });
 </script>
 

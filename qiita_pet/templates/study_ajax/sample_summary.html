@@ -47,6 +47,12 @@
         $('#file-btn').prop('disabled', false);
       }
     });
+
+    {% if alert_type != 'success' and alert_message != '' %}
+      bootstrapAlert("{% raw alert_message %}", "{{alert_type}}");
+    {% else %}
+      $('#bootstrap-alert').alert('close');
+    {% end %}
   });
 </script>
 
