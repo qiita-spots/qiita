@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 from os.path import isdir, exists, join
-from os import remove, close
+from os import remove, close, mkdir
 from shutil import rmtree
 from tempfile import mkstemp, mkdtemp
 
@@ -70,10 +70,8 @@ class PickOTUsTests(TestCase):
     def test_generate_sortmerna_tgz(self):
         outdir = mkdtemp()
         self._clean_up_files.append(outdir)
-        obs = generate_sortmerna_tgz(outdir)
-        exp = ("tar zcf %s/sortmerna_picked_otus.tgz "
-               "%s/sortmerna_picked_otus" % (outdir, outdir))
-        self.assertEqual(obs, exp)
+        mkdir(join(outdir, 'sortmerna_picked_otus'))
+        self.assertIsNone(generate_sortmerna_tgz(outdir))
 
     def test_generate_pick_closed_reference_otus_cmd_valueerror(self):
         filepaths = [('/directory/seqs.log', 'log'),
