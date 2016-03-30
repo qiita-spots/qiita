@@ -272,7 +272,7 @@ def safe_submit(*args, **kwargs):
     There are cases in which a race condition may occur: submit returns the
     job id but moi hasn't submitted the job. In some cases this is not
     acceptable, so this wrapper makes sure that the job_id
-    is returned only once the job has already been submitted
+    is returned only once the job has already been submitted.
 
     From previous tests, the while loop is executed ~2 times, so there is no
     much time lost in here
