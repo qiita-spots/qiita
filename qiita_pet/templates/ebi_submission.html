@@ -4,7 +4,7 @@
 
 <h1>Submission summary for study: <b>{{study_title}}</b></h1>
 
-<form role="form" action="/ebi_submission/{{preprocessed_data_id}}" method="post">
+<form role="form" action="{% raw qiita_config.portal_dir %}/ebi_submission/{{preprocessed_data_id}}" method="post">
     <div class="panel panel-default">
         <div class="panel-heading">
             The information below describes information contained in the sample
@@ -45,6 +45,6 @@
       <b>You need to set an investigation type to continue!</b>
     {% end %}
     <br/><br/>
-    <a class="btn btn-primary" href="/study/description/{{study_id}}?top_tab=preprocessed_data_tab&sub_tab={{preprocessed_data_id}}">Return to study</a>
+    <a class="btn btn-primary" href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}?top_tab=preprocessed_data_tab&sub_tab={{preprocessed_data_id}}">Return to study</a>
 </form>
 {% end %}

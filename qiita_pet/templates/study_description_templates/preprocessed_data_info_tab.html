@@ -1,3 +1,4 @@
+{% from qiita_core.qiita_settings import qiita_config %}
 {% from qiita_pet.handlers.util import download_link_or_path %}
 
 <script>
@@ -23,7 +24,7 @@ function parameters_changed(obj, ppd_id){
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h4 class="modal-title" id="myModalLabel">Choose processing parameters</h4>
       </div>
-      <form action="/study/process" method="post" id="parameter-form-{{ppd_id}}">
+      <form action="{% raw qiita_config.portal_dir %}/study/process" method="post" id="parameter-form-{{ppd_id}}">
         <div class="modal-body">
           <div>
             <div class="form-group">
@@ -89,9 +90,9 @@ function parameters_changed(obj, ppd_id){
   <table border="0" width="60%">
     <tr>
       {% if not ebi_link %}
-        <td><a class="btn btn-primary glyphicon glyphicon-export" href="/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a></td>
+        <td><a class="btn btn-primary glyphicon glyphicon-export" href="{% raw qiita_config.portal_dir %}/ebi_submission/{{ppd_id}}" style="word-spacing: -10px;"> Submit to EBI</a></td>
       {% end %}
-      <td><a class="btn btn-primary glyphicon glyphicon-export" href="/vamps/{{ppd_id}}" style="word-spacing: -10px;"> Submit to VAMPS</a></td>
+      <td><a class="btn btn-primary glyphicon glyphicon-export" href="{% raw qiita_config.portal_dir %}/vamps/{{ppd_id}}" style="word-spacing: -10px;"> Submit to VAMPS</a></td>
     </tr>
   </table>
   <br/>
@@ -108,7 +109,7 @@ function parameters_changed(obj, ppd_id){
     {% end %}
       <tr>
         <td style="padding:3px;">
-          <a href="/preprocessing_summary/{{ppd_id}}">Preprocessing summary</a>
+          <a href="{% raw qiita_config.portal_dir %}/preprocessing_summary/{{ppd_id}}">Preprocessing summary</a>
         </td>
       </tr>
   </table>
