@@ -18,8 +18,8 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from itertools import product
-from os.path import join
-from subprocess import Popen, PIPE
+from os.path import join, basename
+from tarfile import open as taropen
 
 from future.utils import viewitems
 from biom import load_table
@@ -798,17 +798,20 @@ class Analysis(qdb.base.QiitaStatusObject):
 
             _, analysis_mp = qdb.util.get_mountpoint('analysis')[0]
             tgz = join(analysis_mp, '%d_files.tgz' % self.id)
-            cmd = 'tar zcf %s %s' % (tgz, ' '.join(full_fps))
-
-            proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
-                         stderr=PIPE)
-            stdout, stderr = proc.communicate()
-            return_value = proc.returncode
+            try:
+                with taropen(tgz, "w:gz") as tar:
+                    for f in full_fps:
+                        tar.add(f, arcname=basename(f))
+                error_txt = ''
+                return_value = 0
+            except Exception as e:
+                error_txt = str(e)
+                return_value = 1
 
             if return_value == 0:
                 self._add_file(tgz, 'tgz')
 
-        return stdout, stderr, return_value
+        return '', error_txt, return_value
 
     def build_files(self,
                     rarefaction_depth=None,

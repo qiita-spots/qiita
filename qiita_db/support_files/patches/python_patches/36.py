@@ -1,7 +1,7 @@
 from random import SystemRandom
 from string import ascii_letters, digits
-from subprocess import Popen, PIPE
-from os.path import exists, join
+from os.path import exists, join, basename
+from tarfile import open as taropen
 
 from qiita_db.sql_connection import TRN
 from qiita_db.artifact import Artifact
@@ -51,15 +51,8 @@ with TRN:
 
         tgz = to_tgz + '.tgz'
         if not exists(tgz):
-            cmd = 'tar zcf %s %s' % (tgz, to_tgz)
-            proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
-                         stderr=PIPE)
-            stdout, stderr = proc.communicate()
-            return_value = proc.returncode
-            if return_value != 0:
-                raise ValueError(
-                    "There was an error:\nstdout:\n%s\n\nstderr:\n%s"
-                    % (stdout, stderr))
+            with taropen(tgz, "w:gz") as tar:
+                tar.add(to_tgz, arcname=basename(to_tgz))
 
         a_id = a.id
         # Add the new tgz file to the artifact.
@@ -105,15 +98,9 @@ with TRN:
         if not exists(tgz):
             full_fps = [join(get_mountpoint_path_by_id(mid), f)
                         for f, mid in fps]
-            cmd = 'tar zcf %s %s' % (tgz, ' '.join(full_fps))
-            proc = Popen(cmd, universal_newlines=True, shell=True, stdout=PIPE,
-                         stderr=PIPE)
-            stdout, stderr = proc.communicate()
-            return_value = proc.returncode
-            if return_value != 0:
-                raise ValueError(
-                    "There was an error:\nstdout:\n%s\n\nstderr:\n%s"
-                    % (stdout, stderr))
+            with taropen(tgz, "w:gz") as tar:
+                for f in full_fps:
+                    tar.add(f, arcname=basename(f))
 
         # Add the new tgz file to the analysis.
         fp_ids = insert_filepaths([(tgz, tgz_id)], analysis_id, 'analysis',

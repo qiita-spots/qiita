@@ -6,9 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import join
+from os.path import join, basename
 from functools import partial
 from glob import glob
+from tarfile import open as taropen
 
 from qiita_client import format_payload
 
@@ -103,9 +104,8 @@ def generate_sortmerna_tgz(out_dir):
     """
     to_tgz = join(out_dir, 'sortmerna_picked_otus')
     tgz = to_tgz + '.tgz'
-    cmd = 'tar zcf %s %s' % (tgz, to_tgz)
-
-    return cmd
+    with taropen(tgz, "w:gz") as tar:
+        tar.add(to_tgz, arcname=basename(to_tgz))
 
 
 def generate_artifact_info(pick_out):
@@ -189,11 +189,10 @@ def pick_closed_reference_otus(qclient, job_id, parameters, out_dir):
 
     qclient.update_job_step(job_id,
                             "Step 4 of 4: Generating tgz sortmerna folder")
-    command = generate_sortmerna_tgz(pick_out)
-    std_out, std_err, return_value = system_call(command)
-    if return_value != 0:
-        error_msg = ("Error while tgz failures:\nStd out: %s\nStd err: %s"
-                     % (std_out, std_err))
+    try:
+        generate_sortmerna_tgz(pick_out)
+    except Exception as e:
+        error_msg = ("Error while tgz failures:\nError: %s" % str(e))
         return format_payload(False, error_msg=error_msg)
 
     artifacts_info = generate_artifact_info(pick_out)
