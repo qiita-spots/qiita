@@ -274,7 +274,7 @@ def safe_submit(*args, **kwargs):
     acceptable, so this wrapper makes sure that the job_id
     is returned only once the job has already been submitted.
 
-    From previous tests, the while loop is executed ~2 times, so there is no
+    From previous tests, the while loop is executed ~2 times, so there is not
     much time lost in here
     """
     job_id = submit(*args, **kwargs)

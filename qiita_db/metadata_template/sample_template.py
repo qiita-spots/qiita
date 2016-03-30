@@ -137,7 +137,7 @@ class SampleTemplate(MetadataTemplate):
             has_prep_templates = qdb.sql_connection.TRN.execute_fetchlast()
             if has_prep_templates:
                 raise qdb.exceptions.QiitaDBError(
-                    "Sample template can not be erased because there are prep "
+                    "Sample template cannot be erased because there are prep "
                     "templates associated.")
 
             table_name = cls._table_name(id_)

@@ -56,7 +56,7 @@ class TestDispatchable(TestCase):
     def test_delete_sample_template(self):
         obs = delete_sample_template(1)
         exp = {'status': 'danger',
-               'message': 'Sample template can not be erased because there '
+               'message': 'Sample template cannot be erased because there '
                           'are prep templates associated.'}
         self.assertEqual(obs, exp)
 
