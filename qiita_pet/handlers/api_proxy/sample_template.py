@@ -227,12 +227,11 @@ def sample_template_summary_get_req(samp_id, user_id):
             alert_msg = 'This sample template is currently being processed'
         else:
             alert_type = redis_info['return']['status']
-            alert_msg = redis_info['return']['message']
+            alert_msg = redis_info['return']['message'].replace('\n', '</br>')
     else:
         processing = False
         alert_type = ''
         alert_msg = ''
-    alert_msg = alert_msg.replace('\n', '</br>')
 
     exists = _check_sample_template_exists(int(samp_id))
     if exists['status'] != 'success':

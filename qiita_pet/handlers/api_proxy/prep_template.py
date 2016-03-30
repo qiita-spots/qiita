@@ -139,13 +139,11 @@ def prep_template_ajax_get_req(user_id, prep_id):
             alert_msg = 'This prep template is currently being updated'
         else:
             alert_type = redis_info['return']['status']
-            alert_msg = redis_info['return']['message']
+            alert_msg = redis_info['return']['message'].replace('\n', '</br>')
     else:
         processing = False
         alert_type = ''
         alert_msg = ''
-
-    alert_msg = alert_msg.replace('\n', '</br>')
 
     editable = Study(study_id).can_edit(User(user_id)) and not processing
 
