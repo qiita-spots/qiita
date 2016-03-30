@@ -13,6 +13,7 @@ from random import choice
 
 import pandas as pd
 import numpy.testing as npt
+from moi import r_client
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
@@ -83,7 +84,9 @@ class TestPrepAPIReadOnly(TestCase):
                'artifact_attached': True,
                'study_id': 1,
                'editable': True,
-               'data_type': '18S'}
+               'data_type': '18S',
+               'alert_type': '',
+               'alert_message': ''}
         self.assertEqual(obs, exp)
 
         obs = prep_template_ajax_get_req('admin@foo.bar', 1)
@@ -276,6 +279,8 @@ class TestPrepAPI(TestCase):
             with open(fp, 'w') as f:
                 f.write('')
 
+        r_client.flushdb()
+
     def test_prep_template_graph_get_req(self):
         obs = prep_template_graph_get_req(1, 'test@foo.bar')
         exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5), (2, 6)],
@@ -392,15 +397,8 @@ class TestPrepAPI(TestCase):
         # Update prep template data
         obs = prep_template_patch_req(
             'test@foo.bar', 'replace', '/1/data', 'update.txt')
-        self.assertEqual(obs['status'], 'warning')
-        exp = [
-            'Sample names were already prefixed with the study id.',
-            'The following columns have been added to the existing template: '
-            'new_col',
-            'There are no differences between the data stored in the DB and '
-            'the new data provided']
-        self.assertItemsEqual(obs['message'].split('\n'), exp)
-        self.assertEqual(pt['1.SKD6.640190']['new_col'], 'new_value')
+        self.assertEqual(obs, exp)
+        self.assertIsNotNone(r_client.get('prep_template_1'))
 
     def test_prep_template_patch_req_errors(self):
         # Operation not supported
