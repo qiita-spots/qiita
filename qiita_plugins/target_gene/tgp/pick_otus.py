@@ -187,7 +187,8 @@ def pick_closed_reference_otus(qclient, job_id, parameters, out_dir):
                      % (std_out, std_err))
         return format_payload(False, error_msg=error_msg)
 
-    qclient.update_job_step(job_id, "Step 4 of 4: tgz sortmerna folder")
+    qclient.update_job_step(job_id,
+                            "Step 4 of 4: Generating tgz sortmerna folder")
     command = generate_sortmerna_tgz(pick_out)
     std_out, std_err, return_value = system_call(command)
     if return_value != 0:

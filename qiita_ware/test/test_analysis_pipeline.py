@@ -73,10 +73,10 @@ class TestRun(TestCase):
 
     def test_generate_analysis_tgz(self):
         obs_sout, obs_serr, obs_return = _generate_analysis_tgz(Analysis(1))
-        exp_serr = "tar: Removing leading '/' from member names\n"
 
+        # not testing obs_serr as it will change depending on the system's tar
+        # version
         self.assertEqual(obs_sout, "")
-        self.assertEqual(obs_serr, exp_serr)
         self.assertEqual(obs_return, 0)
 
 

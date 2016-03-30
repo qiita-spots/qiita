@@ -468,6 +468,13 @@ class TestAnalysis(TestCase):
     def test_retrieve_tgz_none(self):
         self.assertIsNone(self.analysis.tgz)
 
+    def test_generate_tgz(self):
+        obs_sout, obs_serr, obs_return = self.analysis.generate_tgz()
+        # not testing obs_serr as it will change depending on the system's tar
+        # version
+        self.assertEqual(obs_sout, "")
+        self.assertEqual(obs_return, 0)
+
     # def test_get_parent(self):
     #     raise NotImplementedError()
 
