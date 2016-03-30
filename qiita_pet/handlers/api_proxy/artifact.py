@@ -125,6 +125,16 @@ def artifact_summary_get_request(user_id, artifact_id):
     files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')))
              for f_id, fp, f_type in artifact.filepaths]
 
+    # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded
+    # values to actually get the information from the database once it stores
+    # the information
+    if artifact.artifact_type in ['SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger',
+                                  'per_sample_FASTQ']:
+        # If the artifact is one of the "raw" types, only the owner of the
+        # study and users that has been shared with can see the files
+        if not artifact.study.has_access(user, no_public=True):
+            files = []
+
     return {'status': 'success',
             'message': '',
             'name': artifact.name,
