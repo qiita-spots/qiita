@@ -60,9 +60,8 @@ class TestSampleTemplateAJAX(TestHandlerBase):
                              {'study_id': 1,
                               'action': 'delete'})
         self.assertEqual(response.code, 200)
-        exp = ('{"status": "error", '
-               '"message": "Sample template can not be erased because there '
-               'are prep templates associated."}')
+        exp = ('{"status": "success", '
+               '"message": ""}')
         # checking that the action was sent
         self.assertEqual(response.body, exp)
 

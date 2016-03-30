@@ -10,6 +10,8 @@ from os import remove
 from os.path import join, exists
 from string import ascii_letters
 from random import choice
+from time import sleep
+from json import loads
 
 import pandas as pd
 import numpy.testing as npt
@@ -398,7 +400,16 @@ class TestPrepAPI(TestCase):
         obs = prep_template_patch_req(
             'test@foo.bar', 'replace', '/1/data', 'update.txt')
         self.assertEqual(obs, exp)
-        self.assertIsNotNone(r_client.get('prep_template_1'))
+        obs = r_client.get('prep_template_1')
+        self.assertIsNotNone(obs)
+
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
 
     def test_prep_template_patch_req_errors(self):
         # Operation not supported
