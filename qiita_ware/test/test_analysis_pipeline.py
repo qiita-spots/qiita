@@ -11,7 +11,7 @@ from qiita_db.analysis import Analysis
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.exceptions import QiitaDBWarning
-from qiita_ware.analysis_pipeline import RunAnalysis
+from qiita_ware.analysis_pipeline import RunAnalysis, _generate_analysis_tgz
 
 
 # -----------------------------------------------------------------------------
@@ -70,6 +70,15 @@ class TestRun(TestCase):
                 '4_summarize_taxa_through_plots.py_output_dir'),
             'opt1': 5}
         self.assertEqual(job.options, expopts)
+
+    def test_generate_analysis_tgz(self):
+        obs_sout, obs_serr, obs_return = _generate_analysis_tgz(Analysis(1))
+
+        # not testing obs_serr as it will change depending on the system's tar
+        # version
+        self.assertEqual(obs_sout, "")
+        self.assertEqual(obs_return, 0)
+
 
 if __name__ == "__main__":
     main()

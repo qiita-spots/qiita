@@ -18,7 +18,8 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from itertools import product
-from os.path import join
+from os.path import join, basename
+from tarfile import open as taropen
 
 from future.utils import viewitems
 from biom import load_table
@@ -467,22 +468,23 @@ class Analysis(qdb.base.QiitaStatusObject):
         dict
             Dictonary in the form {data_type: full BIOM filepath}
         """
-        with qdb.sql_connection.TRN:
-            fptypeid = qdb.util.convert_to_id("biom", "filepath_type")
-            sql = """SELECT data_type, filepath
-                     FROM qiita.filepath
-                        JOIN qiita.analysis_filepath USING (filepath_id)
-                        JOIN qiita.data_type USING (data_type_id)
-                     WHERE analysis_id = %s AND filepath_type_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id, fptypeid])
-            tables = qdb.sql_connection.TRN.execute_fetchindex()
-            if not tables:
-                return {}
-            ret_tables = {}
-            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
-            for fp in tables:
-                ret_tables[fp[0]] = join(base_fp, fp[1])
-            return ret_tables
+        fps = [(_id, fp) for _id, fp, ftype in qdb.util.retrieve_filepaths(
+            "analysis_filepath", "analysis_id", self._id)
+            if ftype == 'biom']
+
+        if fps:
+            fps_ids = [f[0] for f in fps]
+            with qdb.sql_connection.TRN:
+                sql = """SELECT filepath_id, data_type FROM qiita.filepath
+                            JOIN qiita.analysis_filepath USING (filepath_id)
+                            JOIN qiita.data_type USING (data_type_id)
+                            WHERE filepath_id IN %s"""
+                qdb.sql_connection.TRN.add(sql, [tuple(fps_ids)])
+                data_types = dict(qdb.sql_connection.TRN.execute_fetchindex())
+
+            return {data_types[_id]: f for _id, f in fps}
+        else:
+            return {}
 
     @property
     def mapping_file(self):
@@ -493,19 +495,34 @@ class Analysis(qdb.base.QiitaStatusObject):
         str or None
             full filepath to the mapping file or None if not generated
         """
-        with qdb.sql_connection.TRN:
-            fptypeid = qdb.util.convert_to_id("plain_text", "filepath_type")
-            sql = """SELECT filepath
-                     FROM qiita.filepath
-                        JOIN qiita.analysis_filepath USING (filepath_id)
-                     WHERE analysis_id = %s AND filepath_type_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id, fptypeid])
-            mapping_fp = qdb.sql_connection.TRN.execute_fetchindex()
-            if not mapping_fp:
-                return None
+        fp = [fp for _, fp, fp_type in qdb.util.retrieve_filepaths(
+            "analysis_filepath", "analysis_id", self._id)
+            if fp_type == 'plain_text']
 
-            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
-            return join(base_fp, mapping_fp[0][0])
+        if fp:
+            # returning the actual path vs. an array
+            return fp[0]
+        else:
+            return None
+
+    @property
+    def tgz(self):
+        """Returns the tgz file of the analysis
+
+        Returns
+        -------
+        str or None
+            full filepath to the mapping file or None if not generated
+        """
+        fp = [fp for _, fp, fp_type in qdb.util.retrieve_filepaths(
+            "analysis_filepath", "analysis_id", self._id)
+            if fp_type == 'tgz']
+
+        if fp:
+            # returning the actual path vs. an array
+            return fp[0]
+        else:
+            return None
 
     @property
     def step(self):
@@ -767,6 +784,34 @@ class Analysis(qdb.base.QiitaStatusObject):
 
             qdb.sql_connection.TRN.add(sql, args, many=True)
             qdb.sql_connection.TRN.execute()
+
+    def generate_tgz(self):
+        fps_ids = self.all_associated_filepath_ids
+        with qdb.sql_connection.TRN:
+            sql = """SELECT filepath, data_directory_id FROM qiita.filepath
+                        WHERE filepath_id IN %s"""
+            qdb.sql_connection.TRN.add(sql, [tuple(fps_ids)])
+
+            full_fps = [join(qdb.util.get_mountpoint_path_by_id(mid), f)
+                        for f, mid in
+                        qdb.sql_connection.TRN.execute_fetchindex()]
+
+            _, analysis_mp = qdb.util.get_mountpoint('analysis')[0]
+            tgz = join(analysis_mp, '%d_files.tgz' % self.id)
+            try:
+                with taropen(tgz, "w:gz") as tar:
+                    for f in full_fps:
+                        tar.add(f, arcname=basename(f))
+                error_txt = ''
+                return_value = 0
+            except Exception as e:
+                error_txt = str(e)
+                return_value = 1
+
+            if return_value == 0:
+                self._add_file(tgz, 'tgz')
+
+        return '', error_txt, return_value
 
     def build_files(self,
                     rarefaction_depth=None,
