@@ -415,7 +415,7 @@ def sample_template_delete_req(study_id, user_id):
     # Store the job id attaching it to the sample template id
     r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id, job_id)
 
-    return {'status': 'success'}
+    return {'status': 'success', 'message': ''}
 
 
 @execute_as_transaction
