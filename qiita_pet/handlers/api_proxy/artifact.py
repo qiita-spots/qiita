@@ -123,7 +123,8 @@ def artifact_summary_get_request(user_id, artifact_id):
                 ' Submit to VAMPS</a>')
 
     files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')))
-             for f_id, fp, f_type in artifact.filepaths]
+             for f_id, fp, f_type in artifact.filepaths
+             if f_type != 'directory']
 
     # TODO: https://github.com/biocore/qiita/issues/1724 Remove this hardcoded
     # values to actually get the information from the database once it stores
