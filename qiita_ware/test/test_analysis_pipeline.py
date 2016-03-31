@@ -66,6 +66,11 @@ class TestRun(TestCase):
         self.assertEqual(job.command,
                          ['Summarize Taxa', 'summarize_taxa_through_plots.py'])
         expopts = {
+            '--mapping_fp': join(
+                get_db_files_base_dir(), 'analysis/2_analysis_mapping.txt'),
+            '--otu_table_fp': join(
+                get_db_files_base_dir(),
+                'analysis/2_analysis_dt-18S_r-1_c-3.biom'),
             '--output_dir': join(
                 get_db_files_base_dir(), 'job',
                 '4_summarize_taxa_through_plots.py_output_dir'),
