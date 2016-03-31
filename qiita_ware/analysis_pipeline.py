@@ -110,7 +110,10 @@ class RunAnalysis(ParallelWrapper):
             reference = Reference(reference_id)
             tree = reference.tree_fp
 
-            for data_type, command in commands:
+            for cmd_data_type, command in commands:
+                if data_type != cmd_data_type:
+                    continue
+
                 # get opts set by user, else make it empty dict
                 opts = comm_opts.get(command, {})
                 opts["--otu_table_fp"] = biom_fp
