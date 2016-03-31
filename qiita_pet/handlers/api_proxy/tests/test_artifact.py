@@ -225,6 +225,22 @@ class TestArtifactAPI(TestCase):
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
 
+        # A non-owner/share user can't see the files
+        a.visibility = 'public'
+        obs = artifact_summary_get_request('demo@microbio.me', 1)
+        exp = {'status': 'success',
+               'message': '',
+               'name': 'Raw data 1',
+               'summary': '<b>HTML TEST - not important</b>\n',
+               'job': None,
+               'processing_jobs': exp_p_jobs,
+               'errored_jobs': [],
+               'visibility': 'public',
+               'buttons': '',
+               'files': [],
+               'editable': False}
+        self.assertEqual(obs, exp)
+
     def test_artifact_summary_post_request(self):
         # No access
         obs = artifact_summary_post_request('demo@microbio.me', 1)
