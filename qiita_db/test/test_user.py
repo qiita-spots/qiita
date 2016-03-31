@@ -277,7 +277,7 @@ class UserTest(TestCase):
 
     def test_verify_code(self):
         email = 'new@test.bar'
-        user = qdb.user.User.create(email, 'password')
+        qdb.user.User.create(email, 'password')
         # making sure that we know the user codes
         sql = """UPDATE qiita.qiita_user SET
                         user_verify_code='verifycode',
