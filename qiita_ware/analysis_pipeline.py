@@ -133,6 +133,11 @@ class RunAnalysis(ParallelWrapper):
         if comm_opts is None:
             comm_opts = {}
 
+        # building bioms, this is fine as this is running on a worker and
+        # we need them to create the jobs
+        _build_analysis_files(analysis, rarefaction_depth,
+                              merge_duplicated_sample_ids)
+
         tree_commands = ["Beta Diversity", "Alpha Rarefaction"]
         for data_type, biom_fp in viewitems(analysis.biom_tables):
             biom_table = load_table(biom_fp)
@@ -163,15 +168,6 @@ class RunAnalysis(ParallelWrapper):
                 Job.create(data_type, command, opts, analysis, reference,
                            Command(software_command_id), return_existing=True)
 
-        # Create the files for the jobs
-        files_node_name = "%d_ANALYSISFILES" % analysis_id
-        self._job_graph.add_node(files_node_name,
-                                 func=_build_analysis_files,
-                                 args=(analysis, rarefaction_depth,
-                                       merge_duplicated_sample_ids),
-                                 job_name='Build analysis',
-                                 requires_deps=False)
-
         # Add the jobs
         job_nodes = []
         for job in analysis.jobs:
@@ -183,9 +179,6 @@ class RunAnalysis(ParallelWrapper):
                                      args=(job.id,),
                                      job_name=job_name,
                                      requires_deps=False)
-
-            # Adding the dependency edges to the graph
-            self._job_graph.add_edge(files_node_name, node_name)
 
         # tgz-ing the analysis results
         tgz_node_name = "TGZ_ANALYSIS_%d" % (analysis_id)

@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from os.path import join
 from os import remove, rename
+from shutil import copy
 import numpy.testing as npt
 
 from moi.group import get_id_from_user
@@ -36,9 +37,9 @@ class TestRun(TestCase):
         """Make sure failure at file creation step doesn't hang everything"""
         # rename a needed file for creating the biom table
         base = get_db_files_base_dir()
-        rename(join(base, "processed_data",
-                    "1_study_1001_closed_reference_otu_table.biom"),
-               join(base, "processed_data", "1_study_1001.bak"))
+        copy(join(base, "processed_data",
+                  "1_study_1001_closed_reference_otu_table.biom"),
+             join(base, "processed_data", "1_study_1001.bak"))
         analysis = Analysis(2)
         group = get_id_from_user("demo@microbio.me")
         try:
