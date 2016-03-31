@@ -42,7 +42,7 @@ def _build_sample_summary(study_id, user_id):
         study_id, user_id)['samples']}
     all_samps = set(samps_table.keys())
     columns = [{"id": "sample", "name": "Sample", "field": "sample",
-                "width": 240, "sortable": True}]
+                "width": 240, "sortable": False}]
     # Add one column per prep template highlighting what samples exist
     preps = study_prep_get_req(study_id, user_id)["info"]
     for dt in preps:
@@ -52,7 +52,7 @@ def _build_sample_summary(study_id, user_id):
             columns.append({"id": col_field,
                             "name": col_name,
                             "field": col_field,
-                            "sortable": True,
+                            "sortable": False,
                             "width": 240})
 
             prep_samples = prep_template_samples_get_req(

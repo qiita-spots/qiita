@@ -17,9 +17,9 @@ class TestHelpers(TestHandlerBase):
     def test_build_sample_summary(self):
         cols, table = _build_sample_summary(1, 'test@foo.bar')
         # Make sure header filled properly
-        cols_exp = [{'field': 'sample', 'width': 240, 'sortable': True,
+        cols_exp = [{'field': 'sample', 'width': 240, 'sortable': False,
                      'id': 'sample', 'name': 'Sample'},
-                    {'field': 'prep1', 'width': 240, 'sortable': True,
+                    {'field': 'prep1', 'width': 240, 'sortable': False,
                      'id': 'prep1', 'name': 'PREP 1 NAME - 1'}]
         self.assertEqual(cols, cols_exp)
         table_exp = [{'sample': '1.SKB2.640194', 'prep1': 'X'},
