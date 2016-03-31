@@ -129,8 +129,10 @@ class SampleAJAX(BaseHandler):
         if res['status'] == 'error':
             if 'does not exist' in res['message']:
                 raise HTTPError(404, res['message'])
-            if 'User does not have access to study' in res['message']:
+            elif 'User does not have access to study' in res['message']:
                 raise HTTPError(403, res['message'])
+            else:
+                raise HTTPError(500, res['message'])
 
         meta_cats = res['categories']
         cols, samps_table = _build_sample_summary(study_id,
