@@ -183,6 +183,9 @@ def generate_split_libraries_fastq_cmd(filepaths, mapping_file, atype,
             reverse_seqs.append(fp)
         elif fp_type == 'raw_barcodes':
             barcode_fps.append(fp)
+        elif fp_type == 'html_summary':
+            # Ignore the HTML summary file
+            continue
         else:
             raise NotImplementedError("File type not supported %s" % fp_type)
 
