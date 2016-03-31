@@ -31,6 +31,8 @@ from __future__ import division
 from re import sub
 from datetime import datetime
 
+from future.utils import viewitems
+
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.qiita_settings import qiita_config
@@ -238,6 +240,14 @@ class User(qdb.base.QiitaObject):
                 cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
             qdb.sql_connection.TRN.add(sql, values)
 
+            # Add system messages to user
+            sql = """INSERT INTO qiita.message_user (email, message_id)
+                     SELECT %s, message_id FROM qiita.message
+                     WHERE expiration > %s"""
+            qdb.sql_connection.TRN.add(sql, [email, datetime.now()])
+
+            qdb.sql_connection.TRN.execute()
+
             return cls(email)
 
     @classmethod
@@ -322,11 +332,6 @@ class User(qdb.base.QiitaObject):
                         qdb.sql_connection.TRN.add(an_sql, args)
                         an_id = qdb.sql_connection.TRN.execute_fetchlast()
                         qdb.sql_connection.TRN.add(ap_sql, [an_id, portal_id])
-                    # Add system messages to user
-                    sql = """INSERT INTO qiita.message_user (email, message_id)
-                             SELECT %s, message_id FROM qiita.message
-                             WHERE expiration > %s"""
-                    qdb.sql_connection.TRN.add(sql, [email, datetime.now()])
 
                     qdb.sql_connection.TRN.execute()
 
@@ -475,6 +480,46 @@ class User(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchindex()
 
     # ------- methods ---------
+    def user_artifacts(self, artifact_type=None):
+        """Returns the artifacts owned by the user, grouped by study
+
+        Parameters
+        ----------
+        artifact_type : str, optional
+            The artifact type to retrieve. Default: retrieve all artfact types
+
+        Returns
+        -------
+        dict of {qiita_db.study.Study: list of qiita_db.artifact.Artifact}
+            The artifacts owned by the user
+        """
+        with qdb.sql_connection.TRN:
+            sql_args = [self.id, qiita_config.portal]
+            sql_a_type = ""
+            if artifact_type:
+                sql_a_type = " AND artifact_type = %s"
+                sql_args.append(artifact_type)
+
+            sql = """SELECT study_id, array_agg(
+                        artifact_id ORDER BY artifact_id)
+                     FROM qiita.study
+                        JOIN qiita.study_portal USING (study_id)
+                        JOIN qiita.portal_type USING (portal_type_id)
+                        JOIN qiita.study_artifact USING (study_id)
+                        JOIN qiita.artifact USING (artifact_id)
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                        WHERE email = %s AND portal = %s{0}
+                        GROUP BY study_id
+                        ORDER BY study_id""".format(sql_a_type)
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            db_res = dict(qdb.sql_connection.TRN.execute_fetchindex())
+            res = {}
+            for s_id, artifact_ids in viewitems(db_res):
+                res[qdb.study.Study(s_id)] = [
+                    qdb.artifact.Artifact(a_id) for a_id in artifact_ids]
+
+            return res
+
     def change_password(self, oldpass, newpass):
         """Changes the password from oldpass to newpass
 
