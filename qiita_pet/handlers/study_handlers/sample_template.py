@@ -123,8 +123,16 @@ class SampleAJAX(BaseHandler):
         """Show the sample summary page"""
         study_id = self.get_argument('study_id')
 
-        meta_cats = sample_template_meta_cats_get_req(
-            int(study_id), self.current_user.id)['categories']
+        res = sample_template_meta_cats_get_req(
+            int(study_id), self.current_user.id)
+
+        if res['status'] == 'error':
+            if 'does not exist' in res['message']:
+                raise HTTPError(404, res['message'])
+            if 'User does not have access to study' in res['message']:
+                raise HTTPError(403, res['message'])
+
+        meta_cats = res['categories']
         cols, samps_table = _build_sample_summary(study_id,
                                                   self.current_user.id)
         self.render('study_ajax/sample_prep_summary.html',
