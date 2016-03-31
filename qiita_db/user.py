@@ -31,8 +31,6 @@ from __future__ import division
 from re import sub
 from datetime import datetime
 
-from future.utils import viewitems
-
 from qiita_core.exceptions import (IncorrectEmailError, IncorrectPasswordError,
                                    IncompetentQiitaDeveloperError)
 from qiita_core.qiita_settings import qiita_config
