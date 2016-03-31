@@ -98,6 +98,12 @@ class UserTest(TestCase):
 
     def test_create_user(self):
         user = qdb.user.User.create('new@test.bar', 'password')
+
+        # adding a couple of messages
+        qdb.util.add_system_message("TESTMESSAGE_OLD", datetime.now())
+        qdb.util.add_system_message(
+            "TESTMESSAGE", datetime.now() + timedelta(seconds=59))
+
         self.assertEqual(user.id, 'new@test.bar')
         sql = "SELECT * from qiita.qiita_user WHERE email = 'new@test.bar'"
         obs = self.conn_handler.execute_fetchall(sql)
@@ -115,6 +121,14 @@ class UserTest(TestCase):
             'user_level_id': 5,
             'email': 'new@test.bar'}
         self._check_correct_info(obs, exp)
+
+        # Make sure new system messages are linked to user
+        sql = """SELECT message_id FROM qiita.message_user
+                 WHERE email = 'new@test.bar'"""
+        m_id = qdb.util.get_count('qiita.message')
+        # the user should have the latest message (m_id) and the one before
+        self.assertEqual(self.conn_handler.execute_fetchall(sql), [[m_id-1],
+                                                                   [m_id]])
 
     def test_create_user_info(self):
         user = qdb.user.User.create('new@test.bar', 'password', self.userinfo)
@@ -262,39 +276,40 @@ class UserTest(TestCase):
         self.assertEqual(user.shared_analyses, set())
 
     def test_verify_code(self):
-        qdb.util.add_system_message("TESTMESSAGE_OLD", datetime.now())
-        qdb.util.add_system_message(
-            "TESTMESSAGE", datetime.now() + timedelta(seconds=59))
-        sql = ("insert into qiita.qiita_user values ('new@test.bar', '1', "
-               "'testtest', 'testuser', '', '', '', 'verifycode', 'resetcode'"
-               ",null)")
-        self.conn_handler.execute(sql)
+        email = 'new@test.bar'
+        user = qdb.user.User.create(email, 'password')
+        # making sure that we know the user codes
+        sql = """UPDATE qiita.qiita_user SET
+                        user_verify_code='verifycode',
+                        pass_reset_code='resetcode'
+                    WHERE email=%s"""
+        self.conn_handler.execute(sql, [email])
 
         self.assertFalse(
-            qdb.user.User.verify_code('new@test.bar', 'wrongcode', 'create'))
+            qdb.user.User.verify_code(email, 'wrongcode', 'create'))
         self.assertFalse(
-            qdb.user.User.verify_code('new@test.bar', 'wrongcode', 'reset'))
+            qdb.user.User.verify_code(email, 'wrongcode', 'reset'))
 
         self.assertTrue(
-            qdb.user.User.verify_code('new@test.bar', 'verifycode', 'create'))
+            qdb.user.User.verify_code(email, 'verifycode', 'create'))
         self.assertTrue(
-            qdb.user.User.verify_code('new@test.bar', 'resetcode', 'reset'))
+            qdb.user.User.verify_code(email, 'resetcode', 'reset'))
 
         # make sure errors raised if code already used or wrong type
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.user.User.verify_code('new@test.bar', 'verifycode', 'create')
+            qdb.user.User.verify_code(email, 'verifycode', 'create')
         with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.user.User.verify_code('new@test.bar', 'resetcode', 'reset')
+            qdb.user.User.verify_code(email, 'resetcode', 'reset')
 
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            qdb.user.User.verify_code('new@test.bar', 'fakecode', 'badtype')
+            qdb.user.User.verify_code(email, 'fakecode', 'badtype')
 
         # make sure default analyses created
         sql = ("SELECT email, name, description, dflt FROM qiita.analysis "
-               "WHERE email = 'new@test.bar'")
-        obs = self.conn_handler.execute_fetchall(sql)
-        exp = [['new@test.bar', 'new@test.bar-dflt-2', 'dflt', True],
-               ['new@test.bar', 'new@test.bar-dflt-1', 'dflt', True]]
+               "WHERE email = %s")
+        obs = self.conn_handler.execute_fetchall(sql, [email])
+        exp = [[email, 'new@test.bar-dflt-2', 'dflt', True],
+               [email, 'new@test.bar-dflt-1', 'dflt', True]]
         self.assertEqual(obs, exp)
 
         # Make sure default analyses are linked with the portal
