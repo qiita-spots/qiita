@@ -10,6 +10,7 @@ from __future__ import division
 from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
+from os import remove
 
 import networkx as nx
 
@@ -82,6 +83,23 @@ class Artifact(qdb.base.QiitaObject):
         """
         return cls.iter_by_visibility('public')
 
+    @staticmethod
+    def types():
+        """Returns list of all artifact types available and their descriptions
+
+        Returns
+        -------
+        list of list of str
+            The artifact type and description of the artifact type, in the form
+            [[artifact_type, description], ...]
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT artifact_type, description
+                     FROM qiita.artifact_type
+                     ORDER BY artifact_type"""
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchindex()
+
     @classmethod
     def copy(cls, artifact, prep_template):
         """Creates a copy of `artifact` and attaches it to `prep_template`
@@ -106,13 +124,11 @@ class Artifact(qdb.base.QiitaObject):
                 prep_template.data_type(), "data_type")
             sql = """INSERT INTO qiita.artifact (
                         generated_timestamp, visibility_id, artifact_type_id,
-                        data_type_id, can_be_submitted_to_ebi,
-                        can_be_submitted_to_vamps, submitted_to_vamps)
-                     VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        data_type_id, submitted_to_vamps)
+                     VALUES (%s, %s, %s, %s, %s)
                      RETURNING artifact_id"""
             sql_args = [datetime.now(), visibility_id, atype_id, dtype_id,
-                        artifact.can_be_submitted_to_ebi,
-                        artifact.can_be_submitted_to_vamps, False]
+                        False]
             qdb.sql_connection.TRN.add(sql, sql_args)
             a_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -141,8 +157,7 @@ class Artifact(qdb.base.QiitaObject):
 
     @classmethod
     def create(cls, filepaths, artifact_type, name=None, prep_template=None,
-               parents=None, processing_parameters=None,
-               can_be_submitted_to_ebi=False, can_be_submitted_to_vamps=False):
+               parents=None, processing_parameters=None):
         r"""Creates a new artifact in the system
 
         The parameters depend on how the artifact was generated:
@@ -153,11 +168,6 @@ class Artifact(qdb.base.QiitaObject):
             artifacts, the parameters `parents` and `processing_parameters`
             should be provided and the parameter `prep_template` should not
             be provided.
-
-        The parameters `can_be_submitted_to_ebi` and
-        `can_be_submitted_to_vamps` defaults to false and they should be
-        provided if and only if the artifact can be submitted to EBI and
-        VAMPS, respectively.
 
         Parameters
         ----------
@@ -179,12 +189,6 @@ class Artifact(qdb.base.QiitaObject):
             The processing parameters used to generate the new artifact
             from `parents`. It is required if `parents` is provided. It should
             not be provided if `prep_template` is provided.
-        can_be_submitted_to_ebi : bool, optional
-            Whether the new artifact can be submitted to EBI or not. Default:
-            `False`.
-        can_be_submitted_to_vamps : bool, optional
-            Whether the new artifact can be submitted to VAMPS or not. Default:
-            `False`.
 
         Returns
         -------
@@ -205,6 +209,7 @@ class Artifact(qdb.base.QiitaObject):
         -----
         The visibility of the artifact is set by default to `sandbox`
         The timestamp of the artifact is set by default to `datetime.now()`
+        The value of `submitted_to_vamps` is set by default to `False`
         """
         # We need at least one file
         if not filepaths:
@@ -259,15 +264,12 @@ class Artifact(qdb.base.QiitaObject):
                 sql = """INSERT INTO qiita.artifact
                             (generated_timestamp, command_id, data_type_id,
                              command_parameters, visibility_id,
-                             artifact_type_id, can_be_submitted_to_ebi,
-                             can_be_submitted_to_vamps, submitted_to_vamps)
-                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                             artifact_type_id, submitted_to_vamps)
+                         VALUES (%s, %s, %s, %s, %s, %s, %s)
                          RETURNING artifact_id"""
                 sql_args = [timestamp, processing_parameters.command.id,
                             dtype_id, processing_parameters.dump(),
-                            visibility_id, artifact_type_id,
-                            can_be_submitted_to_ebi, can_be_submitted_to_vamps,
-                            False]
+                            visibility_id, artifact_type_id, False]
                 qdb.sql_connection.TRN.add(sql, sql_args)
                 a_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -286,13 +288,11 @@ class Artifact(qdb.base.QiitaObject):
                 sql = """INSERT INTO qiita.artifact
                             (generated_timestamp, visibility_id,
                              artifact_type_id, data_type_id,
-                             can_be_submitted_to_ebi,
-                             can_be_submitted_to_vamps, submitted_to_vamps)
-                         VALUES (%s, %s, %s, %s, %s, %s, %s)
+                             submitted_to_vamps)
+                         VALUES (%s, %s, %s, %s, %s)
                          RETURNING artifact_id"""
                 sql_args = [timestamp, visibility_id, artifact_type_id,
-                            dtype_id, can_be_submitted_to_ebi,
-                            can_be_submitted_to_vamps, False]
+                            dtype_id, False]
                 qdb.sql_connection.TRN.add(sql, sql_args)
                 a_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -377,7 +377,8 @@ class Artifact(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
                     artifact_id, "it has been submitted to VAMPS")
 
-            # Check if there is a job queued that will use the artifact
+            # Check if there is a job queued, running, waiting or
+            # in_construction that will use/is using the artifact
             sql = """SELECT EXISTS(
                         SELECT *
                         FROM qiita.artifact_processing_job
@@ -385,8 +386,9 @@ class Artifact(qdb.base.QiitaObject):
                             JOIN qiita.processing_job_status
                                 USING (processing_job_status_id)
                         WHERE artifact_id = %s
-                            AND processing_job_status IN ('queued', 'running'))
-                  """
+                            AND processing_job_status IN (
+                                'queued', 'running', 'waiting',
+                                'in_construction'))"""
             qdb.sql_connection.TRN.add(sql, [artifact_id])
             if qdb.sql_connection.TRN.execute_fetchlast():
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
@@ -412,6 +414,11 @@ class Artifact(qdb.base.QiitaObject):
                 sql = """DELETE FROM qiita.processing_job
                          WHERE processing_job_id IN %s"""
                 qdb.sql_connection.TRN.add(sql, [job_ids])
+
+            # Delete the entry from the artifact_output_processing_job table
+            sql = """DELETE FROM qiita.artifact_output_processing_job
+                     WHERE artifact_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [artifact_id])
 
             # Detach the artifact from its filepaths
             sql = """DELETE FROM qiita.artifact_filepath
@@ -545,6 +552,11 @@ class Artifact(qdb.base.QiitaObject):
         ----------
         value : str
             The new visibility of the artifact
+
+        Notes
+        -----
+        The visibility of an artifact is propagated to its ancestors, but it
+        only applies when the new visibility is more open than before.
         """
         with qdb.sql_connection.TRN:
             sql = """UPDATE qiita.artifact
@@ -553,6 +565,13 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(
                 sql, [qdb.util.convert_to_id(value, "visibility"), self.id])
             qdb.sql_connection.TRN.execute()
+            # In order to correctly propagate the visibility upstream, we need
+            # to go one step at a time. By setting up the visibility of our
+            # parents first, we accomplish that, since they will propagate
+            # the changes to its parents
+            for p in self.parents:
+                visibilites = [[d.visibility] for d in p.descendants.nodes()]
+                p.visibility = qdb.util.infer_status(visibilites)
 
     @property
     def artifact_type(self):
@@ -599,7 +618,8 @@ class Artifact(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT can_be_submitted_to_ebi
-                     FROM qiita.artifact
+                     FROM qiita.artifact_type
+                        JOIN qiita.artifact USING (artifact_type_id)
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
@@ -701,7 +721,8 @@ class Artifact(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT can_be_submitted_to_vamps
-                     FROM qiita.artifact
+                     FROM qiita.artifact_type
+                        JOIN qiita.artifact USING (artifact_type_id)
                      WHERE artifact_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
@@ -765,7 +786,67 @@ class Artifact(qdb.base.QiitaObject):
             with the artifact
         """
         return qdb.util.retrieve_filepaths(
-            "artifact_filepath", "artifact_id", self.id)
+            "artifact_filepath", "artifact_id", self.id, sort='ascending')
+
+    @property
+    def html_summary_fp(self):
+        """Returns the HTML summary filepath
+
+        Returns
+        -------
+        tuple of (int, str)
+            The filepath id and the path to the HTML summary
+        """
+        fps = qdb.util.retrieve_filepaths("artifact_filepath", "artifact_id",
+                                          self.id, fp_type='html_summary')
+        if fps:
+            # If fps is not the empty list, then we have exactly one file
+            # retrieve_filepaths returns a list of lists of 3 values: the
+            # filepath id, the filepath and the filepath type. We don't want
+            # to return the filepath type here, so just grabbing the first and
+            # second element of the list
+            res = (fps[0][0], fps[0][1])
+        else:
+            res = None
+
+        return res
+
+    @html_summary_fp.setter
+    def html_summary_fp(self, value):
+        """Sets the HTML summary of the artifact
+
+        Parameters
+        ----------
+        value : str
+            Path to the new HTML summary
+        """
+        with qdb.sql_connection.TRN:
+            current = self.html_summary_fp
+            if current:
+                # Delete the current HTML summary
+                fp_id = current[0]
+                fp = current[1]
+                # From the artifact_filepath table
+                sql = """DELETE FROM qiita.artifact_filepath
+                         WHERE filepath_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [fp_id])
+                # From the filepath table
+                sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
+                qdb.sql_connection.TRN.add(sql, [fp_id])
+                # And from the filesystem only after the transaction is
+                # successfully completed (after commit)
+                qdb.sql_connection.TRN.add_post_commit_func(remove, fp)
+
+            # Add the new HTML summary
+            fp_ids = qdb.util.insert_filepaths(
+                [(value, 'html_summary')], self.id, self.artifact_type,
+                "filepath")
+            sql = """INSERT INTO qiita.artifact_filepath
+                        (artifact_id, filepath_id)
+                     VALUES (%s, %s)"""
+            # We only inserted a single filepath, so using index 0
+            qdb.sql_connection.TRN.add(sql, [self.id, fp_ids[0]])
+            qdb.sql_connection.TRN.execute()
 
     @property
     def parents(self):

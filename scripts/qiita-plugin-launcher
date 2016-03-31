@@ -8,7 +8,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from subprocess import Popen
+from subprocess import Popen, PIPE
 
 import click
 
@@ -26,9 +26,12 @@ def start(env_script, start_script, url, job_id, job_dir):
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
     cmd = "source ~/.bash_profile; %s; %s" % (env_script, ' '.join(cmd))
-    proc = Popen(cmd, shell=True)
+    proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = proc.communicate()
     if proc.returncode and proc.returncode != 0:
-        raise ValueError("Error launching the plugin.")
+        raise ValueError(
+            "Error launching the plugin:\n\tStdout: %s\n\tStderr: %s"
+            % (stdout, stderr))
 
 
 if __name__ == '__main__':

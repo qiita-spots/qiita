@@ -78,7 +78,7 @@ class HeartbeatHandlerTests(OauthTestingBase):
             '', headers=self.header)
         self.assertEqual(obs.code, 200)
         exp = {'success': False,
-               'error': 'Job already finished. Status: success'}
+               'error': "Can't execute heartbeat on job: already completed"}
         self.assertEqual(loads(obs.body), exp)
 
     def test_post(self):
@@ -159,6 +159,7 @@ class CompleteHandlerTests(OauthTestingBase):
         super(CompleteHandlerTests, self).setUp()
 
     def tearDown(self):
+        super(CompleteHandlerTests, self).tearDown()
         for fp in self._clean_up_files:
             if exists(fp):
                 remove(fp)
@@ -177,12 +178,13 @@ class CompleteHandlerTests(OauthTestingBase):
         self.assertEqual(loads(obs.body), exp)
 
     def test_post_job_not_running(self):
-        payload = dumps({'sucess': False, 'error': 'Job failure'})
+        payload = dumps({'success': True, 'artifacts': []})
         obs = self.post(
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/complete/',
             payload, headers=self.header)
         self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error': "Job in a non-running state."}
+        exp = {'success': False,
+               'error': "Can't complete job: not in a running state"}
         self.assertEqual(loads(obs.body), exp)
 
     def test_post_job_failure(self):
@@ -209,12 +211,8 @@ class CompleteHandlerTests(OauthTestingBase):
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         payload = dumps(
             {'success': True, 'error': '',
-             'artifacts': [
-                 {'filepaths': [(fp, 'biom')],
-                  'artifact_type': 'BIOM',
-                  'can_be_submitted_to_ebi': False,
-                  'can_be_submitted_to_vamps': False}
-             ]})
+             'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
+                                         'artifact_type': 'BIOM'}}})
         obs = self.post(
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/complete/',
             payload, headers=self.header)

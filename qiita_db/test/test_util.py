@@ -251,6 +251,30 @@ class DBUtilTests(TestCase):
                 "raw_forward_seqs")]
         self.assertEqual(obs, exp)
 
+    def test_retrieve_filepaths_type(self):
+        obs = qdb.util.retrieve_filepaths(
+            'artifact_filepath', 'artifact_id', 1, sort='descending',
+            fp_type='raw_barcodes')
+        path_builder = partial(
+            join, qdb.util.get_db_files_base_dir(), "raw_data")
+        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                "raw_barcodes")]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.util.retrieve_filepaths(
+            'artifact_filepath', 'artifact_id', 1, fp_type='raw_barcodes')
+        path_builder = partial(
+            join, qdb.util.get_db_files_base_dir(), "raw_data")
+        exp = [(2, path_builder("1_s_G1_L001_sequences_barcodes.fastq.gz"),
+                "raw_barcodes")]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.util.retrieve_filepaths(
+            'artifact_filepath', 'artifact_id', 1, fp_type='biom')
+        path_builder = partial(
+            join, qdb.util.get_db_files_base_dir(), "raw_data")
+        self.assertEqual(obs, [])
+
     def test_retrieve_filepaths_error(self):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.util.retrieve_filepaths('artifact_filepath', 'artifact_id', 1,
@@ -674,6 +698,16 @@ class DBUtilTests(TestCase):
         # Run again with no system messages to make sure no errors
         qdb.util.clear_system_messages()
 
+    def test_supported_filepath_types(self):
+        obs = qdb.util.supported_filepath_types("FASTQ")
+        exp = [["raw_forward_seqs", True], ["raw_reverse_seqs", False],
+               ["raw_barcodes", True]]
+        self.assertItemsEqual(obs, exp)
+
+        obs = qdb.util.supported_filepath_types("BIOM")
+        exp = [["biom", True], ["directory", False], ["log", False]]
+        self.assertItemsEqual(obs, exp)
+
 
 class UtilTests(TestCase):
     """Tests for the util functions that do not need to access the DB"""
@@ -702,6 +736,11 @@ class UtilTests(TestCase):
     def test_scrub_data_single_quote(self):
         """Correctly removes single quotes from the string"""
         self.assertEqual(qdb.util.scrub_data("'quotes'"), "quotes")
+
+    def test_get_visibilities(self):
+        obs = qdb.util.get_visibilities()
+        exp = ['awaiting_approval', 'sandbox', 'private', 'public']
+        self.assertEqual(obs, exp)
 
     def test_infer_status(self):
         obs = qdb.util.infer_status([])
