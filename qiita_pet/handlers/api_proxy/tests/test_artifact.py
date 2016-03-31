@@ -239,8 +239,6 @@ class TestArtifactAPI(TestCase):
                'buttons': '',
                'files': [],
                'editable': False}
-        for k in exp:
-            self.assertEqual(obs[k], exp[k])
         self.assertEqual(obs, exp)
 
     def test_artifact_summary_post_request(self):
