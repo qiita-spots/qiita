@@ -305,12 +305,6 @@ class UserTest(TestCase):
                  WHERE email = 'new@test.bar' AND dflt = true"""
         self.assertEqual(self.conn_handler.execute_fetchone(sql)[0], 2)
 
-        # Make sure new system messages are linked to user
-        sql = """SELECT message_id FROM qiita.message_user
-                 WHERE email = 'new@test.bar'"""
-        m_id = qdb.util.get_count('qiita.message')
-        self.assertEqual(self.conn_handler.execute_fetchall(sql), [[m_id]])
-
     def _check_pass(self, passwd):
         obspass = self.conn_handler.execute_fetchone(
             "SELECT password FROM qiita.qiita_user WHERE email = %s",
