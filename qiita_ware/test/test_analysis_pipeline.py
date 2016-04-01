@@ -60,7 +60,7 @@ class TestRun(TestCase):
         RunAnalysis()._construct_job_graph(
             analysis, [('18S', 'Summarize Taxa')],
             comm_opts={'Summarize Taxa': {'opt1': 5}})
-        self.assertEqual(analysis.jobs, [Job(3), Job(4), Job(5)])
+        self.assertEqual(analysis.jobs, [Job(3), Job(4)])
         job = Job(4)
         self.assertEqual(job.datatype, '18S')
         self.assertEqual(job.command,
