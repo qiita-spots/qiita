@@ -12,9 +12,6 @@ from tornado.web import authenticated, HTTPError
 from qiita_ware.context import submit
 from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_VAMPS
-from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.metadata_template.sample_template import SampleTemplate
-from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.artifact import Artifact
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -36,15 +33,26 @@ class VAMPSHandler(BaseHandler):
             if user.level != 'admin':
                 raise HTTPError(403, "No permissions of admin, "
                                      "get/VAMPSSubmitHandler: %s!" % user.id)
-
-        prep_template = PrepTemplate(preprocessed_data.prep_template)
-        sample_template = SampleTemplate(preprocessed_data.study)
-        study = Study(preprocessed_data.study)
+        prep_templates = preprocessed_data.prep_templates
+        allow_submission = len(prep_templates) == 1
+        msg_list = ["Submission to EBI disabled:"]
+        if not allow_submission:
+            msg_list.append(
+                "Only artifacts with a single prep template can be submitted")
+        # If allow_submission is already false, we technically don't need to
+        # do the following work. However, there is no clean way to fix this
+        # using the current structure, so we perform the work as we
+        # did so it doesn't fail.
+        # We currently support only one prep template for submission, so
+        # grabbing the first one
+        prep_template = prep_templates[0]
+        study = preprocessed_data.study
+        sample_template = study.sample_template
         stats = [('Number of samples', len(prep_template)),
                  ('Number of metadata headers',
                   len(sample_template.categories()))]
 
-        demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
+        demux = [path for _, path, ftype in preprocessed_data.filepaths
                  if ftype == 'preprocessed_demux']
         demux_length = len(demux)
 
@@ -61,10 +69,21 @@ class VAMPSHandler(BaseHandler):
             stats.append(('Number of sequences', demux_file_stats.n))
             msg_level = 'success'
 
+        # In EBI here we check that we have the required field for submission,
+        # however for VAMPS we don't need that
+
+        if not allow_submission:
+            disabled_msg = "<br/>".join(msg_list)
+        else:
+            disabled_msg = None
+
         self.render('vamps_submission.html',
                     study_title=study.title, stats=stats, message=msg,
                     study_id=study.id, level=msg_level,
-                    preprocessed_data_id=preprocessed_data_id)
+                    preprocessed_data_id=preprocessed_data_id,
+                    investigation_type=prep_template.investigation_type,
+                    allow_submission=allow_submission,
+                    disabled_msg=disabled_msg)
 
     @authenticated
     def get(self, preprocessed_data_id):
@@ -73,33 +92,30 @@ class VAMPSHandler(BaseHandler):
     @authenticated
     @execute_as_transaction
     def post(self, preprocessed_data_id):
+        user = self.current_user
         # make sure user is admin and can therefore actually submit to VAMPS
-        if self.current_user.level != 'admin':
+        if user.level != 'admin':
             raise HTTPError(403, "User %s cannot submit to VAMPS!" %
-                            self.current_user.id)
+                            user.id)
         msg = ''
         msg_level = 'success'
-        preprocessed_data = Artifact(preprocessed_data_id)
-        state = preprocessed_data.submitted_to_vamps_status()
-
-        demux = [path for _, path, ftype in preprocessed_data.get_filepaths()
-                 if ftype == 'preprocessed_demux']
-        demux_length = len(demux)
-
-        if state in ('submitting',  'success'):
+        study = Artifact(preprocessed_data_id).study
+        study_id = study.id
+        state = study.ebi_submission_status
+        if state == 'submitting':
             msg = "Cannot resubmit! Current state is: %s" % state
             msg_level = 'danger'
-        elif demux_length != 1:
-            msg = "The study doesn't have demux files or have too many" % state
-            msg_level = 'danger'
         else:
-            channel = self.current_user.id
+            channel = user.id
             job_id = submit(channel, submit_to_VAMPS,
                             int(preprocessed_data_id))
 
             self.render('compute_wait.html',
                         job_id=job_id, title='VAMPS Submission',
-                        completion_redirect='/compute_complete/%s' % job_id)
+                        completion_redirect=('/study/description/%s?top_tab='
+                                             'preprocessed_data_tab&sub_tab=%s'
+                                             % (study_id,
+                                                preprocessed_data_id)))
             return
 
         self.display_template(preprocessed_data_id, msg, msg_level)

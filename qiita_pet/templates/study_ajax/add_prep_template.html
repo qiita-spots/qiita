@@ -1,0 +1,124 @@
+<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+<script type="text/javascript>">
+$(document).ready(function () {
+  // Hide the user and new ontology divs
+  $("#user-ena-info").hide();
+  $("#new-ena-info").hide();
+  // If the ena-ontology select changes, check if we need to show the user list
+  $("#ena-ontology").change(function ( event ) {
+    if( $("#ena-ontology").val() == "Other" ) {
+      $("#user-ena-info").show();
+    }
+    else {
+      $("#user-ena-info").hide();
+      $("#new-ena-info").hide();
+    }
+  });
+  // If the user-ena-info select changes, check if we need to show the
+  $("#user-ena-info").change(function ( event ) {
+    if( $("#user-ontology").val() == "New Type" ) {
+      $("#new-ena-info").show();
+    }
+    else {
+      $("#new-ena-info").hide();
+    }
+  });
+
+  // Make sure that the form gets validated prior submission
+  $("#create-prep-form").validate();
+
+  // change the submit behavior
+  $("#create-prep-form").submit(function(event){
+    event.preventDefault();
+    // Add the study id as parameter
+    $('<input>').attr({
+      type: 'hidden',
+      name: 'study_id',
+      value: '{{study_id}}'
+    }).appendTo('#create-prep-form');
+    $.ajax({
+      url: $('#create-prep-form').attr('action'),
+      type: "POST",
+      data: $('#create-prep-form').serialize(),
+      success: function(data) {
+        if(data.status == 'error') { bootstrapAlert(data.message, "danger"); }
+        else {
+          if(data.status == 'warning') {
+            // Note - the warning get's lost due to the reload below
+            bootstrapAlert(data.message, "warning");
+          }
+          populate_data_type_menu_div();
+          populate_main_div('/study/description/prep_template/', { prep_id: data.id, study_id: {{study_id}} });
+        }
+      }
+    });
+  });
+});
+</script>
+<form action="/prep_template/" method="POST" id="create-prep-form">
+
+  <div class="row">
+    <div class="col-md-12">
+      <b>Select file: *</b>
+      <span id="prep-span">
+        <select name="prep-file" id="prep-file" required>
+          <option value="">Choose file...</option>
+          {% for file in prep_files %}
+            <option value="{{file}}">{{file}}</option>
+          {% end %}
+        </select>
+      </span>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <b>Select data type: *</b>
+      <select id="data-type-select" name="data-type" value="data-type" required>
+        <option value="">Choose data type... </option>
+        {% for t in data_types %}
+          <option value="{{t}}">{{t}}</option>
+        {% end %}
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4">
+      <b>Select Investigation Type:</b>
+      <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
+        <option value=""></option>
+        {% for o in ontology['ENA'] %}
+          <option value="{{o}}">{{o}}</option>
+        {% end %}
+      </select>
+    </div>
+
+    <div class="col-md-4" id="user-ena-info"> User defined investigation type:
+      <select id="user-ontology" name="user-ontology" value="user-ontology">
+        <option value=""></option>
+        {% for o in ontology['User'] %}
+          <option value="{{o}}">{{o}}</option>
+        {% end %}
+        <option value="New Type">New Type</option>
+      </select>
+    </div>
+
+    <div class="col-md-4" id="new-ena-info">New user defined term:
+      <input type="textbox" id="new-ontology" name="new-ontology">
+    </div>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <i>* Required fields</i>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <input type="submit" class="btn btn-sm btn-success" value="Create New Preparation">
+    </div>
+  </div>
+</form>

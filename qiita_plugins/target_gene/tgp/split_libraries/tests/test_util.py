@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # -----------------------------------------------------------------------------
 # Copyright (c) 2014--, The Qiita Development Team.
 #
@@ -13,8 +15,8 @@ from os import remove, close
 from tempfile import mkdtemp, mkstemp
 
 import httpretty
+from qiita_client import QiitaClient
 
-from tgp.qiita_client import QiitaClient
 from tgp.split_libraries.util import (
     get_artifact_information, split_mapping_file, generate_demux_file,
     generate_artifact_info)
@@ -29,7 +31,8 @@ class UtilTests(TestCase):
             body='{"access_token": "token", "token_type": "Bearer", '
                  '"expires_in": "3600"}')
 
-        self.qclient = QiitaClient("https://test_server.com")
+        self.qclient = QiitaClient("https://test_server.com", 'client_id',
+                                   'client_secret')
         self._clean_up_files = []
 
     def tearDown(self):
@@ -139,7 +142,7 @@ class UtilTests(TestCase):
                ("/sl/output/seqs.fastq", "preprocessed_fastq"),
                ("/sl/output/seqs.demux", "preprocessed_demux"),
                ("/sl/output/split_library_log.txt", "log")]
-        exp = [['Demultiplexed', fps, True, True]]
+        exp = [['demultiplexed', 'Demultiplexed', fps]]
         self.assertEqual(obs, exp)
 
 
@@ -166,20 +169,20 @@ MAPPING_FILE_SINGLE = (
 MAPPING_FILE_MULT = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\trun_prefix\t"
     "Description\n"
-    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tprefix_1\tTGP test\n"
-    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tprefix_2\tTGP test\n"
+    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tprefix_1\tTGP øtest\n"
+    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tprefix_2\tTGP øtest\n"
 )
 
 EXP_MAPPING_FILE_1 = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\trun_prefix\t"
     "Description\n"
-    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tprefix_1\tTGP test\n"
+    "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tprefix_1\tTGP øtest\n"
 )
 
 EXP_MAPPING_FILE_2 = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\trun_prefix\t"
     "Description\n"
-    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tprefix_2\tTGP test\n"
+    "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tprefix_2\tTGP øtest\n"
 )
 
 if __name__ == '__main__':

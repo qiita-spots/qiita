@@ -23,9 +23,17 @@
         {% end %}
         </table>
     </div>
-    {% if level != 'danger' and maintenance is None  %}
-      <input type="submit" class="btn btn-primary" value="Submit to VAMPS">
+    The investigation type is: <b>{{investigation_type}}</b>
+    <br/><br/>
+
+    {% if level != 'danger' and maintenance is None %}
+      {% if allow_submission %}
+        <input type="submit" class="btn btn-primary" value="Submit to VAMPS">
+      {% else %}
+        <b>{% raw disabled_msg %}
+      {% end %}
     {% end %}
+
     <br/><br/>
     <a class="btn btn-primary" href="{% raw qiita_config.portal_dir %}/study/description/{{study_id}}?top_tab=preprocessed_data_tab&sub_tab={{preprocessed_data_id}}">Return to study</a>
 </form>

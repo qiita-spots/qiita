@@ -26,6 +26,7 @@
       <th>Timestamp</th>
       <th>Mapping File</th>
       <th>Biom Files</th>
+      <th>tgz Files</th>
       <th>Delete?</th>
     </tr>
     {% for analysis in analyses %}
@@ -67,6 +68,9 @@
         </td>
         <td>
           {% raw bioms[_id] %}
+        </td>
+        <td>
+          {% raw tgzs[_id] %}
         </td>
         <td>
          <a class="btn btn-danger glyphicon glyphicon-trash {% if status == 'running' %} disabled {% end %}" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>

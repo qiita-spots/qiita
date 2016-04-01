@@ -1,8 +1,6 @@
 from unittest import TestCase, main
 from datetime import datetime
 
-from future.utils import viewitems
-
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.qiita_settings import qiita_config
 from qiita_core.util import qiita_test_checker
@@ -138,8 +136,8 @@ class TestStudy(TestCase):
             "study_abstract": "Exploring how a high fat diet changes the "
                               "gut microbiome",
             "emp_person_id": 2,
-            "principal_investigator_id": 3,
-            "lab_person_id": 1
+            "principal_investigator": qdb.study.StudyPerson(3),
+            "lab_person": qdb.study.StudyPerson(1)
         }
 
         self.existingexp = {
@@ -147,11 +145,11 @@ class TestStudy(TestCase):
             'metadata_complete': True,
             'reprocess': False,
             'number_samples_promised': 27,
-            'emp_person_id': qdb.study.StudyPerson(2),
+            'emp_person_id': 2,
             'funding': None,
             'vamps_id': None,
             'first_contact': datetime(2014, 5, 19, 16, 10),
-            'principal_investigator_id': qdb.study.StudyPerson(3),
+            'principal_investigator': qdb.study.StudyPerson(3),
             'timeseries_type_id': 1,
             'study_abstract':
                 "This is a preliminary study to examine the "
@@ -169,7 +167,7 @@ class TestStudy(TestCase):
             'study_alias': 'Cannabis Soils',
             'most_recent_contact': '2014-05-19 16:11',
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
-            'lab_person_id': qdb.study.StudyPerson(1),
+            'lab_person': qdb.study.StudyPerson(1),
             'number_samples_collected': 27}
 
     def tearDown(self):
@@ -216,7 +214,7 @@ class TestStudy(TestCase):
             'Soils', 'number_samples_collected': 27,
             'ebi_submission_status': 'submitted',
             'ebi_study_accession': 'EBI123456-BB'}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
         # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
@@ -230,7 +228,7 @@ class TestStudy(TestCase):
             'publication_doi': ['10.100/123456', '10.100/7891011'],
             'study_title': 'Identification of the Microbiomes for Cannabis '
             'Soils'}
-        self.assertItemsEqual(obs, exp)
+        self.assertEqual(obs, exp)
 
         # Test get specific keys for all studies
         info = {
@@ -271,6 +269,13 @@ class TestStudy(TestCase):
         self._change_processed_data_status('public')
         self.assertFalse(
             self.study.has_access(qdb.user.User("demo@microbio.me"), True))
+
+    def test_can_edit(self):
+        self.assertTrue(self.study.can_edit(qdb.user.User('test@foo.bar')))
+        self.assertTrue(self.study.can_edit(qdb.user.User('shared@foo.bar')))
+        self.assertTrue(self.study.can_edit(qdb.user.User('admin@foo.bar')))
+        self.assertFalse(
+            self.study.can_edit(qdb.user.User('demo@microbio.me')))
 
     def test_owner(self):
         self.assertEqual(self.study.owner, qdb.user.User("test@foo.bar"))
@@ -361,7 +366,7 @@ class TestStudy(TestCase):
                'reprocess': False,
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': None, 'vamps_id': None,
-               'principal_investigator_id': 3,
+               'principal_investigator': qdb.study.StudyPerson(3),
                'timeseries_type_id': 1,
                'study_abstract': 'Exploring how a high fat diet changes the '
                                  'gut microbiome',
@@ -369,7 +374,8 @@ class TestStudy(TestCase):
                'study_description': 'Microbiome of people who eat nothing but'
                                     ' fried chicken',
                'study_alias': 'FCM',
-               'most_recent_contact': None, 'lab_person_id': 1,
+               'most_recent_contact': None,
+               'lab_person': qdb.study.StudyPerson(1),
                'number_samples_collected': 25}
         self.assertEqual(obs_info, exp)
         # Check the timestamp separately, since it is set by the database
@@ -431,14 +437,16 @@ class TestStudy(TestCase):
                'number_samples_promised': 28, 'emp_person_id': 2,
                'funding': 'FundAgency', 'vamps_id': 'MBE_1111111',
                'first_contact': datetime(2014, 10, 24, 12, 47),
-               'principal_investigator_id': 3, 'timeseries_type_id': 1,
+               'principal_investigator': qdb.study.StudyPerson(3),
+               'timeseries_type_id': 1,
                'study_abstract': 'Exploring how a high fat diet changes the '
                                  'gut microbiome',
                'spatial_series': True,
                'study_description': 'Microbiome of people who eat nothing '
                                     'but fried chicken',
                'study_alias': 'FCM',
-               'most_recent_contact': None, 'lab_person_id': 1,
+               'most_recent_contact': None,
+               'lab_person': qdb.study.StudyPerson(1),
                'number_samples_collected': 25}
         self.assertEqual(obs.info, exp)
         self.assertEqual(obs.efo, [1])
@@ -584,12 +592,6 @@ class TestStudy(TestCase):
         with self.assertRaises(ValueError):
             new.ebi_submission_status = "unknown"
 
-    def test_retrieve_info(self):
-        for key, val in viewitems(self.existingexp):
-            if isinstance(val, qdb.base.QiitaObject):
-                self.existingexp[key] = val.id
-        self.assertEqual(self.study.info, self.existingexp)
-
     def test_set_info(self):
         """Set info in a study"""
         newinfo = {
@@ -611,8 +613,9 @@ class TestStudy(TestCase):
         self.infoexp["spatial_series"] = None
         self.infoexp["most_recent_contact"] = None
         self.infoexp["reprocess"] = False
-        self.infoexp["lab_person_id"] = 2
         self.infoexp["first_contact"] = datetime(2014, 6, 11)
+        self.infoexp["lab_person"] = qdb.study.StudyPerson(2)
+        del self.infoexp["lab_person_id"]
 
         self.assertEqual(new.info, self.infoexp)
 
@@ -708,6 +711,16 @@ class TestStudy(TestCase):
         self.assertEqual(self.study.artifacts(), exp)
         self.assertEqual(self.study.artifacts(dtype="16S"), [exp[-1]])
         self.assertEqual(self.study.artifacts(dtype="18S"), exp[:-1])
+
+        self.assertEqual(self.study.artifacts(artifact_type="BIOM"),
+                         [qdb.artifact.Artifact(4),
+                          qdb.artifact.Artifact(5),
+                          qdb.artifact.Artifact(6)])
+
+        self.assertEqual(self.study.artifacts(dtype="18S",
+                                              artifact_type="BIOM"),
+                         [qdb.artifact.Artifact(4),
+                          qdb.artifact.Artifact(5)])
 
     def test_retrieve_artifacts_none(self):
         new = qdb.study.Study.create(

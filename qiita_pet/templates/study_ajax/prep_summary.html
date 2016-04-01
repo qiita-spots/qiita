@@ -1,0 +1,415 @@
+<script type="text/javascript">
+  var network;
+
+  /*
+   * Function to draw a vis.Network
+   *
+   * @param nodes list of nodes
+   * @param edges list of edges
+   * @param target div name to draw the netword
+   * @param on_select_f callback function for the 'select' event in the network nodes
+   *
+   * This function creates a new instance of vis.Network and draws the graph
+   * in the target div
+   *
+   */
+  function draw_graph(nodes, edges, target, on_select_f) {
+    var container = document.getElementById(target);
+    container.innerHTML = "";
+    var data = {
+      nodes: nodes,
+      edges: edges
+    };
+    var options = {
+      nodes: {
+        color: '#ffffff',
+        font: '16px arial black'
+      },
+      layout : {
+        hierarchical: {
+          direction: "LR",
+          sortMethod: "directed",
+          levelSeparation: 260
+        }
+      },
+      interaction: {
+        dragNodes: false,
+        dragView: false,
+        zoomView: false
+      }
+    };
+    network = new vis.Network(container, data, options);
+
+    network.on('select', on_select_f);
+  }
+
+  /*
+   * Function to update the prep information contents
+   *
+   * This function executes an AJAX query to modify the contents of the
+   * prep information and updates the interface accordingly
+   *
+   */
+  function update_prep_information() {
+    var fp = $("#file-selector").val();
+    $.ajax({
+      url: '/prep_template/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/{{prep_id}}/data', 'value': fp},
+      success: function(data) {
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        }
+        else {
+          populate_main_div('/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+        }
+      }
+    });
+  }
+
+  /*
+   *
+   * Function to create a new ENA investigation type term and update the template
+   *
+   * This function executes an AJAX query to add a new user-defined term to the
+   * ENA ontology, then updates the current prep information to have the newly
+   * added term and it updates the interface accordingly
+   *
+   */
+  function add_new_investigation_type_term_and_update() {
+    var new_val = $("#new-ontology").val();
+    if (!new_val.match(/^[0-9a-zA-Z ]+$/)) {
+      bootstrapAlert("Only alphanumeric characters and space are allowed.", "danger");
+    }
+    else {
+      $.ajax({
+        url: '/ontology/',
+        type: 'PATCH',
+        data: {'op': 'add', 'path': '/ENA/', 'value': new_val},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message,  "danger");
+          }
+          else {
+            // Add the new term to the user defined list, mark it as selected,
+            // clean the text box and hide it
+            var v = $("#new-ontology").val();
+            $('#user-ontology option').last().before($('<option>').attr({'value': v}).text(v));
+            $('#user-ontology').val(v);
+            $('#new-ontology').val('');
+            $("#new-ena-info").hide();
+            update_investigation_type(v);
+          }
+        }
+      });
+    }
+  }
+
+  /*
+   *
+   * Updates the investigation type of the prep information
+   *
+   * @param value string with the new investigation type value
+   *
+   * This function executes an AJAX call to update the investigation type
+   * of the current prep information
+   *
+   */
+  function update_investigation_type(value) {
+    // Once we update the investigation_type we can't put it back to undefined
+    // so remove the empty values
+    $("#ena-ontology option[value='']").remove();
+    $("#user-ena-info option[value='']").remove();
+
+    $.ajax({
+      url: '/prep_template/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/{{prep_id}}/investigation_type', 'value': value},
+      success: function(data) {
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        }
+      }
+    });
+  }
+
+  /*
+   * Toggle the graph view
+   *
+   * Show/hide the graph div and update GUI accordingly
+   *
+   */
+  function toggle_graphs() {
+    if($("#graph-network-div").css('display') == 'none' ) {
+      $("#graph-network-div").show();
+      $("#show-hide-btn").text("-");
+    } else {
+      $("#graph-network-div").hide();
+       $("#show-hide-btn").text("+");
+    }
+  }
+
+  /*
+   *
+   * Load the interface with the artifact graph
+   *
+   * This function executes an AJAX call to populate the graph-or-new-artifact-div
+   * with the interface showing the artifact graph attached to this prep information
+   *
+   */
+  function load_template_graph() {
+    show_loading("graph-or-new-artifact-div");
+    $.get("/prep/graph/", {"prep_id": {{prep_id}} })
+      .done(function(data) {
+        var edges = [];
+        var nodes = [];
+
+        for(var i=0; i<data.edge_list.length; i++) {
+          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1]});
+        }
+        // format nore depth data
+        for(var i=0; i<data.node_labels.length; i++) {
+          nodes.push({id: data.node_labels[i][0], label: data.node_labels[i][1], shape: 'box'});
+        }
+
+        $("#graph-or-new-artifact-div").html("<div class='row'><div class='col-md-12'><h4><a class='btn btn-info' id='show-hide-btn' onclick='toggle_graphs();'>-</a><i> Files network</i></h4></div></div><div class='row'><div class='col-md-12 graph' id='graph-network-div'></div></div>");
+        draw_graph(nodes, edges, "graph-network-div", function(params) {
+          if(params.nodes.length === 1) {
+            var artifact_id = +params.nodes[0];
+            load_artifact_summary(artifact_id);
+          }
+        });
+      });
+  }
+
+  /*
+   *
+   * Load the interface to add an artifact to the prep information
+   *
+   * This function executes an AJAX call to populate the graph-or-new-artifact-div
+   * with the interface needed to add a new artifact to the prep information
+   *
+   */
+  function load_new_artifact() {
+    show_loading("graph-or-new-artifact-div");
+    $.get("/study/new_artifact/", {"study_id": {{study_id}}, "prep_template_id": {{prep_id}} })
+      .done(function(data) {
+        $("#graph-or-new-artifact-div").html(data);
+      });
+  }
+
+  /*
+   *
+   * Load the prep information summary table
+   *
+   * This function executes an AJAX call to populate the prep-artifact-summary-div
+   * with a table containing a summary of the prep information
+   */
+  function load_information_summary() {
+    show_loading("prep-artifact-summary-div");
+    $.get('/study/description/prep_summary/', {'prep_id': {{prep_id}} })
+      .done(function ( data ) {
+        $("#prep-artifact-summary-div").html(data);
+      });
+  }
+
+  /*
+   * Load the artifact summary page
+   *
+   * @param artifact_id integer with the artifact id to load
+   *
+   * This function executes an AJAX call to populate the prep-artifact-summary-div
+   *
+   */
+  function load_artifact_summary(artifact_id) {
+    show_loading("prep-artifact-summary-div");
+    $.get('/study/description/artifact_summary/', {'artifact_id': artifact_id})
+      .done(function ( data ) {
+        $("#prep-artifact-summary-div").html(data);
+      });
+  }
+
+  /*
+   * Delete a prep template from the system
+   *
+   * @param prep_id The prep template id
+   *
+   * This function executes an AJAX call to delete the provided prep template
+   * and updates the interface accordingly
+   *
+   */
+  function delete_prep_info(prep_id) {
+    if(confirm("Are you sure you want to delete prep template " + prep_id + "?")) {
+      // Perform the AJAX call to delete
+      $.ajax({
+        url: '/prep_template/',
+        type: 'DELETE',
+        data: {'prep-template-id': prep_id},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            // If success, populate the main div with the study info
+            // and regenerate the data type menu div (there is one prep less)
+            populate_main_div("/study/description/baseinfo/", { study_id: {{study_id}} });
+            populate_data_type_menu_div();
+          }
+        }
+      });
+    }
+  }
+
+  $(document).ready(function () {
+    if("{{investigation_type}}" !== "None") {
+      // The prep information already has an investigation type
+      // Delete the entries from the select that correspond to no values
+      $("#ena-ontology option[value='']").remove();
+      $("#user-ena-info option[value='']").remove();
+      // Update the selects to point to the correct value
+      var v = $("#ena-ontology option[value='{{investigation_type}}']");
+      if (v.length == 1) {
+        // Set the value
+        $("#ena-ontology").val('{{investigation_type}}');
+      }
+      else {
+        // It is a user defined value
+        $("#user-ena-info").show();
+        $("#ena-ontology").val('Other');
+        $("#user-ontology").val('{{investigation_type}}');
+      }
+    }
+
+    load_information_summary();
+    // If the template already have an artifact attached, load the
+    // artifact graph, otherwise load the page to add a new artifact
+    if ("{{artifact_attached}}" == "True") {
+      load_template_graph();
+    }
+    else {
+      load_new_artifact();
+    }
+    // If the file-selector select changes, check if we need to show the update button
+    $("#file-selector").change(function ( event ) {
+      if ( $("#file-selector").val() === "" ) {
+        $("#update-button-div").hide();
+      }
+      else {
+        $("#update-button-div").show();
+      }
+    });
+
+    // If the ena-ontology select changes, check if we need to show the user list
+    $("#ena-ontology").change(function ( event ) {
+      var value = $("#ena-ontology").val();
+      if( value == "Other" ) {
+        $("#user-ena-info").show();
+        $("#user-ena-info").trigger('change');
+      }
+      else {
+        $("#user-ena-info").hide();
+        $("#new-ena-info").hide();
+        update_investigation_type(value);
+      }
+    });
+    // If the user-ena-info select changes, check if we need to show the input box
+    $("#user-ena-info").change(function ( event ) {
+        var value = $("#user-ontology").val();
+        if( value == "New Type" ) {
+          $("#new-ena-info").show();
+        }
+        else {
+          $("#new-ena-info").hide();
+          if( value !== "" ) {
+            update_investigation_type(value);
+          }
+        }
+    });
+
+    {% if alert_type != 'success' and alert_message != '' %}
+      bootstrapAlert("{% raw alert_message %}", "{{alert_type}}");
+    {% else %}
+      $('#bootstrap-alert').alert('close');
+    {% end %}
+  });
+</script>
+
+<!-- Prep template title and buttons -->
+<div class="row">
+  <div class="col-md-12">
+    <h4>
+      {{name}} - ID {{prep_id}} ({{data_type}})
+      <a class="btn btn-default" href="/download/{{download_prep}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
+      <a class="btn btn-default" href="/download/{{download_qiime}}"><span class="glyphicon glyphicon-download-alt"></span> Qiime map</a>
+      {% if editable %}
+        <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
+      {% end %}
+    </h4>
+  </div>
+</div>
+
+<!-- #samples and #columns -->
+<div class="row">
+  <div class="col-md-12">
+    There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this preparation.
+  </div>
+</div>
+
+{% if editable %}
+  <!-- Update prep template -->
+  <div class="row">
+    <div class="col-md-12">
+      <b>Update information:</b>
+      <select id="file-selector">
+        <option value="">Choose file...</option>
+        {% for fp in files %}
+          <option value="{{fp}}">{{fp}}</option>
+        {% end %}
+      </select>
+      <div id="update-button-div" hidden>
+        <button class="btn btn-info btn-sm" onclick="update_prep_information();" hidden>Update</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Investigation type info -->
+  <div class="row">
+    <!-- Ena ontology selector -->
+    <div class="col-md-4">
+      <b>Select Investigation Type:</b>
+      <select id="ena-ontology" name="ena-ontology" value="ena-ontology">
+        <option value=""></option>
+        {% for o in ontology['ENA'] %}
+          <option value="{{o}}">{{o}}</option>
+        {% end %}
+      </select>
+    </div>
+    <!-- user-defined selector -->
+    <div class="col-md-4" id="user-ena-info" hidden> User defined investigation type:
+      <select id="user-ontology" name="user-ontology" value="user-ontology">
+        <option value=""></option>
+        {% for o in ontology['User'] %}
+          <option value="{{o}}">{{o}}</option>
+        {% end %}
+        <option value="New Type">New Type</option>
+      </select>
+    </div>
+    <!-- new user-defined input -->
+    <div class="col-md-4" id="new-ena-info" hidden> New user defined term:
+      <input type="textbox" id="new-ontology" name="new-ontology">
+      <button class="btn btn-info btn-sm" onclick="add_new_investigation_type_term_and_update();">Add</button>
+    </div>
+  </div>
+{% end %}
+
+<!-- Files graph or add artifact -->
+<div class="row">
+  <div class="col-md-12" id="graph-or-new-artifact-div">
+  </div>
+</div>
+
+<!-- Prep information summary -->
+<div class="row">
+  <div class="col-md-12" id="prep-artifact-summary-div">
+  </div>
+</div>

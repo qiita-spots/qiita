@@ -22,10 +22,16 @@ from qiita_pet.handlers.analysis_handlers import (
     ShowAnalysesHandler, ResultsHandler, SelectedSamplesHandler,
     AnalysisSummaryAJAX)
 from qiita_pet.handlers.study_handlers import (
-    StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX,
-    StudyDescriptionHandler, MetadataSummaryHandler, EBISubmitHandler,
-    CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList,
-    PreprocessingSummaryHandler, VAMPSHandler)
+    StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateAJAX,
+    StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
+    CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
+    PreprocessingSummaryHandler, VAMPSHandler, PrepTemplateGraphAJAX,
+    ProcessArtifactHandler, ListCommandsHandler, ListOptionsHandler,
+    PrepTemplateAJAX, NewArtifactHandler, SampleAJAX,
+    StudyDeleteAjax, ArtifactAdminAJAX, ArtifactAJAX,
+    NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
+    PrepTemplateSummaryAJAX, ArtifactSummaryAJAX,
+    WorkflowHandler, WorkflowRunHandler, JobAJAX)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
@@ -35,6 +41,8 @@ from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
 from qiita_pet.handlers.processing_handlers import ProcessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
+from qiita_pet.handlers.prep_template import PrepTemplateHandler
+from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
                                               ActiveStepHandler,
                                               CompleteHandler)
@@ -91,20 +99,44 @@ class Application(tornado.web.Application):
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
-            (r"/metadata_summary/(.*)", MetadataSummaryHandler),
+            (r"/admin/artifact/", ArtifactAdminAJAX),
             (r"/preprocessing_summary/(.*)", PreprocessingSummaryHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
             (r"/compute_complete/(.*)", ComputeCompleteHandler),
             (r"/study/create/", StudyEditHandler),
             (r"/study/edit/(.*)", StudyEditHandler),
             (r"/study/list/", ListStudiesHandler),
+            (r"/study/process/commands/options/", ListOptionsHandler),
+            (r"/study/process/commands/", ListCommandsHandler),
+            (r"/study/process/workflow/run/", WorkflowRunHandler),
+            (r"/study/process/workflow/", WorkflowHandler),
+            (r"/study/process/job/", JobAJAX),
+            (r"/study/process/", ProcessArtifactHandler),
             (r"/study/list/socket/", SelectSamplesHandler),
             (r"/study/search/(.*)", SearchStudiesAJAX),
+            (r"/study/new_artifact/", NewArtifactHandler),
+            (r"/study/files/", StudyFilesAJAX),
             (r"/study/create_raw_data", CreateRawData),
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/process", ProcessHandler),
             (r"/study/sharing/", ShareStudyAJAX),
-            (r"/study/description/(.*)", StudyDescriptionHandler),
+            (r"/study/new_prep_template/", NewPrepTemplateAjax),
+            (r"/prep/graph/", PrepTemplateGraphAJAX),
+            (r"/artifact/", ArtifactAJAX),
+            (r"/artifact/graph/", ArtifactGraphAJAX),
+            (r"/prep_template/", PrepTemplateHandler),
+            (r"/ontology/", OntologyHandler),
+            # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.
+            # Same reasoning as below. /study/description/(.*) should be last.
+            (r"/study/description/sample_template/", SampleTemplateAJAX),
+            (r"/study/description/sample_summary/", SampleAJAX),
+            (r"/study/description/prep_summary/", PrepTemplateSummaryAJAX),
+            (r"/study/description/prep_template/", PrepTemplateAJAX),
+            (r"/study/description/artifact_summary/", ArtifactSummaryAJAX),
+            (r"/study/description/baseinfo/", StudyBaseInfoAJAX),
+            (r"/study/description/data_type_menu/", DataTypesMenuAJAX),
+            (r"/study/description/(.*)", StudyIndexHandler),
+            (r"/study/delete/", StudyDeleteAjax),
             (r"/study/upload/(.*)", StudyUploadFileHandler),
             (r"/upload/", UploadFileHandler),
             (r"/check_study/", CreateStudyAJAX),

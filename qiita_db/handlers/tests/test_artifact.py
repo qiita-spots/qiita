@@ -52,6 +52,10 @@ class ArtifactFilepathsHandlerTests(OauthTestingBase):
         obs = self.get('/qiita_db/artifacts/1/filepaths/')
         self.assertEqual(obs.code, 400)
 
+    def test_patch(self):
+        # TODO: issue #1682
+        pass
+
 
 class ArtifactMappingHandlerTests(OauthTestingBase):
     def test_get_artifact_does_not_exist(self):
