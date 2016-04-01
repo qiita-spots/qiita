@@ -112,16 +112,15 @@ def artifact_summary_get_request(user_id, artifact_id):
         if not artifact.is_submitted_to_ebi:
             buttons.append(
                 '<a class="btn btn-primary btn-sm" '
-                'href="/ebi_submission/{{ppd_id}}">'
+                'href="/ebi_submission/%d">'
                 '<span class="glyphicon glyphicon-export"></span>'
-                ' Submit to EBI</a>')
+                ' Submit to EBI</a>' % artifact_id)
     if artifact.can_be_submitted_to_vamps:
         if not artifact.is_submitted_to_vamps:
             buttons.append(
-                '<a class="btn btn-primary btn-sm" href="/vamps/{{ppd_id}}">'
+                '<a class="btn btn-primary btn-sm" href="/vamps/%d">'
                 '<span class="glyphicon glyphicon-export"></span>'
-                ' Submit to VAMPS</a>')
-
+                ' Submit to VAMPS</a>' % artifact_id)
     files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')))
              for f_id, fp, f_type in artifact.filepaths
              if f_type != 'directory']
