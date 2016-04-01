@@ -14,7 +14,7 @@ function initialize() {
     streetViewControl: false,
     mapTypeControl: false
   };
-  
+
   var map = new google.maps.Map(document.getElementById('map-canvas'),
       mapOptions);
 
@@ -27,7 +27,7 @@ function initialize() {
       new google.maps.Size(40, 37),
       new google.maps.Point(0, 0),
       new google.maps.Point(12, 35));
-  
+
   {% for lat, lng in lat_longs %}
       setMarker(map, {{ lat }}, {{ lng }}, pinImage, pinShadow, pinColor);
   {% end %}
@@ -75,7 +75,7 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
       <p align="justify">{{ random_study_info['study_abstract'] }}</p>
       <p>
       {% if user is not None %}
-          <a href="/study/description/{{ random_study_id }}">Go to the study <span class="glyphicon glyphicon-arrow-right"></span></a>
+          <a href="{% raw qiita_config.portal_dir %}/study/description/{{ random_study_id }}">Go to the study <span class="glyphicon glyphicon-arrow-right"></span></a>
       {% else %}
           <h4>Log in above to see this and other public studies</h4>
       {% end %}

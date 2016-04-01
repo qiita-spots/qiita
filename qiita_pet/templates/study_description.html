@@ -162,7 +162,7 @@ function create_raw_data(prep_id, filetype){
     var qual = result[6];
 
     var form = $("<form>")
-    .attr("action", "/study/create_raw_data")
+    .attr("action", "{% raw qiita_config.portal_dir %}/study/create_raw_data")
     .attr("method", "post")
     .append($("<input>")
       .attr("type", "hidden")
@@ -207,7 +207,7 @@ function add_raw_data(prep_id) {
     bootstrapAlert("You need to select a raw data used in a previous study");
   } else {
     var form = $("<form>")
-      .attr("action", "/study/create_raw_data")
+      .attr("action", "{% raw qiita_config.portal_dir %}/study/create_raw_data")
       .attr("method", "post")
       .append($("<input>")
         .attr("type", "hidden")
@@ -577,9 +577,9 @@ $(document).ready(function() {
   <tr>
     <td style="vertical-align: middle; text-align:left; width: 50%;" colspan="2">
       {% if show_edit_btn %}
-        <a class="btn btn-default glyphicon glyphicon-edit" href="/study/edit/{{study.id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
+        <a class="btn btn-default glyphicon glyphicon-edit" href="{% raw qiita_config.portal_dir %}/study/edit/{{study.id}}" title="Edit the study information" style="margin:5px; word-spacing: -10px;"> Edit</a>
       {% end %}
-      <a href="/study/upload/{{study.id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
+      <a href="{% raw qiita_config.portal_dir %}/study/upload/{{study.id}}" class="btn btn-default glyphicon glyphicon-upload" title="Upload study files" style="margin:5px; word-spacing: -10px;"> Upload</a>
       <a class="btn btn-danger glyphicon glyphicon-trash" style="display: inline-block;" data-toggle="modal" data-target="#delete-study"> Delete-study</a>
     </td>
   </tr>

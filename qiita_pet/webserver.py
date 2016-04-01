@@ -173,7 +173,7 @@ class Application(tornado.web.Application):
             "template_path": TEMPLATE_PATH,
             "debug": DEBUG,
             "cookie_secret": COOKIE_SECRET,
-            "login_url": "/auth/login/",
+            "login_url": "%s/auth/login/" % qiita_config.portal_dir,
             "ui_modules": uimodules,
         }
         tornado.web.Application.__init__(self, handlers, **settings)
