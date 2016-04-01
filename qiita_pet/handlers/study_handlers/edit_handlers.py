@@ -88,8 +88,9 @@ class StudyEditorForm(Form):
             self.study_description.data = study_info[
                 'study_description'].decode('utf-8')
             self.principal_investigator.data = study_info[
-                'principal_investigator_id']
-            self.lab_person.data = study_info['lab_person_id']
+                'principal_investigator'].id
+            self.lab_person.data = (study_info['lab_person'].id
+                                    if study_info['lab_person'] else None)
 
 
 class StudyEditorExtendedForm(StudyEditorForm):

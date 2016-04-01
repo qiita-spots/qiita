@@ -17,8 +17,9 @@ Classes
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from itertools import product, chain
-from os.path import join
+from itertools import product
+from os.path import join, basename
+from tarfile import open as taropen
 
 from future.utils import viewitems
 from biom import load_table
@@ -467,22 +468,23 @@ class Analysis(qdb.base.QiitaStatusObject):
         dict
             Dictonary in the form {data_type: full BIOM filepath}
         """
-        with qdb.sql_connection.TRN:
-            fptypeid = qdb.util.convert_to_id("biom", "filepath_type")
-            sql = """SELECT data_type, filepath
-                     FROM qiita.filepath
-                        JOIN qiita.analysis_filepath USING (filepath_id)
-                        JOIN qiita.data_type USING (data_type_id)
-                     WHERE analysis_id = %s AND filepath_type_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id, fptypeid])
-            tables = qdb.sql_connection.TRN.execute_fetchindex()
-            if not tables:
-                return {}
-            ret_tables = {}
-            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
-            for fp in tables:
-                ret_tables[fp[0]] = join(base_fp, fp[1])
-            return ret_tables
+        fps = [(_id, fp) for _id, fp, ftype in qdb.util.retrieve_filepaths(
+            "analysis_filepath", "analysis_id", self._id)
+            if ftype == 'biom']
+
+        if fps:
+            fps_ids = [f[0] for f in fps]
+            with qdb.sql_connection.TRN:
+                sql = """SELECT filepath_id, data_type FROM qiita.filepath
+                            JOIN qiita.analysis_filepath USING (filepath_id)
+                            JOIN qiita.data_type USING (data_type_id)
+                            WHERE filepath_id IN %s"""
+                qdb.sql_connection.TRN.add(sql, [tuple(fps_ids)])
+                data_types = dict(qdb.sql_connection.TRN.execute_fetchindex())
+
+            return {data_types[_id]: f for _id, f in fps}
+        else:
+            return {}
 
     @property
     def mapping_file(self):
@@ -493,19 +495,34 @@ class Analysis(qdb.base.QiitaStatusObject):
         str or None
             full filepath to the mapping file or None if not generated
         """
-        with qdb.sql_connection.TRN:
-            fptypeid = qdb.util.convert_to_id("plain_text", "filepath_type")
-            sql = """SELECT filepath
-                     FROM qiita.filepath
-                        JOIN qiita.analysis_filepath USING (filepath_id)
-                     WHERE analysis_id = %s AND filepath_type_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id, fptypeid])
-            mapping_fp = qdb.sql_connection.TRN.execute_fetchindex()
-            if not mapping_fp:
-                return None
+        fp = [fp for _, fp, fp_type in qdb.util.retrieve_filepaths(
+            "analysis_filepath", "analysis_id", self._id)
+            if fp_type == 'plain_text']
 
-            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
-            return join(base_fp, mapping_fp[0][0])
+        if fp:
+            # returning the actual path vs. an array
+            return fp[0]
+        else:
+            return None
+
+    @property
+    def tgz(self):
+        """Returns the tgz file of the analysis
+
+        Returns
+        -------
+        str or None
+            full filepath to the mapping file or None if not generated
+        """
+        fp = [fp for _, fp, fp_type in qdb.util.retrieve_filepaths(
+            "analysis_filepath", "analysis_id", self._id)
+            if fp_type == 'tgz']
+
+        if fp:
+            # returning the actual path vs. an array
+            return fp[0]
+        else:
+            return None
 
     @property
     def step(self):
@@ -768,6 +785,34 @@ class Analysis(qdb.base.QiitaStatusObject):
             qdb.sql_connection.TRN.add(sql, args, many=True)
             qdb.sql_connection.TRN.execute()
 
+    def generate_tgz(self):
+        fps_ids = self.all_associated_filepath_ids
+        with qdb.sql_connection.TRN:
+            sql = """SELECT filepath, data_directory_id FROM qiita.filepath
+                        WHERE filepath_id IN %s"""
+            qdb.sql_connection.TRN.add(sql, [tuple(fps_ids)])
+
+            full_fps = [join(qdb.util.get_mountpoint_path_by_id(mid), f)
+                        for f, mid in
+                        qdb.sql_connection.TRN.execute_fetchindex()]
+
+            _, analysis_mp = qdb.util.get_mountpoint('analysis')[0]
+            tgz = join(analysis_mp, '%d_files.tgz' % self.id)
+            try:
+                with taropen(tgz, "w:gz") as tar:
+                    for f in full_fps:
+                        tar.add(f, arcname=basename(f))
+                error_txt = ''
+                return_value = 0
+            except Exception as e:
+                error_txt = str(e)
+                return_value = 1
+
+            if return_value == 0:
+                self._add_file(tgz, 'tgz')
+
+        return '', error_txt, return_value
+
     def build_files(self,
                     rarefaction_depth=None,
                     merge_duplicated_sample_ids=False):
@@ -808,81 +853,125 @@ class Analysis(qdb.base.QiitaStatusObject):
             # make testing much harder as we will need to have analyses at
             # different stages and possible errors.
             samples = self.samples
+
             # figuring out if we are going to have duplicated samples, again
             # doing it here cause it's computational cheaper
-            all_ids = list(chain.from_iterable([
-                samps for _, samps in viewitems(samples)]))
-            rename_dup_samples = ((len(all_ids) != len(set(all_ids))) and
-                                  merge_duplicated_sample_ids)
+            # 1. merge samples per data_type, reference used and the command id
+            #    if not one of the tables is not 'Pick closed-reference OTUs'
+            #    it's safer to always rename. Note that grouped_samples is
+            #    basically how many biom tables we are going to create
+            rename_dup_samples = False
+            grouped_samples = {}
+            for k, v in viewitems(samples):
+                a = qdb.artifact.Artifact(k)
+                p = a.processing_parameters
+                c = p.command
+                if c.name != 'Pick closed-reference OTUs':
+                    rename_dup_samples = True
+                    break
+                l = "%s.%d.%d" % (a.data_type, p.values['reference'], c.id)
+                if l not in grouped_samples:
+                    grouped_samples[l] = []
+                grouped_samples[l].append((k, v))
+            # 2. if rename_dup_samples is still False, make sure that we don't
+            #    need to rename samples by checking that there are not
+            #    duplicated samples per group
+            if not rename_dup_samples:
+                for _, t in viewitems(grouped_samples):
+                    # this element only has one table, continue
+                    if len(t) == 1:
+                        continue
+                    dup_samples = set()
+                    for _, s in t:
+                        # this set is not to make the samples unique, cause
+                        # they already are, but cast it as a set so we can
+                        # perform the following operations
+                        s = set(s)
+                        if dup_samples & s:
+                            rename_dup_samples = merge_duplicated_sample_ids
+                            break
+                        dup_samples = dup_samples | s
 
             self._build_mapping_file(samples, rename_dup_samples)
-            self._build_biom_tables(samples, rarefaction_depth,
+            self._build_biom_tables(grouped_samples, rarefaction_depth,
                                     rename_dup_samples)
 
-    def _build_biom_tables(self, samples, rarefaction_depth=None,
+    def _build_biom_tables(self, grouped_samples, rarefaction_depth=None,
                            rename_dup_samples=False):
         """Build tables and add them to the analysis"""
         with qdb.sql_connection.TRN:
             base_fp = qdb.util.get_work_base_dir()
 
-            # this assumes that there is only one reference/pipeline for each
-            # data_type issue #164
-            new_tables = {dt: None for dt in self.data_types}
-            for aid, samps in viewitems(samples):
-                artifact = qdb.artifact.Artifact(aid)
-                # this is not checking the reference used for picking
-                # issue #164
-                biom_table_fp = None
-                for _, fp, fp_type in artifact.filepaths:
-                    if fp_type == 'biom':
-                        biom_table_fp = fp
-                        break
-                if not biom_table_fp:
-                    raise RuntimeError(
-                        "Artifact %s do not have a biom table associated"
-                        % aid)
-                biom_table = load_table(biom_table_fp)
-                # filtering samples to keep those selected by the user
-                biom_table_samples = set(biom_table.ids())
-                selected_samples = biom_table_samples.intersection(samps)
-                biom_table.filter(selected_samples, axis='sample',
-                                  inplace=True)
+            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
+            for label, tables in viewitems(grouped_samples):
+                data_type, reference_id, command_id = label.split('.')
+                new_table = None
+                artifact_ids = []
+                for aid, samples in tables:
+                    artifact = qdb.artifact.Artifact(aid)
+                    artifact_ids.append(str(aid))
 
-                if rename_dup_samples:
-                    ids_map = {_id: "%d.%s" % (aid, _id)
-                               for _id in biom_table.ids()}
-                    biom_table.update_ids(ids_map, 'sample', True, True)
+                    # the next loop is assuming that an artifact can have only
+                    # one biom, which is a safe assumption until we generate
+                    # artifacts from multiple bioms and even then we might
+                    # only have one biom
+                    biom_table_fp = None
+                    for _, fp, fp_type in artifact.filepaths:
+                        if fp_type == 'biom':
+                            biom_table_fp = fp
+                            break
+                    if not biom_table_fp:
+                        raise RuntimeError(
+                            "Artifact %s does not have a biom table associated"
+                            % aid)
+
+                    # loading the found biom table
+                    biom_table = load_table(biom_table_fp)
+                    # filtering samples to keep those selected by the user
+                    biom_table_samples = set(biom_table.ids())
+                    selected_samples = biom_table_samples.intersection(samples)
+                    biom_table.filter(selected_samples, axis='sample',
+                                      inplace=True)
+                    if len(biom_table.ids()) == 0:
+                        raise RuntimeError(
+                            "All samples filtered out from Artifact %s due "
+                            "to selected samples" % aid)
+
+                    if rename_dup_samples:
+                        ids_map = {_id: "%d.%s" % (aid, _id)
+                                   for _id in biom_table.ids()}
+                        biom_table.update_ids(ids_map, 'sample', True, True)
+
+                    if new_table is None:
+                        new_table = biom_table
+                    else:
+                        new_table = new_table.merge(biom_table)
 
                 # add the metadata column for study the samples come from,
                 # this is useful in case the user download the bioms
-                study_md = {'Study': artifact.study.title, 'Artifact_id': aid}
-                samples_md = {sid: study_md for sid in selected_samples}
-                biom_table.add_metadata(samples_md, axis='sample')
-                data_type = artifact.data_type
+                study_md = {'study': artifact.study.title,
+                            'artifact_ids': ', '.join(artifact_ids),
+                            'reference_id': reference_id,
+                            'command_id': command_id}
+                samples_md = {sid: study_md for sid in new_table.ids()}
+                new_table.add_metadata(samples_md, axis='sample')
 
-                # this is not checking the reference used for picking
-                # issue #164
-                if new_tables[data_type] is None:
-                    new_tables[data_type] = biom_table
-                else:
-                    new_tables[data_type] = \
-                        new_tables[data_type].merge(biom_table)
-
-            # add the new tables to the analysis
-            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
-            for dt, biom_table in viewitems(new_tables):
-                if biom_table is None:
-                    continue
-                # rarefy, if specified
                 if rarefaction_depth is not None:
-                    biom_table = biom_table.subsample(rarefaction_depth)
+                    new_table = new_table.subsample(rarefaction_depth)
+                    if len(new_table.ids()) == 0:
+                        raise RuntimeError(
+                            "All samples filtered out due to rarefacion level")
+
                 # write out the file
-                biom_fp = join(base_fp, "%d_analysis_%s.biom" % (self._id, dt))
+                fn = "%d_analysis_dt-%s_r-%s_c-%s.biom" % (
+                    self._id, data_type, reference_id, command_id)
+                biom_fp = join(base_fp, fn)
                 with biom_open(biom_fp, 'w') as f:
-                    biom_table.to_hdf5(f, "Analysis %s Datatype %s" %
-                                       (self._id, dt))
-                self._add_file("%d_analysis_%s.biom" % (self._id, dt),
-                               "biom", data_type=dt)
+                    new_table.to_hdf5(
+                        f, "Generated by Qiita. Analysis %d Datatype %s "
+                        "Reference %s Command %s" % (self._id, data_type,
+                                                     reference_id, command_id))
+                self._add_file(fn, "biom", data_type=data_type)
 
     def _build_mapping_file(self, samples, rename_dup_samples=False):
         """Builds the combined mapping file for all samples
@@ -904,7 +993,7 @@ class Analysis(qdb.base.QiitaStatusObject):
                     qm['original_SampleID'] = qm.index
                     qm['#SampleID'] = "%d." % aid + qm.index
                     qm['qiita_aid'] = aid
-                    samps = ['%d.%s' % (aid, _id) for _id in samps]
+                    samps = set(['%d.%s' % (aid, _id) for _id in samps])
                     qm.set_index('#SampleID', inplace=True, drop=True)
                 else:
                     samps = set(samps) - all_ids

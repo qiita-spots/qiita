@@ -71,9 +71,7 @@ class TestSQL(TestCase):
         new = qdb.artifact.Artifact.create(
             fp, "BIOM",
             parents=[qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)],
-            processing_parameters=params,
-            can_be_submitted_to_ebi=True,
-            can_be_submitted_to_vamps=True)
+            processing_parameters=params)
         self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
         obs = self.conn_handler.execute_fetchall(sql, [new.id])
         exp = [[1]]

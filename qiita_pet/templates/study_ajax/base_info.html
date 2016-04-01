@@ -1,0 +1,11 @@
+<p style="font-weight:bold;">Abstract</p>
+<p>{{study_info['study_abstract']}}</p>
+Study ID:  {{study_info['study_id']}}<br />
+Publications: {% raw publications %}<br />
+PI: {% raw pi %}<br />
+Lab Contact: {% raw contact %}<br />
+Samples: {{study_info['num_samples']}}<br />
+{% if editable %}
+  <a class="btn btn-default" href="/study/edit/{{study_info['study_id']}}"><span class="glyphicon glyphicon-edit"></span> Edit</a>
+  <a class="btn btn-danger" href="#" data-toggle="modal" data-target="#delete-study"><span class="glyphicon glyphicon-trash"></span> Delete</a>
+{% end %}

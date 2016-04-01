@@ -103,7 +103,8 @@ def split_mapping_file(mapping_file, out_dir):
         for prefix, df in mf.groupby('run_prefix'):
             out_fp = path_builder('%s_mapping_file.txt' % prefix)
             output_fps.append(out_fp)
-            df.to_csv(out_fp, index_label='#SampleID', sep='\t')
+            df.to_csv(out_fp, index_label='#SampleID', sep='\t',
+                      encoding='utf-8')
     else:
         output_fps = [mapping_file]
 
@@ -150,17 +151,16 @@ def generate_artifact_info(sl_out):
 
     Returns
     -------
-    list of [str, list of (str, str), bool, bool]
+    list of [str, str, list of (str, str)]
         The artifacts information to include in the payload when the split
         libraries job is completed.
+        - The command output name
         - The artifact type
         - The list of filepaths with their artifact type
-        - Whether the artifact can be submitted to ebi
-        - Whether the artifact can be submitted to vamps
     """
     path_builder = partial(join, sl_out)
     filepaths = [(path_builder('seqs.fna'), 'preprocessed_fasta'),
                  (path_builder('seqs.fastq'), 'preprocessed_fastq'),
                  (path_builder('seqs.demux'), 'preprocessed_demux'),
                  (path_builder('split_library_log.txt'), 'log')]
-    return [['Demultiplexed', filepaths, True, True]]
+    return [['demultiplexed', 'Demultiplexed', filepaths]]

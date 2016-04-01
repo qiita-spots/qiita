@@ -1,0 +1,111 @@
+<script type="text/javascript">
+  /**
+   *
+   * Function that shows the submission button if there are no errors
+   *
+   * This function just checks if the global variable error_count is zero.
+   * If so, it shows the submit button, otherwise it hides it.
+   *
+   */
+  function allow_submission() {
+    if ( $('#files-selector').attr("data-error-count") == 0) {
+      $("#submit-div").show();
+    }
+    else {
+      $("#submit-div").hide();
+    }
+  }
+
+  /**
+   *
+   * Function to populate the file selector div
+   *
+   * @param atype string with the artifact type chosen by the user
+   *
+   * This function executes an AJAX get against the URL
+   * "" and inserts the returned data as HTML in the files-selector div
+   *
+   */
+  function populate_files_list(atype) {
+    show_loading("files-selector");
+    $("#files-selector").show();
+    $.get("/study/files/", {study_id: {{study_id}}, artifact_type: atype, prep_template_id: {{prep_id}}})
+      .done(function(data) {
+          $("#files-selector").html(data);
+      });
+  }
+
+  $(document).ready(function () {
+    // When the artifact-type selection changes, we need to re-populate the
+    // files selection div
+    $("#artifact-type").change(function(event) {
+      if( $("#artifact-type").val() !== "") {
+          populate_files_list($("#artifact-type").val());
+      }
+      else{
+        $("#files-selector").hide();
+      }
+    });
+
+    // Modify the submit action of the form to use AJAX
+    $("#create-artifact-form").submit(function(event){
+      event.preventDefault();
+      // Add the prep template as a parameter
+      $('<input>').attr({
+        type: 'hidden',
+        name: 'prep-template-id',
+        value: '{{prep_id}}'
+      }).appendTo("#create-artifact-form");
+      // Build all the files lists
+      build_file_lists();
+      // Execute the AJAX call
+      $.ajax({
+        url: $("#create-artifact-form").attr('action'),
+        type: "POST",
+        data: $("#create-artifact-form").serialize(),
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            if(data.status == 'warning') {
+              bootstrapAlert(data.message, "warning");
+            }
+            populate_data_type_menu_div();
+            populate_main_div('/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+          }
+        }
+      });
+    });
+  });
+</script>
+
+<div class="row">
+  <div class="col-md-12">
+    <h4><i>No files attached to this preparation</i></h4>
+  </div>
+</div>
+
+<form action="/study/new_artifact/" method="POST" id="create-artifact-form">
+  <div class="row">
+    <div class="col-md-12">
+      <b>Name:</b> <input type="text" id="name" name="name" maxlength="35" required>
+    </div>
+    <div class="col-md-12">
+      <b>Select type:</b>
+      <select name="artifact-type" id="artifact-type">
+        <option value="">Choose a type...</option>
+        {% for t, desc in artifact_types %}
+          <option value="{{t}}">{{t}} - {{desc}}</option>
+        {% end %}
+      </select>
+    </div>
+  </div>
+  <div id="files-selector" hidden>
+  </div>
+  <div class="row" id="submit-div" data-error-count="0" hidden>
+    <div class="col-md-12" style="margin-top: 5px;">
+      <input type="submit" class="btn btn-sm btn-success" value="Add files">
+    </div>
+  </div>
+</form>

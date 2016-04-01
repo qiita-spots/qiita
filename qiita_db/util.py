@@ -25,6 +25,7 @@ Methods
     convert_from_id
     convert_to_id
     get_environmental_packages
+    get_visibilities
     purge_filepaths
     move_filepaths_to_upload_folder
     move_upload_files_to_trash
@@ -443,6 +444,7 @@ def get_files_from_uploads_folders(study_id):
     list
         List of the filepaths for upload for that study
     """
+    study_id = str(study_id)
     fp = []
     for pid, p in get_mountpoint("uploads", retrieve_all=True):
         t = join(p, study_id)
@@ -645,7 +647,8 @@ def insert_filepaths(filepaths, obj_id, table, filepath_table,
             chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:])))
 
 
-def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
+def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
+                       fp_type=None):
     """Retrieves the filepaths for the given object id
 
     Parameters
@@ -659,6 +662,8 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
     sort : {'ascending', 'descending'}, optional
         The direction in which the results are sorted, using the filepath id
         as sorting key. Default: None, no sorting is applied
+    fp_type: str, optional
+        Retrieve only the filepaths of the matching filepath type
 
     Returns
     -------
@@ -683,6 +688,13 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
             "Unknown sorting direction: %s. Please choose from 'ascending' or "
             "'descending'" % sort)
 
+    sql_args = [obj_id]
+
+    sql_type = ""
+    if fp_type:
+        sql_type = " AND filepath_type=%s"
+        sql_args.append(fp_type)
+
     with qdb.sql_connection.TRN:
         sql = """SELECT filepath_id, filepath, filepath_type, mountpoint,
                         subdirectory
@@ -690,14 +702,14 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None):
                     JOIN qiita.filepath_type USING (filepath_type_id)
                     JOIN qiita.data_directory USING (data_directory_id)
                     JOIN qiita.{0} USING (filepath_id)
-                 WHERE {1} = %s{2}""".format(obj_fp_table, obj_id_column,
-                                             sql_sort)
-        qdb.sql_connection.TRN.add(sql, [obj_id])
+                 WHERE {1} = %s{2}{3}""".format(obj_fp_table, obj_id_column,
+                                                sql_type, sql_sort)
+        qdb.sql_connection.TRN.add(sql, sql_args)
         results = qdb.sql_connection.TRN.execute_fetchindex()
         db_dir = get_db_files_base_dir()
 
-        return [(fpid, path_builder(db_dir, fp, m, s, obj_id), fp_type)
-                for fpid, fp, fp_type, m, s in results]
+        return [(fpid, path_builder(db_dir, fp, m, s, obj_id), fp_type_)
+                for fpid, fp, fp_type_, m, s in results]
 
 
 def purge_filepaths():
@@ -993,6 +1005,19 @@ def get_environmental_packages():
         return qdb.sql_connection.TRN.execute_fetchindex()
 
 
+def get_visibilities():
+    """Get the list of available visibilities for artifacts
+
+    Returns
+    -------
+    list of str
+        The available visibilities
+    """
+    with qdb.sql_connection.TRN:
+        qdb.sql_connection.TRN.add("SELECT visibility FROM qiita.visibility")
+        return qdb.sql_connection.TRN.execute_fetchflatten()
+
+
 def get_timeseries_types():
     """Get the list of available timeseries types
 
@@ -1166,3 +1191,27 @@ def clear_system_messages():
             sql = "DELETE FROM qiita.message WHERE message_id IN %s"
             qdb.sql_connection.TRN.add(sql, [msg_ids])
             qdb.sql_connection.TRN.execute()
+
+
+def supported_filepath_types(artifact_type):
+    """Returns the list of supported filepath types for the given artifact type
+
+    Parameters
+    ----------
+    artifact_type : str
+        The artifact type to check the supported filepath types
+
+    Returns
+    -------
+    list of [str, bool]
+        The list of supported filepath types and whether it is required by the
+        artifact type or not
+    """
+    with qdb.sql_connection.TRN:
+        sql = """SELECT DISTINCT filepath_type, required
+                 FROM qiita.artifact_type_filepath_type
+                    JOIN qiita.artifact_type USING (artifact_type_id)
+                    JOIN qiita.filepath_type USING (filepath_type_id)
+                 WHERE artifact_type = %s"""
+        qdb.sql_connection.TRN.add(sql, [artifact_type])
+        return qdb.sql_connection.TRN.execute_fetchindex()

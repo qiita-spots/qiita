@@ -39,7 +39,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.filepath"), 19)
 
     def test_filepath_type(self):
-        self.assertEqual(get_count("qiita.filepath_type"), 19)
+        self.assertEqual(get_count("qiita.filepath_type"), 21)
 
     def test_study_prep_template(self):
         self.assertEqual(get_count("qiita.study_prep_template"), 1)

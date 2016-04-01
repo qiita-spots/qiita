@@ -239,7 +239,9 @@ class SearchTest(TestCase):
             '1.SKD8.640184', '1.SKD9.640182', '1.SKM1.640183', '1.SKM2.640199',
             '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
             '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}
-        self.assertItemsEqual(pds, exp_pds)
+        self.assertItemsEqual(pds.keys(), exp_pds.keys())
+        for k in exp_pds:
+            self.assertItemsEqual(pds[k], exp_pds[k])
 
         exp_meta = pd.DataFrame.from_dict({x: 1 for x in exp_pds[4]},
                                           orient='index')

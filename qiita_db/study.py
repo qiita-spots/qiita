@@ -166,6 +166,20 @@ class Study(qdb.base.QiitaObject):
             return qdb.util.infer_status(
                 qdb.sql_connection.TRN.execute_fetchindex())
 
+    @staticmethod
+    def all_data_types():
+        """Returns list of all the data types available in the system
+
+        Returns
+        -------
+        list of str
+            All the data types available in the system
+        """
+        with qdb.sql_connection.TRN:
+            sql = "SELECT DISTINCT data_type FROM qiita.data_type"
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchflatten()
+
     @classmethod
     def get_by_status(cls, status):
         """Returns study id for all Studies with given status
@@ -500,9 +514,23 @@ class Study(qdb.base.QiitaObject):
             # remove non-info items from info
             for item in self._non_info:
                 info.pop(item)
-            # This is an optional column, but should not be considered part
-            # of the info
+            # removed because redundant to the id already stored in the object
             info.pop('study_id')
+
+            if info['principal_investigator_id']:
+                info['principal_investigator'] = qdb.study.StudyPerson(
+                    info["principal_investigator_id"])
+            else:
+                info['principal_investigator'] = None
+            del info['principal_investigator_id']
+
+            if info['lab_person_id']:
+                info['lab_person'] = qdb.study.StudyPerson(
+                    info["lab_person_id"])
+            else:
+                info['lab_person'] = None
+            del info['lab_person_id']
+
             return info
 
     @info.setter
@@ -924,7 +952,7 @@ class Study(qdb.base.QiitaObject):
     ebi_submission_status.__doc__.format(', '.join(_VALID_EBI_STATUS))
 
     # --- methods ---
-    def artifacts(self, dtype=None):
+    def artifacts(self, dtype=None, artifact_type=None):
         """Returns the list of artifacts associated with the study
 
         Parameters
@@ -932,25 +960,33 @@ class Study(qdb.base.QiitaObject):
         dtype : str, optional
             If given, retrieve only artifacts for given data type. Default,
             return all artifacts associated with the study.
+        artifact_type : str, optional
+            If given, retrieve only artifacts of given data type. Default,
+            return all artifacts associated with the study
 
         Returns
         -------
         list of qiita_db.artifact.Artifact
         """
         with qdb.sql_connection.TRN:
+            sql_args = [self._id]
+            sql_where = ""
             if dtype:
-                sql = """SELECT artifact_id
-                         FROM qiita.artifact
-                            JOIN qiita.data_type USING (data_type_id)
-                            JOIN qiita.study_artifact USING (artifact_id)
-                         WHERE study_id = %s AND data_type = %s"""
-                sql_args = [self._id, dtype]
-            else:
-                sql = """SELECT artifact_id
-                         FROM qiita.artifact
-                            JOIN qiita.study_artifact USING (artifact_id)
-                         WHERE study_id = %s"""
-                sql_args = [self._id]
+                sql_args.append(dtype)
+                sql_where = " AND data_type = %s"
+
+            if artifact_type:
+                sql_args.append(artifact_type)
+                sql_where += "AND artifact_type = %s"
+
+            sql = """SELECT artifact_id
+                     FROM qiita.artifact
+                        JOIN qiita.data_type USING (data_type_id)
+                        JOIN qiita.study_artifact USING (artifact_id)
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE study_id = %s{0}
+                     ORDER BY artifact_id""".format(sql_where)
+
             qdb.sql_connection.TRN.add(sql, sql_args)
             return [qdb.artifact.Artifact(aid)
                     for aid in qdb.sql_connection.TRN.execute_fetchflatten()]
@@ -1011,6 +1047,24 @@ class Study(qdb.base.QiitaObject):
                     self.get_by_status('public')
 
             return self in study_set
+
+    def can_edit(self, user):
+        """Returns whether the given user can edit the study
+
+        Parameters
+        ----------
+        user : User object
+            User we are checking edit permissions for
+
+        Returns
+        -------
+        bool
+            Whether user can edit the study or not
+        """
+        # The study is editable only if the user is the owner, is in the shared
+        # list or the user is an admin
+        return (user.level in {'superuser', 'admin'} or self.owner == user or
+                user in self.shared_with)
 
     def share(self, user):
         """Share the study with another user

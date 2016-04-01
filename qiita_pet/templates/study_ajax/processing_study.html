@@ -1,0 +1,173 @@
+<script type="text/javascript">
+  //the network object itself, + nodes list and edge list
+  var proc_network = null;
+  var nodes = new vis.DataSet([{id: 1, label: "{{artifact_type}}", group: 'type'}]);
+  var edges = new vis.DataSet();
+  //current commands available for selected nodes
+  var commands = null;
+  //currently selected nodes
+  var curr_nodes = [1];
+
+  function validate_node_id(node_id, action){
+      if (node_id.length !== 1) {
+          alert("Can only " + action + " one command at a time");
+          return -1;
+      }
+      // node_id only has one element
+      return +node_id[0];
+  }
+
+  function add_command(type_nodes) {
+    var command_info = commands[$("#command").val()];
+    //TODO: add job callback
+    var command_node = nodes.length + 1;
+    // Add edges to the new command node, then the new command node
+    for(var i=0;i<type_nodes.length;i++) {
+      edges.add({ id: edges.length + 1, from: type_nodes[i], to: command_node});
+    }
+    nodes.add({ id: command_node, label: command_info.command, group: 'command', command_id: command_info.id});
+    // Add edges for types created by command
+    for(i=0;i<command_info.output.length;i++) {
+      var node_id = nodes.length + 1;
+      edges.add({ id: edges.length + 1, from: command_node, to: node_id});
+      nodes.add({ id: node_id, label: command_info.output[i], group: 'type', command_id: null});
+    }
+    proc_network.redraw();
+  }
+
+  function remove_command(node_id) {
+    //TODO: delete job callback
+    node_id = validate_node_id(node_id, "delete");
+    if (node_id === -1){ return;}
+    var queue = [node_id];
+    var edge_list = edges.get();
+    while(queue.length !== 0) {
+      var current = queue.pop();
+      for(var i=0;i<edge_list.length;i++) {
+        edge = edge_list[i];
+        if(edge.from == current) {
+          if($.inArray(edge.to, queue) == -1) { queue.push(edge.to); }
+          edges.remove(edge.id);
+        }
+      }
+      nodes.remove(current);
+    }
+    edges.remove(edges.get({ filter: function (item) { return item.to == node_id; } })[0].id);
+    proc_network.redraw();
+    var curr_nodes = null;
+  }
+
+  function load_job(node_id) {
+    node_id = validate_node_id(node_id, "load");
+    if(node_id === -1){ return;}
+    $.get('/study/job/', {job_id: nodes.get(node_id).id})
+      .done(function ( data ) {
+        $("#network-info").empty();
+        var button = $('<button>').appendTo('#network-info');
+        button.addClass('btn btn-xs').text('Remove Command').click(function () { remove_command(nodes.get(node_id).id); });
+        options = data.options;
+        for(i=0;i<options.length;i++) {
+          opt = options[i];
+          // add each input to the form, based on the type given
+          var input = $('<input>');
+          input.attr('value', opt.value).attr('name', opt.name);
+          if(opt.required) { input.attr('required', true); }
+
+          switch(opt.type) {
+            case 'integer': input.attr('type', 'number').attr('min', 0).attr('step', 1);
+              break;
+            case 'float': input.attr('type', 'number').attr('min', 0);
+              break;
+            case 'bool': input.attr('type', 'checkbox'); if(opt.value == true) { input.attr('checked', true) }
+              break;
+            case 'string': input.attr('type', 'text');
+              break;
+            default: input = null;
+              break;
+          }
+          if(input != null) { $('<p>').text(opt.name).attr('id', opt.name).appendTo('#network-info'); input.appendTo('#' + opt.name); }
+        }
+        var button = $('<button>').appendTo('#network-info');
+        button.addClass('btn btn-xs').text('Save Changes').click(save_options);
+      });
+  }
+
+  function save_options() {
+
+  }
+
+  function load_filetype(node_ids) {
+    //Check nodes all match type
+    var type = nodes.get(node_ids[0]).label;
+    for(var i=1;i<node_ids.length;i++) { if(nodes.get(node_ids[i]).label != type){ $("#network-info").empty(); return; }}
+    $.get('/study/commands/', {artifact_type: type})
+      .done(function ( data ) {
+        $("#network-info").empty();
+        commands = data.commands;
+        $("#network-info").html("<h4>Available Commands</h4>");
+        var sel = $('<select>').appendTo('#network-info');
+        sel.attr('id', 'command').attr('name', 'command');
+        for(i=0;i<commands.length;i++) {
+         sel.append($("<option>").attr('value',i).text(commands[i].command));
+        }
+        var select = $('<button>').appendTo('#network-info');
+        select.addClass('btn btn-xs').text('Add Command').click(function () { add_command(curr_nodes); });
+      });
+  }
+
+  $(document).ready(function() {
+    // create a network
+    $("#graph-toggle-link").remove();
+    var container = document.getElementById('network');
+    var data = {
+        nodes: nodes,
+        edges: edges
+    };
+    var options = {
+      nodes: {
+        color: {highlight: {border: "yellow"}},
+        font: '14px arial black'
+      },
+      edges:{
+        color: 'grey'
+      },
+      layout: {
+        hierarchical: {
+          direction: "LR",
+          sortMethod: "directed",
+          levelSeparation: 150
+        }
+      },
+      interaction: {
+        dragNodes: false,
+        dragView: true,
+        zoomView: true,
+        selectConnectedEdges: false,
+        multiselect: true,
+        navigationButtons: true,
+        keyboard: true
+      },
+      groups: {
+        type: {shape: "ellipse", color: "#cef"},
+        command: {shape: "box", color: "#9fd"}
+      }
+    };
+    proc_network = new vis.Network(container, data, options);
+    proc_network.on('select', function(params) {
+          //render the information for the selected artifacts or commands
+          if(params.nodes.length !== 0) {
+            // Make sure all selected nodes are of same group, so we dont link files to commands
+            var group = nodes.get(params.nodes[0]).group;
+            for(var i=0;i<params.nodes.length;i++) { if(nodes.get(params.nodes[i]).group != group) { $("#network-info").empty(); }}
+            curr_nodes = params.nodes;
+            if(group == 'command') { load_job(params.nodes); }
+            else if(group == 'type') { load_filetype(params.nodes); }
+            else { $("#network-info").empty(); }
+          }
+        });
+    load_filetype([1]);
+  });
+</script>
+
+<div id="network" style="width:100%;height:300px;border: 1px solid #ccc;"></div>
+<div id="network-info" style="width:100%"></div>

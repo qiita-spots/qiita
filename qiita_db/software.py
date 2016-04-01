@@ -10,6 +10,8 @@ from json import dumps, loads
 from copy import deepcopy
 import inspect
 
+import networkx as nx
+
 import qiita_db as qdb
 
 
@@ -33,6 +35,66 @@ class Command(qdb.base.QiitaObject):
     qiita_db.software.Software
     """
     _table = "software_command"
+
+    @classmethod
+    def get_commands_by_input_type(cls, artifact_types):
+        """Returns the commands that can process the given artifact types
+
+        Parameters
+        ----------
+        artifact_type : list of str
+            The artifact types
+
+        Returns
+        -------
+        generator of qiita_db.software.Command
+            The commands that can process the given artifact tyoes
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT command_id
+                     FROM qiita.command_parameter
+                        JOIN qiita.parameter_artifact_type
+                            USING (command_parameter_id)
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE artifact_type IN %s"""
+            qdb.sql_connection.TRN.add(sql, [tuple(artifact_types)])
+            for c_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield cls(c_id)
+
+    @classmethod
+    def get_html_generator(cls, artifact_type):
+        """Returns the command that genearete the HTML for the given artifact
+
+        Parameters
+        ----------
+        artifact_type : str
+            The artifact type to search the HTML generator for
+
+        Returns
+        -------
+        qiita_db.software.Command
+            The newly created command
+
+        Raises
+        ------
+        qdb.exceptions.QiitaDBError
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT command_id
+                     FROM qiita.software_command
+                        JOIN qiita.software_artifact_type USING (software_id)
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE artifact_type = %s
+                        AND name = 'Generate HTML summary'"""
+            qdb.sql_connection.TRN.add(sql, [artifact_type])
+            try:
+                res = qdb.sql_connection.TRN.execute_fetchlast()
+            except IndexError:
+                raise qdb.exceptions.QiitaDBError(
+                    "There is no command to generate the HTML summary for "
+                    "artifact type '%s'" % artifact_type)
+
+            return cls(res)
 
     def _check_id(self, id_):
         """Check that the provided ID actually exists in the database
@@ -270,12 +332,19 @@ class Command(qdb.base.QiitaObject):
             Dictionary of {parameter_name: ptype}
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT parameter_name, parameter_type
+            sql = """SELECT command_parameter_id, parameter_name,
+                            parameter_type, array_agg(
+                                artifact_type ORDER BY artifact_type) AS
+                            artifact_type
                      FROM qiita.command_parameter
-                     WHERE command_id = %s AND required = true"""
+                        LEFT JOIN qiita.parameter_artifact_type
+                            USING (command_parameter_id)
+                        LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE command_id = %s AND required = True
+                     GROUP BY command_parameter_id"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
-            return {pname: ptype for pname, ptype in res}
+            return {pname: (ptype, atype) for _, pname, ptype, atype in res}
 
     @property
     def optional_parameters(self):
@@ -313,6 +382,23 @@ class Command(qdb.base.QiitaObject):
             for pid in res:
                 yield DefaultParameters(pid)
 
+    @property
+    def outputs(self):
+        """Returns the list of output artifact types
+
+        Returns
+        -------
+        list of str
+            The output artifact types
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name, artifact_type
+                     FROM qiita.command_output
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchindex()
+
 
 class Software(qdb.base.QiitaObject):
     r"""A software package available in the system
@@ -340,7 +426,7 @@ class Software(qdb.base.QiitaObject):
 
     @classmethod
     def create(cls, name, version, description, environment_script,
-               start_script, publications=None):
+               start_script, software_type, publications=None):
         r"""Creates a new software in the system
 
         Parameters
@@ -355,6 +441,8 @@ class Software(qdb.base.QiitaObject):
             The script used to start the environment in which the plugin runs
         start_script : str
             The script used to start the plugin
+        software_type : str
+            The type of the software
         publications : list of (str, str), optional
             A list with the (DOI, pubmed_id) of the publications attached to
             the software
@@ -362,11 +450,12 @@ class Software(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.software
                             (name, version, description, environment_script,
-                             start_script)
-                        VALUES (%s, %s, %s, %s, %s)
+                             start_script, software_type_id)
+                        VALUES (%s, %s, %s, %s, %s, %s)
                         RETURNING software_id"""
+            type_id = qdb.util.convert_to_id(software_type, "software_type")
             sql_params = [name, version, description, environment_script,
-                          start_script]
+                          start_script, type_id]
             qdb.sql_connection.TRN.add(sql, sql_params)
             s_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -510,6 +599,41 @@ class Software(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             sql = """SELECT start_script
                      FROM qiita.software
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def default_workflows(self):
+        """Returns the default workflows attached to the current software
+
+        Returns
+        -------
+        generator of qiita_db.software.DefaultWorkflow
+            The defaultworkflows attached to the software
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT default_workflow_id
+                     FROM qiita.default_workflow
+                     WHERE software_id = %s
+                     ORDER BY default_workflow_id"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            for wf_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield DefaultWorkflow(wf_id)
+
+    @property
+    def type(self):
+        """Returns the type of the software
+
+        Returns
+        -------
+        str
+            The type of the software
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT software_type
+                     FROM qiita.software_type
+                        JOIN qiita.software USING (software_type_id)
                      WHERE software_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
@@ -879,3 +1003,135 @@ class Parameters(object):
             The parameter values as a JSON string
         """
         return dumps(self._values, sort_keys=True)
+
+
+class DefaultWorkflowNode(qdb.base.QiitaObject):
+    r"""Represents a node in a default software workflow
+
+    Attributes
+    ----------
+    command
+    parameters
+    """
+    _table = "default_workflow_node"
+
+    @property
+    def command(self):
+        """The command to execute in this node
+
+        Returns
+        -------
+        qiita_db.software.Command
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT command_id
+                     FROM qiita.default_workflow_node
+                     WHERE default_workflow_node_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            cmd_id = qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.software.Command(cmd_id)
+
+    @property
+    def parameters(self):
+        """The default parameter set to use in this node
+
+        Returns
+        -------
+        qiita_db.software.DefaultParameters
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT default_parameter_set_id
+                     FROM qiita.default_workflow_node
+                     WHERE default_workflow_node_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            params_id = qdb.sql_connection.TRN.execute_fetchlast()
+            return qdb.software.DefaultParameters(params_id)
+
+
+class DefaultWorkflowEdge(qdb.base.QiitaObject):
+    r"""Represents an edge in a default software workflow
+
+    Attributes
+    ----------
+    connections
+    """
+    _table = "default_workflow_edge"
+
+    @property
+    def connections(self):
+        """Retrieve how the commands are connected using this edge
+
+        Returns
+        -------
+        list of [str, str]
+            The list of pairs of output parameter name and input parameter name
+            used to connect the output of the source command to the input of
+            the destination command.
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name, parameter_name
+                     FROM qiita.default_workflow_edge_connections c
+                        JOIN qiita.command_output o
+                            ON c.parent_output_id = o.command_output_id
+                        JOIN qiita.command_parameter p
+                            ON c.child_input_id = p.command_parameter_id
+                     WHERE default_workflow_edge_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchindex()
+
+
+class DefaultWorkflow(qdb.base.QiitaObject):
+    r"""Represents a software's default workflow
+
+    A default workflow is defined by a Directed Acyclic Graph (DAG) in which
+    the nodes represent the commands to be executed with the default parameter
+    set to use and the edges represent the command precedence, including
+    which outputs of the source command are provided as input to the
+    destination command.
+    """
+    _table = "default_workflow"
+
+    @property
+    def name(self):
+        with qdb.sql_connection.TRN:
+            sql = """SELECT name
+                     FROM qiita.default_workflow
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def graph(self):
+        """Returns the graph that represents the workflow
+
+        Returns
+        -------
+        networkx.DiGraph
+            The graph representing the default workflow.
+        """
+        g = nx.DiGraph()
+        with qdb.sql_connection.TRN:
+            # Retrieve all graph workflow nodes
+            sql = """SELECT default_workflow_node_id
+                     FROM qiita.default_workflow_node
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            db_nodes = qdb.sql_connection.TRN.execute_fetchflatten()
+
+            nodes = {n_id: DefaultWorkflowNode(n_id) for n_id in db_nodes}
+
+            # Retrieve all graph edges
+            sql = """SELECT DISTINCT default_workflow_edge_id, parent_id,
+                                     child_id
+                     FROM qiita.default_workflow_edge e
+                        JOIN qiita.default_workflow_node n
+                            ON e.parent_id = n.default_workflow_node_id
+                            OR e.child_id = n.default_workflow_node_id
+                     WHERE default_workflow_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            db_edges = qdb.sql_connection.TRN.execute_fetchindex()
+
+            for edge_id, p_id, c_id in db_edges:
+                e = DefaultWorkflowEdge(edge_id)
+                g.add_edge(nodes[p_id], nodes[c_id], connections=e)
+        return g

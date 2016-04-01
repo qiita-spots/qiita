@@ -1,0 +1,218 @@
+<link rel="stylesheet" href="/static/vendor/css/chosen.css" type="text/css">
+<script type="text/javascript>">
+  /**
+   *
+   * Function that validates all the files lists
+   *
+   * This function triggers the sortupdate event in all the elements
+   * that are "checkable"
+   */
+  function check_files_lists() {
+      // Reset the error counter
+      $('#files-selector').attr("data-error-count", 0);
+      // initialize the error count to the number of file types
+      $(".checkable").trigger("sortupdate");
+      allow_submission();
+  }
+
+  /**
+   *
+   * Function that marks the given container as wrong
+   *
+   * @param container the HTML container to set as wrong
+   *
+   * This function adds/removes the needed classes to mark a container
+   * as wrong and updates the global error counter accordingly
+   *
+   */
+  function mark_as_wrong(container) {
+    $(container).removeClass("highlightCorrect");
+    $(container).addClass("highlightWrong");
+    if ( $(container).attr("data-correct") === "true" ) {
+      // It changed value - update the counters and the value
+      $('#files-selector').attr("data-error-count", +$('#files-selector').attr("data-error-count") + 1);
+      $(container).attr("data-correct", "false");
+    }
+  }
+
+  /**
+   *
+   * Function that marks the given container as correct
+   *
+   * @param container the HTML container to set as correct
+   *
+   * This function adds/removes the needed classes to mark a container
+   * as correct and updates the global error counter accordingly
+   *
+   */
+  function mark_as_correct(container) {
+    $(container).removeClass("highlightWrong");
+    $(container).addClass("highlightCorrect");
+    if ( $(container).attr("data-correct") === "false" ) {
+      // It changed value - update the counters and the value
+      var count = $('#files-selector').attr("data-error-count");
+      --count;
+      $(container).attr("data-correct", "true");
+      // Make sure that the error counter variable is always >= 0.
+      if (count < 0) {
+        count = 0;
+      }
+      $('#files-selector').attr("data-error-count", count);
+    }
+  }
+
+  /**
+   *
+   * Callback function for the sortupdate method of the sortable files list
+   *
+   * This function checks that the contents of the sortable list is correct,
+   * taking into account if the lsit is required and the number of elements
+   * in the list.
+   *
+   */
+  function on_change_validation() {
+    var num_children = this.children.length;
+    var is_required = $(this).attr("data-file-required") === "True";
+    var req_count = +$(this).attr("data-file-count");
+
+    // If required count is > 0, then we have to check that the number of files
+    // in each list that is required or optional but populated, have the same
+    // number of files as specified by req_count. Otherwise, we just need to
+    // check that the required lists have at least on file
+    if (req_count > 0) {
+      var count_ok = num_children == req_count;
+      // If the count is correct, then it is always correct. If the count is not
+      // correct, it is correct if and only if it is not required and has no
+      // children
+      if (count_ok || (!is_required && num_children === 0)) {
+        mark_as_correct(this);
+      }
+      else {
+        mark_as_wrong(this);
+      }
+    }
+    else {
+      // There is no required count. In this case, it is correct if the number
+      // of children is greater than 0 or if it is not required
+      if (num_children > 0 || !is_required) {
+        mark_as_correct(this);
+      }
+      else {
+        mark_as_wrong(this);
+      }
+    }
+    allow_submission();
+  }
+
+  /*
+   *
+   * Function to generate the list of files as form values
+   *
+   * This function generates the files lists for each of the filepath types
+   * and adds it as a form value. Note that although they are 2 loops
+   * (each calls) the complexity of this function is O(num_files)
+   *
+   */
+  function build_file_lists() {
+    $(".fileListParam").each( function(i, cont) {
+      var files = [];
+      $("#"+cont.id+"-list").children().each( function(j, c_cont) {
+          files.push(c_cont.id);
+      });
+      $(cont).val(files);
+    });
+  }
+
+  $(document).ready(function () {
+    //make the files draggable
+    $(".connectedSortable").sortable({
+      connectWith: ".connectedSortable"
+    }).disableSelection();
+
+    // Add the event listener to all the lists that can be checked
+    $(".checkable").on( "sortupdate", on_change_validation );
+
+    // When the artifact importer changes, check if we need to show the import
+    // button
+    $("#import-artifact").change(function(event) {
+      if( $("#import-artifact").val() !== "") {
+        $("#artifact-import-btn").show();
+        $("#drag-files-div").hide();
+        $("#submit-div").hide();
+      }
+      else {
+        $("#artifact-import-btn").hide();
+        $("#drag-files-div").show();
+        allow_submission();
+      }
+    });
+
+    $("#artifact-import-btn").hide()
+
+    // Perform the first check to all the lists, given that we may be
+    // prepopulating some of them
+    check_files_lists();
+  });
+</script>
+<style>
+  .connectedSortable {
+    border: 2px solid #ccc;
+    width: 100%;
+    min-height: 20px;
+    list-style-type: none;
+    margin: 0;
+    padding: 5px 0 0 0;
+    float: left;
+    margin-right: 10px;
+  }
+  .connectedSortable li {
+    margin: 0 5px 5px 5px;
+    padding: 5px;
+    font-size: 1em;
+    width: 95%;
+    overflow: hidden;
+    border: 1px solid #ccc;
+  }
+  .highlightCorrect {
+    background: #CCFFBB;
+  }
+  .highlightWrong {
+    background: #FFAEAE;
+  }
+</style>
+<div class="row">
+  <div class="col-md-12">
+    <b>Import files from other studies:</b>
+    <select id="import-artifact" name="import-artifact">
+      <option value="">Choose an artfact to import...</option>
+      {% for a_id, label in artifacts %}
+        <option value="{{a_id}}">{{label}}</option>
+      {% end %}
+    </select>
+    <button id="artifact-import-btn" class="btn btn-default btn-sm" onclick="console.log('clicked')"><span class="glyphicon glyphicon-import"></span> Import</button>
+  </div>
+</div>
+<div id="drag-files-div" class="row">
+  <div class="col-md-12">
+    <b>Or click and drag your uploaded files to the correct file type:</b><br/>
+  </div>
+  <div class="col-md-3" id="files-div">
+    <p style="text-align: center;"><i>Available Files</i></p>
+    <ul id="remaining-list" class="connectedSortable">
+      {% for fp in remaining %}
+        <li id="{{fp}}" style="text-overflow:ellipsis;" title="{{fp}}">{{fp}}</li>
+      {% end %}
+    </ul>
+  </div>
+  {% for ft, req, files in file_types %}
+    <div class="col-md-3" id="{{ft}}-div">
+      <input type="hidden" name="{{ft}}" id="{{ft}}" value="" class="fileListParam">
+      <p style="text-align: center;"><i>{{ ft.replace('_', ' ') }}</i></p>
+      <ul id="{{ft}}-list" data-file-required="{{req}}" data-file-count="{{num_prefixes}}" data-correct="true" class="connectedSortable checkable">
+        {% for fp in files %}
+          <li id="{{fp}}">{{fp}}</li>
+        {% end %}
+      </ul>
+    </div>
+  {% end %}
+</div>

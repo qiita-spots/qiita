@@ -42,6 +42,12 @@
     width:100%;
   }
 
+.graph {
+  width:100%;
+  height:300px;
+  border: 1px solid #ccc;
+}
+
 /* Make the navbar collapse at medium size, not small.
 Fixes really ugly middle ground where menu stacking occurs
 adapted from http://stackoverflow.com/a/23298184 */

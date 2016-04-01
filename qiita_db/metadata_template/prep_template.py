@@ -538,7 +538,8 @@ class PrepTemplate(MetadataTemplate):
                     "Some columns required to generate a QIIME-compliant "
                     "mapping file are not present in the template. A "
                     "placeholder value (XXQIITAXX) has been used to populate "
-                    "these columns. Missing columns: %s" % ', '.join(missing),
+                    "these columns. Missing columns: %s"
+                    % ', '.join(sorted(missing)),
                     qdb.exceptions.QiitaDBWarning)
 
             # Gets the orginal mapping columns and readjust the order to comply

@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from datetime import datetime
 from json import loads
 
 import qiita_db as qdb
@@ -104,15 +103,11 @@ class HeartbeatHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
             if success:
-                job_status = job.status
-                if job_status == 'queued':
-                    job.status = 'running'
-                    job.heartbeat = datetime.now()
-                elif job_status == 'running':
-                    job.heartbeat = datetime.now()
-                else:
+                try:
+                    job.update_heartbeat_state()
+                except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
                     success = False
-                    error_msg = 'Job already finished. Status: %s' % job_status
+                    error_msg = str(e)
 
         response = {'success': success, 'error': error_msg}
         self.write(response)
@@ -175,30 +170,19 @@ class CompleteHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             job, success, error_msg = _get_job(job_id)
             if success:
-                if job.status != 'running':
-                    success = False
-                    error_msg = 'Job in a non-running state.'
+                payload = loads(self.request.body)
+                payload_success = payload['success']
+                if payload_success:
+                    artifacts = payload['artifacts']
+                    error = None
                 else:
-                    payload = loads(self.request.body)
-                    if payload['success']:
-                        for artifact_data in payload['artifacts']:
-                            filepaths = artifact_data['filepaths']
-                            atype = artifact_data['artifact_type']
-                            parents = job.input_artifacts
-                            params = job.parameters
-                            ebi = artifact_data['can_be_submitted_to_ebi']
-                            vamps = artifact_data['can_be_submitted_to_vamps']
-                            qdb.artifact.Artifact.create(
-                                filepaths, atype, parents=parents,
-                                processing_parameters=params,
-                                can_be_submitted_to_ebi=ebi,
-                                can_be_submitted_to_vamps=vamps)
-                        job.status = 'success'
-                    else:
-                        log = qdb.logger.LogEntry.create(
-                            'Runtime', payload['error'])
-                        job.status = 'error'
-                        job.log = log
+                    artifacts = None
+                    error = payload['error']
+                try:
+                    job.complete(payload_success, artifacts, error)
+                except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
+                    success = False
+                    error_msg = str(e)
 
         response = {'success': success, 'error': error_msg}
         self.write(response)
