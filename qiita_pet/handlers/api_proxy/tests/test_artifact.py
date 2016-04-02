@@ -161,7 +161,8 @@ class TestArtifactAPI(TestCase):
                           ' <button onclick="if (confirm(\'Are you sure you '
                           'want to revert to sandbox artifact id: 1?\')) '
                           '{ set_artifact_visibility(\'sandbox\', 1) }" '
-                          'class="btn btn-primary btn-sm">Revert to sandbox</button>',
+                          'class="btn btn-primary btn-sm">Revert to '
+                          'sandbox</button>',
                'files': exp_files,
                'editable': True}
         self.assertEqual(obs, exp)

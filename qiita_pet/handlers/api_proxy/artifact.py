@@ -101,7 +101,8 @@ def artifact_summary_get_request(user_id, artifact_id):
             # The approve artifact button only appears if the user is an admin
             # the artifact is waiting to be approvaed and the qiita config
             # requires artifact approval
-            buttons.append(btn_base % ('approve', 'private', 'Approve artifact'))
+            buttons.append(btn_base % ('approve', 'private',
+                                       'Approve artifact'))
     if visibility == 'private':
         # The make public button only appears if the artifact is private
         buttons.append(btn_base % ('make public', 'public', 'Make public'))
