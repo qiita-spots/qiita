@@ -33,7 +33,7 @@
       });
   }
 
-  function delete_artifact(aid, pid) {
+  function delete_artifact(aid) {
     $.post("/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
         if( data.status == "success"  && curr_prep != -1 ) { fill_prep(curr_prep); }
