@@ -154,12 +154,14 @@ class TestArtifactAPI(TestCase):
                'processing_jobs': exp_p_jobs,
                'errored_jobs': [],
                'visibility': 'private',
-               'buttons': '<button onclick="set_artifact_visibility'
-                          '(\'public\', 1)" class="btn btn-primary btn-sm">'
-                          'Make public</button> <button onclick="'
-                          'set_artifact_visibility(\'sandbox\', 1)" '
-                          'class="btn btn-primary btn-sm">Revert to '
-                          'sandbox</button>',
+               'buttons': '<button onclick="if (confirm(\'Are you sure you '
+                          'want to make public artifact id: 1?\')) { '
+                          'set_artifact_visibility(\'public\', 1) }" '
+                          'class="btn btn-primary btn-sm">Make public</button>'
+                          ' <button onclick="if (confirm(\'Are you sure you '
+                          'want to revert to sandbox artifact id: 1?\')) '
+                          '{ set_artifact_visibility(\'sandbox\', 1) }" '
+                          'class="btn btn-primary btn-sm">Revert to sandbox</button>',
                'files': exp_files,
                'editable': True}
         self.assertEqual(obs, exp)
@@ -179,10 +181,13 @@ class TestArtifactAPI(TestCase):
                'processing_jobs': exp_p_jobs,
                'errored_jobs': [],
                'visibility': 'private',
-               'buttons': '<button onclick="set_artifact_visibility'
-                          '(\'public\', 1)" class="btn btn-primary btn-sm">'
-                          'Make public</button> <button onclick="'
-                          'set_artifact_visibility(\'sandbox\', 1)" '
+               'buttons': '<button onclick="if (confirm(\'Are you sure you '
+                          'want to make public artifact id: 1?\')) { '
+                          'set_artifact_visibility(\'public\', 1) }" '
+                          'class="btn btn-primary btn-sm">Make public</button>'
+                          ' <button onclick="if (confirm(\'Are you sure you '
+                          'want to revert to sandbox artifact id: 1?\')) { '
+                          'set_artifact_visibility(\'sandbox\', 1) }" '
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
                'files': exp_files,
@@ -209,10 +214,13 @@ class TestArtifactAPI(TestCase):
                'processing_jobs': exp_p_jobs,
                'errored_jobs': [],
                'visibility': 'private',
-               'buttons': '<button onclick="set_artifact_visibility'
-                          '(\'public\', 1)" class="btn btn-primary btn-sm">'
-                          'Make public</button> <button onclick="'
-                          'set_artifact_visibility(\'sandbox\', 1)" '
+               'buttons': '<button onclick="if (confirm(\'Are you sure you '
+                          'want to make public artifact id: 1?\')) { '
+                          'set_artifact_visibility(\'public\', 1) }" '
+                          'class="btn btn-primary btn-sm">Make public</button>'
+                          ' <button onclick="if (confirm(\'Are you sure you '
+                          'want to revert to sandbox artifact id: 1?\')) { '
+                          'set_artifact_visibility(\'sandbox\', 1) }" '
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
                'files': exp_files,
