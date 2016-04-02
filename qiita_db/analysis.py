@@ -1011,6 +1011,10 @@ class Analysis(qdb.base.QiitaStatusObject):
                     samps = set(samps) - all_ids
                     all_ids.update(samps)
 
+                # appending the study title
+                qm['qiita_study_title'] = qdb.artifact.Artifact(
+                    aid).study.title
+
                 qm = qm.loc[samps]
                 to_concat.append(qm)
 
