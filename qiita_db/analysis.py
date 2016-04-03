@@ -1011,9 +1011,17 @@ class Analysis(qdb.base.QiitaStatusObject):
                     samps = set(samps) - all_ids
                     all_ids.update(samps)
 
-                # appending the study title
-                qm['qiita_study_title'] = qdb.artifact.Artifact(
-                    aid).study.title
+                # appending study metadata to the analsis
+                study = qdb.artifact.Artifact(aid).study
+                study_owner = study.owner
+                study_info = study.info
+                pi = study_info['principal_investigator']
+                qm['qiita_study_title'] = study.title
+                qm['qiita_study_alias'] = study.info['study_alias']
+                qm['qiita_owner'] = '%s (%s)' % (study_owner.info['name'],
+                                                 study_owner.email)
+                qm['qiita_principal_investigator'] = '%s (%s)' % (
+                    pi.name, pi.email)
 
                 qm = qm.loc[samps]
                 to_concat.append(qm)
