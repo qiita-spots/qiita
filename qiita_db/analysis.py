@@ -1011,7 +1011,7 @@ class Analysis(qdb.base.QiitaStatusObject):
                     samps = set(samps) - all_ids
                     all_ids.update(samps)
 
-                # appending study metadata to the analsis
+                # appending study metadata to the analysis
                 study = qdb.artifact.Artifact(aid).study
                 study_owner = study.owner
                 study_info = study.info
