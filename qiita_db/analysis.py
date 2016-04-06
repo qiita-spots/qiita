@@ -946,9 +946,10 @@ class Analysis(qdb.base.QiitaStatusObject):
                         new_table = new_table.merge(biom_table)
 
                 if not new_table or len(new_table.ids()) == 0:
-                        raise RuntimeError(
-                            "All samples filtered out from Artifact %s due "
-                            "to selected samples" % aid)
+                    # if we get to this point the only reason for failure is
+                    # rarefaction
+                    raise RuntimeError("All samples filtered out from "
+                                       "analysis due to rarefaction level")
 
                 # add the metadata column for study the samples come from,
                 # this is useful in case the user download the bioms
