@@ -1039,7 +1039,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             _, base_fp = qdb.util.get_mountpoint(self._table)[0]
             mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
             merged_map.to_csv(mapping_fp, index_label='#SampleID',
-                              na_rep='unknown', sep='\t')
+                              na_rep='unknown', sep='\t', encoding='utf-8')
 
             self._add_file("%d_analysis_mapping.txt" % self._id, "plain_text")
 
