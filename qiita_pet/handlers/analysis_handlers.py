@@ -32,7 +32,7 @@ from qiita_db.analysis import Analysis
 from qiita_db.artifact import Artifact
 from qiita_db.job import Command
 from qiita_db.user import User
-from qiita_db.util import (get_db_files_base_dir,
+from qiita_db.util import (get_db_files_base_dir, add_message,
                            check_access_to_analysis_result,
                            filepath_ids_to_rel_paths, get_filepath_id)
 from qiita_db.exceptions import QiitaDBUnknownIDError
@@ -367,11 +367,16 @@ class ShareAnalysisAJAX(BaseHandler):
     @execute_as_transaction
     def _share(self, analysis, user, callback):
         user = User(user)
+        add_message('Analysis <a href="/analysis/results/%d">\'%s\'</a> '
+                    'has been shared with you.' %
+                    (analysis.id, analysis.name), [user])
         callback(analysis.share(user))
 
     @execute_as_transaction
     def _unshare(self, analysis, user, callback):
         user = User(user)
+        add_message('Analysis \'%s\' has been unshared from you.' %
+                    analysis.name, [user])
         callback(analysis.unshare(user))
 
     @authenticated

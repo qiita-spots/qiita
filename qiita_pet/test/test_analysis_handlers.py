@@ -81,6 +81,10 @@ class TestShareAnalysisAjax(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
         self.assertEqual(s.shared_with, [])
 
+        # Make sure unshared message added to the system
+        self.assertEqual('Analysis \'SomeAnalysis\' has been unshared from '
+                         'you.', u.messages()[0][1])
+
     def test_get_selected(self):
         s = Analysis(1)
         u = User('admin@foo.bar')
@@ -94,6 +98,11 @@ class TestShareAnalysisAjax(TestHandlerBase):
                  '<a target="_blank" href="mailto:admin@foo.bar">Admin</a>')}
         self.assertEqual(loads(response.body), exp)
         self.assertEqual(s.shared_with, [User('shared@foo.bar'), u])
+
+        # Make sure shared message added to the system
+        self.assertEqual('Analysis <a href="/analysis/results/1">'
+                         '\'SomeAnalysis\'</a> has been shared with you.',
+                         u.messages()[0][1])
 
     def test_get_no_access(self):
         s = Analysis(2)

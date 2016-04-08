@@ -23,7 +23,7 @@ from qiita_db.search import QiitaStudySearch
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.reference import Reference
-from qiita_db.util import get_pubmed_ids_from_dois
+from qiita_db.util import get_pubmed_ids_from_dois, add_message
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -250,11 +250,16 @@ class ShareStudyAJAX(BaseHandler):
     @execute_as_transaction
     def _share(self, study, user, callback):
         user = User(user)
+        add_message('Study \'%s\' has been unshared from you.' %
+                    study.title, [user])
         callback(study.share(user))
 
     @execute_as_transaction
     def _unshare(self, study, user, callback):
         user = User(user)
+        add_message('Study <a href="/study/description/%d">\'%s\'</a> '
+                    'has been shared with you.' %
+                    (study.id, study.title), [user])
         callback(study.unshare(user))
 
     @authenticated
