@@ -201,6 +201,30 @@ class TestStudyApprovalList(TestHandlerBase):
         self.assertIn("test@foo.bar", response.body)
 
 
+class TestAutocompleteHandler(TestHandlerBase):
+    database = False
+
+    base_url = '/study/sharing/autocomplete/?text=%s'
+
+    def test_get(self):
+        response = self.get(self.base_url % 't')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {'results': [{"id": "test@foo.bar",
+                                       "text": "test@foo.bar"}]})
+
+        response = self.get(self.base_url % 'admi')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {'results': [{"id": "admin@foo.bar",
+                                       "text": "admin@foo.bar"}]})
+
+        response = self.get(self.base_url % 'tesq')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {'results': []})
+
+
 class TestShareStudyAjax(TestHandlerBase):
     database = True
 

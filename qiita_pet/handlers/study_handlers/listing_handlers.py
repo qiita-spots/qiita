@@ -14,6 +14,7 @@ from os.path import basename
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 from pyparsing import ParseException
+from moi import r_client
 
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
@@ -252,6 +253,15 @@ class StudyApprovalList(BaseHandler):
 
         self.render('admin_approval.html',
                     study_info=parsed_studies)
+
+
+class AutocompleteHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        text = self.get_argument('text')
+        vals = r_client.execute_command('zrangebylex', 'qiita-usernames',
+                                        u'[%s' % text, u'[%s\xff' % text)
+        self.write({'results': [{'id': s, 'text': s} for s in vals]})
 
 
 class ShareStudyAJAX(BaseHandler):
