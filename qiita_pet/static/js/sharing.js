@@ -14,7 +14,6 @@ $(document).ready(function () {
     },
     minimumInputLength: 1,
     formatResult: function (data, term) {
-      console.log(data);
       return data;
     }
   });
@@ -33,11 +32,11 @@ var shared_list;
 current_id = id;
 $.get('/' + share_type + '/sharing/', {id: id})
     .done(function(data) {
-      users_links = JSON.parse(data);
-      users = users_links.users;
+      var users_links = JSON.parse(data);
+      var users = users_links.users;
       //empty dropdown and repopulate with new study shared values
       $('#shares-select').html('');
-      for(i=0;i<users.length;i++) {
+      for(var i=0;i<users.length;i++) {
         var shared = new Option(users[i], users[i], true, true);
         $("#shares-select").append(shared).trigger('change');
       }
@@ -52,6 +51,6 @@ function update_share(params) {
     .done(function(data) {
       users_links = JSON.parse(data);
       links = users_links['links'];
-      document.getElementById("shared_html_"+current_id).innerHTML = links;
+      $("#shared_html_"+current_study).innerHTML = links;
     });
 }
