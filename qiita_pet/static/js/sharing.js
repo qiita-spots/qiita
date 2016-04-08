@@ -1,5 +1,4 @@
 var current_id = null;
-var share_type = null;
 
 $(document).ready(function () {
   $('#shares-select').select2({
@@ -19,15 +18,15 @@ $(document).ready(function () {
   });
 
   $('#shares-select').on("select2:select", function (e) {
-    update_share({selected: e.params.data.text});
+    update_share(e.target.classList[0], {selected: e.params.data.text});
   });
 
   $('#shares-select').on("select2:unselect", function (e) {
-    update_share({deselected: e.params.data.text});
+    update_share(e.target.classList[0], {deselected: e.params.data.text});
   });
 });
 
-function modify_sharing(id) {
+function modify_sharing(share_type, id) {
 var shared_list;
 current_id = id;
 $.get('/' + share_type + '/sharing/', {id: id})
@@ -44,13 +43,13 @@ $.get('/' + share_type + '/sharing/', {id: id})
     });
 }
 
-function update_share(params) {
+function update_share(share_type, params) {
   data = params || {};
   data.id = current_id;
   $.get('/' + share_type + '/sharing/', data)
     .done(function(data) {
       users_links = JSON.parse(data);
       links = users_links['links'];
-      $("#shared_html_"+current_study).innerHTML = links;
+      $("#shared_html_"+current_id).html(links);
     });
 }
