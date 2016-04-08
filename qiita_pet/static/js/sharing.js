@@ -1,4 +1,5 @@
 var current_id = null;
+var share_type = null;
 
 $(document).ready(function () {
   $('#shares-select').select2({
@@ -27,10 +28,10 @@ $(document).ready(function () {
   });
 });
 
-function modify_sharing(base, id) {
+function modify_sharing(id) {
 var shared_list;
 current_id = id;
-$.get('/' + base + '/sharing/', {id: id})
+$.get('/' + share_type + '/sharing/', {id: id})
     .done(function(data) {
       users_links = JSON.parse(data);
       users = users_links.users;
@@ -47,7 +48,7 @@ $.get('/' + base + '/sharing/', {id: id})
 function update_share(params) {
   data = params || {};
   data.id = current_id;
-  $.get('/study/sharing/', data)
+  $.get('/' + share_type + '/sharing/', data)
     .done(function(data) {
       users_links = JSON.parse(data);
       links = users_links['links'];

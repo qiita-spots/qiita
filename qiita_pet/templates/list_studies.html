@@ -20,6 +20,7 @@ td.details-control {
 <script src="/static/js/sharing.js"></script>
 
 <script type="text/javascript">
+share_type = 'study';
 var ajaxURL = "/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
@@ -113,7 +114,7 @@ $(document).ready(function() {
               {"render": function ( data, type, row, meta ) {
                     var glyph = 'remove';
                     if(data === true) { glyph = 'ok' }
-                    return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing(\"study\", "+ row.study_id +");'>Modify</a>";
+                    return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
               }, targets: [8]},
               ],
             "oLanguage": {

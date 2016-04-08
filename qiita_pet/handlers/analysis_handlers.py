@@ -175,8 +175,8 @@ class AnalysisResultsHandler(BaseHandler):
             data_type = proc_data.data_type
             dropped[data_type].append((proc_data.study.title, len(samples),
                                        ', '.join(samples)))
-        share_access = (self.current_user.id in Analysis.shared_with or
-                        self.current_user.id == Analysis.owner)
+        share_access = (self.current_user.id in analysis.shared_with or
+                        self.current_user.id == analysis.owner)
 
         self.render("analysis_results.html", analysis_id=analysis_id,
                     jobres=jobres, aname=analysis.name, dropped=dropped,
@@ -389,6 +389,6 @@ class ShareAnalysisAJAX(BaseHandler):
         if deselected is not None:
             yield Task(self._unshare, analysis, deselected)
 
-        users, links = yield Task(self._get_shared_for_analysis, analysis)
+        users, links = yield Task(self._get_shared_for_study, analysis)
 
         self.write(dumps({'users': users, 'links': links}))
