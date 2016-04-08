@@ -42,14 +42,13 @@ class TestPrepTemplateHandler(TestHandlerBase):
         self.assertTrue(PrepTemplate.exists(new_prep_id))
 
     def test_patch(self):
-        # TODO: issue #1682
-        # arguments = {'op': 'replace',
-        #              'path': '/1/investigation_type/',
-        #              'value': 'Cancer Genomics'}
-        # response = self.patch('/prep_template/', data=arguments)
-        # self.assertEqual(response.code, 200)
-        # exp = {'status': 'success', 'message': ''}
-        # self.assertEqual(laods(response.body), exp)
+        arguments = {'op': 'replace',
+                     'path': '/1/investigation_type/',
+                     'value': 'Cancer Genomics'}
+        response = self.patch('/prep_template/', data=arguments)
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(loads(response.body), exp)
         pass
 
     def test_delete(self):
