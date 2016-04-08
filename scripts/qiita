@@ -403,10 +403,10 @@ def start(port):
     r_client.delete('qiita-usernames')
     r_client.zadd('qiita-usernames', **{u: 0 for u in qdb.user.User.iter()})
 
-    # if qiita_config.log_path:
-    options.log_file_prefix = qiita_config.log_path
-    options.logging = 'debug'
-    parse_command_line()
+    if qiita_config.log_path:
+        options.log_file_prefix = qiita_config.log_path
+        options.logging = 'debug'
+        parse_command_line()
     ssl_options = {"certfile": qiita_config.certificate_file,
                    "keyfile": qiita_config.key_file}
     http_server = tornado.httpserver.HTTPServer(

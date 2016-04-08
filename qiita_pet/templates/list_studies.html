@@ -1,6 +1,7 @@
 {% extends sitebase.html %}
 {% block head %}
 <link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+<link rel="stylesheet" href="/static/vendor/css/select2.min.css" type="text/css">
 <style>
 .alert {
   position: fixed;
@@ -12,6 +13,7 @@ td.details-control {
   cursor: pointer;
 }
 </style>
+<script src="/static/vendor/js/select2.min.js"></script>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script src="/static/vendor/js/jquery.dataTables.plugin.natural.js"></script>
 <script src="/static/vendor/js/moi.js"></script>
@@ -129,6 +131,7 @@ $(document).ready(function() {
                 }
             }
         });
+
     // Add event listener for opening and closing details
     $('#studies-table tbody').on('click', 'td.details-control', function () {
         var table = $('#studies-table').DataTable();
@@ -147,17 +150,58 @@ $(document).ready(function() {
         }
     } );
 
-    $('#users_list').chosen({width: "100%"});
-    $('#users_list').on('change', function(evt, params) {
-        params['study_id'] = current_study;
-        $.get('/study/sharing/', params)
-            .done(function(data) {
-                users_links = JSON.parse(data);
-                links = users_links['links'];
-                document.getElementById("shared_html_"+current_study).innerHTML = links;
-            }
-        );
+    $('#shares-select').select2({
+      ajax: {
+        url: "/study/sharing/autocomplete/",
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+          return {text: params.term};
+        },
+        cache: true
+      },
+      minimumInputLength: 1,
+      formatResult: function (data, term) {
+        console.log(data);
+        return data;
+      }
     });
+
+    $('#shares-select').on("select2:select", function (e) {
+      $.get('/study/sharing/', {study_id: current_study, selected: e.params.data.text})
+        .done(function(data) {
+          users_links = JSON.parse(data);
+          links = users_links['links'];
+          document.getElementById("shared_html_"+current_study).innerHTML = links;
+        });
+    });
+
+    $('#shares-select').on("select2:unselect", function (e) {
+      $.get('/study/sharing/', {study_id: current_study, deselected: e.params.data.text})
+        .done(function(data) {
+          users_links = JSON.parse(data);
+          links = users_links['links'];
+          document.getElementById("shared_html_"+current_study).innerHTML = links;
+        });
+    });
+
+  function modify_sharing(study_id) {
+    var shared_list;
+    current_study = study_id;
+    $.get('/study/sharing/', {study_id: study_id})
+        .done(function(data) {
+          users_links = JSON.parse(data);
+          users = users_links.users;
+          //empty dropdown and repopulate with new study shared values
+          $('#shares-select').html('');
+          for(i=0;i<users.length;i++) {
+            var shared = new Option(users[i], users[i], true, true);
+            $("#shares-select").append(shared).trigger('change');
+          }
+          $("#shares-select").trigger("change");
+        });
+  }
+
     $("#search-form").submit(function(event)  {
         event.preventDefault();
         $("#submit-button").prop("disabled",true);
@@ -179,20 +223,6 @@ $(document).ready(function() {
         return false;
     });
 } );
-
-function modify_sharing(study_id) {
-    var shared_list;
-    current_study = study_id;
-
-    $.get('/study/sharing/', {study_id: study_id})
-        .done(function(data) {
-            users_links = JSON.parse(data);
-            users = users_links['users'];
-
-            $("#users_list").val(users);
-            $("#users_list").trigger("chosen:updated");
-        });
-}
 
 function add_metacat(metacat) {
   document.getElementById('searchbox').value += (" " + metacat);
@@ -282,16 +312,11 @@ function add_metacat(metacat) {
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h4 class="modal-title" id="myModalLabel">Modify Sharing Settings</h4>
       </div>
-      <form role="form" action="/study/sharing/" method="post">
         <div class="modal-body">
           <div>
             <div class="form-group">
-              <label for="users_list">Add/Remove Users</label>
-              <select multiple class="chosen-select" id="users_list" data-placeholder=" ">
-                {% for email in all_emails_except_current %}
-                <option value="{{ email }}">{{ email }} </option>
-                {% end %}
-              </select>
+              <label for="shares-select">Add/Remove Users</label>
+              <select multiple id="shares-select" style="width:50%"></select>
               <br>
               <br>
               Adding or removing email addresses automatically updates who the study is shared with. Once you click the `X` or give mouse focus to the `Your Studies` page you'll see your new sharing settings.
@@ -300,7 +325,6 @@ function add_metacat(metacat) {
         </div>
         <div class="modal-footer">
         </div>
-      </form>
     </div>
   </div>
 </div>
