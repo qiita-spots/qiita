@@ -684,13 +684,14 @@ class Analysis(qdb.base.QiitaStatusObject):
             The user to share the analysis with
         """
         # Make sure the analysis is not already shared with the given user
-        if user.id in self.shared_with or user.id == self.owner:
+        if user.id == self.owner:
             return
 
-        sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
-                 VALUES (%s, %s)"""
-        qdb.sql_connection.TRN.add(sql, [self._id, user.id])
-        qdb.sql_connection.TRN.execute()
+        with qdb.sql_connection.TRN:
+            sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
+                     VALUES (%s, %s)"""
+            qdb.sql_connection.TRN.add(sql, [self._id, user.id])
+            qdb.sql_connection.TRN.execute()
 
     def unshare(self, user):
         """Unshare the analysis with another user
@@ -700,10 +701,11 @@ class Analysis(qdb.base.QiitaStatusObject):
         user: User object
             The user to unshare the analysis with
         """
-        sql = """DELETE FROM qiita.analysis_users
-                 WHERE analysis_id = %s AND email = %s"""
-        qdb.sql_connection.TRN.add(sql, [self._id, user.id])
-        qdb.sql_connection.TRN.execute()
+        with qdb.sql_connection.TRN:
+            sql = """DELETE FROM qiita.analysis_users
+                     WHERE analysis_id = %s AND email = %s"""
+            qdb.sql_connection.TRN.add(sql, [self._id, user.id])
+            qdb.sql_connection.TRN.execute()
 
     def add_samples(self, samples):
         """Adds samples to the analysis
