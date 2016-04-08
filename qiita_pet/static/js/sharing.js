@@ -49,7 +49,7 @@ function update_share(params) {
   $.get('/study/sharing/', data)
     .done(function(data) {
       users_links = JSON.parse(data);
-      links = users_links['links'];
-      $("#shared_html_"+current_study).innerHTML = links;
+      links = users_links.links;
+      $("#shared_html_"+current_study).html(links);
     });
 }
