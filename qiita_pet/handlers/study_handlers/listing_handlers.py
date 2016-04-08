@@ -28,23 +28,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import (
-    study_person_linkifier, doi_linkifier, pubmed_linkifier, check_access)
-
-
-@execute_as_transaction
-def _get_shared_links_for_study(study):
-    shared = []
-    for person in study.shared_with:
-        name = person.info['name']
-        email = person.email
-        # Name is optional, so default to email if non existant
-        if name:
-            shared.append(study_person_linkifier(
-                (email, name)))
-        else:
-            shared.append(study_person_linkifier(
-                (email, email)))
-    return ", ".join(shared)
+    study_person_linkifier, doi_linkifier, pubmed_linkifier, check_access,
+    get_shared_links)
 
 
 @execute_as_transaction
@@ -83,7 +68,7 @@ def _build_single_study_info(study, info, study_proc, proc_samples):
         info['pmid'] = ""
     if info["number_samples_collected"] is None:
         info["number_samples_collected"] = 0
-    info["shared"] = _get_shared_links_for_study(study)
+    info["shared"] = get_shared_links(study)
     # raw data is any artifact that is not Demultiplexed or BIOM
 
     info["num_raw_data"] = len([a for a in study.artifacts()
@@ -258,7 +243,7 @@ class AutocompleteHandler(BaseHandler):
 class ShareStudyAJAX(BaseHandler):
     @execute_as_transaction
     def _get_shared_for_study(self, study, callback):
-        shared_links = _get_shared_links_for_study(study)
+        shared_links = get_shared_links(study)
         users = [u.email for u in study.shared_with]
         callback((users, shared_links))
 
@@ -276,7 +261,7 @@ class ShareStudyAJAX(BaseHandler):
     @coroutine
     @execute_as_transaction
     def get(self):
-        study_id = int(self.get_argument('study_id'))
+        study_id = int(self.get_argument('id'))
         study = Study(study_id)
         check_access(self.current_user, study, no_public=True,
                      raise_error=True)

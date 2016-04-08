@@ -1,4 +1,4 @@
-var current_study = null;
+var current_id = null;
 
 $(document).ready(function () {
   $('#shares-select').select2({
@@ -27,10 +27,10 @@ $(document).ready(function () {
   });
 });
 
-function modify_sharing(study_id) {
+function modify_sharing(base, id) {
 var shared_list;
-current_study = study_id;
-$.get('/study/sharing/', {study_id: study_id})
+current_id = id;
+$.get('/' + base + '/sharing/', {id: id})
     .done(function(data) {
       users_links = JSON.parse(data);
       users = users_links.users;
@@ -46,11 +46,11 @@ $.get('/study/sharing/', {study_id: study_id})
 
 function update_share(params) {
   data = params || {};
-  data.study_id = current_study;
+  data.id = current_id;
   $.get('/study/sharing/', data)
     .done(function(data) {
       users_links = JSON.parse(data);
       links = users_links['links'];
-      document.getElementById("shared_html_"+current_study).innerHTML = links;
+      document.getElementById("shared_html_"+current_id).innerHTML = links;
     });
 }
