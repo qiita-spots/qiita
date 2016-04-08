@@ -1,6 +1,9 @@
 from unittest import main
+from json import loads
+
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.analysis import Analysis
+from qiita_db.user import User
 from qiita_db.util import get_count
 
 
@@ -62,6 +65,43 @@ class TestShowAnalysesHandler(TestHandlerBase):
         response = self.get('/analysis/show/')
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
+
+
+class TestShareAnalysisAjax(TestHandlerBase):
+    database = True
+
+    def test_get_deselected(self):
+        s = Analysis(1)
+        u = User('shared@foo.bar')
+        args = {'deselected': u.id, 'id': s.id}
+        self.assertEqual(s.shared_with, [u])
+        response = self.get('/analysis/sharing/', args)
+        self.assertEqual(response.code, 200)
+        exp = {'users': [], 'links': ''}
+        self.assertEqual(loads(response.body), exp)
+        self.assertEqual(s.shared_with, [])
+
+    def test_get_selected(self):
+        s = Analysis(1)
+        u = User('admin@foo.bar')
+        args = {'selected': u.id, 'id': s.id}
+        response = self.get('/analysis/sharing/', args)
+        self.assertEqual(response.code, 200)
+        exp = {
+            'users': ['shared@foo.bar', u.id],
+            'links':
+                ('<a target="_blank" href="mailto:shared@foo.bar">Shared</a>, '
+                 '<a target="_blank" href="mailto:admin@foo.bar">Admin</a>')}
+        self.assertEqual(loads(response.body), exp)
+        self.assertEqual(s.shared_with, [User('shared@foo.bar'), u])
+
+    def test_get_no_access(self):
+        s = Analysis(2)
+        u = User('admin@foo.bar')
+        args = {'selected': u.id, 'id': 2}
+        response = self.get('/analysis/sharing/', args)
+        self.assertEqual(response.code, 403)
+        self.assertEqual(s.shared_with, [])
 
 
 if __name__ == "__main__":

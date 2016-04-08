@@ -14,8 +14,7 @@ from moi import r_client
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.study_handlers.listing_handlers import (
-    _get_shared_links_for_study, _build_study_info, _build_single_study_info,
-    _build_single_proc_data_info)
+    _build_study_info, _build_single_study_info, _build_single_proc_data_info)
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.study import Study
 from qiita_db.user import User
@@ -134,11 +133,6 @@ class TestHelpers(TestHandlerBase):
         }
         self.exp = [self.single_exp]
 
-    def test_get_shared_links_for_study(self):
-        obs = _get_shared_links_for_study(Study(1))
-        exp = '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>'
-        self.assertEqual(obs, exp)
-
     def test_build_single_study_info(self):
         study_proc = {1: {'18S': [4, 5, 6]}}
         proc_samples = {4: self.proc_data_exp[0]['samples'],
@@ -236,7 +230,7 @@ class TestShareStudyAjax(TestHandlerBase):
     def test_get_deselected(self):
         s = Study(1)
         u = User('shared@foo.bar')
-        args = {'deselected': u.id, 'study_id': s.id}
+        args = {'deselected': u.id, 'id': s.id}
         self.assertEqual(s.shared_with, [u])
         response = self.get('/study/sharing/', args)
         self.assertEqual(response.code, 200)
@@ -247,7 +241,7 @@ class TestShareStudyAjax(TestHandlerBase):
     def test_get_selected(self):
         s = Study(1)
         u = User('admin@foo.bar')
-        args = {'selected': u.id, 'study_id': s.id}
+        args = {'selected': u.id, 'id': s.id}
         response = self.get('/study/sharing/', args)
         self.assertEqual(response.code, 200)
         exp = {
@@ -274,7 +268,7 @@ class TestShareStudyAjax(TestHandlerBase):
         s = Study.create(u, 'test_study', efo=[1], info=info)
         self.assertEqual(s.shared_with, [])
 
-        args = {'selected': 'test@foo.bar', 'study_id': s.id}
+        args = {'selected': 'test@foo.bar', 'id': s.id}
         response = self.get('/study/sharing/', args)
         self.assertEqual(response.code, 403)
         self.assertEqual(s.shared_with, [])
