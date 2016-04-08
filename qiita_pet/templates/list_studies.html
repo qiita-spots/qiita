@@ -13,10 +13,10 @@ td.details-control {
   cursor: pointer;
 }
 </style>
-<script src="/static/vendor/js/select2.min.js"></script>
 <script src="/static/vendor/js/jquery.dataTables.min.js"></script>
 <script src="/static/vendor/js/jquery.dataTables.plugin.natural.js"></script>
 <script src="/static/vendor/js/moi.js"></script>
+<script src="/static/vendor/js/select2.min.js"></script>
 <script src="/static/js/sharing.js"></script>
 
 <script type="text/javascript">
@@ -273,19 +273,6 @@ function add_metacat(metacat) {
         </div>
         <div class="modal-footer">
         </div>
-    </div>
-  </div>
-</div>
-<!--Available metadata modal-->
-<div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="availmeta">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <div class="modal-header"><h2>Available metadata<h2></div>
-      <div class="modal-body">
-        {% for meta in availmeta %}
-          <a href="#" onclick="add_metacat('{{meta}}')">{{meta}}</a><br />
-        {% end %}
-      </div>
     </div>
   </div>
 </div>

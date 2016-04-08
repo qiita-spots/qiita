@@ -19,21 +19,11 @@ $(document).ready(function () {
   });
 
   $('#shares-select').on("select2:select", function (e) {
-    $.get('/study/sharing/', {study_id: current_study, selected: e.params.data.text})
-      .done(function(data) {
-        users_links = JSON.parse(data);
-        links = users_links['links'];
-        document.getElementById("shared_html_"+current_study).innerHTML = links;
-      });
+    update_share({selected: e.params.data.text});
   });
 
   $('#shares-select').on("select2:unselect", function (e) {
-    $.get('/study/sharing/', {study_id: current_study, deselected: e.params.data.text})
-      .done(function(data) {
-        users_links = JSON.parse(data);
-        links = users_links['links'];
-        document.getElementById("shared_html_"+current_study).innerHTML = links;
-      });
+    update_share({deselected: e.params.data.text});
   });
 });
 
@@ -51,5 +41,16 @@ $.get('/study/sharing/', {study_id: study_id})
         $("#shares-select").append(shared).trigger('change');
       }
       $("#shares-select").trigger("change");
+    });
+}
+
+function update_share(params) {
+  data = params || {};
+  data.study_id = current_study;
+  $.get('/study/sharing/', data)
+    .done(function(data) {
+      users_links = JSON.parse(data);
+      links = users_links['links'];
+      document.getElementById("shared_html_"+current_study).innerHTML = links;
     });
 }
