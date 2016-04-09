@@ -258,7 +258,7 @@ class TestShareStudyAjax(TestHandlerBase):
         self.assertEqual(s.shared_with, [User('shared@foo.bar'), u])
 
         # Make sure shared message added to the system
-        self.assertEqual('Analysis <a href="/study/description/1">'
+        self.assertEqual('Study <a href="/study/description/1">'
                          '\'Identification of the Microbiomes for Cannabis '
                          'Soils\'</a> has been shared with you.',
                          u.messages()[0][1])

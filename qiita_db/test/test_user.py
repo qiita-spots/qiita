@@ -261,7 +261,7 @@ class UserTest(TestCase):
     def test_get_private_analyses(self):
         user = qdb.user.User('test@foo.bar')
         qiita_config.portal = "QIITA"
-        exp = {qdb.analysis.Analysis(1), qdb.analysis.Analysis(2)}
+        exp = {qdb.analysis.Analysis(1)}
         self.assertEqual(user.private_analyses, exp)
 
         qiita_config.portal = "EMP"

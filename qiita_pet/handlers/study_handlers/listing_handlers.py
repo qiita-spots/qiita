@@ -250,16 +250,16 @@ class ShareStudyAJAX(BaseHandler):
     @execute_as_transaction
     def _share(self, study, user, callback):
         user = User(user)
-        add_message('Study \'%s\' has been unshared from you.' %
-                    study.title, [user])
+        add_message('Study <a href="/study/description/%d">\'%s\'</a> '
+                    'has been shared with you.' %
+                    (study.id, study.title), [user])
         callback(study.share(user))
 
     @execute_as_transaction
     def _unshare(self, study, user, callback):
         user = User(user)
-        add_message('Study <a href="/study/description/%d">\'%s\'</a> '
-                    'has been shared with you.' %
-                    (study.id, study.title), [user])
+        add_message('Study \'%s\' has been unshared from you.' %
+                    study.title, [user])
         callback(study.unshare(user))
 
     @authenticated
