@@ -9,6 +9,7 @@ from unittest import main
 from json import loads
 
 from mock import Mock
+from moi import r_client
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_pet.test.tornado_test_base import TestHandlerBase
@@ -199,6 +200,34 @@ class TestStudyApprovalList(TestHandlerBase):
         response = self.get('/admin/approval/')
         self.assertEqual(response.code, 200)
         self.assertIn("test@foo.bar", response.body)
+
+
+class TestAutocompleteHandler(TestHandlerBase):
+    database = False
+
+    base_url = '/study/sharing/autocomplete/?text=%s'
+
+    def test_get(self):
+        # Create the usernames key so we can do autocomplete
+        r_client.zadd('qiita-usernames', **{u: 0 for u in User.iter()})
+        response = self.get(self.base_url % 't')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {'results': [{"id": "test@foo.bar",
+                                       "text": "test@foo.bar"}]})
+
+        response = self.get(self.base_url % 'admi')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {'results': [{"id": "admin@foo.bar",
+                                       "text": "admin@foo.bar"}]})
+
+        response = self.get(self.base_url % 'tesq')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {'results': []})
+
+        r_client.delete('qiita-usernames')
 
 
 class TestShareStudyAjax(TestHandlerBase):

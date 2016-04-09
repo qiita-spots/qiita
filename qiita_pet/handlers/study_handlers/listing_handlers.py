@@ -14,16 +14,16 @@ from os.path import basename
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
 from pyparsing import ParseException
+from moi import r_client
 
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.study import Study, StudyPerson
 from qiita_db.search import QiitaStudySearch
-from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.reference import Reference
-from qiita_db.util import get_table_cols, get_pubmed_ids_from_dois
+from qiita_db.util import get_pubmed_ids_from_dois
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.base_handlers import BaseHandler
@@ -222,15 +222,7 @@ class ListStudiesHandler(BaseHandler):
     @coroutine
     @execute_as_transaction
     def get(self, message="", msg_level=None):
-        all_emails_except_current = yield Task(self._get_all_emails)
-        all_emails_except_current.remove(self.current_user.id)
-        avail_meta = SampleTemplate.metadata_headers() +\
-            get_table_cols("study")
-        self.render('list_studies.html',
-                    availmeta=avail_meta,
-                    all_emails_except_current=all_emails_except_current,
-                    message=message,
-                    msg_level=msg_level)
+        self.render('list_studies.html', message=message, msg_level=msg_level)
 
     def _get_all_emails(self, callback):
         callback(list(User.iter()))
@@ -252,6 +244,15 @@ class StudyApprovalList(BaseHandler):
 
         self.render('admin_approval.html',
                     study_info=parsed_studies)
+
+
+class AutocompleteHandler(BaseHandler):
+    @authenticated
+    def get(self):
+        text = self.get_argument('text')
+        vals = r_client.execute_command('zrangebylex', 'qiita-usernames',
+                                        u'[%s' % text, u'[%s\xff' % text)
+        self.write({'results': [{'id': s, 'text': s} for s in vals]})
 
 
 class ShareStudyAJAX(BaseHandler):
