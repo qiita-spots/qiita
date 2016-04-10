@@ -684,7 +684,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             The user to share the analysis with
         """
         # Make sure the analysis is not already shared with the given user
-        if user.id == self.owner:
+        if user.id == self.owner or user.id in self.shared_with:
             return
 
         with qdb.sql_connection.TRN:

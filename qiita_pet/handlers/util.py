@@ -93,7 +93,7 @@ def to_int(value):
 
 @execute_as_transaction
 def get_shared_links(obj):
-    """Createse HTML links for users obj is shared with
+    """Creates email links for the users obj is shared with
 
     Parameters
     ----------
