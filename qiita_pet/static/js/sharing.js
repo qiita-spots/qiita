@@ -27,9 +27,9 @@ $(document).ready(function () {
 });
 
 function modify_sharing(share_type, id) {
-var shared_list;
-current_id = id;
-$.get('/' + share_type + '/sharing/', {id: id})
+  var shared_list;
+  current_id = id;
+  $.get('/' + share_type + '/sharing/', {id: id})
     .done(function(data) {
       var users_links = JSON.parse(data);
       var users = users_links.users;
