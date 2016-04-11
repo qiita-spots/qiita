@@ -683,13 +683,11 @@ class Analysis(qdb.base.QiitaStatusObject):
         user: User object
             The user to share the analysis with
         """
+        # Make sure the analysis is not already shared with the given user
+        if user.id == self.owner or user.id in self.shared_with:
+            return
+
         with qdb.sql_connection.TRN:
-            self._lock_check()
-
-            # Make sure the analysis is not already shared with the given user
-            if user.id in self.shared_with:
-                return
-
             sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
                      VALUES (%s, %s)"""
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
@@ -704,8 +702,6 @@ class Analysis(qdb.base.QiitaStatusObject):
             The user to unshare the analysis with
         """
         with qdb.sql_connection.TRN:
-            self._lock_check()
-
             sql = """DELETE FROM qiita.analysis_users
                      WHERE analysis_id = %s AND email = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
