@@ -242,9 +242,8 @@
     if(confirm("Are you sure you want to delete prep template " + prep_id + "?")) {
       // Perform the AJAX call to delete
       $.ajax({
-        url: '/prep_template/',
+        url: '/prep_template/?prep-template-id=' + prep_id,
         type: 'DELETE',
-        data: {'prep-template-id': prep_id},
         success: function(data) {
           if(data.status == 'error') {
             bootstrapAlert(data.message, "danger");
@@ -327,7 +326,7 @@
     });
 
     {% if alert_type != 'success' and alert_message != '' %}
-      bootstrapAlert("{% raw alert_message %}", "{{alert_type}}");
+      bootstrapAlert(decodeURIComponent("{% raw alert_message %}").replace(/\+/g,' '), "{{alert_type}}");
     {% else %}
       $('#bootstrap-alert').alert('close');
     {% end %}

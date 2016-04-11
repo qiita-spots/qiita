@@ -95,30 +95,19 @@
     {% block head %}{% end %}
   </head>
 
-  <body style="padding-top: 65px; height: 100%" onload='overlay_check();'>
-  {% set level = globals().get('level', '') %}
-  {% set message = globals().get('message', '') %}
-  {% if maintenance is not None %}
-    {# maintenance mode takes precidence #}
-    {% set level = 'danger' %}
-    {% set message = maintenance %}
-  {% elif sysmessage is not None %}
-    {# since this is a systemwide message, allow regular messages as well #}
-    {% set message = sysmessage + "<br />" + str(message) %}
-  {% end %}
-  {% if message != '' %}
-      {% if level not in {'danger', 'success', 'info', 'warning'} %}
-          {% set level = 'info' %}
-      {% end %}
-      <div class="alert alert-{{ level }} alert-dismissable">
-        <a href="#" class="close" data-dismiss="alert">&times;</a>
-        <p align="center">
-          {% raw message %}
-        </p>
-      </div>
-  {% end %}
+  <body style="padding-top: 0px; height: 100%" onload='overlay_check();'>
+    {% set level = globals().get('level', '') %}
+    {% set message = globals().get('message', '') %}
+    {% if maintenance is not None %}
+      {# maintenance mode takes precidence #}
+      {% set level = 'danger' %}
+      {% set message = maintenance %}
+    {% elif sysmessage is not None %}
+      {# since this is a systemwide message, allow regular messages as well #}
+      {% set message = sysmessage + "<br />" + str(message) %}
+    {% end %}
 
-    <div id="navigation-bar" class="navbar navbar-inverse navbar-fixed-top navbar-custom" role="navigation">
+    <div id="navigation-bar" class="navbar navbar-inverse navbar-static-top navbar-custom" role="navigation">
       <div class="container">
         <div class="navbar-header">
           <!-- button that appears if the window is re-sized to a smaller size -->
@@ -268,6 +257,18 @@
         </div><!--/.navbar-collapse -->
       </div>
     </div> <!--/.main nav-bar -->
+
+    {% if message != '' %}
+        {% if level not in {'danger', 'success', 'info', 'warning'} %}
+            {% set level = 'info' %}
+        {% end %}
+        <div class="alert alert-{{ level }} alert-dismissable">
+          <a href="#" class="close" data-dismiss="alert">&times;</a>
+          <p align="center">
+            {% raw message %}
+          </p>
+        </div>
+    {% end %}
 
     <!-- all templates should override this portion to present their main content -->
     <div id="template-content" class="container" style="width:99%">

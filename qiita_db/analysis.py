@@ -933,9 +933,7 @@ class Analysis(qdb.base.QiitaStatusObject):
                     biom_table.filter(selected_samples, axis='sample',
                                       inplace=True)
                     if len(biom_table.ids()) == 0:
-                        raise RuntimeError(
-                            "All samples filtered out from Artifact %s due "
-                            "to selected samples" % aid)
+                        continue
 
                     if rename_dup_samples:
                         ids_map = {_id: "%d.%s" % (aid, _id)
@@ -946,6 +944,12 @@ class Analysis(qdb.base.QiitaStatusObject):
                         new_table = biom_table
                     else:
                         new_table = new_table.merge(biom_table)
+
+                if not new_table or len(new_table.ids()) == 0:
+                    # if we get to this point the only reason for failure is
+                    # rarefaction
+                    raise RuntimeError("All samples filtered out from "
+                                       "analysis due to rarefaction level")
 
                 # add the metadata column for study the samples come from,
                 # this is useful in case the user download the bioms
@@ -999,6 +1003,16 @@ class Analysis(qdb.base.QiitaStatusObject):
                     samps = set(samps) - all_ids
                     all_ids.update(samps)
 
+                # appending study metadata to the analysis
+                study = qdb.artifact.Artifact(aid).study
+                study_owner = study.owner
+                study_info = study.info
+                pi = study_info['principal_investigator']
+                qm['qiita_study_title'] = study.title
+                qm['qiita_study_alias'] = study.info['study_alias']
+                qm['qiita_owner'] = study_owner.info['name']
+                qm['qiita_principal_investigator'] = pi.name
+
                 qm = qm.loc[samps]
                 to_concat.append(qm)
 
@@ -1017,7 +1031,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             _, base_fp = qdb.util.get_mountpoint(self._table)[0]
             mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
             merged_map.to_csv(mapping_fp, index_label='#SampleID',
-                              na_rep='unknown', sep='\t')
+                              na_rep='unknown', sep='\t', encoding='utf-8')
 
             self._add_file("%d_analysis_mapping.txt" % self._id, "plain_text")
 

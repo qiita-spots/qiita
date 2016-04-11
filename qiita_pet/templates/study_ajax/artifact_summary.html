@@ -91,6 +91,7 @@
       {% if editable %}
         <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit</a>
         <a class="btn btn-default btn-sm" onclick="populate_main_div('/study/process/', {artifact_id: {{artifact_id}} });"><span class="glyphicon glyphicon-play"></span> Process</a>
+        <a class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete artifact {{artifact_id}}?')){ delete_artifact({{artifact_id}}) };"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
     </h4>
   </div>

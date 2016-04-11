@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import authenticated, HTTPError
+from tornado.escape import url_escape
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import get_files_from_uploads_folders
@@ -92,7 +93,8 @@ class SampleTemplateAJAX(BaseHandler):
         stats['files'] = files
         stats['study_id'] = study_id
         stats['data_types'] = data_types
-
+        # URL encode in case message has javascript-breaking characters in it
+        stats['alert_message'] = url_escape(stats['alert_message'])
         self.render('study_ajax/sample_summary.html', **stats)
 
     @authenticated

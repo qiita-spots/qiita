@@ -1,6 +1,9 @@
 {% extends sitebase.html %}
 {% block head %}
+
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.css" type="text/css">
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
+
 <style>
 .alert {
   position: fixed;
@@ -15,9 +18,9 @@ td.details-control {
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.min.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.plugin.natural.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
-
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
 <script type="text/javascript">
-var current_study;
 var ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
@@ -129,6 +132,7 @@ $(document).ready(function() {
                 }
             }
         });
+
     // Add event listener for opening and closing details
     $('#studies-table tbody').on('click', 'td.details-control', function () {
         var table = $('#studies-table').DataTable();
@@ -147,17 +151,6 @@ $(document).ready(function() {
         }
     } );
 
-    $('#users_list').chosen({width: "100%"});
-    $('#users_list').on('change', function(evt, params) {
-        params['study_id'] = current_study;
-        $.get('{% raw qiita_config.portal_dir %}/study/sharing/', params)
-            .done(function(data) {
-                users_links = JSON.parse(data);
-                links = users_links['links'];
-                document.getElementById("shared_html_"+current_study).innerHTML = links;
-            }
-        );
-    });
     $("#search-form").submit(function(event)  {
         event.preventDefault();
         $("#submit-button").prop("disabled",true);
@@ -179,20 +172,6 @@ $(document).ready(function() {
         return false;
     });
 } );
-
-function modify_sharing(study_id) {
-    var shared_list;
-    current_study = study_id;
-
-    $.get('{% raw qiita_config.portal_dir %}/study/sharing/', {study_id: study_id})
-        .done(function(data) {
-            users_links = JSON.parse(data);
-            users = users_links['users'];
-
-            $("#users_list").val(users);
-            $("#users_list").trigger("chosen:updated");
-        });
-}
 
 function add_metacat(metacat) {
   document.getElementById('searchbox').value += (" " + metacat);
@@ -286,34 +265,16 @@ function add_metacat(metacat) {
         <div class="modal-body">
           <div>
             <div class="form-group">
-              <label for="users_list">Add/Remove Users</label>
-              <select multiple class="chosen-select" id="users_list" data-placeholder=" ">
-                {% for email in all_emails_except_current %}
-                <option value="{{ email }}">{{ email }} </option>
-                {% end %}
-              </select>
+              <label for="shares-select">Add/Remove Users</label>
+              <select multiple id="shares-select" style="width:50%"></select>
               <br>
               <br>
-              Adding or removing email addresses automatically updates who the study is shared with. Once you click the `X` or give mouse focus to the `Your Studies` page you'll see your new sharing settings.
+              Adding or removing email addresses automatically updates who the study is shared with.
             </div>
           </div>
         </div>
         <div class="modal-footer">
         </div>
-      </form>
-    </div>
-  </div>
-</div>
-<!--Available metadata modal-->
-<div class="modal fade seaerch-example-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="availmeta">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <div class="modal-header"><h2>Available metadata<h2></div>
-      <div class="modal-body">
-        {% for meta in availmeta %}
-          <a href="#" onclick="add_metacat('{{meta}}')">{{meta}}</a><br />
-        {% end %}
-      </div>
     </div>
   </div>
 </div>

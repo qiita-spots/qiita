@@ -64,8 +64,10 @@ class ArtifactSummaryAJAX(BaseHandler):
     @authenticated
     def get(self):
         artifact_id = self.get_argument('artifact_id')
-        res = artifact_summary_get_request(self.current_user.id, artifact_id)
+        user_id = self.current_user.id
+        res = artifact_summary_get_request(user_id, artifact_id)
         res['artifact_id'] = artifact_id
+        res['user_id'] = user_id
         self.render("study_ajax/artifact_summary.html", **res)
 
     @authenticated

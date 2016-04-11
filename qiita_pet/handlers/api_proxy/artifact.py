@@ -84,7 +84,8 @@ def artifact_summary_get_request(user_id, artifact_id):
 
     buttons = []
     btn_base = (
-        '<button onclick="set_artifact_visibility(\'%s\', {0})" '
+        '<button onclick="if (confirm(\'Are you sure you want to %s '
+        'artifact id: {0}?\')) {{ set_artifact_visibility(\'%s\', {0}) }}" '
         'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
 
     if qiita_config.require_approval:
@@ -93,35 +94,38 @@ def artifact_summary_get_request(user_id, artifact_id):
             # sandboxed and the qiita_config specifies that the approval should
             # be requested
             buttons.append(
-                btn_base % ('awaiting_approval', 'Request approval'))
+                btn_base % ('request approval for', 'awaiting_approval',
+                            'Request approval'))
+
         elif user.level == 'admin' and visibility == 'awaiting_approval':
             # The approve artifact button only appears if the user is an admin
             # the artifact is waiting to be approvaed and the qiita config
             # requires artifact approval
-            buttons.append(btn_base % ('private', 'Approve artifact'))
+            buttons.append(btn_base % ('approve', 'private',
+                                       'Approve artifact'))
     if visibility == 'private':
         # The make public button only appears if the artifact is private
-        buttons.append(btn_base % ('public', 'Make public'))
+        buttons.append(btn_base % ('make public', 'public', 'Make public'))
 
     # The revert to sandbox button only appears if the artifact is not
     # sandboxed nor public
     if visibility not in {'sandbox', 'public'}:
-        buttons.append(btn_base % ('sandbox', 'Revert to sandbox'))
+        buttons.append(btn_base % ('revert to sandbox', 'sandbox',
+                                   'Revert to sandbox'))
 
     if artifact.can_be_submitted_to_ebi:
         if not artifact.is_submitted_to_ebi:
             buttons.append(
                 '<a class="btn btn-primary btn-sm" '
-                'href="/ebi_submission/{{ppd_id}}">'
+                'href="/ebi_submission/%d">'
                 '<span class="glyphicon glyphicon-export"></span>'
-                ' Submit to EBI</a>')
+                ' Submit to EBI</a>' % artifact_id)
     if artifact.can_be_submitted_to_vamps:
         if not artifact.is_submitted_to_vamps:
             buttons.append(
-                '<a class="btn btn-primary btn-sm" href="/vamps/{{ppd_id}}">'
+                '<a class="btn btn-primary btn-sm" href="/vamps/%d">'
                 '<span class="glyphicon glyphicon-export"></span>'
-                ' Submit to VAMPS</a>')
-
+                ' Submit to VAMPS</a>' % artifact_id)
     files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')))
              for f_id, fp, f_type in artifact.filepaths
              if f_type != 'directory']

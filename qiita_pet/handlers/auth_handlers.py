@@ -67,6 +67,7 @@ class AuthVerifyHandler(BaseHandler):
         if User.verify_code(email, code, "create"):
             msg = "Successfully verified user! You are now free to log in."
             color = "black"
+            r_client.zadd('qiita-usernames', email, 0)
         else:
             msg = "Code not valid!"
             color = "red"
