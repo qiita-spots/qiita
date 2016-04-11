@@ -8,7 +8,7 @@
     if( valid == false) {
       return;
     }
-    $.get("/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep-file").val(), study_id: {{study_id}} })
+    $.get("{% raw qiita_config.portal_dir %}/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep-file").val(), study_id: {{study_id}} })
       .done(function( data ) {
         // Add divs for the file type elements
         file_types = data.file_types;
@@ -122,7 +122,7 @@
 </style>
 
 <div class="row"><div class="col-md-12" id="errDiv" style="color:red"></div></div>
-<form action="/study/add_prep/{{study_id}}" method="POST" id="form" onsubmit="build_file_lists()">
+<form action="{% raw qiita_config.portal_dir %}/study/add_prep/{{study_id}}" method="POST" id="form" onsubmit="build_file_lists()">
   <div class="row">
     <div class="col-md-12">
       <h4>Preperation Name</h4>
