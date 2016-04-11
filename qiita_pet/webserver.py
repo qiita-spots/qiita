@@ -20,7 +20,7 @@ from qiita_pet.handlers.user_handlers import (
 from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
     ShowAnalysesHandler, ResultsHandler, SelectedSamplesHandler,
-    AnalysisSummaryAJAX)
+    AnalysisSummaryAJAX, ShareAnalysisAJAX)
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateAJAX,
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
@@ -95,6 +95,7 @@ class Application(tornado.web.Application):
             (r"/analysis/dflt/sumary/", AnalysisSummaryAJAX),
             (r"/analysis/selected/", SelectedSamplesHandler),
             (r"/analysis/selected/socket/", SelectedSocketHandler),
+            (r"/analysis/sharing/", ShareAnalysisAJAX),
             (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),

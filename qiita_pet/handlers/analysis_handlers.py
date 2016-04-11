@@ -17,19 +17,22 @@ from json import dumps
 from functools import partial
 
 from tornado.web import authenticated, HTTPError, StaticFileHandler
+from tornado.gen import coroutine, Task
 from moi import ctx_default, r_client
 from moi.job import submit
 from moi.group import get_id_from_user, create_info
 
 from qiita_pet.util import is_localhost
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.handlers.util import download_link_or_path
+from qiita_pet.handlers.util import (
+    download_link_or_path, get_shared_links)
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
 from qiita_db.analysis import Analysis
 from qiita_db.artifact import Artifact
 from qiita_db.job import Command
-from qiita_db.util import (get_db_files_base_dir,
+from qiita_db.user import User
+from qiita_db.util import (get_db_files_base_dir, add_message,
                            check_access_to_analysis_result,
                            filepath_ids_to_rel_paths, get_filepath_id)
 from qiita_db.exceptions import QiitaDBUnknownIDError
@@ -172,10 +175,13 @@ class AnalysisResultsHandler(BaseHandler):
             data_type = proc_data.data_type
             dropped[data_type].append((proc_data.study.title, len(samples),
                                        ', '.join(samples)))
+        share_access = (self.current_user.id in analysis.shared_with or
+                        self.current_user.id == analysis.owner)
 
         self.render("analysis_results.html", analysis_id=analysis_id,
                     jobres=jobres, aname=analysis.name, dropped=dropped,
-                    basefolder=get_db_files_base_dir())
+                    basefolder=get_db_files_base_dir(),
+                    share_access=share_access)
 
     @authenticated
     @execute_as_transaction
@@ -349,3 +355,49 @@ class AnalysisSummaryAJAX(BaseHandler):
     def get(self):
         info = self.current_user.default_analysis.summary_data()
         self.write(dumps(info))
+
+
+class ShareAnalysisAJAX(BaseHandler):
+    @execute_as_transaction
+    def _get_shared_for_study(self, analysis, callback):
+        shared_links = get_shared_links(analysis)
+        users = [u.email for u in analysis.shared_with]
+        callback((users, shared_links))
+
+    @execute_as_transaction
+    def _share(self, analysis, user, callback):
+        user = User(user)
+        add_message('Analysis <a href="/analysis/results/%d">\'%s\'</a> '
+                    'has been shared with you.' %
+                    (analysis.id, analysis.name), [user])
+        callback(analysis.share(user))
+
+    @execute_as_transaction
+    def _unshare(self, analysis, user, callback):
+        user = User(user)
+        add_message('Analysis \'%s\' has been unshared from you.' %
+                    analysis.name, [user])
+        callback(analysis.unshare(user))
+
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self):
+        analysis_id = int(self.get_argument('id'))
+        analysis = Analysis(analysis_id)
+        if self.current_user != analysis.owner:
+            raise HTTPError(403, 'User %s does not have permissions to share '
+                            'analysis %s' % (
+                                self.current_user.id, analysis.id))
+
+        selected = self.get_argument('selected', None)
+        deselected = self.get_argument('deselected', None)
+
+        if selected is not None:
+            yield Task(self._share, analysis, selected)
+        if deselected is not None:
+            yield Task(self._unshare, analysis, deselected)
+
+        users, links = yield Task(self._get_shared_for_study, analysis)
+
+        self.write(dumps({'users': users, 'links': links}))
