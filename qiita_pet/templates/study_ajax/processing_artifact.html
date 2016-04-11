@@ -1,4 +1,5 @@
 <script type="text/javascript">
+  {% from qiita_core.qiita_settings import qiita_config %}
   var processing_network;
   var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
   var edges = new vis.DataSet();
@@ -16,7 +17,7 @@
     var workflow_id = $("#graph-network-div").attr("data-wf-id");
     if(confirm("Are you sure you want to delete the job " + job_id + "? All jobs depending on this job will also be removed.")) {
       $.ajax({
-        url: '/study/process/workflow/',
+        url: '{% raw qiita_config.portal_dir %}/study/process/workflow/',
         type: 'PATCH',
         data: {'op': 'remove', 'path': '/' + workflow_id + '/' + job_id},
         success: function(data) {
@@ -48,11 +49,11 @@
    */
   function run_workflow() {
     var w_id = $("#graph-network-div").attr("data-wf-id");
-    $.post("/study/process/workflow/run/", {workflow_id: w_id})
+    $.post("{% raw qiita_config.portal_dir %}/study/process/workflow/run/", {workflow_id: w_id})
       .done(function(data) {
         if (data.status == 'success') {
           bootstrapAlert("Workflow " + w_id + " submitted", "success");
-          populate_main_div('/study/description/baseinfo/', { study_id: {{study_id}} });
+          populate_main_div('{% raw qiita_config.portal_dir %}/study/description/baseinfo/', { study_id: {{study_id}} });
         }
         else {
           bootstrapAlert(data.message, "danger");
@@ -78,7 +79,7 @@
     }
     else {
       var j_id = p_nodes[0];
-      $.get('/study/process/job/', {job_id: j_id})
+      $.get('{% raw qiita_config.portal_dir %}/study/process/job/', {job_id: j_id})
         .done(function(data) {
           $("#processing-info-div").empty();
           if (data.status == 'success') {
@@ -200,7 +201,7 @@
     value['connections'] = connections;
     value['req_params'] = r_params;
     $.ajax({
-      url: '/study/process/workflow/',
+      url: '{% raw qiita_config.portal_dir %}/study/process/workflow/',
       type: 'PATCH',
       data: {'op': 'add', 'path': workflow_id, 'value': JSON.stringify(value)},
       success: function(data) {
@@ -232,7 +233,7 @@
    *
    */
   function create_workflow(command_id, params_id, req_params) {
-    $.post('/study/process/workflow/', {dflt_params_id: params_id, req_params: JSON.stringify(req_params) })
+    $.post('{% raw qiita_config.portal_dir %}/study/process/workflow/', {dflt_params_id: params_id, req_params: JSON.stringify(req_params) })
       .done(function(data) {
         if (data.status == 'success') {
           $("#graph-network-div").attr("data-wf-id", data.workflow_id);
@@ -311,7 +312,7 @@
    *
    */
   function load_command_options(cmd_id, sel_artifacts_info) {
-    $.get('/study/process/commands/options/', {command_id: cmd_id})
+    $.get('{% raw qiita_config.portal_dir %}/study/process/commands/options/', {command_id: cmd_id})
       .done(function(data){
           // Put first the required parameters
           for(var key in data.req_options) {
@@ -366,7 +367,7 @@
       }
       sel_artifacts_info[node.id] = {'type': node.type, 'name': node.name}
     }
-    $.get('/study/process/commands/', {artifact_types: types})
+    $.get('{% raw qiita_config.portal_dir %}/study/process/commands/', {artifact_types: types})
       .done(function (data) {
         $("#processing-info-div").empty();
         $("#processing-info-div").html("<i>Choose command: </i>");
