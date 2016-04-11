@@ -49,7 +49,6 @@ class TestPrepTemplateHandler(TestHandlerBase):
         self.assertEqual(response.code, 200)
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(loads(response.body), exp)
-        pass
 
     def test_delete(self):
         # Create a new prep template so we can delete it
