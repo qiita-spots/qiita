@@ -31,7 +31,7 @@
   function populate_files_list(atype) {
     show_loading("files-selector");
     $("#files-selector").show();
-    $.get("/study/files/", {study_id: {{study_id}}, artifact_type: atype, prep_template_id: {{prep_id}}})
+    $.get("{% raw qiita_config.portal_dir %}/study/files/", {study_id: {{study_id}}, artifact_type: atype, prep_template_id: {{prep_id}}})
       .done(function(data) {
           $("#files-selector").html(data);
       });
