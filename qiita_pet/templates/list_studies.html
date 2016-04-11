@@ -114,7 +114,7 @@ $(document).ready(function() {
               {"render": function ( data, type, row, meta ) {
                     var glyph = 'remove';
                     if(data === true) { glyph = 'ok' }
-                    return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing(\"{% raw qiita_config.portal_dir %}/study/sharing/\", "+ row.study_id +");'>Modify</a>";
+                    return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
               }, targets: [8]},
               ],
             "oLanguage": {

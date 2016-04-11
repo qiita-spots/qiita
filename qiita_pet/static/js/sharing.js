@@ -16,7 +16,6 @@ function init_sharing(portal) {
   });
 
   $('#shares-select').on("select2:select", function (e) {
-    console.log(e);
     update_share($('#shares-select').attr('data-share-url'), {selected: e.params.data.text});
   });
 
@@ -25,10 +24,10 @@ function init_sharing(portal) {
   });
 }
 
-function modify_sharing(url, id) {
+function modify_sharing(id) {
   var shared_list;
   $('#shares-select').attr('data-current-id', id);
-  $.get(url, {id: id})
+  $.get($('#shares-select').attr('data-share-url'), {id: id})
     .done(function(data) {
       var users_links = JSON.parse(data);
       var users = users_links.users;
@@ -42,11 +41,11 @@ function modify_sharing(url, id) {
     });
 }
 
-function update_share(url, params) {
+function update_share(params) {
   share_id = $('#shares-select').attr('data-current-id');
   data = params || {};
   data.id = share_id;
-  $.get(url, data)
+  $.get($('#shares-select').attr('data-share-url'), data)
     .done(function(data) {
       users_links = JSON.parse(data);
       links = users_links.links;

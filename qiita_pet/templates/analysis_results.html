@@ -23,7 +23,7 @@ $(document).ready(function () {
         <td><h1>&nbsp;Analysis: <u>{{aname}}</u></h1></td>
         <td width="20px"></td>
         <td>
-          <a class="btn btn-info glyphicon glyphicon-share" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing('{% raw qiita_config.portal_dir %}/analysis/sharing/', {{analysis_id}});"></a>
+          <a class="btn btn-info glyphicon glyphicon-share" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"></a>
         </td>
         <td width="20px"></td>
         <td>
