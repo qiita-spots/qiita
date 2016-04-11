@@ -1,7 +1,7 @@
-$(document).ready(function () {
+function init_sharing(portal) {
   $('#shares-select').select2({
     ajax: {
-      url: "/study/sharing/autocomplete/",
+      url: portal + "/study/sharing/autocomplete/",
       dataType: 'json',
       delay: 250,
       data: function (params) {
@@ -16,18 +16,19 @@ $(document).ready(function () {
   });
 
   $('#shares-select').on("select2:select", function (e) {
-    update_share(e.target.classList[0], {selected: e.params.data.text});
+    console.log(e);
+    update_share($('#shares-select').attr('data-share-url'), {selected: e.params.data.text});
   });
 
   $('#shares-select').on("select2:unselect", function (e) {
-    update_share(e.target.classList[0], {deselected: e.params.data.text});
+    update_share($('#shares-select').attr('data-share-url'), {deselected: e.params.data.text});
   });
-});
+}
 
-function modify_sharing(share_type, id) {
+function modify_sharing(url, id) {
   var shared_list;
   $('#shares-select').attr('data-current-id', id);
-  $.get('/' + share_type + '/sharing/', {id: id})
+  $.get(url, {id: id})
     .done(function(data) {
       var users_links = JSON.parse(data);
       var users = users_links.users;
@@ -41,11 +42,11 @@ function modify_sharing(share_type, id) {
     });
 }
 
-function update_share(share_type, params) {
+function update_share(url, params) {
   share_id = $('#shares-select').attr('data-current-id');
   data = params || {};
   data.id = share_id;
-  $.get('/' + share_type + '/sharing/', data)
+  $.get(url, data)
     .done(function(data) {
       users_links = JSON.parse(data);
       links = users_links.links;
