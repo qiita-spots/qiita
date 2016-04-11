@@ -16,11 +16,11 @@ function init_sharing(portal) {
   });
 
   $('#shares-select').on("select2:select", function (e) {
-    update_share($('#shares-select').attr('data-share-url'), {selected: e.params.data.text});
+    update_share({selected: e.params.data.text});
   });
 
   $('#shares-select').on("select2:unselect", function (e) {
-    update_share($('#shares-select').attr('data-share-url'), {deselected: e.params.data.text});
+    update_share({deselected: e.params.data.text});
   });
 }
 
