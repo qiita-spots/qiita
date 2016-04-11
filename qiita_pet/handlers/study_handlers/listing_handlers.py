@@ -26,6 +26,7 @@ from qiita_db.reference import Reference
 from qiita_db.util import get_pubmed_ids_from_dois, add_message
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import (
     study_person_linkifier, doi_linkifier, pubmed_linkifier, check_access,
@@ -250,9 +251,9 @@ class ShareStudyAJAX(BaseHandler):
     @execute_as_transaction
     def _share(self, study, user, callback):
         user = User(user)
-        add_message('Study <a href="/study/description/%d">\'%s\'</a> '
+        add_message('Study <a href="%s/study/description/%d">\'%s\'</a> '
                     'has been shared with you.' %
-                    (study.id, study.title), [user])
+                    (qiita_config.portal, study.id, study.title), [user])
         callback(study.share(user))
 
     @execute_as_transaction
