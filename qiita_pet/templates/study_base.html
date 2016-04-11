@@ -18,7 +18,7 @@
 
   function fill_artifact(aid) {
     $("#study-main").html("<p><button onclick='process_from(" + aid + ")' class='btn btn-sm'>Process from here</button></p>ARTIFACT " + aid + " HTML STUFF");
-  $.get("/admin/artifact/", {artifact_id: +aid })
+  $.get("{% raw qiita_config.portal_dir %}/admin/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
         $("#study-admin").html(data);
       });
@@ -135,7 +135,7 @@
             bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
             $("#delete-study").modal('hide');
           } else {
-            window.location.replace('/study/list/');
+            window.location.replace('{% raw qiita_config.portal_dir %}/study/list/');
           }
         });
     }
