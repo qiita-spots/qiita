@@ -3,8 +3,7 @@
 <script type="text/javascript" src="/static/js/sharing.js"></script>
 <script type="text/javascript">
 $(document).ready(function () {
-	current_id = {{study_info['study_id']}};
-	update_share('study');
+  update_share('study');
 });
 </script>
 <p style="font-weight:bold;">Abstract</p>
@@ -35,7 +34,7 @@ Samples: {{study_info['num_samples']}}<br />
           <div>
             <div class="form-group">
               <label for="shares-select">Add/Remove Users</label>
-              <select multiple class="study" id="shares-select" style="width:50%"></select>
+              <select multiple class="study" id="shares-select" data-current-id={{study_info['study_id']}} style="width:50%"></select>
               <br>
               <br>
               Adding or removing email addresses automatically updates who the study is shared with.

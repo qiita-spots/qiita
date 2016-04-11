@@ -1,5 +1,3 @@
-var current_id = null;
-
 $(document).ready(function () {
   $('#shares-select').select2({
     ajax: {
@@ -28,7 +26,7 @@ $(document).ready(function () {
 
 function modify_sharing(share_type, id) {
   var shared_list;
-  current_id = id;
+  $('#shares-select').attr('data-current-id', id);
   $.get('/' + share_type + '/sharing/', {id: id})
     .done(function(data) {
       var users_links = JSON.parse(data);
@@ -44,12 +42,13 @@ function modify_sharing(share_type, id) {
 }
 
 function update_share(share_type, params) {
+  share_id = $('#shares-select').attr('data-current-id');
   data = params || {};
-  data.id = current_id;
+  data.id = share_id;
   $.get('/' + share_type + '/sharing/', data)
     .done(function(data) {
       users_links = JSON.parse(data);
       links = users_links.links;
-      $("#shared_html_"+current_id).html(links);
+      $("#shared_html_"+share_id).html(links);
     });
 }
