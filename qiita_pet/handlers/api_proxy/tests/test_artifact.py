@@ -164,7 +164,9 @@ class TestArtifactAPI(TestCase):
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
                'files': exp_files,
-               'editable': True}
+               'editable': True,
+               'prep_id': 1,
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
         # Artifact with summary being generated
@@ -192,7 +194,9 @@ class TestArtifactAPI(TestCase):
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
                'files': exp_files,
-               'editable': True}
+               'editable': True,
+               'prep_id': 1,
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
         # Artifact with summary
@@ -225,7 +229,9 @@ class TestArtifactAPI(TestCase):
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
                'files': exp_files,
-               'editable': True}
+               'editable': True,
+               'prep_id': 1,
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
         # No access
@@ -247,7 +253,9 @@ class TestArtifactAPI(TestCase):
                'visibility': 'public',
                'buttons': '',
                'files': [],
-               'editable': False}
+               'editable': False,
+               'prep_id': 1,
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
     def test_artifact_summary_post_request(self):
@@ -308,20 +316,6 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. Current supported '
                           'operations: replace'}
-        self.assertEqual(obs, exp)
-
-    def test_artifact_delete_req(self):
-        obs = artifact_delete_req(3, 'test@foo.bar')
-        exp = {'status': 'success', 'message': ''}
-        self.assertEqual(obs, exp)
-
-        with self.assertRaises(QiitaDBUnknownIDError):
-            Artifact(3)
-
-    def test_artifact_delete_req_error(self):
-        obs = artifact_delete_req(1, 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': 'Cannot delete artifact 1: it has children: 2, 3'}
         self.assertEqual(obs, exp)
 
     def test_artifact_delete_req_no_access(self):
