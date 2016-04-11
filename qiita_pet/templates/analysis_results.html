@@ -1,27 +1,27 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+{% from future.utils import viewitems %}
 {% extends sitebase.html%}
 
 {%block head%}
-<link rel="stylesheet" href="/static/vendor/css/select2.min.css" type="text/css">
-<script type="text/javascript" src="/static/vendor/js/select2.min.js"></script>
-<script type="text/javascript" src="/static/js/sharing.js"></script>
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
 <script type="text/javascript">
 $(document).ready(function () {
-  update_share('analysis');
+  init_sharing({% raw qiita_config.portal_dir %});
+  update_share("{% raw qiita_config.portal_dir %}/analysis/sharing/");
 });
 </script>
 {%end%}
 
 {%block content%}
-{% from future.utils import viewitems %}
-
-
 <div class="row">
     <table border="0">
       <tr>
         <td><h1>&nbsp;Analysis: <u>{{aname}}</u></h1></td>
         <td width="20px"></td>
         <td>
-          <a class="btn btn-info glyphicon glyphicon-share" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing('analysis', {{analysis_id}});"></a>
+          <a class="btn btn-info glyphicon glyphicon-share" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"></a>
         </td>
         <td width="20px"></td>
         <td>
@@ -105,7 +105,7 @@ $(document).ready(function () {
           <div>
             <div class="form-group">
               <label for="shares-select">Add/Remove Users</label>
-              <select multiple class="analysis" id="shares-select" data-current-id={{analysis_id}} style="width:50%"></select>
+              <select multiple class="analysis" id="shares-select" data-share-url="{% raw qiita_config.portal_dir %}/analysis/sharing/" data-current-id={{analysis_id}} style="width:50%"></select>
               <br>
               <br>
               Adding or removing email addresses automatically updates who the analysis is shared with. Once you click the `X` or give mouse focus to the analysis page you'll see your new sharing settings.
