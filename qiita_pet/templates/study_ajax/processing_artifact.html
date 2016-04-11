@@ -1,5 +1,6 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+
 <script type="text/javascript">
-  {% from qiita_core.qiita_settings import qiita_config %}
   var processing_network;
   var nodes = new vis.DataSet([{id: {{artifact_id}}, label: "{{name}} - ({{type}})", group: "type", name: "{{name}}", type: "{{type}}"}]);
   var edges = new vis.DataSet();
