@@ -1,5 +1,24 @@
 <script type="text/javascript">
   /*
+   * Function to delete an artifact
+   *
+   * @param aid The artifact to be removed
+   *
+   * This function executes an AJAX query to delete an artifact from the system
+   */
+  function delete_artifact(aid) {
+    $.post("/artifact/", {artifact_id: +aid })
+      .done(function ( data ) {
+        if( data.status == "success") {
+          populate_main_div('/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+        }
+        if( data.status == "error") {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
+        }
+      });
+  }
+
+  /*
    * Function to generate the artifact HTML summary
    *
    * @param artifact_id int the artifact id

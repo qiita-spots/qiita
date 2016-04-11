@@ -33,14 +33,6 @@
       });
   }
 
-  function delete_artifact(aid) {
-    $.post("/artifact/", {artifact_id: +aid })
-      .done(function ( data ) {
-        if( data.status == "success"  && curr_prep != -1 ) { fill_prep(curr_prep); }
-        if( data.status == "error") { bootstrapAlert(data.message.replace("\n", "<br/>"), "danger"); }
-      });
-  }
-
   function fill_prep(pid) {
     $("#study-main").empty();
     $("#study-admin").empty();
