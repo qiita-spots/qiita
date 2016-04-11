@@ -306,6 +306,8 @@ class ProcessingJob(qdb.base.QiitaObject):
         software = self.command.software
         plugin_start_script = software.start_script
         plugin_env_script = software.environment_script
+        # Appending the portal URL so the job requests the information from the
+        # portal server that submitted the job
         url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
         cmd = '%s "%s" "%s" "%s" "%s" "%s"' % (
             qiita_config.plugin_launcher, plugin_env_script,
