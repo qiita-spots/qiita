@@ -1,10 +1,11 @@
 {% from qiita_core.qiita_settings import qiita_config %}
+{% from future.utils import viewitems %}
 {% extends sitebase.html%}
 
 {%block head%}
-<link rel="stylesheet" href="/static/vendor/css/select2.min.css" type="text/css">
-<script type="text/javascript" src="/static/vendor/js/select2.min.js"></script>
-<script type="text/javascript" src="/static/js/sharing.js"></script>
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
 <script type="text/javascript">
 $(document).ready(function () {
   init_sharing({% raw qiita_config.portal_dir %});
@@ -14,9 +15,6 @@ $(document).ready(function () {
 {%end%}
 
 {%block content%}
-{% from future.utils import viewitems %}
-
-
 <div class="row">
     <table border="0">
       <tr>
