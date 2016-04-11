@@ -1,4 +1,5 @@
-<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+{% from qiita_core.qiita_settings import qiita_config %}
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.validate.min.js"></script>
 <script type="text/javascript>">
 $(document).ready(function () {
   // Hide the user and new ontology divs
@@ -48,7 +49,7 @@ $(document).ready(function () {
             bootstrapAlert(data.message, "warning");
           }
           populate_data_type_menu_div();
-          populate_main_div('/study/description/prep_template/', { prep_id: data.id, study_id: {{study_id}} });
+          populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: data.id, study_id: {{study_id}} });
         }
       }
     });

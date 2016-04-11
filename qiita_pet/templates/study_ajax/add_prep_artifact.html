@@ -1,5 +1,5 @@
-
-<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+{% from qiita_core.qiita_settings import qiita_config %}
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.validate.min.js"></script>
 <script type="text/javascript>">
   var file_types = [];
   function get_files() {
@@ -91,7 +91,7 @@
       success: function( data ){
         if(data.status == 'warning') { bootstrapAlert(data.message, "warning"); }
         else if( data.status == 'error') { bootstrapAlert(data.message, "danger"); }
-        else {window.location.href('/study/description/{{study_id}}')}
+        else {window.location.href('{% raw qiita_config.portal_dir %}/study/description/{{study_id}}')}
       }
     });
     return false;
