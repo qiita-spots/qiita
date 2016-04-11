@@ -58,7 +58,7 @@ function fillAbstract(table, row) {
 }
 
 $(document).ready(function() {
-        init_sharing({% raw qiita_config.portal_dir %});
+        init_sharing("{% raw qiita_config.portal_dir %}");
         $("#search-waiting").hide();
         moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
         moi.add_callback('sel', show_alert);
