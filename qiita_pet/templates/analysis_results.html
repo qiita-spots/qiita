@@ -15,6 +15,8 @@ $(document).ready(function () {
 {%end%}
 
 {%block content%}
+{# LEAVE THIS IMPORT HERE OTHERWISE IT BREAKS #}
+{% from future.utils import viewitems %}
 <div class="row">
     <table border="0">
       <tr>

@@ -374,7 +374,8 @@ class ShareAnalysisAJAX(BaseHandler):
         user = User(user)
         add_message('Analysis <a href="%s/analysis/results/%d">\'%s\'</a> '
                     'has been shared with you.' %
-                    (qiita_config.portal, analysis.id, analysis.name), [user])
+                    (qiita_config.portal_dir, analysis.id, analysis.name),
+                    [user])
         callback(analysis.share(user))
 
     @execute_as_transaction

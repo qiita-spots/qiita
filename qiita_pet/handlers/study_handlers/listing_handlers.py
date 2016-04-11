@@ -253,7 +253,7 @@ class ShareStudyAJAX(BaseHandler):
         user = User(user)
         add_message('Study <a href="%s/study/description/%d">\'%s\'</a> '
                     'has been shared with you.' %
-                    (qiita_config.portal, study.id, study.title), [user])
+                    (qiita_config.portal_dir, study.id, study.title), [user])
         callback(study.share(user))
 
     @execute_as_transaction
