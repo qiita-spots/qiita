@@ -1,3 +1,4 @@
+{% from qiita_core.qiita_settings import qiita_config %}
 {% from future.utils import viewitems %}
 
 <script type="text/javascript">
@@ -8,7 +9,7 @@
   }
 
   function sample_action(act) {
-    $.post('/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#file-selector").val(), data_type: $("#data_types").val() })
+    $.post('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#file-selector").val(), data_type: $("#data_types").val() })
       .done(function ( data ) {
         var msg_type = "info";
         if(data.status == "error") {
@@ -23,7 +24,7 @@
 
         if (data.status != 'error') {
           //reload section of the page with new info
-          populate_main_div('/study/description/sample_template/', { study_id: {{study_id}} });
+          populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_id}} });
           populate_data_type_menu_div();
           if (act == 'delete') {
             $("#sample-summary-btn").hide();
@@ -63,7 +64,7 @@
     <h4>
       Sample Information
       {% if download_id %}
-        <a class="btn btn-default" href="/download/{{download_id}}"><span class="glyphicon glyphicon-download-alt"></span> Sample info</a>
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_id}}"><span class="glyphicon glyphicon-download-alt"></span> Sample info</a>
         {% if editable %}
           <a class="btn btn-danger" onclick="delete_sample_template();"><span class="glyphicon glyphicon-trash"></span> Delete</a>
         {% end %}
