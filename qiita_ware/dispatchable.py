@@ -44,6 +44,32 @@ def copy_raw_data(prep_template, artifact_id):
     Artifact.copy(Artifact(artifact_id), prep_template)
 
 
+def delete_artifact(artifact_id):
+    """Deletes an artifact from the system
+
+    Parameters
+    ----------
+    artifact_id : int
+        The artifact to delete
+
+    Returns
+    -------
+    dict of {str: str}
+        A dict of the form {'status': str, 'message': str}
+    """
+    from qiita_db.artifact import Artifact
+
+    status = 'success'
+    msg = ''
+    try:
+        Artifact.delete(artifact_id)
+    except Exception as e:
+        status = 'danger'
+        msg = str(e)
+
+    return {'status': status, 'message': msg}
+
+
 def create_sample_template(fp, study, is_mapping_file, data_type=None):
     """Creates a sample template
 
