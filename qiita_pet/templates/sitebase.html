@@ -149,10 +149,12 @@
             <li class="dropdown">
               <a href="#" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
               <ul class="dropdown-menu">
+                {% if qiita_config.portal == "QIITA" %}
                 <li><a href="{% raw qiita_config.portal_dir %}/admin/error/">View Errors</a></li>
                 <li><a href="{% raw qiita_config.portal_dir %}/admin/approval/">View Studies awaiting approval</a></li>
-                {% if qiita_config.portal == "QIITA" %}
                 <li><a href="{% raw qiita_config.portal_dir %}/admin/portals/studies/">Edit study portal connections</a></li>
+                {% else %}
+                <li><a href="/">Admin tasks can only be done in the main Qiita portal</a></li>
                 {% end %}
               </ul>
             </li>
