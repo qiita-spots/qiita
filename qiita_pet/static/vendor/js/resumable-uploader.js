@@ -12,7 +12,7 @@
 
 (function(window, document, $, undefined)
  {
-   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id, valid_extensions) {
+   window.ResumableUploader = function(savedData, browseTarget, dropTarget, progressContainer, uploaderList, fileEditContainer, maxFileSize, study_id, valid_extensions, target_prefix) {
      var $this = this;
      // Bootstrap parameters and clear HTML
      this.originalDocumentTitle = document.title;
@@ -36,7 +36,7 @@
      this.fileEditContainer.show();
 
      // Defaults
-     this.fallbackUrl = '/upload/flash';
+     this.fallbackUrl = target_prefix + '/upload/flash';
      // Properties
      this.resumable = null;
      this.progress = 0;
@@ -51,7 +51,7 @@
            chunkSize:3*1024*1024,
            maxFileSize:this.maxFileSize*1024*1024*1024,
            simultaneousUploads: 1,
-           target:'/upload/',
+           target:target_prefix + '/upload/',
            query:{study_id:this.study_id},
            prioritizeFirstAndLastChunk:false,
            throttleProgressCallbacks:1
@@ -76,7 +76,7 @@
 
            // Apply a thumbnail
            if(file.chunks.length>0 && file.chunks[0].status()=='success' && file.chunks[file.chunks.length-1].status()=='success'){
-             $this.setFileThumbnail(file.uniqueIdentifier, '/api/photo/frame?time=10&study_id='+encodeURIComponent(this.study_id)+'&resumableIdentifier='+encodeURIComponent(file.uniqueIdentifier));
+             $this.setFileThumbnail(file.uniqueIdentifier, target_prefix + '/api/photo/frame?time=10&study_id='+encodeURIComponent(this.study_id)+'&resumableIdentifier='+encodeURIComponent(file.uniqueIdentifier));
            }
          });
        this.resumable.on('complete', function(file){});

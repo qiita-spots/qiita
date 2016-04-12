@@ -74,7 +74,8 @@ class TestStudyAPI(TestCase):
                 'num_samples': 27,
                 'study_title': 'Identification of the Microbiomes for '
                                'Cannabis Soils',
-                'number_samples_collected': 27},
+                'number_samples_collected': 27,
+                'owner': 'test@foo.bar'},
             'editable': True}
 
         self.assertEqual(obs, exp)

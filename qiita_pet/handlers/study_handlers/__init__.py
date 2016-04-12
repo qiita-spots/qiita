@@ -7,7 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from .listing_handlers import (ListStudiesHandler, StudyApprovalList,
-                               ShareStudyAJAX, SearchStudiesAJAX)
+                               ShareStudyAJAX, SearchStudiesAJAX,
+                               AutocompleteHandler)
 from .edit_handlers import StudyEditHandler, CreateStudyAJAX
 from .description_handlers import PreprocessingSummaryHandler
 from .ebi_handlers import EBISubmitHandler
@@ -35,4 +36,4 @@ __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'StudyDeleteAjax', 'ArtifactAJAX', 'NewPrepTemplateAjax',
            'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX',
            'ArtifactSummaryAJAX', 'WorkflowHandler', 'WorkflowRunHandler',
-           'JobAJAX']
+           'JobAJAX', 'AutocompleteHandler']

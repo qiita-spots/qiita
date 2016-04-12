@@ -1,7 +1,7 @@
 {% extends sitebase.html %}
 {% block head %}
-<link rel="stylesheet" src="/static/vendor/css/vis.css" type="text/css">
-<script type="text/javascript" src="/static/vendor/js/vis.js"></script>
+<link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.css" type="text/css">
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.js"></script>
 <script type="text/javascript">
   var network = null;
   // Track what prep template is currently being shown.
@@ -18,14 +18,14 @@
 
   function fill_artifact(aid) {
     $("#study-main").html("<p><button onclick='process_from(" + aid + ")' class='btn btn-sm'>Process from here</button></p>ARTIFACT " + aid + " HTML STUFF");
-  $.get("/admin/artifact/", {artifact_id: +aid })
+  $.get("{% raw qiita_config.portal_dir %}/admin/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
         $("#study-admin").html(data);
       });
   }
 
   function process_from(aid) {
-    $.get("/study/process/", { artifact_id: aid })
+    $.get("{% raw qiita_config.portal_dir %}/study/process/", { artifact_id: aid })
       .done(function ( data ){
         $("#study-prep-graph-row").hide();
         $("#graph-toggle-link").text("Show files");
@@ -34,7 +34,7 @@
   }
 
   function delete_artifact(aid) {
-    $.post("/artifact/", {artifact_id: +aid })
+    $.post("{% raw qiita_config.portal_dir %}/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
         if( data.status == "success"  && curr_prep != -1 ) { fill_prep(curr_prep); }
         if( data.status == "error") { bootstrapAlert(data.message.replace("\n", "<br/>"), "danger"); }
@@ -44,7 +44,7 @@
   function fill_prep(pid) {
     $("#study-main").empty();
     $("#study-admin").empty();
-    $.get( "/prep/graph/", { prep_id: pid} )
+    $.get( "{% raw qiita_config.portal_dir %}/prep/graph/", { prep_id: pid} )
       .done(function( data ) {
         curr_prep = pid;
         var edges = [];
@@ -67,7 +67,7 @@
         // Copy existing formatted prep info to header position
         $("#study-prep-subheader").html("<h2>" + $("#prep-header-" + pid).html() + '</h2><a href="#" onclick="togglegraphs(); return false;" id="graph-toggle-link">Hide files</a>');
     });
-    $.get( "/study/description/prep_template/", { prep_id: pid, study_id: {{study_info['study_id']}} } )
+    $.get( "{% raw qiita_config.portal_dir %}/study/description/prep_template/", { prep_id: pid, study_id: {{study_info['study_id']}} } )
       .done(function( data ) {
         $("#study-main").html(data);
     });
@@ -102,7 +102,7 @@
   }
 
   function fill_sample(sid) {
-    $.get( "/study/description/sample_template/", { study_id: sid } )
+    $.get( "{% raw qiita_config.portal_dir %}/study/description/sample_template/", { study_id: sid } )
       .done(function( data ) {
         curr_prep = -1;
         $("#study-main").html(data);
@@ -129,13 +129,13 @@
       return false;
     }
     else if(confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
-      $.post('/study/delete/', { study_id: {{study_info['study_id']}} })
+      $.post('{% raw qiita_config.portal_dir %}/study/delete/', { study_id: {{study_info['study_id']}} })
         .done(function ( data ) {
           if(data.status == "error") {
             bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
             $("#delete-study").modal('hide');
           } else {
-            window.location.replace('/study/list/');
+            window.location.replace('{% raw qiita_config.portal_dir %}/study/list/');
           }
         });
     }
@@ -171,7 +171,7 @@
    */
   function populate_data_type_menu_div() {
     show_loading("data-types-menu");
-    $.get("/study/description/data_type_menu/", {study_id: {{study_info['study_id']}} })
+    $.get("{% raw qiita_config.portal_dir %}/study/description/data_type_menu/", {study_id: {{study_info['study_id']}} })
       .done(function(data) {
         $("#data-types-menu").html(data);
       });
@@ -188,14 +188,14 @@
    *
    */
   function show_loading(div_name) {
-      $("#" + div_name).html("<img src='/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
+      $("#" + div_name).html("<img src='{% raw qiita_config.portal_dir %}/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
   }
 
   $(document).ready(function() {
     // Populate the different sections of the page
     populate_data_type_menu_div();
     // The initial page to be shown is the base information of the study
-    populate_main_div("/study/description/baseinfo/", { study_id: {{study_info['study_id']}}});
+    populate_main_div("{% raw qiita_config.portal_dir %}/study/description/baseinfo/", { study_id: {{study_info['study_id']}}});
 
     {% if study_info['num_samples'] > 0 %}
       $("#sample-summary-btn").show();
@@ -217,12 +217,12 @@
 {% block content %}
 <div class="row">
   <div class="col-md-3">
-    <button class="btn btn-default btn-block" onclick="populate_main_div('/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Study Information</button>
-    <button class="btn btn-default btn-block" onclick="populate_main_div('/study/description/sample_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Sample Template</button>
-    <button class="btn btn-default btn-block" onclick="populate_main_div('/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })" id="sample-summary-btn"><span class="glyphicon glyphicon-th-list"></span> Sample Summary</button>
+    <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/baseinfo/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Study Information</button>
+    <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_info['study_id']}} })"><span class="glyphicon glyphicon-info-sign"></span> Sample Template</button>
+    <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_summary/', { study_id: {{study_info['study_id']}} })" id="sample-summary-btn"><span class="glyphicon glyphicon-th-list"></span> Sample Summary</button>
     {% if editable %}
-      <a class="btn btn-default btn-block" href="/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
-      <button class="btn btn-default btn-block" onclick="populate_main_div('/study/new_prep_template/', { study_id: {{study_info['study_id']}} })" id="add-new-preparation-btn"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
+      <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
+      <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/new_prep_template/', { study_id: {{study_info['study_id']}} })" id="add-new-preparation-btn"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
     {% end %}
 
     <div id="data-types-menu"></div>

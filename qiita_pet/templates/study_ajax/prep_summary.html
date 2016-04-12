@@ -1,3 +1,4 @@
+{% from qiita_core.qiita_settings import qiita_config %}
 <script type="text/javascript">
   var network;
 
@@ -53,7 +54,7 @@
   function update_prep_information() {
     var fp = $("#file-selector").val();
     $.ajax({
-      url: '/prep_template/',
+      url: '{% raw qiita_config.portal_dir %}/prep_template/',
       type: 'PATCH',
       data: {'op': 'replace', 'path': '/{{prep_id}}/data', 'value': fp},
       success: function(data) {
@@ -61,7 +62,7 @@
           bootstrapAlert(data.message, "danger");
         }
         else {
-          populate_main_div('/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+          populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
         }
       }
     });
@@ -83,7 +84,7 @@
     }
     else {
       $.ajax({
-        url: '/ontology/',
+        url: '{% raw qiita_config.portal_dir %}/ontology/',
         type: 'PATCH',
         data: {'op': 'add', 'path': '/ENA/', 'value': new_val},
         success: function(data) {
@@ -122,7 +123,7 @@
     $("#user-ena-info option[value='']").remove();
 
     $.ajax({
-      url: '/prep_template/',
+      url: '{% raw qiita_config.portal_dir %}/prep_template/',
       type: 'PATCH',
       data: {'op': 'replace', 'path': '/{{prep_id}}/investigation_type', 'value': value},
       success: function(data) {
@@ -159,7 +160,7 @@
    */
   function load_template_graph() {
     show_loading("graph-or-new-artifact-div");
-    $.get("/prep/graph/", {"prep_id": {{prep_id}} })
+    $.get("{% raw qiita_config.portal_dir %}/prep/graph/", {"prep_id": {{prep_id}} })
       .done(function(data) {
         var edges = [];
         var nodes = [];
@@ -192,7 +193,7 @@
    */
   function load_new_artifact() {
     show_loading("graph-or-new-artifact-div");
-    $.get("/study/new_artifact/", {"study_id": {{study_id}}, "prep_template_id": {{prep_id}} })
+    $.get("{% raw qiita_config.portal_dir %}/study/new_artifact/", {"study_id": {{study_id}}, "prep_template_id": {{prep_id}} })
       .done(function(data) {
         $("#graph-or-new-artifact-div").html(data);
       });
@@ -207,7 +208,7 @@
    */
   function load_information_summary() {
     show_loading("prep-artifact-summary-div");
-    $.get('/study/description/prep_summary/', {'prep_id': {{prep_id}} })
+    $.get('{% raw qiita_config.portal_dir %}/study/description/prep_summary/', {'prep_id': {{prep_id}} })
       .done(function ( data ) {
         $("#prep-artifact-summary-div").html(data);
       });
@@ -223,7 +224,7 @@
    */
   function load_artifact_summary(artifact_id) {
     show_loading("prep-artifact-summary-div");
-    $.get('/study/description/artifact_summary/', {'artifact_id': artifact_id})
+    $.get('{% raw qiita_config.portal_dir %}/study/description/artifact_summary/', {'artifact_id': artifact_id})
       .done(function ( data ) {
         $("#prep-artifact-summary-div").html(data);
       });
@@ -242,7 +243,7 @@
     if(confirm("Are you sure you want to delete prep template " + prep_id + "?")) {
       // Perform the AJAX call to delete
       $.ajax({
-        url: '/prep_template/?prep-template-id=' + prep_id,
+        url: '{% raw qiita_config.portal_dir %}/prep_template/?prep-template-id=' + prep_id,
         type: 'DELETE',
         success: function(data) {
           if(data.status == 'error') {
@@ -251,7 +252,7 @@
           else {
             // If success, populate the main div with the study info
             // and regenerate the data type menu div (there is one prep less)
-            populate_main_div("/study/description/baseinfo/", { study_id: {{study_id}} });
+            populate_main_div("{% raw qiita_config.portal_dir %}/study/description/baseinfo/", { study_id: {{study_id}} });
             populate_data_type_menu_div();
           }
         }
@@ -326,7 +327,7 @@
     });
 
     {% if alert_type != 'success' and alert_message != '' %}
-      bootstrapAlert("{% raw alert_message %}", "{{alert_type}}");
+      bootstrapAlert(decodeURIComponent("{% raw alert_message %}").replace(/\+/g,' '), "{{alert_type}}");
     {% else %}
       $('#bootstrap-alert').alert('close');
     {% end %}
@@ -338,8 +339,8 @@
   <div class="col-md-12">
     <h4>
       {{name}} - ID {{prep_id}} ({{data_type}})
-      <a class="btn btn-default" href="/download/{{download_prep}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
-      <a class="btn btn-default" href="/download/{{download_qiime}}"><span class="glyphicon glyphicon-download-alt"></span> Qiime map</a>
+      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_prep}}"><span class="glyphicon glyphicon-download-alt"></span> Prep info</a>
+      <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_qiime}}"><span class="glyphicon glyphicon-download-alt"></span> QIIME map</a>
       {% if editable %}
         <a class="btn btn-danger" onclick="delete_prep_info({{prep_id}});"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}

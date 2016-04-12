@@ -20,7 +20,7 @@ from qiita_pet.handlers.user_handlers import (
 from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
     ShowAnalysesHandler, ResultsHandler, SelectedSamplesHandler,
-    AnalysisSummaryAJAX)
+    AnalysisSummaryAJAX, ShareAnalysisAJAX)
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateAJAX,
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
@@ -31,7 +31,7 @@ from qiita_pet.handlers.study_handlers import (
     StudyDeleteAjax, ArtifactAdminAJAX, ArtifactAJAX,
     NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
     PrepTemplateSummaryAJAX, ArtifactSummaryAJAX,
-    WorkflowHandler, WorkflowRunHandler, JobAJAX)
+    WorkflowHandler, WorkflowRunHandler, JobAJAX, AutocompleteHandler)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
@@ -95,6 +95,7 @@ class Application(tornado.web.Application):
             (r"/analysis/dflt/sumary/", AnalysisSummaryAJAX),
             (r"/analysis/selected/", SelectedSamplesHandler),
             (r"/analysis/selected/socket/", SelectedSocketHandler),
+            (r"/analysis/sharing/", ShareAnalysisAJAX),
             (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),
@@ -120,6 +121,7 @@ class Application(tornado.web.Application):
             (r"/study/preprocess", PreprocessHandler),
             (r"/study/process", ProcessHandler),
             (r"/study/sharing/", ShareStudyAJAX),
+            (r"/study/sharing/autocomplete/", AutocompleteHandler),
             (r"/study/new_prep_template/", NewPrepTemplateAjax),
             (r"/prep/graph/", PrepTemplateGraphAJAX),
             (r"/artifact/", ArtifactAJAX),
@@ -173,7 +175,7 @@ class Application(tornado.web.Application):
             "template_path": TEMPLATE_PATH,
             "debug": DEBUG,
             "cookie_secret": COOKIE_SECRET,
-            "login_url": "/auth/login/",
+            "login_url": "%s/auth/login/" % qiita_config.portal_dir,
             "ui_modules": uimodules,
         }
         tornado.web.Application.__init__(self, handlers, **settings)

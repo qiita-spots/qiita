@@ -1,7 +1,7 @@
 {% extends sitebase.html%}
 
 {%block head%}
-<link rel="stylesheet" href="/static/vendor/css/jquery.dataTables.css" type="text/css">
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.css" type="text/css">
 <style type="text/css">
   .navlist li
   {
@@ -19,7 +19,7 @@
     white-space: nowrap;
   }
 </style>
-<script src="/static/vendor/js/jquery.dataTables.min.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript">
 function check_submit(action) {
   //disable submit buttons
@@ -57,7 +57,7 @@ function check_submit(action) {
       bootstrapAlert(data, "danger", 2200);
     }
     else {
-      $('#info-table').DataTable().ajax.url("/admin/portals/studiesAJAX/" + echo).load();
+      $('#info-table').DataTable().ajax.url("{% raw qiita_config.portal_dir %}/admin/portals/studiesAJAX/" + echo).load();
       bootstrapAlert(data, "success", 2200);
     }
     $("#portal").val('');
@@ -99,7 +99,7 @@ $(document).ready(function() {
       { 'mRender': render_checkbox, 'mData': 2, 'aTargets': [ 0 ] }
     ],
     "ajax": {
-      "url": "/admin/portals/studiesAJAX/?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=QIITA",
+      "url": "{% raw qiita_config.portal_dir %}/admin/portals/studiesAJAX/?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=QIITA",
       "aoColumns": [
         {"sSortDataType": "dom-checkbox", "bSearchable": false, "bSortable": false},
         {% for h in headers %}
@@ -120,7 +120,7 @@ $(document).ready(function() {
 
   $('#view-portal').change(function() {
     var echo = "?sEcho=" + Math.floor(Math.random()*1001) + "&view-portal=" + $("#view-portal").val();
-    $('#info-table').DataTable().ajax.url("/admin/portals/studiesAJAX/" + echo).load();
+    $('#info-table').DataTable().ajax.url("{% raw qiita_config.portal_dir %}/admin/portals/studiesAJAX/" + echo).load();
   });
 });
 </script>
