@@ -1,6 +1,7 @@
-<script src="/static/vendor/js/jquery.event.drag-2.2.js"></script>
-<script src="/static/vendor/js/slick.core.js"></script>
-<script src="/static/vendor/js/slick.grid.js"></script>
+{% from qiita_core.qiita_settings import qiita_config %}
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.event.drag-2.2.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/slick.core.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/slick.grid.js"></script>
 <script type="text/javascript">
   var True = true;
   var False = false;
@@ -12,7 +13,7 @@
 
   function add_meta() {
     var meta_val = $("#meta_col").val();
-    $.post("/study/description/sample_summary/", {study_id: {{study_id}}, meta_col: meta_val })
+    $.post("{% raw qiita_config.portal_dir %}/study/description/sample_summary/", {study_id: {{study_id}}, meta_col: meta_val })
       .done( function ( data ) {
         if(data.status == "success"){
           addColumn(meta_val, data.values);
@@ -82,10 +83,10 @@
     float:left
   }
   .slick-sort-indicator-desc{
-    background:url(/static/vendor/css/images/sort-desc.gif)
+    background:url({% raw qiita_config.portal_dir %}/static/vendor/css/images/sort-desc.gif)
   }
   .slick-sort-indicator-asc {
-    background:url(/static/vendor/css/images/sort-asc.gif)
+    background:url({% raw qiita_config.portal_dir %}/static/vendor/css/images/sort-asc.gif)
   }
   .slick-resizable-handle {
     position:absolute;

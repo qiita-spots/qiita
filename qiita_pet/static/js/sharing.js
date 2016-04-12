@@ -1,9 +1,7 @@
-var current_study = null;
-
-$(document).ready(function () {
+function init_sharing(portal) {
   $('#shares-select').select2({
     ajax: {
-      url: "/study/sharing/autocomplete/",
+      url: portal + "/study/sharing/autocomplete/",
       dataType: 'json',
       delay: 250,
       data: function (params) {
@@ -24,12 +22,12 @@ $(document).ready(function () {
   $('#shares-select').on("select2:unselect", function (e) {
     update_share({deselected: e.params.data.text});
   });
-});
+}
 
-function modify_sharing(study_id) {
-var shared_list;
-current_study = study_id;
-$.get('/study/sharing/', {study_id: study_id})
+function modify_sharing(id) {
+  var shared_list;
+  $('#shares-select').attr('data-current-id', id);
+  $.get($('#shares-select').attr('data-share-url'), {id: id})
     .done(function(data) {
       var users_links = JSON.parse(data);
       var users = users_links.users;
@@ -44,12 +42,13 @@ $.get('/study/sharing/', {study_id: study_id})
 }
 
 function update_share(params) {
+  share_id = $('#shares-select').attr('data-current-id');
   data = params || {};
-  data.study_id = current_study;
-  $.get('/study/sharing/', data)
+  data.id = share_id;
+  $.get($('#shares-select').attr('data-share-url'), data)
     .done(function(data) {
       users_links = JSON.parse(data);
       links = users_links.links;
-      $("#shared_html_"+current_study).html(links);
+      $("#shared_html_"+share_id).html(links);
     });
 }

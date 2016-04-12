@@ -9,6 +9,7 @@ from __future__ import division
 from os.path import join
 
 from tornado.web import authenticated
+from tornado.escape import url_escape
 import pandas as pd
 
 from qiita_pet.handlers.util import to_int
@@ -56,7 +57,8 @@ class PrepTemplateAJAX(BaseHandler):
 
         res = prep_template_ajax_get_req(self.current_user.id, prep_id)
         res['prep_id'] = prep_id
-
+        # Escape the message just in case javascript breaking characters in it
+        res['alert_message'] = url_escape(res['alert_message'])
         self.render('study_ajax/prep_summary.html', **res)
 
 

@@ -683,13 +683,11 @@ class Analysis(qdb.base.QiitaStatusObject):
         user: User object
             The user to share the analysis with
         """
+        # Make sure the analysis is not already shared with the given user
+        if user.id == self.owner or user.id in self.shared_with:
+            return
+
         with qdb.sql_connection.TRN:
-            self._lock_check()
-
-            # Make sure the analysis is not already shared with the given user
-            if user.id in self.shared_with:
-                return
-
             sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
                      VALUES (%s, %s)"""
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
@@ -704,8 +702,6 @@ class Analysis(qdb.base.QiitaStatusObject):
             The user to unshare the analysis with
         """
         with qdb.sql_connection.TRN:
-            self._lock_check()
-
             sql = """DELETE FROM qiita.analysis_users
                      WHERE analysis_id = %s AND email = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
@@ -981,27 +977,15 @@ class Analysis(qdb.base.QiitaStatusObject):
         """Builds the combined mapping file for all samples
            Code modified slightly from qiime.util.MetadataMap.__add__"""
         with qdb.sql_connection.TRN:
-            # query to get the latest qiime mapping file
-            sql = """SELECT filepath
-                     FROM qiita.filepath
-                        JOIN qiita.prep_template_filepath USING (filepath_id)
-                        JOIN qiita.prep_template USING (prep_template_id)
-                        JOIN qiita.filepath_type USING (filepath_type_id)
-                     WHERE filepath_type = 'qiime_map'
-                        AND artifact_id IN (SELECT *
-                                            FROM qiita.find_artifact_roots(%s))
-                     ORDER BY filepath_id DESC LIMIT 1"""
-            _, fp = qdb.util.get_mountpoint('templates')[0]
-
             all_ids = set()
             to_concat = []
             for aid, samps in viewitems(samples):
-                qdb.sql_connection.TRN.add(sql, [aid])
-                qm_fp = qdb.sql_connection.TRN.execute_fetchindex()[0][0]
+                qiime_map_fp = qdb.artifact.Artifact(
+                    aid).prep_templates[0].qiime_map_fp
 
                 # Parse the mapping file
                 qm = qdb.metadata_template.util.load_template_to_dataframe(
-                    join(fp, qm_fp), index='#SampleID')
+                    qiime_map_fp, index='#SampleID')
 
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name
