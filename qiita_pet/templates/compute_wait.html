@@ -5,7 +5,7 @@
     $(document).ready(function() {
 
         var socket_protocol = window.location.protocol == "https:" ? 'wss://' : 'ws://'
-        var host = socket_protocol + window.location.host + '/consumer/';
+        var host = socket_protocol + window.location.host + '{% raw qiita_config.portal_dir %}/consumer/';
         var websocket = new WebSocket(host);
 
         // When the socket is opened, send a message from the client to the

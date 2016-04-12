@@ -1,9 +1,11 @@
-<link rel="stylesheet" href="/static/vendor/css/select2.min.css" type="text/css">
-<script type="text/javascript" src="/static/vendor/js/select2.min.js"></script>
-<script type="text/javascript" src="/static/js/sharing.js"></script>
+{% from qiita_core.qiita_settings import qiita_config %}
+
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
 <script type="text/javascript">
 $(document).ready(function () {
-  current_study = {{study_info['study_id']}};
+  init_sharing("{% raw qiita_config.portal_dir %}");
   update_share();
 });
 </script>
@@ -20,7 +22,7 @@ Samples: {{study_info['num_samples']}}<br />
 <a class="btn btn-default" data-toggle="modal" data-target="#share-study-modal-view" onclick="modify_sharing({{study_info['study_id']}});"><span class="glyphicon glyphicon-share"></span> Share</a>
 {% end %}
 {% if editable %}
-  <a class="btn btn-default" href="/study/edit/{{study_info['study_id']}}"><span class="glyphicon glyphicon-edit"></span> Edit</a>
+  <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/study/edit/{{study_info['study_id']}}"><span class="glyphicon glyphicon-edit"></span> Edit</a>
   <a class="btn btn-danger" href="#" data-toggle="modal" data-target="#delete-study"><span class="glyphicon glyphicon-trash"></span> Delete</a>
 
  <!-- Modal used to share the study -->
@@ -35,7 +37,7 @@ Samples: {{study_info['num_samples']}}<br />
           <div>
             <div class="form-group">
               <label for="shares-select">Add/Remove Users</label>
-              <select multiple id="shares-select" style="width:50%"></select>
+              <select multiple class="study" id="shares-select" data-share-url="{% raw qiita_config.portal_dir %}/study/sharing/" data-current-id={{study_info['study_id']}} style="width:50%"></select>
               <br>
               <br>
               Adding or removing email addresses automatically updates who the study is shared with.

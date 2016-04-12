@@ -1,7 +1,9 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+
 <div id="waiting">
   <center>
-    <img src="/static/img/logo-clear.png" style="margin-left: 75px;">
+    <img src="{% raw qiita_config.portal_dir %}/static/img/logo-clear.png" style="margin-left: 75px;">
     <br/>
-    <img src="/static/img/waiting.gif" width="100" height="100" border="0">
+    <img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" width="100" height="100" border="0">
   </center>
 </div>
