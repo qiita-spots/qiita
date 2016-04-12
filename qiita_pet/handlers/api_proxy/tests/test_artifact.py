@@ -22,7 +22,7 @@ from qiita_db.util import get_count, get_mountpoint
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
 from qiita_db.software import Command, Parameters
-from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBWarning
+from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
     artifact_delete_req, artifact_types_get_req, artifact_post_req,
@@ -316,6 +316,11 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. Current supported '
                           'operations: replace'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_delete_req(self):
+        obs = artifact_delete_req(3, 'test@foo.bar')
+        exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
 
     def test_artifact_delete_req_no_access(self):

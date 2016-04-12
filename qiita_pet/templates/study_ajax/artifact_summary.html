@@ -8,10 +8,10 @@
    * This function executes an AJAX query to delete an artifact from the system
    */
   function delete_artifact(aid) {
-    $.post("/artifact/", {artifact_id: +aid })
+    $.post("{% raw qiita_config.portal_dir %}/artifact/", {artifact_id: +aid })
       .done(function ( data ) {
         if( data.status == "success") {
-          populate_main_div('/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+          populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
         }
         if( data.status == "error") {
           bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
