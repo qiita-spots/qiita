@@ -136,6 +136,15 @@ class UtilTests(TestCase):
         with self.assertRaises(ValueError):
             generate_demux_file(out_dir)
 
+    def test_generate_demux_file_empty(self):
+        out_dir = mkdtemp()
+        self._clean_up_files.append(out_dir)
+        with open(join(out_dir, 'seqs.fastq'), "w") as f:
+            f.write('')
+
+        with self.assertRaises(ValueError):
+            generate_demux_file(out_dir)
+
     def test_generate_artifact_info(self):
         obs = generate_artifact_info("/sl/output/")
         fps = [("/sl/output/seqs.fna", "preprocessed_fasta"),
