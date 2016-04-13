@@ -335,27 +335,27 @@ class TestPrepAPI(TestCase):
         obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
                                      '16S')
         exp = {'status': 'warning',
-               'message': 'Sample names were already prefixed with the study '
-                          'id.\nSome functionality will be disabled due to '
-                          'missing columns:\n\tDemultiplexing with multiple '
-                          'input files disabled. If your raw data includes '
-                          'multiple raw input files, you will not be able to '
-                          'preprocess your raw data: barcode, primer, '
-                          'run_prefix;\n\tDemultiplexing disabled. You will '
-                          'not be able to preprocess your raw data: barcode, '
-                          'primer;\n\tEBI submission disabled: center_name, '
-                          'experiment_design_description, instrument_model, '
-                          'library_construction_protocol, platform, primer.'
-                          '\nSee the Templates tutorial for a description of '
-                          'these fields.\nSome columns required to generate a '
-                          'QIIME-compliant mapping file are not present in the'
-                          ' template. A placeholder value (XXQIITAXX) has been'
-                          ' used to populate these columns. Missing columns: '
-                          'BarcodeSequence, LinkerPrimerSequence',
+               'message': [
+                    'Sample names were already prefixed with the study id.',
+                    ('Some columns required to generate a QIIME-compliant '
+                     'mapping file are not present in the template. A '
+                     'placeholder value (XXQIITAXX) has been used to populate '
+                     'these columns. Missing columns: BarcodeSequence, '
+                     'LinkerPrimerSequence'),
+                    ('Some functionality will be disabled due to missing '
+                     'columns:'),
+                    ('\tDemultiplexing with multiple input files disabled.: '
+                     'barcode, primer, run_prefix;'),
+                    '\tDemultiplexing disabled.: barcode, primer;',
+                    ('\tEBI submission disabled: center_name, '
+                     'experiment_design_description, instrument_model, '
+                     'library_construction_protocol, platform, primer.'),
+                    ('See the Templates tutorial for a description of these '
+                     'fields.')],
                'file': 'update.txt',
                'id': new_id}
-        self.assertItemsEqual(obs['message'].split('\n'),
-                              exp['message'].split('\n'))
+
+        self.assertItemsEqual(obs['message'].split('\n'), exp['message'])
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
         self.assertEqual(obs['id'], exp['id'])
