@@ -357,9 +357,16 @@ class TestArtifactAPI(TestCase):
         obs = artifact_post_req(
             'test@foo.bar', filepaths, 'FASTQ', 'New Test Artifact', pt.id)
         exp = {'status': 'success',
-               'message': '',
-               'artifact': new_artifact_id}
+               'message': ''}
         self.assertEqual(obs, exp)
+
+        obs = r_client.get('prep_template_%d' % pt.id)
+        self.assertIsNotNone(obs)
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
+
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(new_artifact_id)
@@ -377,12 +384,18 @@ class TestArtifactAPI(TestCase):
             'test@foo.bar', {}, 'FASTQ', 'New Test Artifact 2', pt.id,
             new_artifact_id)
         exp = {'status': 'success',
-               'message': '',
-               'artifact': new_artifact_id_2}
+               'message': ''}
         self.assertEqual(obs, exp)
+
+        obs = r_client.get('prep_template_%d' % pt.id)
+        self.assertIsNotNone(obs)
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
-        a = Artifact(new_artifact_id)
+        a = Artifact(new_artifact_id_2)
         self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
 
     def test_artifact_post_req_error(self):
@@ -418,20 +431,6 @@ class TestArtifactAPI(TestCase):
         obs = artifact_post_req(user_id, empty_fps, artifact_type, name, pt.id)
         exp = {'status': 'error',
                'message': "Can't create artifact, no files provided."}
-        self.assertEqual(obs, exp)
-
-        # Exception
-        obs = artifact_post_req(user_id, filepaths, artifact_type, name, 1)
-        exp = {'status': 'error',
-               'message': "Error creating artifact: Prep template 1 already "
-                          "has an artifact associated"}
-        self.assertEqual(obs, exp)
-
-        # Exception
-        obs = artifact_post_req(user_id, {}, artifact_type, name, 1, 1)
-        exp = {'status': 'error',
-               'message': "Error creating artifact: Prep template 1 already "
-                          "has an artifact associated"}
         self.assertEqual(obs, exp)
 
     def test_artifact_status_put_req(self):

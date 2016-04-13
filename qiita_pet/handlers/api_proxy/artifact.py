@@ -15,7 +15,8 @@ from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import delete_artifact
+from qiita_ware.dispatchable import (create_raw_data, copy_raw_data,
+                                     delete_artifact)
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -293,16 +294,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
 
     if artifact_id:
         # if the artifact id has been provided, import the artifact
-        try:
-            artifact = Artifact.copy(Artifact(artifact_id), prep)
-        except Exception as e:
-            # We should hit this exception rarely (that's why it is an
-            # exception)  since at this point we have done multiple checks.
-            # However, it can occur in weird cases, so better let the GUI know
-            # that this failed
-            return {'status': 'error',
-                    'message': "Error creating artifact: %s" % str(e)}
-
+        job_id = safe_submit(user_id, copy_raw_data, prep, artifact_id)
     else:
         uploads_path = get_mountpoint('uploads')[0][1]
         path_builder = partial(join, uploads_path, str(study_id))
@@ -330,20 +322,13 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
 
-        try:
-            artifact = Artifact.create(cleaned_filepaths, artifact_type,
-                                       name=name, prep_template=prep)
-        except Exception as e:
-            # We should hit this exception rarely (that's why it is an
-            # exception)  since at this point we have done multiple checks.
-            # However, it can occur in weird cases, so better let the GUI know
-            # that this failed
-            return {'status': 'error',
-                    'message': "Error creating artifact: %s" % str(e)}
+        job_id = safe_submit(user_id, create_raw_data, artifact_type, prep,
+                             cleaned_filepaths, name=name)
+
+    r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id, job_id)
 
     return {'status': 'success',
-            'message': '',
-            'artifact': artifact.id}
+            'message': ''}
 
 
 def artifact_patch_request(user_id, req_op, req_path, req_value=None,

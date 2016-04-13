@@ -286,9 +286,11 @@
     if ("{{artifact_attached}}" == "True") {
       load_template_graph();
     }
+    {% if editable %}
     else {
       load_new_artifact();
     }
+    {% end %}
     // If the file-selector select changes, check if we need to show the update button
     $("#file-selector").change(function ( event ) {
       if ( $("#file-selector").val() === "" ) {
