@@ -30,17 +30,33 @@ def run_analysis(analysis_id, commands, comm_opts=None,
               merge_duplicated_sample_ids)
 
 
-def create_raw_data(filetype, prep_template, filepaths, name=None):
+def create_raw_data(artifact_type, prep_template, filepaths, name=None):
     """Creates a new raw data
 
     Needs to be dispachable because it moves large files
+
+    Parameters
+    ----------
+    artifact_type: str
+        The artifact type
+    prep_template : qiita_db.metadata_template.prep_template.PrepTemplate
+        The template to attach the artifact
+    filepaths : list of (str, str)
+        The list with filepaths and their filepath types
+    name : str, optional
+        The name of the new artifact
+
+    Returns
+    -------
+    dict of {str: str}
+        A dict of the form {'status': str, 'message': str}
     """
     from qiita_db.artifact import Artifact
 
     status = 'success'
     msg = ''
     try:
-        Artifact.create(filepaths, filetype, name=name,
+        Artifact.create(filepaths, artifact_type, name=name,
                         prep_template=prep_template)
     except Exception as e:
         # We should hit this exception rarely (that's why it is an
@@ -55,6 +71,18 @@ def create_raw_data(filetype, prep_template, filepaths, name=None):
 
 def copy_raw_data(prep_template, artifact_id):
     """Creates a new raw data by copying from artifact_id
+
+    Parameters
+    ----------
+    prep_template : qiita_db.metadata_template.prep_template.PrepTemplate
+        The template to attach the artifact
+    artifact_id : int
+        The id of the artifact to duplicate
+
+    Returns
+    -------
+    dict of {str: str}
+        A dict of the form {'status': str, 'message': str}
     """
     from qiita_db.artifact import Artifact
 
