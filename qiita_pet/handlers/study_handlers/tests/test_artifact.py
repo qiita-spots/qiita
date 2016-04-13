@@ -11,14 +11,16 @@ from os.path import exists, join
 from os import remove, close
 from tempfile import mkstemp
 from json import loads
+from time import sleep
 
 import pandas as pd
 import numpy.testing as npt
+from moi import r_client
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.artifact import Artifact
 from qiita_db.study import Study
-from qiita_db.util import get_mountpoint
+from qiita_db.util import get_mountpoint, get_count
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBWarning
 
@@ -123,8 +125,16 @@ class NewArtifactHandlerTests(TestHandlerBase):
             'import-artifact': ''}
         response = self.post('/study/new_artifact/', args)
         self.assertEqual(response.code, 200)
+
         # make sure new artifact created
-        artifact = Artifact(loads(response.body)['artifact'])
+        obs = r_client.get('prep_template_%s' % self.prep.id)
+        self.assertIsNotNone(obs)
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
+        new_artifact_id = get_count('qiita.artifact')
+        artifact = Artifact(new_artifact_id)
         self.assertEqual(artifact.name, 'New Artifact Handler test')
         self._files_to_remove.extend([fp for _, fp, _ in artifact.filepaths])
 
