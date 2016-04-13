@@ -8,7 +8,6 @@
 from .analysis_pipeline import RunAnalysis
 from qiita_ware.commands import submit_EBI, submit_VAMPS
 from qiita_db.analysis import Analysis
-from qiita_db.artifact import Artifact
 
 
 def submit_to_ebi(preprocessed_data_id, submission_type):
@@ -31,17 +30,48 @@ def run_analysis(analysis_id, commands, comm_opts=None,
               merge_duplicated_sample_ids)
 
 
-def create_raw_data(filetype, prep_template, filepaths):
+def create_raw_data(filetype, prep_template, filepaths, name=None):
     """Creates a new raw data
 
     Needs to be dispachable because it moves large files
     """
-    Artifact.create(filepaths, filetype, prep_template=prep_template)
+    from qiita_db.artifact import Artifact
+
+    status = 'success'
+    msg = ''
+    try:
+        Artifact.create(filepaths, filetype, name=name,
+                        prep_template=prep_template)
+    except Exception as e:
+        # We should hit this exception rarely (that's why it is an
+        # exception)  since at this point we have done multiple checks.
+        # However, it can occur in weird cases, so better let the GUI know
+        # that this failed
+        return {'status': 'danger',
+                'message': "Error creating artifact: %s" % str(e)}
+
+    return {'status': status, 'message': msg}
 
 
 def copy_raw_data(prep_template, artifact_id):
-    """Creates a new raw data by copying from artifact_id"""
-    Artifact.copy(Artifact(artifact_id), prep_template)
+    """Creates a new raw data by copying from artifact_id
+    """
+    from qiita_db.artifact import Artifact
+
+    status = 'success'
+    msg = ''
+
+    try:
+        Artifact.copy(Artifact(artifact_id), prep_template)
+    except Exception as e:
+        # We should hit this exception rarely (that's why it is an
+        # exception)  since at this point we have done multiple checks.
+        # However, it can occur in weird cases, so better let the GUI know
+        # that this failed
+        return {'status': 'danger',
+                'message': "Error creating artifact: %s" % str(e)}
+
+    return {'status': status, 'message': msg}
 
 
 def delete_artifact(artifact_id):
