@@ -9,17 +9,22 @@ from os.path import join, basename
 from functools import partial
 
 from future.utils import viewitems
+from moi import r_client
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
+from qiita_ware.context import safe_submit
+from qiita_ware.dispatchable import delete_artifact
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBArtifactDeletionError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import get_mountpoint, get_visibilities
 from qiita_db.software import Command, Parameters
 from qiita_db.processing_job import ProcessingJob
+
+
+PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
 
 def artifact_summary_get_request(user_id, artifact_id):
@@ -150,7 +155,9 @@ def artifact_summary_get_request(user_id, artifact_id):
             'visibility': visibility,
             'buttons': ' '.join(buttons),
             'files': files,
-            'editable': artifact.study.can_edit(user)}
+            'editable': artifact.study.can_edit(user),
+            'study_id': artifact.study.id,
+            'prep_id': artifact.prep_templates[0].id}
 
 
 def artifact_summary_post_request(user_id, artifact_id):
@@ -481,11 +488,10 @@ def artifact_delete_req(artifact_id, user_id):
     access_error = check_access(pd.study.id, user_id)
     if access_error:
         return access_error
-    try:
-        Artifact.delete(int(artifact_id))
-    except QiitaDBArtifactDeletionError as e:
-        return {'status': 'error',
-                'message': str(e)}
+
+    job_id = safe_submit(user_id, delete_artifact, artifact_id)
+    r_client.set(PREP_TEMPLATE_KEY_FORMAT % pd.prep_templates[0].id, job_id)
+
     return {'status': 'success',
             'message': ''}
 

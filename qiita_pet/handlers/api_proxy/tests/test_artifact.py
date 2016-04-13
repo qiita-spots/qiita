@@ -10,9 +10,12 @@ from os.path import join, exists, basename
 from os import remove, close
 from datetime import datetime
 from tempfile import mkstemp
+from json import loads
+from time import sleep
 
 import pandas as pd
 import numpy.testing as npt
+from moi import r_client
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
@@ -22,7 +25,7 @@ from qiita_db.util import get_count, get_mountpoint
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
 from qiita_db.software import Command, Parameters
-from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBWarning
+from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
     artifact_delete_req, artifact_types_get_req, artifact_post_req,
@@ -135,6 +138,8 @@ class TestArtifactAPI(TestCase):
             with open(fp, 'w') as f:
                 f.write('')
 
+        r_client.flushdb()
+
     def test_artifact_summary_get_request(self):
         # Artifact w/o summary
         obs = artifact_summary_get_request('test@foo.bar', 1)
@@ -164,7 +169,9 @@ class TestArtifactAPI(TestCase):
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
                'files': exp_files,
-               'editable': True}
+               'editable': True,
+               'prep_id': 1,
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
         # Artifact with summary being generated
@@ -192,7 +199,9 @@ class TestArtifactAPI(TestCase):
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
                'files': exp_files,
-               'editable': True}
+               'editable': True,
+               'prep_id': 1,
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
         # Artifact with summary
@@ -225,7 +234,9 @@ class TestArtifactAPI(TestCase):
                           'class="btn btn-primary btn-sm">Revert to '
                           'sandbox</button>',
                'files': exp_files,
-               'editable': True}
+               'editable': True,
+               'prep_id': 1,
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
         # No access
@@ -247,7 +258,9 @@ class TestArtifactAPI(TestCase):
                'visibility': 'public',
                'buttons': '',
                'files': [],
-               'editable': False}
+               'editable': False,
+               'prep_id': 1,
+               'study_id': 1}
         self.assertEqual(obs, exp)
 
     def test_artifact_summary_post_request(self):
@@ -315,14 +328,15 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
 
-        with self.assertRaises(QiitaDBUnknownIDError):
-            Artifact(3)
-
-    def test_artifact_delete_req_error(self):
-        obs = artifact_delete_req(1, 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': 'Cannot delete artifact 1: it has children: 2, 3'}
-        self.assertEqual(obs, exp)
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        obs = r_client.get('prep_template_1')
+        self.assertIsNotNone(obs)
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
 
     def test_artifact_delete_req_no_access(self):
         obs = artifact_delete_req(3, 'demo@microbio.me')

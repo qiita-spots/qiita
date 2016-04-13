@@ -137,10 +137,6 @@ class ArtifactAJAXTests(TestHandlerBase):
                              {'artifact_id': 2})
         self.assertEqual(response.code, 200)
 
-        # checking that the action was sent
-        self.assertIn("Cannot delete artifact 2: it has children: 4",
-                      response.body)
-
 
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):
     def test_get_admin(self):
