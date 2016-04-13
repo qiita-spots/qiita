@@ -57,15 +57,13 @@ class TestPrepTemplateHandler(TestHandlerBase):
                       response.body)
 
     def test_patch(self):
-        # TODO: issue #1682
-        # arguments = {'op': 'replace',
-        #              'path': '/1/investigation_type/',
-        #              'value': 'Cancer Genomics'}
-        # response = self.patch('/prep_template/', data=arguments)
-        # self.assertEqual(response.code, 200)
-        # exp = {'status': 'success', 'message': ''}
-        # self.assertEqual(laods(response.body), exp)
-        pass
+        arguments = {'op': 'replace',
+                     'path': '/1/investigation_type/',
+                     'value': 'Cancer Genomics'}
+        response = self.patch('/prep_template/', data=arguments)
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(loads(response.body), exp)
 
     def test_delete(self):
         # Create a new prep template so we can delete it
