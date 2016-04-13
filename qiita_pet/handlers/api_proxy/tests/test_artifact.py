@@ -10,9 +10,12 @@ from os.path import join, exists, basename
 from os import remove, close
 from datetime import datetime
 from tempfile import mkstemp
+from json import loads
+from time import sleep
 
 import pandas as pd
 import numpy.testing as npt
+from moi import r_client
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.artifact import Artifact
@@ -134,6 +137,8 @@ class TestArtifactAPI(TestCase):
         if not exists(fp):
             with open(fp, 'w') as f:
                 f.write('')
+
+        r_client.flushdb()
 
     def test_artifact_summary_get_request(self):
         # Artifact w/o summary
@@ -328,6 +333,14 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
+
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
 
     def test_artifact_post_req(self):
         # Create new prep template to attach artifact to
