@@ -1,81 +1,147 @@
+{% from qiita_core.qiita_settings import qiita_config %}
 {% from future.utils import viewitems %}
-<div>
-    {% raw dl_path %}
+
+<script type="text/javascript">
+  function delete_sample_template() {
+    if(confirm("Are you sure you want to delete the sample information?")) {
+      sample_action('delete');
+    }
+  }
+
+  function sample_action(act) {
+    $.post('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#file-selector").val(), data_type: $("#data_types").val() })
+      .done(function ( data ) {
+        var msg_type = "info";
+        if(data.status == "error") {
+          msg_type = "danger";
+        } else if(data.status == "warning") {
+          msg_type = "warning";
+        }
+
+        if (data.message) {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), msg_type);
+        }
+
+        if (data.status != 'error') {
+          //reload section of the page with new info
+          populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_id}} });
+          populate_data_type_menu_div();
+          if (act == 'delete') {
+            $("#sample-summary-btn").hide();
+            $("#add-new-preparation-btn").hide();
+          }
+          else if(act == 'create') {
+            $("#sample-summary-btn").show();
+            $("#add-new-preparation-btn").show();
+          }
+        }
+      })
+  }
+
+  $(document).ready(function() {
+    $('#file-btn').prop('disabled', true);
+    $("#file-selector").change(function (event){
+      if($("#file-selector").val() === "" ){
+        $('#file-btn').prop('disabled', true);
+      }
+      else {
+        $('#file-btn').prop('disabled', false);
+      }
+    });
+
+    {% if alert_type != 'success' and alert_message != '' %}
+      bootstrapAlert(decodeURIComponent("{% raw alert_message %}").replace(/\+/g,' '), "{{alert_type}}");
+    {% else %}
+      $('#bootstrap-alert').alert('close');
+    {% end %}
+  });
+</script>
+
+
+<!-- Title and download button -->
+<div class="row">
+  <div class="col-md-12">
+    <h4>
+      Sample Information
+      {% if download_id %}
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_id}}"><span class="glyphicon glyphicon-download-alt"></span> Sample info</a>
+        {% if editable %}
+          <a class="btn btn-danger" onclick="delete_sample_template();"><span class="glyphicon glyphicon-trash"></span> Delete</a>
+        {% end %}
+      {% end %}
+    </h4>
+  </div>
 </div>
 
-<div>
-<h3>Update Sample Information</h3>
-    <p><select id="filepath" value="filepath">
-    {% for f in files %}
-      <option value="{{f}}">{{f}}</option>
+<!-- # samples and # columns -->
+<div class="row">
+  <div class="col-md-12">
+    {% if download_id %}
+      There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this study.
     {% end %}
-    </select>
-    <button class="btn btn-info btn-sm" onclick="sample_action('create')">Create or reset</button>
-    {% if stats %}
-    <button class="btn btn-info btn-sm" onclick="sample_action('update')">Update</button>
-    <button class="btn btn-danger btn-sm" onclick="sample_action('delete')">Delete</button>
-    {% end %}
-    </p>
-    <p> <select id="data_types" value="data_types">
-      <option value=""></option>
-    {% for d in data_types %}
-      <option value="{{d}}">{{d}}</option>
-    {% end %}
-    </select> If uploading a qiime mapping file, select data type</p>
+  </div>
 </div>
 
-<div>
-    <h3>Sample information summary</h3>
-    <p>There are <strong>{{num_samples}}</strong> samples in this study.</p>
-</div>
+<!-- Update sample template -->
+{% if editable %}
+  <div class="row">
+    <div class="col-md-12">
+      <b>Upload information:</b>
+      <select id="file-selector">
+        <option value="">Choose file...</option>
+        {% for fp in files %}
+          <option value="{{fp}}">{{fp}}</option>
+        {% end %}
+      </select>
+      {% if stats %}
+        <button class="btn btn-info btn-sm" id="file-btn" onclick="sample_action('update')">Update</button>
+      {% else %}
+        <button class="btn btn-info btn-sm" id="file-btn" onclick="sample_action('create')">Create</button><br/>
+        If uploading a qiime mapping file, select data type:
+        <select id="data_types" value="data_types">
+          <option value="">Choose a data type...</option>
+          {% for d in data_types %}
+            <option value="{{d}}">{{d}}</option>
+          {% end %}
+        </select>
+      {% end %}
+      </br>
+    </div>
+  </div>
+{% end %}
 
-<div class="panel panel-default" id="summary">
+{% if stats %}
+  <div class="panel panel-default" id="summary">
     <div class="panel-heading">
-        A summary of the sample information is below.
+      Sample information summary
     </div>
 
     <table class="table">
-    {% for category, summary in viewitems(stats) %}
+      {% for category, summary in viewitems(stats) %}
         {% if len(summary) == 1 %}
-            <tr>
-                <td colspan="2">
-                    <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
-                </td>
-            </tr>
+          <tr>
+            <td colspan="2">
+              <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
+            </td>
+          </tr>
         {% elif len(set([row[1] for row in summary])) == 1 %}
-            <tr>
-                <td colspan="2">
-                    <b>{{category}}</b>: All the values in this category are different.
-                </td>
-            </tr>
+          <tr>
+            <td colspan="2">
+              <b>{{category}}</b>: All the values in this category are different.
+            </td>
+          </tr>
         {% else %}
+          <tr>
+            <th colspan="2" align="center">{{category}}</th>
+          </tr>
+          {% for row in summary %}
             <tr>
-                <th colspan="2" align="center">{{category}}</th>
+              <td>{{row[0]}}</td>
+              <td>{{row[1]}}</td>
             </tr>
-            {% for row in summary %}
-            <tr>
-                <td>{{row[0]}}</td>
-                <td>{{row[1]}}</td>
-            </tr>
-            {% end %}
+          {% end %}
         {% end %}
-    {% end %}
+      {% end %}
     </table>
-</div>
-
-<script type="text/javascript">
-  function sample_action(act) {
-    $.post('/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#filepath").val(), data_type: $("#data_types").val() })
-      .done(function ( data ) {
-        if(data.status == "error") {
-          bootstrapAlert("<p>Error updating sample template</p>" + data.message, "danger", 4000);
-        } else if(data.status == "warning") {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "warning", 4000);
-        } else {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "info", 4000);
-        }
-        //reload section of the page with new info
-         fill_sample({{study_id}})
-      })
-  }
-</script>
+  </div>
+{% end %}

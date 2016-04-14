@@ -12,10 +12,11 @@ from urllib import quote
 from base64 import b64encode
 from os.path import join, basename
 import numpy as np
-
 from StringIO import StringIO
 import matplotlib.pyplot as plt
+
 import seaborn as sns
+from qiita_client import format_payload
 
 
 def generate_html_summary(qclient, job_id, parameters, out_dir,
@@ -110,4 +111,7 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     # Step 3: add the new file to the artifact using REST api
     reply = qclient.patch(qclient_url, 'add', '/html_summary/', value=of_fp)
 
-    return reply if not return_html else (reply, artifact_information)
+    payload = format_payload(
+        success=reply['success'], error_msg=reply['error'], artifacts_info=[])
+
+    return payload if not return_html else (payload, artifact_information)

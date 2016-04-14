@@ -23,6 +23,34 @@ class CommandTestsReadOnly(TestCase):
             'opt_int_param': ['integer', '4'],
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
 
+    def test_get_commands_by_input_type(self):
+        obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
+        exp = [qdb.software.Command(1)]
+        self.assertItemsEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'per_sample_FASTQ']))
+        exp = [qdb.software.Command(1)]
+        self.assertItemsEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'SFF']))
+        exp = [qdb.software.Command(1), qdb.software.Command(2)]
+        self.assertItemsEqual(obs, exp)
+
+    def test_get_html_artifact(self):
+        obs = qdb.software.Command.get_html_generator('BIOM')
+        exp = qdb.software.Command(5)
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.Command.get_html_generator('Demultiplexed')
+        exp = qdb.software.Command(7)
+        self.assertEqual(obs, exp)
+
+    def test_get_html_artifact_error(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_html_generator('Unknown')
+
     def test_exists(self):
         self.assertFalse(qdb.software.Command.exists(
             self.software, "donotexists"))
@@ -81,11 +109,21 @@ class CommandTestsReadOnly(TestCase):
         self.assertEqual(qdb.software.Command(2).parameters, exp_params)
 
     def test_required_parameters(self):
-        exp_params = {'input_data': 'artifact'}
-        self.assertEqual(qdb.software.Command(1).required_parameters,
-                         exp_params)
-        self.assertEqual(qdb.software.Command(2).required_parameters,
-                         exp_params)
+        exp_params = {
+            'input_data': ('artifact', ['FASTQ', 'per_sample_FASTQ'])}
+        obs = qdb.software.Command(1).required_parameters
+        self.assertItemsEqual(obs.keys(), exp_params.keys())
+        self.assertEqual(obs['input_data'][0],  exp_params['input_data'][0])
+        self.assertItemsEqual(obs['input_data'][1],
+                              exp_params['input_data'][1])
+
+        exp_params = {
+            'input_data': ('artifact', ['SFF', 'FASTA', 'FASTA_Sanger'])}
+        obs = qdb.software.Command(2).required_parameters
+        self.assertItemsEqual(obs.keys(), exp_params.keys())
+        self.assertEqual(obs['input_data'][0],  exp_params['input_data'][0])
+        self.assertItemsEqual(obs['input_data'][1],
+                              exp_params['input_data'][1])
 
     def test_optional_parameters(self):
         exp_params = {'barcode_type': ['string', 'golay_12'],
@@ -134,6 +172,19 @@ class CommandTestsReadOnly(TestCase):
         obs = list(qdb.software.Command(2).default_parameter_sets)
         exp = [qdb.software.DefaultParameters(8),
                qdb.software.DefaultParameters(9)]
+        self.assertEqual(obs, exp)
+
+    def test_outputs(self):
+        obs = qdb.software.Command(1).outputs
+        exp = [['demultiplexed', 'Demultiplexed']]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.Command(2).outputs
+        exp = [['demultiplexed', 'Demultiplexed']]
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.Command(3).outputs
+        exp = [['OTU table', 'BIOM']]
         self.assertEqual(obs, exp)
 
 
@@ -193,7 +244,7 @@ class CommandTests(TestCase):
         self.assertEqual(obs.name, "Test Command")
         self.assertEqual(obs.description, "This is a command for testing")
         self.assertEqual(obs.parameters, self.parameters)
-        exp_required = {'req_param': 'string'}
+        exp_required = {'req_param': ('string', [None])}
         self.assertEqual(obs.required_parameters, exp_required)
         exp_optional = {
             'opt_int_param': ['integer', '4'],

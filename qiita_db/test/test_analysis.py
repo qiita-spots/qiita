@@ -455,6 +455,26 @@ class TestAnalysis(TestCase):
         obs = new.mapping_file
         self.assertEqual(obs, None)
 
+    def test_retrieve_tgz(self):
+        # generating here as the tgz is only generated once the analysis runs
+        # to completion (un)successfully
+        analysis = qdb.analysis.Analysis(1)
+        fp = self.get_fp('test.tgz')
+        with open(fp, 'w') as f:
+            f.write('')
+        analysis._add_file(fp, 'tgz')
+        self.assertEqual(self.analysis.tgz, fp)
+
+    def test_retrieve_tgz_none(self):
+        self.assertIsNone(self.analysis.tgz)
+
+    def test_generate_tgz(self):
+        obs_sout, obs_serr, obs_return = self.analysis.generate_tgz()
+        # not testing obs_serr as it will change depending on the system's tar
+        # version
+        self.assertEqual(obs_sout, "")
+        self.assertEqual(obs_return, 0)
+
     # def test_get_parent(self):
     #     raise NotImplementedError()
 
@@ -536,7 +556,7 @@ class TestAnalysis(TestCase):
             sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
 
         exp = [[16, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
-               [new_id, '1_analysis_mapping.txt', 9, '682183006', 1, 1]]
+               [new_id, '1_analysis_mapping.txt', 9, '3609817154', 1, 1]]
         self.assertItemsEqual(obs, exp)
 
         sql = """SELECT * FROM qiita.analysis_filepath

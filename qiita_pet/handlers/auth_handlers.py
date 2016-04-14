@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from tornado.escape import url_escape, json_encode
 from tornado.web import HTTPError
 
@@ -46,19 +44,21 @@ class AuthCreateHandler(BaseHandler):
             try:
                 send_email(username, "QIITA: Verify Email Address", "Please "
                            "click the following link to verify email address: "
-                           "%s/auth/verify/%s?email=%s"
-                           % (qiita_config.base_url, info['user_verify_code'],
-                              url_escape(username)))
+                           "%s/%s/auth/verify/%s?email=%s"
+                           % (qiita_config.base_url, qiita_config.portal_dir,
+                              info['user_verify_code'], url_escape(username)))
             except:
                 msg = ("Unable to send verification email. Please contact the "
                        "qiita developers at <a href='mailto:qiita-help"
                        "@gmail.com'>qiita-help@gmail.com</a>")
-                self.redirect(u"/?level=danger&message=" + url_escape(msg))
+                self.redirect(u"%s/?level=danger&message=%s"
+                              % (qiita_config.portal_dir, url_escape(msg)))
                 return
-            self.redirect(u"/")
+            self.redirect(u"%s/" % qiita_config.portal_dir)
         else:
             error_msg = u"?error=" + url_escape(msg)
-            self.redirect(u"/auth/create/" + error_msg)
+            self.redirect(u"%s/auth/create/%s"
+                          % (qiita_config.portal_dir, error_msg))
 
 
 class AuthVerifyHandler(BaseHandler):
@@ -67,6 +67,7 @@ class AuthVerifyHandler(BaseHandler):
         if User.verify_code(email, code, "create"):
             msg = "Successfully verified user! You are now free to log in."
             color = "black"
+            r_client.zadd('qiita-usernames', email, 0)
         else:
             msg = "Code not valid!"
             color = "red"
@@ -77,7 +78,7 @@ class AuthVerifyHandler(BaseHandler):
 class AuthLoginHandler(BaseHandler):
     """user login, no page necessary"""
     def get(self):
-        self.redirect("/")
+        self.redirect("%s/" % qiita_config.portal_dir)
 
     @execute_as_transaction
     def post(self):
@@ -91,7 +92,7 @@ class AuthLoginHandler(BaseHandler):
             if "auth/" not in self.request.headers['Referer']:
                 nextpage = self.request.headers['Referer']
             else:
-                nextpage = "/"
+                nextpage = "%s/" % qiita_config.portal_dir
 
         msg = ""
         # check the user level
@@ -109,7 +110,7 @@ class AuthLoginHandler(BaseHandler):
             # means DB not available, so set maintenance mode and failover
             r_client.set("maintenance", "Database connection unavailable, "
                          "please try again later.")
-            self.redirect("/")
+            self.redirect("%s/" % qiita_config.portal_dir)
             return
 
         # Check the login information
@@ -141,4 +142,4 @@ class AuthLogoutHandler(BaseHandler):
     """Logout handler, no page necessary"""
     def get(self):
         self.clear_cookie("user")
-        self.redirect("/")
+        self.redirect("%s/" % qiita_config.portal_dir)

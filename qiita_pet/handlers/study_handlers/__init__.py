@@ -7,7 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from .listing_handlers import (ListStudiesHandler, StudyApprovalList,
-                               ShareStudyAJAX, SearchStudiesAJAX)
+                               ShareStudyAJAX, SearchStudiesAJAX,
+                               AutocompleteHandler)
 from .edit_handlers import StudyEditHandler, CreateStudyAJAX
 from .description_handlers import PreprocessingSummaryHandler
 from .ebi_handlers import EBISubmitHandler
@@ -18,9 +19,10 @@ from .prep_template import (
     PrepTemplateGraphAJAX, PrepTemplateAJAX, PrepFilesHandler,
     NewPrepTemplateAjax, PrepTemplateSummaryAJAX)
 from .processing import (ProcessArtifactHandler, ListCommandsHandler,
-                         ListOptionsHandler)
+                         ListOptionsHandler, WorkflowHandler,
+                         WorkflowRunHandler, JobAJAX)
 from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
-                       ArtifactAdminAJAX, ArtifactAJAX)
+                       ArtifactAdminAJAX, ArtifactAJAX, ArtifactSummaryAJAX)
 from .sample_template import SampleTemplateAJAX, SampleAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
@@ -32,4 +34,6 @@ __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'NewArtifactHandler', 'PrepFilesHandler', 'ProcessArtifactHandler',
            'ListCommandsHandler', 'ListOptionsHandler', 'SampleAJAX',
            'StudyDeleteAjax', 'ArtifactAJAX', 'NewPrepTemplateAjax',
-           'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX']
+           'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX',
+           'ArtifactSummaryAJAX', 'WorkflowHandler', 'WorkflowRunHandler',
+           'JobAJAX', 'AutocompleteHandler']

@@ -7,18 +7,25 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 import warnings
-
 from os import remove
 from os.path import basename
+from json import loads
+
 from natsort import natsorted
+from moi import r_client
 
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
+from qiita_ware.context import safe_submit
+from qiita_ware.dispatchable import update_prep_template
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
+from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
+
+PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
 
 def _get_ENA_ontology():
@@ -67,11 +74,13 @@ def new_prep_template_get_req(study_id):
             'ontology': ontology_info}
 
 
-def prep_template_ajax_get_req(prep_id):
+def prep_template_ajax_get_req(user_id, prep_id):
     """Returns the prep tempalte information needed for the AJAX handler
 
     Parameters
     ----------
+    user_id : str
+        The user id
     prep_id : int
         The prep template id
 
@@ -97,6 +106,22 @@ def prep_template_ajax_get_req(prep_id):
     # Currently there is no name attribute, but it will be soon
     name = "Prep information %d" % prep_id
     pt = PrepTemplate(prep_id)
+
+    job_id = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
+    if job_id:
+        redis_info = loads(r_client.get(job_id))
+        processing = redis_info['status_msg'] == 'Running'
+        if processing:
+            alert_type = 'info'
+            alert_msg = 'This prep template is currently being updated'
+        else:
+            alert_type = redis_info['return']['status']
+            alert_msg = redis_info['return']['message'].replace('\n', '</br>')
+    else:
+        processing = False
+        alert_type = ''
+        alert_msg = ''
+
     artifact_attached = pt.artifact is not None
     study_id = pt.study_id
     files = [f for _, f in get_files_from_uploads_folders(study_id)
@@ -121,6 +146,8 @@ def prep_template_ajax_get_req(prep_id):
 
     ontology = _get_ENA_ontology()
 
+    editable = Study(study_id).can_edit(User(user_id)) and not processing
+
     return {'status': 'success',
             'message': '',
             'name': name,
@@ -132,7 +159,11 @@ def prep_template_ajax_get_req(prep_id):
             'investigation_type': investigation_type,
             'ontology': ontology,
             'artifact_attached': artifact_attached,
-            'study_id': study_id}
+            'study_id': study_id,
+            'editable': editable,
+            'data_type': pt.data_type(),
+            'alert_type': alert_type,
+            'alert_message': alert_msg}
 
 
 @execute_as_transaction
@@ -367,7 +398,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         if len(req_path) != 2:
             return {'status': 'error',
                     'message': 'Incorrect path parameter'}
-        prep_id = req_path[0]
+        prep_id = int(req_path[0])
         attribute = req_path[1]
 
         # Check if the user actually has access to the prep template
@@ -385,15 +416,8 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             if fp['status'] != 'success':
                 return fp
             fp = fp['file']
-            df = load_template_to_dataframe(fp)
-            with warnings.catch_warnings(record=True) as warns:
-                prep.extend(df)
-                prep.update(df)
-                remove(fp)
-
-                if warns:
-                    msg = '\n'.join(set(str(w.message) for w in warns))
-                    status = 'warning'
+            job_id = safe_submit(user_id, update_prep_template, prep_id, fp)
+            r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id, job_id)
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',
@@ -539,10 +563,19 @@ def prep_template_graph_get_req(prep_id, user_id):
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
+
+    # We should filter for only the public artifacts if the user
+    # doesn't have full access to the study
+    full_access = Study(prep.study_id).can_edit(User(user_id))
     G = prep.artifact.descendants
     node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
-                   for n in G.nodes()]
+                   for n in G.nodes()
+                   if full_access or n.visibility == 'public']
+    node_ids = [id_ for id_, label in node_labels]
+    edge_list = [(n.id, m.id) for n, m in G.edges()
+                 if n.id in node_ids and m.id in node_ids]
+
     return {'status': 'success',
             'message': '',
-            'edge_list': [(n.id, m.id) for n, m in G.edges()],
+            'edge_list': edge_list,
             'node_labels': node_labels}

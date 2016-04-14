@@ -10,11 +10,15 @@ from os import remove
 from os.path import join, exists
 from string import ascii_letters
 from random import choice
+from time import sleep
+from json import loads
 
 import pandas as pd
 import numpy.testing as npt
+from moi import r_client
 
 from qiita_core.util import qiita_test_checker
+from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.ontology import Ontology
 from qiita_db.study import Study
@@ -60,7 +64,7 @@ class TestPrepAPIReadOnly(TestCase):
         self.assertEqual(obs, exp)
 
     def test_prep_template_ajax_get_req(self):
-        obs = prep_template_ajax_get_req(1)
+        obs = prep_template_ajax_get_req('test@foo.bar', 1)
         exp = {'status': 'success',
                'message': '',
                'name': "Prep information 1",
@@ -80,7 +84,18 @@ class TestPrepAPIReadOnly(TestCase):
                            'Other'],
                    'User': []},
                'artifact_attached': True,
-               'study_id': 1}
+               'study_id': 1,
+               'editable': True,
+               'data_type': '18S',
+               'alert_type': '',
+               'alert_message': ''}
+        self.assertEqual(obs, exp)
+
+        obs = prep_template_ajax_get_req('admin@foo.bar', 1)
+        self.assertEqual(obs, exp)
+
+        obs = prep_template_ajax_get_req('demo@microbio.me', 1)
+        exp['editable'] = False
         self.assertEqual(obs, exp)
 
     def test_check_prep_template_exists(self):
@@ -159,29 +174,17 @@ class TestPrepAPIReadOnly(TestCase):
         exp = {'status': 'success',
                'message': '',
                'filepaths': [
-                   (15, join(get_mountpoint('templates')[0][1],
-                             '1_prep_1_19700101-000000.txt')),
-                   (16, join(get_mountpoint('templates')[0][1],
-                             '1_prep_1_qiime_19700101-000000.txt'))]}
-        self.assertItemsEqual(obs, exp)
+                   (19, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_qiime_19700101-000000.txt')),
+                   (18, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_19700101-000000.txt'))]}
+        self.assertEqual(obs, exp)
 
     def test_prep_template_filepaths_get_req_no_access(self):
         obs = prep_template_filepaths_get_req(1, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
-
-    def test_prep_template_graph_get_req(self):
-        obs = prep_template_graph_get_req(1, 'test@foo.bar')
-        exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5)],
-               'node_labels': [(1, 'Raw data 1 - FASTQ'),
-                               (2, 'Demultiplexed 1 - Demultiplexed'),
-                               (3, 'Demultiplexed 2 - Demultiplexed'),
-                               (4, 'BIOM - BIOM'),
-                               (5, 'BIOM - BIOM')],
-               'status': 'success',
-               'message': ''}
-        self.assertItemsEqual(obs, exp)
 
     def test_prep_template_graph_get_req_no_access(self):
         obs = prep_template_graph_get_req(1, 'demo@microbio.me')
@@ -278,6 +281,37 @@ class TestPrepAPI(TestCase):
             with open(fp, 'w') as f:
                 f.write('')
 
+        r_client.flushdb()
+
+    def test_prep_template_graph_get_req(self):
+        obs = prep_template_graph_get_req(1, 'test@foo.bar')
+        exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5), (2, 6)],
+               'node_labels': [(1, 'Raw data 1 - FASTQ'),
+                               (2, 'Demultiplexed 1 - Demultiplexed'),
+                               (3, 'Demultiplexed 2 - Demultiplexed'),
+                               (4, 'BIOM - BIOM'),
+                               (5, 'BIOM - BIOM'),
+                               (6, 'BIOM - BIOM')],
+               'status': 'success',
+               'message': ''}
+        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
+        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['message'], exp['message'])
+
+        Artifact(4).visibility = "public"
+        obs = prep_template_graph_get_req(1, 'demo@microbio.me')
+        exp = {'edge_list': [(1, 2), (2, 4)],
+               'node_labels': [(1, 'Raw data 1 - FASTQ'),
+                               (2, 'Demultiplexed 1 - Demultiplexed'),
+                               (4, 'BIOM - BIOM')],
+               'status': 'success',
+               'message': ''}
+        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
+        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
+        self.assertEqual(obs['status'], exp['status'])
+        self.assertEqual(obs['message'], exp['message'])
+
     def test_process_investigation_type(self):
         obs = _process_investigation_type('Metagenomics', '', '')
         self.assertEqual(obs, 'Metagenomics')
@@ -301,27 +335,27 @@ class TestPrepAPI(TestCase):
         obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
                                      '16S')
         exp = {'status': 'warning',
-               'message': 'Sample names were already prefixed with the study '
-                          'id.\nSome functionality will be disabled due to '
-                          'missing columns:\n\tDemultiplexing with multiple '
-                          'input files disabled. If your raw data includes '
-                          'multiple raw input files, you will not be able to '
-                          'preprocess your raw data: barcode, primer, '
-                          'run_prefix;\n\tDemultiplexing disabled. You will '
-                          'not be able to preprocess your raw data: barcode, '
-                          'primer;\n\tEBI submission disabled: center_name, '
-                          'experiment_design_description, instrument_model, '
-                          'library_construction_protocol, platform, primer.'
-                          '\nSee the Templates tutorial for a description of '
-                          'these fields.\nSome columns required to generate a '
-                          'QIIME-compliant mapping file are not present in the'
-                          ' template. A placeholder value (XXQIITAXX) has been'
-                          ' used to populate these columns. Missing columns: '
-                          'BarcodeSequence, LinkerPrimerSequence',
+               'message': [
+                    'Sample names were already prefixed with the study id.',
+                    ('Some columns required to generate a QIIME-compliant '
+                     'mapping file are not present in the template. A '
+                     'placeholder value (XXQIITAXX) has been used to populate '
+                     'these columns. Missing columns: BarcodeSequence, '
+                     'LinkerPrimerSequence'),
+                    ('Some functionality will be disabled due to missing '
+                     'columns:'),
+                    ('\tDemultiplexing with multiple input files disabled.: '
+                     'barcode, primer, run_prefix;'),
+                    '\tDemultiplexing disabled.: barcode, primer;',
+                    ('\tEBI submission disabled: center_name, '
+                     'experiment_design_description, instrument_model, '
+                     'library_construction_protocol, platform, primer.'),
+                    ('See the Templates tutorial for a description of these '
+                     'fields.')],
                'file': 'update.txt',
                'id': new_id}
-        self.assertItemsEqual(obs['message'].split('\n'),
-                              exp['message'].split('\n'))
+
+        self.assertItemsEqual(obs['message'].split('\n'), exp['message'])
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
         self.assertEqual(obs['id'], exp['id'])
@@ -365,15 +399,17 @@ class TestPrepAPI(TestCase):
         # Update prep template data
         obs = prep_template_patch_req(
             'test@foo.bar', 'replace', '/1/data', 'update.txt')
-        self.assertEqual(obs['status'], 'warning')
-        exp = [
-            'Sample names were already prefixed with the study id.',
-            'The following columns have been added to the existing template: '
-            'new_col',
-            'There are no differences between the data stored in the DB and '
-            'the new data provided']
-        self.assertItemsEqual(obs['message'].split('\n'), exp)
-        self.assertEqual(pt['1.SKD6.640190']['new_col'], 'new_value')
+        self.assertEqual(obs, exp)
+        obs = r_client.get('prep_template_1')
+        self.assertIsNotNone(obs)
+
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
 
     def test_prep_template_patch_req_errors(self):
         # Operation not supported

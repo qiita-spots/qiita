@@ -1,3 +1,5 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/chosen.css" type="text/css">
 <script type="text/javascript>">
   /**
    *
@@ -131,6 +133,23 @@
     // Add the event listener to all the lists that can be checked
     $(".checkable").on( "sortupdate", on_change_validation );
 
+    // When the artifact importer changes, check if we need to show the import
+    // button
+    $("#import-artifact").change(function(event) {
+      if( $("#import-artifact").val() !== "") {
+        $("#artifact-import-btn").show();
+        $("#drag-files-div").hide();
+        $("#submit-div").hide();
+      }
+      else {
+        $("#artifact-import-btn").hide();
+        $("#drag-files-div").show();
+        allow_submission();
+      }
+    });
+
+    $("#artifact-import-btn").hide()
+
     // Perform the first check to all the lists, given that we may be
     // prepopulating some of them
     check_files_lists();
@@ -164,7 +183,19 @@
 </style>
 <div class="row">
   <div class="col-md-12">
-    <b>Click and drag your files to the correct file type:</b><br/>
+    <b>Import files from other studies:</b>
+    <select id="import-artifact" name="import-artifact">
+      <option value="">Choose an artfact to import...</option>
+      {% for a_id, label in artifacts %}
+        <option value="{{a_id}}">{{label}}</option>
+      {% end %}
+    </select>
+    <button id="artifact-import-btn" class="btn btn-default btn-sm" onclick="console.log('clicked')"><span class="glyphicon glyphicon-import"></span> Import</button>
+  </div>
+</div>
+<div id="drag-files-div" class="row">
+  <div class="col-md-12">
+    <b>Or click and drag your uploaded files to the correct file type:</b><br/>
   </div>
   <div class="col-md-3" id="files-div">
     <p style="text-align: center;"><i>Available Files</i></p>

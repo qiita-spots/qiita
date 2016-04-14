@@ -14,7 +14,7 @@
 
 <div id='no-analyses' class='jumbotron'>
   <h1>No Analyses available</h1>
-  <h3><a href="/study/list/">Create an analysis</a></h3>
+  <h3><a href="{% raw qiita_config.portal_dir %}/study/list/">Create an analysis</a></h3>
 </div>
 
 {% if analyses %}
@@ -26,6 +26,7 @@
       <th>Timestamp</th>
       <th>Mapping File</th>
       <th>Biom Files</th>
+      <th>tgz Files</th>
       <th>Delete?</th>
     </tr>
     {% for analysis in analyses %}
@@ -34,19 +35,19 @@
       {% if status == "in_construction"%}
         <tr>
           <td>
-            <a href="/analysis/{{analysis.step}}?aid={{analysis.id}}">{{analysis.name}}</a>
+            <a href="{% raw qiita_config.portal_dir %}/analysis/{{analysis.step}}?aid={{analysis.id}}">{{analysis.name}}</a>
       {% elif status == "running" %}
         <tr class="active">
           <td>
-            <a href="/analysis/wait/{{analysis.id}}">{{analysis.name}}</a>
+            <a href="{% raw qiita_config.portal_dir %}/analysis/wait/{{analysis.id}}">{{analysis.name}}</a>
       {% elif status == "completed" %}
         <tr class="success">
           <td>
-            <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
+            <a href="{% raw qiita_config.portal_dir %}/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
       {% elif status == "error" %}
         <tr class="danger">
           <td>
-            <a href="/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
+            <a href="{% raw qiita_config.portal_dir %}/analysis/results/{{analysis.id}}">{{analysis.name}}</a>
       {% else %}
         <tr class="active">
           <td>
@@ -67,6 +68,9 @@
         </td>
         <td>
           {% raw bioms[_id] %}
+        </td>
+        <td>
+          {% raw tgzs[_id] %}
         </td>
         <td>
          <a class="btn btn-danger glyphicon glyphicon-trash {% if status == 'running' %} disabled {% end %}" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>

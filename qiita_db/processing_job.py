@@ -306,9 +306,12 @@ class ProcessingJob(qdb.base.QiitaObject):
         software = self.command.software
         plugin_start_script = software.start_script
         plugin_env_script = software.environment_script
+        # Appending the portal URL so the job requests the information from the
+        # portal server that submitted the job
+        url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
         cmd = '%s "%s" "%s" "%s" "%s" "%s"' % (
             qiita_config.plugin_launcher, plugin_env_script,
-            plugin_start_script, qiita_config.base_url, self.id, job_dir)
+            plugin_start_script, url, self.id, job_dir)
         return cmd
 
     def submit(self):
@@ -324,6 +327,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 "Can't submit job, not in 'in_construction' or "
                 "'waiting' status. Current status: %s" % status)
+        self._set_status('queued')
         cmd = self._generate_cmd()
         p = Process(target=_job_submitter, args=(self, cmd))
         p.start()
@@ -833,23 +837,27 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                      FROM qiita.get_processing_workflow_edges(%s)"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             edges = qdb.sql_connection.TRN.execute_fetchindex()
+            nodes = {}
             if edges:
                 nodes = {jid: ProcessingJob(jid)
                          for jid in set(chain.from_iterable(edges))}
                 edges = [(nodes[s], nodes[d]) for s, d in edges]
                 g.add_edges_from(edges)
-            else:
-                # It is possible that there are no edges because we are still
-                # building the workflow. In that case, just return a graph
-                # with only the nodes
-                sql = """SELECT processing_job_id
-                         FROM qiita.processing_job_workflow_root
-                         WHERE processing_job_workflow_id = %s"""
-                qdb.sql_connection.TRN.add(sql, [self.id])
-                nodes = [
-                    ProcessingJob(jid)
-                    for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
-                g.add_nodes_from(nodes)
+            # It is possible that there are root jobs that doesn't have any
+            # child, so they do not appear on edge list
+            sql = """SELECT processing_job_id
+                     FROM qiita.processing_job_workflow_root
+                     WHERE processing_job_workflow_id = %s"""
+            sql_args = [self.id]
+            if nodes:
+                sql += " AND processing_job_id NOT IN %s"
+                sql_args.append(tuple(nodes))
+            qdb.sql_connection.TRN.add(sql, sql_args)
+            nodes = [
+                ProcessingJob(jid)
+                for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
+            g.add_nodes_from(nodes)
+
         return g
 
     def _raise_if_not_in_construction(self):
@@ -876,18 +884,19 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                     "Workflow not in construction")
 
-    def add(self, connections, dflt_params, req_params=None, opt_params=None):
+    def add(self, dflt_params, connections=None, req_params=None,
+            opt_params=None):
         """Adds a new job to the workflow
 
         Parameters
         ----------
+        dflt_params : qiita_db.software.DefaultParameters
+            The DefaultParameters object used
         connections : dict of {qiita_db.processing_job.ProcessingJob:
-                               {str: str}}
+                               {str: str}}, optional
             Dictionary keyed by the jobs in which the new job depends on,
             and values is a dict mapping between source outputs and new job
             inputs
-        dflt_params : qiita_db.software.DefaultParameters
-            The DefaultParameters object used
         req_params : dict of {str: object}, optional
             Any extra required parameter values, keyed by parameter name.
             Default: None, all the requried parameters are provided through
@@ -904,50 +913,72 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             self._raise_if_not_in_construction()
 
-            req_params = req_params if req_params else {}
-            # Loop through all the connections to add the relevant parameters
-            for source, mapping in viewitems(connections):
-                source_id = source.id
-                for out, in_param in viewitems(mapping):
-                    req_params[in_param] = [source_id, out]
+            if connections:
+                # The new Job depends on previous jobs in the workflow
+                req_params = req_params if req_params else {}
+                # Loop through all the connections to add the relevant
+                # parameters
+                for source, mapping in viewitems(connections):
+                    source_id = source.id
+                    for out, in_param in viewitems(mapping):
+                        req_params[in_param] = [source_id, out]
 
-            new_job = ProcessingJob.create(
-                self.user, qdb.software.Parameters.from_default_params(
-                    dflt_params, req_params, opt_params=opt_params))
+                new_job = ProcessingJob.create(
+                    self.user, qdb.software.Parameters.from_default_params(
+                        dflt_params, req_params, opt_params=opt_params))
 
-            # SQL used to create the edges between jobs
-            sql = """INSERT INTO qiita.parent_processing_job
-                        (parent_id, child_id)
-                     VALUES (%s, %s)"""
-            sql_args = [[s.id, new_job.id] for s in connections]
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-            qdb.sql_connection.TRN.execute()
+                # SQL used to create the edges between jobs
+                sql = """INSERT INTO qiita.parent_processing_job
+                            (parent_id, child_id)
+                         VALUES (%s, %s)"""
+                sql_args = [[s.id, new_job.id] for s in connections]
+                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+                qdb.sql_connection.TRN.execute()
+            else:
+                # The new job doesn't depend on any previous job in the
+                # workflow, so it is a new root job
+                new_job = ProcessingJob.create(
+                    self.user, qdb.software.Parameters.from_default_params(
+                        dflt_params, req_params, opt_params=opt_params))
+                sql = """INSERT INTO qiita.processing_job_workflow_root
+                            (processing_job_workflow_id, processing_job_id)
+                         VALUES (%s, %s)"""
+                sql_args = [self.id, new_job.id]
+                qdb.sql_connection.TRN.add(sql, sql_args)
+                qdb.sql_connection.TRN.execute()
 
-    def remove(self, job):
+            return new_job
+
+    def remove(self, job, cascade=False):
         """Removes a given job from the workflow
 
         Parameters
         ----------
         job : qiita_db.processing_job.ProcessingJob
             The job to be removed
+        cascade : bool, optional
+            If true, remove the also the input job's children. Default: False.
 
         Raises
         ------
         qiita_db.exceptions.QiitaDBOperationNotPermittedError
             If the workflow is not in construction
-            If the job to be removed has children
+            If the job to be removed has children and `cascade` is `False`
         """
         with qdb.sql_connection.TRN:
             self._raise_if_not_in_construction()
 
             # Check if the given job has children
-            sql = """SELECT EXISTS(SELECT *
-                                   FROM qiita.parent_processing_job
-                                   WHERE parent_id=%s)"""
-            qdb.sql_connection.TRN.add(sql, [job.id])
-            if qdb.sql_connection.TRN.execute_fetchlast():
-                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Can't remove job '%s': it has children" % job.id)
+            children = list(job.children)
+            if children:
+                if not cascade:
+                    raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                        "Can't remove job '%s': it has children" % job.id)
+                else:
+                    # We need to remove all job's children, remove them first
+                    # and then remove the current job
+                    for c in children:
+                        self.remove(c, cascade=True)
 
             # Remove any edges (it can only appear as a child)
             sql = """DELETE FROM qiita.parent_processing_job
@@ -956,6 +987,11 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
 
             # Remove as root job
             sql = """DELETE FROM qiita.processing_job_workflow_root
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [job.id])
+
+            # Remove the input reference
+            sql = """DELETE FROM qiita.artifact_processing_job
                      WHERE processing_job_id = %s"""
             qdb.sql_connection.TRN.add(sql, [job.id])
 
@@ -981,7 +1017,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
             # In order to avoid potential race conditions, we are going to set
             # all the children in 'waiting' status before submitting
             # the root nodes
-            in_degrees = g.in_degrees()
+            in_degrees = g.in_degree()
             roots = []
             for job, degree in viewitems(in_degrees):
                 if degree == 0:

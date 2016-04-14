@@ -1,5 +1,5 @@
-
-<script type="text/javascript" src="/static/vendor/js/jquery.validate.min.js"></script>
+{% from qiita_core.qiita_settings import qiita_config %}
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.validate.min.js"></script>
 <script type="text/javascript>">
   var file_types = [];
   function get_files() {
@@ -8,7 +8,7 @@
     if( valid == false) {
       return;
     }
-    $.get("/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep-file").val(), study_id: {{study_id}} })
+    $.get("{% raw qiita_config.portal_dir %}/study/prep_files/", { type: $("#type").val(), prep_file: $("#prep-file").val(), study_id: {{study_id}} })
       .done(function( data ) {
         // Add divs for the file type elements
         file_types = data.file_types;
@@ -91,7 +91,7 @@
       success: function( data ){
         if(data.status == 'warning') { bootstrapAlert(data.message, "warning"); }
         else if( data.status == 'error') { bootstrapAlert(data.message, "danger"); }
-        else {window.location.href('/study/description/{{study_id}}')}
+        else {window.location.href('{% raw qiita_config.portal_dir %}/study/description/{{study_id}}')}
       }
     });
     return false;
@@ -122,7 +122,7 @@
 </style>
 
 <div class="row"><div class="col-md-12" id="errDiv" style="color:red"></div></div>
-<form action="/study/add_prep/{{study_id}}" method="POST" id="form" onsubmit="build_file_lists()">
+<form action="{% raw qiita_config.portal_dir %}/study/add_prep/{{study_id}}" method="POST" id="form" onsubmit="build_file_lists()">
   <div class="row">
     <div class="col-md-12">
       <h4>Preperation Name</h4>

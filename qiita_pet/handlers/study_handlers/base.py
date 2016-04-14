@@ -25,12 +25,7 @@ class StudyIndexHandler(BaseHandler):
         if study_info['status'] != 'success':
             raise HTTPError(404, study_info['message'])
 
-        study_info = study_info['info']
-
-        editable = study_info['status'] == 'sandbox'
-
-        self.render("study_base.html", study_info=study_info,
-                    editable=editable)
+        self.render("study_base.html", **study_info)
 
 
 class StudyBaseInfoAJAX(BaseHandler):
@@ -38,16 +33,23 @@ class StudyBaseInfoAJAX(BaseHandler):
     def get(self):
         study_id = self.get_argument('study_id')
         study = to_int(study_id)
-        study_info = study_get_req(study, self.current_user.id)['info']
+        res = study_get_req(study, self.current_user.id)
+        study_info = res['study_info']
         study_doi = ' '.join(
             [doi_linkifier(p) for p in study_info['publications']])
         email = '<a href="mailto:{email}">{name} ({affiliation})</a>'
         pi = email.format(**study_info['principal_investigator'])
-        contact = email.format(**study_info['lab_person'])
+        if study_info['lab_person']:
+            contact = email.format(**study_info['lab_person'])
+        else:
+            contact = None
+        share_access = (self.current_user.id in study_info['shared_with'] or
+                        self.current_user.id == study_info['owner'])
 
         self.render('study_ajax/base_info.html',
                     study_info=study_info, publications=study_doi, pi=pi,
-                    contact=contact)
+                    contact=contact, editable=res['editable'],
+                    share_access=share_access)
 
 
 class StudyDeleteAjax(BaseHandler):
@@ -79,9 +81,6 @@ class StudyFilesAJAX(BaseHandler):
         atype = self.get_argument('artifact_type')
         pt_id = self.get_argument('prep_template_id')
 
-        res = study_files_get_req(study_id, pt_id, atype)
+        res = study_files_get_req(self.current_user.id, study_id, pt_id, atype)
 
-        self.render('study_ajax/artifact_file_selector.html',
-                    remaining=res['remaining'],
-                    file_types=res['file_types'],
-                    num_prefixes=res['num_prefixes'])
+        self.render('study_ajax/artifact_file_selector.html', **res)

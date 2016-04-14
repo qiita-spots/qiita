@@ -596,7 +596,7 @@ class ArtifactTests(TestCase):
             self.filepaths_processed, "Demultiplexed",
             parents=[qdb.artifact.Artifact(1)],
             processing_parameters=exp_params)
-        self.assertEqual(obs.name, 'dflt_name')
+        self.assertEqual(obs.name, 'noname')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
@@ -627,7 +627,7 @@ class ArtifactTests(TestCase):
         obs = qdb.artifact.Artifact.create(
             self.filepaths_biom, "BIOM", parents=[qdb.artifact.Artifact(2)],
             processing_parameters=exp_params)
-        self.assertEqual(obs.name, 'dflt_name')
+        self.assertEqual(obs.name, 'noname')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
         self.assertEqual(obs.visibility, 'sandbox')
@@ -813,6 +813,41 @@ class ArtifactTests(TestCase):
         self.assertEqual(a.visibility, "private")
         a.visibility = "public"
         self.assertEqual(a.visibility, "public")
+
+        # Testing that the visibility inference works as expected
+        # The current artifact network that we have in the db looks as follows:
+        #                              /- 4 (private)
+        #              /- 2 (private) -|- 5 (private)
+        # 1 (private) -|               \- 6 (private)
+        #              \- 3 (private)
+        # By changing the visibility of 4 to public, the visibility of 1 and
+        # 2 also changes to public
+        a1 = qdb.artifact.Artifact(1)
+        a2 = qdb.artifact.Artifact(2)
+        a3 = qdb.artifact.Artifact(3)
+        a4 = qdb.artifact.Artifact(4)
+        a5 = qdb.artifact.Artifact(5)
+        a6 = qdb.artifact.Artifact(6)
+
+        a4.visibility = 'public'
+
+        self.assertEqual(a1.visibility, "public")
+        self.assertEqual(a2.visibility, "public")
+        self.assertEqual(a3.visibility, "private")
+        self.assertEqual(a4.visibility, "public")
+        self.assertEqual(a5.visibility, "private")
+        self.assertEqual(a6.visibility, "private")
+
+        # However, if we change it back to private,
+        # it should remain public
+        a4.visibility = 'private'
+
+        self.assertEqual(a1.visibility, "public")
+        self.assertEqual(a2.visibility, "public")
+        self.assertEqual(a3.visibility, "private")
+        self.assertEqual(a4.visibility, "private")
+        self.assertEqual(a5.visibility, "private")
+        self.assertEqual(a6.visibility, "private")
 
     def test_ebi_run_accessions_setter(self):
         a = qdb.artifact.Artifact(3)

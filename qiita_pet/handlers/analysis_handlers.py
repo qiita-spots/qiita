@@ -17,25 +17,29 @@ from json import dumps
 from functools import partial
 
 from tornado.web import authenticated, HTTPError, StaticFileHandler
+from tornado.gen import coroutine, Task
 from moi import ctx_default, r_client
 from moi.job import submit
 from moi.group import get_id_from_user, create_info
 
 from qiita_pet.util import is_localhost
 from qiita_pet.handlers.base_handlers import BaseHandler
-from qiita_pet.handlers.util import download_link_or_path
+from qiita_pet.handlers.util import (
+    download_link_or_path, get_shared_links)
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_ware.dispatchable import run_analysis
 from qiita_db.analysis import Analysis
 from qiita_db.artifact import Artifact
 from qiita_db.job import Command
-from qiita_db.util import (get_db_files_base_dir,
+from qiita_db.user import User
+from qiita_db.util import (get_db_files_base_dir, add_message,
                            check_access_to_analysis_result,
                            filepath_ids_to_rel_paths, get_filepath_id)
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.logger import LogEntry
 from qiita_db.reference import Reference
 from qiita_core.util import execute_as_transaction
+from qiita_core.qiita_settings import qiita_config
 
 SELECT_SAMPLES = 2
 SELECT_COMMANDS = 3
@@ -127,11 +131,13 @@ class AnalysisWaitHandler(BaseHandler):
         cmd_split = [x.split("#") for x in command_args]
 
         moi_user_id = get_id_from_user(self.current_user.id)
-        moi_group = create_info(analysis_id, 'group', url='/analysis/',
-                                parent=moi_user_id, store=True)
+        moi_group = create_info(
+            analysis_id, 'group', url='%s/analysis/' % qiita_config.portal_dir,
+            parent=moi_user_id, store=True)
         moi_name = ("Creating %s... When finished, please click the 'Success' "
                     "link to the right" % analysis.name)
-        moi_result_url = '/analysis/results/%d' % analysis_id
+        moi_result_url = '%s/analysis/results/%d' % (qiita_config.portal_dir,
+                                                     analysis_id)
 
         submit(ctx_default, moi_group['id'], moi_name,
                moi_result_url, run_analysis, analysis_id, cmd_split,
@@ -172,10 +178,13 @@ class AnalysisResultsHandler(BaseHandler):
             data_type = proc_data.data_type
             dropped[data_type].append((proc_data.study.title, len(samples),
                                        ', '.join(samples)))
+        share_access = (self.current_user.id in analysis.shared_with or
+                        self.current_user.id == analysis.owner)
 
         self.render("analysis_results.html", analysis_id=analysis_id,
                     jobres=jobres, aname=analysis.name, dropped=dropped,
-                    basefolder=get_db_files_base_dir())
+                    basefolder=get_db_files_base_dir(),
+                    share_access=share_access)
 
     @authenticated
     @execute_as_transaction
@@ -206,7 +215,8 @@ class AnalysisResultsHandler(BaseHandler):
             LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
                             (analysis_id, e))
 
-        self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
+        self.redirect(u"%s/analysis/show/?level=%s&message=%s"
+                      % (qiita_config.portal_dir, level, msg))
 
 
 class ShowAnalysesHandler(BaseHandler):
@@ -225,20 +235,29 @@ class ShowAnalysesHandler(BaseHandler):
         dlop = partial(download_link_or_path, is_local_request)
         mappings = {}
         bioms = {}
+        tgzs = {}
         for analysis in analyses:
             _id = analysis.id
+            # getting mapping file
             mapping = analysis.mapping_file
             if mapping is not None:
                 mappings[_id] = dlop(mapping, gfi(mapping), 'mapping file')
             else:
                 mappings[_id] = ''
+            # getting biom tables
             links = [dlop(f, gfi(f), l)
                      for l, f in viewitems(analysis.biom_tables)]
             bioms[_id] = '\n'.join(links)
+            # getting tgz file
+            tgz = analysis.tgz
+            if tgz is not None:
+                tgzs[_id] = dlop(tgz, gfi(tgz), 'tgz file')
+            else:
+                tgzs[_id] = ''
 
         self.render("show_analyses.html", analyses=analyses, message=message,
                     level=level, is_local_request=is_local_request,
-                    mappings=mappings, bioms=bioms)
+                    mappings=mappings, bioms=bioms, tgzs=tgzs)
 
     @authenticated
     @execute_as_transaction
@@ -262,7 +281,8 @@ class ShowAnalysesHandler(BaseHandler):
             LogEntry.create('Runtime', "Couldn't remove analysis ID %d: %s" %
                             (analysis_id, e))
 
-        self.redirect(u"/analysis/show/?level=%s&message=%s" % (level, msg))
+        self.redirect(u"%s/analysis/show/?level=%s&message=%s"
+                      % (qiita_config.portal_dir, level, msg))
 
 
 class ResultsHandler(StaticFileHandler, BaseHandler):
@@ -340,3 +360,50 @@ class AnalysisSummaryAJAX(BaseHandler):
     def get(self):
         info = self.current_user.default_analysis.summary_data()
         self.write(dumps(info))
+
+
+class ShareAnalysisAJAX(BaseHandler):
+    @execute_as_transaction
+    def _get_shared_for_study(self, analysis, callback):
+        shared_links = get_shared_links(analysis)
+        users = [u.email for u in analysis.shared_with]
+        callback((users, shared_links))
+
+    @execute_as_transaction
+    def _share(self, analysis, user, callback):
+        user = User(user)
+        add_message('Analysis <a href="%s/analysis/results/%d">\'%s\'</a> '
+                    'has been shared with you.' %
+                    (qiita_config.portal_dir, analysis.id, analysis.name),
+                    [user])
+        callback(analysis.share(user))
+
+    @execute_as_transaction
+    def _unshare(self, analysis, user, callback):
+        user = User(user)
+        add_message('Analysis \'%s\' has been unshared from you.' %
+                    analysis.name, [user])
+        callback(analysis.unshare(user))
+
+    @authenticated
+    @coroutine
+    @execute_as_transaction
+    def get(self):
+        analysis_id = int(self.get_argument('id'))
+        analysis = Analysis(analysis_id)
+        if self.current_user != analysis.owner:
+            raise HTTPError(403, 'User %s does not have permissions to share '
+                            'analysis %s' % (
+                                self.current_user.id, analysis.id))
+
+        selected = self.get_argument('selected', None)
+        deselected = self.get_argument('deselected', None)
+
+        if selected is not None:
+            yield Task(self._share, analysis, selected)
+        if deselected is not None:
+            yield Task(self._unshare, analysis, deselected)
+
+        users, links = yield Task(self._get_shared_for_study, analysis)
+
+        self.write(dumps({'users': users, 'links': links}))

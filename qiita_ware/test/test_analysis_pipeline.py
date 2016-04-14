@@ -1,6 +1,7 @@
 from unittest import TestCase, main
 from os.path import join
 from os import remove, rename
+from shutil import copy
 import numpy.testing as npt
 
 from moi.group import get_id_from_user
@@ -11,7 +12,7 @@ from qiita_db.analysis import Analysis
 from qiita_db.job import Job
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.exceptions import QiitaDBWarning
-from qiita_ware.analysis_pipeline import RunAnalysis
+from qiita_ware.analysis_pipeline import RunAnalysis, _generate_analysis_tgz
 
 
 # -----------------------------------------------------------------------------
@@ -36,9 +37,9 @@ class TestRun(TestCase):
         """Make sure failure at file creation step doesn't hang everything"""
         # rename a needed file for creating the biom table
         base = get_db_files_base_dir()
-        rename(join(base, "processed_data",
-                    "1_study_1001_closed_reference_otu_table.biom"),
-               join(base, "processed_data", "1_study_1001.bak"))
+        copy(join(base, "processed_data",
+                  "1_study_1001_closed_reference_otu_table.biom"),
+             join(base, "processed_data", "1_study_1001.bak"))
         analysis = Analysis(2)
         group = get_id_from_user("demo@microbio.me")
         try:
@@ -59,17 +60,31 @@ class TestRun(TestCase):
         RunAnalysis()._construct_job_graph(
             analysis, [('18S', 'Summarize Taxa')],
             comm_opts={'Summarize Taxa': {'opt1': 5}})
-        self.assertEqual(analysis.jobs, [Job(3), Job(4), Job(5)])
+        self.assertEqual(analysis.jobs, [Job(3), Job(4)])
         job = Job(4)
         self.assertEqual(job.datatype, '18S')
         self.assertEqual(job.command,
                          ['Summarize Taxa', 'summarize_taxa_through_plots.py'])
         expopts = {
+            '--mapping_fp': join(
+                get_db_files_base_dir(), 'analysis/2_analysis_mapping.txt'),
+            '--otu_table_fp': join(
+                get_db_files_base_dir(),
+                'analysis/2_analysis_dt-18S_r-1_c-3.biom'),
             '--output_dir': join(
                 get_db_files_base_dir(), 'job',
                 '4_summarize_taxa_through_plots.py_output_dir'),
             'opt1': 5}
         self.assertEqual(job.options, expopts)
+
+    def test_generate_analysis_tgz(self):
+        obs_sout, obs_serr, obs_return = _generate_analysis_tgz(Analysis(1))
+
+        # not testing obs_serr as it will change depending on the system's tar
+        # version
+        self.assertEqual(obs_sout, "")
+        self.assertEqual(obs_return, 0)
+
 
 if __name__ == "__main__":
     main()

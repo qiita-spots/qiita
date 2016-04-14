@@ -18,7 +18,8 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from itertools import product
-from os.path import join
+from os.path import join, basename
+from tarfile import open as taropen
 
 from future.utils import viewitems
 from biom import load_table
@@ -467,22 +468,23 @@ class Analysis(qdb.base.QiitaStatusObject):
         dict
             Dictonary in the form {data_type: full BIOM filepath}
         """
-        with qdb.sql_connection.TRN:
-            fptypeid = qdb.util.convert_to_id("biom", "filepath_type")
-            sql = """SELECT data_type, filepath
-                     FROM qiita.filepath
-                        JOIN qiita.analysis_filepath USING (filepath_id)
-                        JOIN qiita.data_type USING (data_type_id)
-                     WHERE analysis_id = %s AND filepath_type_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id, fptypeid])
-            tables = qdb.sql_connection.TRN.execute_fetchindex()
-            if not tables:
-                return {}
-            ret_tables = {}
-            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
-            for fp in tables:
-                ret_tables[fp[0]] = join(base_fp, fp[1])
-            return ret_tables
+        fps = [(_id, fp) for _id, fp, ftype in qdb.util.retrieve_filepaths(
+            "analysis_filepath", "analysis_id", self._id)
+            if ftype == 'biom']
+
+        if fps:
+            fps_ids = [f[0] for f in fps]
+            with qdb.sql_connection.TRN:
+                sql = """SELECT filepath_id, data_type FROM qiita.filepath
+                            JOIN qiita.analysis_filepath USING (filepath_id)
+                            JOIN qiita.data_type USING (data_type_id)
+                            WHERE filepath_id IN %s"""
+                qdb.sql_connection.TRN.add(sql, [tuple(fps_ids)])
+                data_types = dict(qdb.sql_connection.TRN.execute_fetchindex())
+
+            return {data_types[_id]: f for _id, f in fps}
+        else:
+            return {}
 
     @property
     def mapping_file(self):
@@ -493,19 +495,34 @@ class Analysis(qdb.base.QiitaStatusObject):
         str or None
             full filepath to the mapping file or None if not generated
         """
-        with qdb.sql_connection.TRN:
-            fptypeid = qdb.util.convert_to_id("plain_text", "filepath_type")
-            sql = """SELECT filepath
-                     FROM qiita.filepath
-                        JOIN qiita.analysis_filepath USING (filepath_id)
-                     WHERE analysis_id = %s AND filepath_type_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id, fptypeid])
-            mapping_fp = qdb.sql_connection.TRN.execute_fetchindex()
-            if not mapping_fp:
-                return None
+        fp = [fp for _, fp, fp_type in qdb.util.retrieve_filepaths(
+            "analysis_filepath", "analysis_id", self._id)
+            if fp_type == 'plain_text']
 
-            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
-            return join(base_fp, mapping_fp[0][0])
+        if fp:
+            # returning the actual path vs. an array
+            return fp[0]
+        else:
+            return None
+
+    @property
+    def tgz(self):
+        """Returns the tgz file of the analysis
+
+        Returns
+        -------
+        str or None
+            full filepath to the mapping file or None if not generated
+        """
+        fp = [fp for _, fp, fp_type in qdb.util.retrieve_filepaths(
+            "analysis_filepath", "analysis_id", self._id)
+            if fp_type == 'tgz']
+
+        if fp:
+            # returning the actual path vs. an array
+            return fp[0]
+        else:
+            return None
 
     @property
     def step(self):
@@ -666,13 +683,11 @@ class Analysis(qdb.base.QiitaStatusObject):
         user: User object
             The user to share the analysis with
         """
+        # Make sure the analysis is not already shared with the given user
+        if user.id == self.owner or user.id in self.shared_with:
+            return
+
         with qdb.sql_connection.TRN:
-            self._lock_check()
-
-            # Make sure the analysis is not already shared with the given user
-            if user.id in self.shared_with:
-                return
-
             sql = """INSERT INTO qiita.analysis_users (analysis_id, email)
                      VALUES (%s, %s)"""
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
@@ -687,8 +702,6 @@ class Analysis(qdb.base.QiitaStatusObject):
             The user to unshare the analysis with
         """
         with qdb.sql_connection.TRN:
-            self._lock_check()
-
             sql = """DELETE FROM qiita.analysis_users
                      WHERE analysis_id = %s AND email = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
@@ -767,6 +780,34 @@ class Analysis(qdb.base.QiitaStatusObject):
 
             qdb.sql_connection.TRN.add(sql, args, many=True)
             qdb.sql_connection.TRN.execute()
+
+    def generate_tgz(self):
+        fps_ids = self.all_associated_filepath_ids
+        with qdb.sql_connection.TRN:
+            sql = """SELECT filepath, data_directory_id FROM qiita.filepath
+                        WHERE filepath_id IN %s"""
+            qdb.sql_connection.TRN.add(sql, [tuple(fps_ids)])
+
+            full_fps = [join(qdb.util.get_mountpoint_path_by_id(mid), f)
+                        for f, mid in
+                        qdb.sql_connection.TRN.execute_fetchindex()]
+
+            _, analysis_mp = qdb.util.get_mountpoint('analysis')[0]
+            tgz = join(analysis_mp, '%d_files.tgz' % self.id)
+            try:
+                with taropen(tgz, "w:gz") as tar:
+                    for f in full_fps:
+                        tar.add(f, arcname=basename(f))
+                error_txt = ''
+                return_value = 0
+            except Exception as e:
+                error_txt = str(e)
+                return_value = 1
+
+            if return_value == 0:
+                self._add_file(tgz, 'tgz')
+
+        return '', error_txt, return_value
 
     def build_files(self,
                     rarefaction_depth=None,
@@ -888,9 +929,7 @@ class Analysis(qdb.base.QiitaStatusObject):
                     biom_table.filter(selected_samples, axis='sample',
                                       inplace=True)
                     if len(biom_table.ids()) == 0:
-                        raise RuntimeError(
-                            "All samples filtered out from Artifact %s due "
-                            "to selected samples" % aid)
+                        continue
 
                     if rename_dup_samples:
                         ids_map = {_id: "%d.%s" % (aid, _id)
@@ -901,6 +940,12 @@ class Analysis(qdb.base.QiitaStatusObject):
                         new_table = biom_table
                     else:
                         new_table = new_table.merge(biom_table)
+
+                if not new_table or len(new_table.ids()) == 0:
+                    # if we get to this point the only reason for failure is
+                    # rarefaction
+                    raise RuntimeError("All samples filtered out from "
+                                       "analysis due to rarefaction level")
 
                 # add the metadata column for study the samples come from,
                 # this is useful in case the user download the bioms
@@ -932,27 +977,15 @@ class Analysis(qdb.base.QiitaStatusObject):
         """Builds the combined mapping file for all samples
            Code modified slightly from qiime.util.MetadataMap.__add__"""
         with qdb.sql_connection.TRN:
-            # query to get the latest qiime mapping file
-            sql = """SELECT filepath
-                     FROM qiita.filepath
-                        JOIN qiita.prep_template_filepath USING (filepath_id)
-                        JOIN qiita.prep_template USING (prep_template_id)
-                        JOIN qiita.filepath_type USING (filepath_type_id)
-                     WHERE filepath_type = 'qiime_map'
-                        AND artifact_id IN (SELECT *
-                                            FROM qiita.find_artifact_roots(%s))
-                     ORDER BY filepath_id DESC LIMIT 1"""
-            _, fp = qdb.util.get_mountpoint('templates')[0]
-
             all_ids = set()
             to_concat = []
             for aid, samps in viewitems(samples):
-                qdb.sql_connection.TRN.add(sql, [aid])
-                qm_fp = qdb.sql_connection.TRN.execute_fetchindex()[0][0]
+                qiime_map_fp = qdb.artifact.Artifact(
+                    aid).prep_templates[0].qiime_map_fp
 
                 # Parse the mapping file
                 qm = qdb.metadata_template.util.load_template_to_dataframe(
-                    join(fp, qm_fp), index='#SampleID')
+                    qiime_map_fp, index='#SampleID')
 
                 # if we are not going to merge the duplicated samples
                 # append the aid to the sample name
@@ -965,6 +998,16 @@ class Analysis(qdb.base.QiitaStatusObject):
                 else:
                     samps = set(samps) - all_ids
                     all_ids.update(samps)
+
+                # appending study metadata to the analysis
+                study = qdb.artifact.Artifact(aid).study
+                study_owner = study.owner
+                study_info = study.info
+                pi = study_info['principal_investigator']
+                qm['qiita_study_title'] = study.title
+                qm['qiita_study_alias'] = study.info['study_alias']
+                qm['qiita_owner'] = study_owner.info['name']
+                qm['qiita_principal_investigator'] = pi.name
 
                 qm = qm.loc[samps]
                 to_concat.append(qm)
@@ -984,7 +1027,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             _, base_fp = qdb.util.get_mountpoint(self._table)[0]
             mapping_fp = join(base_fp, "%d_analysis_mapping.txt" % self._id)
             merged_map.to_csv(mapping_fp, index_label='#SampleID',
-                              na_rep='unknown', sep='\t')
+                              na_rep='unknown', sep='\t', encoding='utf-8')
 
             self._add_file("%d_analysis_mapping.txt" % self._id, "plain_text")
 

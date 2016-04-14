@@ -90,8 +90,6 @@ class QiitaClient(object):
     get
     post
     """
-    import sys
-
     def __init__(self, server_url, client_id, client_secret, server_cert=None):
         self._server_url = server_url
 

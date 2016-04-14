@@ -8,6 +8,10 @@
 from unittest import TestCase, main
 from os import remove, mkdir
 from os.path import join, exists
+from time import sleep
+from json import loads
+
+from moi import r_client
 
 from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
@@ -58,6 +62,8 @@ class TestSampleAPI(TestCase):
 
         if exists(self.new_study_fp):
             remove(self.new_study_fp)
+
+        r_client.flushdb()
 
     def test_check_sample_template_exists(self):
         obs = _check_sample_template_exists(1)
@@ -125,7 +131,7 @@ class TestSampleAPI(TestCase):
 
     def test_sample_template_summary_get_req(self):
         obs = sample_template_summary_get_req(1, 'test@foo.bar')
-        exp = {'summary': {
+        exp = {'stats': {
             'physical_specimen_location': [('ANL', 27)],
             'texture': [('63.1 sand, 17.7 silt, 19.2 clay', 9),
                         ('64.6 sand, 17.6 silt, 17.8 clay', 9),
@@ -205,8 +211,12 @@ class TestSampleAPI(TestCase):
                                 ('SKM4', 1), ('SKM5', 1), ('SKM6', 1),
                                 ('SKM7', 1), ('SKM8', 1), ('SKM9', 1)]},
                'num_samples': 27,
+               'num_columns': 30,
+               'editable': True,
                'status': 'success',
-               'message': ''}
+               'message': '',
+               'alert_type': '',
+               'alert_message': ''}
         self.assertEqual(obs, exp)
 
     def test_sample_template_summary_get_req_no_access(self):
@@ -301,10 +311,21 @@ class TestSampleAPI(TestCase):
     def test_sample_template_post_req(self):
         obs = sample_template_post_req(1, 'test@foo.bar', '16S',
                                        'uploaded_file.txt')
-        exp = {'status': 'error',
-               'message': 'Empty file passed!',
+        exp = {'status': 'success',
+               'message': '',
                'file': 'uploaded_file.txt'}
         self.assertEqual(obs, exp)
+
+        obs = r_client.get('sample_template_1')
+        self.assertIsNotNone(obs)
+
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
 
     def test_sample_template_post_req_no_access(self):
         obs = sample_template_post_req(1, 'demo@microbio.me', '16S',
@@ -316,10 +337,21 @@ class TestSampleAPI(TestCase):
     def test_sample_template_put_req(self):
         obs = sample_template_put_req(1, 'test@foo.bar',
                                       'uploaded_file.txt')
-        exp = {'status': 'error',
-               'message': 'Empty file passed!',
+        exp = {'status': 'success',
+               'message': '',
                'file': 'uploaded_file.txt'}
         self.assertEqual(obs, exp)
+
+        obs = r_client.get('sample_template_1')
+        self.assertIsNotNone(obs)
+
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
 
     def test_sample_template_put_req_no_access(self):
         obs = sample_template_put_req(1, 'demo@microbio.me', 'filepath')
@@ -336,10 +368,20 @@ class TestSampleAPI(TestCase):
 
     def test_sample_template_delete_req(self):
         obs = sample_template_delete_req(1, 'test@foo.bar')
-        exp = {'status': 'error',
-               'message': 'Sample template can not be erased because there are'
-                          ' prep templates associated.'}
+        exp = {'status': 'success',
+               'message': ''}
         self.assertEqual(obs, exp)
+
+        obs = r_client.get('sample_template_1')
+        self.assertIsNotNone(obs)
+
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        redis_info = loads(r_client.get(obs))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(obs))
 
     def test_sample_template_delete_req_no_access(self):
         obs = sample_template_delete_req(1, 'demo@microbio.me')

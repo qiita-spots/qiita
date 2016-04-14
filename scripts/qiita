@@ -399,6 +399,10 @@ def start(port):
     from qiita_pet.webserver import Application
     from tornado.options import options, parse_command_line
 
+    # Create/repopulate the usernames key so we can do autocomplete for sharing
+    r_client.delete('qiita-usernames')
+    r_client.zadd('qiita-usernames', **{u: 0 for u in qdb.user.User.iter()})
+
     if qiita_config.log_path:
         options.log_file_prefix = qiita_config.log_path
         options.logging = 'debug'

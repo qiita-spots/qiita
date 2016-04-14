@@ -6,7 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
+from collections import defaultdict
 
+from future.utils import viewitems
+
+from qiita_db.user import User
 from qiita_db.study import Study
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import (supported_filepath_types,
@@ -78,17 +82,20 @@ def study_get_req(study_id, user_id):
         'affiliation': pi.affiliation}
 
     lab_person = study_info['lab_person']
-    study_info['lab_person'] = {
-        'name': lab_person.name,
-        'email': lab_person.email,
-        'affiliation': lab_person.affiliation}
+    if lab_person:
+        study_info['lab_person'] = {
+            'name': lab_person.name,
+            'email': lab_person.email,
+            'affiliation': lab_person.affiliation}
 
     samples = study.sample_template
     study_info['num_samples'] = 0 if samples is None else len(list(samples))
+    study_info['owner'] = study.owner.id
+
     return {'status': 'success',
             'message': '',
-            'info': study_info
-            }
+            'study_info': study_info,
+            'editable': study.can_edit(User(user_id))}
 
 
 def study_delete_req(study_id, user_id):
@@ -146,10 +153,12 @@ def study_prep_get_req(study_id, user_id):
         return access_error
     # Can only pass ids over API, so need to instantiate object
     study = Study(int(study_id))
-    prep_info = {}
+    prep_info = defaultdict(list)
+    editable = study.can_edit(User(user_id))
     for dtype in study.data_types:
-        prep_info[dtype] = []
         for prep in study.prep_templates(dtype):
+            if prep.status != 'public' and not editable:
+                continue
             start_artifact = prep.artifact
             info = {
                 'name': 'PREP %d NAME' % prep.id,
@@ -168,12 +177,13 @@ def study_prep_get_req(study_id, user_id):
                 info['youngest_artifact'] = None
 
             prep_info[dtype].append(info)
+
     return {'status': 'success',
             'message': '',
             'info': prep_info}
 
 
-def study_files_get_req(study_id, prep_template_id, artifact_type):
+def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     """Returns the uploaded files for the study id categorized by artifact_type
 
     It retrieves the files uploaded for the given study and tries to do a
@@ -182,6 +192,8 @@ def study_files_get_req(study_id, prep_template_id, artifact_type):
 
     Parameters
     ----------
+    user_id : str
+        The id of the user making the request
     study_id : int
         The study id
     prep_template_id : int
@@ -235,8 +247,23 @@ def study_files_get_req(study_id, prep_template_id, artifact_type):
     # because selected is initialized to the empty list
     file_types.insert(0, (first[0], first[1], selected))
 
+    # Create a list of artifacts that the user has access to, in case that
+    # he wants to import the files from another artifact
+    user = User(user_id)
+    artifact_options = []
+    user_artifacts = user.user_artifacts(artifact_type=artifact_type)
+    study = Study(study_id)
+    if study not in user_artifacts:
+        user_artifacts[study] = study.artifacts(artifact_type=artifact_type)
+    for study, artifacts in viewitems(user_artifacts):
+        study_label = "%s (%d)" % (study.title, study.id)
+        for a in artifacts:
+            artifact_options.append(
+                (a.id, "%s - %s (%d)" % (study_label, a.name, a.id)))
+
     return {'status': 'success',
             'message': '',
             'remaining': remaining,
             'file_types': file_types,
-            'num_prefixes': num_prefixes}
+            'num_prefixes': num_prefixes,
+            'artifacts': artifact_options}

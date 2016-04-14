@@ -1,0 +1,189 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+<script type="text/javascript">
+  /*
+   * Function to delete an artifact
+   *
+   * @param aid The artifact to be removed
+   *
+   * This function executes an AJAX query to delete an artifact from the system
+   */
+  function delete_artifact(aid) {
+    $.post("{% raw qiita_config.portal_dir %}/artifact/", {artifact_id: +aid })
+      .done(function ( data ) {
+        if( data.status == "success") {
+          populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+        }
+        if( data.status == "error") {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
+        }
+      });
+  }
+
+  /*
+   * Function to generate the artifact HTML summary
+   *
+   * @param artifact_id int the artifact id
+   *
+   * This function executes an AJAX query to fire off the generation of the
+   * artifact's HTML summary
+   *
+   */
+  function generate_html_summary(artifact_id) {
+    $.post('{% raw qiita_config.portal_dir %}/study/description/artifact_summary/', {'artifact_id': artifact_id})
+      .done( function ( data ) {
+        if(data.status == "success") {
+          var html_contents = "Job <b>" + data.job[0] + "</b>: <i>" + data.job[1] + "</i> ";
+          if (data.job[2]) {
+            html_contents = html_contents + data.job[2];
+          }
+          $("#artifact-summary-content").html(html_contents);
+        }
+        else {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
+        }
+      });
+  }
+
+  /*
+   * Function to change the visibility of an artifact
+   *
+   * @param visibility str the new visibility
+   * @param aid int the artifact id
+   *
+   * The function executes an AJAX query to update the visibility of the
+   * artifact
+   *
+   */
+  function set_artifact_visibility(visibility, aid) {
+    $.post('{% raw qiita_config.portal_dir %}/admin/artifact/', {artifact_id: +aid, visibility: visibility})
+      .done(function ( data ) {
+        var status = "info";
+        if(data["status"] == "error") { status = "danger"; }
+        //Show for 4 seconds (4000 ms), then remove
+        bootstrapAlert(data.message.replace("\n", "<br/>"), status);
+        //update buttons to match new status
+        load_artifact_summary(aid);
+      });
+  }
+
+  /*
+   *
+   * Function to update the artifact name
+   *
+   * @param artifact_id int the artifact to be changed
+   * @param new_name str the new artifact name
+   *
+   * This function executes an AJAX call to update the artifact name
+   * and updates the interface accordingly
+   *
+   */
+  function change_artifact_name(artifact_id, new_name) {
+    $.ajax({
+      url: '{% raw qiita_config.portal_dir %}/artifact/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/' + artifact_id + '/name/', 'value': new_name, 'artifact_id': artifact_id},
+      success: function(data) {
+        $("#update-artifact-name").modal('hide');
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        }
+        else {
+          $("#summary-title").text(new_name + ' (ID: ' + artifact_id + ')');
+          load_template_graph();
+        }
+      }
+    });
+  }
+
+  /*
+   *
+   * Allows updating the artifact name if the new artifact name is not empty
+   *
+   */
+  function validate_new_name() {
+    $("#update-name-btn").prop('disabled', $("#new-artifact-name").val() === "");
+  }
+</script>
+<div class='row'>
+  <div class='col-md-12'>
+    <h4>
+      <i id='summary-title'>{{name}} (ID: {{artifact_id}})</i>
+      {% if editable %}
+        <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit</a>
+        <a class="btn btn-default btn-sm" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/process/', {artifact_id: {{artifact_id}} });"><span class="glyphicon glyphicon-play"></span> Process</a>
+        <a class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete artifact {{artifact_id}}?')){ delete_artifact({{artifact_id}}) };"><span class="glyphicon glyphicon-trash"></span> Delete</a>
+      {% end %}
+    </h4>
+  </div>
+</div>
+<div class='row'>
+  <div class='col-md-12'>
+    Visibility: {{visibility}}
+    {% if editable %}
+      {% raw buttons %}
+    {% end %}
+  </div>
+</div>
+
+{% if files %}
+<div class='row'>
+  <div class='col-md-12'>
+    Available files:
+    {% for f_id, f_name in files %}
+      </br><a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a>
+    {% end %}
+  </div>
+</div>
+{% end %}
+
+<div class='row'>
+  <div class='col-md-12'>
+    {% if processing_jobs %}
+      <b>Jobs using this set of files:</b></br>
+    {% end %}
+    {% for j_id, c_name, j_status, j_step, j_error in processing_jobs %}
+      Job <b>{{j_id}}</b> ({{c_name}}). Status: <i>{{j_status}}</i>.
+      {% if j_step %}
+        Step: <i>{{j_step}}</i>
+      {% end %}
+      {% if j_error %}
+        Erro message: <i>{{j_error}}</i>
+      {% end %}
+      </br>
+    {% end %}
+  </div>
+</div>
+<div class='row'>
+  <div class='col-md-12' id='artifact-summary-content'>
+    {% if summary is not None %}
+      {% raw summary %}
+    {% elif job is not None %}
+      Job <b>{{ job[0] }}</b>: <i>{{ job[1] }}</i> {{ job[2] }}
+    {% else %}
+      Currently, no summary exists. </br>
+      <button class="btn btn-info btn-sm" onclick="generate_html_summary({{artifact_id}});">Generate summary</button></br>
+      {% for j_id, j_error in errored_jobs %}
+        Job <b>{{ j_id }}</b>: <i>{% raw j_error.replace('\n', '</br>') %}</i></br>
+      {% end %}
+    {% end %}
+  </div>
+</div>
+
+<!-- Modal to update the artifact name -->
+<div class="modal fade update-artifact-name" tabindex="-1" role="dialog" id="update-artifact-name">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h3>Updating artifact {{artifact_id}} name</h3>
+      </div>
+      <div class="modal-body">
+        Introduce the new name:<br/>
+        <input type="text" name="new-artifact-name" id="new-artifact-name" size="35" maxlength="35" onkeyup="validate_new_name();">
+        <button id="update-name-btn" class="btn btn-default" onclick="change_artifact_name({{artifact_id}}, $('#new-artifact-name').val());" disabled>Update</button>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>

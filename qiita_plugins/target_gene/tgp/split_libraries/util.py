@@ -8,7 +8,7 @@
 
 from os.path import join, exists
 from functools import partial
-from os import makedirs
+from os import makedirs, stat
 
 import pandas as pd
 from h5py import File
@@ -134,6 +134,8 @@ def generate_demux_file(sl_out):
     if not exists(fastq_fp):
         raise ValueError("The split libraries output directory does not "
                          "contain the demultiplexed fastq file.")
+    elif stat(fastq_fp).st_size == 0:
+        raise ValueError("No sequences were demuxed. Check your parameters.")
 
     demux_fp = join(sl_out, 'seqs.demux')
     with File(demux_fp, "w") as f:
