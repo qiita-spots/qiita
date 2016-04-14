@@ -26,10 +26,16 @@ class TestPrepTemplateHandler(TestHandlerBase):
         with open(self.new_prep, 'w') as f:
             f.write("sample_name\tnew_col\nSKD6.640190\tnew_value\n")
 
+        self.broken_prep = join(uploads_dp, '1', 'broke_template.txt')
+        with open(self.broken_prep, 'w') as f:
+            f.write("sample_name\tbroke \col\nSKD6.640190\tnew_value\n")
+
     def tearDown(self):
         super(TestPrepTemplateHandler, self).tearDown()
         if exists(self.new_prep):
             remove(self.new_prep)
+        if exists(self.broken_prep):
+            remove(self.broken_prep)
 
     def test_post(self):
         new_prep_id = get_count('qiita.prep_template') + 1
@@ -41,16 +47,23 @@ class TestPrepTemplateHandler(TestHandlerBase):
         # Check that the new prep template has been created
         self.assertTrue(PrepTemplate.exists(new_prep_id))
 
+    def test_post_broken_header(self):
+        arguments = {'study_id': '1',
+                     'data-type': '16S',
+                     'prep-file': 'broke_template.txt'}
+        response = self.post('/prep_template/', arguments)
+        self.assertEqual(response.code, 200)
+        self.assertIn('sample_id varchar NOT NULL, broke \\\\col',
+                      response.body)
+
     def test_patch(self):
-        # TODO: issue #1682
-        # arguments = {'op': 'replace',
-        #              'path': '/1/investigation_type/',
-        #              'value': 'Cancer Genomics'}
-        # response = self.patch('/prep_template/', data=arguments)
-        # self.assertEqual(response.code, 200)
-        # exp = {'status': 'success', 'message': ''}
-        # self.assertEqual(laods(response.body), exp)
-        pass
+        arguments = {'op': 'replace',
+                     'path': '/1/investigation_type/',
+                     'value': 'Cancer Genomics'}
+        response = self.patch('/prep_template/', data=arguments)
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(loads(response.body), exp)
 
     def test_delete(self):
         # Create a new prep template so we can delete it

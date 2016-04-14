@@ -211,7 +211,8 @@ class SplitLibrariesFastqTests(TestCase):
                ("s3_rev.fastq.gz", "raw_reverse_seqs"),
                ("s1_barcodes.fastq.gz", "raw_barcodes"),
                ("s2_barcodes.fastq.gz", "raw_barcodes"),
-               ("s3_barcodes.fastq.gz", "raw_barcodes")]
+               ("s3_barcodes.fastq.gz", "raw_barcodes"),
+               ("artifact_summary.html", "html_summary")]
         self._clean_up_files.append(out_dir)
         fd, fp = mkstemp()
         with open(fp, 'w') as f:

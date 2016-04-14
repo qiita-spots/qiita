@@ -1,25 +1,37 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+{% from future.utils import viewitems %}
 {% extends sitebase.html%}
 
 {%block head%}
-
-
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+  init_sharing("{% raw qiita_config.portal_dir %}");
+  update_share();
+});
+</script>
 {%end%}
 
 {%block content%}
+{# LEAVE THIS IMPORT HERE OTHERWISE IT BREAKS #}
 {% from future.utils import viewitems %}
-
-
 <div class="row">
     <table border="0">
       <tr>
         <td><h1>&nbsp;Analysis: <u>{{aname}}</u></h1></td>
         <td width="20px"></td>
         <td>
-          <h1><a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{aname}}', {{analysis_id}});"></a></h1>
+          <a class="btn btn-info glyphicon glyphicon-share" data-toggle="modal" data-target="#share-analysis-modal-view" onclick="modify_sharing({{analysis_id}});"></a>
+        </td>
+        <td width="20px"></td>
+        <td>
+          <a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{aname}}', {{analysis_id}});"></a>
         </td>
       </tr>
     </table>
-  </h1>
+  Shared with: <span id="shared_html_{{analysis_id}}"></span> 
 </div>
 
 
@@ -69,7 +81,7 @@
                   <h3 style="color:red">ERROR</h3>
                 {% end %}
                 {%for result, result_name in results%}
-                  <a href='{{"/results/%s" % result}}' target="resframe">{{result_name}}</a><br />
+                  <a href='{% raw qiita_config.portal_dir %}{{"/results/%s" % result}}' target="resframe">{{result_name}}</a><br />
                 {% end %}
               </div>
             {% end %}
@@ -83,4 +95,28 @@
   </div>
 </div>
 
+ <!-- Modal used to share the analysis -->
+<div class="modal fade" id="share-analysis-modal-view" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Modify Sharing Settings</h4>
+      </div>
+        <div class="modal-body">
+          <div>
+            <div class="form-group">
+              <label for="shares-select">Add/Remove Users</label>
+              <select multiple class="analysis" id="shares-select" data-share-url="{% raw qiita_config.portal_dir %}/analysis/sharing/" data-current-id={{analysis_id}} style="width:50%"></select>
+              <br>
+              <br>
+              Adding or removing email addresses automatically updates who the analysis is shared with. Once you click the `X` or give mouse focus to the analysis page you'll see your new sharing settings.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+        </div>
+    </div>
+  </div>
+</div>
 {%end%}

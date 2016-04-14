@@ -1,4 +1,24 @@
+{% from qiita_core.qiita_settings import qiita_config %}
 <script type="text/javascript">
+  /*
+   * Function to delete an artifact
+   *
+   * @param aid The artifact to be removed
+   *
+   * This function executes an AJAX query to delete an artifact from the system
+   */
+  function delete_artifact(aid) {
+    $.post("{% raw qiita_config.portal_dir %}/artifact/", {artifact_id: +aid })
+      .done(function ( data ) {
+        if( data.status == "success") {
+          populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+        }
+        if( data.status == "error") {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
+        }
+      });
+  }
+
   /*
    * Function to generate the artifact HTML summary
    *
@@ -9,7 +29,7 @@
    *
    */
   function generate_html_summary(artifact_id) {
-    $.post('/study/description/artifact_summary/', {'artifact_id': artifact_id})
+    $.post('{% raw qiita_config.portal_dir %}/study/description/artifact_summary/', {'artifact_id': artifact_id})
       .done( function ( data ) {
         if(data.status == "success") {
           var html_contents = "Job <b>" + data.job[0] + "</b>: <i>" + data.job[1] + "</i> ";
@@ -35,7 +55,7 @@
    *
    */
   function set_artifact_visibility(visibility, aid) {
-    $.post('/admin/artifact/', {artifact_id: +aid, visibility: visibility})
+    $.post('{% raw qiita_config.portal_dir %}/admin/artifact/', {artifact_id: +aid, visibility: visibility})
       .done(function ( data ) {
         var status = "info";
         if(data["status"] == "error") { status = "danger"; }
@@ -59,7 +79,7 @@
    */
   function change_artifact_name(artifact_id, new_name) {
     $.ajax({
-      url: '/artifact/',
+      url: '{% raw qiita_config.portal_dir %}/artifact/',
       type: 'PATCH',
       data: {'op': 'replace', 'path': '/' + artifact_id + '/name/', 'value': new_name, 'artifact_id': artifact_id},
       success: function(data) {
@@ -90,7 +110,8 @@
       <i id='summary-title'>{{name}} (ID: {{artifact_id}})</i>
       {% if editable %}
         <a class="btn btn-default btn-sm" data-toggle="modal" data-target="#update-artifact-name"><span class="glyphicon glyphicon-pencil"></span> Edit</a>
-        <a class="btn btn-default btn-sm" onclick="populate_main_div('/study/process/', {artifact_id: {{artifact_id}} });"><span class="glyphicon glyphicon-play"></span> Process</a>
+        <a class="btn btn-default btn-sm" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/process/', {artifact_id: {{artifact_id}} });"><span class="glyphicon glyphicon-play"></span> Process</a>
+        <a class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete artifact {{artifact_id}}?')){ delete_artifact({{artifact_id}}) };"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
     </h4>
   </div>
@@ -109,7 +130,7 @@
   <div class='col-md-12'>
     Available files:
     {% for f_id, f_name in files %}
-      </br><a class="btn btn-default" href="/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a>
+      </br><a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{f_id}}"><span class="glyphicon glyphicon-download-alt"></span> {{f_name}}</a>
     {% end %}
   </div>
 </div>

@@ -106,6 +106,22 @@ def prep_template_ajax_get_req(user_id, prep_id):
     # Currently there is no name attribute, but it will be soon
     name = "Prep information %d" % prep_id
     pt = PrepTemplate(prep_id)
+
+    job_id = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
+    if job_id:
+        redis_info = loads(r_client.get(job_id))
+        processing = redis_info['status_msg'] == 'Running'
+        if processing:
+            alert_type = 'info'
+            alert_msg = 'This prep template is currently being updated'
+        else:
+            alert_type = redis_info['return']['status']
+            alert_msg = redis_info['return']['message'].replace('\n', '</br>')
+    else:
+        processing = False
+        alert_type = ''
+        alert_msg = ''
+
     artifact_attached = pt.artifact is not None
     study_id = pt.study_id
     files = [f for _, f in get_files_from_uploads_folders(study_id)
@@ -129,21 +145,6 @@ def prep_template_ajax_get_req(user_id, prep_id):
     download_qiime = download_qiime[0]
 
     ontology = _get_ENA_ontology()
-
-    job_id = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
-    if job_id:
-        redis_info = loads(r_client.get(job_id))
-        processing = redis_info['status_msg'] == 'Running'
-        if processing:
-            alert_type = 'info'
-            alert_msg = 'This prep template is currently being updated'
-        else:
-            alert_type = redis_info['return']['status']
-            alert_msg = redis_info['return']['message'].replace('\n', '</br>')
-    else:
-        processing = False
-        alert_type = ''
-        alert_msg = ''
 
     editable = Study(study_id).can_edit(User(user_id)) and not processing
 

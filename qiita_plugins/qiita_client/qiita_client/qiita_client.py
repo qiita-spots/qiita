@@ -117,6 +117,8 @@ class QiitaClient(object):
         self._authenticate_url = "%s/qiita_db/authenticate/" % self._server_url
 
         # Fetch the access token
+        print type(requests), self._verify
+        print dir(requests)
         self._fetch_token()
 
     def _fetch_token(self):

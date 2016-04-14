@@ -23,7 +23,7 @@
 
 <h1>Select Commands</h1>
 <span id="error" style="color:red"></span>
-<form role="form" action="/analysis/wait/{{aid}}" method="post" onsubmit="return check_selection()">
+<form role="form" action="{% raw qiita_config.portal_dir %}/analysis/wait/{{aid}}" method="post" onsubmit="return check_selection()">
 
 <div>
 <table class="table">

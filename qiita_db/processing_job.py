@@ -306,9 +306,12 @@ class ProcessingJob(qdb.base.QiitaObject):
         software = self.command.software
         plugin_start_script = software.start_script
         plugin_env_script = software.environment_script
+        # Appending the portal URL so the job requests the information from the
+        # portal server that submitted the job
+        url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
         cmd = '%s "%s" "%s" "%s" "%s" "%s"' % (
             qiita_config.plugin_launcher, plugin_env_script,
-            plugin_start_script, qiita_config.base_url, self.id, job_dir)
+            plugin_start_script, url, self.id, job_dir)
         return cmd
 
     def submit(self):
@@ -324,7 +327,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 "Can't submit job, not in 'in_construction' or "
                 "'waiting' status. Current status: %s" % status)
-        self._set_status = 'queued'
+        self._set_status('queued')
         cmd = self._generate_cmd()
         p = Process(target=_job_submitter, args=(self, cmd))
         p.start()

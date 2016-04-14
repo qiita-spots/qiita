@@ -40,10 +40,8 @@ setup(name='qiita-type-plugin-target-gene',
       url='https://github.com/biocore/qiita',
       test_suite='nose.collector',
       packages=['target_gene_type'],
-      package_data={
-        'target_gene_type': [
-            'support_files/config_file.cfg',
-            'tests/test_data/*']},
+      package_data={'target_gene_type': ['support_files/config_file.cfg',
+                                         'tests/test_data/*']},
       scripts=glob('scripts/*'),
       extras_require={'test': ["nose >= 0.10.1", "pep8", 'httpretty']},
       install_requires=['click >= 3.3', 'h5py >= 2.3.1'],

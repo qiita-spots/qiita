@@ -43,10 +43,13 @@ class StudyBaseInfoAJAX(BaseHandler):
             contact = email.format(**study_info['lab_person'])
         else:
             contact = None
+        share_access = (self.current_user.id in study_info['shared_with'] or
+                        self.current_user.id == study_info['owner'])
 
         self.render('study_ajax/base_info.html',
                     study_info=study_info, publications=study_doi, pi=pi,
-                    contact=contact, editable=res['editable'])
+                    contact=contact, editable=res['editable'],
+                    share_access=share_access)
 
 
 class StudyDeleteAjax(BaseHandler):

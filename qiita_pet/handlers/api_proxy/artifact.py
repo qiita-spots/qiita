@@ -9,17 +9,23 @@ from os.path import join, basename
 from functools import partial
 
 from future.utils import viewitems
+from moi import r_client
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
+from qiita_ware.context import safe_submit
+from qiita_ware.dispatchable import (create_raw_data, copy_raw_data,
+                                     delete_artifact)
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBArtifactDeletionError
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import get_mountpoint, get_visibilities
 from qiita_db.software import Command, Parameters
 from qiita_db.processing_job import ProcessingJob
+
+
+PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
 
 def artifact_summary_get_request(user_id, artifact_id):
@@ -84,7 +90,8 @@ def artifact_summary_get_request(user_id, artifact_id):
 
     buttons = []
     btn_base = (
-        '<button onclick="set_artifact_visibility(\'%s\', {0})" '
+        '<button onclick="if (confirm(\'Are you sure you want to %s '
+        'artifact id: {0}?\')) {{ set_artifact_visibility(\'%s\', {0}) }}" '
         'class="btn btn-primary btn-sm">%s</button>').format(artifact_id)
 
     if qiita_config.require_approval:
@@ -93,35 +100,38 @@ def artifact_summary_get_request(user_id, artifact_id):
             # sandboxed and the qiita_config specifies that the approval should
             # be requested
             buttons.append(
-                btn_base % ('awaiting_approval', 'Request approval'))
+                btn_base % ('request approval for', 'awaiting_approval',
+                            'Request approval'))
+
         elif user.level == 'admin' and visibility == 'awaiting_approval':
             # The approve artifact button only appears if the user is an admin
             # the artifact is waiting to be approvaed and the qiita config
             # requires artifact approval
-            buttons.append(btn_base % ('private', 'Approve artifact'))
+            buttons.append(btn_base % ('approve', 'private',
+                                       'Approve artifact'))
     if visibility == 'private':
         # The make public button only appears if the artifact is private
-        buttons.append(btn_base % ('public', 'Make public'))
+        buttons.append(btn_base % ('make public', 'public', 'Make public'))
 
     # The revert to sandbox button only appears if the artifact is not
     # sandboxed nor public
     if visibility not in {'sandbox', 'public'}:
-        buttons.append(btn_base % ('sandbox', 'Revert to sandbox'))
+        buttons.append(btn_base % ('revert to sandbox', 'sandbox',
+                                   'Revert to sandbox'))
 
     if artifact.can_be_submitted_to_ebi:
         if not artifact.is_submitted_to_ebi:
             buttons.append(
                 '<a class="btn btn-primary btn-sm" '
-                'href="/ebi_submission/{{ppd_id}}">'
+                'href="/ebi_submission/%d">'
                 '<span class="glyphicon glyphicon-export"></span>'
-                ' Submit to EBI</a>')
+                ' Submit to EBI</a>' % artifact_id)
     if artifact.can_be_submitted_to_vamps:
         if not artifact.is_submitted_to_vamps:
             buttons.append(
-                '<a class="btn btn-primary btn-sm" href="/vamps/{{ppd_id}}">'
+                '<a class="btn btn-primary btn-sm" href="/vamps/%d">'
                 '<span class="glyphicon glyphicon-export"></span>'
-                ' Submit to VAMPS</a>')
-
+                ' Submit to VAMPS</a>' % artifact_id)
     files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')))
              for f_id, fp, f_type in artifact.filepaths
              if f_type != 'directory']
@@ -146,7 +156,9 @@ def artifact_summary_get_request(user_id, artifact_id):
             'visibility': visibility,
             'buttons': ' '.join(buttons),
             'files': files,
-            'editable': artifact.study.can_edit(user)}
+            'editable': artifact.study.can_edit(user),
+            'study_id': artifact.study.id,
+            'prep_id': artifact.prep_templates[0].id}
 
 
 def artifact_summary_post_request(user_id, artifact_id):
@@ -282,16 +294,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
 
     if artifact_id:
         # if the artifact id has been provided, import the artifact
-        try:
-            artifact = Artifact.copy(Artifact(artifact_id), prep)
-        except Exception as e:
-            # We should hit this exception rarely (that's why it is an
-            # exception)  since at this point we have done multiple checks.
-            # However, it can occur in weird cases, so better let the GUI know
-            # that this failed
-            return {'status': 'error',
-                    'message': "Error creating artifact: %s" % str(e)}
-
+        job_id = safe_submit(user_id, copy_raw_data, prep, artifact_id)
     else:
         uploads_path = get_mountpoint('uploads')[0][1]
         path_builder = partial(join, uploads_path, str(study_id))
@@ -319,20 +322,13 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
 
-        try:
-            artifact = Artifact.create(cleaned_filepaths, artifact_type,
-                                       name=name, prep_template=prep)
-        except Exception as e:
-            # We should hit this exception rarely (that's why it is an
-            # exception)  since at this point we have done multiple checks.
-            # However, it can occur in weird cases, so better let the GUI know
-            # that this failed
-            return {'status': 'error',
-                    'message': "Error creating artifact: %s" % str(e)}
+        job_id = safe_submit(user_id, create_raw_data, artifact_type, prep,
+                             cleaned_filepaths, name=name)
+
+    r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id, job_id)
 
     return {'status': 'success',
-            'message': '',
-            'artifact': artifact.id}
+            'message': ''}
 
 
 def artifact_patch_request(user_id, req_op, req_path, req_value=None,
@@ -477,11 +473,10 @@ def artifact_delete_req(artifact_id, user_id):
     access_error = check_access(pd.study.id, user_id)
     if access_error:
         return access_error
-    try:
-        Artifact.delete(int(artifact_id))
-    except QiitaDBArtifactDeletionError as e:
-        return {'status': 'error',
-                'message': str(e)}
+
+    job_id = safe_submit(user_id, delete_artifact, artifact_id)
+    r_client.set(PREP_TEMPLATE_KEY_FORMAT % pd.prep_templates[0].id, job_id)
+
     return {'status': 'success',
             'message': ''}
 

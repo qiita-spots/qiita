@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import authenticated, HTTPError
+from tornado.escape import url_escape
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.util import get_files_from_uploads_folders
@@ -92,7 +93,8 @@ class SampleTemplateAJAX(BaseHandler):
         stats['files'] = files
         stats['study_id'] = study_id
         stats['data_types'] = data_types
-
+        # URL encode in case message has javascript-breaking characters in it
+        stats['alert_message'] = url_escape(stats['alert_message'])
         self.render('study_ajax/sample_summary.html', **stats)
 
     @authenticated
@@ -123,8 +125,18 @@ class SampleAJAX(BaseHandler):
         """Show the sample summary page"""
         study_id = self.get_argument('study_id')
 
-        meta_cats = sample_template_meta_cats_get_req(
-            int(study_id), self.current_user.id)['categories']
+        res = sample_template_meta_cats_get_req(
+            int(study_id), self.current_user.id)
+
+        if res['status'] == 'error':
+            if 'does not exist' in res['message']:
+                raise HTTPError(404, res['message'])
+            elif 'User does not have access to study' in res['message']:
+                raise HTTPError(403, res['message'])
+            else:
+                raise HTTPError(500, res['message'])
+
+        meta_cats = res['categories']
         cols, samps_table = _build_sample_summary(study_id,
                                                   self.current_user.id)
         self.render('study_ajax/sample_prep_summary.html',

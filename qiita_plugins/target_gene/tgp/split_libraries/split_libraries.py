@@ -203,6 +203,9 @@ def split_libraries(qclient, job_id, parameters, out_dir):
             seqs.append(fp)
         elif fp_type == 'raw_qual':
             quals.append(fp)
+        elif fp_type == 'html_summary':
+            # Ignore the HTML summary file
+            continue
         else:
             raise NotImplementedError("File type not supported %s" % fp_type)
 

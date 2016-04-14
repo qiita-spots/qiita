@@ -240,6 +240,14 @@ class User(qdb.base.QiitaObject):
                 cls._table, ','.join(columns), ','.join(['%s'] * len(values)))
             qdb.sql_connection.TRN.add(sql, values)
 
+            # Add system messages to user
+            sql = """INSERT INTO qiita.message_user (email, message_id)
+                     SELECT %s, message_id FROM qiita.message
+                     WHERE expiration > %s"""
+            qdb.sql_connection.TRN.add(sql, [email, datetime.now()])
+
+            qdb.sql_connection.TRN.execute()
+
             return cls(email)
 
     @classmethod
@@ -324,11 +332,6 @@ class User(qdb.base.QiitaObject):
                         qdb.sql_connection.TRN.add(an_sql, args)
                         an_id = qdb.sql_connection.TRN.execute_fetchlast()
                         qdb.sql_connection.TRN.add(ap_sql, [an_id, portal_id])
-                    # Add system messages to user
-                    sql = """INSERT INTO qiita.message_user (email, message_id)
-                             SELECT %s, message_id FROM qiita.message
-                             WHERE expiration > %s"""
-                    qdb.sql_connection.TRN.add(sql, [email, datetime.now()])
 
                     qdb.sql_connection.TRN.execute()
 

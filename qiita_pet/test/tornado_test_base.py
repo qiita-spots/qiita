@@ -31,7 +31,7 @@ class TestHandlerBase(AsyncHTTPTestCase):
             if isinstance(data, dict):
                 data = urlencode(data, doseq=doseq)
             if '?' in url:
-                url += '&amp;%s' % data
+                url += '&%s' % data
             else:
                 url += '?%s' % data
         return self._fetch(url, 'GET', headers=headers)
@@ -42,23 +42,21 @@ class TestHandlerBase(AsyncHTTPTestCase):
                 data = urlencode(data, doseq=doseq)
         return self._fetch(url, 'POST', data, headers)
 
-    def patch(self, url, data=None, headers=None, doseq=True):
-        # TODO: issue #1682
-        if data is not None:
-            if isinstance(data, dict):
-                data = urlencode(data, doseq=doseq)
-            if '?' in url:
-                url += '&amp;%s' % data
-            else:
-                url += '?%s' % data
-        return self._fetch(url, 'PATCH', headers=headers)
+    def patch(self, url, data, headers=None, doseq=True):
+        if isinstance(data, dict):
+            data = urlencode(data, doseq=doseq)
+        if '?' in url:
+            url += '&%s' % data
+        else:
+            url += '?%s' % data
+        return self._fetch(url, 'PATCH', data=data, headers=headers)
 
     def delete(self, url, data=None, headers=None, doseq=True):
         if data is not None:
             if isinstance(data, dict):
                 data = urlencode(data, doseq=doseq)
             if '?' in url:
-                url += '&amp;%s' % data
+                url += '&%s' % data
             else:
                 url += '?%s' % data
         return self._fetch(url, 'DELETE', headers=headers)

@@ -23,48 +23,6 @@ from qiita_ware.wrapper import ParallelWrapper, system_call_from_job
 # -----------------------------------------------------------------------------
 
 
-def _build_analysis_files(analysis, r_depth=None,
-                          merge_duplicated_sample_ids=False, **kwargs):
-    """Creates the biom tables and mapping file, then adds to jobs
-
-    Parameters
-    ----------
-    analysis : Analysis object
-        The analysis to build files for
-    r_depth : int, optional
-        Rarefaction depth for biom table creation. Default: None, no
-        rarefaction is applied
-    merge_duplicated_sample_ids : bool, optional
-        If the duplicated sample ids in the selected studies should be
-        merged or prepended with the artifact ids. False (default) prepends
-        the artifact id
-
-    Raises
-    ------
-    RuntimeError
-        No jobs are attached to the given analysis
-    """
-    if not analysis.jobs:
-        raise RuntimeError("Analysis %d has no jobs attached!" % analysis.id)
-
-    # create the biom tables and add jobs to the analysis
-    analysis.status = "running"
-    analysis.build_files(r_depth, merge_duplicated_sample_ids)
-    mapping_file = analysis.mapping_file
-    biom_tables = analysis.biom_tables
-
-    # add files to existing jobs
-    for job in analysis.jobs:
-        if job.status == 'queued':
-            opts = {
-                "--otu_table_fp": biom_tables[job.datatype],
-                "--mapping_fp": mapping_file
-            }
-            job_opts = job.options
-            job_opts.update(opts)
-            job.options = job_opts
-
-
 def _finish_analysis(analysis, **kwargs):
     """Checks job statuses and finalized analysis and redis communication
 
@@ -133,6 +91,12 @@ class RunAnalysis(ParallelWrapper):
         if comm_opts is None:
             comm_opts = {}
 
+        analysis.status = "running"
+        # creating bioms at this point cause all this section runs on a worker
+        # node, currently an ipython job
+        analysis.build_files(rarefaction_depth, merge_duplicated_sample_ids)
+        mapping_file = analysis.mapping_file
+
         tree_commands = ["Beta Diversity", "Alpha Rarefaction"]
         for data_type, biom_fp in viewitems(analysis.biom_tables):
             biom_table = load_table(biom_fp)
@@ -146,9 +110,15 @@ class RunAnalysis(ParallelWrapper):
             reference = Reference(reference_id)
             tree = reference.tree_fp
 
-            for data_type, command in commands:
+            for cmd_data_type, command in commands:
+                if data_type != cmd_data_type:
+                    continue
+
                 # get opts set by user, else make it empty dict
                 opts = comm_opts.get(command, {})
+                opts["--otu_table_fp"] = biom_fp
+                opts["--mapping_fp"] = mapping_file
+
                 if command in tree_commands:
                     if tree != '':
                         opts["--tree_fp"] = tree
@@ -163,15 +133,6 @@ class RunAnalysis(ParallelWrapper):
                 Job.create(data_type, command, opts, analysis, reference,
                            Command(software_command_id), return_existing=True)
 
-        # Create the files for the jobs
-        files_node_name = "%d_ANALYSISFILES" % analysis_id
-        self._job_graph.add_node(files_node_name,
-                                 func=_build_analysis_files,
-                                 args=(analysis, rarefaction_depth,
-                                       merge_duplicated_sample_ids),
-                                 job_name='Build analysis',
-                                 requires_deps=False)
-
         # Add the jobs
         job_nodes = []
         for job in analysis.jobs:
@@ -183,9 +144,6 @@ class RunAnalysis(ParallelWrapper):
                                      args=(job.id,),
                                      job_name=job_name,
                                      requires_deps=False)
-
-            # Adding the dependency edges to the graph
-            self._job_graph.add_edge(files_node_name, node_name)
 
         # tgz-ing the analysis results
         tgz_node_name = "TGZ_ANALYSIS_%d" % (analysis_id)

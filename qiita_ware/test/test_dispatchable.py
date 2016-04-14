@@ -14,8 +14,11 @@ from os.path import exists
 from qiita_core.util import qiita_test_checker
 from qiita_ware.dispatchable import (
     create_sample_template, update_sample_template, delete_sample_template,
-    update_prep_template)
+    update_prep_template, delete_artifact, copy_raw_data, create_raw_data)
 from qiita_db.study import Study
+from qiita_db.artifact import Artifact
+from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_db.metadata_template.prep_template import PrepTemplate
 
 
 @qiita_test_checker()
@@ -33,6 +36,36 @@ class TestDispatchable(TestCase):
         for fp in self._clean_up_files:
             if exists(fp):
                 remove(fp)
+
+    def test_create_raw_data(self):
+        fps = {'raw_barcodes': 'uploaded_file.txt',
+               'raw_forward_seqs': 'update.txt'}
+        obs = create_raw_data("FASTQ", PrepTemplate(1), fps, name="New name")
+        exp = {'status': 'danger',
+               'message': "Error creating artifact: Prep template 1 already "
+                          "has an artifact associated"}
+        self.assertEqual(obs, exp)
+
+    def test_copy_raw_data(self):
+        obs = copy_raw_data(PrepTemplate(1), 1)
+        exp = {'status': 'danger',
+               'message': "Error creating artifact: Prep template 1 already "
+                          "has an artifact associated"}
+        self.assertEqual(obs, exp)
+
+    def test_delete_artifact(self):
+        obs = delete_artifact(1)
+        exp = {'status': 'danger',
+               'message': 'Cannot delete artifact 1: it has children: 2, 3'}
+        self.assertEqual(obs, exp)
+
+        obs = delete_artifact(3)
+        exp = {'status': 'success',
+               'message': ''}
+        self.assertEqual(obs, exp)
+
+        with self.assertRaises(QiitaDBUnknownIDError):
+            Artifact(3)
 
     def test_create_sample_template(self):
         obs = create_sample_template(self.fp, Study(1), False)
