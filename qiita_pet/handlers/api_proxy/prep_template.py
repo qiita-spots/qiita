@@ -119,7 +119,8 @@ def prep_template_ajax_get_req(user_id, prep_id):
                 alert_msg = 'This prep template is currently being updated'
             elif redis_info['status_msg'] == 'Success':
                 alert_type = redis_info['return']['status']
-                alert_msg = redis_info['return']['message']
+                alert_msg = redis_info['return']['message'].replace('\n',
+                                                                    '</br>')
                 payload = {'job_id': None,
                            'status': alert_type,
                            'message': alert_msg}
