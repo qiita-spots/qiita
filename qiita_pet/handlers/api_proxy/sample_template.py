@@ -229,9 +229,11 @@ def sample_template_summary_get_req(samp_id, user_id):
                 alert_type = 'info'
                 alert_msg = 'This sample template is currently being processed'
             elif redis_info['status_msg'] == 'Success':
+                alert_type = redis_info['return']['status'],
+                alert_msg = redis_info['return']['message']
                 payload = {'job_id': None,
-                           'status': redis_info['return']['status'],
-                           'message': redis_info['return']['message']}
+                           'status': alert_type,
+                           'message': alert_msg}
                 r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % samp_id,
                              dumps(payload))
             else:
