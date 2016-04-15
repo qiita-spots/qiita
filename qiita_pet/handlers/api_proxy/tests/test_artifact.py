@@ -333,10 +333,10 @@ class TestArtifactAPI(TestCase):
         # the test database
         obs = r_client.get('prep_template_1')
         self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(obs))
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
             sleep(0.05)
-            redis_info = loads(r_client.get(obs))
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
 
     def test_artifact_delete_req_no_access(self):
         obs = artifact_delete_req(3, 'demo@microbio.me')
@@ -362,10 +362,10 @@ class TestArtifactAPI(TestCase):
 
         obs = r_client.get('prep_template_%d' % pt.id)
         self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(obs))
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
             sleep(0.05)
-            redis_info = loads(r_client.get(obs))
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
 
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
@@ -389,10 +389,10 @@ class TestArtifactAPI(TestCase):
 
         obs = r_client.get('prep_template_%d' % pt.id)
         self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(obs))
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
             sleep(0.05)
-            redis_info = loads(r_client.get(obs))
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(new_artifact_id_2)
