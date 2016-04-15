@@ -365,6 +365,8 @@ class DBUtilTests(TestCase):
         # files
         fd, seqs_fp = mkstemp(suffix='_seqs.fastq')
         close(fd)
+        fd, html_fp = mkstemp(suffix='.html')
+        close(fd)
         st = qdb.study.Study(1)
         metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
@@ -380,7 +382,8 @@ class DBUtilTests(TestCase):
             metadata, qdb.study.Study(1), "16S")
 
         artifact = qdb.artifact.Artifact.create(
-            [(seqs_fp, 1)], "FASTQ", prep_template=pt)
+            [(seqs_fp, 1), (html_fp, 'html_summary')], "FASTQ",
+            prep_template=pt)
         filepaths = artifact.filepaths
         # deleting reference so we can directly call
         # move_filepaths_to_upload_folder
@@ -394,10 +397,14 @@ class DBUtilTests(TestCase):
         # check that they do not exist in the old path but do in the new one
         path_for_removal = join(qdb.util.get_mountpoint("uploads")[0][1],
                                 str(st.id))
-        for _, fp, _ in filepaths:
+        for _, fp, fp_type in filepaths:
             self.assertFalse(exists(fp))
             new_fp = join(path_for_removal, basename(fp))
-            self.assertTrue(exists(new_fp))
+            if fp_type == 'html_summary':
+                # The html summary gets removed, not moved
+                self.assertFalse(exists(new_fp))
+            else:
+                self.assertTrue(exists(new_fp))
 
             self.files_to_remove.append(new_fp)
 

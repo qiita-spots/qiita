@@ -744,6 +744,28 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(test.id)
 
+    def test_delete_with_html(self):
+        fd, html_fp = mkstemp(suffix=".html")
+        close(fd)
+        self.filepaths_root.append((html_fp, 'html_summary'))
+        self._clean_up_files.append(html_fp)
+
+        test = qdb.artifact.Artifact.create(
+            self.filepaths_root, "FASTQ", prep_template=self.prep_template)
+
+        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1],
+                          str(test.study.id))
+
+        self._clean_up_files.extend(
+            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+
+        qdb.artifact.Artifact.delete(test.id)
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.artifact.Artifact(test.id)
+
+        self.assertFalse(exists(join(uploads_fp, basename(html_fp))))
+
     def test_delete_with_jobs(self):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, "FASTQ", prep_template=self.prep_template)
