@@ -133,8 +133,8 @@ class OauthBaseHandler(RequestHandler):
             return
         # log the error
         exc_info = kwargs['exc_info']
-        trace_info = ''.join(['%s\n' % line for line in
-                             format_exception(*exc_info)])
+        error_lines = ['%s\n' % line for line in format_exception(*exc_info)]
+        trace_info = ''.join(error_lines)
         req_dict = self.request.__dict__
         # must trim body to 1024 chars to prevent huge error messages
         req_dict['body'] = req_dict.get('body', '')[:1024]
@@ -146,6 +146,8 @@ class OauthBaseHandler(RequestHandler):
             'Runtime',
             'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
             (error, trace_info, request_info))
+
+        self.finish(exc_info[1].log_message)
 
     def head(self):
         """Adds proper response for head requests"""
