@@ -406,10 +406,10 @@ class TestPrepAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        redis_info = loads(r_client.get(obs))
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
             sleep(0.05)
-            redis_info = loads(r_client.get(obs))
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
 
     def test_prep_template_patch_req_errors(self):
         # Operation not supported

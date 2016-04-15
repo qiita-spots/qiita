@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 from os.path import join, basename
 from functools import partial
+from json import dumps
 
 from future.utils import viewitems
 from moi import r_client
@@ -325,7 +326,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
         job_id = safe_submit(user_id, create_raw_data, artifact_type, prep,
                              cleaned_filepaths, name=name)
 
-    r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id, job_id)
+    r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id, dumps({'job_id': job_id}))
 
     return {'status': 'success',
             'message': ''}
@@ -470,12 +471,14 @@ def artifact_delete_req(artifact_id, user_id):
         message: Human readable message for status
     """
     pd = Artifact(int(artifact_id))
+    pt_id = pd.prep_templates[0].id
     access_error = check_access(pd.study.id, user_id)
     if access_error:
         return access_error
 
     job_id = safe_submit(user_id, delete_artifact, artifact_id)
-    r_client.set(PREP_TEMPLATE_KEY_FORMAT % pd.prep_templates[0].id, job_id)
+    r_client.set(PREP_TEMPLATE_KEY_FORMAT % pt_id,
+                 dumps({'job_id': job_id}))
 
     return {'status': 'success',
             'message': ''}

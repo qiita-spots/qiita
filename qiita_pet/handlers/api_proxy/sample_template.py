@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from __future__ import division
-from json import loads
+from json import loads, dumps
 
 from natsort import natsorted
 from moi import r_client
@@ -218,16 +218,33 @@ def sample_template_summary_get_req(samp_id, user_id):
     if access_error:
         return access_error
 
-    job_id = r_client.get(SAMPLE_TEMPLATE_KEY_FORMAT % samp_id)
-    if job_id:
-        redis_info = loads(r_client.get(job_id))
-        processing = redis_info['status_msg'] == 'Running'
-        if processing:
-            alert_type = 'info'
-            alert_msg = 'This sample template is currently being processed'
+    job_info = r_client.get(SAMPLE_TEMPLATE_KEY_FORMAT % samp_id)
+    if job_info:
+        job_info = loads(job_info)
+        job_id = job_info['job_id']
+        if job_id:
+            redis_info = loads(r_client.get(job_id))
+            processing = redis_info['status_msg'] == 'Running'
+            if processing:
+                alert_type = 'info'
+                alert_msg = 'This sample template is currently being processed'
+            elif redis_info['status_msg'] == 'Success':
+                alert_type = redis_info['return']['status']
+                alert_msg = redis_info['return']['message'].replace('\n',
+                                                                    '</br>')
+                payload = {'job_id': None,
+                           'status': alert_type,
+                           'message': alert_msg}
+                r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % samp_id,
+                             dumps(payload))
+            else:
+                alert_type = redis_info['return']['status']
+                alert_msg = redis_info['return']['message'].replace('\n',
+                                                                    '</br>')
         else:
-            alert_type = redis_info['return']['status']
-            alert_msg = redis_info['return']['message'].replace('\n', '</br>')
+            processing = False
+            alert_type = job_info['status']
+            alert_msg = job_info['message'].replace('\n', '</br>')
     else:
         processing = False
         alert_type = ''
@@ -323,7 +340,8 @@ def sample_template_post_req(study_id, user_id, data_type,
     job_id = safe_submit(user_id, create_sample_template, fp_rsp, study,
                          is_mapping_file, data_type)
     # Store the job id attaching it to the sample template id
-    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study.id, job_id)
+    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study.id,
+                 dumps({'job_id': job_id}))
 
     return {'status': status,
             'message': msg,
@@ -374,7 +392,8 @@ def sample_template_put_req(study_id, user_id, sample_template):
     job_id = safe_submit(user_id, update_sample_template, int(study_id),
                          fp_rsp)
     # Store the job id attaching it to the sample template id
-    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id, job_id)
+    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
+                 dumps({'job_id': job_id}))
 
     return {'status': status,
             'message': msg,
@@ -412,7 +431,8 @@ def sample_template_delete_req(study_id, user_id):
     # Offload the deletion of the sample template to the cluster
     job_id = safe_submit(user_id, delete_sample_template, int(study_id))
     # Store the job id attaching it to the sample template id
-    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id, job_id)
+    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % study_id,
+                 dumps({'job_id': job_id}))
 
     return {'status': 'success', 'message': ''}
 

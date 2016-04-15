@@ -129,10 +129,10 @@ class NewArtifactHandlerTests(TestHandlerBase):
         # make sure new artifact created
         obs = r_client.get('prep_template_%s' % self.prep.id)
         self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(obs))
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
             sleep(0.05)
-            redis_info = loads(r_client.get(obs))
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
         new_artifact_id = get_count('qiita.artifact')
         artifact = Artifact(new_artifact_id)
         self.assertEqual(artifact.name, 'New Artifact Handler test')

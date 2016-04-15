@@ -322,10 +322,10 @@ class TestSampleAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        redis_info = loads(r_client.get(obs))
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
             sleep(0.05)
-            redis_info = loads(r_client.get(obs))
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
 
     def test_sample_template_post_req_no_access(self):
         obs = sample_template_post_req(1, 'demo@microbio.me', '16S',
@@ -348,10 +348,10 @@ class TestSampleAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        redis_info = loads(r_client.get(obs))
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
             sleep(0.05)
-            redis_info = loads(r_client.get(obs))
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
 
     def test_sample_template_put_req_no_access(self):
         obs = sample_template_put_req(1, 'demo@microbio.me', 'filepath')
@@ -378,10 +378,10 @@ class TestSampleAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        redis_info = loads(r_client.get(obs))
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
             sleep(0.05)
-            redis_info = loads(r_client.get(obs))
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
 
     def test_sample_template_delete_req_no_access(self):
         obs = sample_template_delete_req(1, 'demo@microbio.me')
