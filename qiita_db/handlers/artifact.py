@@ -57,14 +57,8 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            Format:
-            {'success': bool,
-             'error': str,
-             'filepaths': list of (str, str)}
-            - success: whether the request is successful or not
-            - error: in case that success is false, it contains the error msg
-            - filepaths: the filepaths attached to the artifact and their
-            filepath types
+            {'filepaths': list of (str, str)}
+            The filepaths attached to the artifact and their filepath types
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
@@ -82,15 +76,6 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
         ---------
         artifact_id : str
             The id of the artifact whose filepaths information is being updated
-
-        Returns
-        -------
-        dict
-            Format:
-            {'success': bool,
-             'error': str}
-            - success: whether the request is successful or not
-            - error: in case that success is false, it contains the error msg
         """
         req_op = self.get_argument('op')
         req_path = self.get_argument('path')
@@ -127,13 +112,8 @@ class ArtifactMappingHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            Format:
-            {'success': bool,
-             'error': str,
-             'mapping': str}
-             - success: whether the request is successful or not
-             - error: in case that success is false, it contains the error msg
-             - mapping: the filepath to the mapping file
+            {'mapping': str}
+            The filepath to the mapping file
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
@@ -167,13 +147,8 @@ class ArtifactTypeHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            Format:
-            {'success': bool,
-             'error': str,
-             'type': str}
-            - success: whether the request is successful or not
-            - error: in case that success is false, it contains the error msg
-            - type: the artifact type
+            {'type': str}
+            The artifact type
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
