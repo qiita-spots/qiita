@@ -11,10 +11,13 @@ import requests
 import threading
 from json import dumps
 
+from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
+                         ForbiddenError)
+
 JOB_COMPLETED = False
 
 
-def heartbeat(qclient, url):
+def _heartbeat(qclient, url):
     """Send the heartbeat calls to the server
 
     Parameters
@@ -24,16 +27,30 @@ def heartbeat(qclient, url):
     url : str
         The url to issue the heartbeat
     """
-    while not JOB_COMPLETED:
-        json_reply = qclient.post(url, data='')
-        if not json_reply or not json_reply['success']:
-            # The server did not accept our heartbeat - stop doing it
-            break
-        # Perform the heartbeat every 5 seconds
-        time.sleep(5)
+    retries = 2
+    while not JOB_COMPLETED and retries > 0:
+        try:
+            qclient.post(url, data='')
+            retries = 2
+        except requests.ConnectionError:
+            # This error occurs when the Qiita server is not reachable. This
+            # may occur when we are updating the server, and we don't want
+            # the job to fail. In this case, we wait for 5 min and try again
+            time.sleep(300)
+            retries -= 1
+        except QiitaClientError:
+            # If we raised the error, we propagate it since it is a problem
+            # with the request that we are executing
+            raise
+        except Exception as e:
+            # If it is any other exception, raise a RuntimeError
+            raise RuntimeError("Error executing heartbeat: %s" % str(e))
+
+        # Perform the heartbeat every 30 seconds
+        time.sleep(30)
 
 
-def format_payload(success, error_msg=None, artifacts_info=None):
+def _format_payload(success, error_msg=None, artifacts_info=None):
     """Generates the payload dictionary for the job
 
     Parameters
@@ -181,8 +198,19 @@ class QiitaClient(object):
 
         Returns
         -------
-        dict
-            The JSON information in the request response
+        dict or None
+            The JSON information in the request response, if any
+
+        Raises
+        ------
+        NotFoundError
+            If the request returned a 404 error
+        BadRequestError
+            If the request returned a 400 error
+        ForbiddenError
+            If the request returned a 403 error
+        RuntimeError
+            If the request did not succeed due to unknown causes
 
         Notes
         -----
@@ -202,15 +230,24 @@ class QiitaClient(object):
         """
         url = self._server_url + url
         retries = 2
-        json_reply = None
         while retries > 0:
             retries -= 1
             r = self._request_oauth2(req, url, verify=self._verify, **kwargs)
             r.close()
-            if r.status_code == 200:
-                json_reply = r.json()
-                break
-        return json_reply
+            # There are some error codes that the specification says that they
+            # shouldn't be retried
+            if r.status_code == 404:
+                raise NotFoundError(r.text)
+            elif r.status_code == 403:
+                raise ForbiddenError(r.text)
+            elif r.status_code == 400:
+                raise BadRequestError(r.text)
+            elif r.status_code == 200:
+                return r.json() if r.text else None
+
+        raise RuntimeError(
+            "Request '%s %s' did not succeed. Status code: %d. Message: %s"
+            % (req.__name__, url, r.status_code, r.text))
 
     def get(self, url, **kwargs):
         """Execute a get request against the Qiita server
@@ -311,7 +348,8 @@ class QiitaClient(object):
             The job id
         """
         url = "/qiita_db/jobs/%s/heartbeat/" % job_id
-        heartbeat_thread = threading.Thread(target=heartbeat, args=(self, url))
+        heartbeat_thread = threading.Thread(target=_heartbeat,
+                                            args=(self, url))
         heartbeat_thread.daemon = True
         heartbeat_thread.start()
 
@@ -343,15 +381,23 @@ class QiitaClient(object):
         json_payload = dumps({'step': new_step})
         self.post("/qiita_db/jobs/%s/step/" % job_id, data=json_payload)
 
-    def complete_job(self, job_id, payload):
+    def complete_job(self, job_id, success, error_msg=None,
+                     artifacts_info=None):
         """Stops the heartbeat thread and send the job results to the server
 
         Parameters
         ----------
         job_id : str
             The job id
-        payload : dict
-            The job's results
+        success : bool
+            Whether if the job completed successfully or not
+        error_msg : str, optional
+            If `success` is False, ther error message to include.
+            If `success` is True, it is ignored
+        artifacts_info : list of (str, str, list of (str, str))
+            For each artifact that needs to be created, the command output
+            name, the artifact type and the list of files attached to the
+            artifact.
 
         See Also
         --------
@@ -360,6 +406,7 @@ class QiitaClient(object):
         # Stop the heartbeat thread
         global JOB_COMPLETED
         JOB_COMPLETED = True
+        json_payload = dumps(_format_payload(success, error_msg=error_msg,
+                                             artifacts_info=artifacts_info))
         # Create the URL where we have to post the results
-        json_payload = dumps(payload)
         self.post("/qiita_db/jobs/%s/complete/" % job_id, data=json_payload)

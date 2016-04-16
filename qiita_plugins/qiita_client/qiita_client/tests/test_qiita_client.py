@@ -13,7 +13,7 @@ from tempfile import mkstemp
 
 import httpretty
 
-from qiita_client.qiita_client import QiitaClient, format_payload
+from qiita_client.qiita_client import QiitaClient, _format_payload
 
 
 class UtilTests(TestCase):
@@ -21,7 +21,7 @@ class UtilTests(TestCase):
         ainfo = [
             ("demultiplexed", "Demultiplexed",
              [("fp1", "preprocessed_fasta"), ("fp2", "preprocessed_fastq")])]
-        obs = format_payload(True, artifacts_info=ainfo, error_msg="Ignored")
+        obs = _format_payload(True, artifacts_info=ainfo, error_msg="Ignored")
         exp = {'success': True, 'error': '',
                'artifacts':
                    {'demultiplexed':
@@ -31,8 +31,8 @@ class UtilTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_format_payload_error(self):
-        obs = format_payload(False, error_msg="Some error",
-                             artifacts_info=['ignored'])
+        obs = _format_payload(False, error_msg="Some error",
+                              artifacts_info=['ignored'])
         exp = {'success': False, 'error': 'Some error', 'artifacts': None}
         self.assertEqual(obs, exp)
 
@@ -107,8 +107,8 @@ class QiitaClientTests(TestCase):
             httpretty.GET,
             "https://test_server.com/qiita_db/artifacts/1/type/",
             status=500)
-        obs = self.tester.get("/qiita_db/artifacts/1/type/")
-        self.assertIsNone(obs)
+        with self.assertRaises(RuntimeError):
+            self.tester.get("/qiita_db/artifacts/1/type/")
 
     @httpretty.activate
     def test_post(self):
@@ -126,8 +126,8 @@ class QiitaClientTests(TestCase):
             httpretty.POST,
             "https://test_server.com/qiita_db/artifacts/1/type/",
             status=500)
-        obs = self.tester.post("/qiita_db/artifacts/1/type/")
-        self.assertIsNone(obs)
+        with self.assertRaises(RuntimeError):
+            self.tester.post("/qiita_db/artifacts/1/type/")
 
     @httpretty.activate
     def test_patch(self):
@@ -149,10 +149,10 @@ class QiitaClientTests(TestCase):
             "https://test_server.com/qiita_db/artifacts/1/filepaths/",
             status=500
         )
-        obs = self.tester.patch(
-            '/qiita_db/artifacts/1/filepaths/', 'test',
-            '/html_summary/', value='/path/to/html_summary')
-        self.assertIsNone(obs)
+        with self.assertRaises(RuntimeError):
+            self.tester.patch(
+                '/qiita_db/artifacts/1/filepaths/', 'test',
+                '/html_summary/', value='/path/to/html_summary')
 
     def test_patch_value_error(self):
         # Add, replace or test
@@ -203,17 +203,13 @@ class QiitaClientTests(TestCase):
         httpretty.register_uri(
             httpretty.POST,
             "https://test_server.com/qiita_db/jobs/example-job/complete/",
-            body='{"success": true, "error": ""}'
-        )
+            body="")
         job_id = "example-job"
-        payload = {
-            'success': True, 'error': '',
-            'artifacts': [
-                {'artifact_type': "Demultiplexed",
-                 'filepaths': [("fp1", "preprocessed_fasta"),
-                               ("fp2", "preprocessed_fastq")]}]}
+        ainfo = [
+            ("demultiplexed", "Demultiplexed",
+             [("fp1", "preprocessed_fasta"), ("fp2", "preprocessed_fastq")])]
 
-        self.tester.complete_job(job_id, payload)
+        self.tester.complete_job(job_id, True, artifacts_info=ainfo)
 
 
 CERT_FP = """-----BEGIN CERTIFICATE-----
