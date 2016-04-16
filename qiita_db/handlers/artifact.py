@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from tornado.web import HTTPError
+
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
@@ -20,19 +22,25 @@ def _get_artifact(a_id):
 
     Returns
     -------
-    qiita_db.artifact.Artifact, bool, string
-        The requested artifact or None
-        Whether if we could get the artifact or not
-        Error message in case we couldn't get the artifact
+    qiita_db.artifact.Artifact
+        The requested artifact
+
+    Raises
+    ------
+    HTTPError
+        If the artifact does not exist, with error code 404
+        If there is a problem instantiating the artifact, with error code 500
     """
     try:
+        a_id = int(a_id)
         artifact = qdb.artifact.Artifact(a_id)
     except qdb.exceptions.QiitaDBUnknownIDError:
-        return None, False, 'Artifact does not exist'
-    except qdb.exceptions.QiitaDBError as e:
-        return None, False, 'Error instantiating the artifact: %s' % str(e)
+        raise HTTPError(404)
+    except Exception as e:
+        raise HTTPError(500, 'Error instantiating artifact %s: %s'
+                             % (a_id, str(e)))
 
-    return artifact, True, ''
+    return artifact
 
 
 class ArtifactFilepathsHandler(OauthBaseHandler):
@@ -49,23 +57,14 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            Format:
-            {'success': bool,
-             'error': str,
-             'filepaths': list of (str, str)}
-            - success: whether the request is successful or not
-            - error: in case that success is false, it contains the error msg
-            - filepaths: the filepaths attached to the artifact and their
-            filepath types
+            {'filepaths': list of (str, str)}
+            The filepaths attached to the artifact and their filepath types
         """
         with qdb.sql_connection.TRN:
-            artifact, success, error_msg = _get_artifact(artifact_id)
-            fps = None
-            if success:
-                fps = [(fp, fp_type) for _, fp, fp_type in artifact.filepaths]
-
-            response = {'success': success, 'error': error_msg,
-                        'filepaths': fps}
+            artifact = _get_artifact(artifact_id)
+            response = {
+                'filepaths': [(fp, fp_type)
+                              for _, fp, fp_type in artifact.filepaths]}
 
         self.write(response)
 
@@ -77,15 +76,6 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
         ---------
         artifact_id : str
             The id of the artifact whose filepaths information is being updated
-
-        Returns
-        -------
-        dict
-            Format:
-            {'success': bool,
-             'error': str}
-            - success: whether the request is successful or not
-            - error: in case that success is false, it contains the error msg
         """
         req_op = self.get_argument('op')
         req_path = self.get_argument('path')
@@ -94,20 +84,18 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
         if req_op == 'add':
             req_path = [v for v in req_path.split('/') if v]
             if len(req_path) != 1 or req_path[0] != 'html_summary':
-                success = False
-                error_msg = 'Incorrect path parameter value'
+                raise HTTPError(400, 'Incorrect path parameter value')
             else:
-                artifact, success, error_msg = _get_artifact(artifact_id)
-                if success:
+                artifact = _get_artifact(artifact_id)
+                try:
                     artifact.html_summary_fp = req_value
+                except Exception as e:
+                    raise HTTPError(500, str(e))
         else:
-            success = False
-            error_msg = ('Operation "%s" not supported. Current supported '
-                         'operations: add' % req_op)
+            raise HTTPError(400, 'Operation "%s" not supported. Current '
+                                 'supported operations: add' % req_op)
 
-        response = {'success': success, 'error': error_msg}
-
-        self.write(response)
+        self.finish()
 
 
 class ArtifactMappingHandler(OauthBaseHandler):
@@ -124,32 +112,24 @@ class ArtifactMappingHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            Format:
-            {'success': bool,
-             'error': str,
-             'mapping': str}
-             - success: whether the request is successful or not
-             - error: in case that success is false, it contains the error msg
-             - mapping: the filepath to the mapping file
+            {'mapping': str}
+            The filepath to the mapping file
         """
         with qdb.sql_connection.TRN:
-            artifact, success, error_msg = _get_artifact(artifact_id)
-            fp = None
-            if success:
-                # In the current system, we don't have any artifact that
-                # is the result of two other artifacts, and there is no way
-                # of generating such artifact. This operation will be
-                # eventually supported, but in interest of time we are not
-                # going to implement that here.
-                prep_templates = artifact.prep_templates
-                if len(prep_templates) > 1:
-                    raise NotImplementedError(
-                        "Artifact %d has more than one prep template")
+            artifact = _get_artifact(artifact_id)
+            # In the current system, we don't have any artifact that
+            # is the result of two other artifacts, and there is no way
+            # of generating such artifact. This operation will be
+            # eventually supported, but in interest of time we are not
+            # going to implement that here.
+            prep_templates = artifact.prep_templates
+            if len(prep_templates) > 1:
+                raise NotImplementedError(
+                    "Artifact %d has more than one prep template")
 
-                fp = prep_templates[0].qiime_map_fp
+            fp = prep_templates[0].qiime_map_fp
 
-            response = {'success': success, 'error': error_msg,
-                        'mapping': fp}
+            response = {'mapping': fp}
 
         self.write(response)
 
@@ -167,21 +147,11 @@ class ArtifactTypeHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            Format:
-            {'success': bool,
-             'error': str,
-             'type': str}
-            - success: whether the request is successful or not
-            - error: in case that success is false, it contains the error msg
-            - type: the artifact type
+            {'type': str}
+            The artifact type
         """
         with qdb.sql_connection.TRN:
-            artifact, success, error_msg = _get_artifact(artifact_id)
-            atype = None
-            if success:
-                atype = artifact.artifact_type
-
-            response = {'success': success, 'error': error_msg,
-                        'type': atype}
+            artifact = _get_artifact(artifact_id)
+            response = {'type': artifact.artifact_type}
 
         self.write(response)

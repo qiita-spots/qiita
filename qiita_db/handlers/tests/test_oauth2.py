@@ -34,20 +34,15 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         super(OAuth2BaseHandlerTests, self).setUp()
 
     def test_authenticate_header_client(self):
-        obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
+        obs = self.get('/qiita_db/artifacts/1/mapping/', headers={
             'Authorization': 'Bearer ' + self.client_token})
         self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error': 'Artifact does not exist',
-               'mapping': None}
-        self.assertEqual(loads(obs.body), exp)
 
     def test_authenticate_header_username(self):
-        obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
+        obs = self.get('/qiita_db/artifacts/1/mapping/', headers={
             'Authorization': 'Bearer ' + self.user_token})
         self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error': 'Artifact does not exist',
-               'mapping': None}
-        self.assertEqual(loads(obs.body), exp)
+
         # Check rate limiting works
         self.assertEqual(int(r_client.get(self.user_rate_key)), 1)
         r_client.setex('testuser_test@foo.bar_daily_limit', 0, 2)

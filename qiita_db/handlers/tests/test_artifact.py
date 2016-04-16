@@ -9,30 +9,33 @@
 from unittest import main, TestCase
 from json import loads
 from functools import partial
-from os.path import join
+from os.path import join, exists
+from os import close, remove
+from tempfile import mkstemp
 
-from qiita_core.util import qiita_test_checker
+from tornado.web import HTTPError
+
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
 from qiita_db.handlers.artifact import _get_artifact
 
 
-@qiita_test_checker()
 class UtilTests(TestCase):
     def test_get_artifact(self):
-        obs = _get_artifact(-1)
-        exp = (None, False, 'Artifact does not exist')
+        obs = _get_artifact(1)
+        exp = qdb.artifact.Artifact(1)
         self.assertEqual(obs, exp)
+
+        # It does not exist
+        with self.assertRaises(HTTPError):
+            _get_artifact(100)
 
 
 class ArtifactFilepathsHandlerTests(OauthTestingBase):
     def test_get_artifact_does_not_exist(self):
         obs = self.get('/qiita_db/artifacts/100/filepaths/',
                        headers=self.header)
-        self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error': 'Artifact does not exist',
-               'filepaths': None}
-        self.assertEqual(loads(obs.body), exp)
+        self.assertEqual(obs.code, 404)
 
     def test_get_artifact(self):
         obs = self.get('/qiita_db/artifacts/1/filepaths/', headers=self.header)
@@ -44,34 +47,79 @@ class ArtifactFilepathsHandlerTests(OauthTestingBase):
              "raw_forward_seqs"],
             [path_builder('1_s_G1_L001_sequences_barcodes.fastq.gz'),
              "raw_barcodes"]]
-        exp = {'success': True, 'error': '',
-               'filepaths': exp_fps}
-        self.assertEqual(loads(obs.body), exp)
+        self.assertEqual(loads(obs.body), {'filepaths': exp_fps})
 
     def test_get_no_header(self):
         obs = self.get('/qiita_db/artifacts/1/filepaths/')
         self.assertEqual(obs.code, 400)
 
+
+class ArtifactFilepathsHandlerTestsReadWrite(OauthTestingBase):
+    database = True
+
+    def setUp(self):
+        super(ArtifactFilepathsHandlerTestsReadWrite, self).setUp()
+
+        fd, self.html_fp = mkstemp(suffix=".html")
+        close(fd)
+        self._clean_up_files = [self.html_fp]
+
+    def tearDown(self):
+        super(ArtifactFilepathsHandlerTestsReadWrite, self).tearDown()
+        for fp in self._clean_up_files:
+            if exists(fp):
+                remove(fp)
+
     def test_patch(self):
-        # TODO: issue #1682
-        pass
+        arguments = {'op': 'add', 'path': '/html_summary/',
+                     'value': self.html_fp}
+        self.assertIsNone(qdb.artifact.Artifact(1).html_summary_fp)
+        obs = self.patch('/qiita_db/artifacts/1/filepaths/',
+                         headers=self.header,
+                         data=arguments)
+        self.assertEqual(obs.code, 200)
+        self.assertIsNotNone(qdb.artifact.Artifact(1).html_summary_fp)
+
+        # Wrong operation
+        arguments = {'op': 'wrong', 'path': '/html_summary/',
+                     'value': self.html_fp}
+        obs = self.patch('/qiita_db/artifacts/1/filepaths/',
+                         headers=self.header,
+                         data=arguments)
+        self.assertEqual(obs.code, 400)
+        self.assertEqual(obs.body, 'Operation "wrong" not supported. Current '
+                                   'supported operations: add')
+
+        # Wrong path parameter
+        arguments = {'op': 'add', 'path': '/wrong/',
+                     'value': self.html_fp}
+        obs = self.patch('/qiita_db/artifacts/1/filepaths/',
+                         headers=self.header,
+                         data=arguments)
+        self.assertEqual(obs.code, 400)
+        self.assertEqual(obs.body, 'Incorrect path parameter value')
+
+        # Wrong value parameter
+        arguments = {'op': 'add', 'path': '/html_summary/',
+                     'value': self.html_fp}
+        obs = self.patch('/qiita_db/artifacts/1/filepaths/',
+                         headers=self.header,
+                         data=arguments)
+        self.assertEqual(obs.code, 500)
+        self.assertIn('No such file or directory', obs.body)
 
 
 class ArtifactMappingHandlerTests(OauthTestingBase):
     def test_get_artifact_does_not_exist(self):
         obs = self.get('/qiita_db/artifacts/100/mapping/', headers=self.header)
-        self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error': 'Artifact does not exist',
-               'mapping': None}
-        self.assertEqual(loads(obs.body), exp)
+        self.assertEqual(obs.code, 404)
 
     def test_get(self):
         obs = self.get('/qiita_db/artifacts/1/mapping/', headers=self.header)
         self.assertEqual(obs.code, 200)
         db_dir = qdb.util.get_mountpoint('templates')[0][1]
         exp_fp = join(db_dir, "1_prep_1_qiime_19700101-000000.txt")
-        exp = {'success': True, 'error': '',
-               'mapping': exp_fp}
+        exp = {'mapping': exp_fp}
         self.assertEqual(loads(obs.body), exp)
 
     def test_get_no_header(self):
@@ -82,16 +130,12 @@ class ArtifactMappingHandlerTests(OauthTestingBase):
 class ArtifactTypeHandlerTests(OauthTestingBase):
     def test_get_artifact_does_not_exist(self):
         obs = self.get('/qiita_db/artifacts/100/type/', headers=self.header)
-        self.assertEqual(obs.code, 200)
-        exp = {'success': False, 'error': 'Artifact does not exist',
-               'type': None}
-        self.assertEqual(loads(obs.body), exp)
+        self.assertEqual(obs.code, 404)
 
     def test_get(self):
         obs = self.get('/qiita_db/artifacts/1/type/', headers=self.header)
         self.assertEqual(obs.code, 200)
-        exp = {'success': True, 'error': '',
-               'type': "FASTQ"}
+        exp = {'type': "FASTQ"}
         self.assertEqual(loads(obs.body), exp)
 
     def test_get_no_header(self):
