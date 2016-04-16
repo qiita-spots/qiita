@@ -243,7 +243,10 @@ class QiitaClient(object):
             elif r.status_code == 400:
                 raise BadRequestError(r.text)
             elif r.status_code == 200:
-                return r.json() if r.text else None
+                try:
+                    return r.json()
+                except ValueError:
+                    return None
 
         raise RuntimeError(
             "Request '%s %s' did not succeed. Status code: %d. Message: %s"
