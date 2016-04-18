@@ -6,9 +6,18 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .exceptions import (QiitaClientError, NotFoundError, BadRequestError,
-                         ForbiddenError)
-from .qiita_client import QiitaClient
 
-__all__ = ["QiitaClient", "QiitaClientError", "NotFoundError",
-           "BadRequestError", "ForbiddenError"]
+class QiitaClientError(Exception):
+    pass
+
+
+class NotFoundError(QiitaClientError):
+    pass
+
+
+class BadRequestError(QiitaClientError):
+    pass
+
+
+class ForbiddenError(QiitaClientError):
+    pass
