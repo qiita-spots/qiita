@@ -110,13 +110,12 @@ class ActiveStepHandler(OauthBaseHandler):
         """
         with qdb.sql_connection.TRN:
             job = _get_job(job_id)
-            job_status = job.status
-            if job_status != 'running':
-                raise HTTPError(403, 'Job in a non-running state')
-            else:
-                payload = loads(self.request.body)
-                step = payload['step']
+            payload = loads(self.request.body)
+            step = payload['step']
+            try:
                 job.step = step
+            except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
+                raise HTTPError(403, str(e))
 
         self.finish()
 
