@@ -42,36 +42,15 @@ def get_artifact_information(qclient, artifact_id):
     """
     # Get the artifact filepath information
     fps_info = qclient.get("/qiita_db/artifacts/%s/filepaths/" % artifact_id)
-    if not fps_info or not fps_info['success']:
-        error_msg = "Could not get artifact filepath information: %s"
-        if fps_info:
-            error_msg = error_msg % fps_info['error']
-        else:
-            error_msg = error_msg % "could not connect with the server"
-        raise ValueError(error_msg)
     fps = fps_info['filepaths']
 
     # Get the artifact metadata
     metadata_info = qclient.get(
         "/qiita_db/artifacts/%s/mapping/" % artifact_id)
-    if not metadata_info or not metadata_info['success']:
-        error_msg = "Could not get artifact metadata information %s"
-        if metadata_info:
-            error_msg = error_msg % metadata_info['error']
-        else:
-            error_msg = error_msg % "could not connect with the server"
-        raise ValueError(error_msg)
     mapping_file = metadata_info['mapping']
 
     # Get the artifact type
     type_info = qclient.get("/qiita_db/artifacts/%s/type/" % artifact_id)
-    if not type_info or not type_info['success']:
-        error_msg = "Could not get artifact metadata information %s"
-        if type_info:
-            error_msg = error_msg % type_info['error']
-        else:
-            error_msg = error_msg % "could not connect with the server"
-        raise ValueError(error_msg)
     artifact_type = type_info['type']
 
     return fps, mapping_file, artifact_type
