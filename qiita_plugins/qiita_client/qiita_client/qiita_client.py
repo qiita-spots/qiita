@@ -350,6 +350,10 @@ class QiitaClient(object):
             The job id
         """
         url = "/qiita_db/jobs/%s/heartbeat/" % job_id
+        # Execute the first heartbeat, since it is the one that sets the job
+        # to a running state - so make sure that other calls to the job work
+        # as expected
+        self.post(url, data='')
         heartbeat_thread = threading.Thread(target=_heartbeat,
                                             args=(self, url))
         heartbeat_thread.daemon = True
