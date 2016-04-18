@@ -76,7 +76,8 @@ class ArtifactTestsReadOnly(TestCase):
                          'rev_comp_barcode': False,
                          'rev_comp_mapping_barcodes': False,
                          'min_per_read_length_fraction': 0.75,
-                         'barcode_type': 'golay_12'})
+                         'barcode_type': 'golay_12',
+                         'phred_offset': ''})
         self.assertEqual(obs, exp)
         obs = qdb.artifact.Artifact(3).processing_parameters
         exp = qdb.software.Parameters.load(
@@ -87,7 +88,8 @@ class ArtifactTestsReadOnly(TestCase):
                          'rev_comp_barcode': False,
                          'rev_comp_mapping_barcodes': True,
                          'min_per_read_length_fraction': 0.75,
-                         'barcode_type': 'golay_12'})
+                         'barcode_type': 'golay_12',
+                         'phred_offset': ''})
         self.assertEqual(obs, exp)
 
     def test_visibility(self):
@@ -702,8 +704,8 @@ class ArtifactTests(TestCase):
             '"barcode_type": "golay_12", "max_bad_run_length": 3, '
             '"rev_comp": false, "phred_quality_threshold": 3, '
             '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
-            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}'
-            % test.id)
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
+            '"phred_offset": ""}' % test.id)
         qdb.processing_job.ProcessingJob.create(
             qdb.user.User('test@foo.bar'),
             qdb.software.Parameters.load(qdb.software.Command(1),
@@ -720,8 +722,8 @@ class ArtifactTests(TestCase):
             '"barcode_type": "golay_12", "max_bad_run_length": 3, '
             '"rev_comp": false, "phred_quality_threshold": 3, '
             '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
-            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}'
-            % test.id)
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
+            '"phred_offset": ""}' % test.id)
         job = qdb.processing_job.ProcessingJob.create(
             qdb.user.User('test@foo.bar'),
             qdb.software.Parameters.load(qdb.software.Command(1),
@@ -779,8 +781,8 @@ class ArtifactTests(TestCase):
             '"barcode_type": "golay_12", "max_bad_run_length": 3, '
             '"rev_comp": false, "phred_quality_threshold": 3, '
             '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
-            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}'
-            % test.id)
+            '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
+            '"phred_offset": ""}' % test.id)
         job = qdb.processing_job.ProcessingJob.create(
             qdb.user.User('test@foo.bar'),
             qdb.software.Parameters.load(qdb.software.Command(1),

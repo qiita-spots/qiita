@@ -35,13 +35,12 @@ class SplitLibrariesFastqTests(TestCase):
             "sequence_max_n": 0, "rev_comp_barcode": False,
             "rev_comp_mapping_barcodes": True, "rev_comp": False,
             "phred_quality_threshold": 3, "barcode_type": "golay_12",
-            "max_barcode_errors": 1.5, "input_data": 1}
+            "max_barcode_errors": 1.5, "input_data": 1, "phred_offset": ""}
 
         obs = generate_parameters_string(parameters)
-        exp = ("--max_bad_run_length 3 --min_per_read_length_fraction 0.75 "
-               "--sequence_max_n 0 --phred_quality_threshold 3 "
-               "--barcode_type golay_12 --max_barcode_errors 1.5 "
-               "--rev_comp_mapping_barcodes")
+        exp = ('--max_bad_run_length 3 --min_per_read_length_fraction 0.75 '
+               '--phred_quality_threshold 3 --barcode_type golay_12 '
+               '--max_barcode_errors 1.5 --rev_comp_mapping_barcodes')
         self.assertEqual(obs, exp)
 
     def test_get_sample_names_by_run_prefix(self):
@@ -187,17 +186,16 @@ class SplitLibrariesFastqTests(TestCase):
             "sequence_max_n": 0, "rev_comp_barcode": False,
             "rev_comp_mapping_barcodes": True, "rev_comp": False,
             "phred_quality_threshold": 3, "barcode_type": "golay_12",
-            "max_barcode_errors": 1.5, "input_data": 1}
+            "max_barcode_errors": 1.5, "input_data": 1, "phred_offset": ""}
         obs_cmd, obs_outdir = generate_split_libraries_fastq_cmd(
             fps, mapping_file, atype, out_dir, parameters)
         exp_cmd = (
-            "split_libraries_fastq.py --store_demultiplexed_fastq -i "
-            "s1.fastq.gz,s2.fastq.gz,s3.fastq.gz --sample_ids "
-            "SKB8.640193,SKD8.640184,SKB7.640196 -o /output/dir/sl_out "
-            "--max_bad_run_length 3 --min_per_read_length_fraction 0.75 "
-            "--sequence_max_n 0 --phred_quality_threshold 3 "
-            "--barcode_type golay_12 --max_barcode_errors 1.5 "
-            "--rev_comp_mapping_barcodes")
+            'split_libraries_fastq.py --store_demultiplexed_fastq -i '
+            's1.fastq.gz,s2.fastq.gz,s3.fastq.gz --sample_ids '
+            'SKB8.640193,SKD8.640184,SKB7.640196 -o /output/dir/sl_out '
+            '--max_bad_run_length 3 --min_per_read_length_fraction 0.75 '
+            '--phred_quality_threshold 3 --barcode_type golay_12 '
+            '--max_barcode_errors 1.5 --rev_comp_mapping_barcodes')
         self.assertEqual(obs_cmd, exp_cmd)
         self.assertEqual(obs_outdir, "/output/dir/sl_out")
 
@@ -225,21 +223,19 @@ class SplitLibrariesFastqTests(TestCase):
             "sequence_max_n": 0, "rev_comp_barcode": False,
             "rev_comp_mapping_barcodes": True, "rev_comp": False,
             "phred_quality_threshold": 3, "barcode_type": "golay_12",
-            "max_barcode_errors": 1.5, "input_data": 1}
+            "max_barcode_errors": 1.5, "input_data": 1, "phred_offset": ""}
         obs_cmd, obs_outdir = generate_split_libraries_fastq_cmd(
             fps, mapping_file, atype, out_dir, parameters)
         exp_cmd = (
-            "split_libraries_fastq.py --store_demultiplexed_fastq -i "
-            "s1.fastq.gz,s2.fastq.gz,s3.fastq.gz -b "
-            "s1_barcodes.fastq.gz,s2_barcodes.fastq.gz,s3_barcodes.fastq.gz "
-            "-m {0}/mappings/s1_mapping_file.txt,"
-            "{0}/mappings/s2_mapping_file.txt,"
-            "{0}/mappings/s3_mapping_file.txt "
-            "-o {0}/sl_out --max_bad_run_length 3 "
-            "--min_per_read_length_fraction 0.75 --sequence_max_n 0 "
-            "--phred_quality_threshold 3 --barcode_type golay_12 "
-            "--max_barcode_errors 1.5 "
-            "--rev_comp_mapping_barcodes".format(out_dir))
+            'split_libraries_fastq.py --store_demultiplexed_fastq -i '
+            's1.fastq.gz,s2.fastq.gz,s3.fastq.gz -b '
+            's1_barcodes.fastq.gz,s2_barcodes.fastq.gz,s3_barcodes.fastq.gz '
+            '-m {0}/mappings/s1_mapping_file.txt,'
+            '{0}/mappings/s2_mapping_file.txt,{0}/mappings/s3_mapping_file.txt'
+            ' -o {0}/sl_out --max_bad_run_length 3 '
+            '--min_per_read_length_fraction 0.75 --phred_quality_threshold 3 '
+            '--barcode_type golay_12 --max_barcode_errors 1.5 '
+            '--rev_comp_mapping_barcodes'.format(out_dir))
         self.assertEqual(obs_cmd, exp_cmd)
         self.assertEqual(obs_outdir, join(out_dir, "sl_out"))
 
@@ -273,7 +269,7 @@ class SplitLibrariesFastqTests(TestCase):
             "sequence_max_n": 0, "rev_comp_barcode": False,
             "rev_comp_mapping_barcodes": True, "rev_comp": False,
             "phred_quality_threshold": 3, "barcode_type": "golay_12",
-            "max_barcode_errors": 1.5, "input_data": 1}
+            "max_barcode_errors": 1.5, "input_data": 1, "phred_offset": ""}
         with self.assertRaises(ValueError):
             generate_split_libraries_fastq_cmd(
                 fps, mapping_file, atype, out_dir, parameters)
