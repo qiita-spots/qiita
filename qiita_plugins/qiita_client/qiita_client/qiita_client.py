@@ -73,8 +73,7 @@ def _format_payload(success, error_msg=None, artifacts_info=None):
          'artifacts': dict of {str: {'artifact_type': str,
                                      'filepaths': list of (str, str)}}
     """
-    if success:
-        error_msg = ''
+    if success and artifacts_info:
         artifacts = {out_name: {'artifact_type': atype,
                                 'filepaths': filepaths}
                      for out_name, atype, filepaths in artifacts_info}
