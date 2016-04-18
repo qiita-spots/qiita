@@ -61,45 +61,28 @@ class SummaryTestsNotDemux(TestCase):
                          "%s/filepaths/" % self.artifact_id)
         httpretty.register_uri(
             httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", '
-                  '"filepaths": %s}' % self.filepaths))
+            body=('{"filepaths": %s}' % self.filepaths))
         httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
                          "%s/type/" % self.artifact_id)
         httpretty.register_uri(
             httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", "type": "FASTQ"}'))
+            body=('{"type": "FASTQ"}'))
         httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
                          "%s/filepaths/" % self.artifact_id)
-        httpretty.register_uri(
-            httpretty.PATCH, httpretty_url,
-            body='{"success": true, "error": ""}')
-        obs, html = generate_html_summary(self.qclient, 'job-id',
-                                          self.parameters,
-                                          self.out_dir, True)
+        httpretty.register_uri(httpretty.PATCH, httpretty_url)
+        obs_success, obs_ainfo, obs_error = generate_html_summary(
+            self.qclient, 'job-id', self.parameters, self.out_dir)
 
         # asserting reply
-        exp = {"success": True, "error": "", "artifacts": []}
-        self.assertItemsEqual(obs, exp)
+        self.assertTrue(obs_success)
+        self.assertIsNone(obs_ainfo)
+        self.assertEqual(obs_error, "")
 
         # asserting content of html
-        self.assertItemsEqual(html, EXP_HTML)
-
-    @httpretty.activate
-    def test_generate_html_summary_error(self):
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/filepaths/" % self.artifact_id)
-        httpretty.register_uri(
-            httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", '
-                  '"filepaths": %s}' % self.filepaths))
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/type/" % self.artifact_id)
-        httpretty.register_uri(
-            httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", "type": "FASTQ"}'))
-        with self.assertRaises(ValueError):
-            generate_html_summary(self.qclient, 'job-id', self.parameters,
-                                  self.out_dir, True)
+        html_fp = join(self.out_dir, "artifact_%d.html" % self.artifact_id)
+        with open(html_fp) as html_f:
+            html = html_f.read()
+        self.assertEqual(html, "\n".join(EXP_HTML))
 
 
 class SummaryTestsDemux(TestCase):
@@ -139,28 +122,32 @@ class SummaryTestsDemux(TestCase):
                          "%s/filepaths/" % self.artifact_id)
         httpretty.register_uri(
             httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", '
-                  '"filepaths": %s}' % self.filepaths))
+            body=('{"filepaths": %s}' % self.filepaths))
         httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
                          "%s/type/" % self.artifact_id)
         httpretty.register_uri(
             httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", "type": "Demultiplexed"}'))
+            body=('{"type": "Demultiplexed"}'))
         httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
                          "%s/filepaths/" % self.artifact_id)
-        httpretty.register_uri(
-            httpretty.PATCH, httpretty_url,
-            body='{"success": true, "error": ""}')
-        obs, html = generate_html_summary(self.qclient, 'job-id',
-                                          self.parameters,
-                                          self.out_dir, True)
+        httpretty.register_uri(httpretty.PATCH, httpretty_url)
+
+        obs_success, obs_ainfo, obs_error = generate_html_summary(
+            self.qclient, 'job-id', self.parameters, self.out_dir)
 
         # asserting reply
-        exp = {"success": True, "error": "", "artifacts": []}
-        self.assertItemsEqual(obs, exp)
+        self.assertTrue(obs_success)
+        self.assertIsNone(obs_ainfo)
+        self.assertEqual(obs_error, "")
 
         # asserting content of html
-        self.assertItemsEqual(html, EXP_HTML_DEMUX)
+        html_fp = join(self.out_dir, "artifact_%d.html" % self.artifact_id)
+        with open(html_fp) as html_f:
+            html = html_f.read()
+        print html
+        print "\n\n"
+        print "\n".join(EXP_HTML_DEMUX)
+        self.assertEqual(html, "\n".join(EXP_HTML_DEMUX))
 
     @httpretty.activate
     def test_generate_html_summary_no_demux(self):
@@ -168,18 +155,16 @@ class SummaryTestsDemux(TestCase):
                          "%s/filepaths/" % self.artifact_id)
         httpretty.register_uri(
             httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", '
-                  '"filepaths": [["fps", "fps_type"]]}'))
+            body=('{"filepaths": [["fps", "fps_type"]]}'))
         httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
                          "%s/type/" % self.artifact_id)
         httpretty.register_uri(
             httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", "type": "Demultiplexed"}'))
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/filepaths/" % self.artifact_id)
+            body=('{"type": "Demultiplexed"}'))
+
         with self.assertRaises(ValueError):
             generate_html_summary(self.qclient, 'job-id', self.parameters,
-                                  self.out_dir, True)
+                                  self.out_dir)
 
 
 READS = """@MISEQ03:123:000000000-A40KM:1:1101:14149:1572 1:N:0:TCCACAGGAGT

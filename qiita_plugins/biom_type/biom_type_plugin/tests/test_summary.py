@@ -9,7 +9,7 @@
 from unittest import TestCase, main
 from tempfile import mkstemp, mkdtemp
 from os import close, remove
-from os.path import exists, isdir
+from os.path import exists, isdir, join, basename
 from shutil import rmtree
 
 import numpy as np
@@ -61,33 +61,19 @@ class SummaryTestsWith(TestCase):
                          "%s/filepaths/" % self.artifact_id)
         httpretty.register_uri(
             httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", '
-                  '"filepaths": [["%s", "biom"]]}' % self.biom_fp))
-        httpretty.register_uri(
-            httpretty.PATCH, httpretty_url,
-            body='{"success": true, "error": ""}')
-        obs, html = generate_html_summary(self.qclient, 'job-id',
-                                          self.parameters,
-                                          self.out_dir, True)
+            body=('{"filepaths": [["%s", "biom"]]}' % self.biom_fp))
+        httpretty.register_uri(httpretty.PATCH, httpretty_url)
+        obs_success, obs_ainfo, obs_error = generate_html_summary(
+            self.qclient, 'job-id', self.parameters, self.out_dir)
 
         # asserting reply
-        exp = {"success": True, "error": "", "artifacts": []}
-        self.assertItemsEqual(obs, exp)
+        self.assertTrue(obs_success)
+        self.assertIsNone(obs_ainfo)
+        self.assertEqual(obs_error, "")
 
         # asserting content of html
+        html = join(self.out_dir, "%s.html" % basename(self.biom_fp))
         self.assertItemsEqual(html, EXT_HTML)
-
-    @httpretty.activate
-    def test_generate_html_summary_error(self):
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/filepaths/" % self.artifact_id)
-        httpretty.register_uri(
-            httpretty.GET, httpretty_url,
-            body=('{"success": true, "error": "", '
-                  '"filepaths": [["%s", "biom"]]}' % self.biom_fp))
-        with self.assertRaises(ValueError):
-            generate_html_summary(self.qclient, 'job-id', self.parameters,
-                                  self.out_dir, True)
 
 EXT_HTML = [
     '<b>Number of samples:</b> 3<br/>',

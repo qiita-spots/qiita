@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from tornado.web import HTTPError
+
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 import qiita_db as qdb
 
@@ -20,19 +22,23 @@ def _get_reference(r_id):
 
     Returns
     -------
-    qiita_db.reference.Reference, bool, string
-        The requested reference or None
-        Whether if we could get the reference object or not
-        Error message in case we counldn't get the reference object
+    qiita_db.reference.Reference
+        The requested reference
+
+    Raises
+    ------
+    HTTPError
+        If the reference does not exist, with error code 404
+        If there is a problem instantiating the reference, with error code 500
     """
     try:
         reference = qdb.reference.Reference(r_id)
     except qdb.exceptions.QiitaDBUnknownIDError:
-        return None, False, 'Reference does not exist'
-    except qdb.exceptions.QiitaDBError as e:
-        return None, False, 'Error instantiating the reference: %s' % str(e)
+        raise HTTPError(404)
+    except Exception as e:
+        raise HTTPError(500, 'Error instantiating the reference: %s' % str(e))
 
-    return reference, True, ''
+    return reference
 
 
 class ReferenceFilepathsHandler(OauthBaseHandler):
@@ -49,28 +55,20 @@ class ReferenceFilepathsHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            Format:
-            {'success': bool,
-             'error': str,
-             'filepaths': list of (str, str)}
-            - success: whether the request is successful or not
-            - error: in case that success is false, it contains the error msg
-            - filepaths: the filepaths attached to the reference and their
-            filepath types
+            {'filepaths': list of (str, str)}
+            The filepaths attached to the reference and their filepath types
         """
         with qdb.sql_connection.TRN:
-            reference, success, error_msg = _get_reference(reference_id)
-            fps = None
-            if success:
-                fps = [(reference.sequence_fp, "reference_seqs")]
-                tax_fp = reference.taxonomy_fp
-                if tax_fp:
-                    fps.append((tax_fp, "reference_tax"))
-                tree_fp = reference.tree_fp
-                if tree_fp:
-                    fps.append((tree_fp, "reference_tree"))
+            reference = _get_reference(reference_id)
 
-            response = {'success': success, 'error': error_msg,
-                        'filepaths': fps}
+            fps = [(reference.sequence_fp, "reference_seqs")]
+            tax_fp = reference.taxonomy_fp
+            if tax_fp:
+                fps.append((tax_fp, "reference_tax"))
+            tree_fp = reference.tree_fp
+            if tree_fp:
+                fps.append((tree_fp, "reference_tree"))
+
+            response = {'filepaths': fps}
 
         self.write(response)
