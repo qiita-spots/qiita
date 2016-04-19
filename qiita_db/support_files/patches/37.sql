@@ -17,7 +17,7 @@ BEGIN
         SET command_parameters = (
             substring(command_parameters::text FROM 0 FOR char_length(command_parameters::text)) || ',"phred_offset":""}'
         )::json
-        WHERE command_id=cmd_id;;
+        WHERE command_id=cmd_id;
 
     -- updating the default_parameter_set
     UPDATE qiita.default_parameter_set
