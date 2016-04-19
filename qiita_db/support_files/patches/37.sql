@@ -25,4 +25,12 @@ BEGIN
             substring(parameter_set::text FROM 0 FOR char_length(parameter_set::text)) || ',"phred_offset":""}'
         )::json
         WHERE command_id=cmd_id;
+
+    -- inserting new possible default_parameter_sets
+    INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+        VALUES (cmd_id, 'per sample FASTQ defaults, phred_offset 33',
+                '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"not-barcoded","max_barcode_errors":1.5,"phred_offset":"33"}'::json);
+    INSERT INTO qiita.default_parameter_set (command_id, parameter_set_name, parameter_set)
+        VALUES (cmd_id, 'per sample FASTQ defaults, phred_offset 64',
+                '{"max_bad_run_length":3,"min_per_read_length_fraction":0.75,"sequence_max_n":0,"rev_comp_barcode":false,"rev_comp_mapping_barcodes":false,"rev_comp":false,"phred_quality_threshold":3,"barcode_type":"not-barcoded","max_barcode_errors":1.5,"phred_offset":"64"}'::json);
 END $do$;
