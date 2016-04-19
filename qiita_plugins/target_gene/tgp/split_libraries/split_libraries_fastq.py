@@ -35,7 +35,7 @@ def generate_parameters_string(parameters):
                   'sequence_max_n', 'phred_quality_threshold', 'barcode_type',
                   'max_barcode_errors', 'phred_offset']
     result = ["--%s %s" % (sp, parameters[sp]) for sp in str_params
-              if parameters[sp]]
+              if parameters[sp] != ""]
     for fp in flag_params:
         if parameters[fp]:
             result.append("--%s" % fp)

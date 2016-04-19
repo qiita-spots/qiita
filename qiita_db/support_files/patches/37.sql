@@ -17,9 +17,9 @@ BEGIN
         SET command_parameters = (
             substring(command_parameters::text FROM 0 FOR char_length(command_parameters::text)) || ',"phred_offset":""}'
         )::json
-        WHERE artifact_id=2;
+        WHERE command_id=cmd_id;;
 
-    -- updating the per sample FASTQ defaults
+    -- updating the default_parameter_set
     UPDATE qiita.default_parameter_set
         SET parameter_set = (
             substring(parameter_set::text FROM 0 FOR char_length(parameter_set::text)) || ',"phred_offset":""}'
