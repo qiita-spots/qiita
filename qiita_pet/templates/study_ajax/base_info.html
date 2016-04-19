@@ -18,6 +18,8 @@ Lab Contact: {% raw contact %}<br />
 Shared With: <span id="shared_html_{{study_info['study_id']}}">
 </span><br/>
 Samples: {{study_info['num_samples']}}<br />
+EBI: {% raw ebi_info %}<br />
+
 {% if share_access %}
 <a class="btn btn-default" data-toggle="modal" data-target="#share-study-modal-view" onclick="modify_sharing({{study_info['study_id']}});"><span class="glyphicon glyphicon-share"></span> Share</a>
 {% end %}

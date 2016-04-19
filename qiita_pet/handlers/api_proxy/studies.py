@@ -73,6 +73,8 @@ def study_get_req(study_id, user_id):
     study_info['study_title'] = study.title
     study_info['shared_with'] = [s.id for s in study.shared_with]
     study_info['status'] = study.status
+    study_info['ebi_study_accession'] = study.ebi_study_accession
+    study_info['ebi_submission_status'] = study.ebi_submission_status
 
     # Clean up StudyPerson objects to string for display
     pi = study_info['principal_investigator']
