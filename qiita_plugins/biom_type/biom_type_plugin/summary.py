@@ -13,6 +13,7 @@ from base64 import b64encode
 from os.path import join, basename
 import numpy as np
 from StringIO import StringIO
+import matplotlib.pyplot as plt
 
 import seaborn as sns
 from qiita_client import format_payload
@@ -78,6 +79,7 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
         'Median count': np.median(sample_counts),
     }
 
+    plt.switch_backend('agg')
     ax = sns.distplot(sample_counts)
     ax.set_xlabel("Number of sequences per sample")
     ax.set_ylabel("Frequency")

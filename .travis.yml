@@ -26,12 +26,18 @@ install:
     pyzmq networkx pyparsing natsort mock future libgfortran seaborn
     'pandas>=0.15' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate env_name
-  - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1
+  - pip install sphinx sphinx-bootstrap-theme coveralls ipython[all]==2.4.1 HTTPretty==0.8.6 requests
+  - pushd qiita_plugins/qiita_client
+  - travis_retry pip install .
+  - popd
   - travis_retry pip install .
   - pushd qiita_plugins/target_gene
   - travis_retry pip install .
   - popd
-  - pushd qiita_plugins/qiita_client
+  - pushd qiita_plugins/biom_type
+  - travis_retry pip install .
+  - popd
+  - pushd qiita_plugins/target_gene_type
   - travis_retry pip install .
   - popd
 script:
@@ -45,7 +51,8 @@ script:
   - qiita-env make --no-load-ontologies
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita-test-install ; fi
-  - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage -v; fi
+  # - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage -v qiita_plugins/* qiita_*; fi
+  - if [ ${TEST_ADD_STUDIES} == "False" ]; then nosetests --with-doctest --with-coverage -v qiita_plugins/*; fi
   - flake8 qiita_* setup.py scripts/qiita scripts/qiita-env scripts/qiita-test-install
   - ls -R /home/travis/miniconda3/envs/env_name/lib/python2.7/site-packages/qiita_pet/support_files/doc/
   - qiita pet webserver

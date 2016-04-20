@@ -192,6 +192,7 @@ def _summary_demultiplexed(artifact_type, filepaths):
     artifact_information.append("<br/>")
 
     # taken from http://stackoverflow.com/a/9141911
+    plt.switch_backend('agg')
     plt.bar(shist_edge[:-1], shist, width=1)
     plt.xlim(min(shist_edge), max(shist_edge))
     plt.xlabel('Sequence Length')

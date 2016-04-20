@@ -22,7 +22,7 @@ from tgp.split_libraries.util import (
     generate_artifact_info)
 
 
-class UtilTests(TestCase):
+class UtilTestsHTTPRETTY(TestCase):
     @httpretty.activate
     def setUp(self):
         httpretty.register_uri(
@@ -80,6 +80,19 @@ class UtilTests(TestCase):
 
         with self.assertRaises(ValueError):
             get_artifact_information(self.qclient, 1)
+
+
+class UtilTests(TestCase):
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
 
     def test_split_mapping_file_single(self):
         out_dir = mkdtemp()
