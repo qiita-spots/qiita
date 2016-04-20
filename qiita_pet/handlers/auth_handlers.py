@@ -42,11 +42,15 @@ class AuthCreateHandler(BaseHandler):
         if created:
             info = created.info
             try:
+                # qiita_config.base_url doesn't have a / at the end, but the
+                # qiita_config.portal_dir has it at the beginning but not at
+                # the end. This constructs the correct URL
+                url = qiita_config.base_url + qiita_config.portal_dir
                 send_email(username, "QIITA: Verify Email Address", "Please "
                            "click the following link to verify email address: "
-                           "%s/%s/auth/verify/%s?email=%s"
-                           % (qiita_config.base_url, qiita_config.portal_dir,
-                              info['user_verify_code'], url_escape(username)))
+                           "%s/auth/verify/%s?email=%s"
+                           % (url, info['user_verify_code'],
+                              url_escape(username)))
             except:
                 msg = ("Unable to send verification email. Please contact the "
                        "qiita developers at <a href='mailto:qiita-help"
