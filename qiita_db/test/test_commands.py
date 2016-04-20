@@ -226,7 +226,7 @@ class TestLoadParametersFromCmd(TestCase):
             "test", self.fp, 1)
         obs = new.values
         exp = {"barcode_type": "hamming_8", "max_bad_run_length": "3",
-               "max_barcode_errors": "1.5",
+               "phred_offset": "", "max_barcode_errors": "1.5",
                "min_per_read_length_fraction": "0.75",
                "phred_quality_threshold": "3", "sequence_max_n": "0",
                "rev_comp": "False", "rev_comp_barcode": "False",

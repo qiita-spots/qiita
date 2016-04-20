@@ -736,6 +736,13 @@ class DefaultParameters(qdb.base.QiitaObject):
             - If the parameter set already exists
         """
         with qdb.sql_connection.TRN:
+            # setting to default values all parameters not in the user_params
+            cmd_params = command.optional_parameters
+            missing_in_user = {k: cmd_params[k][1]
+                               for k in (set(cmd_params) - set(kwargs))}
+            if missing_in_user:
+                kwargs.update(missing_in_user)
+
             # If the columns in kwargs and command do not match, cls.exists
             # will raise the error for us
             if cls.exists(command, **kwargs):
@@ -868,6 +875,13 @@ class Parameters(object):
             parameters = deepcopy(values_dict)
             error_msg = ("The provided values dictionary doesn't encode a "
                          "parameter set for command %s" % command.id)
+
+        # setting to default values all parameters not in the user_params
+        cmd_params = command.optional_parameters
+        missing_in_user = {k: cmd_params[k][1]
+                           for k in (set(cmd_params) - set(parameters))}
+        if missing_in_user:
+            parameters.update(missing_in_user)
 
         with qdb.sql_connection.TRN:
             cmd_reqd_params = command.required_parameters
