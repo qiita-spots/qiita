@@ -353,7 +353,10 @@
 <!-- #samples and #columns -->
 <div class="row">
   <div class="col-md-12">
-    There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this preparation.
+    There are <b>{{num_samples}}</b> samples and <b>{{num_columns}}</b> columns in this preparation.</br>
+    {% if ebi_experiment_accessions %}
+      <b>EBI status: </b> Submitted
+    {% end %}
   </div>
 </div>
 
@@ -406,12 +409,12 @@
 
 <!-- Files graph or add artifact -->
 <div class="row">
-  <div class="col-md-12" id="graph-or-new-artifact-div">
+  <div class="col-md-10" id="graph-or-new-artifact-div">
   </div>
 </div>
 
 <!-- Prep information summary -->
 <div class="row">
-  <div class="col-md-12" id="prep-artifact-summary-div">
+  <div class="col-md-10" id="prep-artifact-summary-div">
   </div>
 </div>

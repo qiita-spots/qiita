@@ -180,6 +180,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'editable': editable,
             'data_type': pt.data_type(),
             'alert_type': alert_type,
+            'ebi_experiment_accessions': pt.ebi_experiment_accessions,
             'alert_message': alert_msg}
 
 
