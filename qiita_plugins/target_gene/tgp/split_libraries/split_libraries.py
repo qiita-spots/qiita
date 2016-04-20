@@ -8,8 +8,6 @@
 
 from os.path import join, basename, splitext
 
-from qiita_client import format_payload
-
 from tgp.util import system_call
 from .util import (get_artifact_information, split_mapping_file,
                    generate_demux_file, generate_artifact_info)
@@ -290,4 +288,4 @@ def split_libraries(qclient, job_id, parameters, out_dir):
 
     artifacts_info = generate_artifact_info(output_dir)
 
-    return format_payload(True, artifacts_info=artifacts_info)
+    return False, artifacts_info, ""

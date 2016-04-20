@@ -11,8 +11,6 @@ from functools import partial
 from glob import glob
 from tarfile import open as taropen
 
-from qiita_client import format_payload
-
 from tgp.util import system_call
 
 
@@ -156,24 +154,10 @@ def pick_closed_reference_otus(qclient, job_id, parameters, out_dir):
     qclient.update_job_step(job_id, "Step 1 of 4: Collecting information")
     artifact_id = parameters['input_data']
     fps_info = qclient.get("/qiita_db/artifacts/%s/filepaths/" % artifact_id)
-    if not fps_info or not fps_info['success']:
-        error_msg = "Could not get artifact filepath information: %s"
-        if fps_info:
-            error_msg = error_msg % fps_info['error']
-        else:
-            error_msg = error_msg % "could not connect with the server"
-        raise ValueError(error_msg)
     fps = fps_info['filepaths']
 
     reference_id = parameters['reference']
     ref_info = qclient.get("/qiita_db/references/%s/filepaths/" % reference_id)
-    if not ref_info or not ref_info['success']:
-        error_msg = "Could not get artifact filepath information: %s"
-        if ref_info:
-            error_msg = error_msg % ref_info['error']
-        else:
-            error_msg = error_msg % "could not connect with the server"
-        raise ValueError(error_msg)
     reference_fps = ref_info['filepaths']
 
     qclient.update_job_step(job_id, "Step 2 of 4: Generating command")
@@ -185,7 +169,7 @@ def pick_closed_reference_otus(qclient, job_id, parameters, out_dir):
     if return_value != 0:
         error_msg = ("Error running OTU picking:\nStd out: %s\nStd err: %s"
                      % (std_out, std_err))
-        return format_payload(False, error_msg=error_msg)
+        return False, None, error_msg
 
     qclient.update_job_step(job_id,
                             "Step 4 of 4: Generating tgz sortmerna folder")
@@ -193,8 +177,8 @@ def pick_closed_reference_otus(qclient, job_id, parameters, out_dir):
         generate_sortmerna_tgz(pick_out)
     except Exception as e:
         error_msg = ("Error while tgz failures:\nError: %s" % str(e))
-        return format_payload(False, error_msg=error_msg)
+        return False, None, error_msg
 
     artifacts_info = generate_artifact_info(pick_out)
 
-    return format_payload(True, artifacts_info=artifacts_info)
+    return True, artifacts_info, ""

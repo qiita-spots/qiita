@@ -10,7 +10,6 @@ from os.path import join, basename
 import re
 
 import pandas as pd
-from qiita_client import format_payload
 
 from tgp.util import system_call
 from .util import (get_artifact_information, split_mapping_file,
@@ -267,4 +266,4 @@ def split_libraries_fastq(qclient, job_id, parameters, out_dir):
 
     artifacts_info = generate_artifact_info(sl_out)
 
-    return format_payload(True, artifacts_info=artifacts_info)
+    return True, artifacts_info, ""
