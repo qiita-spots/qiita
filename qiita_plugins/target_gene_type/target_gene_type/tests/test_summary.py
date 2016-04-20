@@ -144,9 +144,6 @@ class SummaryTestsDemux(TestCase):
         html_fp = join(self.out_dir, "artifact_%d.html" % self.artifact_id)
         with open(html_fp) as html_f:
             html = html_f.read()
-        print html
-        print "\n\n"
-        print "\n".join(EXP_HTML_DEMUX)
         self.assertEqual(html, "\n".join(EXP_HTML_DEMUX))
 
     @httpretty.activate

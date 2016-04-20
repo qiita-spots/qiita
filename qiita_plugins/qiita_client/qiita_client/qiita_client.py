@@ -26,6 +26,12 @@ def _heartbeat(qclient, url):
         The Qiita server client
     url : str
         The url to issue the heartbeat
+
+    Notes
+    -----
+    If the Qiita server is not reachable, this function will wait 5 minutes
+    before retrying another heartbeat. This is useful for updating the Qiita
+    server without stopping long running jobs.
     """
     retries = 2
     while not JOB_COMPLETED and retries > 0:
@@ -393,7 +399,7 @@ class QiitaClient(object):
         job_id : str
             The job id
         success : bool
-            Whether if the job completed successfully or not
+            Whether the job completed successfully or not
         error_msg : str, optional
             If `success` is False, ther error message to include.
             If `success` is True, it is ignored
