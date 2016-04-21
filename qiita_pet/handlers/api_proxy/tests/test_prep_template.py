@@ -88,6 +88,33 @@ class TestPrepAPIReadOnly(TestCase):
                'editable': True,
                'data_type': '18S',
                'alert_type': '',
+               'ebi_experiment_accessions': {'1.SKB1.640202': 'ERX0000011',
+                                             '1.SKB2.640194': 'ERX0000008',
+                                             '1.SKB3.640195': 'ERX0000024',
+                                             '1.SKB4.640189': 'ERX0000020',
+                                             '1.SKB5.640181': 'ERX0000006',
+                                             '1.SKB6.640176': 'ERX0000025',
+                                             '1.SKB7.640196': 'ERX0000002',
+                                             '1.SKB8.640193': 'ERX0000000',
+                                             '1.SKB9.640200': 'ERX0000016',
+                                             '1.SKD1.640179': 'ERX0000012',
+                                             '1.SKD2.640178': 'ERX0000009',
+                                             '1.SKD3.640198': 'ERX0000013',
+                                             '1.SKD4.640185': 'ERX0000023',
+                                             '1.SKD5.640186': 'ERX0000017',
+                                             '1.SKD6.640190': 'ERX0000007',
+                                             '1.SKD7.640191': 'ERX0000021',
+                                             '1.SKD8.640184': 'ERX0000001',
+                                             '1.SKD9.640182': 'ERX0000019',
+                                             '1.SKM1.640183': 'ERX0000026',
+                                             '1.SKM2.640199': 'ERX0000015',
+                                             '1.SKM3.640197': 'ERX0000018',
+                                             '1.SKM4.640180': 'ERX0000004',
+                                             '1.SKM5.640177': 'ERX0000005',
+                                             '1.SKM6.640187': 'ERX0000022',
+                                             '1.SKM7.640188': 'ERX0000010',
+                                             '1.SKM8.640201': 'ERX0000014',
+                                             '1.SKM9.640192': 'ERX0000003'},
                'alert_message': ''}
         self.assertEqual(obs, exp)
 
@@ -406,10 +433,10 @@ class TestPrepAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        redis_info = loads(r_client.get(obs))
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
         while redis_info['status_msg'] == 'Running':
             sleep(0.05)
-            redis_info = loads(r_client.get(obs))
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
 
     def test_prep_template_patch_req_errors(self):
         # Operation not supported

@@ -46,7 +46,8 @@ class JobHandlerTests(OauthTestingBase):
                   "rev_comp_barcode": False,
                   "rev_comp_mapping_barcodes": False, "rev_comp": False,
                   "phred_quality_threshold": 3, "barcode_type": "golay_12",
-                  "max_barcode_errors": 1.5, "input_data": 1}
+                  "max_barcode_errors": 1.5, "input_data": 1,
+                  'phred_offset': ''}
         exp = {'command': cmd, 'parameters': params, 'status': 'success'}
         self.assertEqual(loads(obs.body), exp)
 

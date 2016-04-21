@@ -46,10 +46,17 @@ class StudyBaseInfoAJAX(BaseHandler):
         share_access = (self.current_user.id in study_info['shared_with'] or
                         self.current_user.id == study_info['owner'])
 
+        ebi_info = study_info['ebi_submission_status']
+        if ebi_info == 'submitted':
+            ebi_info = ''.join([
+                ('<a href="https://www.ebi.ac.uk/ena/data/view/{0}">{0}'
+                 '</a></br>'.format(acc))
+                for acc in study_info['ebi_study_accession'].split(',')])
+
         self.render('study_ajax/base_info.html',
                     study_info=study_info, publications=study_doi, pi=pi,
                     contact=contact, editable=res['editable'],
-                    share_access=share_access)
+                    share_access=share_access, ebi_info=ebi_info)
 
 
 class StudyDeleteAjax(BaseHandler):

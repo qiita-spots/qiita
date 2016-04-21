@@ -9,7 +9,7 @@ from __future__ import division
 import warnings
 from os import remove
 from os.path import basename
-from json import loads
+from json import loads, dumps
 
 from natsort import natsorted
 from moi import r_client
@@ -107,16 +107,33 @@ def prep_template_ajax_get_req(user_id, prep_id):
     name = "Prep information %d" % prep_id
     pt = PrepTemplate(prep_id)
 
-    job_id = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
-    if job_id:
-        redis_info = loads(r_client.get(job_id))
-        processing = redis_info['status_msg'] == 'Running'
-        if processing:
-            alert_type = 'info'
-            alert_msg = 'This prep template is currently being updated'
+    job_info = r_client.get(PREP_TEMPLATE_KEY_FORMAT % prep_id)
+    if job_info:
+        job_info = loads(job_info)
+        job_id = job_info['job_id']
+        if job_id:
+            redis_info = loads(r_client.get(job_id))
+            processing = redis_info['status_msg'] == 'Running'
+            if processing:
+                alert_type = 'info'
+                alert_msg = 'This prep template is currently being updated'
+            elif redis_info['status_msg'] == 'Success':
+                alert_type = redis_info['return']['status']
+                alert_msg = redis_info['return']['message'].replace('\n',
+                                                                    '</br>')
+                payload = {'job_id': None,
+                           'status': alert_type,
+                           'message': alert_msg}
+                r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
+                             dumps(payload))
+            else:
+                alert_type = redis_info['return']['status']
+                alert_msg = redis_info['return']['message'].replace('\n',
+                                                                    '</br>')
         else:
-            alert_type = redis_info['return']['status']
-            alert_msg = redis_info['return']['message'].replace('\n', '</br>')
+            processing = False
+            alert_type = job_info['status']
+            alert_msg = job_info['message'].replace('\n', '</br>')
     else:
         processing = False
         alert_type = ''
@@ -163,6 +180,7 @@ def prep_template_ajax_get_req(user_id, prep_id):
             'editable': editable,
             'data_type': pt.data_type(),
             'alert_type': alert_type,
+            'ebi_experiment_accessions': pt.ebi_experiment_accessions,
             'alert_message': alert_msg}
 
 
@@ -417,7 +435,8 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
                 return fp
             fp = fp['file']
             job_id = safe_submit(user_id, update_prep_template, prep_id, fp)
-            r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id, job_id)
+            r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
+                         dumps({'job_id': job_id}))
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',

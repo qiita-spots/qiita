@@ -93,14 +93,17 @@ class ForgotPasswordHandler(BaseHandler):
             user.generate_reset_code()
             info = user.info
             try:
+                # qiita_config.base_url doesn't have a / at the end, but the
+                # qiita_config.portal_dir has it at the beginning but not at
+                # the end. This constructs the correct URL
+                url = qiita_config.base_url + qiita_config.portal_dir
                 send_email(user.id, "Qiita: Password Reset", "Please go to "
                            "the following URL to reset your password: \n"
-                           "%s/%s/auth/reset/%s  \nYou "
+                           "%s/auth/reset/%s  \nYou "
                            "have 30 minutes from the time you requested a "
                            "reset to change your password. After this period, "
                            "you will have to request another reset." %
-                           (qiita_config.base_url, qiita_config.portal_dir,
-                            info["pass_reset_code"]))
+                           (url, info["pass_reset_code"]))
                 message = ("Check your email for the reset code.")
                 level = "success"
                 page = "index.html"

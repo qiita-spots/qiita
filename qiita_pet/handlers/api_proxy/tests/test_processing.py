@@ -86,7 +86,8 @@ class TestProcessingAPIReadOnly(TestCase):
                                   'rev_comp': False,
                                   'rev_comp_barcode': False,
                                   'rev_comp_mapping_barcodes': False,
-                                  'sequence_max_n': 0}}
+                                  'sequence_max_n': 0,
+                                  'phred_offset': ''}}
         self.assertEqual(obs, exp)
 
 
