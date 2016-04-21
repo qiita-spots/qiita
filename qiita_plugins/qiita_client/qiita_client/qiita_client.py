@@ -79,8 +79,7 @@ def _format_payload(success, error_msg=None, artifacts_info=None):
          'artifacts': dict of {str: {'artifact_type': str,
                                      'filepaths': list of (str, str)}}
     """
-    if success:
-        error_msg = ''
+    if success and artifacts_info:
         artifacts = {out_name: {'artifact_type': atype,
                                 'filepaths': filepaths}
                      for out_name, atype, filepaths in artifacts_info}
@@ -357,6 +356,10 @@ class QiitaClient(object):
             The job id
         """
         url = "/qiita_db/jobs/%s/heartbeat/" % job_id
+        # Execute the first heartbeat, since it is the one that sets the job
+        # to a running state - so make sure that other calls to the job work
+        # as expected
+        self.post(url, data='')
         heartbeat_thread = threading.Thread(target=_heartbeat,
                                             args=(self, url))
         heartbeat_thread.daemon = True

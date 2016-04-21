@@ -75,6 +75,7 @@ def execute_job(server_url, job_id, output_dir):
         exc_str = repr(traceback.format_exception(*sys.exc_info()))
         error_msg = ("Error executing %s: \n%s" % (task_name, exc_str))
         success = False
+        artifacts_info = None
     # The job completed
     qclient.complete_job(job_id, success, error_msg=error_msg,
                          artifacts_info=artifacts_info)
