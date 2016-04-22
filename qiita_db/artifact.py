@@ -411,10 +411,6 @@ class Artifact(qdb.base.QiitaObject):
                          WHERE artifact_id = %s"""
                 qdb.sql_connection.TRN.add(sql, [artifact_id])
 
-                sql = """DELETE FROM qiita.processing_job
-                         WHERE processing_job_id IN %s"""
-                qdb.sql_connection.TRN.add(sql, [job_ids])
-
             # Delete the entry from the artifact_output_processing_job table
             sql = """DELETE FROM qiita.artifact_output_processing_job
                      WHERE artifact_id = %s"""
