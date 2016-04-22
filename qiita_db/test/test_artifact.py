@@ -794,8 +794,8 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(test.id)
 
-        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.processing_job.ProcessingJob(job.id)
+        # Check that the job still exists, so we cap keep track of system usage
+        qdb.processing_job.ProcessingJob(job.id)
 
     def test_delete_as_output_job(self):
         fd, fp = mkstemp(suffix='_table.biom')
