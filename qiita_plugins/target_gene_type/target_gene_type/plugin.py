@@ -12,7 +12,7 @@ from future import standard_library
 import traceback
 import sys
 
-from qiita_client import QiitaClient, format_payload
+from qiita_client import QiitaClient
 
 from target_gene_type.validate import validate
 from target_gene_type.summary import generate_html_summary
@@ -57,25 +57,25 @@ def execute_job(server_url, job_id, output_dir):
                           config.get('main', 'CLIENT_SECRET'),
                           server_cert=config.get('main', 'SERVER_CERT'))
 
-    # Request job information
+    # Request job information. If there is a problem retrieving the job
+    # information, the QiitaClient already raises an error
     job_info = qclient.get_job_info(job_id)
-    # Check if we have received the job information so we can start it
-    if job_info and job_info['success']:
-        # Starting the heartbeat
-        qclient.start_heartbeat(job_id)
-        # Execute the given task
-        task_name = job_info['command']
-        task = TASK_DICT[task_name]
+    # Starting the heartbeat
+    qclient.start_heartbeat(job_id)
+    # Execute the given task
+    task_name = job_info['command']
+    task = TASK_DICT[task_name]
 
-        if not exists(output_dir):
-            makedirs(output_dir)
-        try:
-            payload = task(qclient, job_id, job_info['parameters'], output_dir)
-        except Exception:
-            exc_str = repr(traceback.format_exception(*sys.exc_info()))
-            error_msg = ("Error executing %s: \n%s" % (task_name, exc_str))
-            payload = format_payload(success=False, error_msg=error_msg)
-        # The job completed
-        qclient.complete_job(job_id, payload)
-    else:
-        raise RuntimeError("Can't get job (%s) information" % job_id)
+    if not exists(output_dir):
+        makedirs(output_dir)
+    try:
+        success, artifacts_info, error_msg = task(
+            qclient, job_id, job_info['parameters'], output_dir)
+    except Exception:
+        exc_str = repr(traceback.format_exception(*sys.exc_info()))
+        error_msg = ("Error executing %s: \n%s" % (task_name, exc_str))
+        success = False
+        artifacts_info = None
+    # The job completed
+    qclient.complete_job(job_id, success, error_msg=error_msg,
+                         artifacts_info=artifacts_info)

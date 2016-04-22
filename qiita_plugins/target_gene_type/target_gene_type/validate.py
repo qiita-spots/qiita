@@ -11,7 +11,6 @@ from json import loads
 from shutil import copy
 
 from h5py import File
-from qiita_client import format_payload
 from skbio.parse.sequences import load
 
 # This is temporary. We should move the demux file format somewhere else
@@ -54,12 +53,11 @@ def _validate_multiple(qclient, job_id, prep_info, files, atype):
     # Check if there is any filepath type that is not supported
     unsupported_fp_types = set(files) - all_fp_types
     if unsupported_fp_types:
-        return format_payload(
-            success=False,
-            error_msg="Filepath type(s) %s not supported by artifact "
-                      "type %s. Supported filepath types: %s"
-                      % (', '.join(unsupported_fp_types), atype,
-                         ', '.join(sorted(all_fp_types))))
+        error_msg = ("Filepath type(s) %s not supported by artifact "
+                     "type %s. Supported filepath types: %s"
+                     % (', '.join(unsupported_fp_types), atype,
+                        ', '.join(sorted(all_fp_types))))
+        return False, None, error_msg
 
     # Check if the run_prefix column is present in the prep info
     offending = {}
@@ -104,21 +102,20 @@ def _validate_multiple(qclient, job_id, prep_info, files, atype):
     # Check that all required filepath types where present
     missing = req_fp_types - types_seen
     if missing:
-        return format_payload(
-            success=False, error_msg="Missing required filepath type(s): %s"
-                                     % ', '.join(missing))
+        error_msg = ("Missing required filepath type(s): %s"
+                     % ', '.join(missing))
+        return False, None, error_msg
 
     # Check if there was any offending file
     if offending:
         error_list = ["%s: %s" % (k, v) for k, v in offending.items()]
         error_msg = ("Error creating artifact. Offending files:\n%s"
                      % '\n'.join(error_list))
-        return format_payload(success=False, error_msg=error_msg)
+        return False, None, error_msg
 
     # Everything is ok
     filepaths = [[fps, fps_type] for fps_type, fps in files.items()]
-    return format_payload(
-        success=True, artifacts_info=[[None, atype, filepaths]])
+    return True, [[None, atype, filepaths]], ""
 
 
 def _validate_per_sample_FASTQ(qclient, job_id, prep_info, files):
@@ -150,17 +147,15 @@ def _validate_per_sample_FASTQ(qclient, job_id, prep_info, files):
     unsupported_fp_types = set(files) - {'raw_forward_seqs',
                                          'raw_reverse_seqs'}
     if unsupported_fp_types:
-        return format_payload(
-            success=False,
-            error_msg="Filepath type(s) %s not supported by artifact "
-                      "type per_sample_FASTQ. Supported filepath types: "
-                      "raw_forward_seqs, raw_reverse_seqs"
-                      % ', '.join(unsupported_fp_types))
+        error_msg = ("Filepath type(s) %s not supported by artifact "
+                     "type per_sample_FASTQ. Supported filepath types: "
+                     "raw_forward_seqs, raw_reverse_seqs"
+                     % ', '.join(unsupported_fp_types))
+        return False, None, error_msg
 
     if 'raw_forward_seqs' not in files:
-        return format_payload(
-            success=False,
-            error_msg="Missing required filepath type: raw_forward_seqs")
+        error_msg = "Missing required filepath type: raw_forward_seqs"
+        return False, None, error_msg
 
     # Make sure that we hve the same number of files than samples
     fwd_count = len(files['raw_forward_seqs'])
@@ -172,12 +167,11 @@ def _validate_per_sample_FASTQ(qclient, job_id, prep_info, files):
         rev_count = 0
 
     if not counts_match:
-        return format_payload(
-            success=False,
-            error_msg="The number of provided files doesn't match the "
-                      "number of samples (%d): %d raw_forward_seqs, "
-                      "%d raw_reverse_seqs (optional, 0 is ok)"
-                      % (samples_count, fwd_count, rev_count))
+        error_msg = ("The number of provided files doesn't match the "
+                     "number of samples (%d): %d raw_forward_seqs, "
+                     "%d raw_reverse_seqs (optional, 0 is ok)"
+                     % (samples_count, fwd_count, rev_count))
+        return False, None, error_msg
 
     if 'run_prefix' in prep_info[samples[0]]:
         # The column 'run_prefix' is present in the prep information.
@@ -188,11 +182,10 @@ def _validate_per_sample_FASTQ(qclient, job_id, prep_info, files):
             repeated = ["%s (%d)" % (p, run_prefixes.count(p))
                         for p in set(run_prefixes)
                         if run_prefixes.count(p) > 1]
-            return format_payload(
-                success=False,
-                error_msg="The values for the column 'run_prefix' are not "
-                          "unique for each sample. Repeated values: %s"
-                          % ', '.join(repeated))
+            error_msg = ("The values for the column 'run_prefix' are not "
+                         "unique for each sample. Repeated values: %s"
+                         % ', '.join(repeated))
+            return False, None, error_msg
 
         error_msg = ("The provided files do not match the run prefix values "
                      "in the prep information. Offending files: "
@@ -217,13 +210,11 @@ def _validate_per_sample_FASTQ(qclient, job_id, prep_info, files):
         rev_fail = []
 
     if fwd_fail or rev_fail:
-        return format_payload(
-            success=False,
-            error_msg=error_msg % (', '.join(fwd_fail), ', '.join(rev_fail)))
+        error_msg = error_msg % (', '.join(fwd_fail), ', '.join(rev_fail))
+        return False, None, error_msg
 
     filepaths = [[fps, fps_type] for fps_type, fps in files.items()]
-    return format_payload(
-        success=True, artifacts_info=[[None, 'per_sample_FASTQ', filepaths]])
+    return True, [[None, 'per_sample_FASTQ', filepaths]], ""
 
 
 def _validate_demux_file(qclient, job_id, prep_info, out_dir, demux_fp,
@@ -268,14 +259,13 @@ def _validate_demux_file(qclient, job_id, prep_info, out_dir, demux_fp,
         if 'run_prefix' in prep_info[next(iter(pt_sample_ids))]:
             id_map = {v['run_prefix']: k for k, v in prep_info.items()}
             if not set(id_map).issuperset(demux_sample_ids):
-                return format_payload(
-                    success=False,
-                    error_msg='The sample ids in the "run_prefix" columns '
-                              'from the prep information do not match the '
-                              'ones in the demux file. Please, correct the '
-                              'column "run_prefix" in the prep information to '
-                              'map the existing sample ids to the prep '
-                              'information sample ids.')
+                error_msg = ('The sample ids in the "run_prefix" columns '
+                             'from the prep information do not match the '
+                             'ones in the demux file. Please, correct the '
+                             'column "run_prefix" in the prep information to '
+                             'map the existing sample ids to the prep '
+                             'information sample ids.')
+                return False, None, error_msg
         else:
             # Attempt 2: the sample ids in the demux table are the same that
             # in the prep template but without the prefix
@@ -286,13 +276,13 @@ def _validate_demux_file(qclient, job_id, prep_info, out_dir, demux_fp,
             else:
                 # There is nothing we can do. The samples in the demux file do
                 # not match the ones in the prep template and we can't fix it
-                return format_payload(
-                    success=False,
-                    error_msg='The sample ids in the demultiplexed files do '
-                              'not match the ones in the prep information. '
-                              'Please, provide the column "run_prefix" in '
-                              'the prep information to map the existing sample'
-                              ' ids to the prep information sample ids.')
+                error_msg = ('The sample ids in the demultiplexed files do '
+                             'not match the ones in the prep information. '
+                             'Please, provide the column "run_prefix" in '
+                             'the prep information to map the existing sample'
+                             ' ids to the prep information sample ids.')
+                return False, None, error_msg
+
         # Fix the sample ids
         # Do not modify the original demux file, copy it to a new location
         new_demux_fp = join(out_dir, basename(demux_fp))
@@ -330,8 +320,7 @@ def _validate_demux_file(qclient, job_id, prep_info, out_dir, demux_fp,
                  [[demux_fp], 'preprocessed_demux']]
     if log_fp:
         filepaths.append([[log_fp], 'log'])
-    return format_payload(
-        success=True, artifacts_info=[[None, 'Demultiplexed', filepaths]])
+    return True, [[None, 'Demultiplexed', filepaths]], ""
 
 
 def _validate_demultiplexed(qclient, job_id, prep_info, files, out_dir):
@@ -361,13 +350,11 @@ def _validate_demultiplexed(qclient, job_id, prep_info, files, out_dir):
                           'preprocessed_demux', 'log'}
     unsupported_fp_types = set(files) - supported_fp_types
     if unsupported_fp_types:
-        return format_payload(
-            success=False,
-            error_msg="Filepath type(s) %s not supported by artifact type "
-                      "Demultiplexed. Supported filepath types: %s"
-                      % (', '.join(unsupported_fp_types),
-                         ', '.join(sorted(supported_fp_types)))
-        )
+        error_msg = ("Filepath type(s) %s not supported by artifact type "
+                     "Demultiplexed. Supported filepath types: %s"
+                     % (', '.join(unsupported_fp_types),
+                        ', '.join(sorted(supported_fp_types))))
+        return False, None, error_msg
 
     # At most one file of each type can be provided
     offending = set(fp_t for fp_t, fps in files.items() if len(fps) > 1)
@@ -375,11 +362,9 @@ def _validate_demultiplexed(qclient, job_id, prep_info, files, out_dir):
         errors = ["%s (%d): %s"
                   % (fp_t, len(files[fp_t]), ', '.join(files[fp_t]))
                   for fp_t in sorted(offending)]
-        return format_payload(
-            success=False,
-            error_msg="Only one filepath of each file type is supported, "
-                      "offending types:\n%s"
-                      % "; ".join(errors))
+        error_msg = ("Only one filepath of each file type is supported, "
+                     "offending types:\n%s" % "; ".join(errors))
+        return False, None, error_msg
 
     # Check which files we have available:
     fasta = (files['preprocessed_fasta'][0]
@@ -392,31 +377,32 @@ def _validate_demultiplexed(qclient, job_id, prep_info, files, out_dir):
     if demux:
         # If demux is available, use that one to perform the validation and
         # generate the fasta and fastq from it
-        payload = _validate_demux_file(qclient, job_id, prep_info, out_dir,
-                                       demux, log_fp=log)
+        success, a_info, error_msg = _validate_demux_file(
+            qclient, job_id, prep_info, out_dir, demux, log_fp=log)
     elif fastq:
         # Generate the demux file from the fastq
         demux = join(out_dir, "%s.demux" % splitext(basename(fastq))[0])
         with File(demux, "w") as f:
             to_hdf5(fastq, f)
         # Validate the demux, providing the original fastq
-        payload = _validate_demux_file(qclient, job_id, prep_info, out_dir,
-                                       demux, fastq_fp=fastq, log_fp=log)
+        success, a_info, error_msg = _validate_demux_file(
+            qclient, job_id, prep_info, out_dir, demux, fastq_fp=fastq,
+            log_fp=log)
     elif fasta:
         # Generate the demux file from the fasta
         demux = join(out_dir, "%s.demux" % splitext(basename(fasta))[0])
         with File(demux, "w") as f:
             to_hdf5(fasta, f)
         # Validate the demux, providing the original fasta
-        payload = _validate_demux_file(qclient, job_id, prep_info, out_dir,
-                                       demux, fasta_fp=fasta, log_fp=log)
+        success, a_info, error_msg = _validate_demux_file(
+            qclient, job_id, prep_info, out_dir, demux, fasta_fp=fasta,
+            log_fp=log)
     else:
-        payload = format_payload(
-            success=False,
-            error_msg="Either a 'preprocessed_demux', 'preprocessed_fastq' or "
-                      "'preprocessed_fasta' file should be provided.")
+        error_msg = ("Either a 'preprocessed_demux', 'preprocessed_fastq' or "
+                     "'preprocessed_fasta' file should be provided.")
+        return False, None, error_msg
 
-    return payload
+    return success, a_info, error_msg
 
 
 def validate(qclient, job_id, parameters, out_dir):
@@ -459,14 +445,14 @@ def validate(qclient, job_id, parameters, out_dir):
     prep_info = prep_info['data']
 
     if a_type in ['SFF', 'FASTQ', 'FASTA', 'FASTA_Sanger']:
-        _validate_multiple(qclient, job_id, prep_info, files, a_type)
+        return _validate_multiple(qclient, job_id, prep_info, files, a_type)
     elif a_type == 'per_sample_FASTQ':
-        _validate_per_sample_FASTQ(qclient, job_id, prep_info, files)
+        return _validate_per_sample_FASTQ(qclient, job_id, prep_info, files)
     elif a_type == 'Demultiplexed':
-        _validate_demultiplexed(qclient, job_id, prep_info, files, out_dir)
+        return _validate_demultiplexed(qclient, job_id, prep_info, files,
+                                       out_dir)
     else:
-        return format_payload(
-            success=False,
-            error_msg="Unknown artifact_type %s. Supported types: 'SFF', "
-                      "'FASTQ', 'FASTA', 'FASTA_Sanger', 'per_sample_FASTQ', "
-                      "'Demultiplexed'" % a_type)
+        error_msg = ("Unknown artifact_type %s. Supported types: 'SFF', "
+                     "'FASTQ', 'FASTA', 'FASTA_Sanger', 'per_sample_FASTQ', "
+                     "'Demultiplexed'" % a_type)
+        return False, None, error_msg

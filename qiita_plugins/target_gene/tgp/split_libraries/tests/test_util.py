@@ -50,17 +50,15 @@ class UtilTests(TestCase):
             httpretty.GET,
             "https://test_server.com/qiita_db/artifacts/1/filepaths/",
             body='{"filepaths": [["forward_seqs.fastq.gz", "raw_forward_seqs"]'
-                 ', ["barcodes.fastq.gz", "raw_barcodes"]], "success": true, '
-                 '"error": ""}')
+                 ', ["barcodes.fastq.gz", "raw_barcodes"]]}')
         httpretty.register_uri(
             httpretty.GET,
             "https://test_server.com/qiita_db/artifacts/1/mapping/",
-            body='{"mapping": "mapping_file.txt", "success": true, '
-                 '"error": ""}')
+            body='{"mapping": "mapping_file.txt"}')
         httpretty.register_uri(
             httpretty.GET,
             "https://test_server.com/qiita_db/artifacts/1/type/",
-            body='{"type": "FASTQ", "success": true, "error": ""}')
+            body='{"type": "FASTQ"}')
 
         obs_fps, obs_mf, obs_at = get_artifact_information(self.qclient, 1)
 
@@ -69,17 +67,6 @@ class UtilTests(TestCase):
         self.assertEqual(obs_fps, exp_fps)
         self.assertEqual(obs_mf, "mapping_file.txt")
         self.assertEqual(obs_at, "FASTQ")
-
-    @httpretty.activate
-    def test_get_artifact_error(self):
-        # Mock the URIs
-        httpretty.register_uri(
-            httpretty.GET,
-            "https://test_server.com/qiita_db/artifacts/1/filepaths/",
-            body='{"filepaths": '', "success": false, "error": "some error"}')
-
-        with self.assertRaises(ValueError):
-            get_artifact_information(self.qclient, 1)
 
     def test_split_mapping_file_single(self):
         out_dir = mkdtemp()

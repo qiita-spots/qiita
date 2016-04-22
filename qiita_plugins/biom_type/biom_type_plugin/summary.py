@@ -15,11 +15,9 @@ import numpy as np
 from StringIO import StringIO
 
 import seaborn as sns
-from qiita_client import format_payload
 
 
-def generate_html_summary(qclient, job_id, parameters, out_dir,
-                          return_html=False):
+def generate_html_summary(qclient, job_id, parameters, out_dir):
     """Generates the HTML summary of a BIOM artifact
 
     Parameters
@@ -32,30 +30,18 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
         The parameter values to validate and create the artifact
     out_dir : str
         The path to the job's output directory
-    return_html : bool, optional
-        True will return the html str, useful for testing
 
     Returns
     -------
-    dict(, [str])
-        The results of the job and if return_html is True an array of str
-
-    Raises
-    ------
-    ValueError
-        If there is any error gathering the information from the server
+    bool, None, str
+        Whether the job is successful
+        Ignored
+        The error message, if not successful
     """
     # Step 1: gather file information from qiita using REST api
     artifact_id = parameters['input_data']
     qclient_url = "/qiita_db/artifacts/%s/filepaths/" % artifact_id
     fps_info = qclient.get(qclient_url)
-    if not fps_info or not fps_info['success']:
-        error_msg = "Could not get artifact filepath information: %s"
-        if fps_info:
-            error_msg = error_msg % fps_info['error']
-        else:
-            error_msg = error_msg % "could not connect with the server"
-        raise ValueError(error_msg)
 
     # if we get to this point of the code we are sure that this is a biom file
     # and that it only has one element
@@ -107,9 +93,12 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
         of.write('\n'.join(artifact_information))
 
     # Step 3: add the new file to the artifact using REST api
-    reply = qclient.patch(qclient_url, 'add', '/html_summary/', value=of_fp)
+    success = True
+    error_msg = ""
+    try:
+        qclient.patch(qclient_url, 'add', '/html_summary/', value=of_fp)
+    except Exception as e:
+        success = False
+        error_msg = str(e)
 
-    payload = format_payload(
-        success=reply['success'], error_msg=reply['error'], artifacts_info=[])
-
-    return payload if not return_html else (payload, artifact_information)
+    return success, None, error_msg

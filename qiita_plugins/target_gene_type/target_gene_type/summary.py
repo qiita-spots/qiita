@@ -14,7 +14,6 @@ from base64 import b64encode
 from StringIO import StringIO
 
 
-from qiita_client import format_payload
 from qiita_ware.demux import stats as demux_stats
 import matplotlib.pyplot as plt
 
@@ -23,8 +22,7 @@ FILEPATH_TYPE_TO_NOT_SHOW_HEAD = ['SFF']
 LINES_TO_READ_FOR_HEAD = 10
 
 
-def generate_html_summary(qclient, job_id, parameters, out_dir,
-                          return_html=False):
+def generate_html_summary(qclient, job_id, parameters, out_dir):
     """Generates the HTML summary of a target gene type artifact
 
     Parameters
@@ -37,13 +35,13 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
         The parameter values to validate and create the artifact
     out_dir : str
         The path to the job's output directory
-    return_html : bool, optional
-        True will return the html str, useful for testing
 
     Returns
     -------
-    dict
-        The results of the job
+    bool, None, str
+        Whether the job is successful
+        Ignored
+        The error message, if not successful
 
     Raises
     ------
@@ -56,22 +54,8 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
     artifact_id = parameters['input_data']
     qclient_url = "/qiita_db/artifacts/%s/filepaths/" % artifact_id
     fps_info = qclient.get(qclient_url)
-    if not fps_info or not fps_info['success']:
-        error_msg = "Could not get artifact filepath information: %s"
-        if fps_info:
-            error_msg = error_msg % fps_info['error']
-        else:
-            error_msg = error_msg % "could not connect with the server"
-        raise ValueError(error_msg)
     # 1.b get the artifact type_info
     type_info = qclient.get("/qiita_db/artifacts/%s/type/" % artifact_id)
-    if not type_info or not type_info['success']:
-        error_msg = "Could not get artifact metadata information %s"
-        if type_info:
-            error_msg = error_msg % type_info['error']
-        else:
-            error_msg = error_msg % "could not connect with the server"
-        raise ValueError(error_msg)
     artifact_type = type_info['type']
 
     # we have 2 main cases: Demultiplexed and everything else, splitting on
@@ -90,13 +74,15 @@ def generate_html_summary(qclient, job_id, parameters, out_dir,
         of.write('\n'.join(artifact_information))
 
     # Step 3: add the new file to the artifact using REST api
-    reply = qclient.patch(qclient_url, 'add', '/html_summary/',
-                          value=of_fp)
+    success = True
+    error_msg = ''
+    try:
+        qclient.patch(qclient_url, 'add', '/html_summary/', value=of_fp)
+    except Exception as e:
+        success = False
+        error_msg = str(e)
 
-    payload = format_payload(
-        success=reply['success'], error_msg=reply['error'], artifacts_info=[])
-
-    return payload if not return_html else (payload, artifact_information)
+    return success, None, error_msg
 
 
 def _summary_not_demultiplexed(artifact_type, filepaths):

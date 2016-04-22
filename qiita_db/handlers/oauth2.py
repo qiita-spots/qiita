@@ -128,24 +128,27 @@ class OauthBaseHandler(RequestHandler):
         This function is automatically called by the tornado package on errors,
         and should never be called directly.
         """
-        if status_code in {403, 404, 405}:
-            # We don't need to log these failues in the logging table
-            return
-        # log the error
         exc_info = kwargs['exc_info']
-        trace_info = ''.join(['%s\n' % line for line in
-                             format_exception(*exc_info)])
-        req_dict = self.request.__dict__
-        # must trim body to 1024 chars to prevent huge error messages
-        req_dict['body'] = req_dict.get('body', '')[:1024]
-        request_info = ''.join(['<strong>%s</strong>: %s\n' %
-                               (k, req_dict[k]) for k in
-                                req_dict.keys() if k != 'files'])
-        error = exc_info[1]
-        qdb.logger.LogEntry.create(
-            'Runtime',
-            'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
-            (error, trace_info, request_info))
+
+        # We don't need to log 403, 404 or 405 failures in the logging table
+        if status_code not in {403, 404, 405}:
+            # log the error
+            error_lines = ['%s\n' % line
+                           for line in format_exception(*exc_info)]
+            trace_info = ''.join(error_lines)
+            req_dict = self.request.__dict__
+            # must trim body to 1024 chars to prevent huge error messages
+            req_dict['body'] = req_dict.get('body', '')[:1024]
+            request_info = ''.join(['<strong>%s</strong>: %s\n' %
+                                   (k, req_dict[k]) for k in
+                                    req_dict.keys() if k != 'files'])
+            error = exc_info[1]
+            qdb.logger.LogEntry.create(
+                'Runtime',
+                'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
+                (error, trace_info, request_info))
+
+        self.finish(exc_info[1].log_message)
 
     def head(self):
         """Adds proper response for head requests"""
