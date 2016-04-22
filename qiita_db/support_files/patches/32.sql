@@ -31,7 +31,7 @@ WITH ebi_data AS (SELECT study_id, string_agg(ebi_study_accession, ', ') AS ebi_
 				  GROUP BY study_id)
 	UPDATE qiita.study AS st
 		SET ebi_study_accession = ebi_data.ebi_study_accessions,
-			ebi_submission_status = 'success'
+			ebi_submission_status = 'submitted'
 		FROM ebi_data
 		WHERE st.study_id = ebi_data.study_id;
 
