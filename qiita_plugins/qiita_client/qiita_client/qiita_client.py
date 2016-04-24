@@ -186,6 +186,7 @@ class QiitaClient(object):
                     'Oauth2 error: token has timed out':
                 # The token expired - get a new one and re-try the request
                 self._fetch_token()
+                kwargs['headers']['Authorization'] = 'Bearer %s' % self._token
                 r = req(*args, **kwargs)
         return r
 
