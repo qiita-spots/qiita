@@ -146,6 +146,15 @@ class ArtifactAJAXTests(TestHandlerBase):
         response = self.post('/artifact/',
                              {'artifact_id': 2})
         self.assertEqual(response.code, 200)
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        obs = r_client.get('prep_template_1')
+        self.assertIsNotNone(obs)
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
 
 
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):
