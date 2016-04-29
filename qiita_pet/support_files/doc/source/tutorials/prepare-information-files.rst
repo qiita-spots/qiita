@@ -9,6 +9,14 @@ The set of required fields for the *sample information file* and *prep
 information file* files varies based on the functionality that you want to
 use from the system.
 
+As described in :doc:`../qiita-philosophy/index`, a Qiita study can have
+many biological samples, each with many preparations for different kinds of
+multi-omic analysis. As described in :doc:`getting-started.rst`, the study will
+have a single *sample information file* that will define the biological context
+of each sample. Each multi-omic data type prepared will have a separate *prep
+information file* that will describe the sequencing technology or analytical
+chemistry used to generate that data set.
+
 Example files
 -------------
 
@@ -17,6 +25,12 @@ You can download an example sample information file and prep information file fr
 
 Sample information file
 -----------------------
+
+Similar to a `QIIME metadata file, <http://qiime.org/documentation/file_formats.html#metadata-mapping-files>`__
+a *sample information file* will define common the biological context of each
+sample and also provide a ``sample_name`` which will link each sample with
+different multi-omic data types prepared.
+
 
 Required fields for Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -92,6 +106,10 @@ Optional fields for centralized Qiita by portal
 
 Prep information file
 ---------------------
+
+The *prep information file* will describe the sequencing technology or analytical
+chemistry used to generate this data type and use a shared ``sample_name`` to
+link to a sample in the *sample information file.* 
 
 Required fields for Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~
