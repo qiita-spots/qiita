@@ -5,7 +5,7 @@ What kind of data can I upload to Qiita for processing?
 -------------------------------------------------------
 
 Processing in Qiita requires 3 things: raw data, sample and prep information
-files. `Here <https://github.com/biocore/qiita/blob/master/README.rst#accepted-raw-files>__`
+files. `Here <https://github.com/biocore/qiita/blob/master/README.rst#accepted-raw-files>`__
 you can find a list of currently supported raw files files. Note that we are
 accepting any kind of target gene (16S, 18S, ITS, whatever). You can also upload
 WGS however, WGS processing is not ready.
