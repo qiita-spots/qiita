@@ -9,7 +9,6 @@ from __future__ import division
 from json import dumps
 from future.utils import viewitems
 from collections import defaultdict
-from os.path import basename
 
 from tornado.web import authenticated, HTTPError
 from tornado.gen import coroutine, Task
@@ -18,12 +17,11 @@ from moi import r_client
 
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
-from qiita_db.study import Study, StudyPerson
+from qiita_db.study import Study
 from qiita_db.search import QiitaStudySearch
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
-from qiita_db.reference import Reference
-from qiita_db.util import get_pubmed_ids_from_dois, add_message
+from qiita_db.util import (add_message, generate_study_list)
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
@@ -31,102 +29,6 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import (
     study_person_linkifier, doi_linkifier, pubmed_linkifier, check_access,
     get_shared_links)
-
-
-@execute_as_transaction
-def _build_single_study_info(study, info, study_proc, proc_samples):
-    """Clean up and add to the study info for HTML purposes
-
-    Parameters
-    ----------
-    study : Study object
-        The study to build information for
-    info : dict
-        Information from Study.get_info
-    study_proc : dict of dict of lists
-        Dictionary keyed on study_id that lists all processed data associated
-        with that study. This list of processed data ids is keyed by data type
-    proc_samples : dict of lists
-        Dictionary keyed on proc_data_id that lists all samples associated with
-        that processed data.
-
-    Returns
-    -------
-    dict
-        info-information + extra information for the study,
-        slightly HTML formatted
-    """
-    PI = StudyPerson(info['principal_investigator_id'])
-    status = study.status
-    if info['publication_doi'] is not None:
-        pmids = get_pubmed_ids_from_dois(info['publication_doi']).values()
-        info['pmid'] = ", ".join([pubmed_linkifier([p]) for p in pmids])
-        info['publication_doi'] = ", ".join([doi_linkifier([p])
-                                             for p in info['publication_doi']])
-
-    else:
-        info['publication_doi'] = ""
-        info['pmid'] = ""
-    if info["number_samples_collected"] is None:
-        info["number_samples_collected"] = 0
-    info["shared"] = get_shared_links(study)
-    # raw data is any artifact that is not Demultiplexed or BIOM
-
-    info["num_raw_data"] = len([a for a in study.artifacts()
-                                if a.artifact_type not in ['Demultiplexed',
-                                                           'BIOM']])
-    info["status"] = status
-    info["study_id"] = study.id
-    info["pi"] = study_person_linkifier((PI.email, PI.name))
-    del info["principal_investigator_id"]
-    del info["email"]
-    # Build the proc data info list for the child row in datatable
-    info["proc_data_info"] = []
-    for data_type, proc_datas in viewitems(study_proc[study.id]):
-        info["proc_data_info"].extend([
-            _build_single_proc_data_info(pd_id, data_type, proc_samples[pd_id])
-            for pd_id in proc_datas])
-    return info
-
-
-@execute_as_transaction
-def _build_single_proc_data_info(proc_data_id, data_type, samples):
-    """Build the proc data info list for the child row in datatable
-
-    Parameters
-    ----------
-    proc_data_id : int
-        The processed data attached to he study, in the form
-        {study_id: [proc_data_id, proc_data_id, ...], ...}
-    data_type : str
-        Data type of the processed data
-    proc_samples : dict of lists
-        The samples available in the processed data, in the form
-        {proc_data_id: [samp1, samp2, ...], ...}
-
-    Returns
-    -------
-    dict
-        The information for the processed data, in the form {info: value, ...}
-    """
-    proc_data = Artifact(proc_data_id)
-    proc_info = {'processed_date': str(proc_data.timestamp)}
-    proc_info['pid'] = proc_data_id
-    proc_info['data_type'] = data_type
-    proc_info['processed_date'] = str(proc_info['processed_date'])
-    params = proc_data.processing_parameters.values
-    del params['input_data']
-    ref = Reference(params.pop('reference'))
-    proc_info['reference_name'] = ref.name
-    proc_info['taxonomy_filepath'] = basename(ref.taxonomy_fp)
-    proc_info['sequence_filepath'] = basename(ref.sequence_fp)
-    proc_info['tree_filepath'] = basename(ref.tree_fp)
-    proc_info['reference_version'] = ref.version
-    proc_info['algorithm'] = 'sortmerna'
-    proc_info['samples'] = sorted(proc_data.prep_templates[0].keys())
-    proc_info.update(params)
-
-    return proc_info
 
 
 @execute_as_transaction
@@ -174,33 +76,7 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         # No studies left so no need to continue
         return []
 
-    cols = ['study_id', 'email', 'principal_investigator_id',
-            'publication_doi', 'study_title', 'metadata_complete',
-            'number_samples_collected', 'study_abstract']
-    study_info = Study.get_info([s.id for s in study_set], cols)
-
-    # get info for the studies
-    infolist = []
-    for info in study_info:
-        # Convert DictCursor to proper dict
-        info = dict(info)
-        study = Study(info['study_id'])
-        # Build the processed data info for the study if none passed
-        if build_samples:
-            proc_data_list = [ar for ar in study.artifacts()
-                              if ar.artifact_type == 'BIOM']
-            proc_samples = {}
-            study_proc = {study.id: defaultdict(list)}
-            for proc_data in proc_data_list:
-                study_proc[study.id][proc_data.data_type].append(proc_data.id)
-                # there is only one prep template for each processed data
-                proc_samples[proc_data.id] = proc_data.prep_templates[0].keys()
-
-        study_info = _build_single_study_info(study, info, study_proc,
-                                              proc_samples)
-        infolist.append(study_info)
-
-    return infolist
+    return generate_study_list([s.id for s in study_set], build_samples)
 
 
 class ListStudiesHandler(BaseHandler):
@@ -327,11 +203,29 @@ class SearchStudiesAJAX(BaseHandler):
             study_proc = proc_samples = None
         info = _build_study_info(self.current_user, study_proc=study_proc,
                                  proc_samples=proc_samples)
+        # linkifying data
+        len_info = len(info)
+        for i in range(len_info):
+            info[i]['shared'] = ", ".join([study_person_linkifier(element)
+                                           for element in info[i]['shared']])
+            info[i]['pmid'] = ", ".join([pubmed_linkifier([element])
+                                         for element in info[i]['pmid']])
+            info[i]['publication_doi'] = ", ".join([
+                doi_linkifier([element])
+                for element in info[i]['publication_doi']])
+            info[i]['pi'] = study_person_linkifier(info[i]['pi'])
+            info[i]['ebi_info'] = '%s (%s)' % (
+                ''.join([
+                    '<a href="https://www.ebi.ac.uk/ena/data/view/{0}">{0}'
+                    '</a></br>'.format(acc)
+                    for acc in info[i]['ebi_study_accession'].split(',')]),
+                info[i]['ebi_submission_status'])
+
         # build the table json
         results = {
             "sEcho": echo,
-            "iTotalRecords": len(info),
-            "iTotalDisplayRecords": len(info),
+            "iTotalRecords": len_info,
+            "iTotalDisplayRecords": len_info,
             "aaData": info
         }
 

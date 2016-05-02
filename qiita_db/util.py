@@ -1219,3 +1219,159 @@ def supported_filepath_types(artifact_type):
                  WHERE artifact_type = %s"""
         qdb.sql_connection.TRN.add(sql, [artifact_type])
         return qdb.sql_connection.TRN.execute_fetchindex()
+
+
+def generate_study_list(study_ids, build_samples):
+    """Get general study information
+
+    Parameters
+    ----------
+    study_ids : list of ints
+        The study ids to look for. Not existing ids will be ignored
+    build_samples : bool
+        If true the sample information for each process artifact within each
+        study will be included
+
+    Returns
+    -------
+    list of dict
+        The list of studies and their information
+    """
+    with qdb.sql_connection.TRN:
+        sql = """
+            SELECT metadata_complete, study_abstract, study_id,
+                study_title, ebi_study_accession, ebi_submission_status,
+                qiita.study_person.name AS pi_name,
+                qiita.study_person.email AS pi_email,
+                (SELECT COUNT(sample_id) FROM qiita.study_sample
+                    WHERE study_id=qiita.study.study_id)
+                    AS number_samples_collected,
+                (SELECT array_agg(artifact_id ORDER BY artifact_id)
+                    FROM qiita.study_artifact
+                    LEFT JOIN qiita.artifact USING (artifact_id)
+                    LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                    WHERE artifact_type='BIOM' AND
+                        study_id = qiita.study.study_id) AS artifact_biom_ids,
+                (SELECT array_agg(data_type ORDER BY artifact_id)
+                    FROM qiita.study_artifact
+                    LEFT JOIN qiita.artifact USING (artifact_id)
+                    LEFT JOIN qiita.data_type USING (data_type_id)
+                    LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                    WHERE artifact_type='BIOM' AND
+                        study_id = qiita.study.study_id) AS artifact_biom_dts,
+                (SELECT array_agg(command_parameters ORDER BY artifact_id)
+                    FROM qiita.study_artifact
+                    LEFT JOIN qiita.artifact USING (artifact_id)
+                    LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                    WHERE artifact_type='BIOM' AND
+                        study_id = qiita.study.study_id)
+                    AS artifact_biom_params,
+                (SELECT array_agg(generated_timestamp ORDER BY artifact_id)
+                    FROM qiita.study_artifact
+                    LEFT JOIN qiita.artifact USING (artifact_id)
+                    LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                    WHERE artifact_type='BIOM' AND
+                        study_id = qiita.study.study_id) AS artifact_biom_ts,
+                (SELECT array_agg(DISTINCT visibility) FROM qiita.artifact
+                    LEFT JOIN qiita.visibility USING (visibility_id)
+                    WHERE study_id=qiita.study.study_id)
+                    AS artifacts_visibility,
+                (SELECT array_agg(publication_doi ORDER BY publication_doi)
+                    FROM qiita.study_publication
+                    WHERE study_id=qiita.study.study_id) AS publication_doi,
+                (SELECT array_agg(name ORDER BY email) FROM qiita.study_users
+                    LEFT JOIN qiita.qiita_user USING (email)
+                    WHERE study_id=qiita.study.study_id) AS shared_with_name,
+                (SELECT array_agg(email ORDER BY email) FROM qiita.study_users
+                    LEFT JOIN qiita.qiita_user USING (email)
+                    WHERE study_id=qiita.study.study_id) AS shared_with_email
+                FROM qiita.study
+                LEFT JOIN qiita.study_person ON (
+                    study_person_id=principal_investigator_id)
+                WHERE study_id IN %s"""
+        qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
+        infolist = []
+        refs = {}
+        for info in qdb.sql_connection.TRN.execute_fetchindex():
+            info = dict(info)
+
+            # publication info
+            if info['publication_doi'] is not None:
+                info['pmid'] = get_pubmed_ids_from_dois(
+                    info['publication_doi']).values()
+            else:
+                info['publication_doi'] = []
+                info['pmid'] = []
+
+            # visibility
+            info["status"] = infer_status([info['artifacts_visibility']])
+            del info['artifacts_visibility']
+
+            # pi info
+            info["pi"] = (info['pi_email'], info['pi_name'])
+            del info["pi_email"]
+            del info["pi_name"]
+
+            # shared with
+            info['shared'] = []
+            if info['shared_with_name']:
+                for name, email in zip(info['shared_with_name'],
+                                       info['shared_with_email']):
+                    if not name:
+                        name = email
+                    info['shared'].append((email, name))
+            del info["shared_with_name"]
+            del info["shared_with_email"]
+
+            info['proc_data_info'] = []
+            if build_samples and info['artifact_biom_ids']:
+                to_loop = zip(
+                    info['artifact_biom_ids'], info['artifact_biom_dts'],
+                    info['artifact_biom_ts'], info['artifact_biom_params'])
+                for artifact_id, dt, ts, params in to_loop:
+                    proc_info = {'processed_date': str(ts)}
+                    proc_info['pid'] = artifact_id
+                    proc_info['data_type'] = dt
+                    del params['input_data']
+
+                    # making sure that the reference is only created once
+                    rid = params.pop('reference')
+                    if rid not in refs:
+                        reference = qdb.reference.Reference(rid)
+                        refs[rid] = {
+                            'name': reference.name,
+                            'taxonomy_fp': basename(reference.taxonomy_fp),
+                            'sequence_fp': basename(reference.sequence_fp),
+                            'tree_fp': basename(reference.tree_fp),
+                            'version': reference.version
+                        }
+
+                    proc_info['reference_name'] = refs[rid]['name']
+                    proc_info['taxonomy_filepath'] = refs[rid]['taxonomy_fp']
+                    proc_info['sequence_filepath'] = refs[rid]['sequence_fp']
+                    proc_info['tree_filepath'] = refs[rid]['tree_fp']
+                    proc_info['reference_version'] = refs[rid]['version']
+                    proc_info['algorithm'] = 'sortmerna'
+
+                    sql = """SELECT sample_id from qiita.prep_template_sample
+                             WHERE prep_template_id = (
+                                 SELECT prep_template_id
+                                 FROM qiita.prep_template
+                                 WHERE artifact_id IN (
+                                     SELECT *
+                                     FROM qiita.find_artifact_roots(%s)))"""
+                    qdb.sql_connection.TRN.add(sql, [proc_info['pid']])
+                    proc_info['samples'] = sorted(
+                        qdb.sql_connection.TRN.execute_fetchflatten())
+                    proc_info.update(params)
+
+                    info["proc_data_info"].append(proc_info)
+
+        del info["artifact_biom_ids"]
+        del info["artifact_biom_dts"]
+        del info["artifact_biom_ts"]
+        del info["artifact_biom_params"]
+
+        infolist.append(info)
+
+    return infolist

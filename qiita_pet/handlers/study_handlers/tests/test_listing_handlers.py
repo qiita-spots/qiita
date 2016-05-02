@@ -18,7 +18,7 @@ from qiita_db.study import Study
 from qiita_db.user import User
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.study_handlers.listing_handlers import (
-    _build_study_info, _build_single_study_info, _build_single_proc_data_info)
+    _build_study_info)
 from qiita_pet.handlers.base_handlers import BaseHandler
 
 
@@ -115,60 +115,18 @@ class TestHelpers(TestHandlerBase):
                 'location at different time points in the plant '
                 'lifecycle.',
             'metadata_complete': True,
+            'ebi_study_accession': 'EBI123456-BB',
+            'ebi_submission_status': 'submitted',
             'study_title':
                 'Identification of the Microbiomes for Cannabis Soils',
-            'num_raw_data': 1,
             'number_samples_collected': 27,
-            'shared':
-                '<a target="_blank" href="mailto:shared@foo.bar">Shared</a>',
-            'publication_doi':
-                '<a target="_blank" href="http://dx.doi.org/10.100/123456">'
-                '10.100/123456</a>, <a target="_blank" '
-                'href="http://dx.doi.org/10.100/7891011">10.100/7891011</a>',
-            'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov'
-                    '/pubmed/7891011">7891011</a>, <a target="_blank" href='
-                    '"http://www.ncbi.nlm.nih.gov/pubmed/123456">123456</a>',
-            'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">'
-                  'PIDude</a>',
+            'shared': [('shared@foo.bar', 'Shared')],
+            'publication_doi': ['10.100/123456', '10.100/7891011'],
+            'pmid': ['7891011', '123456'],
+            'pi': ('PI_dude@foo.bar', 'PIDude'),
             'proc_data_info': self.proc_data_exp
         }
         self.exp = [self.single_exp]
-
-    def test_build_single_study_info(self):
-        study_proc = {1: {'18S': [4, 5, 6]}}
-        proc_samples = {4: self.proc_data_exp[0]['samples'],
-                        5: self.proc_data_exp[1]['samples'],
-                        6: self.proc_data_exp[2]['samples']}
-        study_info = {
-            'study_id': 1,
-            'email': 'test@foo.bar',
-            'principal_investigator_id': 3,
-            'publication_doi': ['10.100/123456', '10.100/7891011'],
-            'study_title':
-                'Identification of the Microbiomes for Cannabis Soils',
-            'metadata_complete': True,
-            'number_samples_collected': 27,
-            'study_abstract':
-                'This is a preliminary study to examine the microbiota '
-                'associated with the Cannabis plant. Soils samples '
-                'from the bulk soil, soil associated with the roots, '
-                'and the rhizosphere were extracted and the DNA '
-                'sequenced. Roots from three independent plants of '
-                'different strains were examined. These roots were '
-                'obtained November 11, 2011 from plants that had been '
-                'harvested in the summer. Future studies will attempt '
-                'to analyze the soils and rhizospheres from the same '
-                'location at different time points in the plant '
-                'lifecycle.'
-            }
-        obs = _build_single_study_info(Study(1), study_info, study_proc,
-                                       proc_samples)
-        self.assertItemsEqual(obs, self.single_exp)
-
-    def test_build_single_proc_data_info(self):
-        obs = _build_single_proc_data_info(4, '18S',
-                                           self.proc_data_exp[0]['samples'])
-        self.assertItemsEqual(obs, self.proc_data_exp[0])
 
     def test_build_study_info(self):
         obs = _build_study_info(User('test@foo.bar'))
@@ -309,22 +267,28 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                     'location at different time points in the plant '
                     'lifecycle.',
                 'metadata_complete': True,
+                'ebi_study_accession': 'EBI123456-BB',
+                'ebi_submission_status': 'submitted',
+                'ebi_info': ('<a href="https://www.ebi.ac.uk/ena/data/view/'
+                             'EBI123456-BB">EBI123456-BB</a></br> '
+                             '(submitted)'),
                 'study_title':
                     'Identification of the Microbiomes for Cannabis Soils',
-                'num_raw_data': 1,
                 'number_samples_collected': 27,
-                'shared': '<a target="_blank" href="mailto:shared@foo.bar">'
-                          'Shared</a>',
-                'publication_doi':
+                'shared': ('<a target="_blank" href="mailto:shared@foo.bar">'
+                           'Shared</a>'),
+                'publication_doi': (
                     '<a target="_blank" href="http://dx.doi.org/10.100/123456"'
-                    '>10.100/123456</a>, <a target="_blank" href='
-                    '"http://dx.doi.org/10.100/7891011">10.100/7891011</a>',
-                'pmid': '<a target="_blank" href="http://www.ncbi.nlm.nih.gov'
-                        '/pubmed/7891011">7891011</a>, <a target="_blank" href'
-                        '="http://www.ncbi.nlm.nih.gov/pubmed/123456">123456'
-                        '</a>',
-                'pi': '<a target="_blank" href="mailto:PI_dude@foo.bar">'
-                      'PIDude</a>',
+                    '>10.100/123456</a>, <a target="_blank" '
+                    'href="http://dx.doi.org/10.100/7891011">'
+                    '10.100/7891011</a>'),
+                'pmid': ('<a target="_blank" '
+                         'href="http://www.ncbi.nlm.nih.gov/pubmed/7891011">'
+                         '7891011</a>, <a target="_blank" '
+                         'href="http://www.ncbi.nlm.nih.gov/pubmed/123456">'
+                         '123456</a>'),
+                'pi': ('<a target="_blank" href="mailto:PI_dude@foo.bar">'
+                       'PIDude</a>'),
                 'proc_data_info': [{
                     'pid': 4,
                     'processed_date': '2012-10-02 17:30:00',
