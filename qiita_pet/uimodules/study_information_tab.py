@@ -71,7 +71,7 @@ class StudyInformationTab(BaseUIModule):
         show_select_sample = (
             study.status == 'sandbox' or self.current_user.level == 'admin')
 
-        # Ebi information
+        # EBI information
         ebi_status = study.ebi_submission_status
         ebi_accession = study.ebi_study_accession
         if ebi_accession:
