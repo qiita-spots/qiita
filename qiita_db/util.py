@@ -1410,33 +1410,38 @@ def generate_study_list(study_ids, build_samples):
                     proc_info['pid'] = artifact_id
                     proc_info['data_type'] = dt
 
-                    # making sure that the command is only queried once
-                    if cmd not in commands:
-                        commands[cmd] = [
-                            k for k, v in viewitems(
-                                qdb.software.Command(
-                                    cmd).parameters) if v[0] == 'artifact']
-                    for k in commands[cmd]:
-                        del params[k]
+                    # if cmd exists then we can get its parameters
+                    if cmd is not None:
+                        # making sure that the command is only queried once
+                        if cmd not in commands:
+                            commands[cmd] = [
+                                k for k, v in viewitems(
+                                    qdb.software.Command(
+                                        cmd).parameters) if v[0] == 'artifact']
+                        for k in commands[cmd]:
+                            del params[k]
 
-                    # making sure that the reference is only created once
-                    rid = params.pop('reference')
-                    if rid not in refs:
-                        reference = qdb.reference.Reference(rid)
-                        refs[rid] = {
-                            'name': reference.name,
-                            'taxonomy_fp': basename(reference.taxonomy_fp),
-                            'sequence_fp': basename(reference.sequence_fp),
-                            'tree_fp': basename(reference.tree_fp),
-                            'version': reference.version
-                        }
-                    proc_info['reference_name'] = refs[rid]['name']
-                    proc_info['taxonomy_filepath'] = refs[rid]['taxonomy_fp']
-                    proc_info['sequence_filepath'] = refs[rid]['sequence_fp']
-                    proc_info['tree_filepath'] = refs[rid]['tree_fp']
-                    proc_info['reference_version'] = refs[rid]['version']
-                    proc_info['algorithm'] = 'sortmerna'
+                        # making sure that the reference is only created once
+                        rid = params.pop('reference')
+                        if rid not in refs:
+                            reference = qdb.reference.Reference(rid)
+                            refs[rid] = {
+                                'name': reference.name,
+                                'taxonomy_fp': basename(reference.taxonomy_fp),
+                                'sequence_fp': basename(reference.sequence_fp),
+                                'tree_fp': basename(reference.tree_fp),
+                                'version': reference.version
+                            }
+                        proc_info['reference_name'] = refs[rid]['name']
+                        proc_info['taxonomy_filepath'] = refs[rid][
+                            'taxonomy_fp']
+                        proc_info['sequence_filepath'] = refs[rid][
+                            'sequence_fp']
+                        proc_info['tree_filepath'] = refs[rid]['tree_fp']
+                        proc_info['reference_version'] = refs[rid]['version']
+                        proc_info['algorithm'] = 'sortmerna'
 
+                    # getting all samples
                     sql = """SELECT sample_id from qiita.prep_template_sample
                              WHERE prep_template_id = (
                                  SELECT prep_template_id
