@@ -89,10 +89,9 @@ $(document).ready(function() {
               { "data": "status" },
               { "data": "ebi_info" }
             ],
-            // order: [[11, "desc"], [ 2, "asc" ]],
             columnDefs: [
-            //   {type:'natural', targets:[4,5,6,10]},
-              {"targets": [ 3 ],"visible": false},
+              {type:'natural', targets:[3,7,8]},
+              {"targets": [ 3 ], "visible": false},
               // render the study checkbox cell
               {"render": function ( data, type, row, meta ) {
                     if(row.proc_data_info.length > 0) {

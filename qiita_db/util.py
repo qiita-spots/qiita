@@ -42,6 +42,7 @@ Methods
 
 from __future__ import division
 from future.builtins import zip
+from future.utils import viewitems
 from random import choice
 from string import ascii_letters, digits, punctuation
 from binascii import crc32
@@ -1227,7 +1228,7 @@ def generate_study_list(study_ids, build_samples):
     Parameters
     ----------
     study_ids : list of ints
-        The study ids to look for. Not existing ids will be ignored
+        The study ids to look for. Non-existing ids will be ignored
     build_samples : bool
         If true the sample information for each process artifact within each
         study will be included
@@ -1236,6 +1237,74 @@ def generate_study_list(study_ids, build_samples):
     -------
     list of dict
         The list of studies and their information
+
+    Notes
+    -----
+    The main select might look scary but it's pretty simple:
+    - We select the requiered fields from qiita.study and qiita.study_person
+        SELECT metadata_complete, study_abstract, study_id,
+            study_title, ebi_study_accession, ebi_submission_status,
+            qiita.study_person.name AS pi_name,
+            qiita.study_person.email AS pi_email,
+    - the total number of samples collected by counting sample_ids
+            (SELECT COUNT(sample_id) FROM qiita.study_sample
+                WHERE study_id=qiita.study.study_id)
+                AS number_samples_collected,
+    - all the BIOM artifact_ids sorted by artifact_id that belong to the study
+            (SELECT array_agg(artifact_id ORDER BY artifact_id)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                WHERE artifact_type='BIOM' AND
+                study_id = qiita.study.study_id) AS artifact_biom_ids,
+    - all the BIOM data_types sorted by artifact_id that belong to the study
+            (SELECT array_agg(data_type ORDER BY artifact_id)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.data_type USING (data_type_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                WHERE artifact_type='BIOM' AND
+                study_id = qiita.study.study_id) AS artifact_biom_dts,
+    - all the BIOM parameters sorted by artifact_id that belong to the study
+            (SELECT array_agg(command_parameters ORDER BY artifact_id)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                WHERE artifact_type='BIOM' AND
+                    study_id = qiita.study.study_id)
+                AS artifact_biom_params,
+    - all the BIOM command_ids sorted by artifact_id that belong to the study,
+            (SELECT array_agg(command_id ORDER BY artifact_id)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                WHERE artifact_type='BIOM' AND
+                    study_id = qiita.study.study_id)
+                AS artifact_biom_cmd,
+    - all the BIOM timestamps sorted by artifact_id that belong to the study
+            (SELECT array_agg(generated_timestamp ORDER BY artifact_id)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                WHERE artifact_type='BIOM' AND
+                    study_id = qiita.study.study_id) AS artifact_biom_ts,
+    - all the visibilities of all artifacts that belong to the study
+            (SELECT array_agg(DISTINCT visibility) FROM qiita.artifact
+                LEFT JOIN qiita.visibility USING (visibility_id)
+                WHERE study_id=qiita.study.study_id)
+                AS artifacts_visibility,
+    - all the publication_doi that belong to the study
+            (SELECT array_agg(publication_doi ORDER BY publication_doi)
+                FROM qiita.study_publication
+                WHERE study_id=qiita.study.study_id) AS publication_doi,
+    - all names sorted by email of users that have access to the study
+            (SELECT array_agg(name ORDER BY email) FROM qiita.study_users
+                LEFT JOIN qiita.qiita_user USING (email)
+                WHERE study_id=qiita.study.study_id) AS shared_with_name,
+    - all emails sorted by email of users that have access to the study
+            (SELECT array_agg(email ORDER BY email) FROM qiita.study_users
+                LEFT JOIN qiita.qiita_user USING (email)
+                WHERE study_id=qiita.study.study_id) AS shared_with_email
     """
     with qdb.sql_connection.TRN:
         sql = """
@@ -1266,6 +1335,13 @@ def generate_study_list(study_ids, build_samples):
                     WHERE artifact_type='BIOM' AND
                         study_id = qiita.study.study_id)
                     AS artifact_biom_params,
+                (SELECT array_agg(command_id ORDER BY artifact_id)
+                    FROM qiita.study_artifact
+                    LEFT JOIN qiita.artifact USING (artifact_id)
+                    LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                    WHERE artifact_type='BIOM' AND
+                        study_id = qiita.study.study_id)
+                    AS artifact_biom_cmd,
                 (SELECT array_agg(generated_timestamp ORDER BY artifact_id)
                     FROM qiita.study_artifact
                     LEFT JOIN qiita.artifact USING (artifact_id)
@@ -1292,6 +1368,7 @@ def generate_study_list(study_ids, build_samples):
         qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
         infolist = []
         refs = {}
+        commands = {}
         for info in qdb.sql_connection.TRN.execute_fetchindex():
             info = dict(info)
 
@@ -1314,12 +1391,11 @@ def generate_study_list(study_ids, build_samples):
 
             # shared with
             info['shared'] = []
-            if info['shared_with_name']:
-                for name, email in zip(info['shared_with_name'],
-                                       info['shared_with_email']):
-                    if not name:
-                        name = email
-                    info['shared'].append((email, name))
+            for name, email in zip(info['shared_with_name'],
+                                   info['shared_with_email']):
+                if not name:
+                    name = email
+                info['shared'].append((email, name))
             del info["shared_with_name"]
             del info["shared_with_email"]
 
@@ -1327,12 +1403,21 @@ def generate_study_list(study_ids, build_samples):
             if build_samples and info['artifact_biom_ids']:
                 to_loop = zip(
                     info['artifact_biom_ids'], info['artifact_biom_dts'],
-                    info['artifact_biom_ts'], info['artifact_biom_params'])
-                for artifact_id, dt, ts, params in to_loop:
+                    info['artifact_biom_ts'], info['artifact_biom_params'],
+                    info['artifact_biom_cmd'])
+                for artifact_id, dt, ts, params, cmd in to_loop:
                     proc_info = {'processed_date': str(ts)}
                     proc_info['pid'] = artifact_id
                     proc_info['data_type'] = dt
-                    del params['input_data']
+
+                    # making sure that the command is only queried once
+                    if cmd not in commands:
+                        commands[cmd] = [
+                            k for k, v in viewitems(
+                                qdb.software.Command(
+                                    cmd).parameters) if v[0] == 'artifact']
+                    for k in commands[cmd]:
+                        del params[k]
 
                     # making sure that the reference is only created once
                     rid = params.pop('reference')
@@ -1345,7 +1430,6 @@ def generate_study_list(study_ids, build_samples):
                             'tree_fp': basename(reference.tree_fp),
                             'version': reference.version
                         }
-
                     proc_info['reference_name'] = refs[rid]['name']
                     proc_info['taxonomy_filepath'] = refs[rid]['taxonomy_fp']
                     proc_info['sequence_filepath'] = refs[rid]['sequence_fp']
@@ -1371,6 +1455,7 @@ def generate_study_list(study_ids, build_samples):
         del info["artifact_biom_dts"]
         del info["artifact_biom_ts"]
         del info["artifact_biom_params"]
+        del info['artifact_biom_cmd']
 
         infolist.append(info)
 

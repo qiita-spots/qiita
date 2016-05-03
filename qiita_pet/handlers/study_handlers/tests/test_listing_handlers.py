@@ -269,8 +269,8 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                 'metadata_complete': True,
                 'ebi_study_accession': 'EBI123456-BB',
                 'ebi_submission_status': 'submitted',
-                'ebi_info': ('<a href="https://www.ebi.ac.uk/ena/data/view/'
-                             'EBI123456-BB">EBI123456-BB</a></br> '
+                'ebi_info': ('<a href="http://www.ebi.ac.uk/ena/data/view/'
+                             'EBI123456-BB" target="_blank">EBI123456-BB</a> '
                              '(submitted)'),
                 'study_title':
                     'Identification of the Microbiomes for Cannabis Soils',

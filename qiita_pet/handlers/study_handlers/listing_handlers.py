@@ -25,6 +25,7 @@ from qiita_db.util import (add_message, generate_study_list)
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
+from qiita_pet.util import EBI_LINKIFIER
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import (
     study_person_linkifier, doi_linkifier, pubmed_linkifier, check_access,
@@ -215,10 +216,8 @@ class SearchStudiesAJAX(BaseHandler):
                 for element in info[i]['publication_doi']])
             info[i]['pi'] = study_person_linkifier(info[i]['pi'])
             info[i]['ebi_info'] = '%s (%s)' % (
-                ''.join([
-                    '<a href="https://www.ebi.ac.uk/ena/data/view/{0}">{0}'
-                    '</a></br>'.format(acc)
-                    for acc in info[i]['ebi_study_accession'].split(',')]),
+                ''.join([EBI_LINKIFIER.format(a)
+                         for a in info[i]['ebi_study_accession'].split(',')]),
                 info[i]['ebi_submission_status'])
 
         # build the table json
