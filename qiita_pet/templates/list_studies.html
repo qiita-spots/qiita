@@ -82,18 +82,16 @@ $(document).ready(function() {
               { "data": "study_title" },
               { "data": "study_abstract" },
               { "data": "study_id" },
-              { "data": "metadata_complete" },
               { "data": "number_samples_collected" },
-              { "data": "num_raw_data" },
               { "data": "shared" },
               { "data": "pi" },
               { "data": "pmid" },
-              { "data": "status" }
+              { "data": "status" },
+              { "data": "ebi_info" }
             ],
-            order: [[11, "desc"], [ 2, "asc" ]],
             columnDefs: [
-              {type:'natural', targets:[4,5,6,10]},
-              {"targets": [ 3 ],"visible": false},
+              {type:'natural', targets:[3,7,8]},
+              {"targets": [ 3 ], "visible": false},
               // render the study checkbox cell
               {"render": function ( data, type, row, meta ) {
                     if(row.proc_data_info.length > 0) {
@@ -105,18 +103,11 @@ $(document).ready(function() {
               {"render": function ( data, type, row, meta ) {
                     return "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\"><span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='{% raw qiita_config.portal_dir %}/study/description/"+ row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
               }, targets: [2]},
-              // render the metadata complete cell
-              {"render": function ( data, type, row, meta ) {
-                    var glyph = 'remove';
-                    if(data === true) { glyph = 'ok' }
-                    return "<span class='glyphicon glyphicon-"+ glyph +"'></span>";
-              }, targets: [5]},
-              // render the shared with cell
               {"render": function ( data, type, row, meta ) {
                     var glyph = 'remove';
                     if(data === true) { glyph = 'ok' }
                     return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
-              }, targets: [8]},
+              }, targets: [6]},
               ],
             "oLanguage": {
                 "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
@@ -193,13 +184,12 @@ function add_metacat(metacat) {
                 <th>Title</th>
                 <th>Abstract</th>
                 <th>Study ID</th>
-                <th>Metadata Complete</th>
                 <th>Samples</th>
-                <th>Sequence Files</th>
                 <th>Shared With These Users</th>
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
                 <th>Status</th>
+                <th>EBI</th>
             </tr>
         </thead>
     </table>
