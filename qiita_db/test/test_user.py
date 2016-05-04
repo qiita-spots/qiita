@@ -435,12 +435,14 @@ class UserTest(TestCase):
                                     qdb.artifact.Artifact(3),
                                     qdb.artifact.Artifact(4),
                                     qdb.artifact.Artifact(5),
-                                    qdb.artifact.Artifact(6)]}
+                                    qdb.artifact.Artifact(6),
+                                    qdb.artifact.Artifact(7)]}
         self.assertEqual(obs, exp)
         obs = user.user_artifacts(artifact_type='BIOM')
         exp = {qdb.study.Study(1): [qdb.artifact.Artifact(4),
                                     qdb.artifact.Artifact(5),
-                                    qdb.artifact.Artifact(6)]}
+                                    qdb.artifact.Artifact(6),
+                                    qdb.artifact.Artifact(7)]}
         self.assertEqual(obs, exp)
 
 if __name__ == "__main__":

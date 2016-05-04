@@ -150,13 +150,20 @@ class TestStudyAPI(TestCase):
         obs = study_prep_get_req(1, 'test@foo.bar')
         exp = {'status': 'success',
                'message': '',
-               'info': {'18S': [{
-                   'id': 1,
-                   'status': 'private',
-                   'name': 'PREP 1 NAME',
-                   'start_artifact_id': 1,
-                   'start_artifact': 'FASTQ',
-                   'youngest_artifact': 'BIOM - BIOM'}]}}
+               'info': {
+                   '18S': [{
+                       'id': 1,
+                       'status': 'private',
+                       'name': 'PREP 1 NAME',
+                       'start_artifact_id': 1,
+                       'start_artifact': 'FASTQ',
+                       'youngest_artifact': 'BIOM - BIOM'}, {
+                       'id': 2,
+                       'status': 'private',
+                       'name': 'PREP 2 NAME',
+                       'start_artifact': 'BIOM',
+                       'youngest_artifact': 'BIOM - BIOM',
+                       'start_artifact_id': 7}]}}
         self.assertEqual(obs, exp)
 
         # Add a new prep template
@@ -174,6 +181,12 @@ class TestStudyAPI(TestCase):
                             'name': 'PREP 1 NAME',
                             'start_artifact_id': 1,
                             'start_artifact': 'FASTQ',
+                            'youngest_artifact': 'BIOM - BIOM'},
+                           {'id': 2,
+                            'status': 'private',
+                            'name': 'PREP 2 NAME',
+                            'start_artifact_id': 7,
+                            'start_artifact': 'BIOM',
                             'youngest_artifact': 'BIOM - BIOM'}],
                    '16S': [{'id': pt.id,
                             'status': 'sandbox',

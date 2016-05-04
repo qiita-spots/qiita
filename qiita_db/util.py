@@ -1440,6 +1440,7 @@ def generate_study_list(study_ids, build_samples):
                         proc_info['tree_filepath'] = refs[rid]['tree_fp']
                         proc_info['reference_version'] = refs[rid]['version']
                         proc_info['algorithm'] = 'sortmerna'
+                        proc_info.update(params)
 
                     # getting all samples
                     sql = """SELECT sample_id from qiita.prep_template_sample
@@ -1452,7 +1453,6 @@ def generate_study_list(study_ids, build_samples):
                     qdb.sql_connection.TRN.add(sql, [proc_info['pid']])
                     proc_info['samples'] = sorted(
                         qdb.sql_connection.TRN.execute_fetchflatten())
-                    proc_info.update(params)
 
                     info["proc_data_info"].append(proc_info)
 

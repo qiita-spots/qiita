@@ -378,7 +378,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.metadata_template.prep_template.PrepTemplate(2)
+            qdb.metadata_template.prep_template.PrepTemplate(3)
 
     def test_init(self):
         """Init successfully instantiates the object"""
@@ -398,7 +398,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_exists_false(self):
         """Exists returns false when the PrepTemplate does not exists"""
         self.assertFalse(
-            qdb.metadata_template.prep_template.PrepTemplate.exists(2))
+            qdb.metadata_template.prep_template.PrepTemplate.exists(3))
 
     def test_get_sample_ids(self):
         """get_sample_ids returns the correct set of sample ids"""
@@ -851,9 +851,9 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             self.metadata, self.test_study, self.data_type)
 
         # make sure the two samples were added correctly
-        self.assertEqual(pt.id, 2)
+        self.assertEqual(pt.id, 3)
         obs = self.conn_handler.execute_fetchall(
-            "SELECT sample_id FROM qiita.prep_2")
+            "SELECT sample_id FROM qiita.prep_3")
         exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
         self.assertEqual(obs, exp)
 
