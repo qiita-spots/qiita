@@ -78,7 +78,7 @@ files and that they do not have any barcode or primer information. This file typ
 normally is what you can download from `Illumina's BaseSpace <https://basespace.illumina.com/home/index>`__.
 
 
-The current system allows users to upload these files and the standard protocal
+The current system allows users to upload these files and the standard protocol
 differs in two small ways. The first is that the ``barcode`` field will be
 omitted. The second is that the Preparation information file should have the 
 uploaded sequence file(s) name in the
