@@ -10,4 +10,4 @@ Templates
 The terms *Sample template* and *Prep template* have been depreciated. We now
 call these the *Sample information file* and *Preparation information files*.
 
-To lean more about these files and how to build the, please visit  :doc:`prepare-information-files`.
+To lean more about these files and how to build them, please visit  :doc:`prepare-information-files`.
