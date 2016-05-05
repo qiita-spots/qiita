@@ -850,10 +850,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
 
-        # make sure the two samples were added correctly
-        self.assertEqual(pt.id, 3)
         obs = self.conn_handler.execute_fetchall(
-            "SELECT sample_id FROM qiita.prep_3")
+            "SELECT sample_id FROM qiita.prep_%d" % pt.id)
         exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
         self.assertEqual(obs, exp)
 
