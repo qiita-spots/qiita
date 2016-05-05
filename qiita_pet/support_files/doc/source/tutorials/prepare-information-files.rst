@@ -26,7 +26,7 @@ processing, like ``BarcodeSequence``. Qiita intentionally separates this
 information into two separate files; it would be conceptually incorrect
 to include ``BarcodeSequence`` with the *sample information*, as this
 information pertains to the wet lab preparation and should be placed in the
-a *preparation information file*.
+*preparation information file*.
 
 
 Example files
@@ -39,9 +39,10 @@ Sample information file
 -----------------------
 
 The *sample information file* will define the biological context of each
-sample, with categories like ``sample_type``, ``treatment``, ``timepoint``,
-etc. This file defines the ``sample_name`` that links each sample with
-multiple multi-omic data preparations used to analize it.
+sample, with categories like ``sample_type``, ``treatment``,
+etc. The ``sample_name`` defined in this file is used to relate each
+sample in the preparation file with the biological sample.
+
 
 
 Required fields for Qiita
