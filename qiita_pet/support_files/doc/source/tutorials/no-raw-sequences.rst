@@ -78,8 +78,10 @@ files and that they do not have any barcode or primer information. This file typ
 normally is what you can download from `Illumina's BaseSpace <https://basespace.illumina.com/home/index>`__.
 
 
-The current system allows users to upload this kind of files. The only requirement is
-that the prep template should have the uploaded sequence file(s) name in the
+The current system allows users to upload these files and the standard protocol
+differs in two small ways. The first is that the ``barcode`` field will be
+omitted. The second is that the Preparation information file should have the 
+uploaded sequence file(s) name in the
 run_prefix field. This should be an exact match without extension (fastq or
 fastq.gz). For example, if your uploaded file is named sample1_L001_R1.fastq.gz
 you will need to have sample1_L001_R1 as the run_prefix.
