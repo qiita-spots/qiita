@@ -226,8 +226,9 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     uploaded = get_files_from_uploads_folders(study_id)
     pt = PrepTemplate(prep_template_id).to_dataframe()
 
-    if (any(ft.startswith('raw_') for ft, _ in supp_file_types) and
-            'run_prefix' in pt.columns):
+    ftypes_if = (ft.startswith('raw_') for ft, _ in supp_file_types
+                 if ft != 'raw_sff')
+    if any(ftypes_if) and 'run_prefix' in pt.columns:
         prep_prefixes = tuple(set(pt['run_prefix']))
         num_prefixes = len(prep_prefixes)
         for _, filename in uploaded:
