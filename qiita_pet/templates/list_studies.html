@@ -21,7 +21,8 @@ td.details-control {
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
 <script type="text/javascript">
-var ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&sEcho=" + Math.floor(Math.random()*1001);
+var user_studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&search_type=user&sEcho=" + Math.floor(Math.random()*1001);
+var studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&search_type=public&sEcho=" + Math.floor(Math.random()*1001);
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
 function sel_study(row) {
@@ -53,116 +54,200 @@ function show_alert(data) {
 }
 
 function fillAbstract(table, row) {
-    $('#title-text-area').text($('#' + table).find('#study' + row + "-title").text());
-    $('#abstract-text-area').text($('#'+table).dataTable().fnGetData(row, 3));
+  $('#title-text-area').text($('#' + table).find('#study' + row + "-title").text());
+  $('#abstract-text-area').text($('#'+table).dataTable().fnGetData(row, 3));
 }
 
 $(document).ready(function() {
-        init_sharing("{% raw qiita_config.portal_dir %}");
+  init_sharing("{% raw qiita_config.portal_dir %}");
+  $("#search-waiting").hide();
+  moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
+  moi.add_callback('sel', show_alert);
+  function format (d, row) {
+      // `d` is the original data object for the row
+      // create formatted cell with proc data table
+      var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th>Samples</th></tr>';
+      for(i=0;i<d.proc_data_info.length;i++) {
+        var proc_data = d.proc_data_info[i];
+        proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data('+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';
+      }
+      proc_data_table += '</table>';
+      return proc_data_table;
+  }
+
+  $('#user-studies-table').dataTable({
+      "deferRender": true,
+      "columns": [
+        {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'},
+        { "orderable": false},
+        { "data": "study_title" },
+        { "data": "study_abstract" },
+        { "data": "study_id" },
+        { "data": "number_samples_collected" },
+        { "data": "shared" },
+        { "data": "pi" },
+        { "data": "pmid" },
+        { "data": "status" },
+        { "data": "ebi_info" }
+      ],
+      columnDefs: [
+        {type:'natural', targets:[3,7,8]},
+        {"targets": [ 3 ], "visible": false},
+        // render the study checkbox cell
+        {"render": function ( data, type, row, meta ) {
+              if(row.proc_data_info.length > 0) {
+                  return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study("+ meta.row +")'>";
+              }
+              else { return '<p style="font-size:12px">No Processed Data</p>'; }
+        }, targets: [1]},
+        // render the title cell
+        {"render": function ( data, type, row, meta ) {
+              return "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\"><span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='{% raw qiita_config.portal_dir %}/study/description/"+ row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
+        }, targets: [2]},
+        {"render": function ( data, type, row, meta ) {
+              var glyph = 'remove';
+              if(data === true) { glyph = 'ok' }
+              return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
+        }, targets: [6]},
+        ],
+      "oLanguage": {
+          "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
+          "sLoadingRecords": "Loading table data",
+          "sZeroRecords": "No studies found"
+      },
+      "ajax": {
+          "url": user_studies_ajaxURL + "&query=",
+          "deferRender": true,
+          "error": function(jqXHR, textStatus, ex) {
+              $("#submit-button").prop("disabled",false);
+              if(jqXHR.status === 500) { $("#search-error").text("Internal Server Error, please try again later"); }
+              else { $("#search-error").text(jqXHR.responseText); }
+          }
+      }
+  });
+
+  $('#studies-table').dataTable({
+      "deferRender": true,
+      "sDom": '<"top">rti<"bottom"p><"clear">',
+      "bLengthChange": false,
+      "columns": [
+        {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'},
+        { "orderable": false},
+        { "data": "study_title" },
+        { "data": "study_abstract" },
+        { "data": "study_id" },
+        { "data": "number_samples_collected" },
+        { "data": "pi" },
+        { "data": "pmid" },
+        { "data": "ebi_info" }
+      ],
+      columnDefs: [
+        {type:'natural', targets:[3,7,8]},
+        {"targets": [ 3 ], "visible": false},
+        // render the study checkbox cell
+        {"render": function ( data, type, row, meta ) {
+              if(row.proc_data_info.length > 0) {
+                  return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study("+ meta.row +")'>";
+              }
+              else { return '<p style="font-size:12px">No Processed Data</p>'; }
+        }, targets: [1]},
+        // render the title cell
+        {"render": function ( data, type, row, meta ) {
+              return "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\"><span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='{% raw qiita_config.portal_dir %}/study/description/"+ row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
+        }, targets: [2]},
+        ],
+      "oLanguage": {
+          "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
+          "sLoadingRecords": "Loading table data",
+          "sZeroRecords": "No studies found"
+      },
+      "ajax": {
+          "url": studies_ajaxURL + "&query=",
+          "deferRender": true,
+          "error": function(jqXHR, textStatus, ex) {
+              $("#submit-button").prop("disabled",false);
+              if(jqXHR.status === 500) { $("#search-error").text("Internal Server Error, please try again later"); }
+              else { $("#search-error").text(jqXHR.responseText); }
+          }
+      }
+  });
+
+  // Add event listener for opening and closing details
+  $('#studies-table tbody').on('click', 'td.details-control', function () {
+      var table = $('#studies-table').DataTable();
+      var tr = $(this).closest('tr');
+      var row = table.row( tr );
+
+      if ( row.child.isShown() ) {
+        // This row is already open - close it
+        row.child.hide();
+        tr.removeClass('shown');
+      }
+      else {
+        // Open this row
+        row.child( format(row.data(), row.index()) ).show();
+        tr.addClass('shown');
+      }
+  });
+  $('#user-studies-table tbody').on('click', 'td.details-control', function () {
+      var table = $('#user-studies-table').DataTable();
+      var tr = $(this).closest('tr');
+      var row = table.row( tr );
+
+      if ( row.child.isShown() ) {
+        // This row is already open - close it
+        row.child.hide();
+        tr.removeClass('shown');
+      }
+      else {
+        // Open this row
+        row.child( format(row.data(), row.index()) ).show();
+        tr.addClass('shown');
+      }
+  });
+
+  // connecting searches
+  $('#user-studies-table').on('search.dt', function () {
+    var search_text = $('.dataTables_filter input').val();
+    $('#studies-table').DataTable().search(search_text).draw();
+  });
+
+  // connecting paging size
+  $('#user-studies-table').on('length.dt', function (e, settings, len) {
+    $('#studies-table').DataTable().page.len(len).draw();
+  });
+
+  $("#search-form").submit(function(event)  {
+      event.preventDefault();
+      $("#submit-button").prop("disabled",true);
+      $("#search-error").text('');
+      $("#search-msg").text('');
+      $('.gray-msg').css('color','#F2F2F2');
+      $("#search-waiting").show();
+      var query = $("#searchbox").val();
+
+      var studies_table = $('#studies-table').DataTable();
+      studies_table.ajax.url(ajaxURL + "&query=" + query).load(function() {
+        $("#submit-button").prop("disabled",false);
         $("#search-waiting").hide();
-        moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
-        moi.add_callback('sel', show_alert);
-        function format ( d, row ) {
-            // `d` is the original data object for the row
-            // create formatted cell with proc data table
-            var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th>Samples</th></tr>';
-            for(i=0;i<d.proc_data_info.length;i++) {
-              var proc_data = d.proc_data_info[i];
-              proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data('+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';
-            }
-            proc_data_table += '</table>';
-            return proc_data_table;
-        }
+        $("#search-msg").html('Search Completed: <b>' + query + "</b>");
+        setTimeout(function() { $('.gray-msg').css('color','black'); },400);
+      },
+      true);
+      studies_table.search( '' ).columns().search( '' ).draw();
 
-        $('#studies-table').dataTable({
-            "deferRender": true,
-            "columns": [
-              {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'},
-              { "orderable": false},
-              { "data": "study_title" },
-              { "data": "study_abstract" },
-              { "data": "study_id" },
-              { "data": "number_samples_collected" },
-              { "data": "shared" },
-              { "data": "pi" },
-              { "data": "pmid" },
-              { "data": "status" },
-              { "data": "ebi_info" }
-            ],
-            columnDefs: [
-              {type:'natural', targets:[3,7,8]},
-              {"targets": [ 3 ], "visible": false},
-              // render the study checkbox cell
-              {"render": function ( data, type, row, meta ) {
-                    if(row.proc_data_info.length > 0) {
-                        return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study("+ meta.row +")'>";
-                    }
-                    else { return '<p style="font-size:12px">No Processed Data</p>'; }
-              }, targets: [1]},
-              // render the title cell
-              {"render": function ( data, type, row, meta ) {
-                    return "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\"><span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='{% raw qiita_config.portal_dir %}/study/description/"+ row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
-              }, targets: [2]},
-              {"render": function ( data, type, row, meta ) {
-                    var glyph = 'remove';
-                    if(data === true) { glyph = 'ok' }
-                    return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
-              }, targets: [6]},
-              ],
-            "oLanguage": {
-                "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
-                "sLoadingRecords": "Loading table data",
-                "sZeroRecords": "No studies found"
-            },
-            "ajax": {
-                "url": ajaxURL + "&query=",
-                "deferRender": true,
-                "error": function(jqXHR, textStatus, ex) {
-                    $("#submit-button").prop("disabled",false);
-                    if(jqXHR.status === 500) { $("#search-error").text("Internal Server Error, please try again later"); }
-                    else { $("#search-error").text(jqXHR.responseText); }
-                }
-            }
-        });
+      var user_studies_table = $('#user_studies-table').DataTable();
+      user_studies_table.ajax.url(ajaxURL + "&query=" + query).load(function() {
+        $("#submit-button").prop("disabled",false);
+        $("#search-waiting").hide();
+        $("#search-msg").html('Search Completed: <b>' + query + "</b>");
+        setTimeout(function() { $('.gray-msg').css('color','black'); },400);
+      },
+      true);
+      user_studies_table.search( '' ).columns().search( '' ).draw();
 
-    // Add event listener for opening and closing details
-    $('#studies-table tbody').on('click', 'td.details-control', function () {
-        var table = $('#studies-table').DataTable();
-        var tr = $(this).closest('tr');
-        var row = table.row( tr );
-
-        if ( row.child.isShown() ) {
-            // This row is already open - close it
-            row.child.hide();
-            tr.removeClass('shown');
-        }
-        else {
-            // Open this row
-            row.child( format(row.data(), row.index()) ).show();
-            tr.addClass('shown');
-        }
-    } );
-
-    $("#search-form").submit(function(event)  {
-        event.preventDefault();
-        $("#submit-button").prop("disabled",true);
-        $("#search-error").text('');
-        $("#search-msg").text('');
-        $('.gray-msg').css('color','#F2F2F2');
-        $("#search-waiting").show();
-        var query = $("#searchbox").val();
-        var table = $('#studies-table').DataTable();
-        table.ajax.url(ajaxURL + "&query=" + query).load(function() {
-          $("#submit-button").prop("disabled",false);
-          $("#search-waiting").hide();
-          $("#search-msg").html('Search Completed: <b>' + query + "</b>");
-          setTimeout(function() { $('.gray-msg').css('color','black'); },400);
-        },
-        true);
-        table.search( '' ).columns().search( '' ).draw();
-
-        return false;
-    });
+      return false;
+  });
 } );
 
 function add_metacat(metacat) {
@@ -175,8 +260,8 @@ function add_metacat(metacat) {
 <!--User Studies-->
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
-    <h1 class="gray-msg">Available Studies</h1>
-    <table id="studies-table" class="table table-bordered gray-msg">
+    <h3 class="gray-msg">Your Studies (includes shared with you)</h3>
+    <table id="user-studies-table" class="table table-bordered gray-msg">
         <thead>
             <tr>
                 <th>Expand</th>
@@ -189,6 +274,22 @@ function add_metacat(metacat) {
                 <th>Principal Investigator</th>
                 <th>Pubmed ID(s)</th>
                 <th>Status</th>
+                <th>EBI</th>
+            </tr>
+        </thead>
+    </table>
+    <h3 class="gray-msg">Other Studies</h3>
+    <table id="studies-table" class="table table-bordered gray-msg">
+        <thead>
+            <tr>
+                <th>Expand</th>
+                <th>Add to analysis</th>
+                <th>Title</th>
+                <th>Abstract</th>
+                <th>Study ID</th>
+                <th>Samples</th>
+                <th>Principal Investigator</th>
+                <th>Pubmed ID(s)</th>
                 <th>EBI</th>
             </tr>
         </thead>
