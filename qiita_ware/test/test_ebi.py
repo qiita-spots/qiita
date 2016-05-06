@@ -444,7 +444,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         artifact = self.generate_new_prep_template_and_write_demux_files()
         # raise error as we are missing columns
         exp_text = ("Errors found during EBI submission for study #1, "
-                    "artifact #7 and prep template #2:\nUnrecognized "
+                    "artifact #8 and prep template #3:\nUnrecognized "
                     "investigation type: 'None'. This term is neither one of "
                     "the official terms nor one of the user-defined terms in "
                     "the ENA ontology.\nThese samples do not have a valid "
@@ -649,32 +649,32 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         _, base_fp = get_mountpoint("preprocessed_data")[0]
         exp = ('ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKB2.640194.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./7_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM4.640180.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./7_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKB3.640195.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./7_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKB6.640176.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./7_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKD6.640190.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./7_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM6.640187.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./7_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKD9.640182.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./7_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM8.640201.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./7_ebi_submission/\n'
+               'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/\n'
                'ascp --ignore-host-key -d -QT -k2 '
                '%(ebi_dir)s/1.SKM2.640199.fastq.gz '
-               'Webin-41528@webin.ebi.ac.uk:./7_ebi_submission/' % {
-                   'ebi_dir': e.full_ebi_dir}).split('\n')
+               'Webin-41528@webin.ebi.ac.uk:./%(aid)d_ebi_submission/' % {
+                   'ebi_dir': e.full_ebi_dir, 'aid': artifact.id}).split('\n')
         self.assertEqual(obs, exp)
 
     def test_parse_EBI_reply(self):

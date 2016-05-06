@@ -707,15 +707,17 @@ class TestStudy(TestCase):
                qdb.artifact.Artifact(3),
                qdb.artifact.Artifact(4),
                qdb.artifact.Artifact(5),
-               qdb.artifact.Artifact(6)]
+               qdb.artifact.Artifact(6),
+               qdb.artifact.Artifact(7)]
         self.assertEqual(self.study.artifacts(), exp)
-        self.assertEqual(self.study.artifacts(dtype="16S"), [exp[-1]])
-        self.assertEqual(self.study.artifacts(dtype="18S"), exp[:-1])
+        self.assertEqual(self.study.artifacts(dtype="16S"), exp[-2:])
+        self.assertEqual(self.study.artifacts(dtype="18S"), exp[:-2])
 
         self.assertEqual(self.study.artifacts(artifact_type="BIOM"),
                          [qdb.artifact.Artifact(4),
                           qdb.artifact.Artifact(5),
-                          qdb.artifact.Artifact(6)])
+                          qdb.artifact.Artifact(6),
+                          qdb.artifact.Artifact(7)])
 
         self.assertEqual(self.study.artifacts(dtype="18S",
                                               artifact_type="BIOM"),
@@ -732,7 +734,8 @@ class TestStudy(TestCase):
     def test_retrieve_prep_templates(self):
         self.assertEqual(
             self.study.prep_templates(),
-            [qdb.metadata_template.prep_template.PrepTemplate(1)])
+            [qdb.metadata_template.prep_template.PrepTemplate(1),
+             qdb.metadata_template.prep_template.PrepTemplate(2)])
 
     def test_retrieve_prep_templates_none(self):
         new = qdb.study.Study.create(

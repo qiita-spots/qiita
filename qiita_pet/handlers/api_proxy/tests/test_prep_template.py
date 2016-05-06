@@ -61,6 +61,7 @@ class TestPrepAPIReadOnly(TestCase):
                         'Synthetic Genomics', 'Transcriptome Analysis',
                         'Whole Genome Sequencing', 'Other'],
                 'User': []}}
+
         self.assertEqual(obs, exp)
 
     def test_prep_template_ajax_get_req(self):
@@ -69,8 +70,8 @@ class TestPrepAPIReadOnly(TestCase):
                'message': '',
                'name': "Prep information 1",
                'files': ["uploaded_file.txt"],
-               'download_prep': 18,
-               'download_qiime': 19,
+               'download_prep': 20,
+               'download_qiime': 21,
                'num_samples': 27,
                'num_columns': 22,
                'investigation_type': 'Metagenomics',
@@ -175,6 +176,10 @@ class TestPrepAPIReadOnly(TestCase):
         exp = {'status': 'success',
                'message': '',
                'filepaths': [
+                   (21, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_qiime_19700101-000000.txt')),
+                   (20, join(get_mountpoint('templates')[0][1],
+                             '1_prep_1_19700101-000000.txt')),
                    (19, join(get_mountpoint('templates')[0][1],
                              '1_prep_1_qiime_19700101-000000.txt')),
                    (18, join(get_mountpoint('templates')[0][1],

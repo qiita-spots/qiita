@@ -186,7 +186,7 @@ class TestLoadPrepTemplateFromCmd(TestCase):
         """Correctly adds a prep template to the DB"""
         fh = StringIO(self.pt_contents)
         st = qdb.commands.load_prep_template_from_cmd(fh, 1, '18S')
-        self.assertEqual(st.id, 2)
+        self.assertEqual(st.id, 3)
 
 
 @qiita_test_checker()
