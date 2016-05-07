@@ -33,13 +33,15 @@ from qiita_pet.handlers.util import (
 
 
 @execute_as_transaction
-def _build_study_info(user, study_proc=None, proc_samples=None):
+def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
     """Builds list of dicts for studies table, with all HTML formatted
 
     Parameters
     ----------
     user : User object
         logged in user
+    search_type : choice, ['user', 'public']
+        what kind of search to perform
     study_proc : dict of lists, optional
         Dictionary keyed on study_id that lists all processed data associated
         with that study. Required if proc_samples given.
@@ -69,8 +71,12 @@ def _build_study_info(user, study_proc=None, proc_samples=None):
         build_samples = True
 
     # get list of studies for table
-    study_set = user.user_studies.union(
-        Study.get_by_status('public')).union(user.shared_studies)
+    if search_type == 'user':
+        study_set = user.user_studies.union(user.shared_studies)
+    elif search_type == 'public':
+        study_set = Study.get_by_status('public')
+    else:
+        raise ValueError('Not a valid search type')
     if study_proc is not None:
         study_set = study_set.intersection(study_proc)
     if not study_set:
@@ -168,10 +174,13 @@ class SearchStudiesAJAX(BaseHandler):
     def get(self, ignore):
         user = self.get_argument('user')
         query = self.get_argument('query')
+        search_type = self.get_argument('search_type')
         echo = int(self.get_argument('sEcho'))
 
         if user != self.current_user.id:
             raise HTTPError(403, 'Unauthorized search!')
+        if search_type not in ['user', 'public']:
+            raise HTTPError(400, 'Not a valid search type')
         if query:
             # Search for samples matching the query
             search = QiitaStudySearch()
@@ -202,8 +211,8 @@ class SearchStudiesAJAX(BaseHandler):
                 return
         else:
             study_proc = proc_samples = None
-        info = _build_study_info(self.current_user, study_proc=study_proc,
-                                 proc_samples=proc_samples)
+        info = _build_study_info(self.current_user, search_type, study_proc,
+                                 proc_samples)
         # linkifying data
         len_info = len(info)
         for i in range(len_info):
@@ -215,10 +224,14 @@ class SearchStudiesAJAX(BaseHandler):
                 doi_linkifier([element])
                 for element in info[i]['publication_doi']])
             info[i]['pi'] = study_person_linkifier(info[i]['pi'])
-            info[i]['ebi_info'] = '%s (%s)' % (
-                ''.join([EBI_LINKIFIER.format(a)
-                         for a in info[i]['ebi_study_accession'].split(',')]),
-                info[i]['ebi_submission_status'])
+
+            info[i]['ebi_info'] = info[i]['ebi_submission_status']
+            ebi_study_accession = info[i]['ebi_study_accession']
+            if ebi_study_accession:
+                info[i]['ebi_info'] = '%s (%s)' % (
+                    ''.join([EBI_LINKIFIER.format(a)
+                             for a in ebi_study_accession.split(',')]),
+                    info[i]['ebi_submission_status'])
 
         # build the table json
         results = {

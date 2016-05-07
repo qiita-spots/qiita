@@ -1391,11 +1391,12 @@ def generate_study_list(study_ids, build_samples):
 
             # shared with
             info['shared'] = []
-            for name, email in zip(info['shared_with_name'],
-                                   info['shared_with_email']):
-                if not name:
-                    name = email
-                info['shared'].append((email, name))
+            if info['shared_with_name'] and info['shared_with_email']:
+                for name, email in zip(info['shared_with_name'],
+                                       info['shared_with_email']):
+                    if not name:
+                        name = email
+                    info['shared'].append((email, name))
             del info["shared_with_name"]
             del info["shared_with_email"]
 
@@ -1456,12 +1457,12 @@ def generate_study_list(study_ids, build_samples):
 
                     info["proc_data_info"].append(proc_info)
 
-        del info["artifact_biom_ids"]
-        del info["artifact_biom_dts"]
-        del info["artifact_biom_ts"]
-        del info["artifact_biom_params"]
-        del info['artifact_biom_cmd']
+            del info["artifact_biom_ids"]
+            del info["artifact_biom_dts"]
+            del info["artifact_biom_ts"]
+            del info["artifact_biom_params"]
+            del info['artifact_biom_cmd']
 
-        infolist.append(info)
+            infolist.append(info)
 
     return infolist

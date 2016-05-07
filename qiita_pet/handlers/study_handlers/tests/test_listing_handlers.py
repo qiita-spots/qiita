@@ -142,13 +142,50 @@ class TestHelpers(TestHandlerBase):
         self.exp = [self.single_exp]
 
     def test_build_study_info(self):
-        obs = _build_study_info(User('test@foo.bar'))
+        obs = _build_study_info(User('test@foo.bar'), 'user')
         self.assertEqual(obs, self.exp)
 
+    def test_build_study_info_erros(self):
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            obs = _build_study_info(User('test@foo.bar'), study_proc={})
+            _build_study_info(User('test@foo.bar'), 'user', study_proc={})
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            obs = _build_study_info(User('test@foo.bar'), proc_samples={})
+            _build_study_info(User('test@foo.bar'), 'user', proc_samples={})
+        with self.assertRaises(ValueError):
+            _build_study_info(User('test@foo.bar'), 'wrong')
+
+
+class TestBuildStudyWithDBAccess(TestHelpers):
+    database = True
+
+    def test_build_study_info_empty_study(self):
+        info = {
+            'timeseries_type_id': 1,
+            'lab_person_id': None,
+            'principal_investigator_id': 3,
+            'metadata_complete': False,
+            'mixs_compliant': True,
+            'study_description': 'desc',
+            'study_alias': 'alias',
+            'study_abstract': 'abstract'}
+        Study.create(User('test@foo.bar'), "My study", efo=[1], info=info)
+        obs = _build_study_info(User('test@foo.bar'), 'user')
+
+        self.exp.append({
+            'metadata_complete': False,
+            'ebi_submission_status':
+            'not submitted',
+            'shared': [],
+            'pmid': [],
+            'pi': ('PI_dude@foo.bar', 'PIDude'),
+            'status': 'private',
+            'proc_data_info': [],
+            'publication_doi': [],
+            'study_abstract': 'abstract',
+            'study_id': 2,
+            'ebi_study_accession': None,
+            'study_title': 'My study',
+            'number_samples_collected': 0})
+        self.assertItemsEqual(obs, self.exp)
 
 
 class TestListStudiesHandler(TestHandlerBase):
@@ -423,6 +460,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
     def test_get(self):
         response = self.get('/study/search/', {
             'user': 'test@foo.bar',
+            'search_type': 'user',
             'query': '',
             'sEcho': '1021'
             })
@@ -432,6 +470,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
 
         response = self.get('/study/search/', {
             'user': 'test@foo.bar',
+            'search_type': 'user',
             'query': 'ph > 50',
             'sEcho': '1021'
             })
@@ -439,9 +478,10 @@ class TestSearchStudiesAJAX(TestHandlerBase):
         # make sure responds properly
         self.assertEqual(loads(response.body), self.empty)
 
-    def test_get_failure(self):
+    def test_get_failure_malformed_query(self):
         response = self.get('/study/search/', {
             'user': 'test@foo.bar',
+            'search_type': 'user',
             'query': 'ph',
             'sEcho': '1021'
             })
@@ -452,15 +492,26 @@ class TestSearchStudiesAJAX(TestHandlerBase):
 
         response = self.get('/study/search/', {
             'user': 'FAKE@foo.bar',
+            'search_type': 'user',
             'query': 'ph',
             'sEcho': '1021'
             })
         self.assertEqual(response.code, 403)
 
+    def test_get_failure_no_valid_search_type(self):
+        response = self.get('/study/search/', {
+            'user': 'test@foo.bar',
+            'search_type': 'wrong',
+            'query': 'ph',
+            'sEcho': '1021'
+            })
+        self.assertEqual(response.code, 400)
+
     def test_get_emp_portal(self):
         qiita_config.portal = "EMP"
         response = self.get('/study/search/', {
             'user': 'test@foo.bar',
+            'search_type': 'user',
             'query': '',
             'sEcho': '1021'
             })
