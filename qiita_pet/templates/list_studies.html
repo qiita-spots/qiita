@@ -33,6 +33,19 @@ function sel_study(name, row) {
   moi.send('sel', proc_data);
 }
 
+function sel_proc_data(name, row, pid) {
+  proc_data_info = $('#'+name).dataTable().fnGetData(row).proc_data_info;
+  var proc_data = {};
+  for(var i=0;i<proc_data_info.length;i++) {
+    // Find the processed data and send associated samples
+    if(proc_data_info[i].pid == pid) {
+      proc_data[pid] = proc_data_info[i].samples;
+      break;
+    }
+  }
+  moi.send('sel', proc_data);
+}
+
 function show_alert(data) {
   bootstrapAlert(data + ' samples selected.', "success", 1000);
    $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
@@ -51,13 +64,13 @@ $(document).ready(function() {
   $("#search-waiting").hide();
   moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
   moi.add_callback('sel', show_alert);
-  function format (d, row) {
+  function format (name, d, row) {
       // `d` is the original data object for the row
       // create formatted cell with proc data table
       var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th>Samples</th></tr>';
       for(i=0;i<d.proc_data_info.length;i++) {
         var proc_data = d.proc_data_info[i];
-        proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="moi.send(\"sel\",['+ proc_data.samples +']);"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';
+        proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(\''+ name +'\' ,'+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';
       }
       proc_data_table += '</table>';
       return proc_data_table;
@@ -84,7 +97,7 @@ $(document).ready(function() {
         // render the study checkbox cell
         {"render": function ( data, type, row, meta ) {
             if(row.proc_data_info.length > 0) {
-                return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
+                return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to che Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
             }
             else { return '<p style="font-size:12px">No Processed Data</p>'; }
         }, targets: [1]},
@@ -173,7 +186,7 @@ $(document).ready(function() {
       }
       else {
         // Open this row
-        row.child( format(row.data(), row.index()) ).show();
+        row.child( format('studies-table', row.data(), row.index()) ).show();
         tr.addClass('shown');
       }
   });
@@ -189,7 +202,7 @@ $(document).ready(function() {
       }
       else {
         // Open this row
-        row.child( format(row.data(), row.index()) ).show();
+        row.child( format('user-studies-table', row.data(), row.index()) ).show();
         tr.addClass('shown');
       }
   });
