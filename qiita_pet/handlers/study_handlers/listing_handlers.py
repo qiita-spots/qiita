@@ -180,10 +180,7 @@ class SearchStudiesAJAX(BaseHandler):
         if user != self.current_user.id:
             raise HTTPError(403, 'Unauthorized search!')
         if search_type not in ['user', 'public']:
-            self.clear()
-            self.set_status(400)
-            self.write('Not a valid search type')
-            return
+            raise HTTPError(400, 'Not a valid search type')
         if query:
             # Search for samples matching the query
             search = QiitaStudySearch()
