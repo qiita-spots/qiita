@@ -97,7 +97,7 @@ $(document).ready(function() {
         // render the study checkbox cell
         {"render": function ( data, type, row, meta ) {
             if(row.proc_data_info.length > 0) {
-                return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to che Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
+                return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
             }
             else { return '<p style="font-size:12px">No Processed Data</p>'; }
         }, targets: [1]},
