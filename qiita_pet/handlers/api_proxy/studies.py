@@ -266,7 +266,7 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
 
     return {'status': 'success',
             'message': '',
-            'remaining': remaining,
+            'remaining': sorted(remaining),
             'file_types': file_types,
             'num_prefixes': num_prefixes,
             'artifacts': artifact_options}
