@@ -77,6 +77,7 @@ $(document).ready(function() {
   }
 
   $('#user-studies-table').dataTable({
+      "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
       "columns": [
         {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'},
@@ -111,10 +112,10 @@ $(document).ready(function() {
             return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
         }, targets: [6]},
         ],
-      "oLanguage": {
-          "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
-          "sLoadingRecords": "Loading table data",
-          "sZeroRecords": "No studies found"
+      "language": {
+          "search": "Filter results by column data (Title, abstract, PI, etc):",
+          "loadingRecords": "Please wait - loading information ...",
+          "zeroRecords": "No studies found"
       },
       "ajax": {
           "url": user_studies_ajaxURL + "&query=",
@@ -157,10 +158,10 @@ $(document).ready(function() {
             return "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\"><span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='{% raw qiita_config.portal_dir %}/study/description/"+ row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
         }, targets: [2]},
         ],
-      "oLanguage": {
-          "sSearch": "Narrow search results by column data (Title, abstract, PI, etc):",
-          "sLoadingRecords": "Loading table data",
-          "sZeroRecords": "No studies found"
+      "language": {
+          "search": "Filter results by column data (Title, abstract, PI, etc):",
+          "loadingRecords": "Please wait - loading information ...",
+          "zeroRecords": "No studies found"
       },
       "ajax": {
           "url": studies_ajaxURL + "&query=",
