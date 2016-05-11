@@ -178,6 +178,7 @@ class ConfigurationManager(object):
         if not self.certificate_file:
             self.certificate_file = join(install_dir, 'qiita_core',
                                          'support_files', 'server.crt')
+        self.cookie_secret = config.get('main', 'COOKIE_SECRET')
         self.key_file = config.get('main', 'KEY_FILE')
         if not self.key_file:
             self.key_file = join(install_dir, 'qiita_core', 'support_files',

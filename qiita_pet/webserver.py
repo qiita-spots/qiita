@@ -174,7 +174,7 @@ class Application(tornado.web.Application):
         settings = {
             "template_path": TEMPLATE_PATH,
             "debug": DEBUG,
-            "cookie_secret": COOKIE_SECRET,
+            "cookie_secret": qiita_config.cookie_secret,
             "login_url": "%s/auth/login/" % qiita_config.portal_dir,
             "ui_modules": uimodules,
         }
