@@ -10,6 +10,9 @@ from functools import partial
 from os.path import join, dirname, abspath, isdir
 from os import environ
 from future import standard_library
+from base64 import b64encode
+from uuid import uuid4
+import warnings
 
 from .exceptions import MissingConfigSection
 
@@ -178,7 +181,12 @@ class ConfigurationManager(object):
         if not self.certificate_file:
             self.certificate_file = join(install_dir, 'qiita_core',
                                          'support_files', 'server.crt')
+
         self.cookie_secret = config.get('main', 'COOKIE_SECRET')
+        if not self.cookie_secret:
+            self.cookie_secret = b64encode(uuid4().bytes + uuid4().bytes)
+            warnings.warn("Random cookie secret generated.")
+
         self.key_file = config.get('main', 'KEY_FILE')
         if not self.key_file:
             self.key_file = join(install_dir, 'qiita_core', 'support_files',
