@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import HTTPError
+from collections import defaultdict
 
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
@@ -43,39 +44,62 @@ def _get_artifact(a_id):
     return artifact
 
 
-class ArtifactFilepathsHandler(OauthBaseHandler):
+class ArtifactHandler(OauthBaseHandler):
     @authenticate_oauth
     def get(self, artifact_id):
-        """Retrieves the filepath information of the given artifact
+        """Retrieves the artifact information
 
         Parameters
         ----------
         artifact_id : str
-            The id of the artifact whose filepath information is being
-            retrieved
+            The id of the artifact whose information is being retrieved
 
         Returns
         -------
         dict
-            {'filepaths': list of (str, str)}
-            The filepaths attached to the artifact and their filepath types
+            {''}
+            The artifact information
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
             response = {
-                'filepaths': [(fp, fp_type)
-                              for _, fp, fp_type in artifact.filepaths]}
+                'name': artifact.name,
+                'timestamp': str(artifact.timestamp),
+                'visibility': artifact.visibility,
+                'type': artifact.artifact_type,
+                'data_type': artifact.data_type,
+                'can_be_submitted_to_ebi': artifact.can_be_submitted_to_ebi,
+                'can_be_submitted_to_vamps':
+                    artifact.can_be_submitted_to_vamps,
+                'prep_information': [p.id for p in artifact.prep_templates],
+                'study': artifact.study.id}
+            params = artifact.processing_parameters
+            response['processing_parameters'] = (
+                params.values if params is not None else None)
+
+            response['ebi_run_accessions'] = (
+                artifact.ebi_run_accessions
+                if response['can_be_submitted_to_ebi'] else None)
+            response['is_submitted_to_vamps'] = (
+                artifact.is_submitted_to_vamps
+                if response['can_be_submitted_to_vamps'] else None)
+
+            # Instead of sending a list of files, provide the files as a
+            # dictionary keyed by filepath type
+            response['files'] = defaultdict(list)
+            for _, fp, fp_type in artifact.filepaths:
+                response['files'][fp_type].append(fp)
 
         self.write(response)
 
     @authenticate_oauth
     def patch(self, artifact_id):
-        """Patches the filepaths of the artifact
+        """Patches the artifact information
 
         Parameter
         ---------
         artifact_id : str
-            The id of the artifact whose filepaths information is being updated
+            The id of the artifact whose information is being updated
         """
         req_op = self.get_argument('op')
         req_path = self.get_argument('path')
@@ -96,62 +120,3 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
                                  'supported operations: add' % req_op)
 
         self.finish()
-
-
-class ArtifactMappingHandler(OauthBaseHandler):
-    @authenticate_oauth
-    def get(self, artifact_id):
-        """Retrieves the mapping file information of the given artifact
-
-        Parameters
-        ----------
-        artifact_id : str
-            The id of the artifact whose mapping file information is being
-            retrieved
-
-        Returns
-        -------
-        dict
-            {'mapping': str}
-            The filepath to the mapping file
-        """
-        with qdb.sql_connection.TRN:
-            artifact = _get_artifact(artifact_id)
-            # In the current system, we don't have any artifact that
-            # is the result of two other artifacts, and there is no way
-            # of generating such artifact. This operation will be
-            # eventually supported, but in interest of time we are not
-            # going to implement that here.
-            prep_templates = artifact.prep_templates
-            if len(prep_templates) > 1:
-                raise NotImplementedError(
-                    "Artifact %d has more than one prep template")
-
-            fp = prep_templates[0].qiime_map_fp
-
-            response = {'mapping': fp}
-
-        self.write(response)
-
-
-class ArtifactTypeHandler(OauthBaseHandler):
-    @authenticate_oauth
-    def get(self, artifact_id):
-        """Retrieves the artifact type information of the given artifact
-
-        Parameters
-        ----------
-        artifact_id : str
-            The id of the artifact whose information is being retrieved
-
-        Returns
-        -------
-        dict
-            {'type': str}
-            The artifact type
-        """
-        with qdb.sql_connection.TRN:
-            artifact = _get_artifact(artifact_id)
-            response = {'type': artifact.artifact_type}
-
-        self.write(response)
