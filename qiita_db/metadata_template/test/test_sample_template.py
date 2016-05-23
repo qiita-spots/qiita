@@ -160,8 +160,8 @@ class TestSampleReadOnly(BaseTestSample):
                'root metagenome', '0.164', '114', '15', '1.41', '7.15', '0',
                'ENVO:Temperate grasslands, savannas, and shrubland biome',
                'GAZ:United States of America', '6.94', 'SKB8', '5',
-               'Burmese root', 'ENVO:plant-associated habitat', '74.0894932572',
-               '65.3283470202', '1118232'}
+               'Burmese root', 'ENVO:plant-associated habitat',
+               '74.0894932572', '65.3283470202', '1118232'}
         self.assertItemsEqual(set(obs), exp)
 
     def test_items(self):
@@ -172,7 +172,8 @@ class TestSampleReadOnly(BaseTestSample):
                ('physical_specimen_remaining', 'true'),
                ('dna_extracted', 'true'),
                ('sample_type', 'ENVO:soil'),
-               ('collection_timestamp', str(datetime(2011, 11, 11, 13, 00, 00))),
+               ('collection_timestamp',
+               str(datetime(2011, 11, 11, 13, 00, 00))),
                ('host_subject_id', '1001:M7'),
                ('description', 'Cannabis Soil Microbiome'),
                ('season_environment', 'winter'), ('assigned_from_geo', 'n'),

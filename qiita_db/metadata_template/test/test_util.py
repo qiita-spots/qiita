@@ -503,21 +503,6 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAME = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "NA\n")
 
-SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "1\t42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\1\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\1\tXXXXX4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
-
 SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
@@ -551,9 +536,9 @@ SAMPLE_TEMPLATE_NULLS_DICT = {
                     "sample.5": 'True',
                     "sample.6": 'False'},
     'my_bool_col_w_nulls': {"sample.1": 'False',
-                            "sample.2": None,
+                            "sample.2": 'Unknown',
                             "sample.3": 'True',
-                            "sample.4": None,
+                            "sample.4": '',
                             "sample.5": 'True',
                             "sample.6": 'True'}
 }

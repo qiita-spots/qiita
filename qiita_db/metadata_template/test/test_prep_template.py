@@ -1031,16 +1031,10 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
 
         obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=False,
-                          parse_dates=False, index_col=False, comment='\t',
-                          na_values=qdb.metadata_template.constants.NA_VALUES,
-                          true_values=qdb.metadata_template.constants.TRUE_VALUES,
-                          false_values=qdb.metadata_template.constants.FALSE_VALUES)
+                          parse_dates=False, index_col=False, comment='\t')
         exp = pd.read_csv(
             exp_fp, sep='\t', infer_datetime_format=False,
-            parse_dates=False, index_col=False, comment='\t',
-            na_values=qdb.metadata_template.constants.NA_VALUES,
-            true_values=qdb.metadata_template.constants.TRUE_VALUES,
-            false_values=qdb.metadata_template.constants.FALSE_VALUES)
+            parse_dates=False, index_col=False, comment='\t')
 
         assert_frame_equal(obs, exp)
 

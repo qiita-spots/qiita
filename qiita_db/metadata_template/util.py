@@ -191,7 +191,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     character will be ignored and columns that are empty will be removed. Empty
     sample names will be removed from the DataFrame.
 
-    Everything in the DataFrame will be read and manage as string
+    Everything in the DataFrame will be read and managed as string
     """
     # Load in file lines
     holdfile = None
@@ -245,13 +245,10 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
             encoding='utf-8',
             infer_datetime_format=False,
             keep_default_na=False,
-            na_values=qdb.metadata_template.constants.NA_VALUES,
-            true_values=qdb.metadata_template.constants.TRUE_VALUES,
-            false_values=qdb.metadata_template.constants.FALSE_VALUES,
-            parse_dates=True,
             index_col=False,
             comment='\t',
-            mangle_dupe_cols=False)
+            mangle_dupe_cols=False,
+            converters={index: lambda x: str(x).strip()})
     except UnicodeDecodeError:
         # Find row number and col number for utf-8 encoding errors
         headers = holdfile[0].strip().split('\t')
@@ -286,8 +283,10 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     # set the sample name as the index
     template.set_index(index, inplace=True)
 
-    # it is not uncommon to find templates that have empty columns
-    template.dropna(how='all', axis=1, inplace=True)
+    # it is not uncommon to find templates that have empty columns so let's
+    # find the columsn that are all ''
+    columns = np.where(np.all(template.applymap(lambda x: x == ''), axis=0))
+    template.drop(template.columns[columns], axis=1, inplace=True)
 
     initial_columns.remove(index)
     dropped_cols = initial_columns - set(template.columns)
