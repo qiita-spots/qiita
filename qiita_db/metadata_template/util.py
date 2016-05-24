@@ -191,6 +191,9 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     character will be ignored and columns that are empty will be removed. Empty
     sample names will be removed from the DataFrame.
 
+    Column names are case-insensitive but will be lowercased on addition to
+    the database
+
     Everything in the DataFrame will be read and managed as string
     """
     # Load in file lines
@@ -284,7 +287,7 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     template.set_index(index, inplace=True)
 
     # it is not uncommon to find templates that have empty columns so let's
-    # find the columsn that are all ''
+    # find the columns that are all ''
     columns = np.where(np.all(template.applymap(lambda x: x == ''), axis=0))
     template.drop(template.columns[columns], axis=1, inplace=True)
 
