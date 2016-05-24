@@ -25,7 +25,7 @@ from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateAJAX,
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
-    PreprocessingSummaryHandler, VAMPSHandler, PrepTemplateGraphAJAX,
+    VAMPSHandler, PrepTemplateGraphAJAX,
     ProcessArtifactHandler, ListCommandsHandler, ListOptionsHandler,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX,
     StudyDeleteAjax, ArtifactAdminAJAX, ArtifactAJAX,
@@ -36,9 +36,6 @@ from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
-from qiita_pet.handlers.compute import ComputeCompleteHandler, CreateRawData
-from qiita_pet.handlers.preprocessing_handlers import PreprocessHandler
-from qiita_pet.handlers.processing_handlers import ProcessHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
 from qiita_pet.handlers.prep_template import PrepTemplateHandler
@@ -99,9 +96,7 @@ class Application(tornado.web.Application):
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
             (r"/admin/artifact/", ArtifactAdminAJAX),
-            (r"/preprocessing_summary/(.*)", PreprocessingSummaryHandler),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
-            (r"/compute_complete/(.*)", ComputeCompleteHandler),
             (r"/study/create/", StudyEditHandler),
             (r"/study/edit/(.*)", StudyEditHandler),
             (r"/study/list/", ListStudiesHandler),
@@ -115,9 +110,6 @@ class Application(tornado.web.Application):
             (r"/study/search/(.*)", SearchStudiesAJAX),
             (r"/study/new_artifact/", NewArtifactHandler),
             (r"/study/files/", StudyFilesAJAX),
-            (r"/study/create_raw_data", CreateRawData),
-            (r"/study/preprocess", PreprocessHandler),
-            (r"/study/process", ProcessHandler),
             (r"/study/sharing/", ShareStudyAJAX),
             (r"/study/sharing/autocomplete/", AutocompleteHandler),
             (r"/study/new_prep_template/", NewPrepTemplateAjax),
