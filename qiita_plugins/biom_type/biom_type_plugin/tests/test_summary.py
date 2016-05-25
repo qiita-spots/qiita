@@ -11,6 +11,7 @@ from tempfile import mkstemp, mkdtemp
 from os import close, remove
 from os.path import exists, isdir, join, basename
 from shutil import rmtree
+from json import dumps
 
 import numpy as np
 from biom import Table
@@ -45,6 +46,21 @@ class SummaryTestsWith(TestCase):
         self.artifact_id = 4
         self.parameters = {'input_data': self.artifact_id}
 
+        self.httpretty_body = {
+            'name': 'Artifact name',
+            'timestamp': '2012-10-01 09:30:27',
+            'visibility': 'private',
+            'type': 'FASTQ',
+            'data_type': '16S',
+            'can_be_submitted_to_ebi': False,
+            'ebi_run_accessions': None,
+            'can_be_submitted_to_vamps': False,
+            'is_submitted_to_vamps': None,
+            'prep_information': [1],
+            'study': 1,
+            'processing_parameters': None,
+            'files': {"biom": [self.biom_fp]}}
+
         self._clean_up_files = [self.biom_fp, self.out_dir]
 
     def tearDown(self):
@@ -58,10 +74,10 @@ class SummaryTestsWith(TestCase):
     @httpretty.activate
     def test_generate_html_summary(self):
         httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/filepaths/" % self.artifact_id)
+                         "%s/" % self.artifact_id)
         httpretty.register_uri(
             httpretty.GET, httpretty_url,
-            body=('{"filepaths": [["%s", "biom"]]}' % self.biom_fp))
+            body=dumps(self.httpretty_body))
         httpretty.register_uri(httpretty.PATCH, httpretty_url)
         obs_success, obs_ainfo, obs_error = generate_html_summary(
             self.qclient, 'job-id', self.parameters, self.out_dir)
