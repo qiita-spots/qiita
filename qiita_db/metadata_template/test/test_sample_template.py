@@ -114,14 +114,14 @@ class TestSampleReadOnly(BaseTestSample):
         """
         self.assertEqual(self.tester['physical_specimen_location'], 'ANL')
         self.assertEqual(self.tester['collection_timestamp'],
-                         datetime(2011, 11, 11, 13, 00, 00))
+                         '2011-11-11 13:00:00')
         self.assertTrue(self.tester['dna_extracted'])
 
     def test_getitem_dynamic(self):
         """Get item returns the correct metadata value from the dynamic table
         """
         self.assertEqual(self.tester['SEASON_ENVIRONMENT'], 'winter')
-        self.assertEqual(self.tester['depth'], 0.15)
+        self.assertEqual(self.tester['depth'], '0.15')
 
     def test_getitem_error(self):
         """Get item raises an error if category does not exists"""
@@ -153,15 +153,14 @@ class TestSampleReadOnly(BaseTestSample):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {'ANL', True, True, 'ENVO:soil',
-               datetime(2011, 11, 11, 13, 00, 00), '1001:M7',
-               'Cannabis Soil Microbiome', 'winter', 'n',
-               '64.6 sand, 17.6 silt, 17.8 clay', '1118232', 0.15, '3483',
-               'root metagenome', 0.164, 114, 15, 1.41, 7.15, 0,
+        exp = {'ANL', 'true', 'true', 'ENVO:soil', '2011-11-11 13:00:00',
+               '1001:M7', 'Cannabis Soil Microbiome', 'winter', 'n',
+               '64.6 sand, 17.6 silt, 17.8 clay', '1118232', '0.15', '3483',
+               'root metagenome', '0.164', '114', '15', '1.41', '7.15', '0',
                'ENVO:Temperate grasslands, savannas, and shrubland biome',
-               'GAZ:United States of America', 6.94, 'SKB8', 5,
-               'Burmese root', 'ENVO:plant-associated habitat', 74.0894932572,
-               65.3283470202, '1118232'}
+               'GAZ:United States of America', '6.94', 'SKB8', '5',
+               'Burmese root', 'ENVO:plant-associated habitat',
+               '74.0894932572', '65.3283470202', '1118232'}
         self.assertItemsEqual(set(obs), exp)
 
     def test_items(self):
@@ -169,33 +168,34 @@ class TestSampleReadOnly(BaseTestSample):
         obs = self.tester.items()
         self.assertTrue(isinstance(obs, Iterable))
         exp = {('physical_specimen_location', 'ANL'),
-               ('physical_specimen_remaining', True),
-               ('dna_extracted', True),
+               ('physical_specimen_remaining', 'true'),
+               ('dna_extracted', 'true'),
                ('sample_type', 'ENVO:soil'),
-               ('collection_timestamp', datetime(2011, 11, 11, 13, 00, 00)),
+               ('collection_timestamp', '2011-11-11 13:00:00'),
                ('host_subject_id', '1001:M7'),
                ('description', 'Cannabis Soil Microbiome'),
                ('season_environment', 'winter'), ('assigned_from_geo', 'n'),
                ('texture', '64.6 sand, 17.6 silt, 17.8 clay'),
-               ('taxon_id', '1118232'), ('depth', 0.15),
+               ('taxon_id', '1118232'), ('depth', '0.15'),
                ('host_taxid', '3483'), ('common_name', 'root metagenome'),
-               ('water_content_soil', 0.164), ('elevation', 114), ('temp', 15),
-               ('tot_nitro', 1.41), ('samp_salinity', 7.15), ('altitude', 0),
+               ('water_content_soil', '0.164'), ('elevation', '114'),
+               ('temp', '15'), ('tot_nitro', '1.41'),
+               ('samp_salinity', '7.15'), ('altitude', '0'),
                ('env_biome',
                 'ENVO:Temperate grasslands, savannas, and shrubland biome'),
-               ('country', 'GAZ:United States of America'), ('ph', 6.94),
-               ('anonymized_name', 'SKB8'), ('tot_org_carb', 5),
+               ('country', 'GAZ:United States of America'), ('ph', '6.94'),
+               ('anonymized_name', 'SKB8'), ('tot_org_carb', '5'),
                ('description_duplicate', 'Burmese root'),
                ('env_feature', 'ENVO:plant-associated habitat'),
-               ('latitude', 74.0894932572),
-               ('longitude', 65.3283470202),
+               ('latitude', '74.0894932572'),
+               ('longitude', '65.3283470202'),
                ('scientific_name', '1118232')}
         self.assertEqual(set(obs), exp)
 
     def test_get(self):
         """get returns the correct sample object"""
         self.assertEqual(self.tester.get('SEASON_ENVIRONMENT'), 'winter')
-        self.assertEqual(self.tester.get('depth'), 0.15)
+        self.assertEqual(self.tester.get('depth'), '0.15')
 
     def test_get_none(self):
         """get returns none if the sample id is not present"""
@@ -224,12 +224,9 @@ class TestSampleReadWrite(BaseTestSample):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             self.tester['column that does not exist'] = 0.30
 
-        with self.assertRaises(ValueError):
-            self.tester['collection_timestamp'] = "Error!"
-
-        self.assertEqual(self.tester['tot_nitro'], 1.41)
+        self.assertEqual(self.tester['tot_nitro'], '1.41')
         self.tester['tot_nitro'] = '1234.5'
-        self.assertEqual(self.tester['tot_nitro'], 1234.5)
+        self.assertEqual(self.tester['tot_nitro'], '1234.5')
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
@@ -882,20 +879,33 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
     def test_get_category(self):
         pt = qdb.metadata_template.sample_template.SampleTemplate(1)
         obs = pt.get_category('latitude')
-        exp = {'1.SKB2.640194': 35.2374368957, '1.SKM4.640180': None,
-               '1.SKB3.640195': 95.2060749748, '1.SKB6.640176': 78.3634273709,
-               '1.SKD6.640190': 29.1499460692, '1.SKM6.640187': 0.291867635913,
-               '1.SKD9.640182': 23.1218032799, '1.SKM8.640201': 3.21190859967,
-               '1.SKM2.640199': 82.8302905615, '1.SKD2.640178': 53.5050692395,
-               '1.SKB7.640196': 13.089194595, '1.SKD4.640185': 40.8623799474,
-               '1.SKB8.640193': 74.0894932572, '1.SKM3.640197': None,
-               '1.SKD5.640186': 85.4121476399, '1.SKB1.640202': 4.59216095574,
-               '1.SKM1.640183': 38.2627021402, '1.SKD1.640179': 68.0991287718,
-               '1.SKD3.640198': 84.0030227585, '1.SKB5.640181': 10.6655599093,
-               '1.SKB4.640189': 43.9614715197, '1.SKB9.640200': 12.6245524972,
-               '1.SKM9.640192': 12.7065957714, '1.SKD8.640184': 57.571893782,
-               '1.SKM5.640177': 44.9725384282, '1.SKM7.640188': 60.1102854322,
-               '1.SKD7.640191': 68.51099627}
+        exp = {'1.SKB2.640194': '35.2374368957',
+               '1.SKM4.640180': None,
+               '1.SKB3.640195': '95.2060749748',
+               '1.SKB6.640176': '78.3634273709',
+               '1.SKD6.640190': '29.1499460692',
+               '1.SKM6.640187': '0.291867635913',
+               '1.SKD9.640182': '23.1218032799',
+               '1.SKM8.640201': '3.21190859967',
+               '1.SKM2.640199': '82.8302905615',
+               '1.SKD2.640178': '53.5050692395',
+               '1.SKB7.640196': '13.089194595',
+               '1.SKD4.640185': '40.8623799474',
+               '1.SKB8.640193': '74.0894932572',
+               '1.SKM3.640197': None,
+               '1.SKD5.640186': '85.4121476399',
+               '1.SKB1.640202': '4.59216095574',
+               '1.SKM1.640183': '38.2627021402',
+               '1.SKD1.640179': '68.0991287718',
+               '1.SKD3.640198': '84.0030227585',
+               '1.SKB5.640181': '10.6655599093',
+               '1.SKB4.640189': '43.9614715197',
+               '1.SKB9.640200': '12.6245524972',
+               '1.SKM9.640192': '12.7065957714',
+               '1.SKD8.640184': '57.571893782',
+               '1.SKM5.640177': '44.9725384282',
+               '1.SKM7.640188': '60.1102854322',
+               '1.SKD7.640191': '68.51099627'}
         self.assertEqual(obs, exp)
 
     def test_get_category_no_exists(self):

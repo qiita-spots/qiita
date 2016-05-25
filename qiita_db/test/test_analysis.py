@@ -556,7 +556,7 @@ class TestAnalysis(TestCase):
             sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
 
         exp = [[16, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
-               [new_id, '1_analysis_mapping.txt', 9, '3609817154', 1, 1]]
+               [new_id, '1_analysis_mapping.txt', 9, '1542374513', 1, 1]]
         self.assertItemsEqual(obs, exp)
 
         sql = """SELECT * FROM qiita.analysis_filepath

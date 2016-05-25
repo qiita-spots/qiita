@@ -816,7 +816,7 @@ center_name="%(center_name)s">
     <DESCRIPTION>Cannabis Soil Microbiome</DESCRIPTION>
     <SAMPLE_ATTRIBUTES>
       <SAMPLE_ATTRIBUTE>
-        <TAG>altitude</TAG><VALUE>0.0</VALUE>
+        <TAG>altitude</TAG><VALUE>0</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>anonymized_name</TAG><VALUE>SKB2</VALUE>
@@ -839,10 +839,10 @@ center_name="%(center_name)s">
         <TAG>description_duplicate</TAG><VALUE>Burmese bulk</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>dna_extracted</TAG><VALUE>True</VALUE>
+        <TAG>dna_extracted</TAG><VALUE>true</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>elevation</TAG><VALUE>114.0</VALUE>
+        <TAG>elevation</TAG><VALUE>114</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>env_biome</TAG><VALUE>ENVO:Temperate grasslands, savannas, and \
@@ -870,7 +870,7 @@ shrubland biome</VALUE>
         <TAG>physical_specimen_location</TAG><VALUE>ANL</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>physical_specimen_remaining</TAG><VALUE>True</VALUE>
+        <TAG>physical_specimen_remaining</TAG><VALUE>true</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>samp_salinity</TAG><VALUE>7.15</VALUE>
@@ -882,7 +882,7 @@ shrubland biome</VALUE>
         <TAG>season_environment</TAG><VALUE>winter</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>temp</TAG><VALUE>15.0</VALUE></SAMPLE_ATTRIBUTE>
+        <TAG>temp</TAG><VALUE>15</VALUE></SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>texture</TAG><VALUE>64.6 sand, 17.6 silt, 17.8 clay</VALUE>
       </SAMPLE_ATTRIBUTE>
@@ -890,7 +890,7 @@ shrubland biome</VALUE>
         <TAG>tot_nitro</TAG><VALUE>1.41</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>tot_org_carb</TAG><VALUE>5.0</VALUE>
+        <TAG>tot_org_carb</TAG><VALUE>5</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>water_content_soil</TAG><VALUE>0.164</VALUE>
@@ -907,7 +907,7 @@ center_name="%(center_name)s">
     <DESCRIPTION>Cannabis Soil Microbiome</DESCRIPTION>
       <SAMPLE_ATTRIBUTES>
       <SAMPLE_ATTRIBUTE>
-        <TAG>altitude</TAG><VALUE>0.0</VALUE>
+        <TAG>altitude</TAG><VALUE>0</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>anonymized_name</TAG><VALUE>SKB3</VALUE>
@@ -931,10 +931,10 @@ center_name="%(center_name)s">
         <TAG>description_duplicate</TAG><VALUE>Burmese bulk</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>dna_extracted</TAG><VALUE>True</VALUE>
+        <TAG>dna_extracted</TAG><VALUE>true</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>elevation</TAG><VALUE>114.0</VALUE>
+        <TAG>elevation</TAG><VALUE>114</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>env_biome</TAG><VALUE>ENVO:Temperate grasslands, savannas, and \
@@ -962,7 +962,7 @@ shrubland biome</VALUE>
         <TAG>physical_specimen_location</TAG><VALUE>ANL</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>physical_specimen_remaining</TAG><VALUE>True</VALUE>
+        <TAG>physical_specimen_remaining</TAG><VALUE>true</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>samp_salinity</TAG><VALUE>7.15</VALUE>
@@ -974,7 +974,7 @@ shrubland biome</VALUE>
         <TAG>season_environment</TAG><VALUE>winter</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>temp</TAG><VALUE>15.0</VALUE>
+        <TAG>temp</TAG><VALUE>15</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>texture</TAG><VALUE>64.6 sand, 17.6 silt, 17.8 clay</VALUE>
@@ -983,7 +983,7 @@ shrubland biome</VALUE>
         <TAG>tot_nitro</TAG><VALUE>1.41</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>tot_org_carb</TAG><VALUE>5.0</VALUE>
+        <TAG>tot_org_carb</TAG><VALUE>5</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>water_content_soil</TAG><VALUE>0.164</VALUE>

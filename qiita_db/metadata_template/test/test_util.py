@@ -246,20 +246,6 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.get_invalid_sample_names(one_invalid)
         self.assertItemsEqual(obs, [' ', ' ', ' '])
 
-    def test_invalid_lat_long(self):
-
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            obs = qdb.metadata_template.util.load_template_to_dataframe(
-                StringIO(SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS))
-            # prevent flake8 from complaining
-            str(obs)
-
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            obs = qdb.metadata_template.util.load_template_to_dataframe(
-                StringIO(SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS))
-            # prevent flake8 from complaining
-            str(obs)
-
     def test_looks_like_qiime_mapping_file(self):
         obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(
             StringIO(EXP_SAMPLE_TEMPLATE))
@@ -517,21 +503,6 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAME = (
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "NA\n")
 
-SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "1\t42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\1\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\1\tXXXXX4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
-
 SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
@@ -558,18 +529,18 @@ EXP_SAMPLE_TEMPLATE_NULLS = (
 
 
 SAMPLE_TEMPLATE_NULLS_DICT = {
-    'my_bool_col': {"sample.1": True,
-                    "sample.2": False,
-                    "sample.3": True,
-                    "sample.4": False,
-                    "sample.5": True,
-                    "sample.6": False},
-    'my_bool_col_w_nulls': {"sample.1": False,
-                            "sample.2": None,
-                            "sample.3": True,
-                            "sample.4": None,
-                            "sample.5": True,
-                            "sample.6": True}
+    'my_bool_col': {"sample.1": 'True',
+                    "sample.2": 'False',
+                    "sample.3": 'True',
+                    "sample.4": 'False',
+                    "sample.5": 'True',
+                    "sample.6": 'False'},
+    'my_bool_col_w_nulls': {"sample.1": 'False',
+                            "sample.2": 'Unknown',
+                            "sample.3": 'True',
+                            "sample.4": '',
+                            "sample.5": 'True',
+                            "sample.6": 'True'}
 }
 
 SAMPLE_TEMPLATE_DICT_FORM = {
@@ -579,21 +550,21 @@ SAMPLE_TEMPLATE_DICT_FORM = {
     'description': {'2.Sample1': 'Test Sample 1',
                     '2.Sample2': 'Test Sample 2',
                     '2.Sample3': 'Test Sample 3'},
-    'has_extracted_data': {'2.Sample1': True,
-                           '2.Sample2': True,
-                           '2.Sample3': True},
-    'has_physical_specimen': {'2.Sample1': True,
-                              '2.Sample2': True,
-                              '2.Sample3': True},
+    'has_extracted_data': {'2.Sample1': 'True',
+                           '2.Sample2': 'True',
+                           '2.Sample3': 'True'},
+    'has_physical_specimen': {'2.Sample1': 'True',
+                              '2.Sample2': 'True',
+                              '2.Sample3': 'True'},
     'host_subject_id': {'2.Sample1': 'NotIdentified',
                         '2.Sample2': 'NotIdentified',
                         '2.Sample3': 'NotIdentified'},
-    'latitude': {'2.Sample1': 42.420000000000002,
-                 '2.Sample2': 4.2000000000000002,
-                 '2.Sample3': 4.7999999999999998},
-    'longitude': {'2.Sample1': 41.409999999999997,
-                  '2.Sample2': 1.1000000000000001,
-                  '2.Sample3': 4.4100000000000001},
+    'latitude': {'2.Sample1': '42.42',
+                 '2.Sample2': '4.2',
+                 '2.Sample3': '4.8'},
+    'longitude': {'2.Sample1': '41.41',
+                  '2.Sample2': '1.1',
+                  '2.Sample3': '4.41'},
     'physical_location': {'2.Sample1': 'location1',
                           '2.Sample2': 'location1',
                           '2.Sample3': 'location1'},
@@ -606,9 +577,9 @@ SAMPLE_TEMPLATE_DICT_FORM = {
     'str_column': {'2.Sample1': 'Value for sample 1',
                    '2.Sample2': 'Value for sample 2',
                    '2.Sample3': 'Value for sample 3'},
-    'int_column': {'2.Sample1': 1,
-                   '2.Sample2': 2,
-                   '2.Sample3': 3}
+    'int_column': {'2.Sample1': '1',
+                   '2.Sample2': '2',
+                   '2.Sample3': '3'}
     }
 
 SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
@@ -618,21 +589,21 @@ SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
     'description': {'2.Sample1': 'Test Sample 1',
                     '2.Sample2': 'Test Sample 2',
                     '2.Sample3': 'Test Sample 3'},
-    'has_extracted_data': {'2.Sample1': True,
-                           '2.Sample2': True,
-                           '2.Sample3': True},
-    'has_physical_specimen': {'2.Sample1': True,
-                              '2.Sample2': True,
-                              '2.Sample3': True},
+    'has_extracted_data': {'2.Sample1': 'True',
+                           '2.Sample2': 'True',
+                           '2.Sample3': 'True'},
+    'has_physical_specimen': {'2.Sample1': 'True',
+                              '2.Sample2': 'True',
+                              '2.Sample3': 'True'},
     'host_subject_id': {'2.Sample1': 'NotIdentified',
                         '2.Sample2': 'NotIdentified',
                         '2.Sample3': 'NotIdentified'},
-    'latitude': {'2.Sample1': 42,
-                 '2.Sample2': 4,
-                 '2.Sample3': 4},
-    'longitude': {'2.Sample1': 41.409999999999997,
-                  '2.Sample2': 1.1000000000000001,
-                  '2.Sample3': 4.4100000000000001},
+    'latitude': {'2.Sample1': '42',
+                 '2.Sample2': '4',
+                 '2.Sample3': '4'},
+    'longitude': {'2.Sample1': '41.41',
+                  '2.Sample2': '1.1',
+                  '2.Sample3': '4.41'},
     'physical_location': {'2.Sample1': 'location1',
                           '2.Sample2': 'location1',
                           '2.Sample3': 'location1'},
@@ -645,9 +616,9 @@ SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
     'str_column': {'2.Sample1': 'Value for sample 1',
                    '2.Sample2': 'Value for sample 2',
                    '2.Sample3': 'Value for sample 3'},
-    'int_column': {'2.Sample1': 1,
-                   '2.Sample2': 2,
-                   '2.Sample3': 3}
+    'int_column': {'2.Sample1': '1',
+                   '2.Sample2': '2',
+                   '2.Sample3': '3'}
     }
 
 SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
@@ -657,21 +628,21 @@ SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
     'description': {'2.Sample1': 'Test Sample 1',
                     '2.Sample2': 'Test Sample 2',
                     '2.Sample3': 'Test Sample 3'},
-    'has_extracted_data': {'2.Sample1': True,
-                           '2.Sample2': True,
-                           '2.Sample3': True},
-    'has_physical_specimen': {'2.Sample1': True,
-                              '2.Sample2': True,
-                              '2.Sample3': True},
+    'has_extracted_data': {'2.Sample1': 'True',
+                           '2.Sample2': 'True',
+                           '2.Sample3': 'True'},
+    'has_physical_specimen': {'2.Sample1': 'True',
+                              '2.Sample2': 'True',
+                              '2.Sample3': 'True'},
     'host_subject_id': {'2.Sample1': 'NotIdentified',
                         '2.Sample2': 'NotIdentified',
                         '2.Sample3': 'NotIdentified'},
-    'latitude': {'2.Sample1': 42.0,
-                 '2.Sample2': 4.0,
-                 '2.Sample3': 4.8},
-    'longitude': {'2.Sample1': 41.409999999999997,
-                  '2.Sample2': 1.1000000000000001,
-                  '2.Sample3': 4.4100000000000001},
+    'latitude': {'2.Sample1': '42',
+                 '2.Sample2': '4',
+                 '2.Sample3': '4.8'},
+    'longitude': {'2.Sample1': '41.41',
+                  '2.Sample2': '1.1',
+                  '2.Sample3': '4.41'},
     'physical_location': {'2.Sample1': 'location1',
                           '2.Sample2': 'location1',
                           '2.Sample3': 'location1'},
@@ -684,9 +655,9 @@ SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
     'str_column': {'2.Sample1': 'Value for sample 1',
                    '2.Sample2': 'Value for sample 2',
                    '2.Sample3': 'Value for sample 3'},
-    'int_column': {'2.Sample1': 1,
-                   '2.Sample2': 2,
-                   '2.Sample3': 3}
+    'int_column': {'2.Sample1': '1',
+                   '2.Sample2': '2',
+                   '2.Sample3': '3'}
     }
 
 SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
@@ -696,21 +667,21 @@ SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
     'description': {'002.000': 'Test Sample 1',
                     '1.11111': 'Test Sample 2',
                     '0.12121': 'Test Sample 3'},
-    'has_extracted_data': {'002.000': True,
-                           '1.11111': True,
-                           '0.12121': True},
-    'has_physical_specimen': {'002.000': True,
-                              '1.11111': True,
-                              '0.12121': True},
+    'has_extracted_data': {'002.000': 'True',
+                           '1.11111': 'True',
+                           '0.12121': 'True'},
+    'has_physical_specimen': {'002.000': 'True',
+                              '1.11111': 'True',
+                              '0.12121': 'True'},
     'host_subject_id': {'002.000': 'NotIdentified',
                         '1.11111': 'NotIdentified',
                         '0.12121': 'NotIdentified'},
-    'latitude': {'002.000': 42.420000000000002,
-                 '1.11111': 4.2000000000000002,
-                 '0.12121': 4.7999999999999998},
-    'longitude': {'002.000': 41.409999999999997,
-                  '1.11111': 1.1000000000000001,
-                  '0.12121': 4.4100000000000001},
+    'latitude': {'002.000': '42.42',
+                 '1.11111': '4.2',
+                 '0.12121': '4.8'},
+    'longitude': {'002.000': '41.41',
+                  '1.11111': '1.1',
+                  '0.12121': '4.41'},
     'physical_location': {'002.000': 'location1',
                           '1.11111': 'location1',
                           '0.12121': 'location1'},
@@ -731,21 +702,21 @@ ST_EMPTY_COLUMN_DICT_FORM = \
      'description': {'2.Sample1': 'Test Sample 1',
                      '2.Sample2': 'Test Sample 2',
                      '2.Sample3': 'Test Sample 3'},
-     'has_extracted_data': {'2.Sample1': True,
-                            '2.Sample2': True,
-                            '2.Sample3': True},
-     'has_physical_specimen': {'2.Sample1': True,
-                               '2.Sample2': True,
-                               '2.Sample3': True},
+     'has_extracted_data': {'2.Sample1': 'True',
+                            '2.Sample2': 'True',
+                            '2.Sample3': 'True'},
+     'has_physical_specimen': {'2.Sample1': 'True',
+                               '2.Sample2': 'True',
+                               '2.Sample3': 'True'},
      'host_subject_id': {'2.Sample1': 'NotIdentified',
                          '2.Sample2': 'NotIdentified',
                          '2.Sample3': 'NotIdentified'},
-     'latitude': {'2.Sample1': 42.420000000000002,
-                  '2.Sample2': 4.2000000000000002,
-                  '2.Sample3': 4.7999999999999998},
-     'longitude': {'2.Sample1': 41.409999999999997,
-                   '2.Sample2': 1.1000000000000001,
-                   '2.Sample3': 4.4100000000000001},
+     'latitude': {'2.Sample1': '42.42',
+                  '2.Sample2': '4.2',
+                  '2.Sample3': '4.8'},
+     'longitude': {'2.Sample1': '41.41',
+                   '2.Sample2': '1.1',
+                   '2.Sample3': '4.41'},
      'physical_location': {'2.Sample1': 'location1',
                            '2.Sample2': 'location1',
                            '2.Sample3': 'location1'},
@@ -763,21 +734,21 @@ ST_COLUMN_WITH_NAS_DICT_FORM = \
      'description': {'2.Sample1': 'Test Sample 1',
                      '2.Sample2': 'Test Sample 2',
                      '2.Sample3': 'Test Sample 3'},
-     'has_extracted_data': {'2.Sample1': True,
-                            '2.Sample2': True,
-                            '2.Sample3': True},
-     'has_physical_specimen': {'2.Sample1': True,
-                               '2.Sample2': True,
-                               '2.Sample3': True},
+     'has_extracted_data': {'2.Sample1': 'True',
+                            '2.Sample2': 'True',
+                            '2.Sample3': 'True'},
+     'has_physical_specimen': {'2.Sample1': 'True',
+                               '2.Sample2': 'True',
+                               '2.Sample3': 'True'},
      'host_subject_id': {'2.Sample1': 'NotIdentified',
                          '2.Sample2': 'NotIdentified',
                          '2.Sample3': 'NotIdentified'},
-     'latitude': {'2.Sample1': 42.420000000000002,
-                  '2.Sample2': 4.2000000000000002,
-                  '2.Sample3': 4.7999999999999998},
-     'longitude': {'2.Sample1': 41.409999999999997,
-                   '2.Sample2': 1.1000000000000001,
-                   '2.Sample3': 4.4100000000000001},
+     'latitude': {'2.Sample1': '42.42',
+                  '2.Sample2': '4.2',
+                  '2.Sample3': '4.8'},
+     'longitude': {'2.Sample1': '41.41',
+                   '2.Sample2': '1.1',
+                   '2.Sample3': '4.41'},
      'physical_location': {'2.Sample1': 'location1',
                            '2.Sample2': 'location1',
                            '2.Sample3': 'location1'},
@@ -796,8 +767,8 @@ QIIME_TUTORIAL_MAP_DICT_FORM = {
                              'PC.607': 'YATGCTGCCTCCCGTAGGAGT'},
     'Treatment': {'PC.354': 'Control',
                   'PC.607': 'Fast'},
-    'DOB': {'PC.354': 20061218,
-            'PC.607': 20071112},
+    'DOB': {'PC.354': '20061218',
+            'PC.607': '20071112'},
     'Description': {'PC.354': 'Control_mouse_I.D._354',
                     'PC.607': 'Fasting_mouse_I.D._607'}
 }

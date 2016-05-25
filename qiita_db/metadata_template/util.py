@@ -177,8 +177,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
         Empty file passed
     QiitaDBColumnError
         If the sample_name column is not present in the template.
-        If there's a value in one of the reserved columns that cannot be cast
-        to the needed type.
     QiitaDBWarning
         When columns are dropped because they have no content for any sample.
     QiitaDBError
@@ -193,33 +191,10 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     character will be ignored and columns that are empty will be removed. Empty
     sample names will be removed from the DataFrame.
 
-    The following table describes the data type per column that will be
-    enforced in `fn`. Column names are case-insensitive but will be lowercased
-    on addition to the database.
+    Column names are case-insensitive but will be lowercased on addition to
+    the database
 
-    +-----------------------+--------------+
-    |      Column Name      |  Python Type |
-    +=======================+==============+
-    |           sample_name |          str |
-    +-----------------------+--------------+
-    |             #SampleID |          str |
-    +-----------------------+--------------+
-    |     physical_location |          str |
-    +-----------------------+--------------+
-    | has_physical_specimen |         bool |
-    +-----------------------+--------------+
-    |    has_extracted_data |         bool |
-    +-----------------------+--------------+
-    |           sample_type |          str |
-    +-----------------------+--------------+
-    |       host_subject_id |          str |
-    +-----------------------+--------------+
-    |           description |          str |
-    +-----------------------+--------------+
-    |              latitude |        float |
-    +-----------------------+--------------+
-    |             longitude |        float |
-    +-----------------------+--------------+
+    Everything in the DataFrame will be read and managed as string
     """
     # Load in file lines
     holdfile = None
@@ -262,32 +237,21 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     #   the values that should be considered "True" for boolean columns
     # false_values:
     #   the values that should be considered "False" for boolean columns
-    # converters:
-    #   ensure that sample names are not converted into any other types but
-    #   strings and remove any trailing spaces. Don't let pandas try to guess
-    #   the dtype of the other columns, force them to be a str.
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
     try:
         template = pd.read_csv(
-            StringIO(''.join(holdfile)), sep='\t', encoding='utf-8',
-            infer_datetime_format=True, keep_default_na=False,
-            na_values=qdb.metadata_template.constants.NA_VALUES,
-            true_values=qdb.metadata_template.constants.TRUE_VALUES,
-            false_values=qdb.metadata_template.constants.FALSE_VALUES,
-            parse_dates=True, index_col=False, comment='\t',
+            StringIO(''.join(holdfile)),
+            sep='\t',
+            dtype=str,
+            encoding='utf-8',
+            infer_datetime_format=False,
+            keep_default_na=False,
+            index_col=False,
+            comment='\t',
             mangle_dupe_cols=False,
-            converters={index: lambda x: str(x).strip(),
-                        # required sample template information
-                        'physical_location': str,
-                        'sample_type': str,
-                        # collection_timestamp is not added here
-                        'host_subject_id': str,
-                        'description': str,
-                        # common prep template information
-                        'center_name': str,
-                        'center_projct_name': str})
+            converters={index: lambda x: str(x).strip()})
     except UnicodeDecodeError:
         # Find row number and col number for utf-8 encoding errors
         headers = holdfile[0].strip().split('\t')
@@ -308,20 +272,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
         raise qdb.exceptions.QiitaDBDuplicateHeaderError(
             find_duplicates(template.columns))
 
-    # let pandas infer the dtypes of these columns, if the inference is
-    # not correct, then we have to raise an error
-    columns_to_dtype = [(['latitude', 'longitude'], (np.int, np.float),
-                         'integer or decimal'),
-                        (['has_physical_specimen', 'has_extracted_data'],
-                         np.bool_, 'boolean')]
-    for columns, c_dtype, english_desc in columns_to_dtype:
-        for n in columns:
-            if n in template.columns and not all([isinstance(val, c_dtype)
-                                                  for val in template[n]]):
-                raise qdb.exceptions.QiitaDBColumnError(
-                    "The '%s' column includes values that cannot be cast "
-                    "into a %s value " % (n, english_desc))
-
     initial_columns = set(template.columns)
 
     if index not in template.columns:
@@ -336,8 +286,10 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     # set the sample name as the index
     template.set_index(index, inplace=True)
 
-    # it is not uncommon to find templates that have empty columns
-    template.dropna(how='all', axis=1, inplace=True)
+    # it is not uncommon to find templates that have empty columns so let's
+    # find the columns that are all ''
+    columns = np.where(np.all(template.applymap(lambda x: x == ''), axis=0))
+    template.drop(template.columns[columns], axis=1, inplace=True)
 
     initial_columns.remove(index)
     dropped_cols = initial_columns - set(template.columns)
