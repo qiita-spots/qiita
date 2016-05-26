@@ -33,7 +33,8 @@ class ArtifactTestsReadOnly(TestCase):
                qdb.artifact.Artifact(3),
                qdb.artifact.Artifact(4),
                qdb.artifact.Artifact(5),
-               qdb.artifact.Artifact(6)]
+               qdb.artifact.Artifact(6),
+               qdb.artifact.Artifact(7)]
         self.assertEqual(obs, exp)
 
     def test_iter_public(self):

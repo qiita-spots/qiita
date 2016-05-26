@@ -36,13 +36,13 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.study_experimental_factor"), 1)
 
     def test_filepath(self):
-        self.assertEqual(get_count("qiita.filepath"), 19)
+        self.assertEqual(get_count("qiita.filepath"), 21)
 
     def test_filepath_type(self):
         self.assertEqual(get_count("qiita.filepath_type"), 21)
 
     def test_study_prep_template(self):
-        self.assertEqual(get_count("qiita.study_prep_template"), 1)
+        self.assertEqual(get_count("qiita.study_prep_template"), 2)
 
     def test_required_sample_info(self):
         self.assertEqual(get_count("qiita.study_sample"), 27)
@@ -54,13 +54,13 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.sample_1"), 27)
 
     def test_prep_template(self):
-        self.assertEqual(get_count("qiita.prep_template"), 1)
+        self.assertEqual(get_count("qiita.prep_template"), 2)
 
     def test_prep_template_sample(self):
-        self.assertEqual(get_count("qiita.prep_template_sample"), 27)
+        self.assertEqual(get_count("qiita.prep_template_sample"), 54)
 
     def test_prep_columns(self):
-        self.assertEqual(get_count("qiita.prep_columns"), 23)
+        self.assertEqual(get_count("qiita.prep_columns"), 46)
 
     def test_prep_1(self):
         self.assertEqual(get_count("qiita.prep_1"), 27)

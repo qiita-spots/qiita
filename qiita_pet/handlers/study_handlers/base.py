@@ -9,6 +9,7 @@ from __future__ import division
 
 from tornado.web import authenticated, HTTPError
 
+from qiita_pet.util import EBI_LINKIFIER
 from qiita_pet.handlers.util import to_int, doi_linkifier
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
@@ -47,11 +48,11 @@ class StudyBaseInfoAJAX(BaseHandler):
                         self.current_user.id == study_info['owner'])
 
         ebi_info = study_info['ebi_submission_status']
-        if ebi_info == 'submitted':
-            ebi_info = ''.join([
-                ('<a href="https://www.ebi.ac.uk/ena/data/view/{0}">{0}'
-                 '</a></br>'.format(acc))
-                for acc in study_info['ebi_study_accession'].split(',')])
+        ebi_study_accession = study_info['ebi_study_accession']
+        if ebi_study_accession:
+            links = ''.join([EBI_LINKIFIER.format(a)
+                             for a in ebi_study_accession.split(',')])
+            ebi_info = '%s (%s)' % (links, study_info['ebi_submission_status'])
 
         self.render('study_ajax/base_info.html',
                     study_info=study_info, publications=study_doi, pi=pi,

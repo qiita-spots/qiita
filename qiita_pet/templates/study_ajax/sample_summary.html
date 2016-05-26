@@ -64,7 +64,7 @@
     <h4>
       Sample Information
       {% if download_id %}
-        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_id}}"><span class="glyphicon glyphicon-download-alt"></span> Sample info</a>
+        <a class="btn btn-default" href="{% raw qiita_config.portal_dir %}/download/{{download_id}}"><span class="glyphicon glyphicon-download-alt"></span> Sample Info</a>
         {% if editable %}
           <a class="btn btn-danger" onclick="delete_sample_template();"><span class="glyphicon glyphicon-trash"></span> Delete</a>
         {% end %}

@@ -7,6 +7,9 @@
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from datetime import datetime
+from os.path import exists, join, basename
+from os import remove, close
+from tempfile import mkstemp
 
 import pandas as pd
 import numpy.testing as npt
@@ -20,6 +23,14 @@ from qiita_pet.handlers.api_proxy.studies import (
 
 @qiita_test_checker()
 class TestStudyAPI(TestCase):
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for fp in self._clean_up_files:
+            if exists(fp):
+                remove(fp)
+
     def test_data_types_get_req(self):
         obs = data_types_get_req()
         exp = {
@@ -150,13 +161,20 @@ class TestStudyAPI(TestCase):
         obs = study_prep_get_req(1, 'test@foo.bar')
         exp = {'status': 'success',
                'message': '',
-               'info': {'18S': [{
-                   'id': 1,
-                   'status': 'private',
-                   'name': 'PREP 1 NAME',
-                   'start_artifact_id': 1,
-                   'start_artifact': 'FASTQ',
-                   'youngest_artifact': 'BIOM - BIOM'}]}}
+               'info': {
+                   '18S': [{
+                       'id': 1,
+                       'status': 'private',
+                       'name': 'PREP 1 NAME',
+                       'start_artifact_id': 1,
+                       'start_artifact': 'FASTQ',
+                       'youngest_artifact': 'BIOM - BIOM'}, {
+                       'id': 2,
+                       'status': 'private',
+                       'name': 'PREP 2 NAME',
+                       'start_artifact': 'BIOM',
+                       'youngest_artifact': 'BIOM - BIOM',
+                       'start_artifact_id': 7}]}}
         self.assertEqual(obs, exp)
 
         # Add a new prep template
@@ -174,6 +192,12 @@ class TestStudyAPI(TestCase):
                             'name': 'PREP 1 NAME',
                             'start_artifact_id': 1,
                             'start_artifact': 'FASTQ',
+                            'youngest_artifact': 'BIOM - BIOM'},
+                           {'id': 2,
+                            'status': 'private',
+                            'name': 'PREP 2 NAME',
+                            'start_artifact_id': 7,
+                            'start_artifact': 'BIOM',
                             'youngest_artifact': 'BIOM - BIOM'}],
                    '16S': [{'id': pt.id,
                             'status': 'sandbox',
@@ -312,6 +336,29 @@ class TestStudyAPI(TestCase):
                               ('raw_forward_seqs', True, []),
                               ('raw_reverse_seqs', False, [])],
                'num_prefixes': 1,
+               'artifacts': []}
+        self.assertEqual(obs, exp)
+
+        # Create some 'sff' files
+        upload_dir = qdb.util.get_mountpoint("uploads")[0][1]
+        study_upload_dir = join(upload_dir, str(new_study.id))
+        fps = []
+
+        for i in range(2):
+            fd, fp = mkstemp(suffix=".sff", dir=study_upload_dir)
+            close(fd)
+            with open(fp, 'w') as f:
+                f.write('\n')
+            fps.append(fp)
+
+        self._clean_up_files.extend(fps)
+
+        obs = study_files_get_req('test@foo.bar', new_study.id, 1, 'SFF')
+        exp = {'status': 'success',
+               'message': '',
+               'remaining': [basename(fpath) for fpath in sorted(fps)],
+               'file_types': [('raw_sff', True, [])],
+               'num_prefixes': 0,
                'artifacts': []}
         self.assertEqual(obs, exp)
 

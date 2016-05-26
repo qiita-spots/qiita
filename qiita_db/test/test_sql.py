@@ -135,7 +135,7 @@ class TestSQL(TestCase):
         self._files_to_remove.extend([afp for _, afp, _ in new.filepaths])
         obs = self.conn_handler.execute_fetchall(sql, [new.id])
         exp = [[1], [new_root.id]]
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
     def test_artifact_ancestry_root(self):
         """Correctly returns the ancestry of a root artifact"""
