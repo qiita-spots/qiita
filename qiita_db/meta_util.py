@@ -146,14 +146,15 @@ def get_lat_longs():
 
         sql = """SELECT latitude, longitude
                  FROM qiita.{0}
-                 WHERE latitude IS NOT NULL
-                    AND longitude IS NOT NULL"""
+                 WHERE latitude IS NOT NULL AND latitude NOT IN %s
+                    AND longitude IS NOT NULL AND longitude NOT IN %s"""
         idx = qdb.sql_connection.TRN.index
 
         portal_tables = qdb.sql_connection.TRN.execute_fetchflatten()
 
+        ebi_null = tuple(qdb.metadata_template.constants.EBI_NULL_VALUES)
         for table in portal_tables:
-            qdb.sql_connection.TRN.add(sql.format(table))
+            qdb.sql_connection.TRN.add(sql.format(table), [ebi_null, ebi_null])
 
         return list(
             chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:]))
