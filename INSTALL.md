@@ -59,11 +59,19 @@ If you don't see this output, your `$PATH` variable was setup incorrectly or you
 
 As long as you are in the active qiita environment, commands such as `pip install` or `python` will refer to and be contained within this virtual environment.
 
+
 Install the non-python dependencies
 -----------------------------------
 
 * [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.0, we have tested most extensively with 9.3)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
+* [hdf5](https://www.hdfgroup.org/HDF5/)
+
+There are several options to install these dependencies depending on your needs:
+
+- You could install them via conda, however, the anaconda repository may not have the exact versions of these that you want. 
+- You could install the exact versions we tested as per instructions on their websites, and thus make their available globally on your operating system. This may or may not cause problems if other software on your system requires a differing, specific version of the packages. These instructions were tested with this method.
+- You could setup a full development environment with [Vagrant](https://www.vagrantup.com/), and continue using conda under it to primarily manage python dependencies.
 
 Install both of these packages according to the instructions on their websites.
 You'll then need to ensure that the postgres binaries (for example, ``psql``)
