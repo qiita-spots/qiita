@@ -53,7 +53,12 @@ setup(name='qiita-spots',
                 ],
       include_package_data=True,
       package_data={
-          'qiita_core': ['support_files/config_test.cfg'],
+          'qiita_core': [
+              'support_files/config_test.cfg'
+              'support_files/server.crt',
+              'support_files/server.csr',
+              'support_files/server.key'
+            ],
           'qiita_db': [
               'support_files/*.sql',
               'support_files/patches/*.sql',
