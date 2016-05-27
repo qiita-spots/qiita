@@ -87,10 +87,10 @@ echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.3/bin/"'
 
 You can install redis-server v2.8.x using homebrew as follows:
 
- ```
+```bash
 brew update
 brew install homebrew/versions/redis28
- ```
+```
 
 Install Qiita and its python dependencies
 -----------------------------------------
