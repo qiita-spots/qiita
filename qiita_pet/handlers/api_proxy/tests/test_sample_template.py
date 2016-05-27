@@ -83,7 +83,7 @@ class TestSampleAPI(TestCase):
         self.assertEqual(len(obs['template']), 27)
         self.assertEqual(str(
             obs['template']['1.SKB2.640194']['collection_timestamp']),
-            '2011-11-11 13:00:00')
+            '11/11/11 13:00:00')
         del obs['template']['1.SKB2.640194']['collection_timestamp']
         self.assertEqual(obs['template']['1.SKB2.640194'], {
             'physical_specimen_location': 'ANL',
@@ -168,7 +168,7 @@ class TestSampleAPI(TestCase):
                                       ('Diesel bulk', 3)],
             'elevation': [('114', 27)],
             'description': [('Cannabis Soil Microbiome', 27)],
-            'collection_timestamp': [('2011-11-11 13:00:00', 27)],
+            'collection_timestamp': [('11/11/11 13:00:00', 27)],
             'physical_specimen_remaining': [('true', 27)],
             'dna_extracted': [('true', 27)],
             'taxon_id': [('410658', 9), ('939928', 9), ('1118232', 9)],

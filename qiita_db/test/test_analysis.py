@@ -1,7 +1,6 @@
 from unittest import TestCase, main
 from os import remove
 from os.path import exists, join
-from datetime import datetime
 from shutil import move
 
 from future.utils import viewitems
@@ -269,7 +268,7 @@ class TestAnalysis(TestCase):
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
-                            datetime(2014, 5, 29, 12, 24, 51),
+                            '05/29/14 12:24:51',
                             'host_subject_id': 'NotIdentified',
                             'Description': 'Test Sample 1',
                             'str_column': 'Value for sample 1',
@@ -283,7 +282,7 @@ class TestAnalysis(TestCase):
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
-                            datetime(2014, 5, 29, 12, 24, 51),
+                            '05/29/14 12:24:51',
                             'host_subject_id': 'NotIdentified',
                             'Description': 'Test Sample 2',
                             'str_column': 'Value for sample 2',
@@ -297,7 +296,7 @@ class TestAnalysis(TestCase):
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
-                            datetime(2014, 5, 29, 12, 24, 51),
+                            '05/29/14 12:24:51',
                             'host_subject_id': 'NotIdentified',
                             'Description': 'Test Sample 3',
                             'str_column': 'Value for sample 3',

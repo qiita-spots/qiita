@@ -231,12 +231,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     # keep_default:
     #   is set as False, to avoid inferring empty/NA values with the defaults
     #   that Pandas has.
-    # na_values:
-    #   the values that should be considered as empty
-    # true_values:
-    #   the values that should be considered "True" for boolean columns
-    # false_values:
-    #   the values that should be considered "False" for boolean columns
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
@@ -331,6 +325,33 @@ def get_invalid_sample_names(sample_names):
     inv = []
 
     for s in sample_names:
+        if set(s) - valid:
+            inv.append(s)
+
+    return inv
+
+
+def get_invalid_column_names(column_names):
+    """Get a list of column names that are not SQL compliant
+
+    Parameters
+    ----------
+    column_names : iterable
+        Iterable containing the column names to check.
+
+    Returns
+    -------
+    list
+        List of str objects where each object is an invalid column name.
+
+    References
+    ----------
+    .. [1] postgresql SQL-SYNTAX-IDENTIFIERS: https://goo.gl/EF0cUV.
+    """
+    valid = set(letters+digits+'_')
+    inv = []
+
+    for s in column_names:
         if set(s) - valid:
             inv.append(s)
 
@@ -453,3 +474,17 @@ def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
             "No data found in mapping file.")
 
     return mapping_data, header, comments
+
+
+def get_pgsql_reserved_words():
+    """Returns a list of the current reserved words in pgsql
+
+    Returns
+    -------
+    set: str
+        The reserved words
+    """
+    with qdb.sql_connection.TRN:
+        sql = "SELECT word FROM pg_get_keywords() WHERE catcode = 'R';"
+        qdb.sql_connection.TRN.add(sql)
+        return set(qdb.sql_connection.TRN.execute_fetchflatten())

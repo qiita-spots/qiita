@@ -114,8 +114,7 @@ class PrepTemplate(MetadataTemplate):
                 pt_cols = deepcopy(PREP_TEMPLATE_COLUMNS)
                 pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
-            md_template = cls._clean_validate_template(md_template, study.id,
-                                                       pt_cols)
+            md_template = cls._clean_validate_template(md_template, study.id)
 
             # Insert the metadata template
             sql = """INSERT INTO qiita.prep_template
@@ -154,6 +153,7 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.execute()
 
             pt = cls(prep_id)
+            pt.validate(pt_cols)
             pt.generate_files()
 
             return pt
