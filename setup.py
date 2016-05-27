@@ -51,6 +51,7 @@ setup(name='qiita-spots',
                 'qiita_pet/handlers/api_proxy',
                 'qiita_ware'
                 ],
+      include_package_data=True,
       package_data={
           'qiita_core': ['support_files/config_test.cfg'],
           'qiita_db': [
