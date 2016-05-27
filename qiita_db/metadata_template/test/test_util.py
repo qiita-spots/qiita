@@ -246,8 +246,8 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.get_invalid_sample_names(one_invalid)
         self.assertItemsEqual(obs, [' ', ' ', ' '])
 
-    def test_get_get_invalid_column_names(self):
-        invalid = ['tax on', 'bla.', '.', '{', 'this|is']
+    def test_get_invalid_column_names(self):
+        invalid = ['tax on', 'bla.', '.', '{', 'this|is', '4column']
         valid = ['fine', 'select']
         obs = qdb.metadata_template.util.get_invalid_column_names(
             invalid + valid)

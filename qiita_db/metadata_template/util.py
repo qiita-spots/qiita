@@ -348,11 +348,14 @@ def get_invalid_column_names(column_names):
     ----------
     .. [1] postgresql SQL-SYNTAX-IDENTIFIERS: https://goo.gl/EF0cUV.
     """
-    valid = set(letters+digits+'_')
+    valid_initial_char = letters
+    valid_rest = set(letters+digits+'_')
     inv = []
 
     for s in column_names:
-        if set(s) - valid:
+        if s[0] not in valid_initial_char:
+            inv.append(s)
+        elif set(s) - valid_rest:
             inv.append(s)
 
     return inv

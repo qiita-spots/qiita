@@ -514,7 +514,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         Returns
         -------
         md_template : DataFrame
-            ceed copy of the input md_template
+            Cleaned copy of the input md_template
 
         Raises
         ------
@@ -1452,7 +1452,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         if val in valid_null:
                             continue
                         # test values
-                        if datatype == 'datetime':
+                        if datatype == datetime:
                             val = str(val)
                             try:
                                 datetime.strptime(val, '%m/%d/%y %H:%M:%S')
@@ -1461,7 +1461,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                                     sample, val))
                         else:
                             try:
-                                eval("%s('%s')" % (datatype, val))
+                                datatype(val)
                             except ValueError:
                                 warning_msg.append('%s, wrong value "%s"' % (
                                     sample, val))

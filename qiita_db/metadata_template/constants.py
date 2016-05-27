@@ -8,25 +8,26 @@
 
 from collections import namedtuple
 from future.utils import viewkeys, viewvalues
+from datetime import datetime
 
 Restriction = namedtuple('Restriction', ['columns', 'error_msg'])
 
 # A dict containing the restrictions that apply to the sample templates
 SAMPLE_TEMPLATE_COLUMNS = {
     # The following columns are required by EBI for submission
-    'EBI': Restriction(columns={'collection_timestamp': 'datetime',
-                                'physical_specimen_location': 'str',
-                                'taxon_id': 'int',
-                                'scientific_name': 'str'},
+    'EBI': Restriction(columns={'collection_timestamp': datetime,
+                                'physical_specimen_location': str,
+                                'taxon_id': int,
+                                'scientific_name': str},
                        error_msg="EBI submission disabled"),
     # The following columns are required for the official main QIITA site
-    'qiita_main': Restriction(columns={'sample_type': 'str',
-                                       'description': 'str',
-                                       'physical_specimen_remaining': 'bool',
-                                       'dna_extracted': 'bool',
-                                       'latitude': 'float',
-                                       'longitude': 'float',
-                                       'host_subject_id': 'str'},
+    'qiita_main': Restriction(columns={'sample_type': str,
+                                       'description': str,
+                                       'physical_specimen_remaining': bool,
+                                       'dna_extracted': bool,
+                                       'latitude': float,
+                                       'longitude': float,
+                                       'host_subject_id': str},
                               error_msg="Processed data approval disabled")
 }
 
@@ -34,12 +35,12 @@ SAMPLE_TEMPLATE_COLUMNS = {
 PREP_TEMPLATE_COLUMNS = {
     # The following columns are required by EBI for submission
     'EBI': Restriction(
-        columns={'primer': 'str',
-                 'center_name': 'str',
-                 'platform': 'str',
-                 'instrument_model': 'str',
-                 'library_construction_protocol': 'str',
-                 'experiment_design_description': 'str'},
+        columns={'primer': str,
+                 'center_name': str,
+                 'platform': str,
+                 'instrument_model': str,
+                 'library_construction_protocol': str,
+                 'experiment_design_description': str},
         error_msg="EBI submission disabled")
 }
 
@@ -51,15 +52,15 @@ TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
 PREP_TEMPLATE_COLUMNS_TARGET_GENE = {
     # The following columns are required by QIIME to execute split libraries
     'demultiplex': Restriction(
-        columns={'barcode': 'str',
-                 'primer': 'str'},
+        columns={'barcode': str,
+                 'primer': str},
         error_msg="Demultiplexing disabled."),
     # The following columns are required by Qiita to know how to execute split
     # libraries using QIIME over a study with multiple illumina lanes
     'demultiplex_multiple': Restriction(
-        columns={'barcode': 'str',
-                 'primer': 'str',
-                 'run_prefix': 'str'},
+        columns={'barcode': str,
+                 'primer': str,
+                 'run_prefix': str},
         error_msg="Demultiplexing with multiple input files disabled.")
 }
 
