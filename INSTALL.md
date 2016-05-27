@@ -73,15 +73,16 @@ There are several options to install these dependencies depending on your needs:
 - You could install the exact versions we tested as per instructions on their websites, and thus make their available globally on your operating system. This may or may not cause problems if other software on your system requires a differing, specific version of the packages. These instructions were tested with this method.
 - You could setup a full development environment with [Vagrant](https://www.vagrantup.com/), and continue using conda under it to primarily manage python dependencies.
 
-Install both of these packages according to the instructions on their websites.
-You'll then need to ensure that the postgres binaries (for example, ``psql``)
-are in your executable search path (``$PATH`` environment variable). For
-example if you are using Postgres.app on OS X, you can do this by addint
-the following line to your `.bash_profile`:
+### PostgreSQL installation on Mac OS X
+
+For Mac OS X, you can either install postgres through the [Postgres.app](https://www.postgresql.org/download/macosx/) or [homebrew](http://brew.sh). These instructions were tested with the Postgres.app v9.3
+
+You'll then need to ensure that the postgres binaries (for example, ``psql``) are in your executable search path (``$PATH`` environment variable). If you are using Postgres.app on OS X, you can do this by running the following, though you may have to replace`~/.bash_profile`with `~/.zshrc` if you're using zshell rather than the built-in bash, and you may have to change the version number `Versions/9.3/` to the exact one that you are installing:
 
 ```bash
-export PATH=$PATH:/Applications/Postgres.app/Contents/Versions/9.3/bin/
+echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.3/bin/"' >> ~/.bash_profile
 ```
+
 
 
 Install Qiita and its python dependencies
