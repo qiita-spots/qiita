@@ -92,6 +92,16 @@ brew update
 brew install homebrew/versions/redis28
 ```
 
+### hdf5 installation on Mac OS X
+
+You can install hdf5 using homebrew as follows:
+
+```bash
+brew update
+brew tap homebrew/science
+brew install hdf5
+```
+
 Install Qiita and its python dependencies
 -----------------------------------------
 
