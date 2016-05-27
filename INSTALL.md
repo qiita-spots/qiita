@@ -83,7 +83,14 @@ You'll then need to ensure that the postgres binaries (for example, ``psql``) ar
 echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.3/bin/"' >> ~/.bash_profile
 ```
 
+### Redis-server installation on Mac OS X
 
+You can install redis-server v2.8.x using homebrew as follows:
+
+ ```
+brew update
+brew install homebrew/versions/redis28
+ ```
 
 Install Qiita and its python dependencies
 -----------------------------------------
