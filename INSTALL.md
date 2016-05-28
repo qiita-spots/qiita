@@ -54,28 +54,29 @@ As long as you are in the active qiita environment, commands such as `pip instal
 Install the non-python dependencies
 -----------------------------------
 
-* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.0, we have tested most extensively with 9.3)
+* [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.5, we have tested most extensively with 9.3.6)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
 
 There are several options to install these dependencies depending on your needs:
 
-- You could install them via conda, however, the anaconda repository may not have the exact versions of these that you want. 
-- You could install the exact versions we tested as per instructions on their websites, and thus make their available globally on your operating system. This may or may not cause problems if other software on your system requires a differing, specific version of the packages. These instructions were tested with this method.
-- You could setup a full development environment with [Vagrant](https://www.vagrantup.com/), and continue using conda under it to primarily manage python dependencies.
+- **We suggest installing the exact versions in these instructions by following the instructions of the provided links and making them globally available in your machine. However, this might interfere with other apps that might require different versions.** 
+- Alternatively, you could install them via conda. However, the conda repository may not have the exact versions of these dependencies that you want. 
+- You could setup a full development environment with [Vagrant](https://www.vagrantup.com/), and continue using conda under it to primarily manage python dependencies. Note that we don't cover Vagrant in these instructions.
 
 ### PostgreSQL installation on Mac OS X
 
-For Mac OS X, you can either install postgres through the [Postgres.app](https://www.postgresql.org/download/macosx/) or [homebrew](http://brew.sh). These instructions were tested with the Postgres.app v9.3
+For Mac OS X, you can either install postgres through the [Postgres.app](https://www.postgresql.org/download/macosx/). These instructions were tested with the Postgres.app v9.3.
 
 You'll then need to ensure that the postgres binaries (for example, ``psql``) are in your executable search path (``$PATH`` environment variable). If you are using Postgres.app on OS X, you can do this by running the following, though you may have to replace`~/.bash_profile`with `~/.zshrc` if you're using zshell rather than the built-in bash, and you may have to change the version number `Versions/9.3/` to the exact one that you are installing:
 
 ```bash
 echo 'export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/9.3/bin/"' >> ~/.bash_profile
+source ~/.bash_profile
 ```
 
 ### Redis-server installation on Mac OS X
 
-You can install redis-server v2.8.x using homebrew as follows:
+Assuming you have [homebrew](http://www.brew.sh) installed, you can install redis-server v2.8.x as follows:
 
 ```bash
 brew update
