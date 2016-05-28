@@ -2,22 +2,13 @@
 Qiita installation
 ==================
 
-Qiita is pip installable, but depends on some non-python packages that must be installed first. We strongly recommend using virtual environments; the solution we recommend ot manage them is [miniconda](http://conda.pydata.org/miniconda.html), a lightweight version of the virtual environment, python distribution, and package manager anaconda.
+Qiita is pip installable, but depends on specific versions of python and non-python packages that must be installed first. We strongly recommend using virtual environments; a popular solution to manage them is [miniconda](http://conda.pydata.org/miniconda.html), a lightweight version of the virtual environment, python distribution, and package manager anaconda. These instructions will be based on miniconda.
 
 These instructions were tested successfully by [@HannesHolste](github.com/HannesHolste) on Mac OS X El Capitan 10.11.4 and a clean installation of Ubuntu 12.04 LTS (precise) using conda v4.0.7 and cloning from [qiita master branch commit #a9e4e03](https://github.com/biocore/qiita/commit/a9e4e03ecd781d3985abc03d15f2248143e565d7) on 5/27/2016.
 
-## Install miniconda
+## Install and setup miniconda
 
-Download the appropriate installer [here](http://conda.pydata.org/miniconda.html) corresponding to your operating system and execute it.
-
-Ensure that your `~/.bash_profile` (for default bash users) and/or `~/.zshrc` (for zshell users) contains the following line, which prepends a path leading to miniconda's binaries to the `$PATH` variable.
-
-```bash
-# added by Miniconda2 installer
-export PATH="/Users/hannes/miniconda2/bin:$PATH"
-```
-
-This essentially allows miniconda's binaries representing each of your virtual environments to take precedence over any custom, pre-existing installations of pip or python you might have installed through homebrew, for example – thus you do *not* have to uninstall them.
+Download the appropriate installer [here](http://conda.pydata.org/docs/install/quick.html) corresponding to your operating system and execute it.
 
 Next, ensure conda is up-to-date.
 
@@ -25,23 +16,21 @@ Next, ensure conda is up-to-date.
 conda update conda
 ```
 
-Finally, restart your shell or reload your profile/rc file to ensure your `$PATH` variable was updated:
+### Create a conda environment for Qiita
 
-````bash
-source ~/.bash_profile
-````
-
-## Setup miniconda environment for Qiita
-
-To ensure that Qiita can install its dependencies – some of which require older or specific distributions of pip packages – without interfering with any pre-existing, globally installed pip packages you might have, you will setup a virtual environment in conda that you must *activate* whenever you are working with or running Qiita.
+Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
-conda create --yes --name qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran seaborn 'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1' --channel https://conda.anaconda.org/OpenMDAO
+conda create --yes --name qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran seaborn 'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
 ```
 
-If you receive an error message about conda being unable to find one of the specified packages in its repository, you will have to manually search for them (see troubleshooting miniconda below).
+If you receive an error message about conda being unable to find one of the specified packages in its repository, you will have to manually find the appropriate conda channel that they belong to (see troubleshooting section below).
 
-Next, activate your newly created virtual environment for qiita:
+### Brief introduction to managing conda environments
+
+Though these instructions use the newly created `qiita` conda environment, the concepts apply to managing conda environments in general. 
+
+Activate your newly created virtual environment for qiita whenever you want to run or develop for it:
 
 ```bash
 source activate qiita
@@ -49,15 +38,15 @@ source activate qiita
 
 (When you want to deactivate this environment, e.g. to return to a different project or back to your global python and pip packages, run `source deactivate`)
 
-If your new conda environment is functioning correctly, you should see this kind of output when you run `which python`, indicating that the `python` command now refers to the python binary in your new virtual environment, rather than a previous global default such as `/usr/bin/python`:
+After activating your new environment, you should see this kind of output when you run `which python`, indicating that the `python` command now refers to the python binary in your new virtual environment, rather than a previous global default such as `/usr/bin/python`. For example, assuming you installed miniconda in `Users/your_username/`:
 
 ```
-▶ which python
+$ which python
 /Users/your_username/miniconda2/envs/qiita/bin/python
 (qiita)
 ```
 
-If you don't see this output, your `$PATH` variable was setup incorrectly or you haven't restarted your shell.
+If you don't see this output, your `$PATH` variable was setup incorrectly or you haven't restarted your shell. Consult the [conda documentation](http://conda.pydata.org/docs/install/quick.html).
 
 As long as you are in the active qiita environment, commands such as `pip install` or `python` will refer to and be contained within this virtual environment.
 
