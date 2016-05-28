@@ -128,6 +128,7 @@ pip install .
 popd
 ```
 
+
 Qiita configuration
 ===================
 
@@ -190,7 +191,34 @@ qiita pet webserver start
 ```
 If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
 
-## Installation issues on Ubuntu 14.04
+
+
+# Frequently Asked Questions and Troubleshooting
+
+As a first line of defense, ensure that you activated the qiita conda environment (assuming you're using conda as per the above instruction). If it wasn't previously active, try re-running your commands.
+
+```bash
+source activate qiita
+```
+
+**Q: Conda – What if I already have python installed? Or homebrew on OS  X? And a bunch of pip packages??**
+
+This isn't a problem because conda *prepends* its binaries to the `$PATH` variable.
+
+**Q: I get the error** `ConfigParser.NoOptionError: No option 'cookie_secret' in section: 'main'`
+
+This means `cookie_secret` is missing on the qiita configuration file `~/config_test.cfg`. Try updating it as per above instructions, or manually adding the missing key-value to the config file.
+
+**Q: I get the error:** `Error: database "qiita_test" already exists`
+
+This usually happens after an incomplete run of the qiita-env setup procedure. Drop the postgres table named `qiita_test` and retry setting up qiita-env as per instructions above:
+
+```bash
+ $ psql
+ DROP DATABASE qiita_test;\q
+ # now re-run qiita-env make --no-load-ontologies
+```
+## Installation issues on Ubuntu
 
 ### `fe_sendauth: no password supplied`
 
@@ -206,7 +234,9 @@ File "/home/jorge/code/qiita/qiita_db/sql_connection.py", line 155, in _open_con
   raise RuntimeError("Cannot connect to database: %s" % str(e))
 RuntimeError: Cannot connect to database: fe_sendauth: no password supplied
 ```
+
 it can be solved by setting a password for the database (replace `postgres` with the actual name of the database qiita is configured to use):
+
 ```
 $ psql postgres
 ALTER USER postgres PASSWORD 'supersecurepassword';
@@ -216,6 +246,40 @@ ALTER USER postgres PASSWORD 'supersecurepassword';
 It might be necessary to restart postgresql: `sudo service postgresql restart`.
 
 Furthermore, the `pg_hba.conf` file can be modified to change authentication type for local users to trust (rather than, e.g., md5) but we haven't tested this solution.
+
+### `Error: You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application.`
+
+Run the following. Note that for older ubuntu versions (< 14), these commands may install an older version of postgres (< 9.3) which may cause trouble. Ensure you're downloading and installing postgresql 9.3 via a different apt repository as per [instructions here](https://www.postgresql.org/download/linux/ubuntu/)
+
+```bash
+sudo apt-get update
+sudo apt-get install postgresql
+sudo apt-get install postgresql-contrib
+sudo apt-get install libpq-dev
+```
+
+### ` c/_cffi_backend.c:15:17: fatal error: ffi.h: No such file or directory`
+
+Missing dependency. Run the following and then re-run whatever command failed earlier:
+
+```bash
+sudo apt-get install -y libffi-dev
+```
+
+### `from PyQt4 import QtCore, QtGui ImportError: libSM.so.6: cannot open shared object file: No such file or directory`
+
+```bash
+ sudo apt-get install -y python-qt4
+```
+
+### `ERROR:  could not open extension control file "/usr/share/postgresql/9.3/extension/uuid-ossp.control": No such file or directory`
+
+```bash
+sudo apt-get install postgresql-contrib
+# or: sudo apt-get install postgresql-contrib-9.3 depending on your OS and apt repository versions
+```
+
+
 
 ## Troubleshooting installation on non-Ubuntu operating systems
 
