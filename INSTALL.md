@@ -132,51 +132,62 @@ Qiita configuration
 ===================
 
 After these commands are executed, you will need to:
-1. Download a [sample Qiita configuration file](https://github.com/biocore/qiita/blob/master/qiita_core/support_files/config_test.cfg).
+
+Download a [sample Qiita configuration file](https://github.com/biocore/qiita/blob/master/qiita_core/support_files/config_test.cfg) by running these commands (assuming you have curl installed).
 
 ```bash
-  cd
+  pushd ~/
   curl -O https://raw.githubusercontent.com/biocore/qiita/master/qiita_core/support_files/config_test.cfg
+  popd
 ```
 
-1. Set your `QIITA_CONFIG_FP` environment variable to point to that file:
+Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.bashrc` if using bash; `.zshrc` if using zshell):
 
 ```bash
   echo "export QIITA_CONFIG_FP=$HOME/config_test.cfg" >> ~/.bashrc
-  echo "export MOI_CONFIG_FP=$QIITA_CONFIG_FP" >> ~/.bashrc
+  echo "export MOI_CONFIG_FP=$HOME/config_test.cfg" >> ~/.bashrc
   source ~/.bashrc
+  # Re-enable conda environment for qiita
+  source activate qiita
 ```
 
-1. Start a test environment:
+Setup ipython profile for qiita:
 
 ```bash
-  qiita-env make --no-load-ontologies
+ipython profile create qiita-general --parallel
 ```
 
-1. Start the redis server:
-```bash
-  redis-server
-```
-
-1. Start the IPython cluster:
+Next, make a test environment:
 
 ```bash
-  qiita-env start_cluster qiita-general && sleep 30
+qiita-env make --no-load-ontologies
 ```
 
-1. Build the documentation (you may need to add `sudo` depending on your
-   privileges and the installation location:
+
+
+## Starting Qiita
+
+Start postgres (Instructions vary depending on operating system and install method).
+
+Next, start redis server (the command may differ depending on your operating system and install location):
 
 ```bash
-  qiita pet webserver
+redis-server
 ```
 
-1. Start the server:
+Start the IPython cluster:
 
-   ```bash
-    qiita pet webserver start
-   ```
+```bash
+qiita-env start_cluster qiita-general && sleep 30
+```
 
+Start the qiita server:
+
+```bash
+# this builds documentation before starting the server
+# alternatively: qiita pet webserver --no-build-docs start
+qiita pet webserver start
+```
 If all the above commands executed correctly, you should be able to go to http://localhost:21174 in your browser, to login use `test@foo.bar` and `password` as the credentials. (In the future, we will have a *single user mode* that will allow you to use a local Qiita server without logging in. You can track progress on this on issue [#920](https://github.com/biocore/qiita/issues/920).)
 
 ## Installation issues on Ubuntu 14.04
@@ -245,10 +256,6 @@ Install the the appropriate channel name that corresponds to your platform. For 
 Now you can re-run your `conda create` command:
 
 `conda create [previous parameters go here] --channel OpenMDAO/libgfortran`
-
-
-
-
 
 
 
