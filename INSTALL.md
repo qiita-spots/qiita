@@ -31,9 +31,9 @@ Finally, restart your shell or reload your profile/rc file to ensure your `$PATH
 source ~/.bash_profile
 ````
 
-## Setup miniconda environment for QIITA
+## Setup miniconda environment for Qiita
 
-To ensure that QIITA can install its dependencies – some of which require older or specific distributions of pip packages – without interfering with any pre-existing, globally installed pip packages you might have, you will setup a virtual environment in conda that you must *activate* whenever you are working with or running QIITA.
+To ensure that Qiita can install its dependencies – some of which require older or specific distributions of pip packages – without interfering with any pre-existing, globally installed pip packages you might have, you will setup a virtual environment in conda that you must *activate* whenever you are working with or running Qiita.
 
 ```bash
 conda create --yes --name qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran seaborn 'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1' --channel https://conda.anaconda.org/OpenMDAO
