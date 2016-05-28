@@ -21,7 +21,7 @@ conda update conda
 Setup a virtual environment in conda named `qiita` by executing the following:
 
 ```bash
-conda create --yes --name qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran seaborn 'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
+conda create --yes --name qiita python=2.7 pip nose flake8 pyzmq networkx pyparsing natsort mock future libgfortran seaborn 'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1' hdf5
 ```
 
 If you receive an error message about conda being unable to find one of the specified packages in its repository, you will have to manually find the appropriate conda channel that they belong to (see troubleshooting section below).
@@ -56,7 +56,6 @@ Install the non-python dependencies
 
 * [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.0, we have tested most extensively with 9.3)
 * [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
-* [hdf5](https://www.hdfgroup.org/HDF5/)
 
 There are several options to install these dependencies depending on your needs:
 
