@@ -4,6 +4,8 @@ Qiita installation
 
 Qiita is pip installable, but depends on some non-python packages that must be installed first. We strongly recommend using virtual environments; the solution we recommend ot manage them is [miniconda](http://conda.pydata.org/miniconda.html), a lightweight version of the virtual environment, python distribution, and package manager anaconda.
 
+These instructions were tested successfully by [@HannesHolste](github.com/HannesHolste) on Mac OS X El Capitan 10.11.4 and a clean installation of Ubuntu 12.04 LTS (precise) using conda v4.0.7 and cloning from [qiita master branch commit #a9e4e03](https://github.com/biocore/qiita/commit/a9e4e03ecd781d3985abc03d15f2248143e565d7) on 5/27/2016.
+
 ## Install miniconda
 
 Download the appropriate installer [here](http://conda.pydata.org/miniconda.html) corresponding to your operating system and execute it.
