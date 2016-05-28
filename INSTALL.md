@@ -87,47 +87,50 @@ brew install homebrew/versions/redis28
 Install Qiita development version and its python dependencies
 -------------------------------------------------------------
 
-Clone the git repository with the development version of Qiita:
+Clone the git repository with the development version of Qiita into your current directory:
 
 ```bash
 git clone https://github.com/biocore/qiita.git
 ```
 
-Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
+Navigate to the cloned directory and ensure your conda environment is active:
+
 ```bash
 cd qiita
-pip install .
+source activate qiita
+```
+
+Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
+
+```bash
+pip install -e .
 ```
 
 You will also need to install several plugins for Qiita to be fully functional. As they are already included in the repository, to install, simply execute:
 ```bash
 pushd qiita_plugins/target_gene
-pip install .
+pip install -e .
 popd
 pushd qiita_plugins/qiita_client
-pip install .
+pip install -e .
 popd
 ```
 
-
-Qiita configuration
-===================
+## Configure Qiita
 
 After these commands are executed, you will need to:
 
-Download a [sample Qiita configuration file](https://github.com/biocore/qiita/blob/master/qiita_core/support_files/config_test.cfg) by running these commands (assuming you have curl installed).
+Move the Qiita sample configuration file to a different directory by executing:
 
 ```bash
-  pushd ~/
-  curl -O https://raw.githubusercontent.com/biocore/qiita/master/qiita_core/support_files/config_test.cfg
-  popd
+ cp ./qiita_core/support_files/config_test.cfg ~/.qiita_config_test.cfg
 ```
 
 Set your `QIITA_CONFIG_FP` environment variable to point to that file (into `.bashrc` if using bash; `.zshrc` if using zshell):
 
 ```bash
-  echo "export QIITA_CONFIG_FP=$HOME/config_test.cfg" >> ~/.bashrc
-  echo "export MOI_CONFIG_FP=$HOME/config_test.cfg" >> ~/.bashrc
+  echo "export QIITA_CONFIG_FP=$HOME/.qiita_config_test.cfg" >> ~/.bashrc
+  echo "export MOI_CONFIG_FP=$HOME/.qiita_config_test.cfg" >> ~/.bashrc
   source ~/.bashrc
   # Re-enable conda environment for qiita
   source activate qiita
@@ -145,11 +148,9 @@ Next, make a test environment:
 qiita-env make --no-load-ontologies
 ```
 
+## Start Qiita
 
-
-## Starting Qiita
-
-Start postgres (Instructions vary depending on operating system and install method).
+Start postgres (instructions vary depending on operating system and install method).
 
 Next, start redis server (the command may differ depending on your operating system and install location):
 
