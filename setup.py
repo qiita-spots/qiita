@@ -110,6 +110,6 @@ setup(name='qiita-spots',
                         'scikit-bio >= 0.2.3, < 0.3.0', 'wtforms == 2.0.1',
                         'qiime >= 1.9.0, < 1.10.0', 'moi',
                         'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
-                        'gitpython', 'coveralls'],
+                        'gitpython'],
       classifiers=classifiers
       )
