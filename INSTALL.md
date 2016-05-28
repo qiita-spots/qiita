@@ -102,27 +102,9 @@ brew tap homebrew/science
 brew install hdf5
 ```
 
-Install Qiita and its python dependencies
------------------------------------------
-
-Then, you can use pip to install Qiita, which will also install its python dependencies.
-
-```bash
-pip install numpy
-pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
-pip install qiita-spots
-```
-
 
 Install Qiita development version and its python dependencies
 -------------------------------------------------------------
-
-You can also use pip to install the development version of Qiita:
-
-```bash
-pip install numpy
-pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
-```
 
 Clone the git repository with the development version of Qiita:
 
@@ -130,22 +112,25 @@ Clone the git repository with the development version of Qiita:
 git clone https://github.com/biocore/qiita.git
 ```
 
-Install Qiita:
+Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
 ```bash
 cd qiita
 pip install .
 ```
 
-You will also need to install the target gene plugin for Qiita to be fully functional.
-However, the plugin is already included in the repository so to install it simply execute:
+You will also need to install several plugins for Qiita to be fully functional. As they are already included in the repository, to install, simply execute:
 ```bash
-cd qiita_plugins/target_gene
+pushd qiita_plugins/target_gene
 pip install .
+popd
+pushd qiita_plugins/qiita_client
+pip install .
+popd
 ```
-
 
 Qiita configuration
 ===================
+
 After these commands are executed, you will need to:
 1. Download a [sample Qiita configuration file](https://github.com/biocore/qiita/blob/master/qiita_core/support_files/config_test.cfg).
 
