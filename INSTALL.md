@@ -177,21 +177,7 @@ If all the above commands executed correctly, you should be able to go to http:/
 
 # Frequently Asked Questions and Troubleshooting
 
-As a first line of defense, ensure that you activated the qiita conda environment (assuming you're using conda as per the above instruction). If it wasn't previously active, try re-running your commands.
-
-```bash
-source activate qiita
-```
-
-**Q: Conda – What if I already have python installed? Or homebrew on OS  X? And a bunch of pip packages??**
-
-This isn't a problem because conda *prepends* its binaries to the `$PATH` variable.
-
-**Q: I get the error** `ConfigParser.NoOptionError: No option 'cookie_secret' in section: 'main'`
-
-This means `cookie_secret` is missing on the qiita configuration file `~/config_test.cfg`. Try updating it as per above instructions, or manually adding the missing key-value to the config file.
-
-**Q: I get the error:** `Error: database "qiita_test" already exists`
+### `Error: database "qiita_test" already exists`
 
 This usually happens after an incomplete run of the qiita-env setup procedure. Drop the postgres table named `qiita_test` and retry setting up qiita-env as per instructions above:
 
@@ -200,9 +186,11 @@ This usually happens after an incomplete run of the qiita-env setup procedure. D
  DROP DATABASE qiita_test;\q
  # now re-run qiita-env make --no-load-ontologies
 ```
-## Installation issues on Ubuntu
+## Operating-system specific troubleshooting
 
-### `fe_sendauth: no password supplied`
+### Ubuntu
+
+#### `fe_sendauth: no password supplied`
 
 If you get a traceback similar to this one when starting up Qiita
 ```python
@@ -229,9 +217,9 @@ It might be necessary to restart postgresql: `sudo service postgresql restart`.
 
 Furthermore, the `pg_hba.conf` file can be modified to change authentication type for local users to trust (rather than, e.g., md5) but we haven't tested this solution.
 
-### `Error: You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application.`
+#### `Error: You need to install postgresql-server-dev-X.Y for building a server-side extension or libpq-dev for building a client-side application.`
 
-Run the following. Note that for older ubuntu versions (< 14), these commands may install an older version of postgres (< 9.3) which may cause trouble. Ensure you're downloading and installing postgresql 9.3 via a different apt repository as per [instructions here](https://www.postgresql.org/download/linux/ubuntu/)
+Run the following. Note that for older ubuntu versions (< 14), these commands may install an older version of postgres (< 9.3) which may cause trouble. Ensure you're downloading and installing postgresql 9.3 via a different apt repository as per [instructions here](https://www.postgresql.org/download/linux/ubuntu/).
 
 ```bash
 sudo apt-get update
@@ -240,7 +228,7 @@ sudo apt-get install postgresql-contrib
 sudo apt-get install libpq-dev
 ```
 
-### ` c/_cffi_backend.c:15:17: fatal error: ffi.h: No such file or directory`
+#### ` c/_cffi_backend.c:15:17: fatal error: ffi.h: No such file or directory`
 
 Missing dependency. Run the following and then re-run whatever command failed earlier:
 
@@ -248,13 +236,13 @@ Missing dependency. Run the following and then re-run whatever command failed ea
 sudo apt-get install -y libffi-dev
 ```
 
-### `from PyQt4 import QtCore, QtGui ImportError: libSM.so.6: cannot open shared object file: No such file or directory`
+#### `from PyQt4 import QtCore, QtGui ImportError: libSM.so.6: cannot open shared object file: No such file or directory`
 
 ```bash
  sudo apt-get install -y python-qt4
 ```
 
-### `ERROR:  could not open extension control file "/usr/share/postgresql/9.3/extension/uuid-ossp.control": No such file or directory`
+#### `ERROR:  could not open extension control file "/usr/share/postgresql/9.3/extension/uuid-ossp.control": No such file or directory`
 
 ```bash
 sudo apt-get install postgresql-contrib
@@ -263,7 +251,9 @@ sudo apt-get install postgresql-contrib
 
 
 
-## Troubleshooting installation on non-Ubuntu operating systems
+## General Troubleshooting
+
+Please note that the following notes are related to dependencies that Qiita does not maintain. As such, we strongly suggest you consult their official documentation to resolve issues. We cannot guarantee the accuracy of the suggestions below.
 
 ### xcode
 
@@ -271,7 +261,7 @@ If running on OS X you should make sure that the Xcode and the Xcode command lin
 
 ### postgres
 
-If you are using Postgres.app on OSX, a database user will be created with your system username. If you want to use this user account, change the `USER` and `ADMIN_USER` settings to your username under the `[postgres]` section of your Qiita config file.
+If you are using Postgres.app 9.3 on OSX, a database user will be created with your system username. If you want to use this user account, change the `USER` and `ADMIN_USER` settings to your username under the `[postgres]` section of your Qiita config file.
 
 ### conda
 
@@ -303,9 +293,7 @@ Now you can re-run your `conda create` command:
 
 `conda create [previous parameters go here] --channel OpenMDAO/libgfortran`
 
-
-
-## Troubleshooting installation issues with Python
+### python
 
 As a general rule of thumb you will want to have an updated version of Python
 2.7 and an updated version of pip (`pip install -U pip` will do the trick).
@@ -314,6 +302,6 @@ H5PY is known to cause a few problems, however their [installation
 instructions](http://docs.h5py.org/en/latest/build.html) are a great resource
 to troubleshoot your system in case any of the steps above fail.
 
-## Troubleshooting installation issues with matplotlib
+### matplotlib
 
 In the event that you get `_tkinter.TclError: no display name and no $DISPLAY environment variable` error while trying to generate figures that rely on matplotlib, you should create a matplotlib rc file. This configuration file should have `backend : agg`. For more information you should visit the [matplotlib configuration](http://matplotlib.org/users/customizing.html) and [troubleshooting](http://matplotlib.org/faq/troubleshooting_faq.html#locating-matplotlib-config-dir) page.
