@@ -36,9 +36,7 @@ Activate your newly created virtual environment for qiita whenever you want to r
 source activate qiita
 ```
 
-(When you want to deactivate this environment, e.g. to return to a different project or back to your global python and pip packages, run `source deactivate`)
-
-After activating your new environment, you should see this kind of output when you run `which python`, indicating that the `python` command now refers to the python binary in your new virtual environment, rather than a previous global default such as `/usr/bin/python`. For example, assuming you installed miniconda in `Users/your_username/`:
+After activating your new environment, you should see this kind of output when you run `which python`, indicating that the `python` command now refers to the python binary in your new virtual environment, rather than a previous global default such as `/usr/bin/python`. For example, assuming you installed miniconda in `/Users/your_username/`:
 
 ```
 $ which python
@@ -49,6 +47,12 @@ $ which python
 If you don't see this output, your `$PATH` variable was setup incorrectly or you haven't restarted your shell. Consult the [conda documentation](http://conda.pydata.org/docs/install/quick.html).
 
 As long as you are in the active qiita environment, commands such as `pip install` or `python` will refer to and be contained within this virtual environment.
+
+When you want to deactivate your current condo environment, e.g. to return to a different project or back to your global python and pip packages, run:
+
+```bash
+source deactivate
+```
 
 
 Install the non-python dependencies
