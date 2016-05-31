@@ -48,7 +48,7 @@ If you don't see this output, your `$PATH` variable was setup incorrectly or you
 
 As long as you are in the active qiita environment, commands such as `pip install` or `python` will refer to and be contained within this virtual environment.
 
-When you want to deactivate your current condo environment, e.g. to return to a different project or back to your global python and pip packages, run:
+When you want to deactivate your current conda environment, e.g. to return to a different project or back to your global python and pip packages, run:
 
 ```bash
 source deactivate
