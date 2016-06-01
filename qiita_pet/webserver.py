@@ -43,9 +43,7 @@ from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
                                               ActiveStepHandler,
                                               CompleteHandler)
-from qiita_db.handlers.artifact import (ArtifactFilepathsHandler,
-                                        ArtifactMappingHandler,
-                                        ArtifactTypeHandler)
+from qiita_db.handlers.artifact import ArtifactHandler
 from qiita_db.handlers.oauth2 import TokenAuthHandler
 from qiita_db.handlers.reference import ReferenceFilepathsHandler
 from qiita_pet import uimodules
@@ -147,9 +145,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)/step/", ActiveStepHandler),
             (r"/qiita_db/jobs/(.*)/complete/", CompleteHandler),
             (r"/qiita_db/jobs/(.*)", JobHandler),
-            (r"/qiita_db/artifacts/(.*)/filepaths/", ArtifactFilepathsHandler),
-            (r"/qiita_db/artifacts/(.*)/mapping/", ArtifactMappingHandler),
-            (r"/qiita_db/artifacts/(.*)/type/", ArtifactTypeHandler),
+            (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
             (r"/qiita_db/references/(.*)/filepaths/",
              ReferenceFilepathsHandler)
         ]

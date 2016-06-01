@@ -40,12 +40,12 @@ def generate_html_summary(qclient, job_id, parameters, out_dir):
     """
     # Step 1: gather file information from qiita using REST api
     artifact_id = parameters['input_data']
-    qclient_url = "/qiita_db/artifacts/%s/filepaths/" % artifact_id
+    qclient_url = "/qiita_db/artifacts/%s/" % artifact_id
     fps_info = qclient.get(qclient_url)
 
     # if we get to this point of the code we are sure that this is a biom file
     # and that it only has one element
-    fps, fps_type = fps_info['filepaths'][0]
+    fps = fps_info['files']['biom'][0]
 
     # Step 2: generate HTML summary
     # Modified from https://goo.gl/cUVHgB
