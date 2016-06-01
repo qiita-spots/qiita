@@ -144,7 +144,7 @@ def get_lat_longs():
                     AND SPLIT_PART(table_name, '_', 2)::int IN %s;"""
         qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
 
-        sql = """SELECT latitude, longitude
+        sql = """SELECT CAST(latitude AS FLOAT), CAST(longitude AS FLOAT)
                  FROM qiita.{0}
                  WHERE latitude IS NOT NULL AND latitude NOT IN %s
                     AND longitude IS NOT NULL AND longitude NOT IN %s"""

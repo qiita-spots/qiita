@@ -27,15 +27,15 @@ class TestUtil(TestCase):
             'Sample3': {'int_col': 3, 'float_col': 3, 'str_col': 'string30'},
         }
         self.metadata_map = pd.DataFrame.from_dict(metadata_dict,
-                                                   orient='index')
+                                                   orient='index', dtype=str)
         self.headers = ['float_col', 'str_col', 'int_col']
 
     def test_type_lookup(self):
         """Correctly returns the SQL datatype of the passed dtype"""
         self.assertEqual(qdb.metadata_template.util.type_lookup(
-            self.metadata_map['float_col'].dtype), 'float8')
+            self.metadata_map['float_col'].dtype), 'varchar')
         self.assertEqual(qdb.metadata_template.util.type_lookup(
-            self.metadata_map['int_col'].dtype), 'integer')
+            self.metadata_map['int_col'].dtype), 'varchar')
         self.assertEqual(qdb.metadata_template.util.type_lookup(
             self.metadata_map['str_col'].dtype), 'varchar')
 
@@ -43,7 +43,7 @@ class TestUtil(TestCase):
         """Correctly returns the data types of each column"""
         obs = qdb.metadata_template.util.get_datatypes(
             self.metadata_map.ix[:, self.headers])
-        exp = ['float8', 'varchar', 'integer']
+        exp = ['varchar', 'varchar', 'varchar']
         self.assertEqual(obs, exp)
 
     def test_cast_to_python(self):
@@ -76,7 +76,8 @@ class TestUtil(TestCase):
             '1.Sample2': {'int_col': 2, 'float_col': 3.1, 'str_col': '200'},
             '1.Sample3': {'int_col': 3, 'float_col': 3, 'str_col': 'string30'},
         }
-        exp_df = pd.DataFrame.from_dict(exp_metadata_dict, orient='index')
+        exp_df = pd.DataFrame.from_dict(exp_metadata_dict, orient='index',
+                                        dtype=str)
         qdb.metadata_template.util.prefix_sample_names_with_id(
             self.metadata_map, 1)
         self.metadata_map.sort_index(inplace=True)
@@ -86,14 +87,14 @@ class TestUtil(TestCase):
     def test_load_template_to_dataframe(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_qiime_map(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(QIIME_TUTORIAL_MAP_SUBSET), index='#SampleID')
-        exp = pd.DataFrame.from_dict(QIIME_TUTORIAL_MAP_DICT_FORM)
+        exp = pd.DataFrame.from_dict(QIIME_TUTORIAL_MAP_DICT_FORM, dtype=str)
         exp.index.name = 'SampleID'
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
@@ -109,7 +110,7 @@ class TestUtil(TestCase):
     def test_load_template_to_dataframe_scrubbing(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -118,14 +119,14 @@ class TestUtil(TestCase):
             qdb.exceptions.QiitaDBWarning,
             qdb.metadata_template.util.load_template_to_dataframe,
             StringIO(EXP_ST_SPACES_EMPTY_COLUMN))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_empty_rows(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -133,7 +134,7 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES))
         exp = pd.DataFrame.from_dict(
-            SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM)
+            SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         obs.sort_index(inplace=True)
         exp.sort_index(inplace=True)
@@ -142,13 +143,13 @@ class TestUtil(TestCase):
     def test_load_template_to_dataframe_empty_sample_names(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -157,14 +158,14 @@ class TestUtil(TestCase):
             qdb.exceptions.QiitaDBWarning,
             qdb.metadata_template.util.load_template_to_dataframe,
             StringIO(SAMPLE_TEMPLATE_EMPTY_COLUMN))
-        exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM)
+        exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_column_with_nas(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_COLUMN_WITH_NAS))
-        exp = pd.DataFrame.from_dict(ST_COLUMN_WITH_NAS_DICT_FORM)
+        exp = pd.DataFrame.from_dict(ST_COLUMN_WITH_NAS_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -176,14 +177,14 @@ class TestUtil(TestCase):
     def test_load_template_to_dataframe_whitespace(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_WHITESPACE))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_lowercase(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_MULTICASE))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         exp.rename(columns={"str_column": "str_CoLumn"}, inplace=True)
         assert_frame_equal(obs, exp)
@@ -198,21 +199,23 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_LAT_ALL_INT))
 
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_LAT_ALL_INT_DICT)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_LAT_ALL_INT_DICT,
+                                     dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT))
 
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT,
+                                     dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_with_nulls(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_NULLS))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_NULLS_DICT)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_NULLS_DICT, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
