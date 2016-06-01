@@ -57,8 +57,24 @@ class ArtifactHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            {''}
-            The artifact information
+            The artifact information:
+            'name': artifact name
+            'timestamp': artifact creation timestamp
+            'visibility': artifact visibility
+            'type': artifact type
+            'data_type': artifact data type
+            'can_be_submitted_to_ebi': if the artifact can be submitted to ebi
+            'ebi_run_accessions': dict with the EBI run accessions attached to
+                the artifact
+            'can_be_submitted_to_vamps': if the artifact can be submitted to
+                vamps
+            'is_submitted_to_vamps': whether the artifact has been submitted
+                to vamps or not
+            'prep_information': list of prep information ids
+            'study': the study id
+            'processing_parameters': dict with the processing parameters used
+                to generate the artifact or None
+            'files': dict with the artifact files, keyed by filepath type
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
