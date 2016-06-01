@@ -8,25 +8,26 @@
 
 from collections import namedtuple
 from future.utils import viewkeys, viewvalues
+from datetime import datetime
 
 Restriction = namedtuple('Restriction', ['columns', 'error_msg'])
 
 # A dict containing the restrictions that apply to the sample templates
 SAMPLE_TEMPLATE_COLUMNS = {
     # The following columns are required by EBI for submission
-    'EBI': Restriction(columns={'collection_timestamp': 'timestamp',
-                                'physical_specimen_location': 'varchar',
-                                'taxon_id': 'integer',
-                                'scientific_name': 'varchar'},
+    'EBI': Restriction(columns={'collection_timestamp': datetime,
+                                'physical_specimen_location': str,
+                                'taxon_id': int,
+                                'scientific_name': str},
                        error_msg="EBI submission disabled"),
     # The following columns are required for the official main QIITA site
-    'qiita_main': Restriction(columns={'sample_type': 'varchar',
-                                       'description': 'varchar',
-                                       'physical_specimen_remaining': 'bool',
-                                       'dna_extracted': 'bool',
-                                       'latitude': 'float8',
-                                       'longitude': 'float8',
-                                       'host_subject_id': 'varchar'},
+    'qiita_main': Restriction(columns={'sample_type': str,
+                                       'description': str,
+                                       'physical_specimen_remaining': bool,
+                                       'dna_extracted': bool,
+                                       'latitude': float,
+                                       'longitude': float,
+                                       'host_subject_id': str},
                               error_msg="Processed data approval disabled")
 }
 
@@ -34,12 +35,12 @@ SAMPLE_TEMPLATE_COLUMNS = {
 PREP_TEMPLATE_COLUMNS = {
     # The following columns are required by EBI for submission
     'EBI': Restriction(
-        columns={'primer': 'varchar',
-                 'center_name': 'varchar',
-                 'platform': 'varchar',
-                 'instrument_model': 'varchar',
-                 'library_construction_protocol': 'varchar',
-                 'experiment_design_description': 'varchar'},
+        columns={'primer': str,
+                 'center_name': str,
+                 'platform': str,
+                 'instrument_model': str,
+                 'library_construction_protocol': str,
+                 'experiment_design_description': str},
         error_msg="EBI submission disabled")
 }
 
@@ -51,15 +52,15 @@ TARGET_GENE_DATA_TYPES = ['16S', '18S', 'ITS']
 PREP_TEMPLATE_COLUMNS_TARGET_GENE = {
     # The following columns are required by QIIME to execute split libraries
     'demultiplex': Restriction(
-        columns={'barcode': 'varchar',
-                 'primer': 'varchar'},
+        columns={'barcode': str,
+                 'primer': str},
         error_msg="Demultiplexing disabled."),
     # The following columns are required by Qiita to know how to execute split
     # libraries using QIIME over a study with multiple illumina lanes
     'demultiplex_multiple': Restriction(
-        columns={'barcode': 'varchar',
-                 'primer': 'varchar',
-                 'run_prefix': 'varchar'},
+        columns={'barcode': str,
+                 'primer': str,
+                 'run_prefix': str},
         error_msg="Demultiplexing with multiple input files disabled.")
 }
 
@@ -69,7 +70,10 @@ ALL_RESTRICTIONS = [SAMPLE_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS,
                     PREP_TEMPLATE_COLUMNS_TARGET_GENE]
 
 # This is what we consider as "NaN" cell values on metadata import
-NA_VALUES = ['', 'no_data', 'unknown', 'Unknown', 'Unspecified', 'unspecified']
+EBI_NULL_VALUES = ['not applicable', 'not available: not collected',
+                   'not available: to be reported',
+                   'not available: restricted access', 'obscured',
+                   'temporarily obscured']
 
 # These are what will be considered 'True' bool values on metadata import
 TRUE_VALUES = ['Yes', 'yes', 'YES', 'Y', 'y', 'True', 'true', 'TRUE', 't', 'T']

@@ -97,13 +97,13 @@ class SampleTemplate(MetadataTemplate):
                     cls.__name__, 'id: %d' % study.id)
 
             # Clean and validate the metadata template given
-            md_template = cls._clean_validate_template(
-                md_template, study.id,
-                qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
+            md_template = cls._clean_validate_template(md_template, study.id)
 
             cls._common_creation_steps(md_template, study.id)
 
             st = cls(study.id)
+            st.validate(
+                qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS)
             st.generate_files()
 
             return st

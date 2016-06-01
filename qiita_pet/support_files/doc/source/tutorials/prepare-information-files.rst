@@ -15,6 +15,30 @@ Example files
 You can download an example sample information file and prep information file from
 `here <ftp://ftp.microbio.me/pub/qiita/sample_prep_information_files_examples.tgz>`__
 
+EBI-ENA NULL values vocabulary
+------------------------------
+
+Based on discussions with the expert/research communities and feedback from submitters
+the ENA has defined a set of valid NULL values:
+
++--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| Value                                | Description                                                                                                                                      |
++======================================+==================================================================================================================================================+
+| ``not applicable``                   | metadata information is inappropriate to report, can indicate that the standard itself fails to model or represent the information appropriately |
++--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``not available: not collected``     | metadata information of an expected format was not given because it has not been collected                                                       |
++--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``not available: to be reported``    | metadata information of an expected format was not given, a value will be given at the later stage                                               |
++--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``not available: restricted access`` | metadata information exists but can not be released openly                                                                                       |
++--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``obscured``                         | metadata information has been provided deliberately with low precision                                                                           |
++--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``temporarily obscured``             | metadata information has been provided deliberately with low precision, a higher precision value will be provided at a later stage               |
++--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
+
+The last two, which consider level of precision, will be used, for example, for geo-references (latitude, longitude and country/sea).
+
 Sample information file
 -----------------------
 

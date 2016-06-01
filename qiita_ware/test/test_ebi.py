@@ -17,7 +17,7 @@ from unittest import TestCase, main
 from xml.etree import ElementTree as ET
 from functools import partial
 import pandas as pd
-from datetime import date, datetime
+from datetime import date
 
 from h5py import File
 
@@ -372,17 +372,17 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         }
         study = Study.create(User('test@foo.bar'), "Test EBI study", [1], info)
         metadata_dict = {
-            'Sample1': {'collection_timestamp': datetime(2015, 6, 1, 7, 0, 0),
+            'Sample1': {'collection_timestamp': '06/01/15 07:00:00',
                         'physical_specimen_location': 'location1',
                         'taxon_id': 9606,
                         'scientific_name': 'homo sapiens',
                         'Description': 'Test Sample 1'},
-            'Sample2': {'collection_timestamp': datetime(2015, 6, 2, 7, 0, 0),
+            'Sample2': {'collection_timestamp': '06/02/15 07:00:00',
                         'physical_specimen_location': 'location1',
                         'taxon_id': 9606,
                         'scientific_name': 'homo sapiens',
                         'Description': 'Test Sample 2'},
-            'Sample3': {'collection_timestamp': datetime(2015, 6, 3, 7, 0, 0),
+            'Sample3': {'collection_timestamp': '06/03/15 07:00:00',
                         'physical_specimen_location': 'location1',
                         'taxon_id': 9606,
                         'scientific_name': 'homo sapiens',
@@ -825,7 +825,7 @@ center_name="%(center_name)s">
         <TAG>assigned_from_geo</TAG><VALUE>n</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>collection_timestamp</TAG><VALUE>2011-11-11 13:00:00</VALUE>
+        <TAG>collection_timestamp</TAG><VALUE>11/11/11 13:00:00</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>common_name</TAG><VALUE>soil metagenome</VALUE>
@@ -916,7 +916,7 @@ center_name="%(center_name)s">
         <TAG>assigned_from_geo</TAG><VALUE>n</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>collection_timestamp</TAG><VALUE>2011-11-11 13:00:00</VALUE>
+        <TAG>collection_timestamp</TAG><VALUE>11/11/11 13:00:00</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>common_name</TAG><VALUE>soil metagenome</VALUE>

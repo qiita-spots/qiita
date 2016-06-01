@@ -40,6 +40,7 @@ from future.utils import viewitems, viewvalues
 from future.builtins import zip
 from itertools import chain
 from copy import deepcopy
+from datetime import datetime
 
 import pandas as pd
 import numpy as np
@@ -497,7 +498,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         return "%s%d" % (cls._table_prefix, obj_id)
 
     @classmethod
-    def _clean_validate_template(cls, md_template, study_id, restriction_dict,
+    def _clean_validate_template(cls, md_template, study_id,
                                  current_columns=None):
         """Takes care of all validation and cleaning of metadata templates
 
@@ -507,8 +508,6 @@ class MetadataTemplate(qdb.base.QiitaObject):
             The metadata template file contents indexed by sample ids
         study_id : int
             The study to which the metadata template belongs to.
-        restriction_dict : dict of {str: Restriction}
-            A dictionary with the restrictions that apply to the metadata
         current_columns : iterable of str, optional
             The current list of metadata columns
 
@@ -541,37 +540,34 @@ class MetadataTemplate(qdb.base.QiitaObject):
         # we don't modify the user one
         md_template = md_template.copy(deep=True)
 
+        # In the database, all the column headers are lowercase
+        md_template.columns = [c.lower() for c in md_template.columns]
+        # validating pgsql reserved words not to be column headers
+        current_headers = set(md_template.columns.values)
+        reserved_words = qdb.metadata_template.util.get_pgsql_reserved_words()
+        overlap = reserved_words & current_headers
+        if overlap:
+            raise qdb.exceptions.QiitaDBColumnError(
+                "The following column names in the template contain PgSQL "
+                "reserved words: %s. You need to modify them." % ", ".join(
+                    overlap))
+        # validating invalid column names
+        invalid_ids = qdb.metadata_template.util.get_invalid_column_names(
+            current_headers)
+        if invalid_ids:
+            raise qdb.exceptions.QiitaDBColumnError(
+                "The following column names in the template contain invalid "
+                "chars: %s. You need to modify them." % ", ".join(
+                    invalid_ids))
+
         # Prefix the sample names with the study_id
         qdb.metadata_template.util.prefix_sample_names_with_id(md_template,
                                                                study_id)
-
-        # In the database, all the column headers are lowercase
-        md_template.columns = [c.lower() for c in md_template.columns]
 
         # Check that we don't have duplicate columns
         if len(set(md_template.columns)) != len(md_template.columns):
             raise qdb.exceptions.QiitaDBDuplicateHeaderError(
                 find_duplicates(md_template.columns))
-
-        # Check if we have the columns required for some functionality
-        warning_msg = []
-        columns = set(md_template.columns)
-        if current_columns:
-            columns.update(current_columns)
-        for key, restriction in viewitems(restriction_dict):
-            missing = set(restriction.columns).difference(columns)
-
-            if missing:
-                warning_msg.append(
-                    "%s: %s" % (restriction.error_msg,
-                                ', '.join(sorted(missing))))
-
-        if warning_msg:
-            warnings.warn(
-                "Some functionality will be disabled due to missing "
-                "columns:\n\t%s.\nSee the Templates tutorial for a description"
-                " of these fields." % ";\n\t".join(warning_msg),
-                qdb.exceptions.QiitaDBWarning)
 
         return md_template
 
@@ -1105,9 +1101,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             md_template = self._clean_validate_template(
-                md_template, self.study_id, self.columns_restrictions,
-                current_columns=self.categories())
+                md_template, self.study_id, current_columns=self.categories())
             self._common_extend_steps(md_template)
+            self.validate(self.columns_restrictions)
             self.generate_files()
 
     def update(self, md_template):
@@ -1131,8 +1127,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             # Clean and validate the metadata template given
             new_map = self._clean_validate_template(
-                md_template, self.study_id, self.columns_restrictions,
-                current_columns=self.categories())
+                md_template, self.study_id, current_columns=self.categories())
             # Retrieving current metadata
             current_map = self.to_dataframe()
 
@@ -1234,6 +1229,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, sql_args)
             qdb.sql_connection.TRN.execute()
 
+            self.validate(self.columns_restrictions)
             self.generate_files()
 
     def update_category(self, category, samples_and_values):
@@ -1426,3 +1422,53 @@ class MetadataTemplate(qdb.base.QiitaObject):
             else:
                 warnings.warn("No new accession numbers to update",
                               qdb.exceptions.QiitaDBWarning)
+
+    def validate(self, restriction_dict):
+        """ Validate the values in the restricted fields in info files
+
+        Parameters
+        ----------
+        restriction_dict : dict of {str: Restriction}
+            A dictionary with the restrictions that apply to the metadata
+
+        Raises
+        ------
+        QiitaDBWarning
+            If the values aren't castable
+        """
+        warning_msg = []
+        columns = self.categories()
+        for label, restriction in viewitems(restriction_dict):
+            missing = set(restriction.columns).difference(columns)
+            if missing:
+                warning_msg.append(
+                    "%s: %s" % (restriction.error_msg,
+                                ', '.join(sorted(missing))))
+            else:
+                valid_null = qdb.metadata_template.constants.EBI_NULL_VALUES
+                for column, datatype in viewitems(restriction.columns):
+                    for sample, val in viewitems(self.get_category(column)):
+                        # ignore if valid null value
+                        if val in valid_null:
+                            continue
+                        # test values
+                        if datatype == datetime:
+                            val = str(val)
+                            try:
+                                datetime.strptime(val, '%m/%d/%y %H:%M:%S')
+                            except ValueError:
+                                warning_msg.append('%s, wrong value "%s"' % (
+                                    sample, val))
+                        else:
+                            try:
+                                datatype(val)
+                            except ValueError:
+                                warning_msg.append('%s, wrong value "%s"' % (
+                                    sample, val))
+
+        if warning_msg:
+            warnings.warn(
+                "Some functionality will be disabled due to missing "
+                "columns:\n\t%s.\nSee the Templates tutorial for a description"
+                " of these fields." % ";\n\t".join(warning_msg),
+                qdb.exceptions.QiitaDBWarning)
