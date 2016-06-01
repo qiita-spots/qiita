@@ -28,7 +28,6 @@ to include ``BarcodeSequence`` with the *sample information*, as this
 information pertains to the wet lab preparation and should be placed in the
 *preparation information file*.
 
-
 Example files
 -------------
 
@@ -42,8 +41,6 @@ The *sample information file* will define the biological context of each
 sample, with categories like ``sample_type``, ``treatment``,
 etc. The ``sample_name`` defined in this file is used to relate each
 sample in the preparation file with the biological sample.
-
-
 
 Required fields for Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~
