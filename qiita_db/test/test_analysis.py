@@ -305,7 +305,8 @@ class TestAnalysis(TestCase):
                             'taxon_id': 9606,
                             'scientific_name': 'homo sapiens'},
             }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
 
         study = qdb.study.Study.create(
             qdb.user.User("test@foo.bar"), "Test study 2", [1], info)
@@ -317,7 +318,7 @@ class TestAnalysis(TestCase):
             {'SKB8.640193': {'barcode': 'AAAAAAAAAAAA'},
              'SKD8.640184': {'barcode': 'AAAAAAAAAAAC'},
              'SKB7.640196': {'barcode': 'AAAAAAAAAAAG'}},
-            orient='index')
+            orient='index', dtype=str)
 
         pt = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning,

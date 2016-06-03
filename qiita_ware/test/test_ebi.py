@@ -346,7 +346,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                                 'extra_value': 'Unspecified'}
             }
             investigation_type = "Metagenomics"
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         pt = PrepTemplate.create(metadata, Study(1), "18S",
                                  investigation_type=investigation_type)
         artifact = self.write_demux_files(pt)
@@ -388,7 +389,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                         'scientific_name': 'homo sapiens',
                         'Description': 'Test Sample 3'}
         }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         SampleTemplate.create(metadata, study)
         metadata_dict = {
             'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
@@ -413,7 +415,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 3"},
         }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         pt = PrepTemplate.create(metadata, study, "16S", 'Metagenomics')
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')

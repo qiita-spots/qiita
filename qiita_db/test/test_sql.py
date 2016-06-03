@@ -88,7 +88,7 @@ class TestSQL(TestCase):
                              'instrument_model': 'Illumina MiSeq',
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
-            orient='index')
+            orient='index', dtype=str)
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             metadata, qdb.study.Study(1), "18S")
         fd, fp = mkstemp(suffix='_seqs.fastq')

@@ -303,7 +303,7 @@ class BaseTestPrepTemplate(TestCase):
                             'experiment_design_description': 'BBBB'}
             }
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
-                                               orient='index')
+                                               orient='index', dtype=str)
 
         metadata_prefixed_dict = {
             '1.SKB8.640193': {'center_name': 'ANL',
@@ -711,7 +711,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'}
             }
-        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index', dtype=str)
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
@@ -785,7 +785,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.metadata_dict['NOTREAL'] = self.metadata_dict['SKB7.640196']
         del self.metadata_dict['SKB7.640196']
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
-                                               orient='index')
+                                               orient='index', dtype=str)
         # Test error raised and correct error given
         with self.assertRaises(qdb.exceptions.QiitaDBExecutionError) as err:
             qdb.metadata_template.prep_template.PrepTemplate.create(
@@ -799,7 +799,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         # remove one sample so not all samples in the prep template
         del self.metadata_dict['SKB7.640196']
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
-                                               orient='index')
+                                               orient='index', dtype=str)
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
 
@@ -1217,7 +1217,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         """extend fails adding samples to an already preprocessed template"""
         df = pd.DataFrame.from_dict(
             {'new_sample': {'barcode': 'CCTCTGAGAGCT'}},
-            orient='index')
+            orient='index', dtype=str)
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.metadata_template.prep_template.PrepTemplate(1).extend(df)
 
@@ -1433,7 +1433,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}
             }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         PT = qdb.metadata_template.prep_template.PrepTemplate
         obs = PT._clean_validate_template(metadata, 2)
 
@@ -1449,7 +1450,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'}
             }
-        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                     dtype=str)
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)

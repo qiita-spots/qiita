@@ -287,7 +287,7 @@ class BaseTestSampleTemplate(TestCase):
             'foo.Sample3': self.metadata_dict['Sample3'],
         }
         self.metadata_str_prefix = pd.DataFrame.from_dict(
-            metadata_str_prefix_dict, orient='index')
+            metadata_str_prefix_dict, orient='index', dtype=str)
 
         metadata_int_prefix_dict = {
             '12.Sample1': self.metadata_dict['Sample1'],
@@ -295,7 +295,7 @@ class BaseTestSampleTemplate(TestCase):
             '12.Sample3': self.metadata_dict['Sample3']
         }
         self.metadata_int_pref = pd.DataFrame.from_dict(
-            metadata_int_prefix_dict, orient='index')
+            metadata_int_prefix_dict, orient='index', dtype=str)
 
         metadata_prefixed_dict = {
             '2.Sample1': self.metadata_dict['Sample1'],
@@ -303,7 +303,7 @@ class BaseTestSampleTemplate(TestCase):
             '2.Sample3': self.metadata_dict['Sample3']
         }
         self.metadata_prefixed = pd.DataFrame.from_dict(
-            metadata_prefixed_dict, orient='index')
+            metadata_prefixed_dict, orient='index', dtype=str)
 
         self.test_study = qdb.study.Study(1)
         self.tester = qdb.metadata_template.sample_template.SampleTemplate(1)
@@ -362,7 +362,7 @@ class BaseTestSampleTemplate(TestCase):
                         'scientific_name': 'homo sapiens'},
             }
         self.metadata_dict_updated = pd.DataFrame.from_dict(
-            self.metadata_dict_updated_dict, orient='index')
+            self.metadata_dict_updated_dict, orient='index', dtype=str)
 
         metadata_dict_updated_sample_error = {
             'Sample1': {'physical_specimen_location': 'location1',
@@ -423,7 +423,7 @@ class BaseTestSampleTemplate(TestCase):
                         'scientific_name': 'homo sapiens'}
             }
         self.metadata_dict_updated_sample_error = pd.DataFrame.from_dict(
-            metadata_dict_updated_sample_error, orient='index')
+            metadata_dict_updated_sample_error, orient='index', dtype=str)
 
         metadata_dict_updated_column_error = {
             'Sample1': {'physical_specimen_location': 'location1',
@@ -473,7 +473,7 @@ class BaseTestSampleTemplate(TestCase):
                         'extra_col': True},
             }
         self.metadata_dict_updated_column_error = pd.DataFrame.from_dict(
-            metadata_dict_updated_column_error, orient='index')
+            metadata_dict_updated_column_error, orient='index', dtype=str)
 
     def tearDown(self):
         for f in self._clean_up_files:
@@ -753,7 +753,8 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                         'latitude': '42.42',
                         'longitude': '41.41'}
             }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST._clean_validate_template(
             metadata, 2,
@@ -768,7 +769,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                           'latitude': '42.42',
                           'longitude': '41.41'}
             }
-        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index', dtype=str)
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
@@ -824,7 +825,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                           'taxon_id': '9606',
                           'scientific_name': 'homo sapiens'},
             }
-        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index', dtype=str)
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
@@ -1325,7 +1326,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             self.metadata, self.new_study)
         new_metadata = pd.DataFrame.from_dict(
             {'Sample1': {'physical_specimen_location': 'CHANGE'}},
-            orient='index')
+            orient='index', dtype=str)
         exp = {s_id: st[s_id]._to_dict() for s_id in st}
         s_id = '%d.Sample1' % self.new_study.id
         exp[s_id]['physical_specimen_location'] = 'CHANGE'
@@ -1342,20 +1343,22 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             'Sample2': {'bool_col': np.bool_(False),
                         'date_col': np.datetime64(datetime(2015, 8, 1))}
         }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         st = npt.assert_warns(qdb.exceptions.QiitaDBWarning, ST.create,
                               metadata, self.new_study)
 
         metadata_dict['Sample2']['date_col'] = np.datetime64(
             datetime(2015, 9, 1))
         metadata_dict['Sample1']['bool_col'] = np.bool_(False)
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.update, metadata)
 
         sql = "SELECT * FROM qiita.sample_{0}".format(st.id)
         obs = self.conn_handler.execute_fetchall(sql)
-        exp = [['2.Sample1', False, datetime(2015, 9, 1)],
-               ['2.Sample2', False, datetime(2015, 9, 1)]]
+        exp = [['2.Sample1', 'false', '2015-09-01 00:00:00'],
+               ['2.Sample2', 'false', '2015-09-01 00:00:00']]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_generate_files(self):
@@ -1437,7 +1440,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                         'longitude': '41.41',
                         'taxon_id': '9606',
                         'scientific_name': 'homo sapiens'}}
-        md_ext = pd.DataFrame.from_dict(md_dict, orient='index')
+        md_ext = pd.DataFrame.from_dict(md_dict, orient='index', dtype=str)
 
         npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, md_ext)
 
@@ -1554,7 +1557,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.metadata_dict['Sample1']['Description'] = 'Changed'
         self.metadata_dict['Sample2']['str_column'] = 'Changed dynamic'
 
-        md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
+        md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index',
+                                        dtype=str)
         # Make sure adding duplicate samples raises warning
         npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, md_ext)
 
@@ -1739,7 +1743,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.metadata_dict['Sample1']['Description'] = 'Changed'
         self.metadata_dict['Sample2']['str_column'] = 'Changed dynamic'
 
-        md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
+        md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index',
+                                        dtype=str)
 
         md_ext['NEWCOL'] = pd.Series(['val1', 'val2', 'val3', 'val4'],
                                      index=md_ext.index)
@@ -1844,7 +1849,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.metadata_dict['Sample1']['Description'] = 'Changed'
         self.metadata_dict['Sample2']['str_column'] = 'Changed dynamic'
 
-        md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index')
+        md_ext = pd.DataFrame.from_dict(self.metadata_dict, orient='index',
+                                        dtype=str)
 
         md_ext['NEWCOL'] = pd.Series(['val1', 'val2', 'val3', 'val4'],
                                      index=md_ext.index)
@@ -1976,7 +1982,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'taxon_id': '9606',
                           'scientific_name': 'homo sapiens'},
             }
-        exp = pd.DataFrame.from_dict(exp_dict, orient='index')
+        exp = pd.DataFrame.from_dict(exp_dict, orient='index', dtype=str)
         exp.index.name = 'sample_id'
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
@@ -2149,7 +2155,8 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                         'latitude': '42.42',
                         'longitude': '41.41'}
             }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST._clean_validate_template(metadata, 2)
         metadata_dict = {
@@ -2162,7 +2169,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                           'latitude': '42.42',
                           'longitude': '41.41'}
             }
-        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index', dtype=str)
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
