@@ -36,7 +36,7 @@ Methods
 # -----------------------------------------------------------------------------
 
 from __future__ import division
-from future.utils import viewitems, viewvalues
+from future.utils import viewitems
 from future.builtins import zip
 from itertools import chain
 from copy import deepcopy
@@ -85,7 +85,6 @@ class BaseSample(qdb.base.QiitaObject):
     """
     # Used to find the right SQL tables - should be defined on the subclasses
     _table_prefix = None
-    _column_table = None
     _id_column = None
 
     def _check_template_class(self, md_template):
@@ -291,41 +290,11 @@ class BaseSample(qdb.base.QiitaObject):
         value : str
             The value to set. This is expected to be a str on the assumption
             that psycopg2 will cast as necessary when updating.
-
-        Raises
-        ------
-        ValueError
-            If the value type does not match the one in the DB
         """
         with qdb.sql_connection.TRN:
             self.setitem(column, value)
 
-            try:
-                qdb.sql_connection.TRN.execute()
-            except ValueError as e:
-                # catching error so we can check if the error is due to
-                # different column type or something else
-                value_type = qdb.metadata_template.util.type_lookup(
-                    type(value))
-
-                sql = """SELECT udt_name
-                         FROM information_schema.columns
-                         WHERE column_name = %s
-                            AND table_schema = 'qiita'
-                            AND (table_name = %s OR table_name = %s)"""
-                sql_args = [column, self._table, self._dynamic_table]
-                qdb.sql_connection.TRN.add(sql, sql_args)
-                column_type = qdb.sql_connection.TRN.execute_fetchlast()
-
-                if column_type != value_type:
-                    raise ValueError(
-                        'The new value being added to column: "{0}" is "{1}" '
-                        '(type: "{2}"). However, this column in the DB is of '
-                        'type "{3}". Please change the value in your updated '
-                        'template or reprocess your template.'.format(
-                            column, value, value_type, column_type))
-
-                raise e
+            qdb.sql_connection.TRN.execute()
 
     def __delitem__(self, key):
         r"""Removes the sample with sample id `key` from the database
@@ -461,7 +430,6 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
     # Used to find the right SQL tables - should be defined on the subclasses
     _table_prefix = None
-    _column_table = None
     _id_column = None
     _sample_cls = None
 
@@ -595,23 +563,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
                      VALUES (%s, %s)""".format(cls._table, cls._id_column)
             qdb.sql_connection.TRN.add(sql, values, many=True)
 
-            # Insert rows on *_columns table
-            datatypes = qdb.metadata_template.util.get_datatypes(
-                md_template.ix[:, headers])
-            # psycopg2 requires a list of tuples, in which each tuple is a set
-            # of values to use in the string formatting of the query. We have
-            # all the values in different lists (but in the same order) so use
-            # zip to create the list of tuples that psycopg2 requires.
-            values = [[obj_id, h, d] for h, d in zip(headers, datatypes)]
-            sql = """INSERT INTO qiita.{0} ({1}, column_name, column_type)
-                     VALUES (%s, %s, %s)""".format(cls._column_table,
-                                                   cls._id_column)
-            qdb.sql_connection.TRN.add(sql, values, many=True)
-
             # Create table with custom columns
             table_name = cls._table_name(obj_id)
-            column_datatype = ["%s %s" % (col, dtype)
-                               for col, dtype in zip(headers, datatypes)]
+            column_datatype = ["%s varchar" % col for col in headers]
             sql = """CREATE TABLE qiita.{0} (
                         sample_id varchar NOT NULL, {1},
                         CONSTRAINT fk_{0} FOREIGN KEY (sample_id)
@@ -620,9 +574,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                      )""".format(table_name, ', '.join(column_datatype))
             qdb.sql_connection.TRN.add(sql)
 
-            # Insert values on custom table
-            values = qdb.metadata_template.util.as_python_types(md_template,
-                                                                headers)
+            values = [list(md_template[h]) for h in headers]
             values.insert(0, sample_ids)
             values = [list(v) for v in zip(*values)]
             sql = """INSERT INTO qiita.{0} (sample_id, {1})
@@ -714,34 +666,25 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 # If we are adding new columns, add them first (simplifies
                 # code). Sorting the new columns to enforce an order
                 new_cols = sorted(new_cols)
-                datatypes = qdb.metadata_template.util.get_datatypes(
-                    md_template.ix[:, new_cols])
-                sql_cols = """INSERT INTO qiita.{0}
-                                    ({1}, column_name, column_type)
-                              VALUES (%s, %s, %s)""".format(self._column_table,
-                                                            self._id_column)
+
                 sql_alter = """ALTER TABLE qiita.{0} ADD COLUMN {1} {2}"""
-                for category, dtype in zip(new_cols, datatypes):
+                for category in new_cols:
                     qdb.sql_connection.TRN.add(
-                        sql_cols, [self._id, category, dtype])
-                    qdb.sql_connection.TRN.add(
-                        sql_alter.format(table_name, category, dtype))
+                        sql_alter.format(table_name, category, 'varchar'))
 
                 if existing_samples:
                     # The values for the new columns are the only ones that get
                     # added to the database. None of the existing values will
                     # be modified (see update for that functionality)
-                    min_md_template = \
-                        md_template[new_cols].loc[existing_samples]
-                    values = qdb.metadata_template.util.as_python_types(
-                        min_md_template, new_cols)
+                    md_filtered = md_template[new_cols].loc[existing_samples]
+                    values = [list(md_filtered[h]) for h in md_filtered]
                     values.append(existing_samples)
+                    values = [list(v) for v in zip(*values)]
                     # psycopg2 requires a list of iterable, in which each
                     # iterable is a set of values to use in the string
                     # formatting of the query. We have all the values in
                     # different lists (but in the same order) so use zip to
                     # create the list of iterable that psycopg2 requires.
-                    values = [list(v) for v in zip(*values)]
                     set_str = ["{0} = %s".format(col) for col in new_cols]
                     sql = """UPDATE qiita.{0}
                              SET {1}
@@ -757,9 +700,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 new_samples = sorted(new_samples)
                 # At this point we only want the information
                 # from the new samples
-                md_template = md_template.loc[new_samples]
-
-                # Insert values on required columns
+                md_filtered = md_template.loc[new_samples]
+                # Insert new_samples in the study table
                 values = [[self._id, s_id] for s_id in new_samples]
                 sql = """INSERT INTO qiita.{0} ({1}, sample_id)
                          VALUES (%s, %s)""".format(self._table,
@@ -767,8 +709,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql, values, many=True)
 
                 # Insert values on custom table
-                values = qdb.metadata_template.util.as_python_types(
-                    md_template, headers)
+                values = [list(md_filtered[h]) for h in md_filtered]
                 values.insert(0, new_samples)
                 values = [list(v) for v in zip(*values)]
                 sql = """INSERT INTO qiita.{0} (sample_id, {1})
@@ -1044,7 +985,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             meta = qdb.sql_connection.TRN.execute_fetchindex()
 
             # Create the dataframe and clean it up a bit
-            df = pd.DataFrame((list(x) for x in meta), columns=cols)
+            df = pd.DataFrame((list(x) for x in meta), columns=cols, dtype=str)
             df.set_index('sample_id', inplace=True, drop=True)
 
             return df
@@ -1219,10 +1160,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                                sql_values, sql_cols)
             sql_args = []
             for sample in samples_to_update:
-                sample_vals = [
-                    qdb.metadata_template.util.cast_to_python(
-                        new_map[col][sample])
-                    for col in cols_to_update]
+                sample_vals = [new_map[col][sample] for col in cols_to_update]
                 sample_vals.insert(0, sample)
                 sql_args.extend(sample_vals)
 
@@ -1249,9 +1187,6 @@ class MetadataTemplate(qdb.base.QiitaObject):
         QiitaDBColumnError
             If the column does not exist in the table. This is implicit, and
             can be thrown by the contained Samples.
-        ValueError
-            If one of the new values cannot be inserted in the DB due to
-            different types
         """
         with qdb.sql_connection.TRN:
             if not set(self.keys()).issuperset(samples_and_values):
@@ -1265,39 +1200,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
                     v = np.asscalar(v)
                 sample.setitem(category, v)
 
-            try:
-                qdb.sql_connection.TRN.execute()
-            except ValueError as e:
-                # catching error so we can check if the error is due to
-                # different column type or something else
-
-                value_types = set(
-                    qdb.metadata_template.util.type_lookup(type(value))
-                    for value in viewvalues(samples_and_values))
-
-                sql = """SELECT udt_name
-                         FROM information_schema.columns
-                         WHERE column_name = %s
-                            AND table_schema = 'qiita'
-                            AND (table_name = %s OR table_name = %s)"""
-                qdb.sql_connection.TRN.add(
-                    sql, [category, self._table, self._table_name(self._id)])
-                column_type = qdb.sql_connection.TRN.execute_fetchlast()
-
-                if any([column_type != vt for vt in value_types]):
-                    value_str = ', '.join(
-                        [str(value)
-                         for value in viewvalues(samples_and_values)])
-                    value_types_str = ', '.join(value_types)
-
-                    raise ValueError(
-                        'The new values being added to column: "%s" are "%s" '
-                        '(types: "%s"). However, this column in the DB is of '
-                        'type "%s". Please change the values in your updated '
-                        'template or reprocess your template.'
-                        % (category, value_str, value_types_str, column_type))
-
-                raise e
+            qdb.sql_connection.TRN.execute()
 
     def get_category(self, category):
         """Returns the values of all samples for the given category

@@ -269,10 +269,6 @@ class QiitaStudySearch(object):
         eval_stack = (search_expr + stringEnd).parseString(searchstr)[0]
         sql_where = eval_stack.generate_sql()
 
-        # this lookup will be used to select only studies with columns
-        # of the correct type
-        type_lookup = {int: 'integer', float: 'float8', str: 'varchar'}
-
         # parse out all metadata headers we need to have in a study, and
         # their corresponding types
         all_headers = [c[0][0].term[0] for c in
@@ -280,8 +276,6 @@ class QiitaStudySearch(object):
         meta_headers = set(all_headers)
         all_types = [c[0][0].term[2] for c in
                      (criterion + optional_seps).scanString(searchstr)]
-        all_types = [type_lookup[type(qdb.util.convert_type(s))]
-                     for s in all_types]
 
         # sort headers and types so they return in same order every time.
         # Should be a relatively short list so very quick
@@ -321,14 +315,16 @@ class QiitaStudySearch(object):
                     allowable_types = "('integer', 'float8')"
                 else:
                     allowable_types = "('varchar')"
-
-                sql.append("SELECT study_id FROM qiita.study_sample_columns "
-                           "WHERE lower(column_name) = lower('%s') and "
-                           "column_type in %s" %
-                           (qdb.util.scrub_data(meta), allowable_types))
+                sql.append("""
+                    SELECT DISTINCT table_name
+                        FROM information_schema.columns
+                        WHERE lower(column_name) = lower('{0}') and
+                        data_type in {1}""".format(qdb.util.scrub_data(meta),
+                                                   allowable_types))
         else:
             # no study-specific metadata, so need all studies
-            sql.append("SELECT study_id FROM qiita.study_sample_columns")
+            sql.append("SELECT DISTINCT table_name"
+                       "FROM information_schema.columns")
 
         # combine the query
         if only_with_processed_data:

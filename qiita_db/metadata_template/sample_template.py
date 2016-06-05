@@ -26,7 +26,6 @@ class Sample(BaseSample):
     """
     _table = "study_sample"
     _table_prefix = "sample_"
-    _column_table = "study_sample_columns"
     _id_column = "study_id"
 
     def _check_template_class(self, md_template):
@@ -57,13 +56,12 @@ class SampleTemplate(MetadataTemplate):
     """
     _table = "study_sample"
     _table_prefix = "sample_"
-    _column_table = "study_sample_columns"
     _id_column = "study_id"
     _sample_cls = Sample
     _filepath_table = 'sample_template_filepath'
 
-    @staticmethod
-    def metadata_headers():
+    @classmethod
+    def metadata_headers(cls):
         """Returns metadata headers available
 
         Returns
@@ -73,7 +71,10 @@ class SampleTemplate(MetadataTemplate):
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT DISTINCT column_name
-                     FROM qiita.study_sample_columns ORDER BY column_name"""
+                        FROM information_schema.columns
+                        WHERE table_name LIKE '{0}%' AND
+                              table_name != 'sample_template_filepath'
+                        ORDER BY column_name""".format(cls._table_prefix)
             qdb.sql_connection.TRN.add(sql)
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
@@ -153,10 +154,6 @@ class SampleTemplate(MetadataTemplate):
 
             sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
                 cls._table, cls._id_column)
-            qdb.sql_connection.TRN.add(sql, args)
-
-            sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
-                cls._column_table, cls._id_column)
             qdb.sql_connection.TRN.add(sql, args)
 
             qdb.sql_connection.TRN.execute()

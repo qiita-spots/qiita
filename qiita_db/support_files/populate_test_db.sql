@@ -95,40 +95,6 @@ INSERT INTO qiita.study_sample (study_id, sample_id, ebi_sample_accession, biosa
     (1, '1.SKB6.640176', 'ERS000025', 'SAMEA0000025'),
     (1, '1.SKM1.640183', 'ERS000025', 'SAMEA0000026');
 
--- Add the study sample columns for study 1
-INSERT INTO qiita.study_sample_columns (study_id, column_name, column_type) VALUES
-    (1, 'sample_id', 'varchar'),
-    (1, 'season_environment', 'varchar'),
-    (1, 'assigned_from_geo', 'varchar'),
-    (1, 'texture', 'varchar'),
-    (1, 'taxon_id', 'varchar'),
-    (1, 'depth', 'varchar'),
-    (1, 'host_taxid', 'varchar'),
-    (1, 'common_name', 'varchar'),
-    (1, 'water_content_soil', 'varchar'),
-    (1, 'elevation', 'varchar'),
-    (1, 'temp', 'varchar'),
-    (1, 'tot_nitro', 'varchar'),
-    (1, 'samp_salinity', 'varchar'),
-    (1, 'altitude', 'varchar'),
-    (1, 'env_biome', 'varchar'),
-    (1, 'country', 'varchar'),
-    (1, 'ph', 'varchar'),
-    (1, 'anonymized_name', 'varchar'),
-    (1, 'tot_org_carb', 'varchar'),
-    (1, 'description_duplicate', 'varchar'),
-    (1, 'env_feature', 'varchar'),
-    (1, 'physical_specimen_location', 'varchar'),
-    (1, 'physical_specimen_remaining', 'varchar'),
-    (1, 'dna_extracted', 'varchar'),
-    (1, 'sample_type', 'varchar'),
-    (1, 'collection_timestamp', 'varchar'),
-    (1, 'host_subject_id', 'varchar'),
-    (1, 'description', 'varchar'),
-    (1, 'latitude', 'varchar'),
-    (1, 'longitude', 'varchar'),
-    (1, 'scientific_name', 'varchar');
-
 -- Crate the sample_1 dynamic table
 CREATE TABLE qiita.sample_1 (
     sample_id                       varchar,
@@ -258,58 +224,6 @@ INSERT INTO qiita.prep_template_sample (prep_template_id, sample_id, ebi_experim
     (2, '1.SKB3.640195', 'ERX0000024'),
     (2, '1.SKB6.640176', 'ERX0000025'),
     (2, '1.SKM1.640183', 'ERX0000026');
-
--- Add raw data prep columns
-INSERT INTO qiita.prep_columns (prep_template_id, column_name, column_type) VALUES
-    (1, 'sample_id', 'varchar'),
-    (1, 'barcode', 'varchar'),
-    (1, 'LIBRARY_CONSTRUCTION_PROTOCOL', 'varchar'),
-    (1, 'primer', 'varchar'),
-    (1, 'TARGET_SUBFRAGMENT', 'varchar'),
-    (1, 'target_gene', 'varchar'),
-    (1, 'RUN_CENTER', 'varchar'),
-    (1, 'RUN_PREFIX', 'varchar'),
-    (1, 'RUN_DATE', 'varchar'),
-    (1, 'EXPERIMENT_CENTER', 'varchar'),
-    (1, 'EXPERIMENT_DESIGN_DESCRIPTION', 'varchar'),
-    (1, 'EXPERIMENT_TITLE', 'varchar'),
-    (1, 'PLATFORM', 'varchar'),
-    (1, 'INSTRUMENT_MODEL', 'varchar'),
-    (1, 'SAMP_SIZE', 'varchar'),
-    (1, 'SEQUENCING_METH', 'varchar'),
-    (1, 'illumina_technology', 'varchar'),
-    (1, 'SAMPLE_CENTER', 'varchar'),
-    (1, 'pcr_primers', 'varchar'),
-    (1, 'STUDY_CENTER', 'varchar'),
-    (1, 'center_name', 'varchar'),
-    (1, 'center_project_name', 'varchar'),
-    (1, 'emp_status', 'varchar');
-
--- Add raw data prep columns
-INSERT INTO qiita.prep_columns (prep_template_id, column_name, column_type) VALUES
-    (2, 'sample_id', 'varchar'),
-    (2, 'barcode', 'varchar'),
-    (2, 'LIBRARY_CONSTRUCTION_PROTOCOL', 'varchar'),
-    (2, 'primer', 'varchar'),
-    (2, 'TARGET_SUBFRAGMENT', 'varchar'),
-    (2, 'target_gene', 'varchar'),
-    (2, 'RUN_CENTER', 'varchar'),
-    (2, 'RUN_PREFIX', 'varchar'),
-    (2, 'RUN_DATE', 'varchar'),
-    (2, 'EXPERIMENT_CENTER', 'varchar'),
-    (2, 'EXPERIMENT_DESIGN_DESCRIPTION', 'varchar'),
-    (2, 'EXPERIMENT_TITLE', 'varchar'),
-    (2, 'PLATFORM', 'varchar'),
-    (2, 'INSTRUMENT_MODEL', 'varchar'),
-    (2, 'SAMP_SIZE', 'varchar'),
-    (2, 'SEQUENCING_METH', 'varchar'),
-    (2, 'illumina_technology', 'varchar'),
-    (2, 'SAMPLE_CENTER', 'varchar'),
-    (2, 'pcr_primers', 'varchar'),
-    (2, 'STUDY_CENTER', 'varchar'),
-    (2, 'center_name', 'varchar'),
-    (2, 'center_project_name', 'varchar'),
-    (2, 'emp_status', 'varchar');
 
 -- Crate the prep_1 dynamic table
 CREATE TABLE qiita.prep_1 (
