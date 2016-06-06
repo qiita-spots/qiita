@@ -1922,7 +1922,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                 'scientific_name': 'homo sapiens',
                 'newcol': 'val4'}}
         for s_id in exp_sample_ids:
-            print s_id
             self.assertEqual(st[s_id]._to_dict(), exp_dict[s_id])
 
     def test_to_dataframe(self):

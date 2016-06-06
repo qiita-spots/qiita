@@ -986,6 +986,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             # Create the dataframe and clean it up a bit
             df = pd.DataFrame((list(x) for x in meta), columns=cols, dtype=str)
+            df.where((pd.notnull(df)), None)
             df.set_index('sample_id', inplace=True, drop=True)
 
             return df
