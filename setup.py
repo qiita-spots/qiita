@@ -42,15 +42,23 @@ setup(name='qiita-spots',
       test_suite='nose.collector',
       packages=['qiita_core',
                 'qiita_db',
-                'qiita_db/metadata_template/',
+                'qiita_db/handlers',
+                'qiita_db/metadata_template',
                 'qiita_pet',
                 'qiita_pet/uimodules',
                 'qiita_pet/handlers',
                 'qiita_pet/handlers/study_handlers',
+                'qiita_pet/handlers/api_proxy',
                 'qiita_ware'
                 ],
+      include_package_data=True,
       package_data={
-          'qiita_core': ['support_files/config_test.cfg'],
+          'qiita_core': [
+              'support_files/config_test.cfg'
+              'support_files/server.crt',
+              'support_files/server.csr',
+              'support_files/server.key'
+            ],
           'qiita_db': [
               'support_files/*.sql',
               'support_files/patches/*.sql',
@@ -100,7 +108,7 @@ setup(name='qiita-spots',
                         'ipython[all] >= 2.4.1, < 2.5', 'pyparsing',
                         'h5py >= 2.3.1', 'biom-format', 'natsort', 'networkx',
                         'scikit-bio >= 0.2.3, < 0.3.0', 'wtforms == 2.0.1',
-                        'qiime >= 1.9.0, < 1.10.0', 'moi >= 0.2.0, < 0.3.0',
+                        'qiime >= 1.9.0, < 1.10.0', 'moi',
                         'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
                         'gitpython'],
       classifiers=classifiers
