@@ -8,13 +8,11 @@
 
 from future.builtins import zip
 from unittest import TestCase, main
-from datetime import datetime
 from tempfile import mkstemp
 from os import close, remove
 from collections import Iterable
 from warnings import catch_warnings
 
-import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
@@ -1235,12 +1233,6 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         exp = []
         self.assertEqual(obs, exp)
 
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.study_sample_columns WHERE study_id=%s"
-            % st_id)
-        exp = []
-        self.assertEqual(obs, exp)
-
         with self.assertRaises(ValueError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.sample_%s" % st_id)
@@ -1338,19 +1330,18 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         """Update values in existing mapping file with numpy values"""
         ST = qdb.metadata_template.sample_template.SampleTemplate
         metadata_dict = {
-            'Sample1': {'bool_col': np.bool_(True),
-                        'date_col': np.datetime64(datetime(2015, 9, 1))},
-            'Sample2': {'bool_col': np.bool_(False),
-                        'date_col': np.datetime64(datetime(2015, 8, 1))}
+            'Sample1': {'bool_col': 'true',
+                        'date_col': '2015-09-01 00:00:00'},
+            'Sample2': {'bool_col': 'true',
+                        'date_col': '2015-09-01 00:00:00'}
         }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
         st = npt.assert_warns(qdb.exceptions.QiitaDBWarning, ST.create,
                               metadata, self.new_study)
 
-        metadata_dict['Sample2']['date_col'] = np.datetime64(
-            datetime(2015, 9, 1))
-        metadata_dict['Sample1']['bool_col'] = np.bool_(False)
+        metadata_dict['Sample2']['date_col'] = '2015-09-01 00:00:00'
+        metadata_dict['Sample1']['bool_col'] = 'false'
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
         npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.update, metadata)
@@ -1358,7 +1349,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         sql = "SELECT * FROM qiita.sample_{0}".format(st.id)
         obs = self.conn_handler.execute_fetchall(sql)
         exp = [['2.Sample1', 'false', '2015-09-01 00:00:00'],
-               ['2.Sample2', 'false', '2015-09-01 00:00:00']]
+               ['2.Sample2', 'true', '2015-09-01 00:00:00']]
         self.assertEqual(sorted(obs), sorted(exp))
 
     def test_generate_files(self):

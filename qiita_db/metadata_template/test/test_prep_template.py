@@ -1052,12 +1052,6 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp = []
         self.assertEqual(obs, exp)
 
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=%s",
-            (pt.id,))
-        exp = []
-        self.assertEqual(obs, exp)
-
         with self.assertRaises(ValueError):
             self.conn_handler.execute_fetchall(
                 "SELECT * FROM qiita.prep_%d" % pt.id)

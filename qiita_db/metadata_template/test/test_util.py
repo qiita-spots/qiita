@@ -8,9 +8,7 @@
 
 from six import StringIO
 from unittest import TestCase, main
-from datetime import datetime
 
-import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
@@ -29,46 +27,6 @@ class TestUtil(TestCase):
         self.metadata_map = pd.DataFrame.from_dict(metadata_dict,
                                                    orient='index', dtype=str)
         self.headers = ['float_col', 'str_col', 'int_col']
-
-    def test_type_lookup(self):
-        """Correctly returns the SQL datatype of the passed dtype"""
-        self.assertEqual(qdb.metadata_template.util.type_lookup(
-            self.metadata_map['float_col'].dtype), 'varchar')
-        self.assertEqual(qdb.metadata_template.util.type_lookup(
-            self.metadata_map['int_col'].dtype), 'varchar')
-        self.assertEqual(qdb.metadata_template.util.type_lookup(
-            self.metadata_map['str_col'].dtype), 'varchar')
-
-    def test_get_datatypes(self):
-        """Correctly returns the data types of each column"""
-        obs = qdb.metadata_template.util.get_datatypes(
-            self.metadata_map.ix[:, self.headers])
-        exp = ['varchar', 'varchar', 'varchar']
-        self.assertEqual(obs, exp)
-
-    def test_cast_to_python(self):
-        """Correctly returns the value casted"""
-        b = np.bool_(True)
-        obs = qdb.metadata_template.util.cast_to_python(b)
-        self.assertTrue(obs)
-        self.assertFalse(isinstance(obs, np.bool_))
-        self.assertTrue(isinstance(obs, bool))
-
-        exp = datetime(2015, 9, 1, 10, 00)
-        dt = np.datetime64(exp)
-        obs = qdb.metadata_template.util.cast_to_python(dt)
-        self.assertEqual(obs, exp)
-        self.assertFalse(isinstance(obs, np.datetime64))
-        self.assertTrue(isinstance(obs, datetime))
-
-    def test_as_python_types(self):
-        """Correctly returns the columns as python types"""
-        obs = qdb.metadata_template.util.as_python_types(
-            self.metadata_map, self.headers)
-        exp = [[2.1, 3.1, 3],
-               ['str1', '200', 'string30'],
-               [1, 2, 3]]
-        self.assertEqual(obs, exp)
 
     def test_prefix_sample_names_with_id(self):
         exp_metadata_dict = {

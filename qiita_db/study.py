@@ -436,9 +436,7 @@ class Study(qdb.base.QiitaObject):
                     'Study "%s" cannot be erased because it has a '
                     'sample template' % cls(id_).title)
 
-            sql = "DELETE FROM qiita.study_sample_columns WHERE study_id = %s"
             args = [id_]
-            qdb.sql_connection.TRN.add(sql, args)
 
             sql = "DELETE FROM qiita.study_portal WHERE study_id = %s"
             qdb.sql_connection.TRN.add(sql, args)
