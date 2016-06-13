@@ -5,9 +5,28 @@
 Prepare information files
 =========================
 
-The set of required fields for the *sample information file* and *prep
-information file* files varies based on the functionality that you want to
+The set of required fields for the *sample information* and *preparation
+information files* varies based on the functionality that you want to
 use from the system.
+
+As described in :doc:`../qiita-philosophy/index`, a Qiita study can have
+many biological samples, each with many preparations for different kinds of
+multi-omic analysis. As described in :doc:`getting-started`, the study will
+have a single *sample information file* that will define the biological context
+of each sample. Each multi-omic data type prepared will have a separate
+*preparation information file* that will describe the sequencing technology
+or analytical chemistry used to generate that data set.
+
+Please note that while *sample information* and *preparation information files*
+are similar to a `QIIME metadata file
+<http://qiime.org/documentation/file_formats.html#metadata-mapping-files>`__,
+they are conceptually different. A QIIME metadata file includes information
+about the biological context, like ``sample_type``, and about the wet lab
+processing, like ``BarcodeSequence``. Qiita intentionally separates this
+information into two separate files; it would be conceptually incorrect
+to include ``BarcodeSequence`` with the *sample information*, as this
+information pertains to the wet lab preparation and should be placed in the
+*preparation information file*.
 
 Example files
 -------------
@@ -17,6 +36,11 @@ You can download an example sample information file and prep information file fr
 
 Sample information file
 -----------------------
+
+The *sample information file* will define the biological context of each
+sample, with categories like ``sample_type``, ``treatment``,
+etc. The ``sample_name`` defined in this file is used to relate each
+sample in the preparation file with the biological sample.
 
 Required fields for Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -92,6 +116,11 @@ Optional fields for centralized Qiita by portal
 
 Prep information file
 ---------------------
+
+The *preparation information file* will describe the wet lab technology used
+to generate this data type, including sequencing, proteomics, metabolomics,
+etc. A shared ``sample_name`` linkes a prepared sample to a biological
+sample in the *sample information file.*
 
 Required fields for Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~
