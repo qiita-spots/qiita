@@ -11,7 +11,8 @@ from __future__ import division
 from unittest import TestCase, main
 
 from qiita_core.util import (
-    send_email, qiita_test_checker, execute_as_transaction, get_qiita_version)
+    send_email, qiita_test_checker, execute_as_transaction, get_qiita_version,
+    is_test_environment)
 import qiita_db as qdb
 
 
@@ -27,6 +28,9 @@ class UtilTests(TestCase):
         with self.assertRaises(IOError):
             send_email("antgonza@gmail.com", "This is a test",
                        "This is the body of the test")
+
+    def test_is_test_environment(self):
+        self.assertTrue(is_test_environment())
 
     def test_qiita_test_checker(self):
         """testing qiita test checker"""
