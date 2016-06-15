@@ -201,5 +201,30 @@ class CompleteHandlerTests(OauthTestingBase):
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
 
+
+class ProcessingJobAPItestHandlerTests(OauthTestingBase):
+    database = True
+
+    def test_post_processing_job(self):
+        data = {
+            'user': 'demo@microbio.me',
+            'command': 3,
+            'parameters': dumps({"reference": 1,
+                                 "sortmerna_e_value": 1,
+                                 "sortmerna_max_pos": 10000,
+                                 "similarity": 0.97,
+                                 "sortmerna_coverage": 0.97,
+                                 "threads": 1,
+                                 "input_data": 1})
+            }
+
+        obs = self.post('/apitest/processing_job/', headers=self.header,
+                        data=data)
+        self.assertEqual(obs.code, 200)
+
+        obs = loads(obs.body)
+        self.assertEqual(obs.keys(), ['job'])
+        self.assertIsNotNone(obs['job'])
+
 if __name__ == '__main__':
     main()
