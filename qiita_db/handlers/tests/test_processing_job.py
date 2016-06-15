@@ -226,5 +226,30 @@ class ProcessingJobAPItestHandlerTests(OauthTestingBase):
         self.assertEqual(obs.keys(), ['job'])
         self.assertIsNotNone(obs['job'])
 
+    def test_post_processing_job_status(self):
+        data = {
+            'user': 'demo@microbio.me',
+            'command': 3,
+            'status': 'running',
+            'parameters': dumps({"reference": 1,
+                                 "sortmerna_e_value": 1,
+                                 "sortmerna_max_pos": 10000,
+                                 "similarity": 0.97,
+                                 "sortmerna_coverage": 0.97,
+                                 "threads": 1,
+                                 "input_data": 1})
+            }
+
+        obs = self.post('/apitest/processing_job/', headers=self.header,
+                        data=data)
+        self.assertEqual(obs.code, 200)
+
+        obs = loads(obs.body)
+        self.assertEqual(obs.keys(), ['job'])
+        job_id = obs['job']
+        self.assertTrue(qdb.processing_job.ProcessingJob.exists(job_id))
+        self.assertEqual(qdb.processing_job.ProcessingJob(job_id).status,
+                         'running')
+
 if __name__ == '__main__':
     main()
