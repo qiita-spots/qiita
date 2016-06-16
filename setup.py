@@ -108,7 +108,7 @@ setup(name='qiita-spots',
                         'ipython[all] >= 2.4.1, < 2.5', 'pyparsing',
                         'h5py >= 2.3.1', 'biom-format', 'natsort', 'networkx',
                         'scikit-bio >= 0.2.3, < 0.3.0', 'wtforms == 2.0.1',
-                        'qiime >= 1.9.0, < 1.10.0', 'moi',
+                        'qiime >= 1.9.0, < 1.10.0',
                         'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
                         'gitpython'],
       classifiers=classifiers

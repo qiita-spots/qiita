@@ -28,7 +28,7 @@ If you receive an error message about conda being unable to find one of the spec
 
 ### Brief introduction to managing conda environments
 
-Though these instructions use the newly created `qiita` conda environment, the concepts apply to managing conda environments in general. 
+Though these instructions use the newly created `qiita` conda environment, the concepts apply to managing conda environments in general.
 
 Activate your newly created virtual environment for qiita whenever you want to run or develop for it:
 
@@ -64,7 +64,7 @@ Install the non-python dependencies
 There are several options to install these dependencies depending on your needs:
 
 - **We suggest installing the exact versions in these instructions by following the instructions of the provided links and making them globally available in your machine. However, this might interfere with other apps that might require different versions.** 
-- Alternatively, you could install them via conda. However, the conda repository may not have the exact versions of these dependencies that you want. 
+- Alternatively, you could install them via conda. However, the conda repository may not have the exact versions of these dependencies that you want.
 - You could setup a full development environment with [Vagrant](https://www.vagrantup.com/), and continue using conda under it to primarily manage python dependencies. Note that we don't cover Vagrant in these instructions.
 
 ### PostgreSQL installation on Mac OS X
@@ -102,6 +102,11 @@ Navigate to the cloned directory and ensure your conda environment is active:
 ```bash
 cd qiita
 source activate qiita
+```
+
+Install the development version of moi:
+```bash
+pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
 ```
 
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
