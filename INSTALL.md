@@ -104,6 +104,11 @@ cd qiita
 source activate qiita
 ```
 
+Install the development version of moi:
+```bash
+pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
+```
+
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
 
 ```bash
