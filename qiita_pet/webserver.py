@@ -11,6 +11,7 @@ from moi import moi_js, moi_list_js
 from moi.websocket import MOIMessageHandler
 
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.util import is_test_environment
 from qiita_pet.handlers.base_handlers import (MainHandler, NoPageHandler)
 from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
@@ -40,12 +41,13 @@ from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
 from qiita_pet.handlers.prep_template import PrepTemplateHandler
 from qiita_pet.handlers.ontology import OntologyHandler
-from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
-                                              ActiveStepHandler,
-                                              CompleteHandler)
+from qiita_db.handlers.processing_job import (
+    JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
+    ProcessingJobAPItestHandler)
 from qiita_db.handlers.artifact import ArtifactHandler
 from qiita_db.handlers.oauth2 import TokenAuthHandler
 from qiita_db.handlers.reference import ReferenceFilepathsHandler
+from qiita_db.handlers.core import ResetAPItestHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
@@ -156,6 +158,15 @@ class Application(tornado.web.Application):
                 (r"/admin/portals/studiesAJAX/", StudyPortalAJAXHandler)
             ]
             handlers.extend(portals)
+
+        if is_test_environment():
+            # We add the endpoints for testing plugins
+            test_handlers = [
+                (r"/apitest/processing_job/", ProcessingJobAPItestHandler),
+                (r"/apitest/reset/", ResetAPItestHandler)
+            ]
+            handlers.extend(test_handlers)
+
         # 404 PAGE MUST BE LAST IN THIS LIST!
         handlers.append((r".*", NoPageHandler))
 

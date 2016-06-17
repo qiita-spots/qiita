@@ -147,3 +147,24 @@ class CompleteHandler(OauthBaseHandler):
                 raise HTTPError(403, str(e))
 
         self.finish()
+
+
+class ProcessingJobAPItestHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self):
+        user = self.get_argument('user', 'test@foo.bar')
+        cmd = self.get_argument('command')
+        params_dict = self.get_argument('parameters')
+        status = self.get_argument('status', None)
+
+        params = qdb.software.Parameters.load(
+            qdb.software.Command(cmd),
+            json_str=params_dict)
+
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User(user), params)
+
+        if status:
+            job._set_status(status)
+
+        self.write({'job': job.id})
