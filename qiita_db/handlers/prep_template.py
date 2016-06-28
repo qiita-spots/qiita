@@ -12,12 +12,12 @@ import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
 
-def _get_prep_template(p_id):
-    """Returns the prep template with the given id if it exists
+def _get_prep_template(pid):
+    """Returns the prep template with the given `pid` if it exists
 
     Parameters
     ----------
-    p_id : str
+    pid : str
         The prep template id
 
     Returns
@@ -32,8 +32,8 @@ def _get_prep_template(p_id):
         If there is a problem instantiating the template, with error code 500
     """
     try:
-        p_id = int(p_id)
-        pt = qdb.metadata_template.prep_template.PrepTemplate(p_id)
+        pid = int(pid)
+        pt = qdb.metadata_template.prep_template.PrepTemplate(pid)
     except qdb.exceptions.QiitaDBUnknownIDError:
         raise HTTPError(404)
     except Exception as e:
