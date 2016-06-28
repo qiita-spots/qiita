@@ -38,7 +38,7 @@ def _get_prep_template(pid):
         raise HTTPError(404)
     except Exception as e:
         raise HTTPError(500, 'Error instantiating prep template %s: %s'
-                             % (p_id, str(e)))
+                             % (pid, str(e)))
 
     return pt
 
