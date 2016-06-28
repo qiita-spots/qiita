@@ -45,7 +45,8 @@ from qiita_db.handlers.processing_job import (
     JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
     ProcessingJobAPItestHandler)
 from qiita_db.handlers.artifact import ArtifactHandler
-from qiita_db.handlers.prep_template import PrepTemplateDataHandler
+from qiita_db.handlers.prep_template import (
+    PrepTemplateDataHandler, PrepTemplateAPItestHandler)
 from qiita_db.handlers.oauth2 import TokenAuthHandler
 from qiita_db.handlers.reference import ReferenceFilepathsHandler
 from qiita_db.handlers.core import ResetAPItestHandler
@@ -165,7 +166,8 @@ class Application(tornado.web.Application):
             # We add the endpoints for testing plugins
             test_handlers = [
                 (r"/apitest/processing_job/", ProcessingJobAPItestHandler),
-                (r"/apitest/reset/", ResetAPItestHandler)
+                (r"/apitest/reset/", ResetAPItestHandler),
+                (r"/apitest/prep_template/", PrepTemplateAPItestHandler)
             ]
             handlers.extend(test_handlers)
 
