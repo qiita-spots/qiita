@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import HTTPError
-from collections import defaultdict
 
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
