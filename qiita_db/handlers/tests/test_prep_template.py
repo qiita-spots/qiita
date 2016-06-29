@@ -122,5 +122,6 @@ class PrepTemplateAPItestHandlerTests(OauthTestingBase):
         pt = qdb.metadata_template.prep_template.PrepTemplate(obs['prep'])
         self.assertItemsEqual(pt.keys(), ['1.SKB8.640193', '1.SKD8.640184'])
 
+
 if __name__ == '__main__':
     main()
