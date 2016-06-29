@@ -6,7 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from json import loads
+
 from tornado.web import HTTPError
+import pandas as pd
 
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
@@ -63,3 +66,16 @@ class PrepTemplateDataHandler(OauthBaseHandler):
             response = {'data': pt.to_dataframe().to_dict(orient='index')}
 
         self.write(response)
+
+
+class PrepTemplateAPItestHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self):
+        prep_info_dict = loads(self.get_argument('prep_info'))
+        study = self.get_argument('study')
+        data_type = self.get_argument('data_type')
+
+        metadata = pd.DataFrame.from_dict(prep_info_dict, orient='index')
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, qdb.study.Study(study), data_type)
+        self.write({'prep': pt.id})

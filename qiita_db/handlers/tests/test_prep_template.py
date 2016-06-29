@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main, TestCase
-from json import loads
+from json import loads, dumps
 
 from tornado.web import HTTPError
 
@@ -95,6 +95,33 @@ class PrepTemplateDataHandlerTests(OauthTestingBase):
             'target_gene': '16S rRNA',
             'target_subfragment': 'V4'}
         self.assertEqual(obs, exp)
+
+
+class PrepTemplateAPItestHandlerTests(OauthTestingBase):
+    database = True
+
+    def test_post(self):
+        metadata_dict = {
+            'SKB8.640193': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq'},
+            'SKD8.640184': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq'}}
+        data = {'prep_info': dumps(metadata_dict),
+                'study': 1,
+                'data_type': '16S'}
+        obs = self.post('/apitest/prep_template/', headers=self.header,
+                        data=data)
+        self.assertEqual(obs.code, 200)
+        obs = loads(obs.body)
+        self.assertEqual(obs.keys(), ['prep'])
+
+        pt = qdb.metadata_template.prep_template.PrepTemplate(obs['prep'])
+        self.assertItemsEqual(pt.keys(), ['1.SKB8.640193', '1.SKD8.640184'])
+
 
 if __name__ == '__main__':
     main()
