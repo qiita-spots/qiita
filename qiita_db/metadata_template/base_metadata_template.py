@@ -1358,28 +1358,19 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         # test values
                         if datatype == datetime:
                             val = str(val)
-                            try:
-                                datetime.strptime(val, '%m/%d/%Y %H:%M:%S')
-                            except ValueError:
+                            formats = ['%m/%d/%Y %H:%M:%S', '%m/%d/%Y %H:%M',
+                                       '%m/%d/%Y %H', '%m/%d/%Y', '%m/%Y',
+                                       '%Y']
+                            date = None
+                            for fmt in formats:
                                 try:
-                                    datetime.strptime(val, '%m/%d/%Y %H:%M')
+                                    date = datetime.strptime(val, fmt)
+                                    break
                                 except ValueError:
-                                    try:
-                                        datetime.strptime(val, '%m/%d/%Y %H')
-                                    except ValueError:
-                                        try:
-                                            datetime.strptime(val, '%m/%d/%Y')
-                                        except ValueError:
-                                            try:
-                                                datetime.strptime(val, '%d/%Y')
-                                            except ValueError:
-                                                try:
-                                                    datetime.strptime(val,
-                                                                      '%Y')
-                                                except ValueError:
-                                                    warning_msg.append(
-                                                        '%s, wrong value "%s"'
-                                                        % (sample, val))
+                                    pass
+                            if date is None:
+                                warning_msg.append('%s, wrong value "%s"' % (
+                                    sample, val))
                         else:
                             try:
                                 datatype(val)
