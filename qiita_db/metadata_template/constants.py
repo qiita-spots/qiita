@@ -70,10 +70,9 @@ ALL_RESTRICTIONS = [SAMPLE_TEMPLATE_COLUMNS, PREP_TEMPLATE_COLUMNS,
                     PREP_TEMPLATE_COLUMNS_TARGET_GENE]
 
 # This is what we consider as "NaN" cell values on metadata import
-EBI_NULL_VALUES = ['not applicable', 'not available: not collected',
-                   'not available: to be reported',
-                   'not available: restricted access', 'obscured',
-                   'temporarily obscured']
+# from http://www.ebi.ac.uk/ena/about/missing-values-reporting
+EBI_NULL_VALUES = ['Not applicable', 'Missing: Not collected',
+                   'Missing: Not provided', 'Missing: Restricted access']
 
 # These are what will be considered 'True' bool values on metadata import
 TRUE_VALUES = ['Yes', 'yes', 'YES', 'Y', 'y', 'True', 'true', 'TRUE', 't', 'T']

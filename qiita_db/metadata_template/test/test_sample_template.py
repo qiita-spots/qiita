@@ -846,7 +846,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
         pt = qdb.metadata_template.sample_template.SampleTemplate(1)
         obs = pt.get_category('latitude')
         exp = {'1.SKB2.640194': '35.2374368957',
-               '1.SKM4.640180': 'not applicable',
+               '1.SKM4.640180': 'Not applicable',
                '1.SKB3.640195': '95.2060749748',
                '1.SKB6.640176': '78.3634273709',
                '1.SKD6.640190': '29.1499460692',
@@ -858,7 +858,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                '1.SKB7.640196': '13.089194595',
                '1.SKD4.640185': '40.8623799474',
                '1.SKB8.640193': '74.0894932572',
-               '1.SKM3.640197': 'not applicable',
+               '1.SKM3.640197': 'Not applicable',
                '1.SKD5.640186': '85.4121476399',
                '1.SKB1.640202': '4.59216095574',
                '1.SKM1.640183': '38.2627021402',
