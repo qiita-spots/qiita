@@ -1359,10 +1359,27 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         if datatype == datetime:
                             val = str(val)
                             try:
-                                datetime.strptime(val, '%m/%d/%y %H:%M:%S')
+                                datetime.strptime(val, '%m/%d/%Y %H:%M:%S')
                             except ValueError:
-                                warning_msg.append('%s, wrong value "%s"' % (
-                                    sample, val))
+                                try:
+                                    datetime.strptime(val, '%m/%d/%Y %H:%M')
+                                except ValueError:
+                                    try:
+                                        datetime.strptime(val, '%m/%d/%Y %H')
+                                    except ValueError:
+                                        try:
+                                            datetime.strptime(val, '%m/%d/%Y')
+                                        except ValueError:
+                                            try:
+                                                datetime.strptime(val, '%d/%Y')
+                                            except ValueError:
+                                                try:
+                                                    datetime.strptime(val,
+                                                                      '%Y')
+                                                except ValueError:
+                                                    warning_msg.append(
+                                                        '%s, wrong value "%s"'
+                                                        % (sample, val))
                         else:
                             try:
                                 datatype(val)
