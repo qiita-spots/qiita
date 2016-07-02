@@ -37,26 +37,9 @@ You can download an example sample information file and prep information file fr
 EBI-ENA NULL values vocabulary
 ------------------------------
 
-Based on discussions with the expert/research communities and feedback from submitters
-the ENA has defined a set of valid NULL values:
+We support the following values: *Not applicable*, *Missing: Not collected*, *Missing: Not provided*, *Missing: Restricted access*.
 
-+--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| Value                                | Description                                                                                                                                      |
-+======================================+==================================================================================================================================================+
-| ``not applicable``                   | metadata information is inappropriate to report, can indicate that the standard itself fails to model or represent the information appropriately |
-+--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``not available: not collected``     | metadata information of an expected format was not given because it has not been collected                                                       |
-+--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``not available: to be reported``    | metadata information of an expected format was not given, a value will be given at the later stage                                               |
-+--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``not available: restricted access`` | metadata information exists but can not be released openly                                                                                       |
-+--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``obscured``                         | metadata information has been provided deliberately with low precision                                                                           |
-+--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``temporarily obscured``             | metadata information has been provided deliberately with low precision, a higher precision value will be provided at a later stage               |
-+--------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------+
-
-The last two, which consider level of precision, will be used, for example, for geo-references (latitude, longitude and country/sea).
+For the latest definitions and explanation visit the `EBI/ENA Missing value reporting <http://www.ebi.ac.uk/ena/about/missing-values-reporting>`__.
 
 Sample information file
 -----------------------
@@ -83,19 +66,24 @@ Required fields for EBI submission
 
 These are the columns required for successfully submit your data to EBI:
 
-+----------------------------------+----------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| Field name                       | Format               | Description                                                                                                                                         |
-+==================================+======================+=====================================================================================================================================================+
-| ``collection_timestamp``         | ``mm/dd/yy hh:mm``   | Date and time with time in 24-hour format in which the sample was collected.                                                                        |
-+----------------------------------+----------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``physical_specimen_location``   | free text            | Where you would go to find physical sample or DNA, regardless of whether it is still available or not.                                              |
-+----------------------------------+----------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``taxon_id``                     | integer              | NCBI's taxon id for the sample. Note, for amplicon sequencing, this is the taxonomy id for the metagenome being targeted, not the host taxonomy id. |
-+----------------------------------+----------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``description``                  | free text            | Description of the sample.                                                                                                                          |
-+----------------------------------+----------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
-| ``scientific_name``              | free text            | NCBI's scientific name for the provided taxon ID. Note, the name of the metagenome, not the host scientific name.                                   |
-+----------------------------------+----------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
++----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| Field name                       | Format                  | Description                                                                                                                                         |
++==================================+=========================+=====================================================================================================================================================+
+| ``collection_timestamp``         | ``mm/dd/yyyy hh:mm:ss`` | The time stamp (preferred) of when the sample was collected. Several format are accepted.                                                           |
+|                                  | or ``mm/dd/yyyy hh:mm`` |                                                                                                                                                     |
+|                                  | or ``mm/dd/yyyy hh``    |                                                                                                                                                     |
+|                                  | or ``mm/dd/yyyy``       |                                                                                                                                                     |
+|                                  | or ``mm/yyyy``          |                                                                                                                                                     |
+|                                  | or ``yyyy``             |                                                                                                                                                     |
++----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``physical_specimen_location``   | free text               | Where you would go to find physical sample or DNA, regardless of whether it is still available or not.                                              |
++----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``taxon_id``                     | integer                 | NCBI's taxon id for the sample. Note, for amplicon sequencing, this is the taxonomy id for the metagenome being targeted, not the host taxonomy id. |
++----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``description``                  | free text               | Description of the sample.                                                                                                                          |
++----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| ``scientific_name``              | free text               | NCBI's scientific name for the provided taxon ID. Note, the name of the metagenome, not the host scientific name.                                   |
++----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Required fields for centralized Qiita
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
