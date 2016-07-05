@@ -8,9 +8,7 @@
 
 from six import StringIO
 from unittest import TestCase, main
-from datetime import datetime
 
-import numpy as np
 import numpy.testing as npt
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
@@ -27,48 +25,8 @@ class TestUtil(TestCase):
             'Sample3': {'int_col': 3, 'float_col': 3, 'str_col': 'string30'},
         }
         self.metadata_map = pd.DataFrame.from_dict(metadata_dict,
-                                                   orient='index')
+                                                   orient='index', dtype=str)
         self.headers = ['float_col', 'str_col', 'int_col']
-
-    def test_type_lookup(self):
-        """Correctly returns the SQL datatype of the passed dtype"""
-        self.assertEqual(qdb.metadata_template.util.type_lookup(
-            self.metadata_map['float_col'].dtype), 'float8')
-        self.assertEqual(qdb.metadata_template.util.type_lookup(
-            self.metadata_map['int_col'].dtype), 'integer')
-        self.assertEqual(qdb.metadata_template.util.type_lookup(
-            self.metadata_map['str_col'].dtype), 'varchar')
-
-    def test_get_datatypes(self):
-        """Correctly returns the data types of each column"""
-        obs = qdb.metadata_template.util.get_datatypes(
-            self.metadata_map.ix[:, self.headers])
-        exp = ['float8', 'varchar', 'integer']
-        self.assertEqual(obs, exp)
-
-    def test_cast_to_python(self):
-        """Correctly returns the value casted"""
-        b = np.bool_(True)
-        obs = qdb.metadata_template.util.cast_to_python(b)
-        self.assertTrue(obs)
-        self.assertFalse(isinstance(obs, np.bool_))
-        self.assertTrue(isinstance(obs, bool))
-
-        exp = datetime(2015, 9, 1, 10, 00)
-        dt = np.datetime64(exp)
-        obs = qdb.metadata_template.util.cast_to_python(dt)
-        self.assertEqual(obs, exp)
-        self.assertFalse(isinstance(obs, np.datetime64))
-        self.assertTrue(isinstance(obs, datetime))
-
-    def test_as_python_types(self):
-        """Correctly returns the columns as python types"""
-        obs = qdb.metadata_template.util.as_python_types(
-            self.metadata_map, self.headers)
-        exp = [[2.1, 3.1, 3],
-               ['str1', '200', 'string30'],
-               [1, 2, 3]]
-        self.assertEqual(obs, exp)
 
     def test_prefix_sample_names_with_id(self):
         exp_metadata_dict = {
@@ -76,7 +34,8 @@ class TestUtil(TestCase):
             '1.Sample2': {'int_col': 2, 'float_col': 3.1, 'str_col': '200'},
             '1.Sample3': {'int_col': 3, 'float_col': 3, 'str_col': 'string30'},
         }
-        exp_df = pd.DataFrame.from_dict(exp_metadata_dict, orient='index')
+        exp_df = pd.DataFrame.from_dict(exp_metadata_dict, orient='index',
+                                        dtype=str)
         qdb.metadata_template.util.prefix_sample_names_with_id(
             self.metadata_map, 1)
         self.metadata_map.sort_index(inplace=True)
@@ -86,14 +45,14 @@ class TestUtil(TestCase):
     def test_load_template_to_dataframe(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_qiime_map(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(QIIME_TUTORIAL_MAP_SUBSET), index='#SampleID')
-        exp = pd.DataFrame.from_dict(QIIME_TUTORIAL_MAP_DICT_FORM)
+        exp = pd.DataFrame.from_dict(QIIME_TUTORIAL_MAP_DICT_FORM, dtype=str)
         exp.index.name = 'SampleID'
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
@@ -109,7 +68,7 @@ class TestUtil(TestCase):
     def test_load_template_to_dataframe_scrubbing(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_SPACES))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -118,14 +77,14 @@ class TestUtil(TestCase):
             qdb.exceptions.QiitaDBWarning,
             qdb.metadata_template.util.load_template_to_dataframe,
             StringIO(EXP_ST_SPACES_EMPTY_COLUMN))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_empty_rows(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -133,7 +92,7 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES))
         exp = pd.DataFrame.from_dict(
-            SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM)
+            SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         obs.sort_index(inplace=True)
         exp.sort_index(inplace=True)
@@ -142,13 +101,13 @@ class TestUtil(TestCase):
     def test_load_template_to_dataframe_empty_sample_names(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -157,14 +116,14 @@ class TestUtil(TestCase):
             qdb.exceptions.QiitaDBWarning,
             qdb.metadata_template.util.load_template_to_dataframe,
             StringIO(SAMPLE_TEMPLATE_EMPTY_COLUMN))
-        exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM)
+        exp = pd.DataFrame.from_dict(ST_EMPTY_COLUMN_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_column_with_nas(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(SAMPLE_TEMPLATE_COLUMN_WITH_NAS))
-        exp = pd.DataFrame.from_dict(ST_COLUMN_WITH_NAS_DICT_FORM)
+        exp = pd.DataFrame.from_dict(ST_COLUMN_WITH_NAS_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -176,14 +135,14 @@ class TestUtil(TestCase):
     def test_load_template_to_dataframe_whitespace(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_WHITESPACE))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_lowercase(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_MULTICASE))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_DICT_FORM, dtype=str)
         exp.index.name = 'sample_name'
         exp.rename(columns={"str_column": "str_CoLumn"}, inplace=True)
         assert_frame_equal(obs, exp)
@@ -198,21 +157,23 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_LAT_ALL_INT))
 
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_LAT_ALL_INT_DICT)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_LAT_ALL_INT_DICT,
+                                     dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT))
 
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT,
+                                     dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
     def test_load_template_to_dataframe_with_nulls(self):
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             StringIO(EXP_SAMPLE_TEMPLATE_NULLS))
-        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_NULLS_DICT)
+        exp = pd.DataFrame.from_dict(SAMPLE_TEMPLATE_NULLS_DICT, dtype=str)
         exp.index.name = 'sample_name'
         assert_frame_equal(obs, exp)
 
@@ -246,19 +207,12 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.get_invalid_sample_names(one_invalid)
         self.assertItemsEqual(obs, [' ', ' ', ' '])
 
-    def test_invalid_lat_long(self):
-
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            obs = qdb.metadata_template.util.load_template_to_dataframe(
-                StringIO(SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS))
-            # prevent flake8 from complaining
-            str(obs)
-
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            obs = qdb.metadata_template.util.load_template_to_dataframe(
-                StringIO(SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS))
-            # prevent flake8 from complaining
-            str(obs)
+    def test_get_invalid_column_names(self):
+        invalid = ['tax on', 'bla.', '.', '{', 'this|is', '4column']
+        valid = ['fine', 'select']
+        obs = qdb.metadata_template.util.get_invalid_column_names(
+            invalid + valid)
+        self.assertEqual(obs, invalid)
 
     def test_looks_like_qiime_mapping_file(self):
         obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(
@@ -289,6 +243,12 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util._parse_mapping_file(s2)
         self.assertEqual(obs, exp)
 
+    def test_get_pgsql_reserved_words(self):
+        # simply testing that at least one of the well know reserved words is
+        # in the list
+        obs = qdb.metadata_template.util.get_pgsql_reserved_words()
+        self.assertIn('select', obs)
+
 
 QIIME_TUTORIAL_MAP_SUBSET = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tTreatment\tDOB\t"
@@ -303,44 +263,44 @@ EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
     "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "2.Sample2\t05/29/2014 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_MULTICASE = (
     "sAmPle_Name\tcollection_timestamp\tDescription\thas_extracted_data\t"
     "has_physical_specimen\thost_Subject_id\tint_column\tlatitude\tLongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\tstr_CoLumn\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
     "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "2.Sample2\t05/29/2014 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_LAT_ALL_INT = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
     "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "2.Sample2\t05/29/2014 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
     "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "2.Sample2\t05/29/2014 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_DUPE_COLS = (
@@ -348,13 +308,13 @@ EXP_SAMPLE_TEMPLATE_DUPE_COLS = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\tstr_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\tValue for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
+    "2.Sample2\t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tValue for sample 2\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\tValue for sample 3\n")
 
@@ -363,13 +323,13 @@ EXP_SAMPLE_TEMPLATE_SPACES = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1         \t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "2.Sample2  \t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
@@ -378,13 +338,13 @@ EXP_SAMPLE_TEMPLATE_WHITESPACE = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2\t      2014-05-29 12:24:51 \t"
+    "2.Sample2\t      05/29/2014 12:24:51 \t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\t Value for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\t   Test Sample 3 \tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\t   Test Sample 3 \tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
@@ -393,13 +353,13 @@ EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1         \t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "2.Sample2  \t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
     "\t\t\t\t\t\t\t\t\t\t\t\t\n"
@@ -410,13 +370,13 @@ EXP_ST_SPACES_EMPTY_COLUMN = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\t\n"
-    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1         \t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\t\n"
-    "2.Sample2  \t2014-05-29 12:24:51\t"
+    "2.Sample2  \t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\t\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\t\n")
 
@@ -425,13 +385,13 @@ EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "002.000\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "002.000\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "1.11111\t2014-05-29 12:24:51\t"
+    "1.11111\t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tValue for sample 2\n"
-    "0.12121\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "0.12121\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
@@ -440,16 +400,16 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAMES = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
+    "2.Sample2\t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
-    "\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
     "\t\t\t\t\t\t\t\t\t\t\t\n"
@@ -460,13 +420,13 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
+    "2.Sample2\t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
     "\t\t\t\t\t \t\t\t\t\t \t\t\n"
@@ -477,13 +437,13 @@ SAMPLE_TEMPLATE_EMPTY_COLUMN = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
+    "2.Sample2\t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\t\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "\n")
 
@@ -492,13 +452,13 @@ SAMPLE_TEMPLATE_COLUMN_WITH_NAS = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "NA\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
+    "2.Sample2\t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tNA\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "NA\n")
 
@@ -507,43 +467,28 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAME = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "NA\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
+    "2.Sample2\t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tNA\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "NA\n")
-
-SAMPLE_TEMPLATE_INVALID_LATITUDE_COLUMNS = (
-    "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
-    "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
-    "physical_location\trequired_sample_info_status\tsample_type\t"
-    "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
-    "1\t42\t41.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
-    "Test Sample 2\tTrue\tTrue\1\t4.2\t1.1\tlocation1\treceived\t"
-    "type1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
-    "True\1\tXXXXX4.8\t4.41\tlocation1\treceived\ttype1\t"
-    "Value for sample 3\n")
 
 SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "1\t11.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2\t2014-05-29 12:24:51\t"
+    "2.Sample2\t05/29/2014 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\1\t4.2\tXXX\tlocation1\treceived\t"
     "type1\tValue for sample 2\n"
-    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
     "True\1\t4.8\t4.XXXXX41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
@@ -558,42 +503,42 @@ EXP_SAMPLE_TEMPLATE_NULLS = (
 
 
 SAMPLE_TEMPLATE_NULLS_DICT = {
-    'my_bool_col': {"sample.1": True,
-                    "sample.2": False,
-                    "sample.3": True,
-                    "sample.4": False,
-                    "sample.5": True,
-                    "sample.6": False},
-    'my_bool_col_w_nulls': {"sample.1": False,
-                            "sample.2": None,
-                            "sample.3": True,
-                            "sample.4": None,
-                            "sample.5": True,
-                            "sample.6": True}
+    'my_bool_col': {"sample.1": 'True',
+                    "sample.2": 'False',
+                    "sample.3": 'True',
+                    "sample.4": 'False',
+                    "sample.5": 'True',
+                    "sample.6": 'False'},
+    'my_bool_col_w_nulls': {"sample.1": 'False',
+                            "sample.2": 'Unknown',
+                            "sample.3": 'True',
+                            "sample.4": '',
+                            "sample.5": 'True',
+                            "sample.6": 'True'}
 }
 
 SAMPLE_TEMPLATE_DICT_FORM = {
-    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                             '2.Sample2': '2014-05-29 12:24:51',
-                             '2.Sample3': '2014-05-29 12:24:51'},
+    'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
+                             '2.Sample2': '05/29/2014 12:24:51',
+                             '2.Sample3': '05/29/2014 12:24:51'},
     'description': {'2.Sample1': 'Test Sample 1',
                     '2.Sample2': 'Test Sample 2',
                     '2.Sample3': 'Test Sample 3'},
-    'has_extracted_data': {'2.Sample1': True,
-                           '2.Sample2': True,
-                           '2.Sample3': True},
-    'has_physical_specimen': {'2.Sample1': True,
-                              '2.Sample2': True,
-                              '2.Sample3': True},
+    'has_extracted_data': {'2.Sample1': 'True',
+                           '2.Sample2': 'True',
+                           '2.Sample3': 'True'},
+    'has_physical_specimen': {'2.Sample1': 'True',
+                              '2.Sample2': 'True',
+                              '2.Sample3': 'True'},
     'host_subject_id': {'2.Sample1': 'NotIdentified',
                         '2.Sample2': 'NotIdentified',
                         '2.Sample3': 'NotIdentified'},
-    'latitude': {'2.Sample1': 42.420000000000002,
-                 '2.Sample2': 4.2000000000000002,
-                 '2.Sample3': 4.7999999999999998},
-    'longitude': {'2.Sample1': 41.409999999999997,
-                  '2.Sample2': 1.1000000000000001,
-                  '2.Sample3': 4.4100000000000001},
+    'latitude': {'2.Sample1': '42.42',
+                 '2.Sample2': '4.2',
+                 '2.Sample3': '4.8'},
+    'longitude': {'2.Sample1': '41.41',
+                  '2.Sample2': '1.1',
+                  '2.Sample3': '4.41'},
     'physical_location': {'2.Sample1': 'location1',
                           '2.Sample2': 'location1',
                           '2.Sample3': 'location1'},
@@ -606,33 +551,33 @@ SAMPLE_TEMPLATE_DICT_FORM = {
     'str_column': {'2.Sample1': 'Value for sample 1',
                    '2.Sample2': 'Value for sample 2',
                    '2.Sample3': 'Value for sample 3'},
-    'int_column': {'2.Sample1': 1,
-                   '2.Sample2': 2,
-                   '2.Sample3': 3}
+    'int_column': {'2.Sample1': '1',
+                   '2.Sample2': '2',
+                   '2.Sample3': '3'}
     }
 
 SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
-    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                             '2.Sample2': '2014-05-29 12:24:51',
-                             '2.Sample3': '2014-05-29 12:24:51'},
+    'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
+                             '2.Sample2': '05/29/2014 12:24:51',
+                             '2.Sample3': '05/29/2014 12:24:51'},
     'description': {'2.Sample1': 'Test Sample 1',
                     '2.Sample2': 'Test Sample 2',
                     '2.Sample3': 'Test Sample 3'},
-    'has_extracted_data': {'2.Sample1': True,
-                           '2.Sample2': True,
-                           '2.Sample3': True},
-    'has_physical_specimen': {'2.Sample1': True,
-                              '2.Sample2': True,
-                              '2.Sample3': True},
+    'has_extracted_data': {'2.Sample1': 'True',
+                           '2.Sample2': 'True',
+                           '2.Sample3': 'True'},
+    'has_physical_specimen': {'2.Sample1': 'True',
+                              '2.Sample2': 'True',
+                              '2.Sample3': 'True'},
     'host_subject_id': {'2.Sample1': 'NotIdentified',
                         '2.Sample2': 'NotIdentified',
                         '2.Sample3': 'NotIdentified'},
-    'latitude': {'2.Sample1': 42,
-                 '2.Sample2': 4,
-                 '2.Sample3': 4},
-    'longitude': {'2.Sample1': 41.409999999999997,
-                  '2.Sample2': 1.1000000000000001,
-                  '2.Sample3': 4.4100000000000001},
+    'latitude': {'2.Sample1': '42',
+                 '2.Sample2': '4',
+                 '2.Sample3': '4'},
+    'longitude': {'2.Sample1': '41.41',
+                  '2.Sample2': '1.1',
+                  '2.Sample3': '4.41'},
     'physical_location': {'2.Sample1': 'location1',
                           '2.Sample2': 'location1',
                           '2.Sample3': 'location1'},
@@ -645,33 +590,33 @@ SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
     'str_column': {'2.Sample1': 'Value for sample 1',
                    '2.Sample2': 'Value for sample 2',
                    '2.Sample3': 'Value for sample 3'},
-    'int_column': {'2.Sample1': 1,
-                   '2.Sample2': 2,
-                   '2.Sample3': 3}
+    'int_column': {'2.Sample1': '1',
+                   '2.Sample2': '2',
+                   '2.Sample3': '3'}
     }
 
 SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
-    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                             '2.Sample2': '2014-05-29 12:24:51',
-                             '2.Sample3': '2014-05-29 12:24:51'},
+    'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
+                             '2.Sample2': '05/29/2014 12:24:51',
+                             '2.Sample3': '05/29/2014 12:24:51'},
     'description': {'2.Sample1': 'Test Sample 1',
                     '2.Sample2': 'Test Sample 2',
                     '2.Sample3': 'Test Sample 3'},
-    'has_extracted_data': {'2.Sample1': True,
-                           '2.Sample2': True,
-                           '2.Sample3': True},
-    'has_physical_specimen': {'2.Sample1': True,
-                              '2.Sample2': True,
-                              '2.Sample3': True},
+    'has_extracted_data': {'2.Sample1': 'True',
+                           '2.Sample2': 'True',
+                           '2.Sample3': 'True'},
+    'has_physical_specimen': {'2.Sample1': 'True',
+                              '2.Sample2': 'True',
+                              '2.Sample3': 'True'},
     'host_subject_id': {'2.Sample1': 'NotIdentified',
                         '2.Sample2': 'NotIdentified',
                         '2.Sample3': 'NotIdentified'},
-    'latitude': {'2.Sample1': 42.0,
-                 '2.Sample2': 4.0,
-                 '2.Sample3': 4.8},
-    'longitude': {'2.Sample1': 41.409999999999997,
-                  '2.Sample2': 1.1000000000000001,
-                  '2.Sample3': 4.4100000000000001},
+    'latitude': {'2.Sample1': '42',
+                 '2.Sample2': '4',
+                 '2.Sample3': '4.8'},
+    'longitude': {'2.Sample1': '41.41',
+                  '2.Sample2': '1.1',
+                  '2.Sample3': '4.41'},
     'physical_location': {'2.Sample1': 'location1',
                           '2.Sample2': 'location1',
                           '2.Sample3': 'location1'},
@@ -684,33 +629,33 @@ SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
     'str_column': {'2.Sample1': 'Value for sample 1',
                    '2.Sample2': 'Value for sample 2',
                    '2.Sample3': 'Value for sample 3'},
-    'int_column': {'2.Sample1': 1,
-                   '2.Sample2': 2,
-                   '2.Sample3': 3}
+    'int_column': {'2.Sample1': '1',
+                   '2.Sample2': '2',
+                   '2.Sample3': '3'}
     }
 
 SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
-    'collection_timestamp': {'002.000': '2014-05-29 12:24:51',
-                             '1.11111': '2014-05-29 12:24:51',
-                             '0.12121': '2014-05-29 12:24:51'},
+    'collection_timestamp': {'002.000': '05/29/2014 12:24:51',
+                             '1.11111': '05/29/2014 12:24:51',
+                             '0.12121': '05/29/2014 12:24:51'},
     'description': {'002.000': 'Test Sample 1',
                     '1.11111': 'Test Sample 2',
                     '0.12121': 'Test Sample 3'},
-    'has_extracted_data': {'002.000': True,
-                           '1.11111': True,
-                           '0.12121': True},
-    'has_physical_specimen': {'002.000': True,
-                              '1.11111': True,
-                              '0.12121': True},
+    'has_extracted_data': {'002.000': 'True',
+                           '1.11111': 'True',
+                           '0.12121': 'True'},
+    'has_physical_specimen': {'002.000': 'True',
+                              '1.11111': 'True',
+                              '0.12121': 'True'},
     'host_subject_id': {'002.000': 'NotIdentified',
                         '1.11111': 'NotIdentified',
                         '0.12121': 'NotIdentified'},
-    'latitude': {'002.000': 42.420000000000002,
-                 '1.11111': 4.2000000000000002,
-                 '0.12121': 4.7999999999999998},
-    'longitude': {'002.000': 41.409999999999997,
-                  '1.11111': 1.1000000000000001,
-                  '0.12121': 4.4100000000000001},
+    'latitude': {'002.000': '42.42',
+                 '1.11111': '4.2',
+                 '0.12121': '4.8'},
+    'longitude': {'002.000': '41.41',
+                  '1.11111': '1.1',
+                  '0.12121': '4.41'},
     'physical_location': {'002.000': 'location1',
                           '1.11111': 'location1',
                           '0.12121': 'location1'},
@@ -725,27 +670,27 @@ SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
                    '0.12121': 'Value for sample 3'}}
 
 ST_EMPTY_COLUMN_DICT_FORM = \
-    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                              '2.Sample2': '2014-05-29 12:24:51',
-                              '2.Sample3': '2014-05-29 12:24:51'},
+    {'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
+                              '2.Sample2': '05/29/2014 12:24:51',
+                              '2.Sample3': '05/29/2014 12:24:51'},
      'description': {'2.Sample1': 'Test Sample 1',
                      '2.Sample2': 'Test Sample 2',
                      '2.Sample3': 'Test Sample 3'},
-     'has_extracted_data': {'2.Sample1': True,
-                            '2.Sample2': True,
-                            '2.Sample3': True},
-     'has_physical_specimen': {'2.Sample1': True,
-                               '2.Sample2': True,
-                               '2.Sample3': True},
+     'has_extracted_data': {'2.Sample1': 'True',
+                            '2.Sample2': 'True',
+                            '2.Sample3': 'True'},
+     'has_physical_specimen': {'2.Sample1': 'True',
+                               '2.Sample2': 'True',
+                               '2.Sample3': 'True'},
      'host_subject_id': {'2.Sample1': 'NotIdentified',
                          '2.Sample2': 'NotIdentified',
                          '2.Sample3': 'NotIdentified'},
-     'latitude': {'2.Sample1': 42.420000000000002,
-                  '2.Sample2': 4.2000000000000002,
-                  '2.Sample3': 4.7999999999999998},
-     'longitude': {'2.Sample1': 41.409999999999997,
-                   '2.Sample2': 1.1000000000000001,
-                   '2.Sample3': 4.4100000000000001},
+     'latitude': {'2.Sample1': '42.42',
+                  '2.Sample2': '4.2',
+                  '2.Sample3': '4.8'},
+     'longitude': {'2.Sample1': '41.41',
+                   '2.Sample2': '1.1',
+                   '2.Sample3': '4.41'},
      'physical_location': {'2.Sample1': 'location1',
                            '2.Sample2': 'location1',
                            '2.Sample3': 'location1'},
@@ -757,27 +702,27 @@ ST_EMPTY_COLUMN_DICT_FORM = \
                      '2.Sample3': 'type1'}}
 
 ST_COLUMN_WITH_NAS_DICT_FORM = \
-    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
-                              '2.Sample2': '2014-05-29 12:24:51',
-                              '2.Sample3': '2014-05-29 12:24:51'},
+    {'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
+                              '2.Sample2': '05/29/2014 12:24:51',
+                              '2.Sample3': '05/29/2014 12:24:51'},
      'description': {'2.Sample1': 'Test Sample 1',
                      '2.Sample2': 'Test Sample 2',
                      '2.Sample3': 'Test Sample 3'},
-     'has_extracted_data': {'2.Sample1': True,
-                            '2.Sample2': True,
-                            '2.Sample3': True},
-     'has_physical_specimen': {'2.Sample1': True,
-                               '2.Sample2': True,
-                               '2.Sample3': True},
+     'has_extracted_data': {'2.Sample1': 'True',
+                            '2.Sample2': 'True',
+                            '2.Sample3': 'True'},
+     'has_physical_specimen': {'2.Sample1': 'True',
+                               '2.Sample2': 'True',
+                               '2.Sample3': 'True'},
      'host_subject_id': {'2.Sample1': 'NotIdentified',
                          '2.Sample2': 'NotIdentified',
                          '2.Sample3': 'NotIdentified'},
-     'latitude': {'2.Sample1': 42.420000000000002,
-                  '2.Sample2': 4.2000000000000002,
-                  '2.Sample3': 4.7999999999999998},
-     'longitude': {'2.Sample1': 41.409999999999997,
-                   '2.Sample2': 1.1000000000000001,
-                   '2.Sample3': 4.4100000000000001},
+     'latitude': {'2.Sample1': '42.42',
+                  '2.Sample2': '4.2',
+                  '2.Sample3': '4.8'},
+     'longitude': {'2.Sample1': '41.41',
+                   '2.Sample2': '1.1',
+                   '2.Sample3': '4.41'},
      'physical_location': {'2.Sample1': 'location1',
                            '2.Sample2': 'location1',
                            '2.Sample3': 'location1'},
@@ -796,8 +741,8 @@ QIIME_TUTORIAL_MAP_DICT_FORM = {
                              'PC.607': 'YATGCTGCCTCCCGTAGGAGT'},
     'Treatment': {'PC.354': 'Control',
                   'PC.607': 'Fast'},
-    'DOB': {'PC.354': 20061218,
-            'PC.607': 20071112},
+    'DOB': {'PC.354': '20061218',
+            'PC.607': '20071112'},
     'Description': {'PC.354': 'Control_mouse_I.D._354',
                     'PC.607': 'Fasting_mouse_I.D._607'}
 }

@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from datetime import datetime
 
 import pandas as pd
 
@@ -159,7 +158,7 @@ class MetaUtilTests(TestCase):
                 'physical_specimen_remaining': True,
                 'dna_extracted': True,
                 'sample_type': 'type1',
-                'collection_timestamp': datetime(2014, 5, 29, 12, 24, 51),
+                'collection_timestamp': '05/29/14 12:24:51',
                 'host_subject_id': 'NotIdentified',
                 'Description': 'Test Sample 4',
                 'str_column': 'Value for sample 4',
@@ -170,7 +169,7 @@ class MetaUtilTests(TestCase):
                 'scientific_name': 'homo sapiens'}
         }
 
-        md_ext = pd.DataFrame.from_dict(md, orient='index')
+        md_ext = pd.DataFrame.from_dict(md, orient='index', dtype=str)
         qdb.metadata_template.sample_template.SampleTemplate.create(
             md_ext, study)
 
