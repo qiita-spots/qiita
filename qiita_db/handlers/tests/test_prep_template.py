@@ -8,6 +8,8 @@
 
 from unittest import main, TestCase
 from json import loads, dumps
+from os.path import join
+from functools import partial
 
 from tornado.web import HTTPError
 
@@ -25,6 +27,33 @@ class UtilTests(TestCase):
         # It does not exist
         with self.assertRaises(HTTPError):
             _get_prep_template(100)
+
+
+class PrepTemplateHandlerTests(OauthTestingBase):
+    def test_get_does_not_exist(self):
+        obs = self.get('/qiita_db/prep_template/100/', headers=self.header)
+        self.assertEqual(obs.code, 404)
+
+    def test_get_no_header(self):
+        obs = self.get('/qiita_db/prep_template/1/')
+        self.assertEqual(obs.code, 400)
+
+    def test_get(self):
+        obs = self.get('/qiita_db/prep_template/1/', headers=self.header)
+        self.assertEqual(obs.code, 200)
+
+        db_test_template_dir = qdb.util.get_mountpoint('templates')[0][1]
+        path_builder = partial(join, db_test_template_dir)
+
+        obs = loads(obs.body)
+        exp = {'data_type': '18S',
+               'artifact': 1,
+               'investigation_type': 'Metagenomics',
+               'study': 1,
+               'status': 'private',
+               'qiime-map': path_builder('1_prep_1_qiime_19700101-000000.txt'),
+               'prep-file': path_builder('1_prep_1_19700101-000000.txt')}
+        self.assertEqual(obs, exp)
 
 
 class PrepTemplateDataHandlerTests(OauthTestingBase):
