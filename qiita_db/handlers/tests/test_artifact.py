@@ -12,8 +12,10 @@ from functools import partial
 from os.path import join, exists
 from os import close, remove
 from tempfile import mkstemp
+from json import dumps
 
 from tornado.web import HTTPError
+import pandas as pd
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
@@ -120,6 +122,69 @@ class ArtifactHandlerTestsReadWrite(OauthTestingBase):
                          data=arguments)
         self.assertEqual(obs.code, 500)
         self.assertIn('No such file or directory', obs.body)
+
+
+class ArtifactAPItestHandlerTests(OauthTestingBase):
+    database = True
+
+    def setUp(self):
+        super(ArtifactAPItestHandlerTests, self).setUp()
+
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'primer': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcode': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}}
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        self.prep_template = \
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                metadata, qdb.study.Study(1), "16S")
+
+        self._clean_up_files = []
+
+    def tearDown(self):
+        super(ArtifactAPItestHandlerTests, self).tearDown()
+
+        for f in self._clean_up_files:
+            if exists(f):
+                remove(f)
+
+    def test_post_root(self):
+        fd, fp1 = mkstemp(suffix='_seqs.fastq')
+        close(fd)
+        self._clean_up_files.append(fp1)
+        with open(fp1, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 1:N:0:\n"
+                    "NACGTAGGGTGCAAGCGTTGTCCGGAATNA\n"
+                    "+\n"
+                    "#1=DDFFFHHHHHJJJJJJJJJJJJGII#0\n")
+
+        fd, fp2 = mkstemp(suffix='_barcodes.fastq')
+        close(fd)
+        self._clean_up_files.append(fp2)
+        with open(fp2, 'w') as f:
+            f.write("@HWI-ST753:189:D1385ACXX:1:1101:1214:1906 2:N:0:\n"
+                    "NNNCNNNNNNNNN\n"
+                    "+\n"
+                    "#############\n")
+
+        data = {'filepaths': dumps([(fp1, 'raw_forward_seqs'),
+                                    (fp2, 'raw_barcodes')]),
+                'type': "FASTQ",
+                'name': "New test artifact",
+                'prep': self.prep_template.id}
+        obs = self.post('/apitest/artifact/', headers=self.header, data=data)
+        self.assertEqual(obs.code, 200)
+        obs = loads(obs.body)
+        self.assertEqual(obs.keys(), ['artifact'])
+
+        a = qdb.artifact.Artifact(obs['artifact'])
+        self._clean_up_files.extend([fp for _, fp, _ in a.filepaths])
+        self.assertEqual(a.name, "New test artifact")
 
 
 if __name__ == '__main__':

@@ -44,7 +44,7 @@ from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (
     JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
     ProcessingJobAPItestHandler)
-from qiita_db.handlers.artifact import ArtifactHandler
+from qiita_db.handlers.artifact import ArtifactHandler, ArtifactAPItestHandler
 from qiita_db.handlers.prep_template import (
     PrepTemplateDataHandler, PrepTemplateAPItestHandler,
     PrepTemplateDBHandler)
@@ -168,7 +168,8 @@ class Application(tornado.web.Application):
             test_handlers = [
                 (r"/apitest/processing_job/", ProcessingJobAPItestHandler),
                 (r"/apitest/reset/", ResetAPItestHandler),
-                (r"/apitest/prep_template/", PrepTemplateAPItestHandler)
+                (r"/apitest/prep_template/", PrepTemplateAPItestHandler),
+                (r"/apitest/artifact/", ArtifactAPItestHandler)
             ]
             handlers.extend(test_handlers)
 

@@ -8,6 +8,7 @@
 
 from tornado.web import HTTPError
 from collections import defaultdict
+from json import loads
 
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
@@ -136,3 +137,43 @@ class ArtifactHandler(OauthBaseHandler):
                                  'supported operations: add' % req_op)
 
         self.finish()
+
+
+class ArtifactAPItestHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self):
+        """Creates a new artifact
+
+        Parameters
+        ----------
+        filepahts : str
+            Json string with a list of filepaths and its types
+        type : str
+            The artifact type
+        prep_template: int
+            The id of the template that the new artifact belongs to
+        name : str, optional
+            The artifact name
+
+        Returns
+        -------
+        dict
+            'artifact': the id of the new artifact
+
+        See Also
+        --------
+        qiita_db.artifact.Artifact.create
+        """
+        filepaths = loads(self.get_argument('filepaths'))
+        artifact_type = self.get_argument('type')
+        prep_template = self.get_argument('prep')
+        name = self.get_argument('name', None)
+
+        if prep_template:
+            prep_template = qdb.metadata_template.prep_template.PrepTemplate(
+                prep_template)
+
+        a = qdb.artifact.Artifact.create(
+            filepaths, artifact_type, name=name, prep_template=prep_template)
+
+        self.write({'artifact': a.id})
