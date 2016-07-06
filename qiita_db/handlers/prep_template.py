@@ -80,6 +80,8 @@ class PrepTemplateDBHandler(OauthBaseHandler):
                 'study': pt.study_id,
                 'status': pt.status,
                 'qiime-map': pt.qiime_map_fp,
+                # The first element in the prep_files is the newest
+                # prep information file - hence the correct one
                 'prep-file': prep_files[0]
             }
 
