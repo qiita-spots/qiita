@@ -41,7 +41,7 @@ def _get_reference(r_id):
     return reference
 
 
-class ReferenceFilepathsHandler(OauthBaseHandler):
+class ReferenceHandler(OauthBaseHandler):
     @authenticate_oauth
     def get(self, reference_id):
         """Retrieves the filepath information of the given reference
@@ -61,14 +61,18 @@ class ReferenceFilepathsHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             reference = _get_reference(reference_id)
 
-            fps = [(reference.sequence_fp, "reference_seqs")]
+            fps = {'reference_seqs': reference.sequence_fp}
             tax_fp = reference.taxonomy_fp
             if tax_fp:
-                fps.append((tax_fp, "reference_tax"))
+                fps["reference_tax"] = tax_fp
             tree_fp = reference.tree_fp
             if tree_fp:
-                fps.append((tree_fp, "reference_tree"))
+                fps["reference_tree"] = tree_fp
 
-            response = {'filepaths': fps}
+            response = {
+                'name': reference.name,
+                'version': reference.version,
+                'files': fps
+            }
 
         self.write(response)
