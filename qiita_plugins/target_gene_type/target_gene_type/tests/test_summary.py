@@ -11,6 +11,7 @@ from tempfile import mkdtemp
 from os import remove
 from os.path import exists, isdir, join, dirname
 from shutil import rmtree
+from json import dumps
 
 from qiita_client import QiitaClient
 from gzip import GzipFile
@@ -39,13 +40,27 @@ class SummaryTestsNotDemux(TestCase):
         fastq_file = join(self.out_dir, "file1.fastq")
         with open(fastq_file, mode='w') as fh:
             fh.write(READS)
-        self.filepaths = (
-            '[["%s", "raw_forward_seqs"], ["%s", "raw_barcodes"]]' % (
-                gz_file, fastq_file))
+
         self.artifact_id = 4
         self.parameters = {'input_data': self.artifact_id}
 
-        self._clean_up_files = [self.out_dir]
+        self.httpretty_body = {
+            'name': 'Artifact name',
+            'timestamp': '2012-10-01 09:30:27',
+            'visibility': 'private',
+            'type': 'FASTQ',
+            'data_type': '16S',
+            'can_be_submitted_to_ebi': False,
+            'ebi_run_accessions': None,
+            'can_be_submitted_to_vamps': False,
+            'is_submitted_to_vamps': None,
+            'prep_information': [1],
+            'study': 1,
+            'processing_parameters': None,
+            'files': {"raw_forward_seqs": [gz_file],
+                      "raw_barcodes": [fastq_file]}}
+
+        self._clean_up_files = [self.out_dir, gz_file, fastq_file]
 
     def tearDown(self):
         for fp in self._clean_up_files:
@@ -57,19 +72,14 @@ class SummaryTestsNotDemux(TestCase):
 
     @httpretty.activate
     def test_generate_html_summary(self):
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/filepaths/" % self.artifact_id)
+        httpretty_url = ("https://test_server.com/qiita_db/artifacts/%s/"
+                         % self.artifact_id)
         httpretty.register_uri(
-            httpretty.GET, httpretty_url,
-            body=('{"filepaths": %s}' % self.filepaths))
+            httpretty.GET, httpretty_url, body=dumps(self.httpretty_body))
         httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/type/" % self.artifact_id)
-        httpretty.register_uri(
-            httpretty.GET, httpretty_url,
-            body=('{"type": "FASTQ"}'))
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/filepaths/" % self.artifact_id)
+                         "%s/" % self.artifact_id)
         httpretty.register_uri(httpretty.PATCH, httpretty_url)
+
         obs_success, obs_ainfo, obs_error = generate_html_summary(
             self.qclient, 'job-id', self.parameters, self.out_dir)
 
@@ -99,12 +109,25 @@ class SummaryTestsDemux(TestCase):
                                    'client_secret')
         # creating files
         self.out_dir = mkdtemp()
-        self.filepaths = (
-            '[["test_file", "raw_forward_seqs"], '
-            '["%s/test_data/101_seqs.demux", "preprocessed_demux"]]' %
-            dirname(__file__))
         self.artifact_id = 4
         self.parameters = {'input_data': self.artifact_id}
+
+        self.httpretty_body = {
+            'name': 'Artifact name',
+            'timestamp': '2012-10-01 09:30:27',
+            'visibility': 'private',
+            'type': 'Demultiplexed',
+            'data_type': '16S',
+            'can_be_submitted_to_ebi': True,
+            'ebi_run_accessions': None,
+            'can_be_submitted_to_vamps': True,
+            'is_submitted_to_vamps': False,
+            'prep_information': [1],
+            'study': 1,
+            'processing_parameters': None,
+            'files': {"raw_forward_seqs": ["test_file"],
+                      "preprocessed_demux": ["%s/test_data/101_seqs.demux"
+                                             % dirname(__file__)]}}
 
         self._clean_up_files = [self.out_dir]
 
@@ -118,18 +141,12 @@ class SummaryTestsDemux(TestCase):
 
     @httpretty.activate
     def test_generate_html_summary(self):
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/filepaths/" % self.artifact_id)
+        httpretty_url = ("https://test_server.com/qiita_db/artifacts/%s/"
+                         % self.artifact_id)
         httpretty.register_uri(
-            httpretty.GET, httpretty_url,
-            body=('{"filepaths": %s}' % self.filepaths))
+            httpretty.GET, httpretty_url, body=dumps(self.httpretty_body))
         httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/type/" % self.artifact_id)
-        httpretty.register_uri(
-            httpretty.GET, httpretty_url,
-            body=('{"type": "Demultiplexed"}'))
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/filepaths/" % self.artifact_id)
+                         "%s/" % self.artifact_id)
         httpretty.register_uri(httpretty.PATCH, httpretty_url)
 
         obs_success, obs_ainfo, obs_error = generate_html_summary(
@@ -148,16 +165,11 @@ class SummaryTestsDemux(TestCase):
 
     @httpretty.activate
     def test_generate_html_summary_no_demux(self):
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/filepaths/" % self.artifact_id)
+        self.httpretty_body['files'] = {"fps_type": ["fps"]}
+        httpretty_url = ("https://test_server.com/qiita_db/artifacts/%s/"
+                         % self.artifact_id)
         httpretty.register_uri(
-            httpretty.GET, httpretty_url,
-            body=('{"filepaths": [["fps", "fps_type"]]}'))
-        httpretty_url = ("https://test_server.com/qiita_db/artifacts/"
-                         "%s/type/" % self.artifact_id)
-        httpretty.register_uri(
-            httpretty.GET, httpretty_url,
-            body=('{"type": "Demultiplexed"}'))
+            httpretty.GET, httpretty_url, body=dumps(self.httpretty_body))
 
         with self.assertRaises(ValueError):
             generate_html_summary(self.qclient, 'job-id', self.parameters,
@@ -207,8 +219,8 @@ FFFFFB:FFFFFFFFFF
 """
 
 EXP_HTML = [
-    '<h3>file1.fastq.gz (raw_forward_seqs)</h3>',
-    '<b>MD5:</b>: eb3203ab33442b168c274b32c5624961</br>',
+    '<h3>file1.fastq (raw_barcodes)</h3>',
+    '<b>MD5:</b>: 97328e860ef506f7b029997b12bf9885</br>',
     '<p style="font-family:\'Courier New\', Courier, monospace;font-size:10;"'
     '>@MISEQ03:123:000000000-A40KM:1:1101:14149:1572 1:N:0:TCCACAGGAGT\n<br/>'
     'GGGGGGTGCCAGCCGCCGCGGTAATACGGGGGGGGCAAGCGTTGTTCGGAATTACTGGGCGTAAAGGGCTCG'
@@ -232,8 +244,8 @@ EXP_HTML = [
     'GGCTCAACCTGGGAATGGCAGTGGAAACTGGCGAGCTTGAGTGTGGCAGAGGGGGGGGGAATTCCGCGTGTA'
     'GCAGTGAAATGCGTAGAGATGCGGAGGAACACCGATGGCGAAGGCAACCCCCTGGGATAATATTTACGCTCA'
     'T\n</p><hr/>',
-    '<h3>file1.fastq (raw_barcodes)</h3>',
-    '<b>MD5:</b>: 97328e860ef506f7b029997b12bf9885</br>',
+    '<h3>file1.fastq.gz (raw_forward_seqs)</h3>',
+    '<b>MD5:</b>: eb3203ab33442b168c274b32c5624961</br>',
     '<p style="font-family:\'Courier New\', Courier, monospace;font-size:10;"'
     '>@MISEQ03:123:000000000-A40KM:1:1101:14149:1572 1:N:0:TCCACAGGAGT\n<br/>'
     'GGGGGGTGCCAGCCGCCGCGGTAATACGGGGGGGGCAAGCGTTGTTCGGAATTACTGGGCGTAAAGGGCTCG'

@@ -11,6 +11,7 @@ from moi import moi_js, moi_list_js
 from moi.websocket import MOIMessageHandler
 
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.util import is_test_environment
 from qiita_pet.handlers.base_handlers import (MainHandler, NoPageHandler)
 from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
@@ -40,14 +41,16 @@ from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import DownloadHandler
 from qiita_pet.handlers.prep_template import PrepTemplateHandler
 from qiita_pet.handlers.ontology import OntologyHandler
-from qiita_db.handlers.processing_job import (JobHandler, HeartbeatHandler,
-                                              ActiveStepHandler,
-                                              CompleteHandler)
-from qiita_db.handlers.artifact import (ArtifactFilepathsHandler,
-                                        ArtifactMappingHandler,
-                                        ArtifactTypeHandler)
+from qiita_db.handlers.processing_job import (
+    JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
+    ProcessingJobAPItestHandler)
+from qiita_db.handlers.artifact import ArtifactHandler, ArtifactAPItestHandler
+from qiita_db.handlers.prep_template import (
+    PrepTemplateDataHandler, PrepTemplateAPItestHandler,
+    PrepTemplateDBHandler)
 from qiita_db.handlers.oauth2 import TokenAuthHandler
-from qiita_db.handlers.reference import ReferenceFilepathsHandler
+from qiita_db.handlers.reference import ReferenceHandler
+from qiita_db.handlers.core import ResetAPItestHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
@@ -147,11 +150,10 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)/step/", ActiveStepHandler),
             (r"/qiita_db/jobs/(.*)/complete/", CompleteHandler),
             (r"/qiita_db/jobs/(.*)", JobHandler),
-            (r"/qiita_db/artifacts/(.*)/filepaths/", ArtifactFilepathsHandler),
-            (r"/qiita_db/artifacts/(.*)/mapping/", ArtifactMappingHandler),
-            (r"/qiita_db/artifacts/(.*)/type/", ArtifactTypeHandler),
-            (r"/qiita_db/references/(.*)/filepaths/",
-             ReferenceFilepathsHandler)
+            (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
+            (r"/qiita_db/prep_template/(.*)/data/", PrepTemplateDataHandler),
+            (r"/qiita_db/prep_template/(.*)/", PrepTemplateDBHandler),
+            (r"/qiita_db/references/(.*)/", ReferenceHandler)
         ]
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal
@@ -160,6 +162,17 @@ class Application(tornado.web.Application):
                 (r"/admin/portals/studiesAJAX/", StudyPortalAJAXHandler)
             ]
             handlers.extend(portals)
+
+        if is_test_environment():
+            # We add the endpoints for testing plugins
+            test_handlers = [
+                (r"/apitest/processing_job/", ProcessingJobAPItestHandler),
+                (r"/apitest/reset/", ResetAPItestHandler),
+                (r"/apitest/prep_template/", PrepTemplateAPItestHandler),
+                (r"/apitest/artifact/", ArtifactAPItestHandler)
+            ]
+            handlers.extend(test_handlers)
+
         # 404 PAGE MUST BE LAST IN THIS LIST!
         handlers.append((r".*", NoPageHandler))
 
