@@ -55,8 +55,12 @@ class ReferenceHandler(OauthBaseHandler):
         Returns
         -------
         dict
-            {'filepaths': list of (str, str)}
-            The filepaths attached to the reference and their filepath types
+            'name': str
+                the reference name
+            'version': str
+                the reference version
+            'filepaths': dict of {str: str}
+                The filepaths attached to the reference keyed by filepath type
         """
         with qdb.sql_connection.TRN:
             reference = _get_reference(reference_id)
