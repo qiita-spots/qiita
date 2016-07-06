@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from json import loads
+from os.path import basename
 
 from tornado.web import HTTPError
 import pandas as pd
@@ -44,6 +45,47 @@ def _get_prep_template(pid):
                              % (pid, str(e)))
 
     return pt
+
+
+class PrepTemplateDBHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def get(self, prep_id):
+        """Retrieves the prep template information
+
+        Parameters
+        ----------
+        prep_id: str
+            The id of the prep template whose information is being retrieved
+
+        Returns
+        -------
+        dict
+            The prep information:
+            'data_type': prep info data type
+            'artifact': artifact attached to the given prep
+            'investigation_type': prep info investigation type
+            'study': study that the prep info belongs to
+            'status': prep info status
+            'qiime-map': the path to the qiime mapping file
+            'prep-file': the path to the prep info file
+        """
+        with qdb.sql_connection.TRN:
+            pt = _get_prep_template(prep_id)
+            prep_files = [fp for _, fp in pt.get_filepaths()
+                          if 'qiime' not in basename(fp)]
+            response = {
+                'data_type': pt.data_type(),
+                'artifact': pt.artifact.id,
+                'investigation_type': pt.investigation_type,
+                'study': pt.study_id,
+                'status': pt.status,
+                'qiime-map': pt.qiime_map_fp,
+                # The first element in the prep_files is the newest
+                # prep information file - hence the correct one
+                'prep-file': prep_files[0]
+            }
+
+        self.write(response)
 
 
 class PrepTemplateDataHandler(OauthBaseHandler):

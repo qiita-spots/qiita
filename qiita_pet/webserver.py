@@ -46,7 +46,8 @@ from qiita_db.handlers.processing_job import (
     ProcessingJobAPItestHandler)
 from qiita_db.handlers.artifact import ArtifactHandler
 from qiita_db.handlers.prep_template import (
-    PrepTemplateDataHandler, PrepTemplateAPItestHandler)
+    PrepTemplateDataHandler, PrepTemplateAPItestHandler,
+    PrepTemplateDBHandler)
 from qiita_db.handlers.oauth2 import TokenAuthHandler
 from qiita_db.handlers.reference import ReferenceFilepathsHandler
 from qiita_db.handlers.core import ResetAPItestHandler
@@ -151,6 +152,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)", JobHandler),
             (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
             (r"/qiita_db/prep_template/(.*)/data/", PrepTemplateDataHandler),
+            (r"/qiita_db/prep_template/(.*)/", PrepTemplateDBHandler),
             (r"/qiita_db/references/(.*)/filepaths/",
              ReferenceFilepathsHandler)
         ]
