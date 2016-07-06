@@ -420,6 +420,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
     to_file
     add_filepath
     update
+    metadata_headers
 
     See Also
     --------
@@ -585,6 +586,24 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
             # Execute all the steps
             qdb.sql_connection.TRN.execute()
+
+    @classmethod
+    def metadata_headers(cls):
+        """Returns metadata headers available
+
+        Returns
+        -------
+        list
+            Alphabetical list of all metadata headers available
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT column_name
+                        FROM information_schema.columns
+                        WHERE table_name LIKE '{0}%' AND
+                              table_name != 'sample_template_filepath'
+                        ORDER BY column_name""".format(cls._table_prefix)
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchflatten()
 
     def can_be_extended(self, new_samples, new_cols):
         """Whether the template can be updated or not

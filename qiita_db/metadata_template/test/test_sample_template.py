@@ -2209,12 +2209,15 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_validate_errors_timestampB(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '20/2016')
+                                '12/2016')
         self.metadata.set_value('Sample2', 'collection_timestamp',
                                 '2016')
+        with catch_warnings(record=True) as warn:
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                self.metadata, self.new_study)
 
-        qdb.metadata_template.sample_template.SampleTemplate.create(
-            self.metadata, self.new_study)
+            # the warnings should be empty
+            self.assertEqual(warn, [])
 
 
 EXP_SAMPLE_TEMPLATE = (
