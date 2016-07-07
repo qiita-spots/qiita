@@ -153,7 +153,7 @@ class ArtifactAPItestHandlerTests(OauthTestingBase):
             if exists(f):
                 remove(f)
 
-    def test_post_root(self):
+    def test_post(self):
         fd, fp1 = mkstemp(suffix='_seqs.fastq')
         close(fd)
         self._clean_up_files.append(fp1)
@@ -185,6 +185,16 @@ class ArtifactAPItestHandlerTests(OauthTestingBase):
         a = qdb.artifact.Artifact(obs['artifact'])
         self._clean_up_files.extend([fp for _, fp, _ in a.filepaths])
         self.assertEqual(a.name, "New test artifact")
+
+    def test_post_error(self):
+        data = {'filepaths': dumps([('Do not exist', 'raw_forward_seqs')]),
+                'type': "FASTQ",
+                'name': "New test artifact",
+                'prep': 1}
+        obs = self.post('/apitest/artifact/', headers=self.header, data=data)
+        self.assertEqual(obs.code, 500)
+        self.assertIn("Prep template 1 already has an artifact associated",
+                      obs.body)
 
 
 if __name__ == '__main__':
