@@ -485,16 +485,16 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
     def test_metadata_headers(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST.metadata_headers()
-        exp = ['physical_specimen_location', 'physical_specimen_remaining',
-               'dna_extracted', 'sample_type', 'collection_timestamp',
-               'host_subject_id', 'description', 'season_environment',
-               'assigned_from_geo', 'texture', 'taxon_id', 'depth',
-               'host_taxid', 'common_name', 'water_content_soil', 'elevation',
-               'temp', 'tot_nitro', 'samp_salinity', 'altitude', 'env_biome',
-               'country', 'ph', 'anonymized_name', 'tot_org_carb',
-               'description_duplicate', 'env_feature', 'latitude', 'longitude',
-               'sample_id', 'scientific_name']
-        self.assertItemsEqual(obs, exp)
+        exp = ['altitude', 'anonymized_name', 'assigned_from_geo',
+               'collection_timestamp', 'common_name', 'country', 'depth',
+               'description', 'description_duplicate', 'dna_extracted',
+               'elevation', 'env_biome', 'env_feature', 'host_subject_id',
+               'host_taxid', 'int_column', 'latitude', 'longitude', 'ph',
+               'physical_specimen_location', 'physical_specimen_remaining',
+               'samp_salinity', 'sample_id', 'sample_type', 'scientific_name',
+               'season_environment', 'str_column', 'taxon_id', 'temp',
+               'texture', 'tot_nitro', 'tot_org_carb', 'water_content_soil']
+        self.assertEqual(obs, exp)
 
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
