@@ -247,14 +247,11 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
     def test_metadata_headers(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
         obs = PT.metadata_headers()
-        exp = ['artifact_id', 'barcode', 'center_name', 'center_project_name',
-               'data_type_id', 'ebi_experiment_accession', 'emp_status',
+        exp = ['barcode', 'center_name', 'center_project_name', 'emp_status',
                'experiment_center', 'experiment_design_description',
                'experiment_title', 'illumina_technology', 'instrument_model',
-               'investigation_type', 'library_construction_protocol',
-               'pcr_primers', 'platform', 'prep_template_id',
-               'preprocessing_status', 'primer', 'processing_job_id',
-               'run_center', 'run_date', 'run_prefix', 'samp_size',
+               'library_construction_protocol', 'pcr_primers', 'platform',
+               'primer', 'run_center', 'run_date', 'run_prefix', 'samp_size',
                'sample_center', 'sample_id', 'sequencing_meth', 'study_center',
                'target_gene', 'target_subfragment']
         self.assertItemsEqual(obs, exp)
