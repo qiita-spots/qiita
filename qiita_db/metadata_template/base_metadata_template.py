@@ -600,7 +600,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             sql = """SELECT DISTINCT column_name
                         FROM information_schema.columns
                         WHERE table_name LIKE '{0}%' AND
-                              table_name != 'sample_template_filepath'
+                              table_name != 'sample_template_filepath' AND
+                              table_name != 'prep_template_filepath'
                         ORDER BY column_name""".format(cls._table_prefix)
             qdb.sql_connection.TRN.add(sql)
             return qdb.sql_connection.TRN.execute_fetchflatten()
