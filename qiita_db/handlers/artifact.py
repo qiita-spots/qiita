@@ -146,7 +146,7 @@ class ArtifactAPItestHandler(OauthBaseHandler):
 
         Parameters
         ----------
-        filepahts : str
+        filepaths : str
             Json string with a list of filepaths and its types
         type : str
             The artifact type
