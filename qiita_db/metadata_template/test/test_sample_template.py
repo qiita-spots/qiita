@@ -494,7 +494,7 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                'samp_salinity', 'sample_id', 'sample_type', 'scientific_name',
                'season_environment', 'str_column', 'taxon_id', 'temp',
                'texture', 'tot_nitro', 'tot_org_carb', 'water_content_soil']
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""

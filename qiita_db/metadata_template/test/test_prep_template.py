@@ -254,7 +254,7 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
                'primer', 'run_center', 'run_date', 'run_prefix', 'samp_size',
                'sample_center', 'sample_id', 'sequencing_meth', 'study_center',
                'target_gene', 'target_subfragment']
-        self.assertEqual(obs, exp)
+        self.assertItemsEqual(obs, exp)
 
 
 @qiita_test_checker()
