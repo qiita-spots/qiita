@@ -21,7 +21,7 @@ In order to achieve this flexibility, Qiita represents the different -omics
 datasets using ``Artifacts`` where an ``Artifact`` is a file or set of files
 that conceptually represents a dataset. Note that Qiita is not ``Artifact`` or
 ``Pipeline`` aware, thus it is up to the Qiita Plugins to define what an
-artifact is and which methods can be applied to it. With the goal of reducing
+``Artifact`` is and which methods can be applied to it. With the goal of reducing
 community development effort, there are two different types of plugins:
 ``Qiita Type Plugins`` and ``Qiita Plugins``.
 
@@ -30,7 +30,7 @@ two operations: ``Validate`` and ``Generate HTML summary``.
 
 Given the artifact type, the :doc:`prep information <../tutorials/prepare-information-files>`
 and the user-uploaded files, the ``Validate`` operation decides if the
-user-uploaded files creates a valid artifact of the given type. If the files do
+user-uploaded files conform ``Artifact`` of the new type. If the files do
 not create a valid artifact, the plugin should try to fix the files using the
 given information, but only if the files can be deterministically fixed and not
 generate ambiguous results.
@@ -46,20 +46,16 @@ the ``Artifacts``.  They don't need to import directly from the
 need such plugin to be present in the system, otherwise Qiita will not accept
 ``Artifacts`` of the given type. There are no limitation on the ``Qiita Plugin``
 methods: they can take one or more input artifacts and generate one or more
-output artifacts. Besides defining individual methods, the ``Qiita Plugins``
+output ``Artifacts``. Besides defining individual methods, the ``Qiita Plugins``
 also have the ability to define default ``workflows``, where a ``workflow`` is
 a set of methods connected by their input/outputs to perform a bigger task over
 one or a set of artifacts.
-
-The goal of having the ``Qiita Type Plugins`` independent of the
-``Qiita Plugins`` is that other plugin developers will be able to rely on
-previously defined types to develop their own pipelines.
 
 Plugins run in independent software environments from Qiita (i.e. different
 ``PATH`` and ``PYTHONPATH`` environment variables, among others), allowing them
 to have any dependency stack as well as being able to be written in any
 language. Qiita only needs a single script to start the plugin, which should
-follow this signature:
+conform with this call:
 
 .. code-block:: bash
 
