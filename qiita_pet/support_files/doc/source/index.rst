@@ -26,4 +26,5 @@ following documents:
    qiita-philosophy/index.rst
    tutorials/index.rst
    admin/index.rst
+   dev/index.rst
    faq.rst
