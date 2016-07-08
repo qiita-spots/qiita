@@ -115,11 +115,20 @@ Install Qiita (this occurs through setuptools' `setup.py` file in the qiita dire
 pip install -e .
 ```
 
-You will also need to install several plugins for Qiita to be fully functional. As they are already included in the repository, to install, simply execute:
+At this point, Qiita will be installed and the system will start. However,
+you will need to install plugins in order to process any kind of data. For a list
+of available plugins, visit the [Qiita Spots](https://github.com/qiita-spots)
+github organization. Currently, the `Type Plugins`
+[qtp-biom](https://github.com/qiita-spots/qtp-biom) and
+[qtp-target-gene](https://github.com/qiita-spots/qtp-target-gene) as well as
+the `Plugin` [qp-target-gene](https://github.com/qiita-spots/qp-target-gene) are
+required. To install these plugins, simply execute
+
 ```bash
-pushd qiita_plugins/target_gene
-pip install -e .
-popd
+pip install https://github.com/qiita-spots/qiita_client
+pip install https://github.com/qiita-spots/qtp-biom
+pip install https://github.com/qiita-spots/qtp-target-gene
+pip install https://github.com/qiita-spots/qp-target-gene
 ```
 
 ## Configure Qiita
