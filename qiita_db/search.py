@@ -141,6 +141,9 @@ class SearchTerm(object):
         else:
             column_name = "sa.%s" % column_name.lower()
 
+        if argument_type in [int, float]:
+            column_name = 'CAST(%s AS FLOAT)' % column_name
+
         if operator == "includes":
             # substring search, so create proper query for it
             return "LOWER(%s) LIKE '%%%s%%'" % (column_name, argument.lower())
@@ -197,7 +200,8 @@ class QiitaStudySearch(object):
 
             # get all studies containing the metadata headers requested
             qdb.sql_connection.TRN.add(study_sql)
-            study_ids = set(qdb.sql_connection.TRN.execute_fetchflatten())
+            res = qdb.sql_connection.TRN.execute_fetchflatten()
+            study_ids = set([int(sid[7:]) for sid in res])
             # strip to only studies user has access to
             if user.level not in {'admin', 'dev', 'superuser'}:
                 studies = qdb.study.Study.get_by_status('public') | \
@@ -269,10 +273,6 @@ class QiitaStudySearch(object):
         eval_stack = (search_expr + stringEnd).parseString(searchstr)[0]
         sql_where = eval_stack.generate_sql()
 
-        # this lookup will be used to select only studies with columns
-        # of the correct type
-        type_lookup = {int: 'integer', float: 'float8', str: 'varchar'}
-
         # parse out all metadata headers we need to have in a study, and
         # their corresponding types
         all_headers = [c[0][0].term[0] for c in
@@ -280,8 +280,6 @@ class QiitaStudySearch(object):
         meta_headers = set(all_headers)
         all_types = [c[0][0].term[2] for c in
                      (criterion + optional_seps).scanString(searchstr)]
-        all_types = [type_lookup[type(qdb.util.convert_type(s))]
-                     for s in all_types]
 
         # sort headers and types so they return in same order every time.
         # Should be a relatively short list so very quick
@@ -317,29 +315,26 @@ class QiitaStudySearch(object):
         if meta_headers:
             # have study-specific metadata, so need to find specific studies
             for meta in meta_headers:
-                if meta_header_type_lookup[meta] in ('integer', 'float8'):
-                    allowable_types = "('integer', 'float8')"
-                else:
-                    allowable_types = "('varchar')"
-
-                sql.append("SELECT study_id FROM qiita.study_sample_columns "
-                           "WHERE lower(column_name) = lower('%s') and "
-                           "column_type in %s" %
-                           (qdb.util.scrub_data(meta), allowable_types))
+                sql.append("SELECT DISTINCT table_name FROM "
+                           "information_schema.columns WHERE "
+                           "lower(column_name) = lower('{0}')".format(
+                            qdb.util.scrub_data(meta)))
         else:
             # no study-specific metadata, so need all studies
-            sql.append("SELECT study_id FROM qiita.study_sample_columns")
+            sql.append("SELECT DISTINCT table_name "
+                       "FROM information_schema.columns")
 
         # combine the query
         if only_with_processed_data:
-            sql.append("SELECT DISTINCT study_id "
+            sql.append("SELECT DISTINCT 'sample_' || CAST(study_id AS VARCHAR)"
                        "FROM qiita.study_artifact "
                        "JOIN qiita.artifact USING (artifact_id) "
                        "JOIN qiita.artifact_type USING (artifact_type_id) "
                        "WHERE artifact_type = 'BIOM'")
 
         # restrict to studies in portal
-        sql.append("SELECT study_id from qiita.study_portal "
+        sql.append("SELECT 'sample_' || CAST(study_id AS VARCHAR) "
+                   "FROM qiita.study_portal "
                    "JOIN qiita.portal_type USING (portal_type_id) "
                    "WHERE portal = '%s'" % qiita_config.portal)
         study_sql = ' INTERSECT '.join(sql)
@@ -354,12 +349,13 @@ class QiitaStudySearch(object):
                 header_info.append("sa.%s" % meta)
         # build the SQL query
 
-        sample_sql = ("SELECT ss.sample_id,%s "
+        sample_sql = ("SELECT ss.sample_id, %s "
                       "FROM qiita.study_sample ss "
                       "JOIN qiita.sample_{0} sa ON ss.sample_id = sa.sample_id"
                       " JOIN qiita.study st ON st.study_id = ss.study_id "
                       "WHERE %s" %
                       (','.join(header_info), sql_where))
+
         return study_sql, sample_sql, meta_header_type_lookup.keys()
 
     def filter_by_processed_data(self, datatypes=None):

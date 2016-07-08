@@ -49,10 +49,23 @@
         objbrowserName = M[0];
         objBrMajorVersion = M[1];
 
-        if ((objbrowserName == "Chrome"  && objBrMajorVersion < {{allowed_min_browser_versions['chrome']}}) ||
-            (objbrowserName == "Firefox" && objBrMajorVersion < {{allowed_min_browser_versions['firefox']}}) ||
-            (objbrowserName == "Safari"  && objBrMajorVersion < {{allowed_min_browser_versions['safari']}}) ||
-            ((objbrowserName == "IE" || objbrowserName == "MSIE") && objBrMajorVersion < {{allowed_min_browser_versions['IE']}})) {
+        if ((objbrowserName == "Chrome"  && objBrMajorVersion < {{allowed_min_browser_versions['chrome']}})
+            {% if 'firefox' in allowed_min_browser_versions %}
+              || (objbrowserName == "Firefox" && objBrMajorVersion < {{allowed_min_browser_versions['firefox']}})
+            {% else %}
+              || (objbrowserName == "Firefox")
+            {% end %}
+            {% if 'safari' in allowed_min_browser_versions %}
+              || (objbrowserName == "Safari"  && objBrMajorVersion < {{allowed_min_browser_versions['safari']}})
+            {% else %}
+              || (objbrowserName == "Safari")
+            {% end %}
+            {% if 'IE' in allowed_min_browser_versions %}
+              || ((objbrowserName == "IE" || objbrowserName == "MSIE") && objBrMajorVersion < {{allowed_min_browser_versions['IE']}})
+            {% else %}
+              || (objbrowserName == "IE" || objbrowserName == "MSIE")
+            {% end %}
+          ) {
           // Show overlay because too old a browser
           ol = document.getElementById("overlay");
           ol.style.visibility = "visible";
@@ -284,9 +297,15 @@
         <img src="{% raw qiita_config.portal_dir %}{{portal_styling.logo}}" alt="Qiita logo" id="small-logo"/>
         <h1>This site only works with the following browsers</h1>
         <p id="explanation"><strong>Chrome >= {{allowed_min_browser_versions['chrome']}}:</strong> You can download Chrome from <a href="https://www.google.com/chrome/browser/">here</a> or you can find instructions on how to update it <a href="https://support.google.com/chrome/answer/95414?hl=en">here</a></p>
-        <p id="explanation"><strong>Safari >= {{allowed_min_browser_versions['safari']}}:</strong> You can update Safari following <a href="http://support.apple.com/en-us/HT6104">these</a> instructions.</p>
-        <p id="explanation"><strong>Firefox >= {{allowed_min_browser_versions['firefox']}}:</strong> For instructions on how to install or update Firefox go <a href="https://support.mozilla.org/en-US/kb/update-firefox-latest-version">here.</a></p>
-        <p id="explanation"><strong>Internet Explorer >= {{allowed_min_browser_versions['IE']}}:</strong> For instructions on how to update IE go <a href="http://windows.microsoft.com/en-us/internet-explorer">here.</a></p>
+        {% if 'safari' in allowed_min_browser_versions %}
+          <p id="explanation"><strong>Safari >= {{allowed_min_browser_versions['safari']}}:</strong> You can update Safari following <a href="http://support.apple.com/en-us/HT6104">these</a> instructions.</p>
+        {% end %}
+        {% if 'firefox' in allowed_min_browser_versions %}
+          <p id="explanation"><strong>Firefox >= {{allowed_min_browser_versions['firefox']}}:</strong> For instructions on how to install or update Firefox go <a href="https://support.mozilla.org/en-US/kb/update-firefox-latest-version">here.</a></p>
+        {% end %}
+        {% if 'IE' in allowed_min_browser_versions %}
+          <p id="explanation"><strong>Internet Explorer >= {{allowed_min_browser_versions['IE']}}:</strong> For instructions on how to update IE go <a href="http://windows.microsoft.com/en-us/internet-explorer">here.</a></p>
+        {% end %}
     </div>
   </body>
 </html>

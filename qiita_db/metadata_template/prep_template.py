@@ -33,7 +33,6 @@ class PrepSample(BaseSample):
     """
     _table = "prep_template_sample"
     _table_prefix = "prep_"
-    _column_table = "prep_columns"
     _id_column = "prep_template_id"
 
     def _check_template_class(self, md_template):
@@ -64,7 +63,6 @@ class PrepTemplate(MetadataTemplate):
     """
     _table = "prep_template_sample"
     _table_prefix = "prep_"
-    _column_table = "prep_columns"
     _id_column = "prep_template_id"
     _sample_cls = PrepSample
     _filepath_table = 'prep_template_filepath'
@@ -114,8 +112,7 @@ class PrepTemplate(MetadataTemplate):
                 pt_cols = deepcopy(PREP_TEMPLATE_COLUMNS)
                 pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
-            md_template = cls._clean_validate_template(md_template, study.id,
-                                                       pt_cols)
+            md_template = cls._clean_validate_template(md_template, study.id)
 
             # Insert the metadata template
             sql = """INSERT INTO qiita.prep_template
@@ -154,6 +151,7 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.execute()
 
             pt = cls(prep_id)
+            pt.validate(pt_cols)
             pt.generate_files()
 
             return pt
@@ -228,11 +226,6 @@ class PrepTemplate(MetadataTemplate):
             # Remove the rows from prep_template_samples
             sql = "DELETE FROM qiita.{0} WHERE {1} = %s".format(
                 cls._table, cls._id_column)
-            qdb.sql_connection.TRN.add(sql, args)
-
-            # Remove the rows from prep_columns
-            sql = "DELETE FROM qiita.{0} where {1} = %s".format(
-                cls._column_table, cls._id_column)
             qdb.sql_connection.TRN.add(sql, args)
 
             # Remove the row from study_prep_template

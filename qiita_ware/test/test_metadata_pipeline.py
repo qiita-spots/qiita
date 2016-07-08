@@ -113,13 +113,13 @@ QIIME_MAP = (
     "collection_timestamp\tDescription\n"
     "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tIllumina MiSeq\tUCSD\tTRUE\t"
     "TRUE\ttype1\tNotIdentified\t4.1\t4.1\t9606\thomo sapiens\tANL\trp_1\t"
-    "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00\tDescription S1\n"
+    "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00:00\tDescription S1\n"
     "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tIllumina MiSeq\tUCSD\tTRUE\t"
     "TRUE\ttype2\tNotIdentified\t4.2\t4.2\t9606\thomo sapiens\tANL\trp_1\t"
-    "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00\tDescription S2\n"
+    "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00:00\tDescription S2\n"
     "Sample3\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tIllumina MiSeq\tUCSD\tTRUE\t"
     "TRUE\ttype3\tNotIdentified\t4.3\t4.3\t9606\thomo sapiens\tANL\trp_2\t"
-    "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00\tDescription S3\n")
+    "ILLUMINA\tprotocol_1\tedd_1\t05/28/15 11:00:00\tDescription S3\n")
 
 QIIME_MAP_WITH_REVERSE_LINKER_PRIMER = (
     "#SampleID\tBarcodeSequence\tLinkerPrimerSequence\tReverseLinkerPrimer\t"
@@ -130,15 +130,15 @@ QIIME_MAP_WITH_REVERSE_LINKER_PRIMER = (
     "collection_timestamp\tDescription\n"
     "Sample1\tGTCCGCAAGTTA\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCMGCCGCGGTAA\tUCSD\t"
     "TRUE\tTRUE\ttype1\tNotIdentified\t4.1\t4.1\t9606\thomo sapiens\tANL\t"
-    "rp_1\tILLUMINA\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00\t"
+    "rp_1\tILLUMINA\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00:00\t"
     "Description S1\n"
     "Sample2\tCGTAGAGCTCTC\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCMGCCGCGGTAA\tUCSD\t"
     "TRUE\tTRUE\ttype2\tNotIdentified\t4.2\t4.2\t9606\thomo sapiens\tANL\t"
-    "rp_1\tILLUMINA\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00\t"
+    "rp_1\tILLUMINA\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00:00\t"
     "Description S2\n"
     "Sample3\tCCTCTGAGAGCT\tGTGCCAGCMGCCGCGGTAA\tGTGCCAGCMGCCGCGGTAA\tUCSD\t"
     "TRUE\tTRUE\ttype3\tNotIdentified\t4.3\t4.3\t9606\thomo sapiens\tANL\t"
-    "rp_2\tILLUMINA\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00\t"
+    "rp_2\tILLUMINA\tIllumina MiSeq\tprotocol_1\tedd_1\t05/28/15 11:00:00\t"
     "Description S3\n")
 
 QIIME_MAP_ERROR = (
@@ -149,13 +149,13 @@ QIIME_MAP_ERROR = (
     "experiment_design_description\tcollection_timestamp\tDescription\n"
     "Sample1\tGTCCGCAAGTTA\tUCSD\tTRUE\tTRUE\ttype1\tNotIdentified\t4.1\t4.1\t"
     "9606\thomo sapiens\tANL\trp_1\tILLUMINA\tprotocol_1\tedd_1\t"
-    "05/28/15 11:00\tDescription S1\n"
+    "05/28/15 11:00:00\tDescription S1\n"
     "Sample2\tCGTAGAGCTCTC\tUCSD\tTRUE\tTRUE\ttype2\tNotIdentified\t4.2\t4.2\t"
     "9606\thomo sapiens\tANL\trp_1\tILLUMINA\tprotocol_1\tedd_1\t"
-    "05/28/15 11:00\tDescription S2\n"
+    "05/28/15 11:00:00\tDescription S2\n"
     "Sample3\tCCTCTGAGAGCT\tUCSD\tTRUE\tTRUE\ttype3\tNotIdentified\t4.3\t4.3\t"
     "9606\thomo sapiens\tANL\trp_2\tILLUMINA\tprotocol_1\tedd_1\t"
-    "05/28/15 11:00\tDescription S3\n")
+    "05/28/15 11:00:00\tDescription S3\n")
 
 
 if __name__ == "__main__":

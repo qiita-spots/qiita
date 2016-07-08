@@ -288,7 +288,8 @@ class ProcessingJobTest(TestCase):
                             'instrument_model': 'Illumina MiSeq',
                             'library_construction_protocol': 'AAAA',
                             'experiment_design_description': 'BBBB'}}
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             metadata, qdb.study.Study(1), "16S")
         self._clean_up_files.extend([ptfp for _, ptfp in pt.get_filepaths()])
