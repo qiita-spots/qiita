@@ -87,11 +87,6 @@ except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'wtforms'))
 
 try:
-    from qiime import __version__ as qiime_lib_version
-except ImportError as e:
-    missing_deps_errors.append((e, core_dependency_missing_msg % 'qiime'))
-
-try:
     from mock import __version__ as mock_lib_version
 except ImportError as e:
     missing_deps_warnings.append((e, dependency_missing_msg % 'mock'))
@@ -330,8 +325,6 @@ def main():
         ('pyparsing library version', pyparsing_lib_version),
         ('networkX library version', networkx_lib_version),
         ('WTForms library version', wtforms_lib_version),
-        ('qiime library version', qiime_lib_version + ', for more info use '
-         'print_qiime_config.py'),
         ('mock library version', mock_lib_version),
         ('MOI library version', moi_lib_version),
         ('MOI config file path', environ['MOI_CONFIG_FP']),
