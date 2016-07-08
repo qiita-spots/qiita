@@ -325,8 +325,6 @@ def main():
         ('pyparsing library version', pyparsing_lib_version),
         ('networkX library version', networkx_lib_version),
         ('WTForms library version', wtforms_lib_version),
-        ('qiime library version', qiime_lib_version + ', for more info use '
-         'print_qiime_config.py'),
         ('mock library version', mock_lib_version),
         ('MOI library version', moi_lib_version),
         ('MOI config file path', environ['MOI_CONFIG_FP']),

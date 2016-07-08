@@ -118,7 +118,7 @@ pip install -e .
 At this point, Qiita will be installed and the system will start. However,
 you will need to install plugins in order to process any kind of data. For a list
 of available plugins, visit the [Qiita Spots](https://github.com/qiita-spots)
-github organization. At this moment, the `Type Plugins`
+github organization. Currently, the `Type Plugins`
 [qtp-biom](https://github.com/qiita-spots/qtp-biom) and
 [qtp-target-gene](https://github.com/qiita-spots/qtp-target-gene) as well as
 the `Plugin` [qp-target-gene](https://github.com/qiita-spots/qp-target-gene) are
