@@ -53,8 +53,7 @@ class TestPrepTemplateHandler(TestHandlerBase):
                      'prep-file': 'broke_template.txt'}
         response = self.post('/prep_template/', arguments)
         self.assertEqual(response.code, 200)
-        self.assertIn('sample_id varchar NOT NULL, broke \\\\col',
-                      response.body)
+        self.assertIn('broke \\\\col', response.body)
 
     def test_patch(self):
         arguments = {'op': 'replace',

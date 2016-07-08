@@ -303,7 +303,7 @@ class BaseTestPrepTemplate(TestCase):
                             'experiment_design_description': 'BBBB'}
             }
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
-                                               orient='index')
+                                               orient='index', dtype=str)
 
         metadata_prefixed_dict = {
             '1.SKB8.640193': {'center_name': 'ANL',
@@ -653,9 +653,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         self.metadata.index = ['o()xxxx[{::::::::>', 'sample.1', 'sample.3']
         PT = qdb.metadata_template.prep_template.PrepTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            PT._clean_validate_template(
-                self.metadata, 2,
-                qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
+            PT._clean_validate_template(self.metadata, 2)
 
     def test_clean_validate_template_error_duplicate_cols(self):
         """Raises an error if there are duplicated columns in the template"""
@@ -663,63 +661,18 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                                                 index=self.metadata.index)
         PT = qdb.metadata_template.prep_template.PrepTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateHeaderError):
-            PT._clean_validate_template(
-                self.metadata, 2,
-                qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
+            PT._clean_validate_template(self.metadata, 2)
 
     def test_clean_validate_template_error_duplicate_samples(self):
         """Raises an error if there are duplicated samples in the templates"""
         self.metadata.index = ['sample.1', 'sample.1', 'sample.3']
         PT = qdb.metadata_template.prep_template.PrepTemplate
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateSamplesError):
-            PT._clean_validate_template(
-                self.metadata, 2,
-                qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
-
-    def test_clean_validate_template_warning_missing(self):
-        """Raises an error if the template is missing a required column"""
-        metadata_dict = {
-            'SKB8.640193': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcodesequence': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
-                            'instrument_model': 'Illumina MiSeq',
-                            'library_construction_protocol': 'AAAA',
-                            'experiment_design_description': 'BBBB'}
-            }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        PT = qdb.metadata_template.prep_template.PrepTemplate
-        obs = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning, PT._clean_validate_template,
-            metadata, 2, qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
-
-        metadata_dict = {
-            '2.SKB8.640193': {'center_name': 'ANL',
-                              'center_project_name': 'Test Project',
-                              'ebi_submission_accession': None,
-                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
-                              'barcodesequence': 'GTCCGCAAGTTA',
-                              'run_prefix': "s_G1_L001_sequences",
-                              'platform': 'ILLUMINA',
-                              'instrument_model': 'Illumina MiSeq',
-                              'library_construction_protocol': 'AAAA',
-                              'experiment_design_description': 'BBBB'}
-            }
-        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
-        obs.sort_index(axis=0, inplace=True)
-        obs.sort_index(axis=1, inplace=True)
-        exp.sort_index(axis=0, inplace=True)
-        exp.sort_index(axis=1, inplace=True)
-        assert_frame_equal(obs, exp)
+            PT._clean_validate_template(self.metadata, 2)
 
     def test_clean_validate_template(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
-        obs = PT._clean_validate_template(
-            self.metadata, 2,
-            qdb.metadata_template.constants.PREP_TEMPLATE_COLUMNS)
+        obs = PT._clean_validate_template(self.metadata, 2)
         metadata_dict = {
             '2.SKB8.640193': {'center_name': 'ANL',
                               'center_project_name': 'Test Project',
@@ -758,7 +711,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
                               'library_construction_protocol': 'AAAA',
                               'experiment_design_description': 'BBBB'}
             }
-        exp = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index', dtype=str)
         obs.sort_index(axis=0, inplace=True)
         obs.sort_index(axis=1, inplace=True)
         exp.sort_index(axis=0, inplace=True)
@@ -832,7 +785,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         self.metadata_dict['NOTREAL'] = self.metadata_dict['SKB7.640196']
         del self.metadata_dict['SKB7.640196']
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
-                                               orient='index')
+                                               orient='index', dtype=str)
         # Test error raised and correct error given
         with self.assertRaises(qdb.exceptions.QiitaDBExecutionError) as err:
             qdb.metadata_template.prep_template.PrepTemplate.create(
@@ -846,7 +799,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         # remove one sample so not all samples in the prep template
         del self.metadata_dict['SKB7.640196']
         self.metadata = pd.DataFrame.from_dict(self.metadata_dict,
-                                               orient='index')
+                                               orient='index', dtype=str)
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
 
@@ -854,76 +807,6 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             "SELECT sample_id FROM qiita.prep_%d" % pt.id)
         exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
         self.assertEqual(obs, exp)
-
-    def test_create_error_cleanup(self):
-        """Create does not modify the database if an error happens"""
-        metadata_dict = {
-            'SKB8.640193': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'EMP_status': 'EMP',
-                            'group': 2,
-                            'primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcode': 'GTCCGCAAGTTA',
-                            'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
-                            'instrument_model': 'Illumina MiSeq',
-                            'library_construction_protocol': 'AAAA',
-                            'experiment_design_description': 'BBBB'},
-            'SKD8.640184': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'EMP_status': 'EMP',
-                            'group': 1,
-                            'primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcode': 'CGTAGAGCTCTC',
-                            'run_prefix': "s_G1_L001_sequences",
-                            'platform': 'ILLUMINA',
-                            'instrument_model': 'Illumina MiSeq',
-                            'library_construction_protocol': 'AAAA',
-                            'experiment_design_description': 'BBBB'},
-            'SKB7.640196': {'center_name': 'ANL',
-                            'center_project_name': 'Test Project',
-                            'ebi_submission_accession': None,
-                            'EMP_status': 'EMP',
-                            'group': 'Value for sample 3',
-                            'primer': 'GTGCCAGCMGCCGCGGTAA',
-                            'barcode': 'CCTCTGAGAGCT',
-                            'run_prefix': "s_G1_L002_sequences",
-                            'platform': 'ILLUMINA',
-                            'instrument_model': 'Illumina MiSeq',
-                            'library_construction_protocol': 'AAAA',
-                            'experiment_design_description': 'BBBB'}
-            }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
-
-        exp_id = qdb.util.get_count("qiita.prep_template") + 1
-
-        with self.assertRaises(ValueError):
-            qdb.metadata_template.prep_template.PrepTemplate.create(
-                metadata, self.test_study, self.data_type)
-
-        sql = """SELECT EXISTS(
-                    SELECT * FROM qiita.prep_template
-                    WHERE prep_template_id=%s)"""
-        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
-
-        sql = """SELECT EXISTS(
-                    SELECT * FROM qiita.prep_template_sample
-                    WHERE prep_template_id=%s)"""
-        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
-
-        sql = """SELECT EXISTS(
-                    SELECT * FROM qiita.prep_columns
-                    WHERE prep_template_id=%s)"""
-        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
-
-        sql = """SELECT EXISTS(
-                    SELECT * FROM qiita.study_prep_template
-                    WHERE prep_template_id=%s)"""
-        self.assertFalse(self.conn_handler.execute_fetchone(sql, (exp_id,))[0])
-
-        self.assertFalse(qdb.util.exists_table("prep_%d" % exp_id))
 
     def _common_creation_checks(self, new_id, pt, fp_count):
         # The returned object has the correct id
@@ -1030,14 +913,11 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         obs_fp = pt.create_qiime_mapping_file()
         exp_fp = join(fp, '1_prep_1_qiime_19700101-000000.txt')
 
-        obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=True,
-                          parse_dates=True, index_col=False, comment='\t')
+        obs = pd.read_csv(obs_fp, sep='\t', infer_datetime_format=False,
+                          parse_dates=False, index_col=False, comment='\t')
         exp = pd.read_csv(
-            exp_fp, sep='\t', infer_datetime_format=True,
-            parse_dates=True, index_col=False, comment='\t',
-            na_values=qdb.metadata_template.constants.NA_VALUES,
-            true_values=qdb.metadata_template.constants.TRUE_VALUES,
-            false_values=qdb.metadata_template.constants.FALSE_VALUES)
+            exp_fp, sep='\t', infer_datetime_format=False,
+            parse_dates=False, index_col=False, comment='\t')
 
         assert_frame_equal(obs, exp)
 
@@ -1169,12 +1049,6 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.prep_template_sample "
             "WHERE prep_template_id=%s", (pt.id,))
-        exp = []
-        self.assertEqual(obs, exp)
-
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.prep_columns WHERE prep_template_id=%s",
-            (pt.id,))
         exp = []
         self.assertEqual(obs, exp)
 
@@ -1337,7 +1211,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         """extend fails adding samples to an already preprocessed template"""
         df = pd.DataFrame.from_dict(
             {'new_sample': {'barcode': 'CCTCTGAGAGCT'}},
-            orient='index')
+            orient='index', dtype=str)
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.metadata_template.prep_template.PrepTemplate(1).extend(df)
 
@@ -1539,6 +1413,44 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             self.metadata, self.test_study, self.data_type)
         self.assertFalse(pt.is_submitted_to_ebi)
 
+    def test_validate_template_warning_missing(self):
+        """Raises an error if the template is missing a required column"""
+        metadata_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}
+            }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        obs = PT._clean_validate_template(metadata, 2)
+
+        metadata_dict = {
+            '2.SKB8.640193': {'center_name': 'ANL',
+                              'center_project_name': 'Test Project',
+                              'ebi_submission_accession': None,
+                              'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                              'barcodesequence': 'GTCCGCAAGTTA',
+                              'run_prefix': "s_G1_L001_sequences",
+                              'platform': 'ILLUMINA',
+                              'instrument_model': 'Illumina MiSeq',
+                              'library_construction_protocol': 'AAAA',
+                              'experiment_design_description': 'BBBB'}
+            }
+        exp = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                     dtype=str)
+        obs.sort_index(axis=0, inplace=True)
+        obs.sort_index(axis=1, inplace=True)
+        exp.sort_index(axis=0, inplace=True)
+        exp.sort_index(axis=1, inplace=True)
+        assert_frame_equal(obs, exp)
 
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'

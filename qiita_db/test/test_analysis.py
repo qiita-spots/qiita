@@ -1,7 +1,6 @@
 from unittest import TestCase, main
 from os import remove
 from os.path import exists, join
-from datetime import datetime
 from shutil import move
 
 from future.utils import viewitems
@@ -269,7 +268,7 @@ class TestAnalysis(TestCase):
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
-                            datetime(2014, 5, 29, 12, 24, 51),
+                            '05/29/14 12:24:51',
                             'host_subject_id': 'NotIdentified',
                             'Description': 'Test Sample 1',
                             'str_column': 'Value for sample 1',
@@ -283,7 +282,7 @@ class TestAnalysis(TestCase):
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
-                            datetime(2014, 5, 29, 12, 24, 51),
+                            '05/29/14 12:24:51',
                             'host_subject_id': 'NotIdentified',
                             'Description': 'Test Sample 2',
                             'str_column': 'Value for sample 2',
@@ -297,7 +296,7 @@ class TestAnalysis(TestCase):
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
-                            datetime(2014, 5, 29, 12, 24, 51),
+                            '05/29/14 12:24:51',
                             'host_subject_id': 'NotIdentified',
                             'Description': 'Test Sample 3',
                             'str_column': 'Value for sample 3',
@@ -306,7 +305,8 @@ class TestAnalysis(TestCase):
                             'taxon_id': 9606,
                             'scientific_name': 'homo sapiens'},
             }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
 
         study = qdb.study.Study.create(
             qdb.user.User("test@foo.bar"), "Test study 2", [1], info)
@@ -318,7 +318,7 @@ class TestAnalysis(TestCase):
             {'SKB8.640193': {'barcode': 'AAAAAAAAAAAA'},
              'SKD8.640184': {'barcode': 'AAAAAAAAAAAC'},
              'SKB7.640196': {'barcode': 'AAAAAAAAAAAG'}},
-            orient='index')
+            orient='index', dtype=str)
 
         pt = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning,
@@ -556,7 +556,7 @@ class TestAnalysis(TestCase):
             sql, ("%d_analysis_mapping.txt" % self.analysis.id,))
 
         exp = [[16, '1_analysis_mapping.txt', 9, '852952723', 1, 1],
-               [new_id, '1_analysis_mapping.txt', 9, '3609817154', 1, 1]]
+               [new_id, '1_analysis_mapping.txt', 9, '1542374513', 1, 1]]
         self.assertItemsEqual(obs, exp)
 
         sql = """SELECT * FROM qiita.analysis_filepath

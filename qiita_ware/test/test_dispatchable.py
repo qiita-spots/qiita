@@ -77,11 +77,67 @@ class TestDispatchable(TestCase):
     def test_update_sample_template(self):
         obs = update_sample_template(1, self.fp)
         exp = {'status': 'warning',
-               'message': 'Sample names were already prefixed with the study '
-                          'id.\nThe following columns have been added to the '
-                          'existing template: new_col\nThere are no '
-                          'differences between the data stored in the DB and '
-                          'the new data provided'}
+               'message': ("Sample names were already prefixed with the study "
+                           "id.\nThe following columns have been added to the "
+                           "existing template: new_col\nThere are no "
+                           "differences between the data stored in the DB and "
+                           "the new data provided\nSome functionality will be "
+                           "disabled due to missing columns:\n"
+                           "\t1.SKB2.640194, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKM4.640180, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKB3.640195, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKB6.640176, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKD6.640190, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKM6.640187, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKD9.640182, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKM8.640201, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKM2.640199, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKD2.640178, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKB7.640196, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKD4.640185, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKB8.640193, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKM3.640197, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKD5.640186, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKB1.640202, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKM1.640183, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKD1.640179, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKD3.640198, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKB5.640181, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKB4.640189, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKB9.640200, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKM9.640192, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKD8.640184, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKM5.640177, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKM7.640188, wrong value "
+                           '"11/11/11 13:00:00";\n'
+                           "\t1.SKD7.640191, wrong value "
+                           '"11/11/11 13:00:00".\nSee the Templates tutorial '
+                           'for a description of these fields.')}
         self.assertEqual(obs['status'], exp['status'])
         self.assertItemsEqual(obs['message'].split('\n'),
                               exp['message'].split('\n'))

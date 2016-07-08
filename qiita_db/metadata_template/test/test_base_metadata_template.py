@@ -65,7 +65,7 @@ class TestMetadataTemplateReadOnly(TestCase):
         """_clean_validate_template raises an error from base class"""
         MT = qdb.metadata_template.base_metadata_template.MetadataTemplate
         with self.assertRaises(IncompetentQiitaDeveloperError):
-            MT._clean_validate_template(None, 1, None)
+            MT._clean_validate_template(None, 1)
 
 
 if __name__ == '__main__':

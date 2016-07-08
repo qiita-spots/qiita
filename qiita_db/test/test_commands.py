@@ -98,7 +98,7 @@ class TestLoadArtifactFromCmd(TestCase):
                              'instrument_model': 'Illumina MiSeq',
                              'library_construction_protocol': 'AAAA',
                              'experiment_design_description': 'BBBB'}},
-            orient='index')
+            orient='index', dtype=str)
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             metadata, qdb.study.Study(1), "16S")
         obs = qdb.commands.load_artifact_from_cmd(
@@ -439,16 +439,16 @@ SAMPLE_TEMPLATE = (
     "sample_type\tphysical_specimen_remaining\tphysical_specimen_location\t"
     "dna_extracted\thost_subject_id\tTreatment\tDOB\tlatitude\tlongitude"
     "\ttaxon_id\tscientific_name\tDescription\n"
-    "PC.354\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
+    "PC.354\treceived\t06/18/14 16:44:00\ttype_1\tTrue\tLocation_1\tTrue\t"
     "HS_ID_PC.354\tControl\t20061218\t1.88401499993\t56.0003871552\t"
     "9606\thomo sapiens\tControl_mouse_I.D._354\n"
-    "PC.593\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
+    "PC.593\treceived\t06/18/14 16:44:00\ttype_1\tTrue\tLocation_1\tTrue\t"
     "HS_ID_PC.593\tControl\t20071210\t35.4079458313\t83.2595338611\t"
     "9606\thomo sapiens\tControl_mouse_I.D._593\n"
-    "PC.607\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
+    "PC.607\treceived\t06/18/14 16:44:00\ttype_1\tTrue\tLocation_1\tTrue\t"
     "HS_ID_PC.607\tFast\t20071112\t18.3175615444\t91.3713989729\t"
     "9606\thomo sapiens\tFasting_mouse_I.D._607\n"
-    "PC.636\treceived\t2014-06-18 16:44\ttype_1\tTrue\tLocation_1\tTrue\t"
+    "PC.636\treceived\t06/18/14 16:44:00\ttype_1\tTrue\tLocation_1\tTrue\t"
     "HS_ID_PC.636\tFast\t20080116\t31.0856060708\t4.16781143893\t"
     "9606\thomo sapiens\tFasting_mouse_I.D._636")
 

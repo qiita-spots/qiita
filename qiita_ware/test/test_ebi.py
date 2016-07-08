@@ -17,7 +17,7 @@ from unittest import TestCase, main
 from xml.etree import ElementTree as ET
 from functools import partial
 import pandas as pd
-from datetime import date, datetime
+from datetime import date
 
 from h5py import File
 
@@ -346,7 +346,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                                 'extra_value': 'Unspecified'}
             }
             investigation_type = "Metagenomics"
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         pt = PrepTemplate.create(metadata, Study(1), "18S",
                                  investigation_type=investigation_type)
         artifact = self.write_demux_files(pt)
@@ -372,23 +373,24 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         }
         study = Study.create(User('test@foo.bar'), "Test EBI study", [1], info)
         metadata_dict = {
-            'Sample1': {'collection_timestamp': datetime(2015, 6, 1, 7, 0, 0),
+            'Sample1': {'collection_timestamp': '06/01/15 07:00:00',
                         'physical_specimen_location': 'location1',
                         'taxon_id': 9606,
                         'scientific_name': 'homo sapiens',
                         'Description': 'Test Sample 1'},
-            'Sample2': {'collection_timestamp': datetime(2015, 6, 2, 7, 0, 0),
+            'Sample2': {'collection_timestamp': '06/02/15 07:00:00',
                         'physical_specimen_location': 'location1',
                         'taxon_id': 9606,
                         'scientific_name': 'homo sapiens',
                         'Description': 'Test Sample 2'},
-            'Sample3': {'collection_timestamp': datetime(2015, 6, 3, 7, 0, 0),
+            'Sample3': {'collection_timestamp': '06/03/15 07:00:00',
                         'physical_specimen_location': 'location1',
                         'taxon_id': 9606,
                         'scientific_name': 'homo sapiens',
                         'Description': 'Test Sample 3'}
         }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         SampleTemplate.create(metadata, study)
         metadata_dict = {
             'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
@@ -413,7 +415,8 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
                         'library_construction_protocol': 'Protocol ABC',
                         'experiment_design_description': "Random value 3"},
         }
-        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index')
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
         pt = PrepTemplate.create(metadata, study, "16S", 'Metagenomics')
         fna_fp = join(self.temp_dir, 'seqs.fna')
         demux_fp = join(self.temp_dir, 'demux.seqs')
@@ -816,7 +819,7 @@ center_name="%(center_name)s">
     <DESCRIPTION>Cannabis Soil Microbiome</DESCRIPTION>
     <SAMPLE_ATTRIBUTES>
       <SAMPLE_ATTRIBUTE>
-        <TAG>altitude</TAG><VALUE>0.0</VALUE>
+        <TAG>altitude</TAG><VALUE>0</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>anonymized_name</TAG><VALUE>SKB2</VALUE>
@@ -825,7 +828,7 @@ center_name="%(center_name)s">
         <TAG>assigned_from_geo</TAG><VALUE>n</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>collection_timestamp</TAG><VALUE>2011-11-11 13:00:00</VALUE>
+        <TAG>collection_timestamp</TAG><VALUE>11/11/11 13:00:00</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>common_name</TAG><VALUE>soil metagenome</VALUE>
@@ -839,10 +842,10 @@ center_name="%(center_name)s">
         <TAG>description_duplicate</TAG><VALUE>Burmese bulk</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>dna_extracted</TAG><VALUE>True</VALUE>
+        <TAG>dna_extracted</TAG><VALUE>true</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>elevation</TAG><VALUE>114.0</VALUE>
+        <TAG>elevation</TAG><VALUE>114</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>env_biome</TAG><VALUE>ENVO:Temperate grasslands, savannas, and \
@@ -870,7 +873,7 @@ shrubland biome</VALUE>
         <TAG>physical_specimen_location</TAG><VALUE>ANL</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>physical_specimen_remaining</TAG><VALUE>True</VALUE>
+        <TAG>physical_specimen_remaining</TAG><VALUE>true</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>samp_salinity</TAG><VALUE>7.15</VALUE>
@@ -882,7 +885,7 @@ shrubland biome</VALUE>
         <TAG>season_environment</TAG><VALUE>winter</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>temp</TAG><VALUE>15.0</VALUE></SAMPLE_ATTRIBUTE>
+        <TAG>temp</TAG><VALUE>15</VALUE></SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>texture</TAG><VALUE>64.6 sand, 17.6 silt, 17.8 clay</VALUE>
       </SAMPLE_ATTRIBUTE>
@@ -890,7 +893,7 @@ shrubland biome</VALUE>
         <TAG>tot_nitro</TAG><VALUE>1.41</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>tot_org_carb</TAG><VALUE>5.0</VALUE>
+        <TAG>tot_org_carb</TAG><VALUE>5</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>water_content_soil</TAG><VALUE>0.164</VALUE>
@@ -907,7 +910,7 @@ center_name="%(center_name)s">
     <DESCRIPTION>Cannabis Soil Microbiome</DESCRIPTION>
       <SAMPLE_ATTRIBUTES>
       <SAMPLE_ATTRIBUTE>
-        <TAG>altitude</TAG><VALUE>0.0</VALUE>
+        <TAG>altitude</TAG><VALUE>0</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>anonymized_name</TAG><VALUE>SKB3</VALUE>
@@ -916,7 +919,7 @@ center_name="%(center_name)s">
         <TAG>assigned_from_geo</TAG><VALUE>n</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>collection_timestamp</TAG><VALUE>2011-11-11 13:00:00</VALUE>
+        <TAG>collection_timestamp</TAG><VALUE>11/11/11 13:00:00</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>common_name</TAG><VALUE>soil metagenome</VALUE>
@@ -931,10 +934,10 @@ center_name="%(center_name)s">
         <TAG>description_duplicate</TAG><VALUE>Burmese bulk</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>dna_extracted</TAG><VALUE>True</VALUE>
+        <TAG>dna_extracted</TAG><VALUE>true</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>elevation</TAG><VALUE>114.0</VALUE>
+        <TAG>elevation</TAG><VALUE>114</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>env_biome</TAG><VALUE>ENVO:Temperate grasslands, savannas, and \
@@ -962,7 +965,7 @@ shrubland biome</VALUE>
         <TAG>physical_specimen_location</TAG><VALUE>ANL</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>physical_specimen_remaining</TAG><VALUE>True</VALUE>
+        <TAG>physical_specimen_remaining</TAG><VALUE>true</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>samp_salinity</TAG><VALUE>7.15</VALUE>
@@ -974,7 +977,7 @@ shrubland biome</VALUE>
         <TAG>season_environment</TAG><VALUE>winter</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>temp</TAG><VALUE>15.0</VALUE>
+        <TAG>temp</TAG><VALUE>15</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>texture</TAG><VALUE>64.6 sand, 17.6 silt, 17.8 clay</VALUE>
@@ -983,7 +986,7 @@ shrubland biome</VALUE>
         <TAG>tot_nitro</TAG><VALUE>1.41</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>tot_org_carb</TAG><VALUE>5.0</VALUE>
+        <TAG>tot_org_carb</TAG><VALUE>5</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>water_content_soil</TAG><VALUE>0.164</VALUE>

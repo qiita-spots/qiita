@@ -1,13 +1,5 @@
 import qiita_db as qdb
 
-bool_vals = set(qdb.metadata_template.constants.TRUE_VALUES +
-                qdb.metadata_template.constants.FALSE_VALUES + [None])
-na_vals = set(qdb.metadata_template.constants.NA_VALUES)
-
-nans = tuple(qdb.metadata_template.constants.NA_VALUES)
-false_vals = tuple(qdb.metadata_template.constants.FALSE_VALUES)
-true_vals = tuple(qdb.metadata_template.constants.TRUE_VALUES)
-
 st_update = set()
 pr_update = set()
 
@@ -43,8 +35,6 @@ with qdb.sql_connection.TRN:
         # Change NaN values to NULL in database
         qdb.sql_connection.TRN.add(cols_sql, [table])
         cols = qdb.sql_connection.TRN.execute_fetchflatten()
-        for col in cols:
-            qdb.sql_connection.TRN.add(null_sql.format(table, col), [nans])
         qdb.sql_connection.TRN.execute()
 
         # Update now boolean columns to bool in database
@@ -55,16 +45,6 @@ with qdb.sql_connection.TRN:
             if set(vals) == {None}:
                 # Ignore columns that are all NULL
                 continue
-            if all([v in bool_vals for v in vals]):
-                # Every value in the column should be bool, so do it
-                qdb.sql_connection.TRN.add(
-                    alter_sql.format(table, col), [false_vals, true_vals])
-                if "sample" in table:
-                    st_update.add(table_id)
-                    qdb.sql_connection.TRN.add(ssc_update_sql, [table_id, col])
-                else:
-                    pr_update.add(table_id)
-                    qdb.sql_connection.TRN.add(pc_update_sql, [table_id, col])
 
     qdb.sql_connection.TRN.execute()
     for stid in st_update:

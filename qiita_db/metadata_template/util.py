@@ -25,99 +25,6 @@ else:
     from string import letters, digits
 
 
-def type_lookup(dtype):
-    """Lookup function to transform from python type to SQL type
-
-    Parameters
-    ----------
-    dtype : object
-        The python type
-
-    Returns
-    -------
-    str
-        The SQL type
-    """
-    if dtype in [np.int8, np.int16, np.int32, np.int64]:
-        return 'integer'
-    elif dtype in [np.float16, np.float32, np.float64]:
-        return 'float8'
-    elif np.issubdtype(dtype, np.datetime64):
-        return 'timestamp'
-    elif dtype == np.bool:
-        return 'bool'
-    else:
-        return 'varchar'
-
-
-def get_datatypes(metadata_map):
-    r"""Returns the datatype of each metadata_map column
-
-    Parameters
-    ----------
-    metadata_map : DataFrame
-        The MetadataTemplate contents
-
-    Returns
-    -------
-    list of str
-        The SQL datatypes for each column, in column order
-    """
-    return [type_lookup(dtype) for dtype in metadata_map.dtypes]
-
-
-def cast_to_python(value):
-    """Casts the value from numpy types to python types
-
-    Parameters
-    ----------
-    value : object
-        The value to cast
-
-    Returns
-    -------
-    object
-        The input value casted to a python type
-    """
-    if isinstance(value, np.generic):
-        value = np.asscalar(value)
-    return value
-
-
-def as_python_types(metadata_map, headers):
-    r"""Converts the values of metadata_map pointed by headers from numpy types
-    to python types.
-
-    Psycopg2 does not support the numpy types, so we should cast them to the
-    closest python type
-
-    Parameters
-    ----------
-    metadata_map : DataFrame
-        The MetadataTemplate contents
-    headers : list of str
-        The headers of the columns of metadata_map that needs to be converted
-        to a python type
-
-    Returns
-    -------
-    list of lists
-        The values of the columns in metadata_map pointed by headers cast to
-        python types.
-    """
-    values = []
-    for h in headers:
-        # we explicitly check for cases when we have a datetime64 object
-        # because otherwise doing the isinstance check against np.generic fails
-        if isinstance(metadata_map[h].values[0], np.datetime64):
-            values.append(list(map(pd.to_datetime, metadata_map[h])))
-        elif isinstance(metadata_map[h].values[0], np.generic):
-            values.append(list(map(np.asscalar, metadata_map[h])))
-        else:
-            values.append(list(metadata_map[h]))
-    return values
-
-
 def prefix_sample_names_with_id(md_template, study_id):
     r"""prefix the sample_names in md_template with the study id
 
@@ -177,8 +84,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
         Empty file passed
     QiitaDBColumnError
         If the sample_name column is not present in the template.
-        If there's a value in one of the reserved columns that cannot be cast
-        to the needed type.
     QiitaDBWarning
         When columns are dropped because they have no content for any sample.
     QiitaDBError
@@ -193,33 +98,10 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     character will be ignored and columns that are empty will be removed. Empty
     sample names will be removed from the DataFrame.
 
-    The following table describes the data type per column that will be
-    enforced in `fn`. Column names are case-insensitive but will be lowercased
-    on addition to the database.
+    Column names are case-insensitive but will be lowercased on addition to
+    the database
 
-    +-----------------------+--------------+
-    |      Column Name      |  Python Type |
-    +=======================+==============+
-    |           sample_name |          str |
-    +-----------------------+--------------+
-    |             #SampleID |          str |
-    +-----------------------+--------------+
-    |     physical_location |          str |
-    +-----------------------+--------------+
-    | has_physical_specimen |         bool |
-    +-----------------------+--------------+
-    |    has_extracted_data |         bool |
-    +-----------------------+--------------+
-    |           sample_type |          str |
-    +-----------------------+--------------+
-    |       host_subject_id |          str |
-    +-----------------------+--------------+
-    |           description |          str |
-    +-----------------------+--------------+
-    |              latitude |        float |
-    +-----------------------+--------------+
-    |             longitude |        float |
-    +-----------------------+--------------+
+    Everything in the DataFrame will be read and managed as string
     """
     # Load in file lines
     holdfile = None
@@ -256,38 +138,21 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     # keep_default:
     #   is set as False, to avoid inferring empty/NA values with the defaults
     #   that Pandas has.
-    # na_values:
-    #   the values that should be considered as empty
-    # true_values:
-    #   the values that should be considered "True" for boolean columns
-    # false_values:
-    #   the values that should be considered "False" for boolean columns
-    # converters:
-    #   ensure that sample names are not converted into any other types but
-    #   strings and remove any trailing spaces. Don't let pandas try to guess
-    #   the dtype of the other columns, force them to be a str.
     # comment:
     #   using the tab character as "comment" we remove rows that are
     #   constituted only by delimiters i. e. empty rows.
     try:
         template = pd.read_csv(
-            StringIO(''.join(holdfile)), sep='\t', encoding='utf-8',
-            infer_datetime_format=True, keep_default_na=False,
-            na_values=qdb.metadata_template.constants.NA_VALUES,
-            true_values=qdb.metadata_template.constants.TRUE_VALUES,
-            false_values=qdb.metadata_template.constants.FALSE_VALUES,
-            parse_dates=True, index_col=False, comment='\t',
+            StringIO(''.join(holdfile)),
+            sep='\t',
+            dtype=str,
+            encoding='utf-8',
+            infer_datetime_format=False,
+            keep_default_na=False,
+            index_col=False,
+            comment='\t',
             mangle_dupe_cols=False,
-            converters={index: lambda x: str(x).strip(),
-                        # required sample template information
-                        'physical_location': str,
-                        'sample_type': str,
-                        # collection_timestamp is not added here
-                        'host_subject_id': str,
-                        'description': str,
-                        # common prep template information
-                        'center_name': str,
-                        'center_projct_name': str})
+            converters={index: lambda x: str(x).strip()})
     except UnicodeDecodeError:
         # Find row number and col number for utf-8 encoding errors
         headers = holdfile[0].strip().split('\t')
@@ -308,20 +173,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
         raise qdb.exceptions.QiitaDBDuplicateHeaderError(
             find_duplicates(template.columns))
 
-    # let pandas infer the dtypes of these columns, if the inference is
-    # not correct, then we have to raise an error
-    columns_to_dtype = [(['latitude', 'longitude'], (np.int, np.float),
-                         'integer or decimal'),
-                        (['has_physical_specimen', 'has_extracted_data'],
-                         np.bool_, 'boolean')]
-    for columns, c_dtype, english_desc in columns_to_dtype:
-        for n in columns:
-            if n in template.columns and not all([isinstance(val, c_dtype)
-                                                  for val in template[n]]):
-                raise qdb.exceptions.QiitaDBColumnError(
-                    "The '%s' column includes values that cannot be cast "
-                    "into a %s value " % (n, english_desc))
-
     initial_columns = set(template.columns)
 
     if index not in template.columns:
@@ -336,8 +187,10 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     # set the sample name as the index
     template.set_index(index, inplace=True)
 
-    # it is not uncommon to find templates that have empty columns
-    template.dropna(how='all', axis=1, inplace=True)
+    # it is not uncommon to find templates that have empty columns so let's
+    # find the columns that are all ''
+    columns = np.where(np.all(template.applymap(lambda x: x == ''), axis=0))
+    template.drop(template.columns[columns], axis=1, inplace=True)
 
     initial_columns.remove(index)
     dropped_cols = initial_columns - set(template.columns)
@@ -380,6 +233,36 @@ def get_invalid_sample_names(sample_names):
 
     for s in sample_names:
         if set(s) - valid:
+            inv.append(s)
+
+    return inv
+
+
+def get_invalid_column_names(column_names):
+    """Get a list of column names that are not SQL compliant
+
+    Parameters
+    ----------
+    column_names : iterable
+        Iterable containing the column names to check.
+
+    Returns
+    -------
+    list
+        List of str objects where each object is an invalid column name.
+
+    References
+    ----------
+    .. [1] postgresql SQL-SYNTAX-IDENTIFIERS: https://goo.gl/EF0cUV.
+    """
+    valid_initial_char = letters
+    valid_rest = set(letters+digits+'_')
+    inv = []
+
+    for s in column_names:
+        if s[0] not in valid_initial_char:
+            inv.append(s)
+        elif set(s) - valid_rest:
             inv.append(s)
 
     return inv
@@ -501,3 +384,17 @@ def _parse_mapping_file(lines, strip_quotes=True, suppress_stripping=False):
             "No data found in mapping file.")
 
     return mapping_data, header, comments
+
+
+def get_pgsql_reserved_words():
+    """Returns a list of the current reserved words in pgsql
+
+    Returns
+    -------
+    set: str
+        The reserved words
+    """
+    with qdb.sql_connection.TRN:
+        sql = "SELECT word FROM pg_get_keywords() WHERE catcode = 'R';"
+        qdb.sql_connection.TRN.add(sql)
+        return set(qdb.sql_connection.TRN.execute_fetchflatten())
