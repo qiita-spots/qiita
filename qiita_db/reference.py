@@ -156,9 +156,11 @@ class Reference(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id])
             result = qdb.sql_connection.TRN.execute_fetchindex()
             if result:
-                fp, m, s = result[0]
+                # If results is not empty, there will be only 1 result in the
+                # list, hence using the 0 index
+                fp, mountpoint, subdir = result[0]
                 db_dir = qdb.util.get_db_files_base_dir()
-                return path_builder(db_dir, fp, m, s, self._id)
+                return path_builder(db_dir, fp, mountpoint, subdir, self._id)
             else:
                 return ''
 
