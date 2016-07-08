@@ -111,16 +111,17 @@ def artifact_summary_get_request(user_id, artifact_id):
             buttons.append(btn_base % ('approve', 'private',
                                        'Approve artifact'))
 
-    if user.level == 'admin':
-        if visibility == 'private':
-            # The make public button only appears if the artifact is private
-            buttons.append(btn_base % ('make public', 'public', 'Make public'))
+    if visibility == 'private':
+        # The make public button only appears if the artifact is private
+        buttons.append(btn_base % ('make public', 'public', 'Make public'))
 
-        # The revert to sandbox button only appears if the artifact is not
-        # sandboxed nor public
-        if visibility not in {'sandbox', 'public'}:
-            buttons.append(btn_base % ('revert to sandbox', 'sandbox',
-                                       'Revert to sandbox'))
+    # The revert to sandbox button only appears if the artifact is not
+    # sandboxed nor public
+    if visibility not in {'sandbox', 'public'}:
+        buttons.append(btn_base % ('revert to sandbox', 'sandbox',
+                                   'Revert to sandbox'))
+
+    if user.level == 'admin':
         if artifact.can_be_submitted_to_ebi:
             if not artifact.is_submitted_to_ebi:
                 buttons.append(
