@@ -139,43 +139,37 @@ class Reference(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    @property
-    def sequence_fp(self):
-        with qdb.sql_connection.TRN:
-            sql = """SELECT f.filepath
-                     FROM qiita.filepath f
-                        JOIN qiita.{0} r ON r.sequence_filepath=f.filepath_id
-                     WHERE r.reference_id=%s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            rel_path = qdb.sql_connection.TRN.execute_fetchlast()
-            _, basefp = qdb.util.get_mountpoint('reference')[0]
-            return join(basefp, rel_path)
+    def _retrieve_filepath(self, column):
+        def path_builder(db_dir, filepath, mountpoint, subdirectory, obj_id):
+            if subdirectory:
+                return join(db_dir, mountpoint, str(obj_id), filepath)
+            else:
+                return join(db_dir, mountpoint, filepath)
 
-    @property
-    def taxonomy_fp(self):
         with qdb.sql_connection.TRN:
-            sql = """SELECT f.filepath
+            sql = """SELECT filepath, mountpoint, subdirectory
                      FROM qiita.filepath f
-                        JOIN qiita.{0} r ON r.taxonomy_filepath=f.filepath_id
-                     WHERE r.reference_id=%s""".format(self._table)
+                        JOIN qiita.filepath_type USING (filepath_type_id)
+                        JOIN qiita.data_directory USING (data_directory_id)
+                        JOIN qiita.{0} r ON r.{1} = f.filepath_id
+                     WHERE r.reference_id = %s""".format(self._table, column)
             qdb.sql_connection.TRN.add(sql, [self._id])
-            rel_path = qdb.sql_connection.TRN.execute_fetchlast()
-            _, basefp = qdb.util.get_mountpoint('reference')[0]
-            return join(basefp, rel_path)
-
-    @property
-    def tree_fp(self):
-        with qdb.sql_connection.TRN:
-            sql = """SELECT f.filepath
-                     FROM qiita.filepath f
-                        JOIN qiita.{0} r ON r.tree_filepath=f.filepath_id
-                     WHERE r.reference_id=%s""".format(self._table)
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            rel_path = qdb.sql_connection.TRN.execute_fetchindex()
-            if rel_path:
-                rel_path = rel_path[0][0]
+            result = qdb.sql_connection.TRN.execute_fetchindex()
+            if result:
+                fp, m, s = result[0]
+                db_dir = qdb.util.get_db_files_base_dir()
+                return path_builder(db_dir, fp, m, s, self._id)
             else:
                 return ''
 
-            _, basefp = qdb.util.get_mountpoint('reference')[0]
-            return join(basefp, rel_path)
+    @property
+    def sequence_fp(self):
+        return self._retrieve_filepath('sequence_filepath')
+
+    @property
+    def taxonomy_fp(self):
+        return self._retrieve_filepath('taxonomy_filepath')
+
+    @property
+    def tree_fp(self):
+        return self._retrieve_filepath('tree_filepath')
