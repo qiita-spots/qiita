@@ -70,7 +70,7 @@ Developing a Qiita Plugin
 To facilitate the development of Qiita Plugins, we have created a library that
 simplifies the usage of Qiita's REST api:
 `Qiita Client <https://github.com/qiita-spots/qiita_client>`__. This library
-encapsulates the authentication of the plugin when using Qiita's REST api as
+encapsulates the authentication of the plugin when using Qiita's REST api, as
 well as providing convenient functions to retrieve the job information, update
 the job status and complete the job. This library should not require any
 further development from the plugin developer and it should be ready to use.
