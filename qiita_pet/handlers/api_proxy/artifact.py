@@ -110,29 +110,31 @@ def artifact_summary_get_request(user_id, artifact_id):
             # requires artifact approval
             buttons.append(btn_base % ('approve', 'private',
                                        'Approve artifact'))
-    if visibility == 'private':
-        # The make public button only appears if the artifact is private
-        buttons.append(btn_base % ('make public', 'public', 'Make public'))
 
-    # The revert to sandbox button only appears if the artifact is not
-    # sandboxed nor public
-    if visibility not in {'sandbox', 'public'}:
-        buttons.append(btn_base % ('revert to sandbox', 'sandbox',
-                                   'Revert to sandbox'))
+    if user.level == 'admin':
+        if visibility == 'private':
+            # The make public button only appears if the artifact is private
+            buttons.append(btn_base % ('make public', 'public', 'Make public'))
 
-    if artifact.can_be_submitted_to_ebi:
-        if not artifact.is_submitted_to_ebi:
-            buttons.append(
-                '<a class="btn btn-primary btn-sm" '
-                'href="/ebi_submission/%d">'
-                '<span class="glyphicon glyphicon-export"></span>'
-                ' Submit to EBI</a>' % artifact_id)
-    if artifact.can_be_submitted_to_vamps:
-        if not artifact.is_submitted_to_vamps:
-            buttons.append(
-                '<a class="btn btn-primary btn-sm" href="/vamps/%d">'
-                '<span class="glyphicon glyphicon-export"></span>'
-                ' Submit to VAMPS</a>' % artifact_id)
+        # The revert to sandbox button only appears if the artifact is not
+        # sandboxed nor public
+        if visibility not in {'sandbox', 'public'}:
+            buttons.append(btn_base % ('revert to sandbox', 'sandbox',
+                                       'Revert to sandbox'))
+        if artifact.can_be_submitted_to_ebi:
+            if not artifact.is_submitted_to_ebi:
+                buttons.append(
+                    '<a class="btn btn-primary btn-sm" '
+                    'href="/ebi_submission/%d">'
+                    '<span class="glyphicon glyphicon-export"></span>'
+                    ' Submit to EBI</a>' % artifact_id)
+        if artifact.can_be_submitted_to_vamps:
+            if not artifact.is_submitted_to_vamps:
+                buttons.append(
+                    '<a class="btn btn-primary btn-sm" href="/vamps/%d">'
+                    '<span class="glyphicon glyphicon-export"></span>'
+                    ' Submit to VAMPS</a>' % artifact_id)
+
     files = [(f_id, "%s (%s)" % (basename(fp), f_type.replace('_', ' ')))
              for f_id, fp, f_type in artifact.filepaths
              if f_type != 'directory']
