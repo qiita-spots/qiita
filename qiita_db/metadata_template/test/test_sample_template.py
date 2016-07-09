@@ -489,11 +489,11 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
                'collection_timestamp', 'common_name', 'country', 'depth',
                'description', 'description_duplicate', 'dna_extracted',
                'elevation', 'env_biome', 'env_feature', 'host_subject_id',
-               'host_taxid', 'int_column', 'latitude', 'longitude', 'ph',
+               'host_taxid', 'latitude', 'longitude', 'ph',
                'physical_specimen_location', 'physical_specimen_remaining',
                'samp_salinity', 'sample_id', 'sample_type', 'scientific_name',
-               'season_environment', 'str_column', 'taxon_id', 'temp',
-               'texture', 'tot_nitro', 'tot_org_carb', 'water_content_soil']
+               'season_environment', 'taxon_id', 'temp', 'texture',
+               'tot_nitro', 'tot_org_carb', 'water_content_soil']
         self.assertItemsEqual(obs, exp)
 
     def test_study_id(self):
