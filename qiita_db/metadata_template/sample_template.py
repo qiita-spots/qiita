@@ -61,24 +61,6 @@ class SampleTemplate(MetadataTemplate):
     _filepath_table = 'sample_template_filepath'
 
     @classmethod
-    def metadata_headers(cls):
-        """Returns metadata headers available
-
-        Returns
-        -------
-        list
-            Alphabetical list of all metadata headers available
-        """
-        with qdb.sql_connection.TRN:
-            sql = """SELECT DISTINCT column_name
-                        FROM information_schema.columns
-                        WHERE table_name LIKE '{0}%' AND
-                              table_name != 'sample_template_filepath'
-                        ORDER BY column_name""".format(cls._table_prefix)
-            qdb.sql_connection.TRN.add(sql)
-            return qdb.sql_connection.TRN.execute_fetchflatten()
-
-    @classmethod
     def create(cls, md_template, study):
         r"""Creates the sample template in the database
 

@@ -485,15 +485,15 @@ class TestSampleTemplateReadOnly(BaseTestSampleTemplate):
     def test_metadata_headers(self):
         ST = qdb.metadata_template.sample_template.SampleTemplate
         obs = ST.metadata_headers()
-        exp = ['physical_specimen_location', 'physical_specimen_remaining',
-               'dna_extracted', 'sample_type', 'collection_timestamp',
-               'host_subject_id', 'description', 'season_environment',
-               'assigned_from_geo', 'texture', 'taxon_id', 'depth',
-               'host_taxid', 'common_name', 'water_content_soil', 'elevation',
-               'temp', 'tot_nitro', 'samp_salinity', 'altitude', 'env_biome',
-               'country', 'ph', 'anonymized_name', 'tot_org_carb',
-               'description_duplicate', 'env_feature', 'latitude', 'longitude',
-               'sample_id', 'scientific_name']
+        exp = ['altitude', 'anonymized_name', 'assigned_from_geo',
+               'collection_timestamp', 'common_name', 'country', 'depth',
+               'description', 'description_duplicate', 'dna_extracted',
+               'elevation', 'env_biome', 'env_feature', 'host_subject_id',
+               'host_taxid', 'latitude', 'longitude', 'ph',
+               'physical_specimen_location', 'physical_specimen_remaining',
+               'samp_salinity', 'sample_id', 'sample_type', 'scientific_name',
+               'season_environment', 'taxon_id', 'temp', 'texture',
+               'tot_nitro', 'tot_org_carb', 'water_content_soil']
         self.assertItemsEqual(obs, exp)
 
     def test_study_id(self):
@@ -2209,12 +2209,15 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
 
     def test_validate_errors_timestampB(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '20/2016')
+                                '12/2016')
         self.metadata.set_value('Sample2', 'collection_timestamp',
                                 '2016')
+        with catch_warnings(record=True) as warn:
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                self.metadata, self.new_study)
 
-        qdb.metadata_template.sample_template.SampleTemplate.create(
-            self.metadata, self.new_study)
+            # the warnings should be empty
+            self.assertEqual(warn, [])
 
 
 EXP_SAMPLE_TEMPLATE = (
