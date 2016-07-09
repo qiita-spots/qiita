@@ -582,12 +582,18 @@ class ProcessingJob(qdb.base.QiitaObject):
                             SET command_parameters = %s,
                                 pending = %s
                             WHERE processing_job_id = %s"""
+            sql_link = """INSERT INTO qiita.artifact_processing_job
+                            (artifact_id, processing_job_id)
+                          VALUES (%s, %s)"""
             for c in self.children:
                 qdb.sql_connection.TRN.add(sql, [c.id])
                 params, pending = qdb.sql_connection.TRN.execute_fetchflatten()
                 for pname, out_name in viewitems(pending[self.id]):
-                    params[pname] = new_map[out_name]
+                    a_id = new_map[out_name]
+                    params[pname] = a_id
                     del pending[self.id]
+                    # Link the input artifact with the child job
+                    qdb.sql_connection.TRN.add(sql_link, [a_id, c.id])
 
                 # Force to insert a NULL in the DB if pending is empty
                 pending = pending if pending else None

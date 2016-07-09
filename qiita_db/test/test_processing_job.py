@@ -409,6 +409,7 @@ class ProcessingJobTest(TestCase):
         obs = parent._update_children(mapping)
         exp = [child]
         self.assertTrue(obs, exp)
+        self.assertEqual(child.input_artifacts, [qdb.artifact.Artifact(3)])
 
 
 class ProcessingWorkflowTestsReadOnly(TestCase):
