@@ -55,6 +55,28 @@ def send_email(to, subject, body):
         smtp.close()
 
 
+def is_test_environment():
+    """Checks if Qiita is running in a test environment
+
+    Returns
+    -------
+    bool
+        Whether Qiita is running in a test environment or not
+
+    Notes
+    -----
+    Qiita is running in a test environment if:
+        - It is connected to a test database, AND
+        - The config file indicates that this is a test environment
+    """
+    # Check that we are not in a production environment
+    conn_handler = qdb.sql_connection.SQLConnectionHandler()
+    # It is possible that we are connecting to a production database
+    test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
+    # Or the loaded configuration file belongs to a production environment
+    return qiita_config.test_environment and test_db
+
+
 def qiita_test_checker(test=False):
     """Decorator that allows the execution of all methods in a test class only
     and only if Qiita is set up to work in a test environment.
@@ -70,12 +92,7 @@ def qiita_test_checker(test=False):
         If Qiita is set up to work in a production environment
     """
     def class_modifier(cls):
-        # First, we check that we are not in a production environment
-        conn_handler = qdb.sql_connection.SQLConnectionHandler()
-        # It is possible that we are connecting to a production database
-        test_db = conn_handler.execute_fetchone("SELECT test FROM settings")[0]
-        # Or the loaded configuration file belongs to a production environment
-        if not qiita_config.test_environment or not test_db or test:
+        if not is_test_environment() or test:
             raise RuntimeError("Working in a production environment. Not "
                                "executing the tests to keep the production "
                                "database safe.")

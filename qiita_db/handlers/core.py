@@ -6,7 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .split_libraries import split_libraries
-from .split_libraries_fastq import split_libraries_fastq
+from .oauth2 import OauthBaseHandler, authenticate_oauth
+import qiita_db as qdb
 
-__all__ = ['split_libraries', 'split_libraries_fastq']
+
+class ResetAPItestHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self):
+        qdb.environment_manager.drop_and_rebuild_tst_database()

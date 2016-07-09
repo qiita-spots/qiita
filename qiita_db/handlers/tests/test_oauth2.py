@@ -34,19 +34,19 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         super(OAuth2BaseHandlerTests, self).setUp()
 
     def test_authenticate_header_client(self):
-        obs = self.get('/qiita_db/artifacts/1/mapping/', headers={
+        obs = self.get('/qiita_db/artifacts/1/', headers={
             'Authorization': 'Bearer ' + self.client_token})
         self.assertEqual(obs.code, 200)
 
     def test_authenticate_header_username(self):
-        obs = self.get('/qiita_db/artifacts/1/mapping/', headers={
+        obs = self.get('/qiita_db/artifacts/1/', headers={
             'Authorization': 'Bearer ' + self.user_token})
         self.assertEqual(obs.code, 200)
 
         # Check rate limiting works
         self.assertEqual(int(r_client.get(self.user_rate_key)), 1)
         r_client.setex('testuser_test@foo.bar_daily_limit', 0, 2)
-        obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
+        obs = self.get('/qiita_db/artifacts/100/', headers={
             'Authorization': 'Bearer ' + self.user_token})
         exp = {'error': 'invalid_grant',
                'error_description': 'Oauth2 error: daily request limit reached'
@@ -54,14 +54,14 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         self.assertEqual(loads(obs.body), exp)
 
     def test_authenticate_header_missing(self):
-        obs = self.get('/qiita_db/artifacts/100/mapping/')
+        obs = self.get('/qiita_db/artifacts/100/')
         self.assertEqual(obs.code, 400)
         self.assertEqual(loads(obs.body), {
             'error': 'invalid_request',
             'error_description': 'Oauth2 error: invalid access token'})
 
     def test_authenticate_header_bad_token(self):
-        obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
+        obs = self.get('/qiita_db/artifacts/100/', headers={
             'Authorization': 'Bearer BADTOKEN'})
         self.assertEqual(obs.code, 400)
         exp = {'error': 'invalid_grant',
@@ -69,7 +69,7 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         self.assertEqual(loads(obs.body), exp)
 
     def test_authenticate_header_bad_header_type(self):
-        obs = self.get('/qiita_db/artifacts/100/mapping/', headers={
+        obs = self.get('/qiita_db/artifacts/100/', headers={
             'Authorization': 'WRONG ' + self.client_token})
         self.assertEqual(obs.code, 400)
         exp = {'error': 'invalid_grant',

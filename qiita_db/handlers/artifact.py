@@ -7,6 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from tornado.web import HTTPError
+from collections import defaultdict
+from json import loads
 
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
@@ -43,39 +45,78 @@ def _get_artifact(a_id):
     return artifact
 
 
-class ArtifactFilepathsHandler(OauthBaseHandler):
+class ArtifactHandler(OauthBaseHandler):
     @authenticate_oauth
     def get(self, artifact_id):
-        """Retrieves the filepath information of the given artifact
+        """Retrieves the artifact information
 
         Parameters
         ----------
         artifact_id : str
-            The id of the artifact whose filepath information is being
-            retrieved
+            The id of the artifact whose information is being retrieved
 
         Returns
         -------
         dict
-            {'filepaths': list of (str, str)}
-            The filepaths attached to the artifact and their filepath types
+            The artifact information:
+            'name': artifact name
+            'timestamp': artifact creation timestamp
+            'visibility': artifact visibility
+            'type': artifact type
+            'data_type': artifact data type
+            'can_be_submitted_to_ebi': if the artifact can be submitted to ebi
+            'ebi_run_accessions': dict with the EBI run accessions attached to
+                the artifact
+            'can_be_submitted_to_vamps': if the artifact can be submitted to
+                vamps
+            'is_submitted_to_vamps': whether the artifact has been submitted
+                to vamps or not
+            'prep_information': list of prep information ids
+            'study': the study id
+            'processing_parameters': dict with the processing parameters used
+                to generate the artifact or None
+            'files': dict with the artifact files, keyed by filepath type
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
             response = {
-                'filepaths': [(fp, fp_type)
-                              for _, fp, fp_type in artifact.filepaths]}
+                'name': artifact.name,
+                'timestamp': str(artifact.timestamp),
+                'visibility': artifact.visibility,
+                'type': artifact.artifact_type,
+                'data_type': artifact.data_type,
+                'can_be_submitted_to_ebi': artifact.can_be_submitted_to_ebi,
+                'can_be_submitted_to_vamps':
+                    artifact.can_be_submitted_to_vamps,
+                'prep_information': [p.id for p in artifact.prep_templates],
+                'study': artifact.study.id}
+            params = artifact.processing_parameters
+            response['processing_parameters'] = (
+                params.values if params is not None else None)
+
+            response['ebi_run_accessions'] = (
+                artifact.ebi_run_accessions
+                if response['can_be_submitted_to_ebi'] else None)
+            response['is_submitted_to_vamps'] = (
+                artifact.is_submitted_to_vamps
+                if response['can_be_submitted_to_vamps'] else None)
+
+            # Instead of sending a list of files, provide the files as a
+            # dictionary keyed by filepath type
+            response['files'] = defaultdict(list)
+            for _, fp, fp_type in artifact.filepaths:
+                response['files'][fp_type].append(fp)
 
         self.write(response)
 
     @authenticate_oauth
     def patch(self, artifact_id):
-        """Patches the filepaths of the artifact
+        """Patches the artifact information
 
         Parameter
         ---------
         artifact_id : str
-            The id of the artifact whose filepaths information is being updated
+            The id of the artifact whose information is being updated
         """
         req_op = self.get_argument('op')
         req_path = self.get_argument('path')
@@ -98,60 +139,41 @@ class ArtifactFilepathsHandler(OauthBaseHandler):
         self.finish()
 
 
-class ArtifactMappingHandler(OauthBaseHandler):
+class ArtifactAPItestHandler(OauthBaseHandler):
     @authenticate_oauth
-    def get(self, artifact_id):
-        """Retrieves the mapping file information of the given artifact
+    def post(self):
+        """Creates a new artifact
 
         Parameters
         ----------
-        artifact_id : str
-            The id of the artifact whose mapping file information is being
-            retrieved
-
-        Returns
-        -------
-        dict
-            {'mapping': str}
-            The filepath to the mapping file
-        """
-        with qdb.sql_connection.TRN:
-            artifact = _get_artifact(artifact_id)
-            # In the current system, we don't have any artifact that
-            # is the result of two other artifacts, and there is no way
-            # of generating such artifact. This operation will be
-            # eventually supported, but in interest of time we are not
-            # going to implement that here.
-            prep_templates = artifact.prep_templates
-            if len(prep_templates) > 1:
-                raise NotImplementedError(
-                    "Artifact %d has more than one prep template")
-
-            fp = prep_templates[0].qiime_map_fp
-
-            response = {'mapping': fp}
-
-        self.write(response)
-
-
-class ArtifactTypeHandler(OauthBaseHandler):
-    @authenticate_oauth
-    def get(self, artifact_id):
-        """Retrieves the artifact type information of the given artifact
-
-        Parameters
-        ----------
-        artifact_id : str
-            The id of the artifact whose information is being retrieved
-
-        Returns
-        -------
-        dict
-            {'type': str}
+        filepaths : str
+            Json string with a list of filepaths and its types
+        type : str
             The artifact type
-        """
-        with qdb.sql_connection.TRN:
-            artifact = _get_artifact(artifact_id)
-            response = {'type': artifact.artifact_type}
+        prep_template: int
+            The id of the template that the new artifact belongs to
+        name : str, optional
+            The artifact name
 
-        self.write(response)
+        Returns
+        -------
+        dict
+            'artifact': the id of the new artifact
+
+        See Also
+        --------
+        qiita_db.artifact.Artifact.create
+        """
+        filepaths = loads(self.get_argument('filepaths'))
+        artifact_type = self.get_argument('type')
+        prep_template = self.get_argument('prep')
+        name = self.get_argument('name', None)
+
+        if prep_template:
+            prep_template = qdb.metadata_template.prep_template.PrepTemplate(
+                prep_template)
+
+        a = qdb.artifact.Artifact.create(
+            filepaths, artifact_type, name=name, prep_template=prep_template)
+
+        self.write({'artifact': a.id})

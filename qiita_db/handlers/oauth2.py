@@ -148,7 +148,11 @@ class OauthBaseHandler(RequestHandler):
                 'ERROR:\n%s\nTRACE:\n%s\nHTTP INFO:\n%s\n' %
                 (error, trace_info, request_info))
 
-        self.finish(exc_info[1].log_message)
+        message = exc_info[1].message
+        if hasattr(exc_info[1], 'log_message'):
+            message = exc_info[1].log_message
+
+        self.finish(message)
 
     def head(self):
         """Adds proper response for head requests"""
