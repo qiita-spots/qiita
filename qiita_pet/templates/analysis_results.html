@@ -31,7 +31,7 @@ $(document).ready(function () {
         </td>
       </tr>
     </table>
-  Shared with: <span id="shared_html_{{analysis_id}}"></span> 
+  Shared with: <span id="shared_html_{{analysis_id}}"></span>
 </div>
 
 
@@ -45,6 +45,7 @@ $(document).ready(function () {
           </div>
           <div id="dropped-samples" class="panel-collapse collapse">
               <div class="panel-body">
+                {% if dropped %}
                   {% for data_type, studies in viewitems(dropped) %}
                     <b><u>{{data_type}}</u></b>
                     <br/><br/>
@@ -57,6 +58,9 @@ $(document).ready(function () {
                     {% end %}
                     <hr>
                   {% end %}
+                {% else %}
+                  <b><u>No samples have been dropped.</u></b>
+                {% end %}
               </div>
           </div>
         </div>
