@@ -2196,18 +2196,35 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             self.assertIn('2.Sample2, wrong value "wrong latitude"', message)
             self.assertIn('2.Sample1, wrong value "wrong date"', message)
 
-    def test_validate_errors_timestampA(self):
+    def test_validate_errors_timestampA_year4digits(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',
                                 '09/20/2016 12:00')
         self.metadata.set_value('Sample2', 'collection_timestamp',
-                                '09/20/2016 12')
+                                '9/20/2016 12')
         self.metadata.set_value('Sample3', 'collection_timestamp',
                                 '09/20/2016')
 
-        qdb.metadata_template.sample_template.SampleTemplate.create(
-            self.metadata, self.new_study)
+        with catch_warnings(record=True) as warn:
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                self.metadata, self.new_study)
+            # the warnings should be empty
+            self.assertEqual(warn, [])
 
-    def test_validate_errors_timestampB(self):
+    def test_validate_errors_timestampA_year2digits(self):
+        self.metadata.set_value('Sample1', 'collection_timestamp',
+                                '09/20/16 12:00')
+        self.metadata.set_value('Sample2', 'collection_timestamp',
+                                '9/20/16 12')
+        self.metadata.set_value('Sample3', 'collection_timestamp',
+                                '09/20/16')
+
+        with catch_warnings(record=True) as warn:
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                self.metadata, self.new_study)
+            # the warnings should be empty
+            self.assertEqual(warn, [])
+
+    def test_validate_errors_timestampB_year4digits(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',
                                 '12/2016')
         self.metadata.set_value('Sample2', 'collection_timestamp',
@@ -2215,7 +2232,17 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         with catch_warnings(record=True) as warn:
             qdb.metadata_template.sample_template.SampleTemplate.create(
                 self.metadata, self.new_study)
+            # the warnings should be empty
+            self.assertEqual(warn, [])
 
+    def test_validate_errors_timestampB_year2digits(self):
+        self.metadata.set_value('Sample1', 'collection_timestamp',
+                                '12/16')
+        self.metadata.set_value('Sample2', 'collection_timestamp',
+                                '16')
+        with catch_warnings(record=True) as warn:
+            qdb.metadata_template.sample_template.SampleTemplate.create(
+                self.metadata, self.new_study)
             # the warnings should be empty
             self.assertEqual(warn, [])
 
