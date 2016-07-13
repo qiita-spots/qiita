@@ -2246,6 +2246,11 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             # the warnings should be empty
             self.assertEqual(warn, [])
 
+    def test_delete_column(self):
+        st = qdb.metadata_template.sample_template.SampleTemplate(1)
+        st.delete_column('ph')
+        self.assertNotIn('ph', st.categories())
+
 
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"

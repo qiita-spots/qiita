@@ -1464,6 +1464,17 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp.sort_index(axis=1, inplace=True)
         assert_frame_equal(obs, exp)
 
+    def test_delete_column(self):
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        pt.delete_column('run_date')
+        self.assertNotIn('run_date', pt.categories())
+
+        # testing errors
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            pt.delete_column('barcode')
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            pt.delete_column('ph')
+
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'

@@ -421,6 +421,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
     add_filepath
     update
     metadata_headers
+    delete_column
 
     See Also
     --------
@@ -608,6 +609,32 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         ORDER BY column_name""".format(cls._table_prefix)
             qdb.sql_connection.TRN.add(sql)
             return qdb.sql_connection.TRN.execute_fetchflatten()
+
+    def delete_column(self, column_name):
+        """Delete `column_name` from info file
+
+        Parameters
+        ----------
+        column : str
+            The column name where the accession number are stored
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If a the info file can't be updated
+            If the `column_name` doesn't exist
+        """
+        if not self.can_be_updated({column_name}):
+            raise qdb.exceptions.QiitaDBColumnError(
+                '%s cannot be deleted' % column_name)
+        if column_name not in self.categories():
+            raise qdb.exceptions.QiitaDBColumnError(
+                "'%s' not in info file %d" % (column_name, self._id))
+        with qdb.sql_connection.TRN:
+            sql = 'ALTER TABLE qiita.%s%d DROP COLUMN %s' % (
+                self._table_prefix, self._id, column_name)
+            qdb.sql_connection.TRN.add(sql)
+            qdb.sql_connection.TRN.execute()
 
     def can_be_extended(self, new_samples, new_cols):
         """Whether the template can be updated or not
