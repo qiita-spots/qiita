@@ -120,6 +120,8 @@ def workflow_handler_post_req(user_id, dflt_params_id, req_params):
     req_params = loads(req_params)
     parameters = Parameters.from_default_params(dflt_params, req_params)
     wf = ProcessingWorkflow.from_scratch(User(user_id), parameters)
+    # this is safe as we are creating the workflow for the first time and there
+    # is only one node. Remember networkx doesn't assure order of nodes
     job = wf.graph.nodes()[0]
     inputs = [a.id for a in job.input_artifacts]
     job_cmd = job.command

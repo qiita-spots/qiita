@@ -384,14 +384,13 @@ class ProcessingJobTest(TestCase):
     def test_update_children(self):
         # Create a workflow so we can test this functionality
         exp_command = qdb.software.Command(1)
-        input_id = 1
         json_str = (
-            '{"input_data": %d, "max_barcode_errors": 1.5, '
+            '{"input_data": 1, "max_barcode_errors": 1.5, '
             '"barcode_type": "golay_12", "max_bad_run_length": 3, '
             '"rev_comp": false, "phred_quality_threshold": 3, '
             '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
             '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
-            '"phred_offset": ""}' % input_id)
+            '"phred_offset": ""}')
         exp_params = qdb.software.Parameters.load(exp_command,
                                                   json_str=json_str)
         exp_user = qdb.user.User('test@foo.bar')
@@ -404,14 +403,16 @@ class ProcessingJobTest(TestCase):
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
         tester.add(dflt_params, connections=connections)
-        child = tester.graph.nodes()[1]
+        # we could get the child using tester.graph.nodes()[1] but networkx
+        # doesn't assure order so using the actual graph to get the child
+        child = nx.topological_sort(tester.graph)[1]
 
         mapping = {1: 3}
         obs = parent._update_children(mapping)
         exp = [child]
         self.assertTrue(obs, exp)
         self.assertEqual(child.input_artifacts,
-                         [qdb.artifact.Artifact(input_id)])
+                         [qdb.artifact.Artifact(3)])
 
 
 class ProcessingWorkflowTestsReadOnly(TestCase):
