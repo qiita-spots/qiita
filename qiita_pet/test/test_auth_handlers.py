@@ -25,7 +25,7 @@ class TestAuthVerifyHandler(TestHandlerBase):
 
     def test_get(self):
         response = self.get('/auth/verify/SOMETHINGHERE?email=test%40foo.bar')
-        self.assertEqual(response.code, 500)
+        self.assertEqual(response.code, 200)
 
         User.create('new@test.com', 'Somesortofpass')
         response = self.get('/auth/verify/SOMETHINGHERE?email=new%40test.bar')

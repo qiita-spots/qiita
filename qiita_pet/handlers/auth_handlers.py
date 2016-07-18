@@ -9,7 +9,8 @@ from qiita_core.util import send_email, execute_as_transaction
 from qiita_core.exceptions import (IncorrectPasswordError, IncorrectEmailError,
                                    UnverifiedEmailError)
 from qiita_db.user import User
-from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBDuplicateError
+from qiita_db.exceptions import (QiitaDBUnknownIDError, QiitaDBDuplicateError,
+                                 QiitaDBError)
 # login code modified from https://gist.github.com/guillaumevincent/4771570
 
 
@@ -68,13 +69,24 @@ class AuthCreateHandler(BaseHandler):
 class AuthVerifyHandler(BaseHandler):
     def get(self, code):
         email = self.get_argument("email").strip().lower()
-        if User.verify_code(email, code, "create"):
-            msg = "Successfully verified user! You are now free to log in."
+
+        code_is_valid = False
+        msg = "This code is not valid."
+
+        # an exception is raised if the 'code type' is not available, otherwise
+        # the method determines the validity of the code
+        try:
+            code_is_valid = User.verify_code(email, code, "create")
+        except QiitaDBError:
+            msg = "This user has already created an account."
+
+        if code_is_valid:
+            msg = "Successfully verified user. You are now free to log in."
             color = "black"
             r_client.zadd('qiita-usernames', email, 0)
         else:
-            msg = "Code not valid!"
             color = "red"
+
         self.render("user_verified.html", msg=msg, color=color,
                     email=self.get_argument("email").strip())
 
