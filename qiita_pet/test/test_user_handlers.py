@@ -32,8 +32,8 @@ class TestUserProfileHandler(TestHandlerBase):
         response = self.get('/auth/reset/')
         self.assertEqual(response.code, 200)
         self.assertIn(('<label for="newpass2" class="col-sm-2 '
-                         'control-label">Repeat New Password'
-                         '</label>'), response.body)
+                       'control-label">Repeat New Password'
+                       '</label>'), response.body)
 
         # not displaying due to maintenance
         r_client.set('maintenance', 'This is my error message')

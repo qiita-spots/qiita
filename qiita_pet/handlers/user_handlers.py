@@ -142,8 +142,10 @@ class ChangeForgotPasswordHandler(BaseHandler):
                 changed = user.change_forgot_password(code, newpass)
             except IncorrectPasswordError:
                 message = "The new password is not valid. Try again."
+                changed = False
             except QiitaDBError:
                 message = "Invalid code. Request a new one."
+                changed = False
 
             if changed:
                 message = ("Password reset successful. Please log in to "
