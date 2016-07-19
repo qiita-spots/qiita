@@ -12,19 +12,25 @@ $( document ).ready(function() { dualpass_validator(); });
     <div style='width: 50%;'>
     <h1>Password Reset</h1>
     <h3>Enter new password below</h3>
-    <form role="form" action="{% raw qiita_config.portal_dir %}/auth/reset/{{code}}" method="post" id="lost_pass" name="lost_pass">
+    <form class="form-horizontal dualpass" role="form" action="{% raw qiita_config.portal_dir %}/auth/reset/{{code}}" method="post" id="lost_pass">
     <div class="form-group">
-        <label for="email" class="col-sm-10 control-label">Email</label>
+        <label for="email" class="col-sm-2 control-label">Email</label>
+        <div class="col-sm-10">
           <input type="email" class="form-control" id="email" name="email">
+        </div>
     </div>
     <div class="form-group">
-        <label for="newpass" class="col-sm-10 control-label">New Password</label>
-          <input type="password" class="form-control" id="newpass" name="newpass">
-    </div>
-    <div class="form-group">
-        <label for="newpass2" class="col-sm-10 control-label">Repeat New Password</label>
-          <input type="password" class="form-control" id="newpass2" name="newpass2">
+      <label for="newpass" class="col-sm-2 control-label">New Password</label>
+      <div class="col-sm-10">
+        <input type="password" class="form-control" id="newpass" name="newpass" placeholder="password">
       </div>
+    </div>
+    <div class="form-group">
+      <label for="newpass2" class="col-sm-2 control-label">Repeat New Password</label>
+      <div class="col-sm-10">
+        <input type="password" class="form-control" id="newpass2" name="newpass2" placeholder="password">
+      </div>
+    </div>
     <button class="btn btn-danger">Change Password</button>
     </form>
   {% end %}
