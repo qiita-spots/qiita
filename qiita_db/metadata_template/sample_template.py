@@ -162,6 +162,26 @@ class SampleTemplate(MetadataTemplate):
         """
         return qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS
 
+    def delete_sample(self, sample_name):
+        """Delete `sample_name` from sample information file
+
+        Parameters
+        ----------
+        sample_name : str
+            The sample name to be deleted
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the `sample_name` has been used in a prep info file
+        """
+        if any([pt.get(sample_name) != None
+                for pt in qdb.study.Study(self.study_id).prep_templates()]):
+            raise qdb.exceptions.QiitaDBColumnError(
+                "'%s' has been linked in a prep template" % (sample_name))
+
+        self._common_delete_sample_steps(sample_name)
+
     def can_be_updated(self, **kwargs):
         """Whether the template can be updated or not
 

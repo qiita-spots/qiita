@@ -610,13 +610,43 @@ class MetadataTemplate(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql)
             return qdb.sql_connection.TRN.execute_fetchflatten()
 
+    def _common_delete_sample_steps(self, sample_name):
+        r"""Executes the common delete sample steps
+
+        Parameters
+        ----------
+        sample_name : str
+            The sample name to be erased
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the `sample_name` doesn't exist
+        """
+        if sample_name not in self.keys():
+            raise qdb.exceptions.QiitaDBColumnError(
+                "'%s' not in info file %d" % (sample_name, self._id))
+
+        with qdb.sql_connection.TRN:
+            sql = 'DELETE FROM qiita.{0}{1} WHERE sample_id=%s'.format(
+                self._table_prefix, self._id)
+            qdb.sql_connection.TRN.add(sql, [sample_name])
+
+            sql = "DELETE FROM qiita.{0} WHERE sample_id=%s".format(
+                    self._table)
+            qdb.sql_connection.TRN.add(sql, [sample_name])
+
+            qdb.sql_connection.TRN.execute()
+
+            self.generate_files()
+
     def delete_column(self, column_name):
         """Delete `column_name` from info file
 
         Parameters
         ----------
         column : str
-            The column name where the accession number are stored
+            The column name to be deleted
 
         Raises
         ------
@@ -624,7 +654,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
             If a the info file can't be updated
             If the `column_name` doesn't exist
         """
-        if not self.can_be_updated({column_name}):
+        if not self.can_be_updated(columns={column_name}):
             raise qdb.exceptions.QiitaDBColumnError(
                 '%s cannot be deleted' % column_name)
         if column_name not in self.categories():
@@ -635,6 +665,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 self._table_prefix, self._id, column_name)
             qdb.sql_connection.TRN.add(sql)
             qdb.sql_connection.TRN.execute()
+
+            self.generate_files()
 
     def can_be_extended(self, new_samples, new_cols):
         """Whether the template can be updated or not

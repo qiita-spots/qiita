@@ -1475,6 +1475,21 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             pt.delete_column('ph')
 
+    def test_delete_sample(self):
+        pt = qdb.metadata_template.prep_template.PrepTemplate(2)
+        pt.delete_sample('1.SKM5.640177')
+        self.assertNotIn('1.SKM5.640177', pt.keys())
+
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            # doesn't exist
+            pt.delete_sample('not.existing.sample')
+
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            # the prep info file has been processed
+            pt.delete_sample('1.SKM5.640177')
+
+
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
