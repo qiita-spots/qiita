@@ -1365,6 +1365,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
         """
         warning_msg = []
         columns = self.categories()
+        wrong_msg = 'Sample "%s", column "%s", wrong value "%s"'
         for label, restriction in viewitems(restriction_dict):
             missing = set(restriction.columns).difference(columns)
             if missing:
@@ -1397,14 +1398,14 @@ class MetadataTemplate(qdb.base.QiitaObject):
                                 except ValueError:
                                     pass
                             if date is None:
-                                warning_msg.append('%s, wrong value "%s"' % (
-                                    sample, val))
+                                warning_msg.append(
+                                    wrong_msg % (sample, column, val))
                         else:
                             try:
                                 datatype(val)
-                            except ValueError:
-                                warning_msg.append('%s, wrong value "%s"' % (
-                                    sample, val))
+                            except (ValueError, TypeError):
+                                warning_msg.append(
+                                    wrong_msg % (sample, column, val))
 
         if warning_msg:
             warnings.warn(
