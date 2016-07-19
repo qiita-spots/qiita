@@ -9,6 +9,7 @@
 from __future__ import division
 from os.path import join
 from time import strftime
+from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
@@ -172,13 +173,16 @@ class SampleTemplate(MetadataTemplate):
 
         Raises
         ------
-        QiitaDBColumnError
+        QiitaDBOperationNotPermittedError
             If the `sample_name` has been used in a prep info file
         """
-        if any([pt.get(sample_name) != None
-                for pt in qdb.study.Study(self.study_id).prep_templates()]):
-            raise qdb.exceptions.QiitaDBColumnError(
-                "'%s' has been linked in a prep template" % (sample_name))
+        pts = {pt.id: pt.get(sample_name) is not None
+               for pt in qdb.study.Study(self.study_id).prep_templates()}
+        if any(pts.values()):
+            pts = ', '.join([str(k) for k, v in viewitems(pts) if v])
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "'%s' has been linked in a prep template(s): %s" % (
+                    sample_name, pts))
 
         self._common_delete_sample_steps(sample_name)
 

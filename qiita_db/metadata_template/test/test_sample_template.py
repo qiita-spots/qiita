@@ -2252,6 +2252,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.assertNotIn('ph', st.categories())
 
     def test_delete_sample(self):
+        QE = qdb.exceptions
         st = qdb.metadata_template.sample_template.SampleTemplate(1)
         md_dict = {
             'Sample4': {'physical_specimen_location': 'location1',
@@ -2268,18 +2269,16 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
                         'taxon_id': '9606',
                         'scientific_name': 'homo sapiens'}}
         md_ext = pd.DataFrame.from_dict(md_dict, orient='index', dtype=str)
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning, st.extend, md_ext)
+        npt.assert_warns(QE.QiitaDBWarning, st.extend, md_ext)
 
-        npt.assert_warns(qdb.exceptions.QiitaDBWarning,
-                         st.delete_sample, '1.Sample4')
+        npt.assert_warns(QE.QiitaDBWarning, st.delete_sample, '1.Sample4')
         self.assertNotIn('1.Sample4', st.keys())
 
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            # doesn't exist
+        # testing errors
+        with self.assertRaises(QE.QiitaDBUnknownIDError):
             st.delete_sample('not.existing.sample')
 
-        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
-            # linked to a prep template
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
             st.delete_sample('1.SKM5.640177')
 
 

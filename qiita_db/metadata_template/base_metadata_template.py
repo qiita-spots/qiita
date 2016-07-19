@@ -620,16 +620,15 @@ class MetadataTemplate(qdb.base.QiitaObject):
 
         Raises
         ------
-        QiitaDBColumnError
+        QiitaDBUnknownIDError
             If the `sample_name` doesn't exist
         """
         if sample_name not in self.keys():
-            raise qdb.exceptions.QiitaDBColumnError(
-                "'%s' not in info file %d" % (sample_name, self._id))
+            raise qdb.exceptions.QiitaDBUnknownIDError(sample_name, self._id)
 
         with qdb.sql_connection.TRN:
-            sql = 'DELETE FROM qiita.{0}{1} WHERE sample_id=%s'.format(
-                self._table_prefix, self._id)
+            sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'.format(
+                self._table_name(self._id))
             qdb.sql_connection.TRN.add(sql, [sample_name])
 
             sql = "DELETE FROM qiita.{0} WHERE sample_id=%s".format(
@@ -651,15 +650,16 @@ class MetadataTemplate(qdb.base.QiitaObject):
         Raises
         ------
         QiitaDBColumnError
-            If a the info file can't be updated
             If the `column_name` doesn't exist
+        QiitaDBOperationNotPermittedError
+            If a the info file can't be updated
         """
-        if not self.can_be_updated(columns={column_name}):
-            raise qdb.exceptions.QiitaDBColumnError(
-                '%s cannot be deleted' % column_name)
         if column_name not in self.categories():
             raise qdb.exceptions.QiitaDBColumnError(
                 "'%s' not in info file %d" % (column_name, self._id))
+        if not self.can_be_updated(columns={column_name}):
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                '%s cannot be deleted' % column_name)
         with qdb.sql_connection.TRN:
             sql = 'ALTER TABLE qiita.%s%d DROP COLUMN %s' % (
                 self._table_prefix, self._id, column_name)
