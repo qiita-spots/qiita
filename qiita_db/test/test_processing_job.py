@@ -403,13 +403,16 @@ class ProcessingJobTest(TestCase):
         connections = {parent: {'demultiplexed': 'input_data'}}
         dflt_params = qdb.software.DefaultParameters(10)
         tester.add(dflt_params, connections=connections)
-        child = tester.graph.nodes()[1]
+        # we could get the child using tester.graph.nodes()[1] but networkx
+        # doesn't assure order so using the actual graph to get the child
+        child = nx.topological_sort(tester.graph)[1]
 
         mapping = {1: 3}
         obs = parent._update_children(mapping)
         exp = [child]
         self.assertTrue(obs, exp)
-        self.assertEqual(child.input_artifacts, [qdb.artifact.Artifact(3)])
+        self.assertEqual(child.input_artifacts,
+                         [qdb.artifact.Artifact(3)])
 
 
 class ProcessingWorkflowTestsReadOnly(TestCase):
