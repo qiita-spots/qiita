@@ -1,0 +1,2 @@
+Sample_name	RUN_PREFIX	TITLE	nucleic_acid	sample_type	 geo_loc_name	COLLECTION_TIME	description	dna_extracted	host_subject_id	latitude	longitude	physical_specimen_remaining	 collection_timestamp	physical_specimen_location	scientific_name	taxon_id
+sample1	341F-785R-Mineview-1-H4-A689_joined-SR	dna	bathing water	Finland:Narpio	15.6.2015	mid june dna	TRUE	Not applicable	Not applicable	Not applicable	TRUE	Not applicable	Not applicable	Not applicable	Not applicable
