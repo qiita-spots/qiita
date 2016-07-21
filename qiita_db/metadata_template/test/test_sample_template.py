@@ -2181,6 +2181,7 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
         self.metadata.set_value('Sample1', 'collection_timestamp',
                                 'wrong date')
         self.metadata.set_value('Sample2', 'latitude', 'wrong latitude')
+        self.metadata.set_value('Sample3', 'latitude', None)
 
         with catch_warnings(record=True) as warn:
             qdb.metadata_template.sample_template.SampleTemplate.create(
@@ -2193,8 +2194,15 @@ class TestSampleTemplateReadWrite(BaseTestSampleTemplate):
             self.assertEqual(warn.category, qdb.exceptions.QiitaDBWarning)
             # it should contain this text
             message = str(warn.message)
-            self.assertIn('2.Sample2, wrong value "wrong latitude"', message)
-            self.assertIn('2.Sample1, wrong value "wrong date"', message)
+            exp_error = ('Sample "2.Sample2", column "latitude", wrong value '
+                         '"wrong latitude"')
+            self.assertIn(exp_error, message)
+            exp_error = ('Sample "2.Sample1", column "collection_timestamp", '
+                         'wrong value "wrong date"')
+            self.assertIn(exp_error, message)
+            exp_error = ('Sample "2.Sample3", column "latitude", '
+                         'wrong value "None"')
+            self.assertIn(exp_error, message)
 
     def test_validate_errors_timestampA_year4digits(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',
