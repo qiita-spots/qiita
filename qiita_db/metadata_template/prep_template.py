@@ -650,3 +650,23 @@ class PrepTemplate(MetadataTemplate):
             qdb.sql_connection.TRN.add(sql, [self.id])
             is_submitted = qdb.sql_connection.TRN.execute_fetchlast()
         return is_submitted
+
+    def delete_sample(self, sample_name):
+        """Delete `sample_name` from prep information file
+
+        Parameters
+        ----------
+        sample_name : str
+            The sample name to be deleted
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the prep info file has been processed
+        """
+        if self.artifact.children:
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "Prep info file '%d' has been processed, you cannot delete "
+                "samples." % (self._id))
+
+        self._common_delete_sample_steps(sample_name)

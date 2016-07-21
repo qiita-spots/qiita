@@ -421,6 +421,7 @@ class MetadataTemplate(qdb.base.QiitaObject):
     add_filepath
     update
     metadata_headers
+    delete_column
 
     See Also
     --------
@@ -608,6 +609,64 @@ class MetadataTemplate(qdb.base.QiitaObject):
                         ORDER BY column_name""".format(cls._table_prefix)
             qdb.sql_connection.TRN.add(sql)
             return qdb.sql_connection.TRN.execute_fetchflatten()
+
+    def _common_delete_sample_steps(self, sample_name):
+        r"""Executes the common delete sample steps
+
+        Parameters
+        ----------
+        sample_name : str
+            The sample name to be erased
+
+        Raises
+        ------
+        QiitaDBUnknownIDError
+            If the `sample_name` doesn't exist
+        """
+        if sample_name not in self.keys():
+            raise qdb.exceptions.QiitaDBUnknownIDError(sample_name, self._id)
+
+        with qdb.sql_connection.TRN:
+            sql = 'DELETE FROM qiita.{0} WHERE sample_id=%s'.format(
+                self._table_name(self._id))
+            qdb.sql_connection.TRN.add(sql, [sample_name])
+
+            sql = "DELETE FROM qiita.{0} WHERE sample_id=%s".format(
+                    self._table)
+            qdb.sql_connection.TRN.add(sql, [sample_name])
+
+            qdb.sql_connection.TRN.execute()
+
+            self.generate_files()
+
+    def delete_column(self, column_name):
+        """Delete `column_name` from info file
+
+        Parameters
+        ----------
+        column : str
+            The column name to be deleted
+
+        Raises
+        ------
+        QiitaDBColumnError
+            If the `column_name` doesn't exist
+        QiitaDBOperationNotPermittedError
+            If a the info file can't be updated
+        """
+        if column_name not in self.categories():
+            raise qdb.exceptions.QiitaDBColumnError(
+                "'%s' not in info file %d" % (column_name, self._id))
+        if not self.can_be_updated(columns={column_name}):
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                '%s cannot be deleted' % column_name)
+        with qdb.sql_connection.TRN:
+            sql = 'ALTER TABLE qiita.%s%d DROP COLUMN %s' % (
+                self._table_prefix, self._id, column_name)
+            qdb.sql_connection.TRN.add(sql)
+            qdb.sql_connection.TRN.execute()
+
+            self.generate_files()
 
     def can_be_extended(self, new_samples, new_cols):
         """Whether the template can be updated or not

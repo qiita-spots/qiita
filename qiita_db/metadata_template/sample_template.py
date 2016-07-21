@@ -9,6 +9,7 @@
 from __future__ import division
 from os.path import join
 from time import strftime
+from future.utils import viewitems
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
@@ -161,6 +162,29 @@ class SampleTemplate(MetadataTemplate):
             The dict of restictions
         """
         return qdb.metadata_template.constants.SAMPLE_TEMPLATE_COLUMNS
+
+    def delete_sample(self, sample_name):
+        """Delete `sample_name` from sample information file
+
+        Parameters
+        ----------
+        sample_name : str
+            The sample name to be deleted
+
+        Raises
+        ------
+        QiitaDBOperationNotPermittedError
+            If the `sample_name` has been used in a prep info file
+        """
+        pts = {pt.id: pt.get(sample_name) is not None
+               for pt in qdb.study.Study(self.study_id).prep_templates()}
+        if any(pts.values()):
+            pts = ', '.join([str(k) for k, v in viewitems(pts) if v])
+            raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                "'%s' has been linked in a prep template(s): %s" % (
+                    sample_name, pts))
+
+        self._common_delete_sample_steps(sample_name)
 
     def can_be_updated(self, **kwargs):
         """Whether the template can be updated or not
