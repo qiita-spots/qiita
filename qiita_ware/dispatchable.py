@@ -180,7 +180,7 @@ def create_sample_template(fp, study, is_mapping_file, data_type=None):
         status = 'danger'
         msg = str(e)
 
-    return {'status': status, 'message': msg}
+    return {'status': status, 'message': msg.decode('utf-8', 'replace')}
 
 
 def update_sample_template(study_id, fp):

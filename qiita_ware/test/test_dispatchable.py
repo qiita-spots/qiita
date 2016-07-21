@@ -9,7 +9,7 @@
 from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
-from os.path import exists
+from os.path import exists, join, dirname, abspath
 
 from qiita_core.util import qiita_test_checker
 from qiita_ware.dispatchable import (
@@ -72,6 +72,15 @@ class TestDispatchable(TestCase):
         exp = {'status': 'danger',
                'message': "The 'SampleTemplate' object with attributes "
                           "(id: 1) already exists."}
+        self.assertEqual(obs, exp)
+
+    def test_create_sample_template_nonutf8(self):
+        fp = join(dirname(abspath(__file__)), 'test_data',
+                  'sample_info_utf8_error.txt')
+        obs = create_sample_template(fp, Study(1), False)
+        exp = {'status': 'danger',
+               'message': u"Non UTF-8 characters found in columns:"
+                          u"\n\ufffdcollection_timestamp: row(s) 1"}
         self.assertEqual(obs, exp)
 
     def test_update_sample_template(self):
