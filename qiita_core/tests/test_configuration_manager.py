@@ -22,7 +22,7 @@ with standard_library.hooks():
 
 class ConfigurationManagerTests(TestCase):
     def setUp(self):
-        self.old_conf_fp = environ['QIITA_CONFIG_FP']
+        self.old_conf_fp = environ.get('QIITA_CONFIG_FP')
         fd, self.conf_fp = mkstemp(suffix='.txt')
         close(fd)
         with open(self.conf_fp, 'w') as f:
