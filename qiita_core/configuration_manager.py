@@ -7,8 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from functools import partial
-from os.path import join, dirname, abspath, isdir, expanduser
-from os import environ
+from os.path import join, dirname, abspath, isdir, expanduser, exists
+from os import environ, mkdir
 from future import standard_library
 from base64 import b64encode
 from uuid import uuid4
@@ -116,7 +116,7 @@ class ConfigurationManager(object):
         The filepath to the portal styling config file
     plugin_launcher : str
         The script used to start the plugins
-    portal_dir : str
+    plugin_dir : str
         The path to the directory containing the plugin configuration files
     """
     def __init__(self):
@@ -175,6 +175,11 @@ class ConfigurationManager(object):
         self.plugin_dir = config.get('main', 'PLUGIN_DIR')
         if not self.plugin_dir:
             self.plugin_dir = join(expanduser('~'), '.qiita_plugins')
+            if not exists(self.plugin_dir):
+                mkdir(self.plugin_dir)
+        elif not isdir(self.plugin_dir):
+            raise ValueError("The PLUGIN_DIR (%s) folder doesn't exist"
+                             % self.plugin_dir)
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]
