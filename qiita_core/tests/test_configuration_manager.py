@@ -115,7 +115,6 @@ class ConfigurationManagerTests(TestCase):
         obs = ConfigurationManager()
 
         conf_setter = partial(self.conf.set, 'main')
-        conf_setter('VALID_UPLOAD_EXTENSION', '')
         conf_setter('COOKIE_SECRET', '')
         conf_setter('BASE_DATA_DIR', '')
         conf_setter('PLUGIN_DIR', '')
@@ -128,11 +127,9 @@ class ConfigurationManagerTests(TestCase):
             obs._get_main(self.conf)
 
             obs_warns = [str(w.message) for w in warns]
-            exp_warns = ['No files will be allowed to be uploaded.',
-                         'Random cookie secret generated.']
+            exp_warns = ['Random cookie secret generated.']
             self.assertItemsEqual(obs_warns, exp_warns)
 
-        self.assertEqual(obs.valid_upload_extension, [])
         self.assertNotEqual(obs.cookie_secret, "SECRET")
         # Test default base_data_dir
         self.assertTrue(
@@ -155,6 +152,12 @@ class ConfigurationManagerTests(TestCase):
         # WORKING_DIR does not exist
         self.conf.set('main', 'BASE_DATA_DIR', '/tmp')
         self.conf.set('main', 'WORKING_DIR', '/surprised/if/this/dir/exists')
+        with self.assertRaises(ValueError):
+            obs._get_main(self.conf)
+
+        # No files can be uploaded
+        self.conf.set('main', 'WORKING_DIR', '/tmp')
+        conf_setter('VALID_UPLOAD_EXTENSION', '')
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
 

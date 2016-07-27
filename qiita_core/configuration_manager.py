@@ -181,7 +181,7 @@ class ConfigurationManager(object):
         if (not self.valid_upload_extension or
            self.valid_upload_extension == ['']):
             self.valid_upload_extension = []
-            warnings.warn('No files will be allowed to be uploaded.')
+            raise ValueError('No files will be allowed to be uploaded.')
 
         self.certificate_file = config.get('main', 'CERTIFICATE_FILE')
         if not self.certificate_file:
