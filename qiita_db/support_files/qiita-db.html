@@ -477,12 +477,7 @@ table {
 	collection_users references qiita_user ( email )</title>
 </path>
 <text x='347' y='475' transform='rotate(270 347,475)' title='Foreign Key fk_collection_user_email
-	collection_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1785 360 L 1920,360' >
-	<title>Foreign Key fk_study_mapping_columns_study
-	study_sample_columns references study ( study_id )</title>
-</path>
-<text x='1792' y='355' transform='rotate(0 1792,355)' title='Foreign Key fk_study_mapping_columns_study
-	study_sample_columns references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1725 495 L 1920,495' >
+	collection_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1725 495 L 1920,495' >
 	<title>Foreign Key fk_study_prep_template_study
 	study_prep_template references study ( study_id )</title>
 </path>
@@ -492,12 +487,7 @@ table {
 	study_prep_template references prep_template ( prep_template_id )</title>
 </path>
 <text x='1484' y='475' transform='rotate(0 1484,475)' title='Foreign Key fk_study_prep_template_pt
-	study_prep_template references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1455 405 L 1447,405 Q 1440,405 1440,412 L 1440,420' >
-	<title>Foreign Key fk_prep_columns_prep_template
-	prep_columns references prep_template ( prep_template_id )</title>
-</path>
-<text x='1364' y='400' transform='rotate(0 1364,400)' title='Foreign Key fk_prep_columns_prep_template
-	prep_columns references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1350 345 L 1350,420' >
+	study_prep_template references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1350 345 L 1350,420' >
 	<title>Foreign Key fk_prep_template
 	prep_template_sample references prep_template ( prep_template_id )</title>
 </path>
@@ -592,16 +582,16 @@ table {
 	study_users references study ( study_id )</title>
 </path>
 <text x='1963' y='210' transform='rotate(90 1963,210)' title='Foreign Key fk_study_users_study
-	study_users references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1905 135 L 1627,135 Q 1620,135 1620,127 L 1620,127 Q 1620,120 1612,120 L 472,120 Q 465,120 465,127 L 465,225' >
+	study_users references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1905 180 L 1822,180 Q 1815,180 1815,187 L 1815,352 Q 1815,360 1807,360 L 480,360' >
 	<title>Foreign Key fk_study_users_user
 	study_users references qiita_user ( email )</title>
 </path>
-<text x='1879' y='130' transform='rotate(0 1879,130)' title='Foreign Key fk_study_users_user
-	study_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1920 570 L 1222,570 Q 1215,570 1215,562 L 1215,382 Q 1215,375 1207,375 L 480,375' >
+<text x='1879' y='175' transform='rotate(0 1879,175)' title='Foreign Key fk_study_users_user
+	study_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1920 375 L 480,375' >
 	<title>Foreign Key fk_study_user
 	study references qiita_user ( email )</title>
 </path>
-<text x='1894' y='565' transform='rotate(0 1894,565)' title='Foreign Key fk_study_user
+<text x='1894' y='370' transform='rotate(0 1894,370)' title='Foreign Key fk_study_user
 	study references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 2115 270 L 2205,270' >
 	<title>Foreign Key fk_study_study_emp_person
 	study references study_person ( emp_person_id -> study_person_id )</title>
@@ -672,11 +662,11 @@ table {
 	software_publication references publication ( publication_doi -> doi )</title>
 </path>
 <text x='2122' y='805' transform='rotate(0 2122,805)' title='Foreign Key fk_software_publication_0
-	software_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 180 L 1882,180 Q 1890,180 1890,187 L 1890,247 Q 1890,255 1897,255 L 1920,255' >
+	software_publication references publication ( publication_doi -> doi )' style='fill:#a1a0a0;'>publication_doi</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1605 165 L 1882,165 Q 1890,165 1890,172 L 1890,247 Q 1890,255 1897,255 L 1920,255' >
 	<title>Foreign Key fk_required_sample_info_study
 	study_sample references study ( study_id )</title>
 </path>
-<text x='1612' y='175' transform='rotate(0 1612,175)' title='Foreign Key fk_required_sample_info_study
+<text x='1612' y='160' transform='rotate(0 1612,160)' title='Foreign Key fk_required_sample_info_study
 	study_sample references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1995 690 L 1995,630' >
 	<title>Foreign Key fk_study_publication_study
 	study_publication references study ( study_id )</title>
@@ -712,7 +702,12 @@ table {
 	analysis_chain references analysis ( child_id -> analysis_id )</title>
 </path>
 <text x='157' y='1120' transform='rotate(0 157,1120)' title='Foreign Key fk_analysis_chain_0
-	analysis_chain references analysis ( child_id -> analysis_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 1050 L 1365,997 Q 1365,990 1357,990 L 1350,990' >
+	analysis_chain references analysis ( child_id -> analysis_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1380 1050 L 1380,817 Q 1380,810 1387,810 L 1552,810 Q 1560,810 1560,802 L 1560,255' >
+	<title>Foreign Key fk_ebi_run_accession
+	ebi_run_accession references study_sample ( sample_id )</title>
+</path>
+<text x='1382' y='1045' transform='rotate(270 1382,1045)' title='Foreign Key fk_ebi_run_accession
+	ebi_run_accession references study_sample ( sample_id )' style='fill:#a1a0a0;'>sample_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1365 1050 L 1365,997 Q 1365,990 1357,990 L 1350,990' >
 	<title>Foreign Key fk_ebi_run_accession_artifact
 	ebi_run_accession references artifact ( artifact_id )</title>
 </path>
@@ -727,11 +722,11 @@ table {
 	artifact references artifact_type ( artifact_type_id )</title>
 </path>
 <text x='1357' y='850' transform='rotate(0 1357,850)' title='Foreign Key fk_artifact_filetype
-	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1350 960 L 1372,960 Q 1380,960 1380,967 L 1380,982 Q 1380,990 1387,990 L 1702,990 Q 1710,990 1710,982 L 1710,922 Q 1710,915 1717,915 L 2302,915 Q 2310,915 2310,922 L 2310,1252 Q 2310,1260 2302,1260 L 2295,1260' >
+	artifact references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 1335 1020 L 1335,1027 Q 1335,1035 1342,1035 L 1702,1035 Q 1710,1035 1710,1027 L 1710,922 Q 1710,915 1717,915 L 2302,915 Q 2310,915 2310,922 L 2310,1252 Q 2310,1260 2302,1260 L 2295,1260' >
 	<title>Foreign Key fk_artifact_soft_command
 	artifact references software_command ( command_id )</title>
 </path>
-<text x='1357' y='955' transform='rotate(0 1357,955)' title='Foreign Key fk_artifact_soft_command
+<text x='1348' y='1020' transform='rotate(90 1348,1020)' title='Foreign Key fk_artifact_soft_command
 	artifact references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1230 1020 L 1230,1132 Q 1230,1140 1222,1140 L 787,1140 Q 780,1140 780,1147 L 780,1155' >
 	<title>Foreign Key fk_artifact_data_type
 	artifact references data_type ( data_type_id )</title>
@@ -782,17 +777,12 @@ table {
 	command_output references artifact_type ( artifact_type_id )</title>
 </path>
 <text x='1839' y='1150' transform='rotate(0 1839,1150)' title='Foreign Key fk_command_output_0
-	command_output references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2295 1245 L 2362,1245 Q 2370,1245 2370,1237 L 2370,1057 Q 2370,1050 2377,1050 L 2385,1050' >
-	<title>Foreign Key fk_soft_command_software
-	software_command references software ( software_id )</title>
-</path>
-<text x='2302' y='1240' transform='rotate(0 2302,1240)' title='Foreign Key fk_soft_command_software
-	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2385 1230 L 2295,1230' >
+	command_output references artifact_type ( artifact_type_id )' style='fill:#a1a0a0;'>artifact_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2385 1230 L 2295,1230' >
 	<title>Foreign Key fk_default_parameter_set
 	default_parameter_set references software_command ( command_id )</title>
 </path>
 <text x='2318' y='1225' transform='rotate(0 2318,1225)' title='Foreign Key fk_default_parameter_set
-	default_parameter_set references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2610 1155 L 2587,1155 Q 2580,1155 2580,1147 L 2580,1072 Q 2580,1065 2572,1065 L 2535,1065' >
+	default_parameter_set references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2610 1155 L 2587,1155 Q 2580,1155 2580,1147 L 2580,1087 Q 2580,1080 2572,1080 L 2535,1080' >
 	<title>Foreign Key fk_default_workflow_software
 	default_workflow references software ( software_id )</title>
 </path>
@@ -902,12 +892,12 @@ table {
 	processing_job_workflow_root references processing_job_workflow ( processing_job_workflow_id )</title>
 </path>
 <text x='2293' y='1665' transform='rotate(90 2293,1665)' title='Foreign Key fk_processing_job_workflow_roots
-	processing_job_workflow_root references processing_job_workflow ( processing_job_workflow_id )' style='fill:#a1a0a0;'>processing_job_workflow_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1980 1500 L 1642,1500 Q 1635,1500 1635,1492 L 1635,817 Q 1635,810 1627,810 L 997,810 Q 990,810 990,802 L 990,397 Q 990,390 982,390 L 480,390' >
+	processing_job_workflow_root references processing_job_workflow ( processing_job_workflow_id )' style='fill:#a1a0a0;'>processing_job_workflow_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1980 1500 L 1702,1500 Q 1695,1500 1695,1492 L 1695,787 Q 1695,780 1702,780 L 1732,780 Q 1740,780 1740,772 L 1740,397 Q 1740,390 1732,390 L 480,390' >
 	<title>Foreign Key fk_processing_job_qiita_user
 	processing_job references qiita_user ( email )</title>
 </path>
 <text x='1954' y='1495' transform='rotate(0 1954,1495)' title='Foreign Key fk_processing_job_qiita_user
-	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2145 1335 L 2145,1297 Q 2145,1290 2152,1290 L 2160,1290' >
+	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2145 1335 L 2145,1312 Q 2145,1305 2152,1305 L 2160,1305' >
 	<title>Foreign Key fk_processing_job
 	processing_job references software_command ( command_id )</title>
 </path>
@@ -947,12 +937,7 @@ table {
 	job references reference ( input_file_reference_id -> reference_id )</title>
 </path>
 <text x='622' y='1285' transform='rotate(0 622,1285)' title='Foreign Key fk_job_reference
-	job references reference ( input_file_reference_id -> reference_id )' style='fill:#a1a0a0;'>input_file_reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2535 945 L 2610,945' >
-	<title>Foreign Key fk_software_software_type
-	software references software_type ( software_type_id )</title>
-</path>
-<text x='2542' y='940' transform='rotate(0 2542,940)' title='Foreign Key fk_software_software_type
-	software references software_type ( software_type_id )' style='fill:#a1a0a0;'>software_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1755 945 L 1755,457 Q 1755,450 1747,450 L 1455,450' >
+	job references reference ( input_file_reference_id -> reference_id )' style='fill:#a1a0a0;'>input_file_reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1755 945 L 1755,457 Q 1755,450 1747,450 L 1455,450' >
 	<title>Foreign Key fk_prep_template_processing_job
 	prep_template_processing_job references prep_template ( prep_template_id )</title>
 </path>
@@ -972,7 +957,17 @@ table {
 	software_artifact_type references software ( software_id )</title>
 </path>
 <text x='2182' y='955' transform='rotate(0 2182,955)' title='Foreign Key fk_software_artifact_type_sw
-	software_artifact_type references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	software_artifact_type references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2535 945 L 2610,945' >
+	<title>Foreign Key fk_software_software_type
+	software references software_type ( software_type_id )</title>
+</path>
+<text x='2542' y='940' transform='rotate(0 2542,940)' title='Foreign Key fk_software_software_type
+	software references software_type ( software_type_id )' style='fill:#a1a0a0;'>software_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2295 1245 L 2362,1245 Q 2370,1245 2370,1237 L 2370,1072 Q 2370,1065 2377,1065 L 2385,1065' >
+	<title>Foreign Key fk_soft_command_software
+	software_command references software ( software_id )</title>
+</path>
+<text x='2302' y='1240' transform='rotate(0 2302,1240)' title='Foreign Key fk_soft_command_software
+	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1369,19 +1364,6 @@ Allows sharing of a collection</title></a>
 <a xlink:href='#collection_users.email'><text x='273' y='547'>email</text><title>email varchar not null</title></a>
 <a xlink:href='#collection_users.email'><use id='fk' x='348' y='536' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
 
-<!-- ============= Table 'study_sample_columns' ============= -->
-<rect class='table' x='1635' y='338' width='150' height='90' rx='7' ry='7' />
-<path d='M 1635.50 364.50 L 1635.50 345.50 Q 1635.50 338.50 1642.50 338.50 L 1777.50 338.50 Q 1784.50 338.50 1784.50 345.50 L 1784.50 364.50 L1635.50 364.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#study_sample_columns'><text x='1647' y='352' class='tableTitle'>study_sample_columns</text><title>Table qiita.study_sample_columns
-Holds information on which metadata columns are available for the study sample template</title></a>
-  <use id='nn' x='1637' y='372' xlink:href='#nn'/><a xlink:href='#study_sample_columns.study_id'><use id='pk' x='1637' y='371' xlink:href='#pk'/><title>Primary Key  ( study_id, column_name, column_type ) Index  ( study_id ) </title></a>
-<a xlink:href='#study_sample_columns.study_id'><text x='1653' y='382'>study_id</text><title>study_id bigint not null</title></a>
-<a xlink:href='#study_sample_columns.study_id'><use id='fk' x='1773' y='371' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
-  <use id='nn' x='1637' y='387' xlink:href='#nn'/><a xlink:href='#study_sample_columns.column_name'><use id='pk' x='1637' y='386' xlink:href='#pk'/><title>Primary Key  ( study_id, column_name, column_type ) </title></a>
-<a xlink:href='#study_sample_columns.column_name'><text x='1653' y='397'>column_name</text><title>column_name varchar not null</title></a>
-  <use id='nn' x='1637' y='402' xlink:href='#nn'/><a xlink:href='#study_sample_columns.column_type'><use id='pk' x='1637' y='401' xlink:href='#pk'/><title>Primary Key  ( study_id, column_name, column_type ) </title></a>
-<a xlink:href='#study_sample_columns.column_type'><text x='1653' y='412'>column_type</text><title>column_type varchar not null</title></a>
-
 <!-- ============= Table 'study_prep_template' ============= -->
 <rect class='table' x='1590' y='473' width='135' height='75' rx='7' ry='7' />
 <path d='M 1590.50 499.50 L 1590.50 480.50 Q 1590.50 473.50 1597.50 473.50 L 1717.50 473.50 Q 1724.50 473.50 1724.50 480.50 L 1724.50 499.50 L1590.50 499.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -1393,18 +1375,6 @@ links study to its prep templates</title></a>
   <use id='nn' x='1592' y='522' xlink:href='#nn'/><a xlink:href='#study_prep_template.prep_template_id'><use id='pk' x='1592' y='521' xlink:href='#pk'/><title>Primary Key  ( study_id, prep_template_id ) Index  ( prep_template_id ) </title></a>
 <a xlink:href='#study_prep_template.prep_template_id'><text x='1608' y='532'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
 <a xlink:href='#study_prep_template.prep_template_id'><use id='fk' x='1713' y='521' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
-
-<!-- ============= Table 'prep_columns' ============= -->
-<rect class='table' x='1470' y='338' width='135' height='90' rx='7' ry='7' />
-<path d='M 1470.50 364.50 L 1470.50 345.50 Q 1470.50 338.50 1477.50 338.50 L 1597.50 338.50 Q 1604.50 338.50 1604.50 345.50 L 1604.50 364.50 L1470.50 364.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#prep_columns'><text x='1499' y='352' class='tableTitle'>prep_columns</text><title>Table qiita.prep_columns</title></a>
-  <use id='nn' x='1472' y='372' xlink:href='#nn'/><a xlink:href='#prep_columns.prep_template_id'><use id='pk' x='1472' y='371' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, column_name, column_type ) Index  ( prep_template_id ) </title></a>
-<a xlink:href='#prep_columns.prep_template_id'><text x='1488' y='382'>prep_template_id</text><title>prep_template_id bigint not null</title></a>
-<a xlink:href='#prep_columns.prep_template_id'><use id='fk' x='1593' y='371' xlink:href='#fk'/><title>References prep_template ( prep_template_id ) </title></a>
-  <use id='nn' x='1472' y='387' xlink:href='#nn'/><a xlink:href='#prep_columns.column_name'><use id='pk' x='1472' y='386' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, column_name, column_type ) </title></a>
-<a xlink:href='#prep_columns.column_name'><text x='1488' y='397'>column_name</text><title>column_name varchar not null</title></a>
-  <use id='nn' x='1472' y='402' xlink:href='#nn'/><a xlink:href='#prep_columns.column_type'><use id='pk' x='1472' y='401' xlink:href='#pk'/><title>Primary Key  ( prep_template_id, column_name, column_type ) </title></a>
-<a xlink:href='#prep_columns.column_type'><text x='1488' y='412'>column_type</text><title>column_type varchar not null</title></a>
 
 <!-- ============= Table 'prep_template_sample' ============= -->
 <rect class='table' x='1335' y='248' width='180' height='90' rx='7' ry='7' />
@@ -1506,11 +1476,10 @@ Represents whatever other columns go with this study</title></a>
 <a xlink:href='#prep_template'><text x='1341' y='442' class='tableTitle'>prep_template</text><title>Table qiita.prep_template</title></a>
   <use id='nn' x='1307' y='462' xlink:href='#nn'/><a xlink:href='#prep_template.prep_template_id'><use id='pk' x='1307' y='461' xlink:href='#pk'/><title>Primary Key  ( prep_template_id ) </title></a>
 <a xlink:href='#prep_template.prep_template_id'><text x='1323' y='472'>prep_template_id</text><title>prep_template_id bigserial not null</title></a>
-<a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1443' y='461' xlink:href='#ref'/><title>Referred by prep_columns ( prep_template_id ) 
-Referred by prep_template_filepath ( prep_template_id ) 
+<a xlink:href='#prep_template.prep_template_id'><use id='ref' x='1443' y='461' xlink:href='#ref'/><title>Referred by prep_template_filepath ( prep_template_id ) 
+Referred by prep_template_processing_job ( prep_template_id ) 
 Referred by prep_template_sample ( prep_template_id ) 
-Referred by study_prep_template ( prep_template_id ) 
-Referred by prep_template_processing_job ( prep_template_id ) </title></a>
+Referred by study_prep_template ( prep_template_id ) </title></a>
   <use id='nn' x='1307' y='477' xlink:href='#nn'/><a xlink:href='#prep_template.data_type_id'><use id='idx' x='1307' y='476' xlink:href='#idx'/><title>Index  ( data_type_id ) </title></a>
 <a xlink:href='#prep_template.data_type_id'><text x='1323' y='487'>data_type_id</text><title>data_type_id bigint not null</title></a>
 <a xlink:href='#prep_template.data_type_id'><use id='fk' x='1443' y='476' xlink:href='#fk'/><title>References data_type ( data_type_id ) </title></a>
@@ -1585,7 +1554,6 @@ Referred by study_portal ( study_id )
 Referred by study_prep_template ( study_id ) 
 Referred by study_publication ( study_id ) 
 Referred by study_sample ( study_id ) 
-Referred by study_sample_columns ( study_id ) 
 Referred by study_users ( study_id ) </title></a>
   <use id='nn' x='1937' y='297' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1937' y='296' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1953' y='307'>email</text><title>email varchar not null
@@ -2024,25 +1992,6 @@ Referred by default_workflow_edge_connections ( parent_output_id -> command_outp
 <a xlink:href='#command_output.artifact_type_id'><text x='1953' y='1237'>artifact_type_id</text><title>artifact_type_id bigint not null</title></a>
 <a xlink:href='#command_output.artifact_type_id'><use id='fk' x='2073' y='1226' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
 
-<!-- ============= Table 'software_command' ============= -->
-<rect class='table' x='2175' y='1208' width='120' height='105' rx='7' ry='7' />
-<path d='M 2175.50 1234.50 L 2175.50 1215.50 Q 2175.50 1208.50 2182.50 1208.50 L 2287.50 1208.50 Q 2294.50 1208.50 2294.50 1215.50 L 2294.50 1234.50 L2175.50 1234.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software_command'><text x='2182' y='1222' class='tableTitle'>software_command</text><title>Table qiita.software_command</title></a>
-  <use id='nn' x='2177' y='1242' xlink:href='#nn'/><a xlink:href='#software_command.command_id'><use id='pk' x='2177' y='1241' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
-<a xlink:href='#software_command.command_id'><text x='2193' y='1252'>command_id</text><title>command_id bigserial not null</title></a>
-<a xlink:href='#software_command.command_id'><use id='ref' x='2283' y='1241' xlink:href='#ref'/><title>Referred by artifact ( command_id ) 
-Referred by command_output ( command_id ) 
-Referred by command_parameter ( command_id ) 
-Referred by default_parameter_set ( command_id ) 
-Referred by default_workflow_node ( command_id ) 
-Referred by job ( input_file_software_command_id -> command_id ) 
-Referred by processing_job ( command_id ) </title></a>
-  <use id='nn' x='2177' y='1257' xlink:href='#nn'/><a xlink:href='#software_command.name'><text x='2193' y='1267'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='2177' y='1272' xlink:href='#nn'/><a xlink:href='#software_command.software_id'><use id='idx' x='2177' y='1271' xlink:href='#idx'/><title>Index  ( software_id ) </title></a>
-<a xlink:href='#software_command.software_id'><text x='2193' y='1282'>software_id</text><title>software_id bigint not null</title></a>
-<a xlink:href='#software_command.software_id'><use id='fk' x='2283' y='1271' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
-  <use id='nn' x='2177' y='1287' xlink:href='#nn'/><a xlink:href='#software_command.description'><text x='2193' y='1297'>description</text><title>description varchar not null</title></a>
-
 <!-- ============= Table 'default_parameter_set' ============= -->
 <rect class='table' x='2400' y='1148' width='165' height='105' rx='7' ry='7' />
 <path d='M 2400.50 1174.50 L 2400.50 1155.50 Q 2400.50 1148.50 2407.50 1148.50 L 2557.50 1148.50 Q 2564.50 1148.50 2564.50 1155.50 L 2564.50 1174.50 L2400.50 1174.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -2216,8 +2165,8 @@ Using bigserial in DBSchema &#045; however in the postgres DB this column is of 
 Referred by artifact_processing_job ( processing_job_id ) 
 Referred by parent_processing_job ( parent_id -> processing_job_id ) 
 Referred by parent_processing_job ( child_id -> processing_job_id ) 
-Referred by processing_job_workflow_root ( processing_job_id ) 
-Referred by prep_template_processing_job ( processing_job_id ) </title></a>
+Referred by prep_template_processing_job ( processing_job_id ) 
+Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
   <use id='nn' x='1997' y='1392' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='1997' y='1391' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#processing_job.email'><text x='2013' y='1402'>email</text><title>email varchar not null
 The user that launched the job</title></a>
@@ -2274,37 +2223,6 @@ Reference to error if status is error</title></a>
 <a xlink:href='#job.input_file_software_command_id'><text x='423' y='1297'>input_file_software_command_id</text><title>input_file_software_command_id bigint not null</title></a>
 <a xlink:href='#job.input_file_software_command_id'><use id='fk' x='603' y='1286' xlink:href='#fk'/><title>References software_command ( input_file_software_command_id -> command_id ) </title></a>
 
-<!-- ============= Table 'software_type' ============= -->
-<rect class='table' x='2625' y='923' width='120' height='90' rx='7' ry='7' />
-<path d='M 2625.50 949.50 L 2625.50 930.50 Q 2625.50 923.50 2632.50 923.50 L 2737.50 923.50 Q 2744.50 923.50 2744.50 930.50 L 2744.50 949.50 L2625.50 949.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software_type'><text x='2647' y='937' class='tableTitle'>software_type</text><title>Table qiita.software_type</title></a>
-  <use id='nn' x='2627' y='957' xlink:href='#nn'/><a xlink:href='#software_type.software_type_id'><use id='pk' x='2627' y='956' xlink:href='#pk'/><title>Primary Key  ( software_type_id ) </title></a>
-<a xlink:href='#software_type.software_type_id'><text x='2643' y='967'>software_type_id</text><title>software_type_id bigint not null</title></a>
-<a xlink:href='#software_type.software_type_id'><use id='ref' x='2733' y='956' xlink:href='#ref'/><title>Referred by software ( software_type_id ) 
-Referred by software ( software_type_id ) </title></a>
-  <use id='nn' x='2627' y='972' xlink:href='#nn'/><a xlink:href='#software_type.software_type'><text x='2643' y='982'>software_type</text><title>software_type varchar not null</title></a>
-  <use id='nn' x='2627' y='987' xlink:href='#nn'/><a xlink:href='#software_type.description'><text x='2643' y='997'>description</text><title>description varchar not null</title></a>
-
-<!-- ============= Table 'software' ============= -->
-<rect class='table' x='2400' y='923' width='135' height='150' rx='7' ry='7' />
-<path d='M 2400.50 949.50 L 2400.50 930.50 Q 2400.50 923.50 2407.50 923.50 L 2527.50 923.50 Q 2534.50 923.50 2534.50 930.50 L 2534.50 949.50 L2400.50 949.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#software'><text x='2444' y='937' class='tableTitle'>software</text><title>Table qiita.software</title></a>
-  <use id='nn' x='2402' y='957' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2402' y='956' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
-<a xlink:href='#software.software_id'><text x='2418' y='967'>software_id</text><title>software_id bigserial not null</title></a>
-<a xlink:href='#software.software_id'><use id='ref' x='2523' y='956' xlink:href='#ref'/><title>Referred by default_workflow ( software_id ) 
-Referred by oauth_software ( software_id ) 
-Referred by software_command ( software_id ) 
-Referred by software_publication ( software_id ) 
-Referred by software_artifact_type ( software_id ) </title></a>
-  <use id='nn' x='2402' y='972' xlink:href='#nn'/><a xlink:href='#software.name'><text x='2418' y='982'>name</text><title>name varchar not null</title></a>
-  <use id='nn' x='2402' y='987' xlink:href='#nn'/><a xlink:href='#software.version'><text x='2418' y='997'>version</text><title>version varchar not null</title></a>
-  <use id='nn' x='2402' y='1002' xlink:href='#nn'/><a xlink:href='#software.description'><text x='2418' y='1012'>description</text><title>description varchar not null</title></a>
-  <use id='nn' x='2402' y='1017' xlink:href='#nn'/><a xlink:href='#software.environment_script'><text x='2418' y='1027'>environment_script</text><title>environment_script varchar not null</title></a>
-  <use id='nn' x='2402' y='1032' xlink:href='#nn'/><a xlink:href='#software.start_script'><text x='2418' y='1042'>start_script</text><title>start_script varchar not null</title></a>
-  <use id='nn' x='2402' y='1047' xlink:href='#nn'/><a xlink:href='#software.software_type_id'><use id='idx' x='2402' y='1046' xlink:href='#idx'/><title>Index  ( software_type_id ) </title></a>
-<a xlink:href='#software.software_type_id'><text x='2418' y='1057'>software_type_id</text><title>software_type_id bigint not null</title></a>
-<a xlink:href='#software.software_type_id'><use id='fk' x='2523' y='1046' xlink:href='#fk'/><title>References software_type ( software_type_id ) </title></a>
-
 <!-- ============= Table 'prep_template_processing_job' ============= -->
 <rect class='table' x='1740' y='953' width='180' height='75' rx='7' ry='7' />
 <path d='M 1740.50 979.50 L 1740.50 960.50 Q 1740.50 953.50 1747.50 953.50 L 1912.50 953.50 Q 1919.50 953.50 1919.50 960.50 L 1919.50 979.50 L1740.50 979.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -2327,6 +2245,57 @@ In case that the software is of type &quot;type plugin&quot;&#044; it holds the 
   <use id='nn' x='2042' y='987' xlink:href='#nn'/><a xlink:href='#software_artifact_type.artifact_type_id'><use id='pk' x='2042' y='986' xlink:href='#pk'/><title>Primary Key  ( software_id, artifact_type_id ) Index  ( artifact_type_id ) </title></a>
 <a xlink:href='#software_artifact_type.artifact_type_id'><text x='2058' y='997'>artifact_type_id</text><title>artifact_type_id bigint not null</title></a>
 <a xlink:href='#software_artifact_type.artifact_type_id'><use id='fk' x='2163' y='986' xlink:href='#fk'/><title>References artifact_type ( artifact_type_id ) </title></a>
+
+<!-- ============= Table 'software_type' ============= -->
+<rect class='table' x='2625' y='923' width='120' height='90' rx='7' ry='7' />
+<path d='M 2625.50 949.50 L 2625.50 930.50 Q 2625.50 923.50 2632.50 923.50 L 2737.50 923.50 Q 2744.50 923.50 2744.50 930.50 L 2744.50 949.50 L2625.50 949.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software_type'><text x='2647' y='937' class='tableTitle'>software_type</text><title>Table qiita.software_type</title></a>
+  <use id='nn' x='2627' y='957' xlink:href='#nn'/><a xlink:href='#software_type.software_type_id'><use id='pk' x='2627' y='956' xlink:href='#pk'/><title>Primary Key  ( software_type_id ) </title></a>
+<a xlink:href='#software_type.software_type_id'><text x='2643' y='967'>software_type_id</text><title>software_type_id bigserial not null</title></a>
+<a xlink:href='#software_type.software_type_id'><use id='ref' x='2733' y='956' xlink:href='#ref'/><title>Referred by software ( software_type_id ) </title></a>
+  <use id='nn' x='2627' y='972' xlink:href='#nn'/><a xlink:href='#software_type.software_type'><text x='2643' y='982'>software_type</text><title>software_type varchar not null</title></a>
+  <use id='nn' x='2627' y='987' xlink:href='#nn'/><a xlink:href='#software_type.description'><text x='2643' y='997'>description</text><title>description varchar not null</title></a>
+
+<!-- ============= Table 'software' ============= -->
+<rect class='table' x='2400' y='923' width='135' height='165' rx='7' ry='7' />
+<path d='M 2400.50 949.50 L 2400.50 930.50 Q 2400.50 923.50 2407.50 923.50 L 2527.50 923.50 Q 2534.50 923.50 2534.50 930.50 L 2534.50 949.50 L2400.50 949.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software'><text x='2444' y='937' class='tableTitle'>software</text><title>Table qiita.software</title></a>
+  <use id='nn' x='2402' y='957' xlink:href='#nn'/><a xlink:href='#software.software_id'><use id='pk' x='2402' y='956' xlink:href='#pk'/><title>Primary Key  ( software_id ) </title></a>
+<a xlink:href='#software.software_id'><text x='2418' y='967'>software_id</text><title>software_id bigserial not null</title></a>
+<a xlink:href='#software.software_id'><use id='ref' x='2523' y='956' xlink:href='#ref'/><title>Referred by default_workflow ( software_id ) 
+Referred by oauth_software ( software_id ) 
+Referred by software_artifact_type ( software_id ) 
+Referred by software_command ( software_id ) 
+Referred by software_publication ( software_id ) </title></a>
+  <use id='nn' x='2402' y='972' xlink:href='#nn'/><a xlink:href='#software.name'><text x='2418' y='982'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2402' y='987' xlink:href='#nn'/><a xlink:href='#software.version'><text x='2418' y='997'>version</text><title>version varchar not null</title></a>
+  <use id='nn' x='2402' y='1002' xlink:href='#nn'/><a xlink:href='#software.description'><text x='2418' y='1012'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='2402' y='1017' xlink:href='#nn'/><a xlink:href='#software.environment_script'><text x='2418' y='1027'>environment_script</text><title>environment_script varchar not null</title></a>
+  <use id='nn' x='2402' y='1032' xlink:href='#nn'/><a xlink:href='#software.start_script'><text x='2418' y='1042'>start_script</text><title>start_script varchar not null</title></a>
+  <use id='nn' x='2402' y='1047' xlink:href='#nn'/><a xlink:href='#software.software_type_id'><use id='idx' x='2402' y='1046' xlink:href='#idx'/><title>Index  ( software_type_id ) </title></a>
+<a xlink:href='#software.software_type_id'><text x='2418' y='1057'>software_type_id</text><title>software_type_id bigint not null</title></a>
+<a xlink:href='#software.software_type_id'><use id='fk' x='2523' y='1046' xlink:href='#fk'/><title>References software_type ( software_type_id ) </title></a>
+  <use id='nn' x='2402' y='1062' xlink:href='#nn'/><a xlink:href='#software.active'><text x='2418' y='1072'>active</text><title>active bool not null default &#039;True&#039;</title></a>
+
+<!-- ============= Table 'software_command' ============= -->
+<rect class='table' x='2175' y='1208' width='120' height='120' rx='7' ry='7' />
+<path d='M 2175.50 1234.50 L 2175.50 1215.50 Q 2175.50 1208.50 2182.50 1208.50 L 2287.50 1208.50 Q 2294.50 1208.50 2294.50 1215.50 L 2294.50 1234.50 L2175.50 1234.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#software_command'><text x='2182' y='1222' class='tableTitle'>software_command</text><title>Table qiita.software_command</title></a>
+  <use id='nn' x='2177' y='1242' xlink:href='#nn'/><a xlink:href='#software_command.command_id'><use id='pk' x='2177' y='1241' xlink:href='#pk'/><title>Primary Key  ( command_id ) </title></a>
+<a xlink:href='#software_command.command_id'><text x='2193' y='1252'>command_id</text><title>command_id bigserial not null</title></a>
+<a xlink:href='#software_command.command_id'><use id='ref' x='2283' y='1241' xlink:href='#ref'/><title>Referred by artifact ( command_id ) 
+Referred by command_output ( command_id ) 
+Referred by command_parameter ( command_id ) 
+Referred by default_parameter_set ( command_id ) 
+Referred by default_workflow_node ( command_id ) 
+Referred by job ( input_file_software_command_id -> command_id ) 
+Referred by processing_job ( command_id ) </title></a>
+  <use id='nn' x='2177' y='1257' xlink:href='#nn'/><a xlink:href='#software_command.name'><text x='2193' y='1267'>name</text><title>name varchar not null</title></a>
+  <use id='nn' x='2177' y='1272' xlink:href='#nn'/><a xlink:href='#software_command.software_id'><use id='idx' x='2177' y='1271' xlink:href='#idx'/><title>Index  ( software_id ) </title></a>
+<a xlink:href='#software_command.software_id'><text x='2193' y='1282'>software_id</text><title>software_id bigint not null</title></a>
+<a xlink:href='#software_command.software_id'><use id='fk' x='2283' y='1271' xlink:href='#fk'/><title>References software ( software_id ) </title></a>
+  <use id='nn' x='2177' y='1287' xlink:href='#nn'/><a xlink:href='#software_command.description'><text x='2193' y='1297'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='2177' y='1302' xlink:href='#nn'/><a xlink:href='#software_command.active'><text x='2193' y='1312'>active</text><title>active bool not null default &#039;True&#039;</title></a>
 
 </g></svg>
 
@@ -3568,46 +3537,6 @@ In case that the software is of type &quot;type plugin&quot;&#044; it holds the 
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='study_sample_columns'>Table study_sample_columns</a></th></tr>
-<tr><td colspan='3'>Holds information on which metadata columns are available for the study sample template </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='study_sample_columns.study_id'>study&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_sample_columns.column_name'>column&#095;name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='study_sample_columns.column_type'>column&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;study&#095;mapping&#095;columns primary key</td>
-		<td> ON study&#095;id&#044; column&#095;name&#044; column&#095;type</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;study&#095;mapping&#095;columns&#095;study&#095;id </td>
-		<td> ON study&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_study_mapping_columns_study</td>
-		<td > ( study&#095;id ) ref <a href='#study'>study</a> (study&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='study_prep_template'>Table study_prep_template</a></th></tr>
 <tr><td colspan='3'>links study to its prep templates </td></tr>
 </thead>
@@ -3643,45 +3572,6 @@ In case that the software is of type &quot;type plugin&quot;&#044; it holds the 
 	</tr>
 	<tr>
 		<td>fk_study_prep_template_pt</td>
-		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='prep_columns'>Table prep_columns</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='prep_columns.prep_template_id'>prep&#095;template&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_columns.column_name'>column&#095;name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='prep_columns.column_type'>column&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;prep&#095;columns&#095;0 primary key</td>
-		<td> ON prep&#095;template&#095;id&#044; column&#095;name&#044; column&#095;type</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;prep&#095;columns&#095;1 </td>
-		<td> ON prep&#095;template&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_prep_columns_prep_template</td>
 		<td > ( prep&#095;template&#095;id ) ref <a href='#prep&#095;template'>prep&#095;template</a> (prep&#095;template&#095;id) </td>
 		<td>  </td>
 	</tr>
@@ -5663,50 +5553,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='software_command'>Table software_command</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='software_command.command_id'>command&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_command.name'>name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_command.software_id'>software&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_command.description'>description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;soft&#095;command primary key</td>
-		<td> ON command&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;soft&#095;command </td>
-		<td> ON software&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_soft_command_software</td>
-		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='default_parameter_set'>Table default_parameter_set</a></th></tr>
 </thead>
 <tbody>
@@ -6492,94 +6338,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='software_type'>Table software_type</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='software_type.software_type_id'>software&#095;type&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_type.software_type'>software&#095;type</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software_type.description'>description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;software&#095;type primary key</td>
-		<td> ON software&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='software'>Table software</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='software.software_id'>software&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.name'>name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.version'>version</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.description'>description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.environment_script'>environment&#095;script</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.start_script'>start&#095;script</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='software.software_type_id'>software&#095;type&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;software primary key</td>
-		<td> ON software&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;software </td>
-		<td> ON software&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_software_software_type</td>
-		<td > ( software&#095;type&#095;id ) ref <a href='#software&#095;type'>software&#095;type</a> (software&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='prep_template_processing_job'>Table prep_template_processing_job</a></th></tr>
 </thead>
 <tbody>
@@ -6658,6 +6416,148 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>
 		<td>fk_software_artifact_type_sw</td>
+		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='software_type'>Table software_type</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='software_type.software_type_id'>software&#095;type&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software_type.software_type'>software&#095;type</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software_type.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;software&#095;type primary key</td>
+		<td> ON software&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='software'>Table software</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='software.software_id'>software&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.version'>version</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.environment_script'>environment&#095;script</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.start_script'>start&#095;script</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.software_type_id'>software&#095;type&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software.active'>active</a></td>
+		<td> bool  NOT NULL  DEFO 'True' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;software primary key</td>
+		<td> ON software&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;software </td>
+		<td> ON software&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_software_software_type</td>
+		<td > ( software&#095;type&#095;id ) ref <a href='#software&#095;type'>software&#095;type</a> (software&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='software_command'>Table software_command</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='software_command.command_id'>command&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software_command.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software_command.software_id'>software&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software_command.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='software_command.active'>active</a></td>
+		<td> bool  NOT NULL  DEFO 'True' </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;soft&#095;command primary key</td>
+		<td> ON command&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;soft&#095;command </td>
+		<td> ON software&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_soft_command_software</td>
 		<td > ( software&#095;id ) ref <a href='#software'>software</a> (software&#095;id) </td>
 		<td>  </td>
 	</tr>
