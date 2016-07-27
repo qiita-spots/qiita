@@ -145,18 +145,24 @@ class ConfigurationManagerTests(TestCase):
             obs.key_file.endswith("/qiita_core/support_files/server.key"))
 
         # BASE_DATA_DIR does not exist
-        self.conf.set('main', 'BASE_DATA_DIR', '/surprised/if/this/dir/exists')
+        conf_setter('BASE_DATA_DIR', '/surprised/if/this/dir/exists')
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
 
         # WORKING_DIR does not exist
-        self.conf.set('main', 'BASE_DATA_DIR', '/tmp')
-        self.conf.set('main', 'WORKING_DIR', '/surprised/if/this/dir/exists')
+        conf_setter('BASE_DATA_DIR', '/tmp')
+        conf_setter('WORKING_DIR', '/surprised/if/this/dir/exists')
+        with self.assertRaises(ValueError):
+            obs._get_main(self.conf)
+
+        # PLUGIN_DIR does not exist
+        conf_setter('WORKING_DIR', '/tmp')
+        conf_setter('PLUGIN_DIR', '/surprised/if/this/dir/exists')
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
 
         # No files can be uploaded
-        self.conf.set('main', 'WORKING_DIR', '/tmp')
+        conf_setter('PLUGIN_DIR', '/tmp')
         conf_setter('VALID_UPLOAD_EXTENSION', '')
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
