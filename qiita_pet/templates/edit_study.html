@@ -144,6 +144,9 @@ function cancel_edition(){
     {% set kwargs = {'tabindex': idx, 'class_': 'form-control'} %}
     {% set additional_info = '' %}
     {# form-item-specific rendering #}
+    {% if form_item.label.text == 'Study Title' %}
+      {% set additional_info = '<u>Recommended format:</u><br/>PI last name brief project description<br/>For example: <i>Darwin Galapagos Finch Feces</i><br/><br/>' %}
+    {% end %}
     {% if form_item.label.text == 'Environmental Packages' %}
         {% set kwargs['size'] = len(form_item.choices) %}
         {% set additional_info = 'You can select multiple entries by control-clicking (mac: command-clicking)' %}
@@ -151,7 +154,7 @@ function cancel_edition(){
         {% set kwargs['class_'] = kwargs['class_'] + ' chzn-select' %}
     {% end %}
   <tr>
-    <td width="20%">{% raw form_item.label %} <br /> {{additional_info}}</td>
+    <td width="20%">{% raw form_item.label %} <br /> {% raw additional_info %}</td>
     <td width="30%">{% raw form_item(**kwargs) %}</td>
     <td width="50%">{% if form_item.flags.required %}<font color="red"><h4>&nbsp;&nbsp;*</h4></font>{% end %}</td>
   </tr>
