@@ -260,6 +260,13 @@
     }
   }
 
+
+  function delete_prep_column(prep_id, column_name) {
+    if(confirm("Are you sure you want to delete '" + column_name + "' information?")) {
+      console.log({{study_id}}, prep_id, column_name)
+    }
+  }
+
   $(document).ready(function () {
     if("{{investigation_type}}" !== "None") {
       // The prep information already has an investigation type

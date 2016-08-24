@@ -64,6 +64,7 @@ def _build_sample_summary(study_id, user_id):
             # X in cell for samples in the prep template
             for s in all_samps.intersection(prep_samples):
                 samps_table[s][col_field] = "X"
+
     return columns, samps_table.values()
 
 

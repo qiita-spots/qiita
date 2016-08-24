@@ -7,8 +7,20 @@
   var False = false;
   var table = {% raw table %};
   var cols = {% raw cols %};
-  var options = { enableCellNavigation: false };
+  var options = { enableCellNavigation: false, rowHeight: 40 };
   var currentSortCol = 'sample';
+
+  // ==> adding the delete column to the grid
+  // adding new column to the table - using sample name as value
+  for(var i=0;i<table.length;i++) {
+    table[i]['slick-grid-sample-delete'] = table[i]['sample'];
+  }
+  // adding new column to cols, we need to add a Formatter
+  function linkFormatter(row, cell, value, columnDef, dataContext) {
+    return "<a class=\"btn btn-danger\" onclick=\"delete_sample('" + value +
+           "');\"><span class=\"glyphicon glyphicon-trash\"></span></a>";
+  }
+  cols.unshift({ name: "", field: "slick-grid-sample-delete", width: 60, formatter: linkFormatter })
   var grid = new Slick.Grid("#samples-div", table, cols, options);
 
   function add_meta() {
@@ -38,6 +50,7 @@
     grid.invalidateAllRows();
     grid.render();
   }
+
 </script>
 
 <style>
