@@ -45,7 +45,7 @@ class PrepTemplateSummaryAJAX(BaseHandler):
     def get(self):
         prep_id = to_int(self.get_argument('prep_id'))
         res = prep_template_summary_get_req(prep_id, self.current_user.id)
-        self.render('study_ajax/prep_summary_table.html',
+        self.render('study_ajax/prep_summary_table.html', pid=prep_id, 
                     stats=res['summary'])
 
 
