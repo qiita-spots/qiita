@@ -17,7 +17,8 @@ from qiita_pet.handlers.api_proxy import (
     sample_template_delete_req, sample_template_filepaths_get_req,
     data_types_get_req, sample_template_samples_get_req,
     prep_template_samples_get_req, study_prep_get_req,
-    sample_template_meta_cats_get_req, sample_template_category_get_req)
+    sample_template_meta_cats_get_req, sample_template_category_get_req,
+    sample_template_patch_request)
 
 
 def _build_sample_summary(study_id, user_id):
@@ -118,6 +119,23 @@ class SampleTemplateAJAX(BaseHandler):
             raise HTTPError(400, 'Unknown sample information action: %s'
                             % action)
         self.write(result)
+
+    @authenticated
+    def patch(self):
+        """Patches a sample template in the system
+
+        Follows the JSON PATCH specification:
+        https://tools.ietf.org/html/rfc6902
+        """
+        req_op = self.get_argument('op')
+        req_path = self.get_argument('path')
+        req_value = self.get_argument('value', None)
+        req_from = self.get_argument('from', None)
+
+        response = sample_template_patch_request(
+            self.current_user.id, req_op, req_path, req_value, req_from)
+
+        self.write(response)
 
 
 class SampleAJAX(BaseHandler):

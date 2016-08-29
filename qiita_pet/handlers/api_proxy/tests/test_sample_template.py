@@ -20,7 +20,8 @@ from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_put_req, sample_template_delete_req,
     sample_template_filepaths_get_req, sample_template_get_req,
     _check_sample_template_exists, sample_template_samples_get_req,
-    sample_template_category_get_req, sample_template_meta_cats_get_req)
+    sample_template_category_get_req, sample_template_meta_cats_get_req,
+    sample_template_patch_request)
 
 
 @qiita_test_checker()
@@ -447,6 +448,46 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs, {'status': 'error',
                                'message': 'Sample template %d does not '
                                'exist' % self.new_study.id})
+
+    def test_sample_template_patch_request(self):
+        # Wrong operation operation
+        obs = sample_template_patch_request(
+            "test@foo.bar", "add", "/1/columns/season_environment/")
+        exp = {'status': 'error',
+               'message': 'Operation "add" not supported. '
+                          'Current supported operations: remove'}
+        self.assertEqual(obs, exp)
+        # Wrong path parameter
+        obs = sample_template_patch_request(
+            "test@foo.bar", "remove", "/columns/season_environment/")
+        exp = {'status': 'error',
+               'message': 'Incorrect path parameter'}
+        self.assertEqual(obs, exp)
+        # No access
+        obs = sample_template_patch_request(
+            "demo@microbio.me", "remove", "/1/columns/season_environment/")
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+        # Success
+        obs = sample_template_patch_request(
+            "test@foo.bar", "remove", "/1/columns/season_environment/")
+        exp = {'status': 'success',
+               'message': ''}
+        self.assertEqual(obs, exp)
+
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        obs = r_client.get('sample_template_1')
+        self.assertIsNotNone(obs)
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
+
+        ST = qdb.metadata_template.sample_template.SampleTemplate
+        self.assertNotIn("season_environment", ST(1).categories())
 
 
 if __name__ == '__main__':
