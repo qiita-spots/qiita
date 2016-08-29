@@ -119,7 +119,7 @@ class TestDispatchable(TestCase):
         self.assertItemsEqual(obs['message'].split('\n'),
                               exp['message'].split('\n'))
 
-    def test_delete_sample_or_colum(self):
+    def test_delete_sample_or_column(self):
         st = SampleTemplate(1)
 
         # Delete a sample template column
