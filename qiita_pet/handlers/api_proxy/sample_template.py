@@ -522,7 +522,7 @@ def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
         attribute = req_path[1]
         attr_id = req_path[2]
 
-        # Check if the user actually has access to the artifact
+        # Check if the user actually has access to the template
         st = SampleTemplate(st_id)
         access_error = check_access(st.study_id, user_id)
         if access_error:

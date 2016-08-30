@@ -289,6 +289,16 @@ class TestPrepAPI(TestCase):
 
         r_client.flushdb()
 
+    def _wait_for_parallel_job(self, key):
+        # This is needed so the clean up works - this is a distributed system
+        # so we need to make sure that all processes are done before we reset
+        # the test database
+        obs = r_client.get(key)
+        redis_info = loads(r_client.get(loads(obs)['job_id']))
+        while redis_info['status_msg'] == 'Running':
+            sleep(0.05)
+            redis_info = loads(r_client.get(loads(obs)['job_id']))
+
     def test_prep_template_graph_get_req(self):
         obs = prep_template_graph_get_req(1, 'test@foo.bar')
         exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5), (2, 6)],
@@ -409,22 +419,24 @@ class TestPrepAPI(TestCase):
         obs = r_client.get('prep_template_1')
         self.assertIsNotNone(obs)
 
-        # This is needed so the clean up works - this is a distributed system
-        # so we need to make sure that all processes are done before we reset
-        # the test database
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        self._wait_for_parallel_job('prep_template_1')
 
-    def test_prep_template_patch_req_errors(self):
+        # Delete a prep template column
+        obs = prep_template_patch_req(
+            'test@foo.bar', 'delete', '/1/columns/target_subfragment/')
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(obs, exp)
+        self._wait_for_parallel_job('prep_template_1')
+        self.assertNotIn('target_subfragment', pt.categories())
+
+        # Test all the errors
         # Operation not supported
         obs = prep_template_patch_req(
             'test@foo.bar', 'add', '/1/investigation_type',
             'Cancer Genomics')
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. '
-                          'Current supported operations: replace'}
+                          'Current supported operations: replace, delete'}
         self.assertEqual(obs, exp)
         # Incorrect path parameter
         obs = prep_template_patch_req(
