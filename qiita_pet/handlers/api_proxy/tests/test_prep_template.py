@@ -423,7 +423,7 @@ class TestPrepAPI(TestCase):
 
         # Delete a prep template column
         obs = prep_template_patch_req(
-            'test@foo.bar', 'delete', '/1/columns/target_subfragment/')
+            'test@foo.bar', 'remove', '/1/columns/target_subfragment/')
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
         self._wait_for_parallel_job('prep_template_1')

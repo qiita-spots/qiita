@@ -445,7 +445,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
                                'Please, check the path parameter' % attribute}
 
         return {'status': status, 'message': msg}
-    elif req_op == 'delete':
+    elif req_op == 'remove':
         # The structure of the path should be /prep_id/{columns|samples}/name
         if len(req_path) != 3:
             return {'status': 'error',
@@ -470,7 +470,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '
-                           'Current supported operations: replace, delete'
+                           'Current supported operations: replace, remove'
                            % req_op}
 
 

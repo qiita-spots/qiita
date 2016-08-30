@@ -135,6 +135,35 @@
   }
 
   /*
+   *
+   * Deletes a column from the prep template
+   *
+   * @param prep_id the prep template id
+   * @param column_name string the the column to be removed
+   *
+   * This function executes an AJAX call to remove the given column from the
+   * prep information
+   *
+   */
+  function delete_prep_column(prep_id, column_name) {
+    if(confirm("Are you sure you want to delete '" + column_name + "' information?")) {
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/prep_template/',
+        type: 'PATCH',
+        data: {'op': 'remove', 'path': '/' + prep_id + '/columns/' + column_name},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            populate_main_div('/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}} });
+          }
+        }
+      });
+    }
+  }
+
+  /*
    * Toggle the graph view
    *
    * Show/hide the graph div and update GUI accordingly
@@ -257,13 +286,6 @@
           }
         }
       });
-    }
-  }
-
-
-  function delete_prep_column(prep_id, column_name) {
-    if(confirm("Are you sure you want to delete '" + column_name + "' information?")) {
-      console.log({{study_id}}, prep_id, column_name)
     }
   }
 
