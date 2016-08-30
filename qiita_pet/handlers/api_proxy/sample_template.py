@@ -190,6 +190,42 @@ def sample_template_category_get_req(category, samp_id, user_id):
             'values': values}
 
 
+def get_sample_template_processing_status(st_id):
+    job_info = r_client.get(SAMPLE_TEMPLATE_KEY_FORMAT % st_id)
+    if job_info:
+        job_info = loads(job_info)
+        job_id = job_info['job_id']
+        if job_id:
+            redis_info = loads(r_client.get(job_id))
+            processing = redis_info['status_msg'] == 'Running'
+            if processing:
+                alert_type = 'info'
+                alert_msg = 'This sample template is currently being processed'
+            elif redis_info['status_msg'] == 'Success':
+                alert_type = redis_info['return']['status']
+                alert_msg = redis_info['return']['message'].replace('\n',
+                                                                    '</br>')
+                payload = {'job_id': None,
+                           'status': alert_type,
+                           'message': alert_msg}
+                r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,
+                             dumps(payload))
+            else:
+                alert_type = redis_info['return']['status']
+                alert_msg = redis_info['return']['message'].replace('\n',
+                                                                    '</br>')
+        else:
+            processing = False
+            alert_type = job_info['status']
+            alert_msg = job_info['message'].replace('\n', '</br>')
+    else:
+        processing = False
+        alert_type = ''
+        alert_msg = ''
+
+    return processing, alert_type, alert_msg
+
+
 def sample_template_summary_get_req(samp_id, user_id):
     """Returns a summary of the sample template metadata columns
 
@@ -219,37 +255,8 @@ def sample_template_summary_get_req(samp_id, user_id):
     if access_error:
         return access_error
 
-    job_info = r_client.get(SAMPLE_TEMPLATE_KEY_FORMAT % samp_id)
-    if job_info:
-        job_info = loads(job_info)
-        job_id = job_info['job_id']
-        if job_id:
-            redis_info = loads(r_client.get(job_id))
-            processing = redis_info['status_msg'] == 'Running'
-            if processing:
-                alert_type = 'info'
-                alert_msg = 'This sample template is currently being processed'
-            elif redis_info['status_msg'] == 'Success':
-                alert_type = redis_info['return']['status']
-                alert_msg = redis_info['return']['message'].replace('\n',
-                                                                    '</br>')
-                payload = {'job_id': None,
-                           'status': alert_type,
-                           'message': alert_msg}
-                r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % samp_id,
-                             dumps(payload))
-            else:
-                alert_type = redis_info['return']['status']
-                alert_msg = redis_info['return']['message'].replace('\n',
-                                                                    '</br>')
-        else:
-            processing = False
-            alert_type = job_info['status']
-            alert_msg = job_info['message'].replace('\n', '</br>')
-    else:
-        processing = False
-        alert_type = ''
-        alert_msg = ''
+    processing, alert_type, alert_msg = get_sample_template_processing_status(
+        samp_id)
 
     exists = _check_sample_template_exists(int(samp_id))
     if exists['status'] != 'success':
