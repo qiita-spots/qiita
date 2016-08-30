@@ -10,13 +10,19 @@
 
   function delete_column(column_name) {
     if(confirm("Are you sure you want to delete '" + column_name + "' information?")) {
-      console.log({{study_id}}, column_name)
-    }
-  }
-
-  function delete_sample(sample_name) {
-    if(confirm("Are you sure you want to delete '" + sample_name + "'?")) {
-      console.log({{study_id}}, sample_name)
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/study/description/sample_template/',
+        type: 'PATCH',
+        data: {'op': 'remove', 'path': '/{{study_id}}/columns/' + column_name},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_id}} });
+          }
+        }
+      });
     }
   }
 

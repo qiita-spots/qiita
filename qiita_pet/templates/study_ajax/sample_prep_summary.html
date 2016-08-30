@@ -51,6 +51,32 @@
     grid.render();
   }
 
+  function delete_sample(sample_name) {
+    if(confirm("Are you sure you want to delete '" + sample_name + "'?")) {
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/study/description/sample_template/',
+        type: 'PATCH',
+        data: {'op': 'remove', 'path': '/{{study_id}}/samples/' + sample_name},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_summary/', { study_id: {{study_id}} });
+          }
+        }
+      });
+    }
+  }
+
+  $(document).ready(function() {
+    {% if alert_type != 'success' and alert_message != '' %}
+      bootstrapAlert(decodeURIComponent("{% raw alert_message %}").replace(/\+/g,' '), "{{alert_type}}");
+    {% else %}
+      $('#bootstrap-alert').alert('close');
+    {% end %}
+  });
+
 </script>
 
 <style>
