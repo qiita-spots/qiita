@@ -159,8 +159,8 @@ def prep_template_ajax_get_req(user_id, prep_id):
             download_qiime.append(fp_id)
         else:
             download_prep.append(fp_id)
-    download_prep = download_prep[0] if download_prep else None
-    download_qiime = download_qiime[0] if download_qiime else None
+    download_prep = download_prep[0]
+    download_qiime = download_qiime[0]
 
     ontology = _get_ENA_ontology()
 
