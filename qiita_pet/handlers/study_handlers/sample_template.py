@@ -18,7 +18,7 @@ from qiita_pet.handlers.api_proxy import (
     data_types_get_req, sample_template_samples_get_req,
     prep_template_samples_get_req, study_prep_get_req,
     sample_template_meta_cats_get_req, sample_template_category_get_req,
-    sample_template_patch_request)
+    sample_template_patch_request, get_sample_template_processing_status)
 
 
 def _build_sample_summary(study_id, user_id):
@@ -158,9 +158,12 @@ class SampleAJAX(BaseHandler):
         meta_cats = res['categories']
         cols, samps_table = _build_sample_summary(study_id,
                                                   self.current_user.id)
+        _, alert_type, alert_msg = get_sample_template_processing_status(
+            study_id)
         self.render('study_ajax/sample_prep_summary.html',
                     table=samps_table, cols=cols, meta_available=meta_cats,
-                    study_id=study_id)
+                    study_id=study_id, alert_type=alert_type,
+                    alert_message=alert_msg)
 
     @authenticated
     def post(self):
