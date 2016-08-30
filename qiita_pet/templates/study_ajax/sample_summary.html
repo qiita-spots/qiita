@@ -8,6 +8,16 @@
     }
   }
 
+  /*
+   *
+   * Deletes a column from the sample template
+   *
+   * @param column_name string with the column to be removed
+   *
+   * This function executes an AJAX call to remove the given column from the
+   * sample information
+   *
+   */
   function delete_column(column_name) {
     if(confirm("Are you sure you want to delete '" + column_name + "' information?")) {
       $.ajax({

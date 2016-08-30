@@ -51,6 +51,15 @@
     grid.render();
   }
 
+  /*
+   * Deletes a sample from the sample template
+   *
+   * @param sample_name string with the sample to be removed
+   *
+   * This function executes an AJAX call to remove the given sample from the
+   * current sample template
+   *
+   */
   function delete_sample(sample_name) {
     if(confirm("Are you sure you want to delete '" + sample_name + "'?")) {
       $.ajax({
