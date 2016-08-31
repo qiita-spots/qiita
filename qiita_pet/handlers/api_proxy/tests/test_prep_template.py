@@ -436,7 +436,7 @@ class TestPrepAPI(TestCase):
             'Cancer Genomics')
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. '
-                          'Current supported operations: replace, delete'}
+                          'Current supported operations: replace, remove'}
         self.assertEqual(obs, exp)
         # Incorrect path parameter
         obs = prep_template_patch_req(
