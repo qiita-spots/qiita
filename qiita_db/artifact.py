@@ -157,7 +157,7 @@ class Artifact(qdb.base.QiitaObject):
 
     @classmethod
     def create(cls, filepaths, artifact_type, name=None, prep_template=None,
-               parents=None, processing_parameters=None):
+               parents=None, processing_parameters=None, move_files=True):
         r"""Creates a new artifact in the system
 
         The parameters depend on how the artifact was generated:
@@ -189,6 +189,8 @@ class Artifact(qdb.base.QiitaObject):
             The processing parameters used to generate the new artifact
             from `parents`. It is required if `parents` is provided. It should
             not be provided if `prep_template` is provided.
+        move_files : bool, optional
+            If False the files will not be moved but copied
 
         Returns
         -------
@@ -309,7 +311,8 @@ class Artifact(qdb.base.QiitaObject):
 
             # Associate the artifact with its filepaths
             fp_ids = qdb.util.insert_filepaths(
-                filepaths, a_id, artifact_type, "filepath")
+                filepaths, a_id, artifact_type, "filepath",
+                move_files=move_files, copy=(not move_files))
             sql = """INSERT INTO qiita.artifact_filepath
                         (artifact_id, filepath_id)
                      VALUES (%s, %s)"""

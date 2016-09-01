@@ -621,6 +621,39 @@ class ArtifactTests(TestCase):
             [qdb.metadata_template.prep_template.PrepTemplate(1)])
         self.assertEqual(obs.ebi_run_accessions, dict())
         self.assertEqual(obs.study, qdb.study.Study(1))
+        self.assertFalse(exists(self.filepaths_processed[0][0]))
+
+    def test_create_copy_files(self):
+        fp_count = qdb.util.get_count('qiita.filepath')
+        exp_params = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
+        before = datetime.now()
+        obs = qdb.artifact.Artifact.create(
+            self.filepaths_processed, "Demultiplexed",
+            parents=[qdb.artifact.Artifact(1)],
+            processing_parameters=exp_params, move_files=False)
+        self.assertEqual(obs.name, 'noname')
+        self.assertTrue(before < obs.timestamp < datetime.now())
+        self.assertEqual(obs.processing_parameters, exp_params)
+        self.assertEqual(obs.visibility, 'sandbox')
+        self.assertEqual(obs.artifact_type, "Demultiplexed")
+        self.assertEqual(obs.data_type, qdb.artifact.Artifact(1).data_type)
+        self.assertTrue(obs.can_be_submitted_to_ebi)
+        self.assertTrue(obs.can_be_submitted_to_vamps)
+        self.assertFalse(obs.is_submitted_to_vamps)
+
+        db_demultiplexed_dir = qdb.util.get_mountpoint('Demultiplexed')[0][1]
+        path_builder = partial(join, db_demultiplexed_dir, str(obs.id))
+        exp_fps = [(fp_count + 1, path_builder(basename(self.fp3)),
+                    "preprocessed_fasta")]
+        self.assertEqual(obs.filepaths, exp_fps)
+        self.assertEqual(obs.parents, [qdb.artifact.Artifact(1)])
+        self.assertEqual(
+            obs.prep_templates,
+            [qdb.metadata_template.prep_template.PrepTemplate(1)])
+        self.assertEqual(obs.ebi_run_accessions, dict())
+        self.assertEqual(obs.study, qdb.study.Study(1))
+        self.assertTrue(exists(self.filepaths_processed[0][0]))
 
     def test_create_biom(self):
         fp_count = qdb.util.get_count('qiita.filepath')
