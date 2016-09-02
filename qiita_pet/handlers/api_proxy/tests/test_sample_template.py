@@ -9,7 +9,7 @@ from unittest import TestCase, main
 from os import remove, mkdir
 from os.path import join, exists
 from time import sleep
-from json import loads
+from json import loads, dumps
 
 from moi import r_client
 
@@ -21,7 +21,8 @@ from qiita_pet.handlers.api_proxy.sample_template import (
     sample_template_filepaths_get_req, sample_template_get_req,
     _check_sample_template_exists, sample_template_samples_get_req,
     sample_template_category_get_req, sample_template_meta_cats_get_req,
-    sample_template_patch_request)
+    sample_template_patch_request, get_sample_template_processing_status,
+    SAMPLE_TEMPLATE_KEY_FORMAT)
 
 
 @qiita_test_checker()
@@ -129,6 +130,56 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs, {'status': 'error',
                                'message': 'Sample template %d does not '
                                'exist' % self.new_study.id})
+
+    def test_get_sample_template_processing_status(self):
+        key = SAMPLE_TEMPLATE_KEY_FORMAT % 1
+
+        obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
+        self.assertFalse(obs_proc)
+        self.assertEqual(obs_at, "")
+        self.assertEqual(obs_am, "")
+
+        # Without job id
+        r_client.set(key, dumps({'job_id': None, 'status': "success",
+                                 'message': ""}))
+        obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
+        self.assertFalse(obs_proc)
+        self.assertEqual(obs_at, "success")
+        self.assertEqual(obs_am, "")
+
+        # With job id and processing
+        r_client.set(key, dumps({'job_id': "test_job_id"}))
+        r_client.set("test_job_id", dumps({'status_msg': 'Running'}))
+        obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
+        self.assertTrue(obs_proc)
+        self.assertEqual(obs_at, "info")
+        self.assertEqual(
+            obs_am, "This sample template is currently being processed")
+
+        # With job id and success
+        r_client.set(key, dumps({'job_id': "test_job_id"}))
+        r_client.set("test_job_id",
+                     dumps({'status_msg': 'Success',
+                            'return': {'status': 'success',
+                                       'message': 'Some\nwarning'}}))
+        obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
+        self.assertFalse(obs_proc)
+        self.assertEqual(obs_at, "success")
+        self.assertEqual(obs_am, "Some</br>warning")
+        obs = loads(r_client.get(key))
+        self.assertEqual(obs, {'job_id': None, 'status': 'success',
+                               'message': 'Some</br>warning'})
+
+        # With job and not success
+        r_client.set(key, dumps({'job_id': "test_job_id"}))
+        r_client.set("test_job_id",
+                     dumps({'status_msg': 'Failed',
+                            'return': {'status': 'error',
+                                       'message': 'Some\nerror'}}))
+        obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
+        self.assertFalse(obs_proc)
+        self.assertEqual(obs_at, "error")
+        self.assertEqual(obs_am, "Some</br>error")
 
     def test_sample_template_summary_get_req(self):
         obs = sample_template_summary_get_req(1, 'test@foo.bar')
