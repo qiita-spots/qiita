@@ -1059,15 +1059,19 @@ class MetadataTemplate(qdb.base.QiitaObject):
             The metadata in the template,indexed on sample id
         """
         with qdb.sql_connection.TRN:
-            cols = sorted(qdb.util.get_table_cols(self._table_name(self._id)))
-            # Get all metadata for the template
-            sql = "SELECT {0} FROM qiita.{1}".format(", ".join(cols),
-                                                     self._table_name(self.id))
-            qdb.sql_connection.TRN.add(sql, [self._id])
+            # Retrieve all the information from the database
+            sql = "SELECT * FROM qiita.{0}".format(self._table_name(self._id))
+            qdb.sql_connection.TRN.add(sql)
             meta = qdb.sql_connection.TRN.execute_fetchindex()
 
-            # Create the dataframe and clean it up a bit
-            df = pd.DataFrame((list(x) for x in meta), columns=cols, dtype=str)
+            # When we create the dataframe, we are providing a matrix (list of
+            # lists) with all the data, so we need to make sure that all the
+            # rows contain the columns in the same order
+            cols = sorted(meta[0].keys())
+            meta_matrix = [[r[c] for c in cols] for r in meta]
+            df = pd.DataFrame(meta_matrix, columns=cols, dtype=str)
+
+            # Make sure that we are changing np.NaN by Nones
             df.where((pd.notnull(df)), None)
             df.set_index('sample_id', inplace=True, drop=True)
 

@@ -7,8 +7,20 @@
   var False = false;
   var table = {% raw table %};
   var cols = {% raw cols %};
-  var options = { enableCellNavigation: false };
+  var options = { enableCellNavigation: false, rowHeight: 40 };
   var currentSortCol = 'sample';
+
+  // ==> adding the delete column to the grid
+  // adding new column to the table - using sample name as value
+  for(var i=0;i<table.length;i++) {
+    table[i]['slick-grid-sample-delete'] = table[i]['sample'];
+  }
+  // adding new column to cols, we need to add a Formatter
+  function linkFormatter(row, cell, value, columnDef, dataContext) {
+    return "<a class=\"btn btn-danger\" onclick=\"delete_sample('" + value +
+           "');\"><span class=\"glyphicon glyphicon-trash\"></span></a>";
+  }
+  cols.unshift({ name: "", field: "slick-grid-sample-delete", width: 60, formatter: linkFormatter })
   var grid = new Slick.Grid("#samples-div", table, cols, options);
 
   function add_meta() {
@@ -38,6 +50,42 @@
     grid.invalidateAllRows();
     grid.render();
   }
+
+  /*
+   * Deletes a sample from the sample template
+   *
+   * @param sample_name string with the sample to be removed
+   *
+   * This function executes an AJAX call to remove the given sample from the
+   * current sample template
+   *
+   */
+  function delete_sample(sample_name) {
+    if(confirm("Are you sure you want to delete '" + sample_name + "'?")) {
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/study/description/sample_template/',
+        type: 'PATCH',
+        data: {'op': 'remove', 'path': '/{{study_id}}/samples/' + sample_name},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_summary/', { study_id: {{study_id}} });
+          }
+        }
+      });
+    }
+  }
+
+  $(document).ready(function() {
+    {% if alert_type != 'success' and alert_message != '' %}
+      bootstrapAlert('{% raw alert_message %}', "{{alert_type}}");
+    {% else %}
+      $('#bootstrap-alert').alert('close');
+    {% end %}
+  });
+
 </script>
 
 <style>
