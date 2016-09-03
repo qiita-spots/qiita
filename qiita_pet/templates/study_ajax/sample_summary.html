@@ -8,6 +8,34 @@
     }
   }
 
+  /*
+   *
+   * Deletes a column from the sample template
+   *
+   * @param column_name string with the column to be removed
+   *
+   * This function executes an AJAX call to remove the given column from the
+   * sample information
+   *
+   */
+  function delete_column(column_name) {
+    if(confirm("Are you sure you want to delete '" + column_name + "' information?")) {
+      $.ajax({
+        url: '{% raw qiita_config.portal_dir %}/study/description/sample_template/',
+        type: 'PATCH',
+        data: {'op': 'remove', 'path': '/{{study_id}}/columns/' + column_name},
+        success: function(data) {
+          if(data.status == 'error') {
+            bootstrapAlert(data.message, "danger");
+          }
+          else {
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_id}} });
+          }
+        }
+      });
+    }
+  }
+
   function sample_action(act) {
     $.post('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_id}}, action: act, filepath: $("#file-selector").val(), data_type: $("#data_types").val() })
       .done(function ( data ) {
@@ -118,29 +146,31 @@
 
     <table class="table">
       {% for category, summary in viewitems(stats) %}
-        {% if len(summary) == 1 %}
-          <tr>
+        <tr>
+          {% if editable %}
+            <td>
+              <a class="btn btn-danger" onclick="delete_column('{{category}}');"><span class="glyphicon glyphicon-trash"></span></a>
+            </td>
+          {% end %}
+          {% if len(summary) == 1 %}
             <td colspan="2">
               <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
             </td>
-          </tr>
-        {% elif len(set([row[1] for row in summary])) == 1 %}
-          <tr>
+          {% elif len(set([row[1] for row in summary])) == 1 %}
             <td colspan="2">
               <b>{{category}}</b>: All the values in this category are different.
             </td>
-          </tr>
-        {% else %}
-          <tr>
+          {% else %}
             <th colspan="2" align="center">{{category}}</th>
-          </tr>
-          {% for row in summary %}
+            {% for row in summary %}
             <tr>
+              <td width="5px">&nbsp;</td>
               <td>{{row[0]}}</td>
               <td>{{row[1]}}</td>
             </tr>
+            {% end %}
           {% end %}
-        {% end %}
+        </tr>
       {% end %}
     </table>
   </div>
