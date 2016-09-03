@@ -664,9 +664,9 @@ class PrepTemplate(MetadataTemplate):
         QiitaDBColumnError
             If the prep info file has been processed
         """
-        if self.artifact.children:
+        if self.artifact:
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                "Prep info file '%d' has been processed, you cannot delete "
+                "Prep info file '%d' has files attached, you cannot delete "
                 "samples." % (self._id))
 
         self._common_delete_sample_steps(sample_name)

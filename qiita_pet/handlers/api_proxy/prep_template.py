@@ -17,7 +17,8 @@ from moi import r_client
 from qiita_core.util import execute_as_transaction
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import update_prep_template
+from qiita_ware.dispatchable import (
+    update_prep_template, delete_sample_or_column)
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.util import convert_to_id, get_files_from_uploads_folders
 from qiita_db.study import Study
@@ -409,8 +410,8 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         - status: str, whether if the request is successful or not
         - message: str, if the request is unsuccessful, a human readable error
     """
+    req_path = [v for v in req_path.split('/') if v]
     if req_op == 'replace':
-        req_path = [v for v in req_path.split('/') if v]
         # The structure of the path should be /prep_id/attribute_to_modify/
         # so if we don't have those 2 elements, we should return an error
         if len(req_path) != 2:
@@ -444,10 +445,33 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
                                'Please, check the path parameter' % attribute}
 
         return {'status': status, 'message': msg}
+    elif req_op == 'remove':
+        # The structure of the path should be /prep_id/{columns|samples}/name
+        if len(req_path) != 3:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter'}
+        prep_id = int(req_path[0])
+        attribute = req_path[1]
+        attr_id = req_path[2]
+
+        # Check if the user actually has access to the study
+        pt = PrepTemplate(prep_id)
+        access_error = check_access(pt.study_id, user_id)
+        if access_error:
+            return access_error
+
+        # Offload the deletion of the column to the cluster
+        job_id = safe_submit(user_id, delete_sample_or_column, PrepTemplate,
+                             prep_id, attribute, attr_id)
+        # Store the job id attaching it to the sample template id
+        r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
+                     dumps({'job_id': job_id}))
+        return {'status': 'success', 'message': ''}
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '
-                           'Current supported operations: replace' % req_op}
+                           'Current supported operations: replace, remove'
+                           % req_op}
 
 
 def prep_template_samples_get_req(prep_id, user_id):

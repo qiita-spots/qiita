@@ -1478,15 +1478,18 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_delete_sample(self):
         QE = qdb.exceptions
-        pt = qdb.metadata_template.prep_template.PrepTemplate(2)
-        pt.delete_sample('1.SKM5.640177')
-        self.assertNotIn('1.SKM5.640177', pt.keys())
+
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
+        sample_id = '%s.SKB8.640193' % self.test_study.id
+        pt.delete_sample(sample_id)
+        self.assertNotIn(sample_id, pt.keys())
 
         # testing errors
         with self.assertRaises(QE.QiitaDBUnknownIDError):
             pt.delete_sample('not.existing.sample')
 
-        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
+        pt = qdb.metadata_template.prep_template.PrepTemplate(2)
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
             pt.delete_sample('1.SKM5.640177')
 

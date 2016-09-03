@@ -293,3 +293,45 @@ def update_prep_template(prep_id, fp):
             msg = str(e)
 
     return {'status': status, 'message': msg}
+
+
+def delete_sample_or_column(obj_class, obj_id, sample_or_col, name):
+    """Deletes a sample or a column from the metadata
+
+    Parameters
+    ----------
+    obj_class : {SampleTemplate, PrepTemplate}
+        The metadata template subclass
+    obj_id : int
+        The template id
+    sample_or_col : {"samples", "columns"}
+        Which resource are we deleting. Either "samples" or "columns"
+    name : str
+        The name of the resource to be deleted
+
+    Returns
+    -------
+    dict of {str: str}
+        A dict of the form {'status': str, 'message': str}
+    """
+    st = obj_class(obj_id)
+
+    if sample_or_col == 'columns':
+        del_func = st.delete_column
+    elif sample_or_col == 'samples':
+        del_func = st.delete_sample
+    else:
+        return {'status': 'danger',
+                'message': 'Unknown value "%s". Choose between "samples" '
+                           'and "columns"' % sample_or_col}
+
+    msg = ''
+    status = 'success'
+
+    try:
+        del_func(name)
+    except Exception as e:
+        status = 'danger'
+        msg = str(e)
+
+    return {'status': status, 'message': msg}
