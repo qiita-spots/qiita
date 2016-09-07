@@ -192,6 +192,19 @@ class TestSQL(TestCase):
         exp = [[4, 2], [5, 2], [6L, 2L]]
         self.assertItemsEqual(obs, exp)
 
+    def test_isnumeric(self):
+        """Test SQL function isnumeric"""
+        exp = [['', False], ['.', False], ['.0', True], ['0.', True],
+               ['0', True], ['1', True], ['123', True], ['123.456', True],
+               ['abc', False], ['1..2', False], ['1.2.3.4', False],
+               ['1x234', False], ['1.234e-5', True]]
+
+        sql = ("WITH test(x) AS ("
+               "VALUES (''), ('.'), ('.0'), ('0.'), ('0'), ('1'), ('123'), "
+               "('123.456'), ('abc'), ('1..2'), ('1.2.3.4'), ('1x234'), "
+               "('1.234e-5')) SELECT x, isnumeric(x) FROM test;")
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(exp, obs)
 
 if __name__ == '__main__':
     main()
