@@ -304,6 +304,17 @@ class SoftwareTestsReadOnly(TestCase):
     def test_active(self):
         self.assertTrue(qdb.software.Software(1).active)
 
+    def test_client_id(self):
+        self.assertEqual(
+            qdb.software.Software(1).client_id,
+            'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u')
+
+    def test_client_secret(self):
+        self.assertEqual(
+            qdb.software.Software(1).client_secret,
+            '9xhU5rvzq8dHCEI5sSN95jesUULrZi6pT6Wuc71fDbFbsrnWarcSq56TJLN4kP4hH'
+            )
+
 
 @qiita_test_checker()
 class SoftwareTests(TestCase):
@@ -323,6 +334,9 @@ class SoftwareTests(TestCase):
 
     def test_from_file(self):
         exp = qdb.software.Software(1)
+        client_id = 'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u'
+        client_secret = ('9xhU5rvzq8dHCEI5sSN95jesUULrZi6pT6Wuc71fDbFbsrnWarc'
+                         'Sq56TJLN4kP4hH')
         # Activate existing plugin
         fd, fp = mkstemp(suffix='.conf')
         close(fd)
@@ -335,7 +349,8 @@ class SoftwareTests(TestCase):
                      'performing microbiome analysis from raw DNA '
                      'sequencing data', 'source activate qiita',
                      'start_target_gene', 'artifact transformation',
-                     '[["10.1038/nmeth.f.303", "20383131"]]'))
+                     '[["10.1038/nmeth.f.303", "20383131"]]', client_id,
+                     client_secret))
         obs = qdb.software.Software.from_file(fp)
         self.assertEqual(obs, exp)
 
@@ -348,7 +363,8 @@ class SoftwareTests(TestCase):
                     ('QIIME', '1.9.1', 'Different description',
                      'source activate qiime', 'start_qiime',
                      'artifact transformation',
-                     '[["10.1038/nmeth.f.303", "20383131"]]'))
+                     '[["10.1038/nmeth.f.303", "20383131"]]', client_id,
+                     client_secret))
         with warnings.catch_warnings(record=True) as warns:
             obs = qdb.software.Software.from_file(fp)
             obs_warns = [str(w.message) for w in warns]
@@ -383,7 +399,8 @@ class SoftwareTests(TestCase):
             f.write(CONF_TEMPLATE %
                     ('NewPlugin', '0.0.1', 'Some description',
                      'source activate newplug', 'start_new_plugin',
-                     'artifact definition', ''))
+                     'artifact definition', '', client_id,
+                     client_secret))
         obs = qdb.software.Software.from_file(fp)
         self.assertNotEqual(obs, exp)
         self.assertEqual(obs.name, 'NewPlugin')
@@ -397,7 +414,8 @@ class SoftwareTests(TestCase):
             f.write(CONF_TEMPLATE %
                     ('NewPlugin', '0.0.1', 'Some description',
                      'source activate newplug', 'start_new_plugin',
-                     'artifact definition', '[["10.1039/nmeth.f.303", null]]'))
+                     'artifact definition', '[["10.1039/nmeth.f.303", null]]',
+                     client_id, client_secret))
         obs = qdb.software.Software.from_file(fp, update=True)
         self.assertEqual(obs, exp)
         self.assertEqual(obs.publications, [["10.1039/nmeth.f.303", None]])
@@ -410,8 +428,26 @@ class SoftwareTests(TestCase):
             f.write(CONF_TEMPLATE %
                     ("NewPlugin", "0.0.1", "Some description",
                      "source activate newplug", "start_new_plugin",
-                     "artifact transformation", ""))
+                     "artifact transformation", "", client_id,
+                     client_secret))
         QE = qdb.exceptions
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            qdb.software.Software.from_file(fp)
+
+        # Raise an error if client_id or client_secret are different
+        fd, fp = mkstemp(suffix='.conf')
+        close(fd)
+        self._clean_up_files.append(fp)
+        with open(fp, 'w') as f:
+            f.write(CONF_TEMPLATE %
+                    ('QIIME', '1.9.1',
+                     'Quantitative Insights Into Microbial Ecology (QIIME) '
+                     'is an open-source bioinformatics pipeline for '
+                     'performing microbiome analysis from raw DNA '
+                     'sequencing data', 'source activate qiita',
+                     'start_target_gene', 'artifact transformation',
+                     '[["10.1038/nmeth.f.303", "20383131"]]', "client_id",
+                     client_secret))
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
             qdb.software.Software.from_file(fp)
 
@@ -434,6 +470,8 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.environment_script, 'env_name')
         self.assertEqual(obs.start_script, 'start_plugin')
         self.assertEqual(obs.type, 'artifact transformation')
+        self.assertIsNotNone(obs.client_id)
+        self.assertIsNotNone(obs.client_secret)
 
         # create with publications
         exp_publications = [['10.1000/nmeth.f.101', '12345678']]
@@ -449,6 +487,26 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.environment_script, 'env_name')
         self.assertEqual(obs.start_script, 'start_plugin')
         self.assertEqual(obs.type, 'artifact transformation')
+        self.assertIsNotNone(obs.client_id)
+        self.assertIsNotNone(obs.client_secret)
+
+        # Create with client_id, client_secret
+        obs = qdb.software.Software.create(
+            "Another Software", "0.1.0",
+            "This is adding another software for testing", "env_a_name",
+            "start_plugin_script", "artifact transformation",
+            client_id='SomeNewClientId', client_secret='SomeNewClientSecret')
+        self.assertEqual(obs.name, "Another Software")
+        self.assertEqual(obs.version, "0.1.0")
+        self.assertEqual(obs.description,
+                         "This is adding another software for testing")
+        self.assertEqual(obs.commands, [])
+        self.assertEqual(obs.publications, [])
+        self.assertEqual(obs.environment_script, 'env_a_name')
+        self.assertEqual(obs.start_script, 'start_plugin_script')
+        self.assertEqual(obs.type, 'artifact transformation')
+        self.assertEqual(obs.client_id, 'SomeNewClientId')
+        self.assertEqual(obs.client_secret, 'SomeNewClientSecret')
 
     def test_add_publications(self):
         tester = qdb.software.Software(1)
@@ -745,6 +803,10 @@ ENVIRONMENT_SCRIPT = %s
 START_SCRIPT = %s
 PLUGIN_TYPE = %s
 PUBLICATIONS = %s
+
+[oauth2]
+CLIENT_ID = %s
+CLIENT_SECRET = %s
 """
 
 if __name__ == '__main__':
