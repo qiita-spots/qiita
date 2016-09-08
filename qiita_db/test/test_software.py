@@ -420,6 +420,28 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs, exp)
         self.assertEqual(obs.publications, [["10.1039/nmeth.f.303", None]])
 
+        # Correctly ignores if there are no publications
+        fd, fp = mkstemp(suffix='.conf')
+        close(fd)
+        self._clean_up_files.append(fp)
+        with open(fp, 'w') as f:
+            f.write(CONF_TEMPLATE %
+                    ('Target Gene type', '0.1.0',
+                     'Target gene artifact types plugin',
+                     'source activate qiita', 'start_target_gene_types',
+                     'artifact definition', '',
+                     '4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h',
+                     'rFb7jwAb3UmSUN57Bjlsi4DTl2owLwRpwCc0SggRNEVb2Ebae2p5Umnq'
+                     '20rNMhmqN'))
+        with warnings.catch_warnings(record=True) as warns:
+            obs = qdb.software.Software.from_file(fp)
+            obs_warns = [str(w.message) for w in warns]
+            exp_warns = []
+            self.assertItemsEqual(obs_warns, exp_warns)
+
+        self.assertEqual(obs, qdb.software.Software(3))
+        self.assertEqual(obs.publications, [])
+
         # Raise an error if changing plugin type
         fd, fp = mkstemp(suffix='.conf')
         close(fd)
