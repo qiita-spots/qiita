@@ -494,6 +494,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.type, 'artifact transformation')
         self.assertIsNotNone(obs.client_id)
         self.assertIsNotNone(obs.client_secret)
+        self.assertFalse(obs.active)
 
         # create with publications
         exp_publications = [['10.1000/nmeth.f.101', '12345678']]
@@ -511,6 +512,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.type, 'artifact transformation')
         self.assertIsNotNone(obs.client_id)
         self.assertIsNotNone(obs.client_secret)
+        self.assertFalse(obs.active)
 
         # Create with client_id, client_secret
         obs = qdb.software.Software.create(
@@ -529,6 +531,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.type, 'artifact transformation')
         self.assertEqual(obs.client_id, 'SomeNewClientId')
         self.assertEqual(obs.client_secret, 'SomeNewClientSecret')
+        self.assertFalse(obs.active)
 
     def test_add_publications(self):
         tester = qdb.software.Software(1)
@@ -542,6 +545,13 @@ class SoftwareTests(TestCase):
         # Add a publication that already exists
         tester.add_publications([['10.1000/nmeth.f.101', '12345678']])
         self.assertItemsEqual(tester.publications, exp)
+
+    def test_activate(self):
+        qdb.software.Software.deactivate_all()
+        obs = qdb.software.Software(1)
+        self.assertFalse(obs.active)
+        obs.activate()
+        self.assertTrue(obs.active)
 
 
 class DefaultParametersTestsReadOnly(TestCase):
