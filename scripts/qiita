@@ -405,6 +405,11 @@ def start(port):
     from qiita_pet.webserver import Application
     from tornado.options import options, parse_command_line
 
+    # Deactivate all the plugins and only activate those that are currently
+    # available in the config file folder
+    qdb.software.Software.deactivate_all()
+    _activate_or_update_plugins()
+
     # Create/repopulate the usernames key so we can do autocomplete for sharing
     r_client.delete('qiita-usernames')
     r_client.zadd('qiita-usernames', **{u: 0 for u in qdb.user.User.iter()})
@@ -436,15 +441,30 @@ def start(port):
 # #############################################################################
 
 
+def _activate_or_update_plugins(update=False):
+    """Activates/updates the plugins
+
+    Parameters
+    ----------
+    update : bool, optional
+        If True will update the plugins. Otherwise will activate them.
+        Default: False.
+    """
+    conf_files = glob(join(qiita_config.plugin_dir, "*.conf"))
+    label = "{} plugin (%s/{}): %s... ".format(
+        "Updating" if update else "\tLoading", len(conf_files))
+    for i, fp in enumerate(conf_files):
+        click.echo(label % (i + 1, basename(fp)), nl=False)
+        s = qdb.software.Software.from_file(fp, update=update)
+        if not update:
+            s.activate()
+        click.echo("Ok")
+
+
 @plugins.command()
 def update():
     """Updates the plugins in the database"""
-    item_show_func = lambda x: basename(x) if x is not None else x
-    with click.progressbar(glob(join(qiita_config.plugin_dir, "*.conf")),
-                           label="Updating plugins",
-                           item_show_func=item_show_func) as config_files:
-        for fp in config_files:
-            qdb.software.Software.from_file(fp, update=True)
+    _activate_or_update_plugins(update=True)
 
 if __name__ == '__main__':
     qiita()
