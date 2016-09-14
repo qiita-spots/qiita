@@ -165,7 +165,6 @@ class TestStudy(TestCase):
             'spatial_series': False,
             'study_description': 'Analysis of the Cannabis Plant Microbiome',
             'study_alias': 'Cannabis Soils',
-            'most_recent_contact': '2014-05-19 16:11',
             'most_recent_contact': datetime(2014, 5, 19, 16, 11),
             'lab_person': qdb.study.StudyPerson(1),
             'number_samples_collected': 27}
