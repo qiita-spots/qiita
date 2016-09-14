@@ -397,7 +397,9 @@ def log(n):
 @click.option('--port', required=False, type=int, help='Port where the '
               'webserver will start', default=21174)
 # (cursive Q)iita = 21174 in 1337sp34k
-def start(port):
+@click.option('--master', is_flag=True,
+              help="If set, update available plugins")
+def start(port, master):
     # in order to use this command you need to have an IPython cluster running,
     # for now this makes it so that you can use other sub-commands without
     # having to do that. The solution will (perhaps) be to move this subcommand
@@ -405,10 +407,11 @@ def start(port):
     from qiita_pet.webserver import Application
     from tornado.options import options, parse_command_line
 
-    # Deactivate all the plugins and only activate those that are currently
-    # available in the config file folder
-    qdb.software.Software.deactivate_all()
-    _activate_or_update_plugins()
+    if master:
+        # Deactivate all the plugins and only activate those that are currently
+        # available in the config file folder
+        qdb.software.Software.deactivate_all()
+        _activate_or_update_plugins()
 
     # Create/repopulate the usernames key so we can do autocomplete for sharing
     r_client.delete('qiita-usernames')
