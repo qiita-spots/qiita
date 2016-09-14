@@ -103,10 +103,10 @@ def qiita_test_checker(test=False):
                 super(DecoratedClass, self).setUp()
                 self.conn_handler = qdb.sql_connection.SQLConnectionHandler()
 
-            @qdb.environment_manager.reset_test_database
             @classmethod
+            @qdb.environment_manager.reset_test_database
             def tearDownClass(cls):
-                super(DecoratedClass, cls).tearDown()
+                pass
 
         return DecoratedClass
     return class_modifier
