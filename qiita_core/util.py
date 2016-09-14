@@ -104,6 +104,7 @@ def qiita_test_checker(test=False):
                 self.conn_handler = qdb.sql_connection.SQLConnectionHandler()
 
             @qdb.environment_manager.reset_test_database
+            @classmethod
             def tearDownClass(cls):
                 super(DecoratedClass, cls).tearDown()
 
