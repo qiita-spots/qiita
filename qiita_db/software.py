@@ -637,6 +637,19 @@ class Software(qdb.base.QiitaObject):
 
         return instance
 
+    @classmethod
+    def from_name_and_version(cls, name, version):
+        with qdb.sql_connection.TRN:
+            sql = """SELECT software_id
+                     FROM qiita.software
+                     WHERE name = %s AND version = %s"""
+            qdb.sql_connection.TRN.add(sql, [name, version])
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+            if not res:
+                raise qdb.exceptions.QiitaDBUnknownIDError(
+                    "%s %s" % (name, version), cls._table)
+            return cls(res[0][0])
+
     @property
     def name(self):
         """The name of the software

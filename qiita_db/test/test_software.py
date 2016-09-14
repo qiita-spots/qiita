@@ -261,6 +261,22 @@ class CommandTests(TestCase):
 
 
 class SoftwareTestsReadOnly(TestCase):
+    def test_from_name_and_version(self):
+        obs = qdb.software.Software.from_name_and_version('QIIME', '1.9.1')
+        exp = qdb.software.Software(1)
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.Software.from_name_and_version('BIOM type', '2.1.4')
+        exp = qdb.software.Software(2)
+        self.assertEqual(obs, exp)
+
+        # Wrong name
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.software.Software.from_name_and_version('QiIME', '1.9.1')
+        # Wrong version
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.software.Software.from_name_and_version('QIIME', '1.9.0')
+
     def test_name(self):
         self.assertEqual(qdb.software.Software(1).name, "QIIME")
 
