@@ -42,7 +42,7 @@ class TestBase(TestCase):
                 remove(fp)
 
         with self.con.cursor() as cur:
-           cur.execute(DB_DROP_TEST_TABLE)
+            cur.execute(DB_DROP_TEST_TABLE)
         self.con.commit()
 
     def _populate_test_table(self):
