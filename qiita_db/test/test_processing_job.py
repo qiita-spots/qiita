@@ -429,6 +429,30 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(child.input_artifacts,
                          [qdb.artifact.Artifact(3)])
 
+    def test_outputs(self):
+        job = _create_job()
+        job._set_status('running')
+
+        QE = qdb.exceptions
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            job.outputs
+
+        fd, fp = mkstemp(suffix='_table.biom')
+        self._clean_up_files.append(fp)
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
+        artifacts_data = {'OTU table': {'filepaths': [(fp, 'biom')],
+                                        'artifact_type': 'BIOM'}}
+        job.complete(True, artifacts_data=artifacts_data)
+        obs = job.outputs
+        self.assertEqual(
+            obs, {'OTU table': qdb.artifact.Artifact(exp_artifact_count)})
+        self._clean_up_files.extend(
+            [afp for _, afp, _ in
+                qdb.artifact.Artifact(exp_artifact_count).filepaths])
+
 
 @qiita_test_checker()
 class ProcessingWorkflowTests(TestCase):
