@@ -65,6 +65,8 @@ class TestSampleAPI(TestCase):
         if exists(self.new_study_fp):
             remove(self.new_study_fp)
 
+        qdb.study.Study.delete(self.new_study.id)
+
         r_client.flushdb()
 
     def test_check_sample_template_exists(self):
