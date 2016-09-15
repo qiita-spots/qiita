@@ -631,9 +631,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
                 self._table_name(self._id))
             qdb.sql_connection.TRN.add(sql, [sample_name])
 
-            sql = "DELETE FROM qiita.{0} WHERE sample_id=%s".format(
-                self._table)
-            qdb.sql_connection.TRN.add(sql, [sample_name])
+            sql = "DELETE FROM qiita.{0} WHERE sample_id=%s AND {1}=%s".format(
+                self._table, self._id_column)
+            qdb.sql_connection.TRN.add(sql, [sample_name, self.id])
 
             qdb.sql_connection.TRN.execute()
 
