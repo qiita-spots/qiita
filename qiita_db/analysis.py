@@ -747,8 +747,8 @@ class Analysis(qdb.base.QiitaStatusObject):
 
         Notes
         -----
-         - When only a list of samples given, the samples will be removed from
-           all artifacts it is associated with
+        - When only a list of samples given, the samples will be removed from
+          all artifacts it is associated with
         - When only a list of artifacts is given, all samples associated with
           that artifact are removed
         - If both are passed, the given samples are removed from the given
@@ -782,8 +782,13 @@ class Analysis(qdb.base.QiitaStatusObject):
             qdb.sql_connection.TRN.execute()
 
     def generate_tgz(self):
-        fps_ids = self.all_associated_filepath_ids
         with qdb.sql_connection.TRN:
+            fps_ids = self.all_associated_filepath_ids
+            if not fps_ids:
+                raise qdb.exceptions.QiitaDBError(
+                    "The analysis %s do not have files attached, "
+                    "can't create the tgz file" % self.id)
+
             sql = """SELECT filepath, data_directory_id FROM qiita.filepath
                         WHERE filepath_id IN %s"""
             qdb.sql_connection.TRN.add(sql, [tuple(fps_ids)])
