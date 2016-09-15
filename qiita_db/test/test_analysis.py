@@ -771,41 +771,44 @@ class TestCollection(TestCase):
         self.collection = qdb.analysis.Collection(1)
 
     def test_create(self):
-        qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'TestCollection2', 'Some desc')
+        user = qdb.user.User('test@foo.bar')
+        obs = qdb.analysis.Collection.create(
+            user, 'TestCollection2', 'Some desc')
 
-        obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.collection WHERE collection_id = 2')
-        exp = [[2, 'test@foo.bar', 'TestCollection2', 'Some desc', 1]]
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs.name, 'TestCollection2')
+        self.assertEqual(obs.description, 'Some desc')
+        self.assertEqual(obs.owner, user)
+        self.assertEqual(obs.analyses, [])
+        self.assertEqual(obs.highlights, [])
+        self.assertEqual(obs.shared_with, [])
 
     def test_create_no_desc(self):
-        qdb.analysis.Collection.create(
-            qdb.user.User('test@foo.bar'), 'Test Collection2')
+        user = qdb.user.User('test@foo.bar')
+        obs = qdb.analysis.Collection.create(user, 'Test Collection2')
 
-        obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.collection WHERE collection_id = 2')
-        exp = [[2, 'test@foo.bar', 'Test Collection2', None, 1]]
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs.name, 'Test Collection2')
+        self.assertEqual(obs.description, None)
+        self.assertEqual(obs.owner, user)
+        self.assertEqual(obs.analyses, [])
+        self.assertEqual(obs.highlights, [])
+        self.assertEqual(obs.shared_with, [])
 
     def test_delete(self):
-        qdb.analysis.Collection.delete(1)
-
-        obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.collection')
-        exp = []
-        self.assertEqual(obs, exp)
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2')
+        qdb.analysis.Collection.delete(obs.id)
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.analysis.Collection(obs.id)
 
     def test_delete_public(self):
-        self.collection.status = 'public'
+        collection = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2')
+        collection.status = 'public'
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            qdb.analysis.Collection.delete(1)
+            qdb.analysis.Collection.delete(collection.id)
 
-        obs = self.conn_handler.execute_fetchall(
-            'SELECT * FROM qiita.collection')
-        exp = [[1, 'test@foo.bar', 'TEST_COLLECTION',
-                'collection for testing purposes', 2]]
-        self.assertEqual(obs, exp)
+        # This should not raise an error
+        qdb.analysis.Collection(collection.id)
 
     def test_retrieve_name(self):
         obs = self.collection.name
@@ -813,13 +816,18 @@ class TestCollection(TestCase):
         self.assertEqual(obs, exp)
 
     def test_set_name(self):
-        self.collection.name = "NeW NaMe 123"
-        self.assertEqual(self.collection.name, "NeW NaMe 123")
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2')
+        self.assertEqual(obs.name, "Test Collection2")
+        obs.name = "NeW NaMe 123"
+        self.assertEqual(obs.name, "NeW NaMe 123")
 
     def test_set_name_public(self):
-        self.collection.status = "public"
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2')
+        obs.status = "public"
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            self.collection.name = "FAILBOAT"
+            obs.name = "FAILBOAT"
 
     def test_retrieve_desc(self):
         obs = self.collection.description
@@ -827,13 +835,18 @@ class TestCollection(TestCase):
         self.assertEqual(obs, exp)
 
     def test_set_desc(self):
-        self.collection.description = "NeW DeSc 123"
-        self.assertEqual(self.collection.description, "NeW DeSc 123")
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
+        self.assertEqual(obs.description, 'SomeDesc')
+        obs.description = "NeW DeSc 123"
+        self.assertEqual(obs.description, "NeW DeSc 123")
 
     def test_set_desc_public(self):
-        self.collection.status = "public"
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
+        obs.status = "public"
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            self.collection.description = "FAILBOAT"
+            obs.description = "FAILBOAT"
 
     def test_retrieve_owner(self):
         obs = self.collection.owner
@@ -856,40 +869,53 @@ class TestCollection(TestCase):
         self.assertEqual(obs, exp)
 
     def test_add_analysis(self):
-        self.collection.add_analysis(qdb.analysis.Analysis(2))
-        obs = self.collection.analyses
-        exp = [qdb.analysis.Analysis(1), qdb.analysis.Analysis(2)]
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
+        obs.add_analysis(qdb.analysis.Analysis(2))
+        obs = obs.analyses
+        exp = [qdb.analysis.Analysis(2)]
         self.assertEqual(obs, exp)
 
     def test_remove_analysis(self):
-        self.collection.remove_analysis(qdb.analysis.Analysis(1))
-        obs = self.collection.analyses
-        exp = []
-        self.assertEqual(obs, exp)
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
+        obs.add_analysis(qdb.analysis.Analysis(2))
+        self.assertEqual(obs.analyses, [qdb.analysis.Analysis(2)])
+        obs.remove_analysis(qdb.analysis.Analysis(2))
+        self.assertEqual(obs.analyses, [])
 
     def test_highlight_job(self):
-        self.collection.highlight_job(qdb.job.Job(2))
-        obs = self.collection.highlights
-        exp = [qdb.job.Job(1), qdb.job.Job(2)]
-        self.assertEqual(obs, exp)
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
+        obs.add_analysis(qdb.analysis.Analysis(1))
+        obs.highlight_job(qdb.job.Job(2))
+        exp = [qdb.job.Job(2)]
+        self.assertEqual(obs.highlights, exp)
 
     def test_remove_highlight(self):
-        self.collection.remove_highlight(qdb.job.Job(1))
-        obs = self.collection.highlights
-        exp = []
-        self.assertEqual(obs, exp)
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
+        obs.add_analysis(qdb.analysis.Analysis(1))
+        obs.highlight_job(qdb.job.Job(1))
+        self.assertEqual(obs.highlights, [qdb.job.Job(1)])
+        obs.remove_highlight(qdb.job.Job(1))
+        self.assertEqual(obs.highlights, [])
 
     def test_share(self):
-        self.collection.share(qdb.user.User("admin@foo.bar"))
-        obs = self.collection.shared_with
-        exp = [qdb.user.User("shared@foo.bar"), qdb.user.User("admin@foo.bar")]
-        self.assertEqual(obs, exp)
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
+        user = qdb.user.User("admin@foo.bar")
+        obs.share(user)
+        self.assertEqual(obs.shared_with, [user])
 
     def test_unshare(self):
-        self.collection.unshare(qdb.user.User("shared@foo.bar"))
-        obs = self.collection.shared_with
-        exp = []
-        self.assertEqual(obs, exp)
+        obs = qdb.analysis.Collection.create(
+            qdb.user.User('test@foo.bar'), 'Test Collection2', 'SomeDesc')
+        user = qdb.user.User("admin@foo.bar")
+        obs.share(user)
+        self.assertEqual(obs.shared_with, [user])
+        obs.unshare(user)
+        self.assertEqual(obs.shared_with, [])
 
 
 if __name__ == "__main__":

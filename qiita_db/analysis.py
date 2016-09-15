@@ -1119,9 +1119,12 @@ class Collection(qdb.base.QiitaStatusObject):
         """
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.{0} (email, name, description)
-                     VALUES (%s, %s, %s)""".format(cls._table)
+                     VALUES (%s, %s, %s)
+                     RETURNING collection_id""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [owner.id, name, description])
-            qdb.sql_connection.TRN.execute()
+            c_id = qdb.sql_connection.TRN.execute_fetchlast()
+
+            return cls(c_id)
 
     @classmethod
     def delete(cls, id_):
