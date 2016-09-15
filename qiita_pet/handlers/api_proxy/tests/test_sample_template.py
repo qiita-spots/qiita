@@ -276,15 +276,14 @@ class TestSampleAPI(TestCase):
                 'num_columns': 29,
                 'editable': True}
 
-        self.assertItemsEqual(obs, exp) # Test the keys
+        self.assertItemsEqual(obs, exp)  # Test the keys
         obs_stats = obs.pop('stats')
         exp_stats = exp.pop('stats')
         for k in obs:
             self.assertEqual(obs[k], exp[k])
-        self.assertItemsEqual(obs_stats, exp_stats) # Test the keys
+        self.assertItemsEqual(obs_stats, exp_stats)  # Test the keys
         for k in obs_stats:
             self.assertItemsEqual(obs_stats[k], exp_stats[k])
-
 
     def test_sample_template_summary_get_req_no_access(self):
         obs = sample_template_summary_get_req(1, 'demo@microbio.me')
