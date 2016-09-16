@@ -1199,6 +1199,41 @@ class StudyPerson(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, args)
             return cls(qdb.sql_connection.TRN.execute_fetchlast())
 
+    @classmethod
+    def delete(cls, id_):
+        r"""Deletes the StudyPerson from the database
+
+        Parameters
+        ----------
+        id_ : integer
+            The object identifier
+
+        Raises
+        ------
+        QiitaDBError
+            If the StudyPerson with the given id is attached to studies
+        """
+        with qdb.sql_connection.TRN:
+            # checking that the id_ exists
+            cls(id_)
+
+            # Check if the person is attached to any study
+            sql = """SELECT EXISTS(
+                        SELECT *
+                        FROM qiita.study
+                        WHERE lab_person_id = %s OR
+                            principal_investigator_id = %s OR
+                            emp_person_id = %s)"""
+            qdb.sql_connection.TRN.add(sql, [id_, id_, id_])
+            if qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBError(
+                    'StudyPerson "%s" cannot be deleted because there are '
+                    'studies referencing it' % id_)
+
+            sql = "DELETE FROM qiita.study_person WHERE study_person_id = %s"
+            qdb.sql_connection.TRN.add(sql, [id_])
+            qdb.sql_connection.TRN.execute()
+
     # Properties
     @property
     def name(self):

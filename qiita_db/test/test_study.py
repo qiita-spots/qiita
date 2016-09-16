@@ -30,6 +30,22 @@ class TestStudyPerson(TestCase):
         self.assertEqual(obs, [[4, 'SomeDude', 'somedude@foo.bar', 'affil',
                          '111 fake street', '111-121-1313']])
 
+        qdb.study.StudyPerson.delete(new.id)
+
+    def test_delete(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.study.StudyPerson.delete(1)
+
+        obs = qdb.study.StudyPerson.create(
+            'SomeDude', 'somedude@foo.bar', 'affil', '111 fake street',
+            '111-121-1313')
+
+        self.assertTrue(
+            qdb.study.StudyPerson.exists('SomeDude', 'affil'))
+        qdb.study.StudyPerson.delete(obs.id)
+        self.assertFalse(
+            qdb.study.StudyPerson.exists('SomeDude', 'affil'))
+
     def test_iter(self):
         """Make sure that each and every StudyPerson is retrieved"""
         expected = [
