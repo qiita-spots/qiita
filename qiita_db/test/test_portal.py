@@ -9,9 +9,8 @@ import qiita_db as qdb
 
 @qiita_test_checker()
 class TestPortal(TestCase):
-    portal = qiita_config.portal
-
     def setUp(self):
+        self.portal = qiita_config.portal
         self.study = qdb.study.Study(1)
         self.analysis = qdb.analysis.Analysis(1)
         self.qiita_portal = qdb.portal.Portal('QIITA')
@@ -26,7 +25,7 @@ class TestPortal(TestCase):
         self.assertEqual(obs, exp)
 
     def test_add_portal(self):
-        qdb.portal.Portal.create("NEWPORTAL", "SOMEDESC")
+        obs = qdb.portal.Portal.create("NEWPORTAL", "SOMEDESC")
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.portal_type")
         exp = [[1, 'QIITA', 'QIITA portal. Access to all data stored '
@@ -43,6 +42,8 @@ class TestPortal(TestCase):
 
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
             qdb.portal.Portal.create("EMP", "DOESNTMATTERFORDESC")
+
+        qdb.portal.Portal.delete('NEWPORTAL')
 
     def test_remove_portal(self):
         qdb.portal.Portal.create("NEWPORTAL", "SOMEDESC")
@@ -123,13 +124,15 @@ class TestPortal(TestCase):
         self.assertEqual(obs, {qdb.study.Study(1)})
 
     def test_add_study_portals(self):
-        self.emp_portal.add_studies([self.study.id])
-        obs = self.study._portals
-        self.assertEqual(obs, ['EMP', 'QIITA'])
+        obs = qdb.portal.Portal.create("NEWPORTAL4", "SOMEDESC")
+        obs.add_studies([self.study.id])
+        self.assertItemsEqual(self.study._portals, ['NEWPORTAL4', 'QIITA'])
 
-        obs = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning, self.emp_portal.add_studies,
-            [self.study.id])
+        npt.assert_warns(qdb.exceptions.QiitaDBWarning, obs.add_studies,
+                         [self.study.id])
+
+        obs.remove_studies([self.study.id])
+        qdb.portal.Portal.delete("NEWPORTAL4")
 
     def test_remove_study_portals(self):
         with self.assertRaises(ValueError):
@@ -184,9 +187,12 @@ class TestPortal(TestCase):
         obs = self.analysis._portals
         self.assertEqual(obs, ['EMP', 'QIITA'])
 
-        obs = npt.assert_warns(
+        npt.assert_warns(
             qdb.exceptions.QiitaDBWarning, self.emp_portal.add_analyses,
             [self.analysis.id])
+
+        self.emp_portal.remove_analyses([self.analysis.id])
+        self.emp_portal.remove_studies([1])
 
     def test_remove_analysis_portals(self):
         with self.assertRaises(ValueError):
@@ -205,6 +211,8 @@ class TestPortal(TestCase):
         obs = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning, self.emp_portal.remove_analyses,
             [self.analysis.id])
+
+        self.emp_portal.remove_studies([1])
 
 
 if __name__ == '__main__':

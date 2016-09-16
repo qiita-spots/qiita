@@ -17,6 +17,12 @@ class TestOntology(TestCase):
     def setUp(self):
         self.ontology = qdb.ontology.Ontology(999999999)
 
+    def _remove_term(self, term):
+        with qdb.sql_connection.TRN:
+            sql = "DELETE FROM qiita.term WHERE ontology_id = %s AND term = %s"
+            qdb.sql_connection.TRN.add(sql, [self.ontology.id, term])
+            qdb.sql_connection.TRN.execute()
+
     def testConvertToID(self):
         self.assertEqual(qdb.util.convert_to_id('ENA', 'ontology'), 999999999)
 
@@ -60,6 +66,8 @@ class TestOntology(TestCase):
         obs = self.ontology.term_type('Test Term')
         self.assertEqual('user_defined', obs)
 
+        self._remove_term('Test Term')
+
     def test_add_user_defined_term(self):
         self.assertFalse('Test Term' in self.ontology.user_defined_terms)
         pre = len(self.ontology.user_defined_terms)
@@ -67,6 +75,9 @@ class TestOntology(TestCase):
         post = len(self.ontology.user_defined_terms)
         self.assertTrue('Test Term' in self.ontology.user_defined_terms)
         self.assertEqual(post-pre, 1)
+
+        # Clean up the previously added term to avoid test failures
+        self._remove_term('Test Term')
 
     def testContains(self):
         self.assertTrue('Metagenomics' in self.ontology)
