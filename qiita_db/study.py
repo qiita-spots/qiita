@@ -1199,6 +1199,50 @@ class StudyPerson(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, args)
             return cls(qdb.sql_connection.TRN.execute_fetchlast())
 
+    @classmethod
+    def delete(cls, id_):
+        r"""Deletes the StudyPerson from the database
+
+        Parameters
+        ----------
+        id_ : integer
+            The object identifier
+
+        Raises
+        ------
+        QiitaDBError
+            If the StudyPerson with the given id is attached to any study
+        """
+        with qdb.sql_connection.TRN:
+            # checking that the id_ exists
+            cls(id_)
+
+            # Check if the person is attached to any study
+            sql = """SELECT EXISTS(
+                        SELECT *
+                        FROM qiita.study
+                        WHERE lab_person_id = %s OR
+                            principal_investigator_id = %s OR
+                            emp_person_id = %s)"""
+            qdb.sql_connection.TRN.add(sql, [id_, id_, id_])
+            if qdb.sql_connection.TRN.execute_fetchlast():
+                sql = """SELECT study_id
+                         FROM qiita.study
+                         WHERE {} = %s"""
+                cols = ['lab_person_id', 'principal_investigator_id',
+                        'emp_person_id']
+                rel = {}
+                for c in cols:
+                    qdb.sql_connection.TRN.add(sql.format(c), [id_])
+                    rel[c] = qdb.sql_connection.TRN.execute_fetchindex()
+                raise qdb.exceptions.QiitaDBError(
+                    'StudyPerson "%s" cannot be deleted because there are '
+                    'studies referencing it: %s' % (id_, str(rel)))
+
+            sql = "DELETE FROM qiita.study_person WHERE study_person_id = %s"
+            qdb.sql_connection.TRN.add(sql, [id_])
+            qdb.sql_connection.TRN.execute()
+
     # Properties
     @property
     def name(self):
