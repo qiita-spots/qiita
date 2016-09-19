@@ -8,8 +8,8 @@
 
 from unittest import TestCase, main
 from datetime import datetime
-from os.path import exists, join
-from os import remove, close
+from os.path import join
+from os import close
 from tempfile import mkstemp
 
 import networkx as nx
