@@ -156,13 +156,13 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(fp)
 
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.filepath")[0]
-        obs = qdb.util.insert_filepaths([(fp, 1)], 1, "raw_data", "filepath")
+            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
+        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data", "filepath")
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
         exp_fp = join(qdb.util.get_db_files_base_dir(), "raw_data",
-                      "1_%s" % basename(fp))
+                      "2_%s" % basename(fp))
         self.assertTrue(exists(exp_fp))
         self.assertFalse(exists(fp))
         self.files_to_remove.append(exp_fp)
@@ -170,9 +170,11 @@ class DBUtilTests(TestCase):
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
-        exp_fp = "1_%s" % basename(fp)
+        exp_fp = "2_%s" % basename(fp)
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
+
+        qdb.util.purge_filepaths()
 
     def test_insert_filepaths_copy(self):
         fd, fp = mkstemp()
@@ -184,14 +186,14 @@ class DBUtilTests(TestCase):
         # The id's in the database are bigserials, i.e. they get
         # autoincremented for each element introduced.
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.filepath")[0]
-        obs = qdb.util.insert_filepaths([(fp, 1)], 1, "raw_data", "filepath",
+            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
+        obs = qdb.util.insert_filepaths([(fp, 1)], 2, "raw_data", "filepath",
                                         copy=True)
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
         exp_fp = join(qdb.util.get_db_files_base_dir(), "raw_data",
-                      "1_%s" % basename(fp))
+                      "2_%s" % basename(fp))
         self.assertTrue(exists(exp_fp))
         self.assertTrue(exists(fp))
         self.files_to_remove.append(exp_fp)
@@ -199,9 +201,11 @@ class DBUtilTests(TestCase):
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
-        exp_fp = "1_%s" % basename(fp)
+        exp_fp = "2_%s" % basename(fp)
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
+
+        qdb.util.purge_filepaths()
 
     def test_insert_filepaths_string(self):
         fd, fp = mkstemp()
@@ -211,23 +215,25 @@ class DBUtilTests(TestCase):
         self.files_to_remove.append(fp)
 
         exp_new_id = 1 + self.conn_handler.execute_fetchone(
-            "SELECT count(1) FROM qiita.filepath")[0]
+            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
         obs = qdb.util.insert_filepaths(
-            [(fp, "raw_forward_seqs")], 1, "raw_data", "filepath")
+            [(fp, "raw_forward_seqs")], 2, "raw_data", "filepath")
         self.assertEqual(obs, [exp_new_id])
 
         # Check that the files have been copied correctly
         exp_fp = join(qdb.util.get_db_files_base_dir(), "raw_data",
-                      "1_%s" % basename(fp))
+                      "2_%s" % basename(fp))
         self.assertTrue(exists(exp_fp))
         self.files_to_remove.append(exp_fp)
 
         # Check that the filepaths have been added to the DB
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.filepath WHERE filepath_id=%d" % exp_new_id)
-        exp_fp = "1_%s" % basename(fp)
+        exp_fp = "2_%s" % basename(fp)
         exp = [[exp_new_id, exp_fp, 1, '852952723', 1, 5]]
         self.assertEqual(obs, exp)
+
+        qdb.util.purge_filepaths()
 
     def test_retrieve_filepaths(self):
         obs = qdb.util.retrieve_filepaths('artifact_filepath',
@@ -610,16 +616,16 @@ class DBUtilTests(TestCase):
             f.write('\n')
         self.files_to_remove.append(fp)
         test = qdb.util.insert_filepaths(
-            [(fp, "raw_forward_seqs")], 1, "FASTQ", "filepath")[0]
+            [(fp, "raw_forward_seqs")], 2, "FASTQ", "filepath")[0]
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.artifact_filepath
                             (artifact_id, filepath_id)
                         VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [1, test])
+            qdb.sql_connection.TRN.add(sql, [2, test])
             qdb.sql_connection.TRN.execute()
 
         obs = qdb.util.filepath_id_to_rel_path(test)
-        exp = 'FASTQ/1/%s' % basename(fp)
+        exp = 'FASTQ/2/%s' % basename(fp)
         self.assertEqual(obs, exp)
 
     def test_filepath_ids_to_rel_paths(self):
@@ -629,18 +635,18 @@ class DBUtilTests(TestCase):
             f.write('\n')
         self.files_to_remove.append(fp)
         test = qdb.util.insert_filepaths(
-            [(fp, "raw_forward_seqs")], 1, "FASTQ", "filepath")[0]
+            [(fp, "raw_forward_seqs")], 2, "FASTQ", "filepath")[0]
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.artifact_filepath
                             (artifact_id, filepath_id)
                         VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [1, test])
+            qdb.sql_connection.TRN.add(sql, [2, test])
             qdb.sql_connection.TRN.execute()
 
         obs = qdb.util.filepath_ids_to_rel_paths([1, 3, test])
         exp = {1: 'raw_data/1_s_G1_L001_sequences.fastq.gz',
                3: 'preprocessed_data/1_seqs.fna',
-               test: 'FASTQ/1/%s' % basename(fp)}
+               test: 'FASTQ/2/%s' % basename(fp)}
 
         self.assertEqual(obs, exp)
 
@@ -653,15 +659,11 @@ class DBUtilTests(TestCase):
 
     def test_add_message(self):
         count = qdb.util.get_count('qiita.message') + 1
-        users = [qdb.user.User('shared@foo.bar'),
-                 qdb.user.User('admin@foo.bar')]
+        user = qdb.user.User.create('new@test.bar', 'password')
+        users = [user]
         qdb.util.add_message("TEST MESSAGE", users)
 
-        obs = [[x[0], x[1]]
-               for x in qdb.user.User('shared@foo.bar').messages()]
-        exp = [[count, 'TEST MESSAGE'], [1, 'message 1']]
-        self.assertEqual(obs, exp)
-        obs = [[x[0], x[1]] for x in qdb.user.User('admin@foo.bar').messages()]
+        obs = [[x[0], x[1]] for x in user.messages()]
         exp = [[count, 'TEST MESSAGE']]
         self.assertEqual(obs, exp)
 
@@ -685,22 +687,20 @@ class DBUtilTests(TestCase):
 
     def test_clear_system_messages(self):
         message_id = qdb.util.get_count('qiita.message') + 1
-        obs = [[x[0], x[1]]
-               for x in qdb.user.User('shared@foo.bar').messages()]
-        exp = [[1, 'message 1']]
+        user = qdb.user.User.create('csm@test.bar', 'password')
+        obs = [[x[0], x[1]] for x in user.messages()]
+        exp = []
         self.assertEqual(obs, exp)
 
         qdb.util.add_system_message("SYS MESSAGE",
                                     datetime(2015, 8, 5, 19, 41))
-        obs = [[x[0], x[1]]
-               for x in qdb.user.User('shared@foo.bar').messages()]
-        exp = [[1, 'message 1'], [message_id, 'SYS MESSAGE']]
+        obs = [[x[0], x[1]] for x in user.messages()]
+        exp = [[message_id, 'SYS MESSAGE']]
         self.assertItemsEqual(obs, exp)
 
         qdb.util.clear_system_messages()
-        obs = [[x[0], x[1]]
-               for x in qdb.user.User('shared@foo.bar').messages()]
-        exp = [[1, 'message 1']]
+        obs = [[x[0], x[1]] for x in user.messages()]
+        exp = []
         self.assertEqual(obs, exp)
 
         # Run again with no system messages to make sure no errors
