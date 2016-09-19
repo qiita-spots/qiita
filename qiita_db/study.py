@@ -1211,7 +1211,7 @@ class StudyPerson(qdb.base.QiitaObject):
         Raises
         ------
         QiitaDBError
-            If the StudyPerson with the given id is attached to studies
+            If the StudyPerson with the given id is attached to any study
         """
         with qdb.sql_connection.TRN:
             # checking that the id_ exists
@@ -1226,9 +1226,18 @@ class StudyPerson(qdb.base.QiitaObject):
                             emp_person_id = %s)"""
             qdb.sql_connection.TRN.add(sql, [id_, id_, id_])
             if qdb.sql_connection.TRN.execute_fetchlast():
+                sql = """SELECT study_id
+                         FROM qiita.study
+                         WHERE {} = %s"""
+                cols = ['lab_person_id', 'principal_investigator_id',
+                        'emp_person_id']
+                rel = {}
+                for c in cols:
+                    qdb.sql_connection.TRN.add(sql.format(c), [id_])
+                    rel[c] = qdb.sql_connection.TRN.execute_fetchindex()
                 raise qdb.exceptions.QiitaDBError(
                     'StudyPerson "%s" cannot be deleted because there are '
-                    'studies referencing it' % id_)
+                    'studies referencing it: %s' % (id_, str(rel)))
 
             sql = "DELETE FROM qiita.study_person WHERE study_person_id = %s"
             qdb.sql_connection.TRN.add(sql, [id_])
