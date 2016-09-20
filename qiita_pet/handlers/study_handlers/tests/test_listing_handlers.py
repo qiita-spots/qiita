@@ -251,6 +251,8 @@ class TestShareStudyAjax(TestHandlerBase):
         self.assertEqual('Study \'Identification of the Microbiomes for '
                          'Cannabis Soils\' has been unshared from you.',
                          u.messages()[0][1])
+        # Share the study back with the user
+        s.share(u)
 
     def test_get_selected(self):
         s = Study(1)
