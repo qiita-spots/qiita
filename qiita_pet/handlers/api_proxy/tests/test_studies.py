@@ -109,7 +109,7 @@ class TestStudyAPI(TestCase):
         }
 
         new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study", [1],
+            qdb.user.User('test@foo.bar'), "Some New Study for test", [1],
             info)
 
         obs = study_get_req(new_study.id, 'test@foo.bar')
@@ -152,7 +152,7 @@ class TestStudyAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_study_get_req_no_exists(self):
-        obs = study_get_req(4, 'test@foo.bar')
+        obs = study_get_req(4000, 'test@foo.bar')
         exp = {'status': 'error',
                'message': 'Study does not exist'}
         self.assertEqual(obs, exp)
@@ -222,6 +222,9 @@ class TestStudyAPI(TestCase):
                             'start_artifact': 'FASTQ',
                             'youngest_artifact': 'BIOM - BIOM'}]}}
         self.assertEqual(obs, exp)
+        # Reset visibility of the artifacts
+        for i in range(4, 0, -1):
+            qdb.artifact.Artifact(i).visibility = "private"
 
     def test_study_prep_get_req_no_access(self):
         obs = study_prep_get_req(1, 'demo@microbio.me')
@@ -245,7 +248,7 @@ class TestStudyAPI(TestCase):
         }
 
         new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study", [1],
+            qdb.user.User('test@foo.bar'), "Some New Study to delete", [1],
             info)
 
         study_delete_req(new_study.id, 'test@foo.bar')
@@ -313,7 +316,7 @@ class TestStudyAPI(TestCase):
         }
 
         new_study = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'), "Some New Study", [1],
+            qdb.user.User('test@foo.bar'), "Some New Study to get files", [1],
             info)
 
         obs = study_files_get_req('test@foo.bar', new_study.id, 1, 'FASTQ')
