@@ -32,7 +32,6 @@ class TestStudyEditHandlerReadOnly(TestHandlerBase):
 
 
 class TestStudyEditHandler(TestHandlerBase):
-    database = True
 
     def test_get_edit_utf8(self):
         """Make sure the page loads when utf8 characters are present"""
