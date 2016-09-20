@@ -330,10 +330,10 @@ class TestArtifactAPI(TestCase):
         # Returns already existing job
         job = ProcessingJob.create(
             User('test@foo.bar'),
-            Parameters.load(Command(7), values_dict={'input_data': 1})
+            Parameters.load(Command(7), values_dict={'input_data': 2})
         )
         job._set_status('queued')
-        obs = artifact_summary_post_request('test@foo.bar', 1)
+        obs = artifact_summary_post_request('test@foo.bar', 2)
         exp = {'status': 'success',
                'message': '',
                'job': [job.id, 'queued', None]}
