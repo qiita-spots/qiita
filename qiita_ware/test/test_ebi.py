@@ -18,6 +18,8 @@ from xml.etree import ElementTree as ET
 from functools import partial
 import pandas as pd
 from datetime import date
+from skbio.util import safe_md5
+from future.utils import viewitems
 
 from h5py import File
 
@@ -35,11 +37,13 @@ from qiita_db.software import Parameters, DefaultParameters
 from qiita_core.util import qiita_test_checker
 
 
+@qiita_test_checker()
 class TestEBISubmission(TestCase):
     def setUp(self):
         self.files_to_remove = []
         self.temp_dir = mkdtemp()
         self.files_to_remove.append(self.temp_dir)
+        self.study_id = None
 
     def tearDown(self):
         for f in self.files_to_remove:
@@ -49,8 +53,15 @@ class TestEBISubmission(TestCase):
                 else:
                     remove(f)
 
+        if self.study_id and Study.exists("Test EBI study"):
+            study = Study(self.study_id)
+            for a in study.artifacts():
+                Artifact.delete(a.id)
+            for pt in study.prep_templates():
+                PrepTemplate.delete(pt.id)
+            SampleTemplate.delete(self.study_id)
+            Study.delete(self.study_id)
 
-class TestEBISubmissionReadOnly(TestEBISubmission):
     def test_init(self):
         artifact_id = 3
         action = 'ADD'
@@ -249,9 +260,6 @@ class TestEBISubmissionReadOnly(TestEBISubmission):
                '%20ebi_seq_xfer_pass"')
         self.assertEqual(obs, exp)
 
-
-@qiita_test_checker()
-class TestEBISubmissionWriteRead(TestEBISubmission):
     def write_demux_files(self, prep_template, sequences='FASTA-EXAMPLE'):
         """Writes a demux test file to avoid duplication of code"""
         fna_fp = join(self.temp_dir, 'seqs.fna')
@@ -372,6 +380,7 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             "lab_person_id": StudyPerson(1)
         }
         study = Study.create(User('test@foo.bar'), "Test EBI study", [1], info)
+        self.study_id = study.id
         metadata_dict = {
             'Sample1': {'collection_timestamp': '06/01/15 07:00:00',
                         'physical_specimen_location': 'location1',
@@ -446,14 +455,16 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
 
         artifact = self.generate_new_prep_template_and_write_demux_files()
         # raise error as we are missing columns
+        # artifact.prep_templates[0] cause there should only be 1
         exp_text = ("Errors found during EBI submission for study #1, "
-                    "artifact #8 and prep template #3:\nUnrecognized "
+                    "artifact #%d and prep template #%d:\nUnrecognized "
                     "investigation type: 'None'. This term is neither one of "
                     "the official terms nor one of the user-defined terms in "
                     "the ENA ontology.\nThese samples do not have a valid "
                     "platform (instrumet model wasn't checked): "
                     "1.SKD6.640190\nThese samples do not have a valid "
-                    "instrument model: 1.SKM6.640187")
+                    "instrument model: 1.SKM6.640187" % (
+                        artifact.id, artifact.prep_templates[0].id))
         with self.assertRaises(EBISubmissionError) as e:
             EBISubmission(artifact.id, 'ADD')
         self.assertEqual(exp_text, str(e.exception))
@@ -513,6 +524,10 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
         self.files_to_remove.append(submission.full_ebi_dir)
         submission.generate_demultiplexed_fastq(mtime=1)
         obs = ET.tostring(submission.generate_run_xml())
+
+        md5_sums = {s: safe_md5(open(fp)).hexdigest()
+                    for s, fp in viewitems(submission.sample_demux_fps)}
+
         exp = RUNXML_NEWSTUDY % {
             'study_alias': submission._get_study_alias(),
             'ebi_dir': submission.ebi_dir,
@@ -520,7 +535,10 @@ class TestEBISubmissionWriteRead(TestEBISubmission):
             'center_name': qiita_config.ebi_center_name,
             'artifact_id': artifact.id,
             'study_id': artifact.study.id,
-            'pt_id': artifact.prep_templates[0].id
+            'pt_id': artifact.prep_templates[0].id,
+            'sample_1': md5_sums['%d.Sample1' % self.study_id],
+            'sample_2': md5_sums['%d.Sample2' % self.study_id],
+            'sample_3': md5_sums['%d.Sample3' % self.study_id]
         }
         exp = ''.join([l.strip() for l in exp.splitlines()])
         self.assertEqual(obs, exp)
@@ -1387,7 +1405,7 @@ Sample1" center_name="%(center_name)s">
 %(study_id)s.Sample1" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="83feb38387c3ccf9da28be56def4916e" \
+        <FILE checksum="%(sample_1)s" \
 checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample1.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
@@ -1399,7 +1417,7 @@ Sample2" center_name="%(center_name)s">
 %(study_id)s.Sample2" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="49b7fd3db7efad3c11fa305bb331c03e" \
+        <FILE checksum="%(sample_2)s" \
 checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample2.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
@@ -1411,7 +1429,7 @@ Sample3" center_name="%(center_name)s">
 %(study_id)s.Sample3" />
     <DATA_BLOCK>
       <FILES>
-        <FILE checksum="55b49d49b3c1bd0edf4d291ba8ce66a1" \
+        <FILE checksum="%(sample_3)s" \
 checksum_method="MD5" filename="%(ebi_dir)s/%(study_id)s.Sample3.fastq.gz" \
 filetype="fastq" quality_scoring_system="phred" />
       </FILES>
