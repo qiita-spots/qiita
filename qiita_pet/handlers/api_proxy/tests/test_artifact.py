@@ -24,7 +24,7 @@ from qiita_db.study import Study
 from qiita_db.util import get_count, get_mountpoint
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
-from qiita_db.software import Command, Parameters
+from qiita_db.software import Command, Parameters, DefaultParameters
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
@@ -125,6 +125,25 @@ class TestArtifactAPI(TestCase):
             f.write("""sample_name\tnew_col\n1.SKD6.640190\tnew_value\n""")
 
         self._files_to_remove = [self.update_fp]
+        self._files_to_remove = []
+
+        # creating temporal files and artifact
+        # NOTE: we don't need to remove the artifact created cause it's
+        # used to test the delete functionality
+        fd, fp = mkstemp(suffix='_seqs.fna')
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write(">1.sid_r4_0 M02034:17:000000000-A5U18:1:1101:15370:1394 "
+                    "1:N:0:1 orig_bc=CATGAGCT new_bc=CATGAGCT bc_diffs=0\n"
+                    "GTGTGCCAGCAGCCGCGGTAATACGTAGGG\n")
+        # 4 Demultiplexed
+        filepaths_processed = [(fp, 4)]
+        # 1 for default parameters and input data
+        exp_params = Parameters.from_default_params(DefaultParameters(1),
+                                                    {'input_data': 1})
+        self.artifact = Artifact.create(filepaths_processed, "Demultiplexed",
+                                        parents=[Artifact(1)],
+                                        processing_parameters=exp_params)
 
     def tearDown(self):
         for fp in self._files_to_remove:
@@ -263,6 +282,9 @@ class TestArtifactAPI(TestCase):
                'study_id': 1}
         self.assertEqual(obs, exp)
 
+        # returnig to private
+        a.visibility = 'sandbox'
+
         # admin gets buttons
         obs = artifact_summary_get_request('admin@foo.bar', 2)
         exp_p_jobs = [
@@ -318,12 +340,13 @@ class TestArtifactAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_artifact_patch_request(self):
-        obs = artifact_patch_request('test@foo.bar', 'replace', '/1/name/',
+        obs = artifact_patch_request('test@foo.bar', 'replace',
+                                     '/%d/name/' % self.artifact.id,
                                      req_value='NEW_NAME')
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
 
-        self.assertEqual(Artifact(1).name, 'NEW_NAME')
+        self.assertEqual(Artifact(self.artifact.id).name, 'NEW_NAME')
 
     def test_artifact_patch_request_errors(self):
         # No access to the study
@@ -359,7 +382,7 @@ class TestArtifactAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_artifact_delete_req(self):
-        obs = artifact_delete_req(3, 'test@foo.bar')
+        obs = artifact_delete_req(self.artifact.id, 'test@foo.bar')
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
 
@@ -374,7 +397,7 @@ class TestArtifactAPI(TestCase):
             redis_info = loads(r_client.get(loads(obs)['job_id']))
 
     def test_artifact_delete_req_no_access(self):
-        obs = artifact_delete_req(3, 'demo@microbio.me')
+        obs = artifact_delete_req(self.artifact.id, 'demo@microbio.me')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
