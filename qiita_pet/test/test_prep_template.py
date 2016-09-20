@@ -17,7 +17,6 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 
 
 class TestPrepTemplateHandler(TestHandlerBase):
-    database = True
 
     def setUp(self):
         super(TestPrepTemplateHandler, self).setUp()

@@ -8,7 +8,6 @@ from qiita_db.util import get_count
 
 
 class TestSelectCommandsHandler(TestHandlerBase):
-    database = True
 
     def test_get(self):
         response = self.get('/analysis/3', {'aid': 1})
@@ -29,7 +28,6 @@ class TestSelectCommandsHandler(TestHandlerBase):
 
 
 class TestAnalysisWaitHandler(TestHandlerBase):
-    database = True
 
     def test_get_exists(self):
         response = self.get('/analysis/wait/1')
@@ -52,7 +50,6 @@ class TestAnalysisWaitHandler(TestHandlerBase):
 
 
 class TestAnalysisResultsHandler(TestHandlerBase):
-    database = True
 
     def test_get(self):
         # TODO: add proper test for this once figure out how. Issue 567
@@ -68,7 +65,6 @@ class TestShowAnalysesHandler(TestHandlerBase):
 
 
 class TestShareAnalysisAjax(TestHandlerBase):
-    database = True
 
     def test_get_deselected(self):
         a = Analysis(1)

@@ -155,7 +155,6 @@ class TestHelpers(TestHandlerBase):
 
 
 class TestBuildStudyWithDBAccess(TestHelpers):
-    database = True
 
     def test_build_study_info_empty_study(self):
         info = {
@@ -195,7 +194,6 @@ class TestListStudiesHandler(TestHandlerBase):
 
 
 class TestStudyApprovalList(TestHandlerBase):
-    database = True
 
     def test_get(self):
         BaseHandler.get_current_user = Mock(return_value=User("admin@foo.bar"))
@@ -234,7 +232,6 @@ class TestAutocompleteHandler(TestHandlerBase):
 
 
 class TestShareStudyAjax(TestHandlerBase):
-    database = True
 
     def test_get_deselected(self):
         s = Study(1)
@@ -297,7 +294,6 @@ class TestShareStudyAjax(TestHandlerBase):
 
 
 class TestSearchStudiesAJAX(TestHandlerBase):
-    database = True
 
     def setUp(self):
         super(TestSearchStudiesAJAX, self).setUp()
