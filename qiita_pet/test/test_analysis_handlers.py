@@ -71,19 +71,21 @@ class TestShareAnalysisAjax(TestHandlerBase):
     database = True
 
     def test_get_deselected(self):
-        s = Analysis(1)
+        a = Analysis(1)
         u = User('shared@foo.bar')
-        args = {'deselected': u.id, 'id': s.id}
-        self.assertEqual(s.shared_with, [u])
+        args = {'deselected': u.id, 'id': a.id}
+        self.assertEqual(a.shared_with, [u])
         response = self.get('/analysis/sharing/', args)
         self.assertEqual(response.code, 200)
         exp = {'users': [], 'links': ''}
         self.assertEqual(loads(response.body), exp)
-        self.assertEqual(s.shared_with, [])
+        self.assertEqual(a.shared_with, [])
 
         # Make sure unshared message added to the system
         self.assertEqual('Analysis \'SomeAnalysis\' has been unshared from '
                          'you.', u.messages()[0][1])
+        # Share the analysis back with the user
+        a.share(u)
 
     def test_get_selected(self):
         s = Analysis(1)

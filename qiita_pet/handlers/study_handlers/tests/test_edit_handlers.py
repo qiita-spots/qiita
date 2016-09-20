@@ -93,7 +93,7 @@ class TestStudyEditHandler(TestHandlerBase):
             'new_people_affiliations': [],
             'new_people_addresses': [],
             'new_people_phones': [],
-            'study_title': 'dummy title',
+            'study_title': 'New title - test post edit',
             'study_alias': study_info['study_alias'],
             'publications_doi': ','.join(
                 [doi for doi, _ in study.publications]),
@@ -106,7 +106,7 @@ class TestStudyEditHandler(TestHandlerBase):
 
         # Check that the study was updated
         self.assertTrue(check_count('qiita.study', study_count_before))
-        self.assertEqual(study.title, 'dummy title')
+        self.assertEqual(study.title, 'New title - test post edit')
 
 
 class TestCreateStudyAJAX(TestHandlerBase):
