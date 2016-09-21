@@ -55,7 +55,6 @@ class TestHelpers(TestHandlerBase):
 
 
 class TestSampleTemplateAJAX(TestHandlerBase):
-    database = True
 
     def test_delete_sample_template(self):
         response = self.post('/study/description/sample_template/',
@@ -78,7 +77,6 @@ class TestSampleAJAXReadOnly(TestHandlerBase):
 
 
 class TestSampleAJAX(TestHandlerBase):
-    database = True
 
     def test_post(self):
         res = self.post("/study/description/sample_summary/", {

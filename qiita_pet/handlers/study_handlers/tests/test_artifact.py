@@ -73,7 +73,6 @@ class NewArtifactHandlerTestsReadOnly(TestHandlerBase):
 
 
 class NewArtifactHandlerTests(TestHandlerBase):
-    database = True
 
     def setUp(self):
         super(NewArtifactHandlerTests, self).setUp()
@@ -140,7 +139,6 @@ class NewArtifactHandlerTests(TestHandlerBase):
 
 
 class ArtifactAJAXTests(TestHandlerBase):
-    database = True
 
     def test_delete_artifact(self):
         response = self.post('/artifact/',
@@ -171,7 +169,6 @@ class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):
 
 
 class ArtifactAdminAJAXTests(TestHandlerBase):
-    database = True
 
     def test_post_admin(self):
         response = self.post('/admin/artifact/',

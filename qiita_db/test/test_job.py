@@ -21,12 +21,36 @@ class JobTest(TestCase):
     """Tests that the job object works as expected"""
 
     def setUp(self):
-        self.job = qdb.job.Job(1)
-        self.options = {"option1": False, "option2": 25, "option3": "NEW"}
         self._delete_path = []
         self._delete_dir = []
+
+        # creating a new job for testing
+        self.options = {"option1": False, "option2": 25, "option3": "NEW"}
         _, self._job_folder = qdb.util.get_mountpoint("job")[0]
-        self.job_id = 4
+
+        self.job_create_params = ("18S", "Alpha Rarefaction",
+                                  self.options, qdb.analysis.Analysis(1),
+                                  qdb.reference.Reference(1),
+                                  qdb.software.Command(3))
+        self.job = qdb.job.Job.create(*self.job_create_params)
+        self.job_id = self.job.id
+
+        # adding filepaths
+        # file
+        self.fp = join(self._job_folder, "%d_job_result.txt" % self.job_id)
+        if not exists(self.fp):
+            with open(self.fp, 'w') as f:
+                f.write("DATA")
+        self.job.add_results([(self.fp, "plain_text")])
+        # folder
+        self.dfp = join(self._job_folder, "my_folder")
+        self.ffp = join(self.dfp, "%d_file_in_folder.html" % self.job_id)
+        if not exists(self.dfp):
+            mkdir(self.dfp)
+        if not exists(self.ffp):
+            with open(self.ffp, 'w') as f:
+                f.write("DATA")
+        self.job.add_results([(self.dfp, "directory")])
 
     def tearDown(self):
         # needs to be this way because map does not play well with remove and
@@ -35,6 +59,9 @@ class JobTest(TestCase):
             remove(item)
         for item in self._delete_dir:
             rmtree(item)
+
+        if qdb.job.Job.exists(*self.job_create_params):
+            qdb.job.Job.delete(self.job_id)
 
     def test_exists(self):
         """tests that existing job returns true"""
@@ -120,66 +147,23 @@ class JobTest(TestCase):
             ]
         self.assertEqual(qdb.job.Job.get_commands(), exp)
 
-    def test_delete_files(self):
-        try:
-            qdb.job.Job.delete(1)
-            with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-                qdb.job.Job(1)
+    def test_delete_files_and_folders(self):
+        qdb.job.Job.delete(self.job_id)
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.job.Job(self.job_id)
 
-            obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.filepath WHERE filepath_id = 13")
-            self.assertEqual(obs, [])
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.job_results_filepath WHERE job_id = "
+            "%d" % self.job_id)
+        self.assertEqual(obs, [])
 
-            obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
-            self.assertEqual(obs, [])
+        obs = self.conn_handler.execute_fetchall(
+            "SELECT * FROM qiita.analysis_job WHERE job_id = %d" % self.job_id)
+        self.assertEqual(obs, [])
 
-            obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.analysis_job WHERE job_id = 1")
-            self.assertEqual(obs, [])
-
-            self.assertFalse(exists(join(self._job_folder,
-                             "1_job_result.txt")))
-        finally:
-            f = join(self._job_folder, "1_job_result.txt")
-            if not exists(f):
-                with open(f, 'w') as f:
-                    f.write("job1result.txt")
-
-    def test_delete_folders(self):
-        try:
-            qdb.job.Job.delete(2)
-            with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-                qdb.job.Job(2)
-
-            obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.filepath WHERE filepath_id = 14")
-            self.assertEqual(obs, [])
-
-            obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.job_results_filepath WHERE job_id = 2")
-            self.assertEqual(obs, [])
-
-            obs = self.conn_handler.execute_fetchall(
-                "SELECT * FROM qiita.analysis_job WHERE job_id = 2")
-            self.assertEqual(obs, [])
-
-            self.assertFalse(exists(join(self._job_folder, "2_test_folder")))
-        finally:
-            # put the test data back
-            basedir = self._job_folder
-            if not exists(join(basedir, "2_test_folder")):
-                mkdir(join(basedir, "2_test_folder"))
-                mkdir(join(basedir, "2_test_folder", "subdir"))
-                with open(join(basedir, "2_test_folder",
-                               "testfile.txt"), 'w') as f:
-                    f.write("DATA")
-                with open(join(basedir, "2_test_folder",
-                               "testres.htm"), 'w') as f:
-                    f.write("DATA")
-                with open(join(basedir, "2_test_folder",
-                               "subdir", "subres.html"), 'w') as f:
-                    f.write("DATA")
+        self.assertFalse(exists(self.fp))
+        self.assertFalse(exists(self.ffp))
+        self.assertFalse(exists(self.dfp))
 
     def test_create(self):
         """Makes sure creation works as expected"""
@@ -188,39 +172,40 @@ class JobTest(TestCase):
                                  qdb.analysis.Analysis(1),
                                  qdb.reference.Reference(1),
                                  qdb.software.Command(3))
-        self.assertEqual(new.id, self.job_id)
+        new_id = new.id
+        # + 1 cause it should be one higher than the one created in setUp
+        self.assertEqual(new_id, self.job_id + 1)
+
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
-                                                 "WHERE job_id = %d" %
-                                                 self.job_id)
-        exp = [[self.job_id, 2, 1, 3, '{"opt1":4}', None, 1, 3]]
+                                                 "WHERE job_id = %d" % new_id)
+        exp = [[new_id, 2, 1, 3, '{"opt1":4}', None, 1, 3]]
 
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
                                                  "qiita.analysis_job WHERE "
-                                                 "job_id = %d" % self.job_id)
-        exp = [[1, self.job_id]]
+                                                 "job_id = %d" % new_id)
+        exp = [[1, new_id]]
         self.assertEqual(obs, exp)
 
-        self.job_id += 1
         # make second job with diff datatype and command to test column insert
         new = qdb.job.Job.create("16S", "Beta Diversity", {"opt1": 4},
                                  qdb.analysis.Analysis(1),
                                  qdb.reference.Reference(2),
                                  qdb.software.Command(3))
-        self.assertEqual(new.id, self.job_id)
+        new_id = new.id
+        self.assertEqual(new_id, self.job_id + 2)
         # make sure job inserted correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM qiita.job "
-                                                 "WHERE job_id = %d" %
-                                                 self.job_id)
-        exp = [[self.job_id, 1, 1, 2, '{"opt1":4}', None, 2, 3]]
+                                                 "WHERE job_id = %d" % new_id)
+        exp = [[new_id, 1, 1, 2, '{"opt1":4}', None, 2, 3]]
         self.assertEqual(obs, exp)
         # make sure job added to analysis correctly
         obs = self.conn_handler.execute_fetchall("SELECT * FROM "
                                                  "qiita.analysis_job WHERE "
-                                                 "job_id = %d" % self.job_id)
-        exp = [[1, self.job_id]]
+                                                 "job_id = %d" % new_id)
+        exp = [[1, new_id]]
         self.assertEqual(obs, exp)
 
     def test_create_exists(self):
@@ -246,7 +231,7 @@ class JobTest(TestCase):
             "18S", "Beta Diversity", {"--otu_table_fp": 1, "--mapping_fp": 1},
             analysis, qdb.reference.Reference(2), qdb.software.Command(3),
             return_existing=True)
-        self.assertEqual(new.id, self.job_id)
+        self.assertEqual(new.id, self.job_id + 1)
 
     def test_retrieve_datatype(self):
         """Makes sure datatype retrieval is correct"""
@@ -254,15 +239,18 @@ class JobTest(TestCase):
 
     def test_retrieve_command(self):
         """Makes sure command retrieval is correct"""
-        self.assertEqual(self.job.command, ['Summarize Taxa',
-                                            'summarize_taxa_through_plots.py'])
+        self.assertEqual(self.job.command, ['Alpha Rarefaction',
+                                            'alpha_rarefaction.py'])
 
     def test_retrieve_options(self):
-        self.assertEqual(self.job.options, {
-            '--otu_table_fp': 1,
-            '--output_dir': join(
-                self._job_folder,
-                '1_summarize_taxa_through_plots.py_output_dir')})
+        exp = {
+            '--output_dir': join(self._job_folder,
+                                 ('%d_alpha_rarefaction.py_output_dir' %
+                                  self.job_id)),
+            'option2': 25,
+            'option3': 'NEW',
+            'option1': False}
+        self.assertEqual(self.job.options, exp)
 
     def test_set_options(self):
         new = qdb.job.Job.create("18S", "Alpha Rarefaction",
@@ -272,16 +260,13 @@ class JobTest(TestCase):
         new.options = self.options
         self.options['--output_dir'] = join(
             self._job_folder,
-            '%d_alpha_rarefaction.py_output_dir' % self.job_id)
+            '%d_alpha_rarefaction.py_output_dir' % new.id)
         self.assertEqual(new.options, self.options)
 
-    def test_retrieve_results(self):
-        self.assertEqual(self.job.results, ["1_job_result.txt"])
-
     def test_retrieve_results_folder(self):
-        job = qdb.job.Job(2)
-        self.assertEqual(job.results, ['2_test_folder/testres.htm',
-                                       '2_test_folder/subdir/subres.html'])
+        exp = ['%d_job_result.txt' % self.job_id,
+               'my_folder/%d_file_in_folder.html' % self.job_id]
+        self.assertEqual(self.job.results, exp)
 
     def test_retrieve_results_empty(self):
         new = qdb.job.Job.create("18S", "Beta Diversity", {"opt1": 4},
@@ -315,28 +300,46 @@ class JobTest(TestCase):
         self.assertEqual(self.job.error.msg, "TESTERROR")
 
     def test_add_results(self):
-        fp_count = qdb.util.get_count('qiita.filepath')
-        self.job.add_results([(join(self._job_folder, "1_job_result.txt"),
-                             "plain_text")])
+        curr_id = self.conn_handler.execute_fetchone(
+            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
+        fp = join(self._job_folder, "%d_job_result_new.txt" % self.job_id)
+        if not exists(fp):
+            with open(fp, 'w') as f:
+                f.write("DATA")
+
+        self.job.add_results([(fp, "plain_text")])
 
         # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
+            "SELECT * FROM qiita.job_results_filepath WHERE job_id = "
+            "%d" % self.job_id)
 
-        self.assertEqual(obs, [[1, 13], [1, fp_count + 1]])
+        # the job now has 3 files, thus the - 1 and + 1
+        self.assertEqual(obs, [[self.job_id, curr_id - 1],
+                               [self.job_id, curr_id],
+                               [self.job_id, curr_id + 1]])
 
     def test_add_results_dir(self):
-        fp_count = qdb.util.get_count('qiita.filepath')
-        # Create a test directory
-        test_dir = join(self._job_folder, "2_test_folder")
+        curr_id = self.conn_handler.execute_fetchone(
+            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
 
-        # add folder to job
-        self.job.add_results([(test_dir, "directory")])
+        dfp = join(self._job_folder, "my_new_folder")
+        ffp = join(dfp, "%d_file_in_new_folder.txt" % self.job_id)
+        if not exists(dfp):
+            mkdir(dfp)
+        if not exists(ffp):
+            with open(ffp, 'w') as f:
+                f.write("DATA")
+        self.job.add_results([(dfp, "directory")])
 
-        # make sure files attached to job properly
         obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.job_results_filepath WHERE job_id = 1")
-        self.assertEqual(obs, [[1, 13], [1, fp_count + 1]])
+            "SELECT * FROM qiita.job_results_filepath WHERE job_id = "
+            "%d" % self.job_id)
+
+        # the job now has 3 files, thus the - 1 and + 1
+        self.assertEqual(obs, [[self.job_id, curr_id - 1],
+                               [self.job_id, curr_id],
+                               [self.job_id, curr_id + 1]])
 
     def test_add_results_completed(self):
         self.job.status = "completed"

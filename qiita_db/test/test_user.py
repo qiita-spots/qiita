@@ -97,15 +97,17 @@ class UserTest(TestCase):
                 self.assertEqual(obs[key], exp[key])
 
     def test_create_user(self):
-        user = qdb.user.User.create('new@test.bar', 'password')
+        user = qdb.user.User.create('testcreateuser@test.bar', 'password')
 
         # adding a couple of messages
         qdb.util.add_system_message("TESTMESSAGE_OLD", datetime.now())
         qdb.util.add_system_message(
-            "TESTMESSAGE", datetime.now() + timedelta(seconds=59))
+            "TESTMESSAGE", datetime.now() + timedelta(milliseconds=1))
 
-        self.assertEqual(user.id, 'new@test.bar')
-        sql = "SELECT * from qiita.qiita_user WHERE email = 'new@test.bar'"
+        self.assertEqual(user.id, 'testcreateuser@test.bar')
+        sql = """SELECT *
+                 FROM qiita.qiita_user
+                 WHERE email = 'testcreateuser@test.bar'"""
         obs = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
@@ -119,21 +121,25 @@ class UserTest(TestCase):
             'user_verify_code': '',
             'address': None,
             'user_level_id': 5,
-            'email': 'new@test.bar'}
+            'email': 'testcreateuser@test.bar'}
         self._check_correct_info(obs, exp)
 
         # Make sure new system messages are linked to user
         sql = """SELECT message_id FROM qiita.message_user
-                 WHERE email = 'new@test.bar'"""
+                 WHERE email = 'testcreateuser@test.bar'"""
         m_id = qdb.util.get_count('qiita.message')
         # the user should have the latest message (m_id) and the one before
         self.assertEqual(self.conn_handler.execute_fetchall(sql), [[m_id-1],
                                                                    [m_id]])
+        qdb.util.clear_system_messages()
 
     def test_create_user_info(self):
-        user = qdb.user.User.create('new@test.bar', 'password', self.userinfo)
-        self.assertEqual(user.id, 'new@test.bar')
-        sql = "SELECT * from qiita.qiita_user WHERE email = 'new@test.bar'"
+        user = qdb.user.User.create('testcreateuserinfo@test.bar', 'password',
+                                    self.userinfo)
+        self.assertEqual(user.id, 'testcreateuserinfo@test.bar')
+        sql = """SELECT *
+                 FROM qiita.qiita_user
+                 WHERE email = 'testcreateuserinfo@test.bar'"""
         obs = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
@@ -147,7 +153,7 @@ class UserTest(TestCase):
             'pass_reset_code': None,
             'user_verify_code': '',
             'user_level_id': 5,
-            'email': 'new@test.bar'}
+            'email': 'testcreateuserinfo@test.bar'}
         self._check_correct_info(obs, exp)
 
     def test_create_user_column_not_allowed(self):
@@ -276,7 +282,7 @@ class UserTest(TestCase):
         self.assertEqual(user.shared_analyses, set())
 
     def test_verify_code(self):
-        email = 'new@test.bar'
+        email = 'testverifycode@test.bar'
         qdb.user.User.create(email, 'password')
         # making sure that we know the user codes
         sql = """UPDATE qiita.qiita_user SET
@@ -308,8 +314,8 @@ class UserTest(TestCase):
         sql = ("SELECT email, name, description, dflt FROM qiita.analysis "
                "WHERE email = %s")
         obs = self.conn_handler.execute_fetchall(sql, [email])
-        exp = [[email, 'new@test.bar-dflt-2', 'dflt', True],
-               [email, 'new@test.bar-dflt-1', 'dflt', True]]
+        exp = [[email, 'testverifycode@test.bar-dflt-2', 'dflt', True],
+               [email, 'testverifycode@test.bar-dflt-1', 'dflt', True]]
         self.assertEqual(obs, exp)
 
         # Make sure default analyses are linked with the portal
@@ -317,32 +323,34 @@ class UserTest(TestCase):
                  FROM qiita.analysis
                     JOIN qiita.analysis_portal USING (analysis_id)
                     JOIN qiita.portal_type USING (portal_type_id)
-                 WHERE email = 'new@test.bar' AND dflt = true"""
+                 WHERE email = 'testverifycode@test.bar' AND dflt = true"""
         self.assertEqual(self.conn_handler.execute_fetchone(sql)[0], 2)
 
-    def _check_pass(self, passwd):
+    def _check_pass(self, user, passwd):
         obspass = self.conn_handler.execute_fetchone(
             "SELECT password FROM qiita.qiita_user WHERE email = %s",
-            (self.user.id, ))[0]
+            (user.id, ))[0]
         self.assertEqual(qdb.util.hash_password(passwd, obspass), obspass)
 
     def test_change_pass(self):
-        self.user._change_pass("newpassword")
-        self._check_pass("newpassword")
-        self.assertIsNone(self.user.info["pass_reset_code"])
+        user = qdb.user.User.create('testchangepass@test.bar', 'password')
+        user._change_pass("newpassword")
+        self._check_pass(user, "newpassword")
+        self.assertIsNone(user.info["pass_reset_code"])
 
     def test_change_pass_short(self):
         with self.assertRaises(IncorrectPasswordError):
             self.user._change_pass("newpass")
-        self._check_pass("password")
+        self._check_pass(self.user, "password")
 
     def test_change_password(self):
         self.user.change_password("password", "newpassword")
-        self._check_pass("newpassword")
+        self._check_pass(self.user, "newpassword")
 
     def test_change_password_wrong_oldpass(self):
-        self.user.change_password("WRONG", "newpass")
-        self._check_pass("password")
+        user = qdb.user.User.create('changepasswrongold@test.bar', 'password')
+        user.change_password("WRONG", "newpass")
+        self._check_pass(user, "password")
 
     def test_generate_reset_code(self):
         user = qdb.user.User.create('new@test.bar', 'password')
@@ -358,39 +366,40 @@ class UserTest(TestCase):
         self.assertTrue(before < obstime < after)
 
     def test_change_forgot_password(self):
-        self.user.generate_reset_code()
-        code = self.user.info["pass_reset_code"]
-        obsbool = self.user.change_forgot_password(code, "newpassword")
+        user = qdb.user.User.create(
+            'changeforgotpassword@test.bar', 'password')
+        user.generate_reset_code()
+        code = user.info["pass_reset_code"]
+        obsbool = user.change_forgot_password(code, "newpassword")
         self.assertEqual(obsbool, True)
-        self._check_pass("newpassword")
+        self._check_pass(user, "newpassword")
 
     def test_change_forgot_password_bad_code(self):
-        self.user.generate_reset_code()
+        user = qdb.user.User.create('badcode@test.bar', 'password')
+        user.generate_reset_code()
         code = "AAAAAAA"
-        obsbool = self.user.change_forgot_password(code, "newpassword")
+        obsbool = user.change_forgot_password(code, "newpassword")
         self.assertEqual(obsbool, False)
-        self._check_pass("password")
+        self._check_pass(user, "password")
 
     def test_messages(self):
         qdb.util.add_system_message('SYS MESSAGE', datetime.now())
         user = qdb.user.User('test@foo.bar')
         obs = user.messages()
         exp_msg = [
-            (4, 'SYS MESSAGE'),
-            (1, 'message 1'),
-            (2, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
-                'Pellentesque sed auctor ex, non placerat sapien. Vestibulum '
-                'vestibulum massa ut sapien condimentum, cursus consequat diam'
-                ' sodales. Nulla aliquam arcu ut massa auctor, et vehicula '
-                'mauris tempor. In lacinia viverra ante quis pellentesque. '
-                'Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla'
-                ' ac nisi quis dui egestas malesuada vitae ut mauris. Morbi '
-                'blandit non nisl a finibus. In erat velit, congue at ipsum '
-                'sit amet, venenatis bibendum sem. Curabitur vel odio sed est '
-                'rutrum rutrum. Quisque efficitur ut purus in ultrices. '
-                'Pellentesque eu auctor justo.'),
-            (3, 'message <a href="#">3</a>')]
-        self.assertEqual([(x[0], x[1]) for x in obs], exp_msg)
+            'SYS MESSAGE', 'message 1',
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
+            'Pellentesque sed auctor ex, non placerat sapien. Vestibulum '
+            'vestibulum massa ut sapien condimentum, cursus consequat diam'
+            ' sodales. Nulla aliquam arcu ut massa auctor, et vehicula '
+            'mauris tempor. In lacinia viverra ante quis pellentesque. '
+            'Nunc vel mi accumsan, porttitor eros ut, pharetra elit. Nulla'
+            ' ac nisi quis dui egestas malesuada vitae ut mauris. Morbi '
+            'blandit non nisl a finibus. In erat velit, congue at ipsum '
+            'sit amet, venenatis bibendum sem. Curabitur vel odio sed est '
+            'rutrum rutrum. Quisque efficitur ut purus in ultrices. '
+            'Pellentesque eu auctor justo.', 'message <a href="#">3</a>']
+        self.assertItemsEqual([(x[1]) for x in obs], exp_msg)
         self.assertTrue(all(x[2] < datetime.now() for x in obs))
         self.assertFalse(all(x[3] for x in obs))
         self.assertEqual([x[4] for x in obs], [True, False, False, False])
@@ -412,20 +421,16 @@ class UserTest(TestCase):
         self.assertEqual([x[3] for x in obs], exp)
 
     def test_delete_messages(self):
-        # Make message 1 a system message
-        sql = """UPDATE qiita.message
-                 SET expiration = '2015-08-05'
-                 WHERE message_id = 1"""
-        self.conn_handler.execute(sql)
-        user = qdb.user.User('test@foo.bar')
-        user.delete_messages([1, 2])
-        obs = user.messages()
-        exp_msg = [(3, 'message <a href="#">3</a>')]
-        self.assertItemsEqual([(x[0], x[1]) for x in obs], exp_msg)
-
-        sql = "SELECT message_id FROM qiita.message"
-        obs = self.conn_handler.execute_fetchall(sql)
-        self.assertItemsEqual(obs, [[1], [3]])
+        user = qdb.user.User.create('deletemsg@test.bar', 'password')
+        self.assertEqual(user.messages(), [])
+        qdb.util.add_message("New message", [user])
+        user_msgs = user.messages()
+        # Magic number 1: the actual message
+        self.assertEqual([msg[1] for msg in user_msgs], ["New message"])
+        # Magic numbers [0][0] - there is only one message and the first
+        # element of that message is the message id
+        user.delete_messages([user_msgs[0][0]])
+        self.assertEqual([msg[1] for msg in user.messages()], [])
 
     def test_user_artifacts(self):
         user = qdb.user.User('test@foo.bar')
