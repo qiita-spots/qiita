@@ -11,7 +11,6 @@ class TestUserProfile(TestHandlerBase):
 
 
 class TestUserProfileHandler(TestHandlerBase):
-    database = True
 
     def test_get(self):
         response = self.get('/profile/')

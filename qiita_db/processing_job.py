@@ -620,6 +620,29 @@ class ProcessingJob(qdb.base.QiitaObject):
         for c in ready:
             c.submit()
 
+    @property
+    def outputs(self):
+        """The outputs of the job
+
+        Returns
+        -------
+        dict of {str: qiita_db.artifact.Artifact}
+            The outputs of the job keyed by output name
+        """
+        with qdb.sql_connection.TRN:
+            if self.status != 'success':
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Can't return the outputs of a non-success job")
+
+            sql = """SELECT artifact_id, name
+                     FROM qiita.artifact_output_processing_job
+                        JOIN qiita.command_output USING (command_output_id)
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return {
+                name: qdb.artifact.Artifact(aid)
+                for aid, name in qdb.sql_connection.TRN.execute_fetchindex()}
+
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
     """Models a workflow defined by the user
