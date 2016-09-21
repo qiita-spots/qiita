@@ -15,27 +15,35 @@ from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
 
-DB_TEST_TABLE = """CREATE TABLE qiita.test_table (
+DB_CREATE_TEST_TABLE = """CREATE TABLE qiita.test_table (
     str_column      varchar DEFAULT 'foo' NOT NULL,
     bool_column     bool DEFAULT True NOT NULL,
     int_column      bigint NOT NULL);"""
+
+DB_DROP_TEST_TABLE = """DROP TABLE IF EXISTS qiita.test_table;"""
 
 
 @qiita_test_checker()
 class TestBase(TestCase):
     def setUp(self):
+
         # Add the test table to the database, so we can use it in the tests
         with connect(user=qiita_config.user, password=qiita_config.password,
                      host=qiita_config.host, port=qiita_config.port,
-                     database=qiita_config.database) as con:
-            with con.cursor() as cur:
-                cur.execute(DB_TEST_TABLE)
+                     database=qiita_config.database) as self.con:
+            with self.con.cursor() as cur:
+                cur.execute(DB_CREATE_TEST_TABLE)
+        self.con.commit()
         self._files_to_remove = []
 
     def tearDown(self):
         for fp in self._files_to_remove:
             if exists(fp):
                 remove(fp)
+
+        with self.con.cursor() as cur:
+            cur.execute(DB_DROP_TEST_TABLE)
+        self.con.commit()
 
     def _populate_test_table(self):
         """Aux function that populates the test table"""
@@ -44,12 +52,9 @@ class TestBase(TestCase):
                  VALUES (%s, %s, %s)"""
         sql_args = [('test1', True, 1), ('test2', True, 2),
                     ('test3', False, 3), ('test4', False, 4)]
-        with connect(user=qiita_config.user, password=qiita_config.password,
-                     host=qiita_config.host, port=qiita_config.port,
-                     database=qiita_config.database) as con:
-            with con.cursor() as cur:
-                cur.executemany(sql, sql_args)
-            con.commit()
+        with self.con.cursor() as cur:
+            cur.executemany(sql, sql_args)
+        self.con.commit()
 
     def _assert_sql_equal(self, exp):
         """Aux function for testing"""

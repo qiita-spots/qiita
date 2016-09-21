@@ -34,6 +34,19 @@ class UtilTests(TestCase):
 
 
 class ArtifactHandlerTests(OauthTestingBase):
+    def setUp(self):
+        super(ArtifactHandlerTests, self).setUp()
+
+        fd, self.html_fp = mkstemp(suffix=".html")
+        close(fd)
+        self._clean_up_files = [self.html_fp]
+
+    def tearDown(self):
+        super(ArtifactHandlerTests, self).tearDown()
+        for fp in self._clean_up_files:
+            if exists(fp):
+                remove(fp)
+
     def test_get_artifact_does_not_exist(self):
         obs = self.get('/qiita_db/artifacts/100/', headers=self.header)
         self.assertEqual(obs.code, 404)
@@ -67,23 +80,6 @@ class ArtifactHandlerTests(OauthTestingBase):
             'processing_parameters': None,
             'files': exp_fps}
         self.assertEqual(loads(obs.body), exp)
-
-
-class ArtifactHandlerTestsReadWrite(OauthTestingBase):
-    database = True
-
-    def setUp(self):
-        super(ArtifactHandlerTestsReadWrite, self).setUp()
-
-        fd, self.html_fp = mkstemp(suffix=".html")
-        close(fd)
-        self._clean_up_files = [self.html_fp]
-
-    def tearDown(self):
-        super(ArtifactHandlerTestsReadWrite, self).tearDown()
-        for fp in self._clean_up_files:
-            if exists(fp):
-                remove(fp)
 
     def test_patch(self):
         arguments = {'op': 'add', 'path': '/html_summary/',
@@ -125,8 +121,6 @@ class ArtifactHandlerTestsReadWrite(OauthTestingBase):
 
 
 class ArtifactAPItestHandlerTests(OauthTestingBase):
-    database = True
-
     def setUp(self):
         super(ArtifactAPItestHandlerTests, self).setUp()
 

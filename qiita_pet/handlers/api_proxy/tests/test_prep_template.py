@@ -328,6 +328,10 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['message'], exp['message'])
 
+        # Reset visibility of the artifacts
+        for i in range(4, 0, -1):
+            Artifact(i).visibility = "private"
+
     def test_process_investigation_type(self):
         obs = _process_investigation_type('Metagenomics', '', '')
         self.assertEqual(obs, 'Metagenomics')
@@ -347,7 +351,6 @@ class TestPrepAPI(TestCase):
         self.assertIn(randstr, ontology.user_defined_terms)
 
     def test_prep_template_post_req(self):
-        new_id = get_count('qiita.prep_template') + 1
         obs = prep_template_post_req(1, 'test@foo.bar', 'update.txt',
                                      '16S')
         exp = {'status': 'warning',
@@ -369,15 +372,15 @@ class TestPrepAPI(TestCase):
                     ('See the Templates tutorial for a description of these '
                      'fields.')],
                'file': 'update.txt',
-               'id': new_id}
+               'id': 'ignored in test'}
 
         self.assertItemsEqual(obs['message'].split('\n'), exp['message'])
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['file'], exp['file'])
-        self.assertEqual(obs['id'], exp['id'])
+        self.assertIsInstance(obs['id'], int)
 
         # Make sure new prep template added
-        prep = PrepTemplate(new_id)
+        prep = PrepTemplate(obs['id'])
         self.assertEqual(prep.data_type(), '16S')
         self.assertEqual([x for x in prep.keys()], ['1.SKD6.640190'])
         self.assertEqual([x._to_dict() for x in prep.values()],
@@ -404,29 +407,45 @@ class TestPrepAPI(TestCase):
                                'message': 'Study does not exist'})
 
     def test_prep_template_patch_req(self):
-        pt = PrepTemplate(1)
+        metadata = pd.DataFrame.from_dict(
+            {'SKD6.640190': {'center_name': 'ANL',
+                             'target_subfragment': 'V4',
+                             'center_project_name': 'Test Project',
+                             'ebi_submission_accession': None,
+                             'EMP_status': 'EMP',
+                             'str_column': 'Value for sample 1',
+                             'primer': 'GTGCCAGCMGCCGCGGTAA',
+                             'barcode': 'GTCCGCAAGTTA',
+                             'run_prefix': "s_G1_L001_sequences",
+                             'platform': 'ILLUMINA',
+                             'instrument_model': 'Illumina MiSeq',
+                             'library_construction_protocol': 'AAAA',
+                             'experiment_design_description': 'BBBB'}},
+            orient='index', dtype=str)
+        pt = PrepTemplate.create(metadata, Study(1), '16S')
         # Update investigation type
         obs = prep_template_patch_req(
-            'test@foo.bar', 'replace', '/1/investigation_type',
+            'test@foo.bar', 'replace', '/%s/investigation_type' % pt.id,
             'Cancer Genomics')
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
         self.assertEqual(pt.investigation_type, 'Cancer Genomics')
         # Update prep template data
         obs = prep_template_patch_req(
-            'test@foo.bar', 'replace', '/1/data', 'update.txt')
+            'test@foo.bar', 'replace', '/%s/data' % pt.id, 'update.txt')
         self.assertEqual(obs, exp)
-        obs = r_client.get('prep_template_1')
+        obs = r_client.get('prep_template_%s' % pt.id)
         self.assertIsNotNone(obs)
 
-        self._wait_for_parallel_job('prep_template_1')
+        self._wait_for_parallel_job('prep_template_%s' % pt.id)
 
         # Delete a prep template column
         obs = prep_template_patch_req(
-            'test@foo.bar', 'remove', '/1/columns/target_subfragment/')
+            'test@foo.bar', 'remove',
+            '/%s/columns/target_subfragment/' % pt.id)
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(obs, exp)
-        self._wait_for_parallel_job('prep_template_1')
+        self._wait_for_parallel_job('prep_template_%s' % pt.id)
         self.assertNotIn('target_subfragment', pt.categories())
 
         # Test all the errors
@@ -455,7 +474,7 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs, exp)
         # User doesn't have access
         obs = prep_template_patch_req(
-            'demo@microbio.me', 'replace', '/1/investigation_type',
+            'demo@microbio.me', 'replace', '/%s/investigation_type' % pt.id,
             'Cancer Genomics')
         exp = {'status': 'error',
                'message': 'User does not have access to study'}

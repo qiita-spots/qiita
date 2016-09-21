@@ -4,7 +4,6 @@ from qiita_db.user import User
 
 
 class TestAuthCreateHandler(TestHandlerBase):
-    database = True
 
     def test_get(self):
         response = self.get('/auth/create/')
@@ -21,7 +20,6 @@ class TestAuthCreateHandler(TestHandlerBase):
 
 
 class TestAuthVerifyHandler(TestHandlerBase):
-    database = True
 
     def test_get(self):
         response = self.get('/auth/verify/SOMETHINGHERE?email=test%40foo.bar')

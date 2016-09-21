@@ -19,7 +19,8 @@ from qiita_core.util import qiita_test_checker
 import qiita_db as qdb
 
 
-class CommandTestsReadOnly(TestCase):
+@qiita_test_checker()
+class CommandTests(TestCase):
     def setUp(self):
         self.software = qdb.software.Software(1)
         self.parameters = {
@@ -195,16 +196,6 @@ class CommandTestsReadOnly(TestCase):
         exp = [['OTU table', 'BIOM']]
         self.assertEqual(obs, exp)
 
-
-@qiita_test_checker()
-class CommandTests(TestCase):
-    def setUp(self):
-        self.software = qdb.software.Software(1)
-        self.parameters = {
-            'req_param': ['string', None],
-            'opt_int_param': ['integer', '4'],
-            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
-
     def test_create_error(self):
         #  no parameters
         with self.assertRaises(qdb.exceptions.QiitaDBError):
@@ -260,7 +251,16 @@ class CommandTests(TestCase):
         self.assertEqual(obs.optional_parameters, exp_optional)
 
 
-class SoftwareTestsReadOnly(TestCase):
+@qiita_test_checker()
+class SoftwareTests(TestCase):
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for f in self._clean_up_files:
+            if exists(f):
+                remove(f)
+
     def test_from_name_and_version(self):
         obs = qdb.software.Software.from_name_and_version('QIIME', '1.9.1')
         exp = qdb.software.Software(1)
@@ -303,8 +303,8 @@ class SoftwareTestsReadOnly(TestCase):
         self.assertEqual(tester.environment_script, 'source activate qiita')
 
     def test_start_script(self):
-        tester = qdb.software.Software(1)
-        self.assertEqual(tester.start_script, 'start_target_gene')
+        tester = qdb.software.Software(2)
+        self.assertEqual(tester.start_script, 'start_biom')
 
     def test_default_workflows(self):
         obs = list(qdb.software.Software(1).default_workflows)
@@ -330,17 +330,6 @@ class SoftwareTestsReadOnly(TestCase):
             qdb.software.Software(1).client_secret,
             '9xhU5rvzq8dHCEI5sSN95jesUULrZi6pT6Wuc71fDbFbsrnWarcSq56TJLN4kP4hH'
             )
-
-
-@qiita_test_checker()
-class SoftwareTests(TestCase):
-    def setUp(self):
-        self._clean_up_files = []
-
-    def tearDown(self):
-        for f in self._clean_up_files:
-            if exists(f):
-                remove(f)
 
     def test_deactivate_all(self):
         obs = qdb.software.Software(1)
@@ -513,7 +502,8 @@ class SoftwareTests(TestCase):
         self.assertFalse(obs.active)
 
         # create with publications
-        exp_publications = [['10.1000/nmeth.f.101', '12345678']]
+        exp_publications = [['10.1000/nmeth.f.101', '12345678'],
+                            ['10.1001/nmeth.f.101', '23456789']]
         obs = qdb.software.Software.create(
             "Published Software", "1.0.0", "Another testing software",
             "env_name", "start_plugin", "artifact transformation",
@@ -550,17 +540,18 @@ class SoftwareTests(TestCase):
         self.assertFalse(obs.active)
 
     def test_add_publications(self):
-        tester = qdb.software.Software(1)
-        self.assertEqual(tester.publications,
-                         [['10.1038/nmeth.f.303', '20383131']])
-        tester.add_publications([['10.1000/nmeth.f.101', '12345678']])
-        exp = [['10.1038/nmeth.f.303', '20383131'],
-               ['10.1000/nmeth.f.101', '12345678']]
-        self.assertItemsEqual(tester.publications, exp)
+        obs = qdb.software.Software.create(
+            "New Software", "0.1.0",
+            "This is adding a new software for testing", "env_name",
+            "start_plugin", "artifact transformation")
+        self.assertEqual(obs.publications, [])
+        obs.add_publications([['10.1000/nmeth.f.101', '12345678']])
+        exp = [['10.1000/nmeth.f.101', '12345678']]
+        self.assertItemsEqual(obs.publications, exp)
 
         # Add a publication that already exists
-        tester.add_publications([['10.1000/nmeth.f.101', '12345678']])
-        self.assertItemsEqual(tester.publications, exp)
+        obs.add_publications([['10.1000/nmeth.f.101', '12345678']])
+        self.assertItemsEqual(obs.publications, exp)
 
     def test_activate(self):
         qdb.software.Software.deactivate_all()
@@ -570,7 +561,8 @@ class SoftwareTests(TestCase):
         self.assertTrue(obs.active)
 
 
-class DefaultParametersTestsReadOnly(TestCase):
+@qiita_test_checker()
+class DefaultParametersTests(TestCase):
     def test_exists(self):
         cmd = qdb.software.Command(1)
         obs = qdb.software.DefaultParameters.exists(
@@ -582,7 +574,7 @@ class DefaultParametersTestsReadOnly(TestCase):
         self.assertTrue(obs)
 
         obs = qdb.software.DefaultParameters.exists(
-            cmd, max_bad_run_length=3, min_per_read_length_fraction=0.75,
+            cmd, max_bad_run_length=3, min_per_read_length_fraction=0.65,
             sequence_max_n=0, rev_comp_barcode=False,
             rev_comp_mapping_barcodes=False, rev_comp=False,
             phred_quality_threshold=3, barcode_type="hamming_8",
@@ -605,9 +597,6 @@ class DefaultParametersTestsReadOnly(TestCase):
         self.assertEqual(
             qdb.software.DefaultParameters(1).command, qdb.software.Command(1))
 
-
-@qiita_test_checker()
-class DefaultParametersTests(TestCase):
     def test_create(self):
         cmd = qdb.software.Command(1)
         obs = qdb.software.DefaultParameters.create(

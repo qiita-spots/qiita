@@ -28,8 +28,7 @@ class TestSQL(TestCase):
                 'VALUES (1, 3)')
         obs = self.conn_handler.execute_fetchall(
             'SELECT * FROM qiita.collection_job')
-        exp = [[1, 1]]
-        self.assertEqual(obs, exp)
+        self.assertNotIn([[1, 3]], obs)
 
     def test_collection_job_trigger(self):
         # make sure a correct job inserts successfully
@@ -102,6 +101,22 @@ class TestSQL(TestCase):
             [afp for _, afp, _ in new_root.filepaths])
         return new_root
 
+    def _create_child_artifact(self, parents):
+        """Creates a new artifact with the given parents"""
+        # Add a child of 2 roots
+        fd, fp = mkstemp(suffix='_seqs.fna')
+        close(fd)
+        self._files_to_remove.append(fp)
+        with open(fp, 'w') as f:
+            f.write("test")
+        fp = [(fp, 4)]
+        params = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 2})
+        new = qdb.artifact.Artifact.create(
+            fp, "Demultiplexed", parents=parents,
+            processing_parameters=params)
+        return new
+
     def test_find_artifact_roots_is_root_without_children(self):
         """Correctly returns the root if the artifact is already the root
            and doesn't have any children
@@ -154,12 +169,15 @@ class TestSQL(TestCase):
     def test_artifact_ancestry_leaf_multiple_parents(self):
         """Correctly returns the ancestry of a leaf artifact w multiple parents
         """
-        sql = """INSERT INTO qiita.parent_artifact (artifact_id, parent_id)
-                 VALUES (%s, %s)"""
-        self.conn_handler.execute(sql, [4, 3])
+        root = self._create_root_artifact()
+        parent1 = self._create_child_artifact([root])
+        parent2 = self._create_child_artifact([root])
+        child = self._create_child_artifact([parent1, parent2])
+
         sql = "SELECT * FROM qiita.artifact_ancestry(%s)"
-        obs = self.conn_handler.execute_fetchall(sql, [4])
-        exp = [[4, 3], [3, 1], [4, 2], [2, 1]]
+        obs = self.conn_handler.execute_fetchall(sql, [child.id])
+        exp = [[child.id, parent1.id], [child.id, parent2.id],
+               [parent1.id, root.id], [parent2.id, root.id]]
         self.assertItemsEqual(obs, exp)
 
     def test_artifact_ancestry_middle(self):
@@ -192,6 +210,19 @@ class TestSQL(TestCase):
         exp = [[4, 2], [5, 2], [6L, 2L]]
         self.assertItemsEqual(obs, exp)
 
+    def test_isnumeric(self):
+        """Test SQL function isnumeric"""
+        exp = [['', False], ['.', False], ['.0', True], ['0.', True],
+               ['0', True], ['1', True], ['123', True], ['123.456', True],
+               ['abc', False], ['1..2', False], ['1.2.3.4', False],
+               ['1x234', False], ['1.234e-5', True]]
+
+        sql = ("WITH test(x) AS ("
+               "VALUES (''), ('.'), ('.0'), ('0.'), ('0'), ('1'), ('123'), "
+               "('123.456'), ('abc'), ('1..2'), ('1.2.3.4'), ('1x234'), "
+               "('1.234e-5')) SELECT x, isnumeric(x) FROM test;")
+        obs = self.conn_handler.execute_fetchall(sql)
+        self.assertEqual(exp, obs)
 
 if __name__ == '__main__':
     main()

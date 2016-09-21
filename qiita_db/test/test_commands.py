@@ -254,6 +254,9 @@ class TestPatch(TestCase):
 
     def tearDown(self):
         rmtree(self.patches_dir)
+        # The tests on this class are really tied up to the status of the
+        # database, so we do an exception and reset the DB in each test
+        qdb.environment_manager.drop_and_rebuild_tst_database()
 
     def _check_patchtest2(self, exists=True):
         if exists:

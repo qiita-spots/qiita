@@ -146,8 +146,7 @@ def get_lat_longs():
 
         sql = """SELECT CAST(latitude AS FLOAT), CAST(longitude AS FLOAT)
                  FROM qiita.{0}
-                 WHERE latitude IS NOT NULL AND latitude NOT IN %s
-                    AND longitude IS NOT NULL AND longitude NOT IN %s"""
+                 WHERE isnumeric(latitude) AND isnumeric(latitude)"""
         idx = qdb.sql_connection.TRN.index
 
         portal_tables = qdb.sql_connection.TRN.execute_fetchflatten()
