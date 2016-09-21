@@ -1,7 +1,15 @@
--- Jul 26, 2016
--- Adding active column to the software and software command table to be able
--- to disallow plugins and/or individual software commands
+-- Sep 7, 2016
+-- Adding a is numeric function to avoid problems with texts
+-- http://stackoverflow.com/a/16206123
 
-ALTER TABLE qiita.software ADD active bool DEFAULT 'True' NOT NULL;
-
-ALTER TABLE qiita.software_command ADD active bool DEFAULT 'True' NOT NULL;
+CREATE OR REPLACE FUNCTION isnumeric(text) RETURNS BOOLEAN AS $$
+DECLARE x NUMERIC;
+BEGIN
+    x = $1::NUMERIC;
+    RETURN TRUE;
+EXCEPTION WHEN others THEN
+    RETURN FALSE;
+END;
+$$
+STRICT
+LANGUAGE plpgsql IMMUTABLE;

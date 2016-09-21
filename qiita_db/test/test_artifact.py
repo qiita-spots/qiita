@@ -840,17 +840,16 @@ class ArtifactTests(TestCase):
             f.write('\n')
         data = {'OTU table': {'filepaths': [(fp, 'biom')],
                               'artifact_type': 'BIOM'}}
-        qdb.processing_job.ProcessingJob(
-            "bcc7ebcd-39c1-43e4-af2d-822e3589f14d").complete(
-                True, artifacts_data=data)
-        a_id = qdb.util.get_count('qiita.artifact')
-        self._clean_up_files.extend(
-            [afp for _, afp, _ in qdb.artifact.Artifact(a_id).filepaths])
+        job = qdb.processing_job.ProcessingJob(
+            "bcc7ebcd-39c1-43e4-af2d-822e3589f14d")
+        job.complete(True, artifacts_data=data)
+        artifact = job.outputs['OTU table']
+        self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
 
-        qdb.artifact.Artifact.delete(a_id)
+        qdb.artifact.Artifact.delete(artifact.id)
 
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.artifact.Artifact(a_id)
+            qdb.artifact.Artifact(artifact.id)
 
     def test_name_setter(self):
         a = qdb.artifact.Artifact(1)
