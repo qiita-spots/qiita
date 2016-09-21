@@ -8,8 +8,8 @@
 
 from unittest import TestCase, main
 from datetime import datetime
-from os.path import exists, join
-from os import remove, close
+from os.path import join
+from os import close
 from tempfile import mkstemp
 
 import networkx as nx
@@ -20,7 +20,27 @@ from qiita_core.util import qiita_test_checker
 from qiita_core.qiita_settings import qiita_config
 
 
-class ProcessingJobUtilTestReadOnly(TestCase):
+def _create_job():
+    job = qdb.processing_job.ProcessingJob.create(
+        qdb.user.User('test@foo.bar'),
+        qdb.software.Parameters.load(
+            qdb.software.Command(2),
+            values_dict={"min_seq_len": 100, "max_seq_len": 1000,
+                         "trim_seq_length": False, "min_qual_score": 25,
+                         "max_ambig": 6, "max_homopolymer": 6,
+                         "max_primer_mismatch": 0,
+                         "barcode_type": "golay_12",
+                         "max_barcode_errors": 1.5,
+                         "disable_bc_correction": False,
+                         "qual_score_window": 0, "disable_primers": False,
+                         "reverse_primers": "disable",
+                         "reverse_primer_mismatches": 0,
+                         "truncate_ambi_bases": False, "input_data": 1}))
+    return job
+
+
+@qiita_test_checker()
+class ProcessingJobUtilTest(TestCase):
     def test_system_call(self):
         obs_out, obs_err, obs_status = qdb.processing_job._system_call(
             'echo "Test system call stdout"')
@@ -36,34 +56,30 @@ class ProcessingJobUtilTestReadOnly(TestCase):
         self.assertEqual(obs_err, "Test system call stderr\n")
         self.assertEqual(obs_status, 1)
 
-
-@qiita_test_checker()
-class ProcessingJobUtilTest(TestCase):
     def test_job_submitter(self):
         # The cmd parameter of the function should be the command that
         # actually executes the function. However, in order to avoid executing
         # a expensive command, we are just going to pass some other command.
         # In case of success, nothing happens, so we just run it and see that
         # it doesn't raise an error
-        job = qdb.processing_job.ProcessingJob(
-            "063e553b-327c-4818-ab4a-adfe58e49860")
+        job = _create_job()
         cmd = 'echo "Test system call stdout"'
         qdb.processing_job._job_submitter(job, cmd)
 
     def test_job_submitter_error(self):
         # Same comment as above, but here we are going to force failure, and
         # check that the job is updated correctly
-        job = qdb.processing_job.ProcessingJob(
-            "063e553b-327c-4818-ab4a-adfe58e49860")
+        job = _create_job()
         cmd = '>&2  echo "Test system call stderr"; exit 1'
         qdb.processing_job._job_submitter(job, cmd)
         self.assertEqual(job.status, 'error')
-        exp = ("Error submitting job '063e553b-327c-4818-ab4a-adfe58e49860':\n"
-               "Std output:\nStd error:Test system call stderr\n")
+        exp = ("Error submitting job '%s':\nStd output:\nStd error:"
+               "Test system call stderr\n" % job.id)
         self.assertEqual(job.log.msg, exp)
 
 
-class ProcessingJobTestReadOnly(TestCase):
+@qiita_test_checker()
+class ProcessingJobTest(TestCase):
     def setUp(self):
         self.tester1 = qdb.processing_job.ProcessingJob(
             "063e553b-327c-4818-ab4a-adfe58e49860")
@@ -206,25 +222,6 @@ class ProcessingJobTestReadOnly(TestCase):
         # jobs, which will mean to run split libraries, for example.
         pass
 
-
-@qiita_test_checker()
-class ProcessingJobTest(TestCase):
-    def setUp(self):
-        self.tester1 = qdb.processing_job.ProcessingJob(
-            "063e553b-327c-4818-ab4a-adfe58e49860")
-        self.tester2 = qdb.processing_job.ProcessingJob(
-            "bcc7ebcd-39c1-43e4-af2d-822e3589f14d")
-        self.tester3 = qdb.processing_job.ProcessingJob(
-            "b72369f9-a886-4193-8d3d-f7b504168e75")
-        self.tester4 = qdb.processing_job.ProcessingJob(
-            "d19f76ee-274e-4c1b-b3a2-a12d73507c55")
-        self._clean_up_files = []
-
-    def tearDown(self):
-        for fp in self._clean_up_files:
-            if exists(fp):
-                remove(fp)
-
     def test_create(self):
         exp_command = qdb.software.Command(1)
         json_str = (
@@ -248,26 +245,29 @@ class ProcessingJobTest(TestCase):
         self.assertTrue(obs in qdb.artifact.Artifact(1).jobs())
 
     def test_set_status(self):
-        self.assertEqual(self.tester1.status, 'queued')
-        self.tester1._set_status('running')
-        self.assertEqual(self.tester1.status, 'running')
-        self.tester1._set_status('error')
-        self.assertEqual(self.tester1.status, 'error')
-        self.tester1._set_status('running')
-        self.assertEqual(self.tester1.status, 'running')
-        self.tester1._set_status('success')
-        self.assertEqual(self.tester1.status, 'success')
-
+        job = _create_job()
+        self.assertEqual(job.status, 'in_construction')
+        job._set_status('queued')
+        self.assertEqual(job.status, 'queued')
+        job._set_status('running')
+        self.assertEqual(job.status, 'running')
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            self.tester2._set_status('queued')
-
+            job._set_status('queued')
+        job._set_status('error')
+        self.assertEqual(job.status, 'error')
+        job._set_status('running')
+        self.assertEqual(job.status, 'running')
+        job._set_status('success')
+        self.assertEqual(job.status, 'success')
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
-            self.tester3._set_status('running')
+            job._set_status('running')
 
     def test_submit_error(self):
+        job = _create_job()
+        job._set_status('queued')
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
-            self.tester1.submit()
+            job.submit()
 
     def test_complete_type(self):
         fd, fp = mkstemp(suffix="_table.biom")
@@ -318,8 +318,11 @@ class ProcessingJobTest(TestCase):
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         artifacts_data = {'OTU table': {'filepaths': [(fp, 'biom')],
                                         'artifact_type': 'BIOM'}}
-        self.tester2.complete(True, artifacts_data=artifacts_data)
-        self.assertTrue(self.tester2.status, 'success')
+
+        job = _create_job()
+        job._set_status('running')
+        job.complete(True, artifacts_data=artifacts_data)
+        self.assertTrue(job.status, 'success')
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
         self._clean_up_files.extend(
@@ -327,11 +330,12 @@ class ProcessingJobTest(TestCase):
                 qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
     def test_complete_failure(self):
-        self.tester2.complete(False, error="Job failure")
-        self.assertEqual(self.tester2.status, 'error')
-        self.assertEqual(self.tester2.log,
+        job = _create_job()
+        job.complete(False, error="Job failure")
+        self.assertEqual(job.status, 'error')
+        self.assertEqual(job.log,
                          qdb.logger.LogEntry.newest_records(numrecords=1)[0])
-        self.assertEqual(self.tester2.log.msg, 'Job failure')
+        self.assertEqual(job.log.msg, 'Job failure')
 
     def test_complete_error(self):
         with self.assertRaises(
@@ -339,7 +343,12 @@ class ProcessingJobTest(TestCase):
             self.tester1.complete(True, artifacts_data={})
 
     def test_set_error(self):
-        for t in [self.tester1, self.tester2]:
+        job1 = _create_job()
+        job1._set_status('queued')
+        job2 = _create_job()
+        job2._set_status('running')
+
+        for t in [job1, job2]:
             t._set_error('Job failure')
             self.assertEqual(t.status, 'error')
             self.assertEqual(
@@ -350,24 +359,30 @@ class ProcessingJobTest(TestCase):
             self.tester3._set_error("Job failure")
 
     def test_update_heartbeat_state(self):
+        job = _create_job()
+        job._set_status('running')
         before = datetime.now()
-        self.tester2.update_heartbeat_state()
-        self.assertTrue(before < self.tester2.heartbeat < datetime.now())
+        job.update_heartbeat_state()
+        self.assertTrue(before < job.heartbeat < datetime.now())
 
+        job = _create_job()
+        job._set_status('queued')
         before = datetime.now()
-        self.assertEqual(self.tester1.status, 'queued')
-        self.tester1.update_heartbeat_state()
-        self.assertTrue(before < self.tester1.heartbeat < datetime.now())
-        self.assertEqual(self.tester1.status, 'running')
+        job.update_heartbeat_state()
+        self.assertTrue(before < job.heartbeat < datetime.now())
+        self.assertEqual(job.status, 'running')
 
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             self.tester3.update_heartbeat_state()
 
     def test_step_setter(self):
-        self.assertEqual(self.tester2.step, 'demultiplexing')
-        self.tester2.step = 'generating demux file'
-        self.assertEqual(self.tester2.step, 'generating demux file')
+        job = _create_job()
+        job._set_status('running')
+        job.step = 'demultiplexing'
+        self.assertEqual(job.step, 'demultiplexing')
+        job.step = 'generating demux file'
+        self.assertEqual(job.step, 'generating demux file')
 
         with self.assertRaises(
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
@@ -414,8 +429,33 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(child.input_artifacts,
                          [qdb.artifact.Artifact(3)])
 
+    def test_outputs(self):
+        job = _create_job()
+        job._set_status('running')
 
-class ProcessingWorkflowTestsReadOnly(TestCase):
+        QE = qdb.exceptions
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            job.outputs
+
+        fd, fp = mkstemp(suffix='_table.biom')
+        self._clean_up_files.append(fp)
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+        exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
+        artifacts_data = {'OTU table': {'filepaths': [(fp, 'biom')],
+                                        'artifact_type': 'BIOM'}}
+        job.complete(True, artifacts_data=artifacts_data)
+        obs = job.outputs
+        self.assertEqual(
+            obs, {'OTU table': qdb.artifact.Artifact(exp_artifact_count)})
+        self._clean_up_files.extend(
+            [afp for _, afp, _ in
+                qdb.artifact.Artifact(exp_artifact_count).filepaths])
+
+
+@qiita_test_checker()
+class ProcessingWorkflowTests(TestCase):
     def test_name(self):
         self.assertEqual(qdb.processing_job.ProcessingWorkflow(1).name,
                          'Testing processing workflow')
@@ -460,9 +500,6 @@ class ProcessingWorkflowTestsReadOnly(TestCase):
         # will mean to run split libraries, for example.
         pass
 
-
-@qiita_test_checker()
-class ProcessingWorkflowTests(TestCase):
     def test_from_default_workflow(self):
         exp_user = qdb.user.User('test@foo.bar')
         dflt_wf = qdb.software.DefaultWorkflow(1)
