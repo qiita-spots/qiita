@@ -1464,10 +1464,10 @@ class TestPrepTemplate(TestCase):
             self.metadata, self.test_study, self.data_type)
         sample_id = '%s.SKB8.640193' % self.test_study.id
         pt.delete_sample(sample_id)
-        self.assertNotIn(sample_id, pt.keys())
+        self.assertNotIn(sample_id, pt)
 
         pt1 = qdb.metadata_template.prep_template.PrepTemplate(1)
-        self.assertIn(sample_id, pt1.keys())
+        self.assertIn(sample_id, pt1)
 
         # testing errors
         with self.assertRaises(QE.QiitaDBUnknownIDError):

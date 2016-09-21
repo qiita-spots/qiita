@@ -176,7 +176,7 @@ class TestAnalysis(TestCase):
         self.assertEqual(obs.owner, user)
         self.assertEqual(obs.name, "newAnalysis")
         self.assertEqual(obs._portals, ["QIITA"])
-        self.assertTrue(time1 < obs.timestamp)
+        self.assertLess(time1, obs.timestamp)
         self.assertEqual(obs.description, "A New Analysis")
         self.assertEqual(obs.samples, {})
         self.assertEqual(obs.dropped_samples, {})

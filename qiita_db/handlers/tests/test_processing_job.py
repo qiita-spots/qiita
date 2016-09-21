@@ -184,6 +184,8 @@ class CompleteHandlerTests(OauthTestingBase):
         with open(fp, 'w') as f:
             f.write('\n')
 
+        self._clean_up_files.append(fp)
+
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         payload = dumps(
             {'success': True, 'error': '',
