@@ -59,7 +59,7 @@ The Qiita configuration file determines how the package interacts with your syst
 
 Unit tests in Qiita are located inside the tests/test folder of every sub-module, for example `qiita_db/test/test_metadata_template.py`. These can be executed on a per-file basis or using `nosetests` from the base directory.
 
-During test creation make sure the test class is decorated with `@qiita_test_checker()` if database modifications are done during tests. This will automatically drop and rebuild the qiita schema before each test case is executed.
+During test creation make sure the test class is decorated with `@qiita_test_checker()` if database modifications are done during tests. This will automatically drop and rebuild the qiita schema after the entire test class has been executed. This requires to all the tests in a single class be independent of each other, so stochastic failures do not occur due to different test order execution.
 
 Coverage testing is in effect, so run tests using `nosetests --with-coverage [test_file.py]` to check what lines of new code in your pull request are not tested.
 
@@ -143,7 +143,7 @@ Since the `qiita_db` code contains a mixture of python code and SQL code, here a
 3. Use PEP8-style indentation for the SQL queries, as it will improve readability. Common SQL best-practices recommend to have a new line for the `SELECT`, `FROM`, `WHERE` and similar clauses:
   * Wrong:
   ```python
-  sql = """SELECT udt_name FROM information_schema.columns WHERE 
+  sql = """SELECT udt_name FROM information_schema.columns WHERE
            column_name = %s AND table_schema = 'qiita' AND (table_name = %s
            OR table_name = %s)"""
   ```

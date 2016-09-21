@@ -23,7 +23,8 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 
 
-class BaseTestPrepSample(TestCase):
+@qiita_test_checker()
+class TestPrepSample(TestCase):
     def setUp(self):
         self.prep_template = \
             qdb.metadata_template.prep_template.PrepTemplate(1)
@@ -41,8 +42,6 @@ class BaseTestPrepSample(TestCase):
                                'sequencing_meth', 'illumina_technology',
                                'sample_center', 'pcr_primers', 'study_center'}
 
-
-class TestPrepSampleReadOnly(BaseTestPrepSample):
     def test_init_unknown_error(self):
         """Init errors if the PrepSample id is not found in the template"""
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
@@ -256,17 +255,16 @@ class TestPrepSampleReadOnly(BaseTestPrepSample):
                'target_gene', 'target_subfragment']
         self.assertItemsEqual(obs, exp)
 
-
-@qiita_test_checker()
-class TestPrepSampleReadWrite(BaseTestPrepSample):
-    """Tests the PrepSample class"""
     def test_setitem(self):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             self.tester['column that does not exist'] = 0.3
 
-        self.assertEqual(self.tester['center_name'], 'ANL')
-        self.tester['center_name'] = "FOO"
-        self.assertEqual(self.tester['center_name'], "FOO")
+        tester = qdb.metadata_template.prep_template.PrepSample(
+            '1.SKD8.640184', self.prep_template)
+
+        self.assertEqual(tester['center_name'], 'ANL')
+        tester['center_name'] = "FOO"
+        self.assertEqual(tester['center_name'], "FOO")
 
     def test_delitem(self):
         """delitem raises an error (currently not allowed)"""
@@ -274,8 +272,9 @@ class TestPrepSampleReadWrite(BaseTestPrepSample):
             del self.tester['pcr_primers']
 
 
-class BaseTestPrepTemplate(TestCase):
-    def _set_up(self):
+@qiita_test_checker()
+class TestPrepTemplate(TestCase):
+    def setUp(self):
         self.metadata_dict = {
             'SKB8.640193': {'center_name': 'ANL',
                             'center_project_name': 'Test Project',
@@ -378,11 +377,6 @@ class BaseTestPrepTemplate(TestCase):
         for f in self._clean_up_files:
             remove(f)
 
-
-class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
-    def setUp(self):
-        self._set_up()
-
     def test_study_id(self):
         """Ensure that the correct study ID is returned"""
         self.assertEqual(self.tester.study_id, 1)
@@ -390,7 +384,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_init_unknown_error(self):
         """Init raises an error if the id is not known"""
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.metadata_template.prep_template.PrepTemplate(3)
+            qdb.metadata_template.prep_template.PrepTemplate(30000)
 
     def test_init(self):
         """Init successfully instantiates the object"""
@@ -410,7 +404,7 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
     def test_exists_false(self):
         """Exists returns false when the PrepTemplate does not exists"""
         self.assertFalse(
-            qdb.metadata_template.prep_template.PrepTemplate.exists(3))
+            qdb.metadata_template.prep_template.PrepTemplate.exists(30000))
 
     def test_get_sample_ids(self):
         """get_sample_ids returns the correct set of sample ids"""
@@ -768,15 +762,6 @@ class TestPrepTemplateReadOnly(BaseTestPrepTemplate):
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
             pt.get_category('DOESNOTEXIST')
 
-
-@qiita_test_checker()
-class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
-    """Tests the PrepTemplate class"""
-
-    def setUp(self):
-        self._set_up()
-        self._clean_up_files = []
-
     def test_create_duplicate_header(self):
         """Create raises an error when duplicate headers are present"""
         self.metadata['STR_COLUMN'] = pd.Series(['', '', ''],
@@ -820,9 +805,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
         exp = [['1.SKB8.640193'], ['1.SKD8.640184']]
         self.assertEqual(obs, exp)
 
-    def _common_creation_checks(self, new_id, pt, fp_count):
+    def _common_creation_checks(self, pt, fp_count):
         # The returned object has the correct id
-        self.assertEqual(pt.id, new_id)
         self.assertEqual(pt.data_type(), self.data_type)
         self.assertEqual(pt.data_type(ret_id=True), self.data_type_id)
         self.assertEqual(pt.artifact, None)
@@ -893,20 +877,18 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
     def test_create(self):
         """Creates a new PrepTemplate"""
         fp_count = qdb.util.get_count('qiita.filepath')
-        new_id = qdb.util.get_count('qiita.prep_template') + 1
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type)
-        self._common_creation_checks(new_id, pt, fp_count)
+        self._common_creation_checks(pt, fp_count)
 
     def test_create_already_prefixed_samples(self):
         """Creates a new PrepTemplate"""
         fp_count = qdb.util.get_count('qiita.filepath')
-        new_id = qdb.util.get_count('qiita.prep_template') + 1
         pt = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning,
             qdb.metadata_template.prep_template.PrepTemplate.create,
             self.metadata_prefixed, self.test_study, self.data_type)
-        self._common_creation_checks(new_id, pt, fp_count)
+        self._common_creation_checks(pt, fp_count)
 
     def test_generate_files(self):
         fp_count = qdb.util.get_count("qiita.filepath")
@@ -936,23 +918,20 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
     def test_create_data_type_id(self):
         """Creates a new PrepTemplate passing the data_type_id"""
         fp_count = qdb.util.get_count('qiita.filepath')
-        new_id = qdb.util.get_count('qiita.prep_template') + 1
         pt = qdb.metadata_template.prep_template.PrepTemplate.create(
             self.metadata, self.test_study, self.data_type_id)
-        self._common_creation_checks(new_id, pt, fp_count)
+        self._common_creation_checks(pt, fp_count)
 
     def test_create_warning(self):
         """Warns if a required columns is missing for a given functionality
         """
         fp_count = qdb.util.get_count("qiita.filepath")
-        new_id = qdb.util.get_count('qiita.prep_template') + 1
         del self.metadata['barcode']
         pt = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning,
             qdb.metadata_template.prep_template.PrepTemplate.create,
             self.metadata, self.test_study, self.data_type)
 
-        self.assertEqual(pt.id, new_id)
         self.assertEqual(pt.data_type(), self.data_type)
         self.assertEqual(pt.data_type(ret_id=True), self.data_type_id)
         self.assertEqual(pt.artifact, None)
@@ -1032,7 +1011,7 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
     def test_delete_unkonwn_id_error(self):
         """Try to delete a non existent prep template"""
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.metadata_template.prep_template.PrepTemplate.delete(5)
+            qdb.metadata_template.prep_template.PrepTemplate.delete(30000)
 
     def test_delete_error_raw_data(self):
         """Try to delete a prep template with a raw data attached to id"""
@@ -1157,8 +1136,8 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
     def test_qiime_map_fp(self):
         pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         exp = join(qdb.util.get_mountpoint('templates')[0][1],
-                   '1_prep_1_qiime_19700101-000000.txt')
-        self.assertEqual(pt.qiime_map_fp, exp)
+                   '1_prep_1_qiime_[0-9]*-[0-9]*.txt')
+        self.assertRegexpMatches(pt.qiime_map_fp, exp)
 
     def test_check_restrictions(self):
         obs = self.tester.check_restrictions(
@@ -1466,11 +1445,13 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
 
     def test_delete_column(self):
         QE = qdb.exceptions
-        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
-        pt.delete_column('run_date')
-        self.assertNotIn('run_date', pt.categories())
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            self.metadata, self.test_study, self.data_type)
+        pt.delete_column('str_column')
+        self.assertNotIn('str_column', pt.categories())
 
         # testing errors
+        pt = qdb.metadata_template.prep_template.PrepTemplate(1)
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
             pt.delete_column('barcode')
         with self.assertRaises(QE.QiitaDBColumnError):
@@ -1483,7 +1464,10 @@ class TestPrepTemplateReadWrite(BaseTestPrepTemplate):
             self.metadata, self.test_study, self.data_type)
         sample_id = '%s.SKB8.640193' % self.test_study.id
         pt.delete_sample(sample_id)
-        self.assertNotIn(sample_id, pt.keys())
+        self.assertNotIn(sample_id, pt)
+
+        pt1 = qdb.metadata_template.prep_template.PrepTemplate(1)
+        self.assertIn(sample_id, pt1)
 
         # testing errors
         with self.assertRaises(QE.QiitaDBUnknownIDError):

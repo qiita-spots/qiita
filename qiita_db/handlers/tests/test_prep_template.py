@@ -127,8 +127,6 @@ class PrepTemplateDataHandlerTests(OauthTestingBase):
 
 
 class PrepTemplateAPItestHandlerTests(OauthTestingBase):
-    database = True
-
     def test_post(self):
         metadata_dict = {
             'SKB8.640193': {'primer': 'GTGCCAGCMGCCGCGGTAA',

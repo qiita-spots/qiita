@@ -57,8 +57,6 @@ class JobHandlerTests(OauthTestingBase):
 
 
 class HeartbeatHandlerTests(OauthTestingBase):
-    database = True
-
     def test_post_job_does_not_exists(self):
         obs = self.post('/qiita_db/jobs/do-not-exist/heartbeat/', '',
                         headers=self.header)
@@ -102,8 +100,6 @@ class HeartbeatHandlerTests(OauthTestingBase):
 
 
 class ActiveStepHandlerTests(OauthTestingBase):
-    database = True
-
     def test_post_no_header(self):
         obs = self.post(
             '/qiita_db/jobs/063e553b-327c-4818-ab4a-adfe58e49860/step/', '')
@@ -135,8 +131,6 @@ class ActiveStepHandlerTests(OauthTestingBase):
 
 
 class CompleteHandlerTests(OauthTestingBase):
-    database = True
-
     def setUp(self):
         self._clean_up_files = []
         super(CompleteHandlerTests, self).setUp()
@@ -181,10 +175,16 @@ class CompleteHandlerTests(OauthTestingBase):
         self.assertEqual(job.log.msg, 'Job failure')
 
     def test_post_job_success(self):
+        job = qdb.processing_job.ProcessingJob(
+            'd19f76ee-274e-4c1b-b3a2-a12d73507c55')
+        job._set_status('running')
+
         fd, fp = mkstemp(suffix='_table.biom')
         close(fd)
         with open(fp, 'w') as f:
             f.write('\n')
+
+        self._clean_up_files.append(fp)
 
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         payload = dumps(
@@ -192,19 +192,15 @@ class CompleteHandlerTests(OauthTestingBase):
              'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
                                          'artifact_type': 'BIOM'}}})
         obs = self.post(
-            '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/complete/',
+            '/qiita_db/jobs/d19f76ee-274e-4c1b-b3a2-a12d73507c55/complete/',
             payload, headers=self.header)
         self.assertEqual(obs.code, 200)
-        job = qdb.processing_job.ProcessingJob(
-            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')
         self.assertEqual(job.status, 'success')
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
 
 
 class ProcessingJobAPItestHandlerTests(OauthTestingBase):
-    database = True
-
     def test_post_processing_job(self):
         data = {
             'user': 'demo@microbio.me',
