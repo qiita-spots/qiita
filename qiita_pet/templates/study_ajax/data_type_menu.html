@@ -1,13 +1,16 @@
 {% from qiita_core.qiita_settings import qiita_config %}
 {% if prep_info %}
-  <h3>Data Types</h3>
+  <h3>Data Types <small>(click on the tabs)</small></h3>
   <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
     <div class="panel panel-default">
       {% for dt in prep_info %}
       {% set cleaned_dt = dt.replace(' ', '_') %}
         <div class="panel-heading" role="tab" id="heading{{cleaned_dt}}">
           <h4 class="panel-title">
-            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{cleaned_dt}}" aria-expanded="true" aria-controls="collapse{{cleaned_dt}}">{{dt}}</a>
+            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{cleaned_dt}}" aria-expanded="true" aria-controls="collapse{{cleaned_dt}}">
+              <span class="glyphicon glyphicon-th-list"></span>
+              {{dt}}
+            </a>
           </h4>
         </div>
         <div id="collapse{{cleaned_dt}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{cleaned_dt}}">
