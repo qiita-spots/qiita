@@ -27,7 +27,6 @@ class StudyBaseInfoAJAX(TestHandlerBase):
 
 
 class StudyDeleteAjaxTests(TestHandlerBase):
-    database = True
 
     def test_delete_study(self):
         response = self.post('/study/delete/', {'study_id': 1})

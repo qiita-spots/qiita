@@ -16,6 +16,8 @@ from qiita_ware.exceptions import QiitaWareError
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
 from qiita_db.util import get_count
+from qiita_db.metadata_template.sample_template import SampleTemplate
+from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_ware.metadata_pipeline import (
     create_templates_from_qiime_mapping_file)
 
@@ -47,6 +49,13 @@ class TestMetadataPipeline(TestCase):
             if exists(fp):
                 remove(fp)
 
+        study_id = self.new_study.id
+        for pt in self.new_study.prep_templates():
+            PrepTemplate.delete(pt.id)
+        if SampleTemplate.exists(study_id):
+            SampleTemplate.delete(study_id)
+        Study.delete(study_id)
+
     def test_create_templates_from_qiime_mapping_file(self):
         new_pt_id = get_count('qiita.prep_template') + 1
         obs_st, obs_pt = create_templates_from_qiime_mapping_file(
@@ -73,7 +82,9 @@ class TestMetadataPipeline(TestCase):
         self.assertEqual(set(obs_pt.categories()), exp)
 
     def test_create_templates_from_qiime_mapping_file_reverse_linker(self):
-        new_pt_id = get_count('qiita.prep_template') + 1
+        curr_id = self.conn_handler.execute_fetchone(
+            "SELECT last_value FROM "
+            "qiita.prep_template_prep_template_id_seq")[0]
         obs_st, obs_pt = create_templates_from_qiime_mapping_file(
             StringIO(QIIME_MAP_WITH_REVERSE_LINKER_PRIMER),
             self.new_study, "16S")
@@ -84,7 +95,7 @@ class TestMetadataPipeline(TestCase):
                 self._clean_up_files.append(fp)
 
         self.assertEqual(obs_st.id, self.new_study.id)
-        self.assertEqual(obs_pt.id, new_pt_id)
+        self.assertEqual(obs_pt.id, curr_id + 1)
 
         # Check that each template has the correct columns
         exp = {"physical_specimen_location", "physical_specimen_remaining",

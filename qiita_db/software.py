@@ -561,13 +561,22 @@ class Software(qdb.base.QiitaObject):
         """
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.publication (doi, pubmed_id)
-                        VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, publications, many=True)
+                        SELECT %s, %s
+                        WHERE NOT EXISTS(SELECT *
+                                         FROM qiita.publication
+                                         WHERE doi = %s)"""
+            args = [[doi, pid, doi] for doi, pid in publications]
+            qdb.sql_connection.TRN.add(sql, args, many=True)
 
             sql = """INSERT INTO qiita.software_publication
                             (software_id, publication_doi)
-                        VALUES (%s, %s)"""
-            sql_params = [[self.id, doi] for doi, _ in publications]
+                        SELECT %s, %s
+                        WHERE NOT EXISTS(SELECT *
+                                         FROM qiita.software_publication
+                                         WHERE software_id = %s AND
+                                               publication_doi = %s)"""
+            sql_params = [[self.id, doi, self.id, doi]
+                          for doi, _ in publications]
             qdb.sql_connection.TRN.add(sql, sql_params, many=True)
             qdb.sql_connection.TRN.execute()
 
