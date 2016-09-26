@@ -24,6 +24,7 @@ class CommandTests(TestCase):
     def setUp(self):
         self.software = qdb.software.Software(1)
         self.parameters = {
+            'req_art': ['artifact:["BIOM"]', None],
             'req_param': ['string', None],
             'opt_int_param': ['integer', '4'],
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
@@ -242,8 +243,8 @@ class CommandTests(TestCase):
             self.parameters)
         self.assertEqual(obs.name, "Test Command")
         self.assertEqual(obs.description, "This is a command for testing")
-        self.assertEqual(obs.parameters, self.parameters)
-        exp_required = {'req_param': ('string', [None])}
+        exp_required = {'req_param': ('string', [None]),
+                        'req_art': ('artifact', ['BIOM'])}
         self.assertEqual(obs.required_parameters, exp_required)
         exp_optional = {
             'opt_int_param': ['integer', '4'],

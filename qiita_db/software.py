@@ -205,6 +205,7 @@ class Command(qdb.base.QiitaObject):
                 "Error creating command %s. At least one parameter should "
                 "be provided." % name)
         sql_param_values = []
+        sql_artifact_params = []
         for pname, vals in parameters.items():
             if len(vals) != 2:
                 raise qdb.exceptions.QiitaDBError(
@@ -214,10 +215,10 @@ class Command(qdb.base.QiitaObject):
 
             ptype, dflt = vals
             # Check that the type is one of the supported types
-            supported_types = ['string', 'integer', 'float', 'artifact',
-                               'reference']
-            if ptype not in supported_types and not ptype.startswith('choice'):
-                supported_types.append('choice')
+            supported_types = ['string', 'integer', 'float', 'reference']
+            if ptype not in supported_types and not ptype.startswith(
+                    ('choice', 'artifact')):
+                supported_types.extend(['choice', 'artifact'])
                 raise qdb.exceptions.QiitaDBError(
                     "Unsupported parameters type '%s' for parameter %s. "
                     "Supported types are: %s"
@@ -231,10 +232,15 @@ class Command(qdb.base.QiitaObject):
                         "listed in the available choices: %s"
                         % (dflt, pname, ', '.join(choices)))
 
-            if dflt is not None:
-                sql_param_values.append([pname, ptype, False, dflt])
+            if ptype.startswith('artifact'):
+                atypes = loads(ptype.split(':')[1])
+                sql_artifact_params.append(
+                    [pname, 'artifact', atypes])
             else:
-                sql_param_values.append([pname, ptype, True, None])
+                if dflt is not None:
+                    sql_param_values.append([pname, ptype, False, dflt])
+                else:
+                    sql_param_values.append([pname, ptype, True, None])
 
         with qdb.sql_connection.TRN:
             if cls.exists(software, name):
@@ -254,11 +260,25 @@ class Command(qdb.base.QiitaObject):
             sql = """INSERT INTO qiita.command_parameter
                         (command_id, parameter_name, parameter_type, required,
                          default_value)
-                     VALUES (%s, %s, %s, %s, %s)"""
+                     VALUES (%s, %s, %s, %s, %s)
+                     RETURNING command_parameter_id"""
             sql_params = [[c_id, pname, p_type, reqd, default]
                           for pname, p_type, reqd, default in sql_param_values]
             qdb.sql_connection.TRN.add(sql, sql_params, many=True)
             qdb.sql_connection.TRN.execute()
+
+            # Add the artifact parameters
+            sql_type = """INSERT INTO qiita.parameter_artifact_type
+                            (command_parameter_id, artifact_type_id)
+                          VALUES (%s, %s)"""
+            for pname, p_type, atypes in sql_artifact_params:
+                sql_params = [c_id, pname, p_type, True, None]
+                qdb.sql_connection.TRN.add(sql, sql_params)
+                pid = qdb.sql_connection.TRN.execute_fetchlast()
+                sql_params = [
+                    [pid, qdb.util.convert_to_id(at, 'artifact_type')]
+                    for at in atypes]
+                qdb.sql_connection.TRN.add(sql_type, sql_params, many=True)
 
         return cls(c_id)
 
