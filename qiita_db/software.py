@@ -8,11 +8,16 @@
 
 from json import dumps, loads
 from copy import deepcopy
+from future import standard_library
 import inspect
+import warnings
 
 import networkx as nx
 
 import qiita_db as qdb
+
+with standard_library.hooks():
+    from configparser import ConfigParser
 
 
 class Command(qdb.base.QiitaObject):
@@ -425,8 +430,138 @@ class Software(qdb.base.QiitaObject):
     _table = "software"
 
     @classmethod
+    def deactivate_all(cls):
+        """Deactivates all the plugins in the system"""
+        with qdb.sql_connection.TRN:
+            sql = "UPDATE qiita.software SET active = False"
+            qdb.sql_connection.TRN.add(sql)
+            qdb.sql_connection.TRN.execute()
+
+    @classmethod
+    def from_file(cls, fp, update=False):
+        """Installs/activates a plugin from the configuration file
+
+        Parameters
+        ----------
+        fp : str
+            Path to the plugin configuration file
+        update : bool, optional
+            If true, update the values in the database with the current values
+            in the config file. Otherwise, use stored values and warn if config
+            file contents and database contents do not match
+
+        Returns
+        -------
+        qiita_db.software.Software
+            The software object for the contents of `fp`
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBOperationNotPermittedError
+            If the plugin type in the DB and in the config file doesn't match
+            If the (client_id, client_secret) pair in the DB and in the config
+            file doesn't match
+        """
+        config = ConfigParser()
+        with open(fp, 'U') as conf_file:
+            config.readfp(conf_file)
+
+        name = config.get('main', 'NAME')
+        version = config.get('main', 'VERSION')
+        description = config.get('main', 'DESCRIPTION')
+        env_script = config.get('main', 'ENVIRONMENT_SCRIPT')
+        start_script = config.get('main', 'START_SCRIPT')
+        software_type = config.get('main', 'PLUGIN_TYPE')
+        publications = config.get('main', 'PUBLICATIONS')
+        if publications:
+            publications = loads(publications)
+        client_id = config.get('oauth2', 'CLIENT_ID')
+        client_secret = config.get('oauth2', 'CLIENT_SECRET')
+
+        if cls.exists(name, version):
+            # This plugin already exists, check that all the values are the
+            # same and return the existing plugin
+            with qdb.sql_connection.TRN:
+                sql = """SELECT software_id
+                         FROM qiita.software
+                         WHERE name = %s AND version = %s"""
+                qdb.sql_connection.TRN.add(sql, [name, version])
+                instance = cls(qdb.sql_connection.TRN.execute_fetchlast())
+
+                warning_values = []
+                sql_update = """UPDATE qiita.software
+                                SET {0} = %s
+                                WHERE software_id = %s"""
+
+                values = [description, env_script, start_script]
+                attrs = ['description', 'environment_script', 'start_script']
+                for value, attr in zip(values, attrs):
+                    if value != instance.__getattribute__(attr):
+                        if update:
+                            qdb.sql_connection.TRN.add(
+                                sql_update.format(attr), [value, instance.id])
+                        else:
+                            warning_values.append(attr)
+
+                # Having a different plugin type should be an error,
+                # independently if the user is trying to update plugins or not
+                if software_type != instance.type:
+                    raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                        'The plugin type of the plugin "%s" version %s does '
+                        'not match the one in the system' % (name, version))
+
+                if publications != instance.publications:
+                    if update:
+                        instance.add_publications(publications)
+                    else:
+                        warning_values.append('publications')
+
+                if (client_id != instance.client_id or
+                        client_secret != instance.client_secret):
+                    raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                        'The (client_id, client_secret) pair of the plugin '
+                        '"%s" version "%s" does not match the one in the '
+                        'system' % (name, version))
+
+                if warning_values:
+                    warnings.warn(
+                        'Plugin "%s" version "%s" config file does not match '
+                        'with stored information. Check the config file or '
+                        'run "qiita plugin update" to update the plugin '
+                        'information. Offending values: %s'
+                        % (name, version, ", ".join(sorted(warning_values))),
+                        qdb.exceptions.QiitaDBWarning)
+        else:
+            # This is a new plugin, create it
+            instance = cls.create(
+                name, version, description, env_script, start_script,
+                software_type, publications=publications, client_id=client_id,
+                client_secret=client_secret)
+
+        return instance
+
+    @classmethod
+    def exists(cls, name, version):
+        """Returns whether the plugin (name, version) already exists
+
+        Parameters
+        ----------
+        name : str
+            The name of the plugin
+        version : str
+            The version of the plugin
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT EXISTS(
+                        SELECT * FROM qiita.software
+                        WHERE name = %s AND version = %s)"""
+            qdb.sql_connection.TRN.add(sql, [name, version])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @classmethod
     def create(cls, name, version, description, environment_script,
-               start_script, software_type, publications=None):
+               start_script, software_type, publications=None,
+               client_id=None, client_secret=None):
         r"""Creates a new software in the system
 
         Parameters
@@ -446,6 +581,15 @@ class Software(qdb.base.QiitaObject):
         publications : list of (str, str), optional
             A list with the (DOI, pubmed_id) of the publications attached to
             the software
+        client_id : str, optional
+            The client_id of the software. Default: randomly generated
+        client_secret : str, optional
+            The client_secret of the software. Default: randomly generated
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBError
+            If one of client_id or client_secret is provided but not both
         """
         with qdb.sql_connection.TRN:
             sql = """INSERT INTO qiita.software
@@ -463,6 +607,34 @@ class Software(qdb.base.QiitaObject):
 
             if publications:
                 instance.add_publications(publications)
+
+            id_is_none = client_id is None
+            secret_is_none = client_secret is None
+
+            if id_is_none and secret_is_none:
+                # Both are none, generate new ones
+                client_id = qdb.util.create_rand_string(50, punct=False)
+                client_secret = qdb.util.create_rand_string(255, punct=False)
+            elif id_is_none ^ secret_is_none:
+                # One has been provided but not the other, raise an error
+                raise qdb.exceptions.QiitaDBError(
+                    'Plugin "%s" version "%s" cannot be created, please '
+                    'provide both client_id and client_secret or none of them'
+                    % (name, version))
+
+            # At this point both client_id and client_secret are defined
+            sql = """INSERT INTO qiita.oauth_identifiers
+                        (client_id, client_secret)
+                     SELECT %s, %s
+                     WHERE NOT EXISTS(SELECT *
+                                      FROM qiita.oauth_identifiers
+                                      WHERE client_id = %s
+                                        AND client_secret = %s)"""
+            qdb.sql_connection.TRN.add(
+                sql, [client_id, client_secret, client_id, client_secret])
+            sql = """INSERT INTO qiita.oauth_software (software_id, client_id)
+                     VALUES (%s, %s)"""
+            qdb.sql_connection.TRN.add(sql, [s_id, client_id])
 
         return instance
 
@@ -643,6 +815,53 @@ class Software(qdb.base.QiitaObject):
             sql = """SELECT software_type
                      FROM qiita.software_type
                         JOIN qiita.software USING (software_type_id)
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def active(self):
+        """Returns if the software is active or not
+
+        Returns
+        -------
+        bool
+            Whether the software is active or not
+        """
+        with qdb.sql_connection.TRN:
+            sql = "SELECT active FROM qiita.software WHERE software_id = %s"
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def client_id(self):
+        """Returns the client id of the plugin
+
+        Returns
+        -------
+        str
+            The client id of the software
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT client_id
+                     FROM qiita.oauth_software
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @property
+    def client_secret(self):
+        """Returns the client secret of the plugin
+
+        Returns
+        -------
+        str
+            The client secrect of the plugin
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT client_secret
+                     FROM qiita.oauth_software
+                        JOIN qiita.oauth_identifiers USING (client_id)
                      WHERE software_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()

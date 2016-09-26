@@ -8,6 +8,10 @@
 
 from unittest import TestCase, main
 from copy import deepcopy
+from os.path import exists
+from os import remove, close
+from tempfile import mkstemp
+import warnings
 
 import networkx as nx
 
@@ -249,6 +253,14 @@ class CommandTests(TestCase):
 
 @qiita_test_checker()
 class SoftwareTests(TestCase):
+    def setUp(self):
+        self._clean_up_files = []
+
+    def tearDown(self):
+        for f in self._clean_up_files:
+            if exists(f):
+                remove(f)
+
     def test_name(self):
         self.assertEqual(qdb.software.Software(1).name, "QIIME")
 
@@ -275,8 +287,8 @@ class SoftwareTests(TestCase):
         self.assertEqual(tester.environment_script, 'source activate qiita')
 
     def test_start_script(self):
-        tester = qdb.software.Software(1)
-        self.assertEqual(tester.start_script, 'start_target_gene')
+        tester = qdb.software.Software(2)
+        self.assertEqual(tester.start_script, 'start_biom')
 
     def test_default_workflows(self):
         obs = list(qdb.software.Software(1).default_workflows)
@@ -288,6 +300,150 @@ class SoftwareTests(TestCase):
     def test_type(self):
         self.assertEqual(qdb.software.Software(1).type,
                          "artifact transformation")
+
+    def test_active(self):
+        self.assertTrue(qdb.software.Software(1).active)
+
+    def test_client_id(self):
+        self.assertEqual(
+            qdb.software.Software(1).client_id,
+            'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u')
+
+    def test_client_secret(self):
+        self.assertEqual(
+            qdb.software.Software(1).client_secret,
+            '9xhU5rvzq8dHCEI5sSN95jesUULrZi6pT6Wuc71fDbFbsrnWarcSq56TJLN4kP4hH'
+            )
+
+    def test_deactivate_all(self):
+        obs = qdb.software.Software(1)
+        self.assertTrue(obs.active)
+        qdb.software.Software.deactivate_all()
+        self.assertFalse(obs.active)
+
+    def test_from_file(self):
+        exp = qdb.software.Software(1)
+        client_id = 'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u'
+        client_secret = ('9xhU5rvzq8dHCEI5sSN95jesUULrZi6pT6Wuc71fDbFbsrnWarc'
+                         'Sq56TJLN4kP4hH')
+        # Activate existing plugin
+        fd, fp = mkstemp(suffix='.conf')
+        close(fd)
+        self._clean_up_files.append(fp)
+        with open(fp, 'w') as f:
+            f.write(CONF_TEMPLATE %
+                    ('QIIME', '1.9.1',
+                     'Quantitative Insights Into Microbial Ecology (QIIME) '
+                     'is an open-source bioinformatics pipeline for '
+                     'performing microbiome analysis from raw DNA '
+                     'sequencing data', 'source activate qiita',
+                     'start_target_gene', 'artifact transformation',
+                     '[["10.1038/nmeth.f.303", "20383131"]]', client_id,
+                     client_secret))
+        obs = qdb.software.Software.from_file(fp)
+        self.assertEqual(obs, exp)
+
+        # Activate an existing plugin with a warning
+        fd, fp = mkstemp(suffix='.conf')
+        close(fd)
+        self._clean_up_files.append(fp)
+        with open(fp, 'w') as f:
+            f.write(CONF_TEMPLATE %
+                    ('QIIME', '1.9.1', 'Different description',
+                     'source activate qiime', 'start_qiime',
+                     'artifact transformation',
+                     '[["10.1038/nmeth.f.303", "20383131"]]', client_id,
+                     client_secret))
+        with warnings.catch_warnings(record=True) as warns:
+            obs = qdb.software.Software.from_file(fp)
+            obs_warns = [str(w.message) for w in warns]
+            exp_warns = ['Plugin "QIIME" version "1.9.1" config file does not '
+                         'match with stored information. Check the config file'
+                         ' or run "qiita plugin update" to update the plugin '
+                         'information. Offending values: description, '
+                         'environment_script, start_script']
+            self.assertItemsEqual(obs_warns, exp_warns)
+
+        self.assertEqual(obs, exp)
+        self.assertEqual(
+            obs.description,
+            'Quantitative Insights Into Microbial Ecology (QIIME) is an '
+            'open-source bioinformatics pipeline for performing microbiome '
+            'analysis from raw DNA sequencing data')
+        self.assertEqual(obs.environment_script, 'source activate qiita')
+        self.assertEqual(obs.start_script, 'start_target_gene')
+
+        # Update an existing plugin
+        obs = qdb.software.Software.from_file(fp, update=True)
+        self.assertEqual(obs, exp)
+        self.assertEqual(obs.description, 'Different description')
+        self.assertEqual(obs.environment_script, 'source activate qiime')
+        self.assertEqual(obs.start_script, 'start_qiime')
+
+        # Create a new plugin
+        fd, fp = mkstemp(suffix='.conf')
+        close(fd)
+        self._clean_up_files.append(fp)
+        with open(fp, 'w') as f:
+            f.write(CONF_TEMPLATE %
+                    ('NewPlugin', '0.0.1', 'Some description',
+                     'source activate newplug', 'start_new_plugin',
+                     'artifact definition', '', client_id,
+                     client_secret))
+        obs = qdb.software.Software.from_file(fp)
+        self.assertNotEqual(obs, exp)
+        self.assertEqual(obs.name, 'NewPlugin')
+
+        # Update publications
+        fd, fp = mkstemp(suffix='.conf')
+        close(fd)
+        self._clean_up_files.append(fp)
+        exp = obs
+        with open(fp, 'w') as f:
+            f.write(CONF_TEMPLATE %
+                    ('NewPlugin', '0.0.1', 'Some description',
+                     'source activate newplug', 'start_new_plugin',
+                     'artifact definition', '[["10.1039/nmeth.f.303", null]]',
+                     client_id, client_secret))
+        obs = qdb.software.Software.from_file(fp, update=True)
+        self.assertEqual(obs, exp)
+        self.assertEqual(obs.publications, [["10.1039/nmeth.f.303", None]])
+
+        # Raise an error if changing plugin type
+        fd, fp = mkstemp(suffix='.conf')
+        close(fd)
+        self._clean_up_files.append(fp)
+        with open(fp, 'w') as f:
+            f.write(CONF_TEMPLATE %
+                    ("NewPlugin", "0.0.1", "Some description",
+                     "source activate newplug", "start_new_plugin",
+                     "artifact transformation", "", client_id,
+                     client_secret))
+        QE = qdb.exceptions
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            qdb.software.Software.from_file(fp)
+
+        # Raise an error if client_id or client_secret are different
+        fd, fp = mkstemp(suffix='.conf')
+        close(fd)
+        self._clean_up_files.append(fp)
+        with open(fp, 'w') as f:
+            f.write(CONF_TEMPLATE %
+                    ('QIIME', '1.9.1',
+                     'Quantitative Insights Into Microbial Ecology (QIIME) '
+                     'is an open-source bioinformatics pipeline for '
+                     'performing microbiome analysis from raw DNA '
+                     'sequencing data', 'source activate qiita',
+                     'start_target_gene', 'artifact transformation',
+                     '[["10.1038/nmeth.f.303", "20383131"]]', "client_id",
+                     client_secret))
+        with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
+            qdb.software.Software.from_file(fp)
+
+    def test_exists(self):
+        self.assertTrue(qdb.software.Software.exists("QIIME", "1.9.1"))
+        self.assertFalse(qdb.software.Software.exists("NewPlugin", "1.9.1"))
+        self.assertFalse(qdb.software.Software.exists("QIIME", "2.0.0"))
 
     def test_create(self):
         obs = qdb.software.Software.create(
@@ -303,6 +459,8 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.environment_script, 'env_name')
         self.assertEqual(obs.start_script, 'start_plugin')
         self.assertEqual(obs.type, 'artifact transformation')
+        self.assertIsNotNone(obs.client_id)
+        self.assertIsNotNone(obs.client_secret)
 
         # create with publications
         exp_publications = [['10.1000/nmeth.f.101', '12345678'],
@@ -319,6 +477,26 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.environment_script, 'env_name')
         self.assertEqual(obs.start_script, 'start_plugin')
         self.assertEqual(obs.type, 'artifact transformation')
+        self.assertIsNotNone(obs.client_id)
+        self.assertIsNotNone(obs.client_secret)
+
+        # Create with client_id, client_secret
+        obs = qdb.software.Software.create(
+            "Another Software", "0.1.0",
+            "This is adding another software for testing", "env_a_name",
+            "start_plugin_script", "artifact transformation",
+            client_id='SomeNewClientId', client_secret='SomeNewClientSecret')
+        self.assertEqual(obs.name, "Another Software")
+        self.assertEqual(obs.version, "0.1.0")
+        self.assertEqual(obs.description,
+                         "This is adding another software for testing")
+        self.assertEqual(obs.commands, [])
+        self.assertEqual(obs.publications, [])
+        self.assertEqual(obs.environment_script, 'env_a_name')
+        self.assertEqual(obs.start_script, 'start_plugin_script')
+        self.assertEqual(obs.type, 'artifact transformation')
+        self.assertEqual(obs.client_id, 'SomeNewClientId')
+        self.assertEqual(obs.client_secret, 'SomeNewClientSecret')
 
     def test_add_publications(self):
         obs = qdb.software.Software.create(
@@ -605,6 +783,20 @@ class DefaultWorkflowTests(TestCase):
                 {'connections': qdb.software.DefaultWorkflowEdge(2)})]
         self.assertItemsEqual(obs.edges(data=True), exp)
 
+
+CONF_TEMPLATE = """[main]
+NAME = %s
+VERSION = %s
+DESCRIPTION = %s
+ENVIRONMENT_SCRIPT = %s
+START_SCRIPT = %s
+PLUGIN_TYPE = %s
+PUBLICATIONS = %s
+
+[oauth2]
+CLIENT_ID = %s
+CLIENT_SECRET = %s
+"""
 
 if __name__ == '__main__':
     main()

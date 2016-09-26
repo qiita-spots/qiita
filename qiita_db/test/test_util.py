@@ -13,6 +13,7 @@ from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
 from functools import partial
+from string import punctuation
 
 import pandas as pd
 
@@ -138,6 +139,17 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_data_types(key='data_type_id')
         exp = {v: k for k, v in exp.items()}
         self.assertEqual(obs, exp)
+
+    def test_create_rand_string(self):
+        set_punct = set(punctuation)
+
+        obs = qdb.util.create_rand_string(200)
+        self.assertEqual(len(obs), 200)
+        self.assertTrue(set_punct.intersection(set(obs)))
+
+        obs = qdb.util.create_rand_string(400, punct=False)
+        self.assertEqual(len(obs), 400)
+        self.assertFalse(set_punct.intersection(set(obs)))
 
     def test_get_count(self):
         """Checks that get_count retrieves proper count"""
