@@ -24,9 +24,11 @@ class CommandTests(TestCase):
     def setUp(self):
         self.software = qdb.software.Software(1)
         self.parameters = {
+            'req_art': ['artifact:["BIOM"]', None],
             'req_param': ['string', None],
             'opt_int_param': ['integer', '4'],
-            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
+            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
+            'opt_bool': ['boolean', 'False']}
 
     def test_get_commands_by_input_type(self):
         obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
@@ -242,12 +244,13 @@ class CommandTests(TestCase):
             self.parameters)
         self.assertEqual(obs.name, "Test Command")
         self.assertEqual(obs.description, "This is a command for testing")
-        self.assertEqual(obs.parameters, self.parameters)
-        exp_required = {'req_param': ('string', [None])}
+        exp_required = {'req_param': ('string', [None]),
+                        'req_art': ('artifact', ['BIOM'])}
         self.assertEqual(obs.required_parameters, exp_required)
         exp_optional = {
             'opt_int_param': ['integer', '4'],
-            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
+            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
+            'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
 
 
@@ -260,6 +263,22 @@ class SoftwareTests(TestCase):
         for f in self._clean_up_files:
             if exists(f):
                 remove(f)
+
+    def test_from_name_and_version(self):
+        obs = qdb.software.Software.from_name_and_version('QIIME', '1.9.1')
+        exp = qdb.software.Software(1)
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.Software.from_name_and_version('BIOM type', '2.1.4')
+        exp = qdb.software.Software(2)
+        self.assertEqual(obs, exp)
+
+        # Wrong name
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.software.Software.from_name_and_version('QiIME', '1.9.1')
+        # Wrong version
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.software.Software.from_name_and_version('QIIME', '1.9.0')
 
     def test_name(self):
         self.assertEqual(qdb.software.Software(1).name, "QIIME")
@@ -277,6 +296,14 @@ class SoftwareTests(TestCase):
         exp = [qdb.software.Command(1), qdb.software.Command(2),
                qdb.software.Command(3)]
         self.assertEqual(qdb.software.Software(1).commands, exp)
+
+    def test_get_command(self):
+        s = qdb.software.Software(1)
+        obs = s.get_command('Split libraries FASTQ')
+        self.assertEqual(obs, qdb.software.Command(1))
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            s.get_command('UNKNOWN')
 
     def test_publications(self):
         self.assertEqual(qdb.software.Software(1).publications,
