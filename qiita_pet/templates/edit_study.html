@@ -1,5 +1,6 @@
 {% extends sitebase.html %}
 {% block head %}
+{% set study_title = study.title.replace('"', '\\"') %}
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.validate.min.js"></script>
 <style>
   .custom-combobox {
@@ -39,7 +40,7 @@ $(document).ready(function() {
         request = $.ajax({
           type: "GET",
           url: '{% raw qiita_config.portal_dir %}/check_study/',
-          data: {study_title: $("#study_title")[0].value {% if study %}, old_study_title: '{{study.title}}'{% end %} }
+          data: {study_title: $("#study_title")[0].value {% if study %}, old_study_title: "{% raw study_title %}"{% end %} }
         });
 
         // callback handler that will be called on success

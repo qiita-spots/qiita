@@ -1,5 +1,7 @@
 {% extends sitebase.html %}
 {% block head %}
+{% set study_title = study_info['study_title'] %}
+{% set study_title_msg = study_title.replace('"', '\\"') %}
 <link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.css" type="text/css">
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.js"></script>
 <script type="text/javascript">
@@ -108,7 +110,7 @@
   }
 
   function validate_delete_study_text() {
-    if ($("#study-alias").val() == "{{study_info['study_title']}}") {
+    if ($("#study-alias").val() == "{% raw study_title_msg %}") {
       $('#delete-study-button').prop('disabled', false);
     } else {
       $('#delete-study-button').prop('disabled', true);
@@ -116,11 +118,11 @@
   }
 
   function delete_study() {
-    if($("#study-alias").val() != "{{study_info['study_title']}}") {
+    if($("#study-alias").val() != "{% raw study_title_msg %}") {
       alert("The entered study alias doesn't match the study");
       return false;
     }
-    else if(confirm("Are you sure you want to delete {{study_info['study_title']}}?")) {
+    else if(confirm("Are you sure you want to delete {% raw study_title_msg %}?")) {
       $.post('{% raw qiita_config.portal_dir %}/study/delete/', { study_id: {{study_info['study_id']}} })
         .done(function ( data ) {
           if(data.status == "error") {
@@ -224,7 +226,7 @@
     <!-- Study ID and study alias always on top -->
     <div class="row">
       <div class="col-md-12" id="study-base-info">
-        <h2>{{study_info['study_title']}} - ID {{study_info['study_id']}}</h2>
+        <h2>{% raw study_title %} - ID {{study_info['study_id']}}</h2>
         <h3>{{study_info['study_alias']}}</h3>
       </div>
     </div>
@@ -239,12 +241,12 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h3>Deleting:<br/></h3><h4>{{study_info['study_title']}}</h4>
+        <h3>Deleting:<br/></h3><h4>{% raw study_title %}</h4>
       </div>
       <div class="modal-body">
         You will only be able to delete a study that has no data associated with it.<br/>
         To continue you need to write the title of the study:<br/>
-        <input type="text" name="study-alias" id="study-alias" onkeyup="validate_delete_study_text();" size="{{ len(study_info['study_title']) }}">
+        <input type="text" name="study-alias" id="study-alias" onkeyup="validate_delete_study_text();" size="{{ len(study_title) }}">
         <button class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_study();" id="delete-study-button" disabled></button>
       </div>
       <div class="modal-footer">
