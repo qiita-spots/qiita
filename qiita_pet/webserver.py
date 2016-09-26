@@ -51,6 +51,8 @@ from qiita_db.handlers.prep_template import (
 from qiita_db.handlers.oauth2 import TokenAuthHandler
 from qiita_db.handlers.reference import ReferenceHandler
 from qiita_db.handlers.core import ResetAPItestHandler
+from qiita_db.handlers.plugin import (PluginHandler, CommandHandler,
+                                      CommandListHandler)
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
@@ -153,7 +155,10 @@ class Application(tornado.web.Application):
             (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
             (r"/qiita_db/prep_template/(.*)/data/", PrepTemplateDataHandler),
             (r"/qiita_db/prep_template/(.*)/", PrepTemplateDBHandler),
-            (r"/qiita_db/references/(.*)/", ReferenceHandler)
+            (r"/qiita_db/references/(.*)/", ReferenceHandler),
+            (r"/qiita_db/plugins/(.*)/(.*)/commands/(.*)/", CommandHandler),
+            (r"/qiita_db/plugins/(.*)/(.*)/commands/", CommandListHandler),
+            (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler)
         ]
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal

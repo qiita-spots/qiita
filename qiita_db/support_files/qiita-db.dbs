@@ -1129,22 +1129,6 @@
 				<column name="portal_type_id" />
 			</index>
 		</table>
-		<table name="prep_columns" >
-			<column name="prep_template_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="column_name" type="varchar" jt="12" mandatory="y" />
-			<column name="column_type" type="varchar" jt="12" mandatory="y" />
-			<index name="idx_prep_columns_0" unique="PRIMARY_KEY" >
-				<column name="prep_template_id" />
-				<column name="column_name" />
-				<column name="column_type" />
-			</index>
-			<index name="idx_prep_columns_1" unique="NORMAL" >
-				<column name="prep_template_id" />
-			</index>
-			<fk name="fk_prep_columns_prep_template" to_schema="qiita" to_table="prep_template" >
-				<fk_column name="prep_template_id" pk="prep_template_id" />
-			</fk>
-		</table>
 		<table name="prep_template" >
 			<column name="prep_template_id" type="bigserial" jt="-5" mandatory="y" />
 			<column name="data_type_id" type="bigint" jt="-5" mandatory="y" />
@@ -1452,6 +1436,9 @@
 			<column name="environment_script" type="varchar" jt="12" mandatory="y" />
 			<column name="start_script" type="varchar" jt="12" mandatory="y" />
 			<column name="software_type_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="active" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;True&#039;</defo>
+			</column>
 			<index name="pk_software" unique="PRIMARY_KEY" >
 				<column name="software_id" />
 			</index>
@@ -1488,6 +1475,9 @@
 			<column name="name" type="varchar" jt="12" mandatory="y" />
 			<column name="software_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="description" type="varchar" jt="12" mandatory="y" />
+			<column name="active" type="bool" jt="-7" mandatory="y" >
+				<defo>&#039;True&#039;</defo>
+			</column>
 			<index name="pk_soft_command" unique="PRIMARY_KEY" >
 				<column name="command_id" />
 			</index>
@@ -1749,23 +1739,6 @@ Controlled Vocabulary]]></comment>
 				<fk_column name="study_id" pk="study_id" />
 			</fk>
 		</table>
-		<table name="study_sample_columns" >
-			<comment>Holds information on which metadata columns are available for the study sample template</comment>
-			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="column_name" type="varchar" jt="12" mandatory="y" />
-			<column name="column_type" type="varchar" jt="12" mandatory="y" />
-			<index name="idx_study_mapping_columns" unique="PRIMARY_KEY" >
-				<column name="study_id" />
-				<column name="column_name" />
-				<column name="column_type" />
-			</index>
-			<index name="idx_study_mapping_columns_study_id" unique="NORMAL" >
-				<column name="study_id" />
-			</index>
-			<fk name="fk_study_mapping_columns_study" to_schema="qiita" to_table="study" >
-				<fk_column name="study_id" pk="study_id" />
-			</fk>
-		</table>
 		<table name="study_users" >
 			<comment>Links shared studies to users they are shared with</comment>
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
@@ -1887,9 +1860,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="collection_status" color="a8c4ef" x="45" y="660" />
 		<entity schema="qiita" name="collection" color="a8c4ef" x="45" y="510" />
 		<entity schema="qiita" name="collection_users" color="a8c4ef" x="255" y="495" />
-		<entity schema="qiita" name="study_sample_columns" color="d0def5" x="1635" y="345" />
 		<entity schema="qiita" name="study_prep_template" color="d0def5" x="1590" y="480" />
-		<entity schema="qiita" name="prep_columns" color="b2cdf7" x="1470" y="345" />
 		<entity schema="qiita" name="prep_template_sample" color="d0def5" x="1335" y="255" />
 		<entity schema="qiita" name="portal_type" color="c0d4f3" x="720" y="510" />
 		<entity schema="qiita" name="analysis_portal" color="a8c4ef" x="180" y="795" />
@@ -1932,7 +1903,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="command_parameter" color="b2cdf7" x="2115" y="1035" />
 		<entity schema="qiita" name="parameter_artifact_type" color="b2cdf7" x="1920" y="1050" />
 		<entity schema="qiita" name="command_output" color="b2cdf7" x="1935" y="1155" />
-		<entity schema="qiita" name="software_command" color="b2cdf7" x="2175" y="1215" />
 		<entity schema="qiita" name="default_parameter_set" color="b2cdf7" x="2400" y="1155" />
 		<entity schema="qiita" name="default_workflow" color="b2cdf7" x="2625" y="1155" />
 		<entity schema="qiita" name="default_workflow_node" color="b2cdf7" x="2400" y="1305" />
@@ -1947,10 +1917,11 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="processing_job_workflow_root" color="b2cdf7" x="2250" y="1590" />
 		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1995" y="1350" />
 		<entity schema="qiita" name="job" color="d0def5" x="405" y="1155" />
-		<entity schema="qiita" name="software" color="b2cdf7" x="2400" y="930" />
 		<entity schema="qiita" name="prep_template_processing_job" color="b2cdf7" x="1740" y="960" />
 		<entity schema="qiita" name="software_artifact_type" color="b2cdf7" x="2040" y="945" />
 		<entity schema="qiita" name="software_type" color="b2cdf7" x="2625" y="930" />
+		<entity schema="qiita" name="software" color="b2cdf7" x="2400" y="930" />
+		<entity schema="qiita" name="software_command" color="b2cdf7" x="2175" y="1215" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
@@ -2028,10 +1999,8 @@ Controlled Vocabulary]]></comment>
 		</group>
 		<group name="Group_template" color="ffffcc" >
 			<entity schema="qiita" name="prep_y" />
-			<entity schema="qiita" name="study_sample_columns" />
 			<entity schema="qiita" name="study_sample" />
 			<entity schema="qiita" name="study_prep_template" />
-			<entity schema="qiita" name="prep_columns" />
 			<entity schema="qiita" name="prep_template_sample" />
 			<entity schema="qiita" name="sample_x" />
 			<entity schema="qiita" name="prep_template_filepath" />

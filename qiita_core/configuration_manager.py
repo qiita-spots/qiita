@@ -7,8 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from functools import partial
-from os.path import join, dirname, abspath, isdir
-from os import environ
+from os.path import join, dirname, abspath, isdir, expanduser, exists
+from os import environ, mkdir
 from future import standard_library
 from base64 import b64encode
 from uuid import uuid4
@@ -116,6 +116,8 @@ class ConfigurationManager(object):
         The filepath to the portal styling config file
     plugin_launcher : str
         The script used to start the plugins
+    plugin_dir : str
+        The path to the directory containing the plugin configuration files
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -168,14 +170,23 @@ class ConfigurationManager(object):
                              self.working_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
         self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
+
         self.plugin_launcher = config.get('main', 'PLUGIN_LAUNCHER')
+        self.plugin_dir = config.get('main', 'PLUGIN_DIR')
+        if not self.plugin_dir:
+            self.plugin_dir = join(expanduser('~'), '.qiita_plugins')
+            if not exists(self.plugin_dir):
+                mkdir(self.plugin_dir)
+        elif not isdir(self.plugin_dir):
+            raise ValueError("The PLUGIN_DIR (%s) folder doesn't exist"
+                             % self.plugin_dir)
 
         self.valid_upload_extension = [ve.strip() for ve in config.get(
             'main', 'VALID_UPLOAD_EXTENSION').split(',')]
         if (not self.valid_upload_extension or
            self.valid_upload_extension == ['']):
             self.valid_upload_extension = []
-            print 'No files will be allowed to be uploaded.'
+            raise ValueError('No files will be allowed to be uploaded.')
 
         self.certificate_file = config.get('main', 'CERTIFICATE_FILE')
         if not self.certificate_file:
