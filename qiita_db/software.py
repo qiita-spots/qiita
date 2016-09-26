@@ -439,7 +439,7 @@ class Software(qdb.base.QiitaObject):
 
     @classmethod
     def from_file(cls, fp, update=False):
-        """Installs/activates a plugin from the configuration file
+        """Installs/updates a plugin from a plugin configuration file
 
         Parameters
         ----------
@@ -473,8 +473,7 @@ class Software(qdb.base.QiitaObject):
         start_script = config.get('main', 'START_SCRIPT')
         software_type = config.get('main', 'PLUGIN_TYPE')
         publications = config.get('main', 'PUBLICATIONS')
-        if publications:
-            publications = loads(publications)
+        publications = loads(publications) if publications else []
         client_id = config.get('oauth2', 'CLIENT_ID')
         client_secret = config.get('oauth2', 'CLIENT_SECRET')
 
@@ -832,6 +831,15 @@ class Software(qdb.base.QiitaObject):
             sql = "SELECT active FROM qiita.software WHERE software_id = %s"
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    def activate(self):
+        """Activates the plugin"""
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software
+                     SET active = %s
+                     WHERE software_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [True, self.id])
+            return qdb.sql_connection.TRN.execute()
 
     @property
     def client_id(self):

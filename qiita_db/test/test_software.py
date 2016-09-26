@@ -409,6 +409,28 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs, exp)
         self.assertEqual(obs.publications, [["10.1039/nmeth.f.303", None]])
 
+        # Correctly ignores if there are no publications
+        fd, fp = mkstemp(suffix='.conf')
+        close(fd)
+        self._clean_up_files.append(fp)
+        with open(fp, 'w') as f:
+            f.write(CONF_TEMPLATE %
+                    ('Target Gene type', '0.1.0',
+                     'Target gene artifact types plugin',
+                     'source activate qiita', 'start_target_gene_types',
+                     'artifact definition', '',
+                     '4MOBzUBHBtUmwhaC258H7PS0rBBLyGQrVxGPgc9g305bvVhf6h',
+                     'rFb7jwAb3UmSUN57Bjlsi4DTl2owLwRpwCc0SggRNEVb2Ebae2p5Umnq'
+                     '20rNMhmqN'))
+        with warnings.catch_warnings(record=True) as warns:
+            obs = qdb.software.Software.from_file(fp)
+            obs_warns = [str(w.message) for w in warns]
+            exp_warns = []
+            self.assertItemsEqual(obs_warns, exp_warns)
+
+        self.assertEqual(obs, qdb.software.Software(3))
+        self.assertEqual(obs.publications, [])
+
         # Raise an error if changing plugin type
         fd, fp = mkstemp(suffix='.conf')
         close(fd)
@@ -461,6 +483,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.type, 'artifact transformation')
         self.assertIsNotNone(obs.client_id)
         self.assertIsNotNone(obs.client_secret)
+        self.assertFalse(obs.active)
 
         # create with publications
         exp_publications = [['10.1000/nmeth.f.101', '12345678'],
@@ -479,6 +502,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.type, 'artifact transformation')
         self.assertIsNotNone(obs.client_id)
         self.assertIsNotNone(obs.client_secret)
+        self.assertFalse(obs.active)
 
         # Create with client_id, client_secret
         obs = qdb.software.Software.create(
@@ -497,6 +521,7 @@ class SoftwareTests(TestCase):
         self.assertEqual(obs.type, 'artifact transformation')
         self.assertEqual(obs.client_id, 'SomeNewClientId')
         self.assertEqual(obs.client_secret, 'SomeNewClientSecret')
+        self.assertFalse(obs.active)
 
     def test_add_publications(self):
         obs = qdb.software.Software.create(
@@ -511,6 +536,13 @@ class SoftwareTests(TestCase):
         # Add a publication that already exists
         obs.add_publications([['10.1000/nmeth.f.101', '12345678']])
         self.assertItemsEqual(obs.publications, exp)
+
+    def test_activate(self):
+        qdb.software.Software.deactivate_all()
+        obs = qdb.software.Software(1)
+        self.assertFalse(obs.active)
+        obs.activate()
+        self.assertTrue(obs.active)
 
 
 @qiita_test_checker()

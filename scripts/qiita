@@ -12,8 +12,9 @@ from __future__ import division, print_function
 import errno
 import socket
 from datetime import datetime, timedelta
-from os.path import join, abspath, dirname
+from os.path import join, abspath, dirname, basename
 from future.utils import viewitems
+from glob import glob
 
 import click
 import tornado.httpserver
@@ -81,6 +82,11 @@ def maintenance():
 
 @qiita.group()
 def ware():
+    pass
+
+
+@qiita.group()
+def plugins():
     pass
 
 
@@ -391,13 +397,21 @@ def log(n):
 @click.option('--port', required=False, type=int, help='Port where the '
               'webserver will start', default=21174)
 # (cursive Q)iita = 21174 in 1337sp34k
-def start(port):
+@click.option('--master', is_flag=True,
+              help="If set, update available plugins")
+def start(port, master):
     # in order to use this command you need to have an IPython cluster running,
     # for now this makes it so that you can use other sub-commands without
     # having to do that. The solution will (perhaps) be to move this subcommand
     # into an entirely different script.
     from qiita_pet.webserver import Application
     from tornado.options import options, parse_command_line
+
+    if master:
+        # Deactivate all the plugins and only activate those that are currently
+        # available in the config file folder
+        qdb.software.Software.deactivate_all()
+        _activate_or_update_plugins()
 
     # Create/repopulate the usernames key so we can do autocomplete for sharing
     r_client.delete('qiita-usernames')
@@ -425,6 +439,35 @@ def start(port):
     click.echo("Qiita started on port %d" % port)
     tornado.ioloop.IOLoop.instance().start()
 
+# #############################################################################
+# PLUGIN COMMANDS
+# #############################################################################
+
+
+def _activate_or_update_plugins(update=False):
+    """Activates/updates the plugins
+
+    Parameters
+    ----------
+    update : bool, optional
+        If True will update the plugins. Otherwise will activate them.
+        Default: False.
+    """
+    conf_files = glob(join(qiita_config.plugin_dir, "*.conf"))
+    label = "{} plugin (%s/{}): %s... ".format(
+        "Updating" if update else "\tLoading", len(conf_files))
+    for i, fp in enumerate(conf_files):
+        click.echo(label % (i + 1, basename(fp)), nl=False)
+        s = qdb.software.Software.from_file(fp, update=update)
+        if not update:
+            s.activate()
+        click.echo("Ok")
+
+
+@plugins.command()
+def update():
+    """Updates the plugins in the database"""
+    _activate_or_update_plugins(update=True)
 
 if __name__ == '__main__':
     qiita()
