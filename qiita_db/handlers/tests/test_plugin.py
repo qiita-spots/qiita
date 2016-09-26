@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main, TestCase
-from json import loads
+from json import loads, dumps
 
 from tornado.web import HTTPError
 
@@ -72,13 +72,16 @@ class CommandListHandlerTests(OauthTestingBase):
         data = {
             'name': 'New Command',
             'description': 'Command added for testing',
-            'required_parameters': {'in_data': ['artifact', ['FASTA']]},
-            'optional_parameters': {'param1': ['string', ''],
-                                    'param2': ['float', '1.5'],
-                                    'param3': ['bool', 'True']},
-            'default_parameter_sets': {
-                'dflt1': {'param1': 'test', 'param2': '2.4', 'param3': 'False'}
-            }}
+            'required_parameters': dumps(
+                {'in_data': ['artifact:["FASTA"]', None]}),
+            'optional_parameters': dumps({'param1': ['string', ''],
+                                          'param2': ['float', '1.5'],
+                                          'param3': ['boolean', 'True']}),
+            'default_parameter_sets': dumps(
+                {'dflt1': {'param1': 'test',
+                           'param2': '2.4',
+                           'param3': 'False'}})
+            }
         obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/', data=data,
                         headers=self.header)
         self.assertEqual(obs.code, 200)

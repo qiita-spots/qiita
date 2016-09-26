@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from json import loads, dumps
+
 from tornado.web import HTTPError
 
 from .oauth2 import OauthBaseHandler, authenticate_oauth
@@ -89,15 +91,24 @@ class CommandListHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self, name, version):
         with qdb.sql_connection.TRN:
+            plugin = _get_plugin(name, version)
+
             cmd_name = self.get_argument('name')
             cmd_desc = self.get_argument('description')
-            req_params = self.get_argument('required_parameters')
-            opt_params = self.get_argument('optional_parameters')
-            dfl_param_set = self.get_argument('default_parameter_sets')
+            req_params = loads(self.get_argument('required_parameters'))
+            opt_params = loads(self.get_argument('optional_parameters'))
+            dflt_param_set = loads(self.get_argument('default_parameter_sets'))
+
+            parameters = req_params
+            parameters.update(opt_params)
+
+            cmd = qdb.software.Command.create(
+                plugin, cmd_name, cmd_desc, parameters)
 
             # params = opt_params
-            # for pname, vals in
-            print cmd_name, cmd_desc, req_params, opt_params
+            for name, vals in dflt_param_set.items():
+                qdb.software.DefaultParameters.create(name, cmd, **vals)
+
         self.finish()
 
 
