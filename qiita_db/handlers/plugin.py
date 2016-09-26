@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from json import loads, dumps
+from json import loads
 
 from tornado.web import HTTPError
 
