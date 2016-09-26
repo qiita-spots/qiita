@@ -158,7 +158,7 @@
             {% if len(summary) == 1 %}
                 <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
             </td>
-            {% elif len(set([row[1] for row in summary])) == 1 %}
+            {% elif len(summary) == num_samples %}
                 <b>{{category}}</b>: All the values in this category are different.
               </td>
             {% else %}
