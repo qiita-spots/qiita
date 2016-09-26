@@ -157,7 +157,14 @@ class LogEntry(qdb.base.QiitaObject):
                      logging_id = %s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [self.id])
 
-            return loads(qdb.sql_connection.TRN.execute_fetchlast())
+            rows = qdb.sql_connection.TRN.execute_fetchlast()
+
+            if rows:
+                results = loads(rows)
+            else:
+                results = {}
+
+            return results
 
     @property
     def msg(self):
