@@ -215,7 +215,8 @@ class Command(qdb.base.QiitaObject):
 
             ptype, dflt = vals
             # Check that the type is one of the supported types
-            supported_types = ['string', 'integer', 'float', 'reference']
+            supported_types = ['string', 'integer', 'float', 'reference',
+                               'boolean']
             if ptype not in supported_types and not ptype.startswith(
                     ('choice', 'artifact')):
                 supported_types.extend(['choice', 'artifact'])

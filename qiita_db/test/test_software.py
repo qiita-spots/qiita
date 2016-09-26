@@ -27,7 +27,8 @@ class CommandTests(TestCase):
             'req_art': ['artifact:["BIOM"]', None],
             'req_param': ['string', None],
             'opt_int_param': ['integer', '4'],
-            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
+            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
+            'opt_bool': ['boolean', 'False']}
 
     def test_get_commands_by_input_type(self):
         obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
@@ -248,7 +249,8 @@ class CommandTests(TestCase):
         self.assertEqual(obs.required_parameters, exp_required)
         exp_optional = {
             'opt_int_param': ['integer', '4'],
-            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1']}
+            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
+            'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
 
 
