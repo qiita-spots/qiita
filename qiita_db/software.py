@@ -639,6 +639,25 @@ class Software(qdb.base.QiitaObject):
 
     @classmethod
     def from_name_and_version(cls, name, version):
+        """Returns the software object with the given name and version
+
+        Parameters
+        ----------
+        name: str
+            The software name
+        version : str
+            The software version
+
+        Returns
+        -------
+        qiita_db.software.Software
+            The software with the given name and version
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBUnknownIDError
+            If no software with the given name and version exists
+        """
         with qdb.sql_connection.TRN:
             sql = """SELECT software_id
                      FROM qiita.software
@@ -710,6 +729,30 @@ class Software(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return [Command(cid)
                     for cid in qdb.sql_connection.TRN.execute_fetchflatten()]
+
+    def get_command(self, cmd_name):
+        """Returns the command with the given name in the software
+
+        Parameters
+        ----------
+        cmd_name: str
+            The command with the given name
+
+        Returns
+        -------
+        qiita_db.software.Command
+            The command with the given name in this software
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT command_id
+                     FROM qiita.software_command
+                     WHERE software_id =%s AND name=%s"""
+            qdb.sql_connection.TRN.add(sql, [self.id, cmd_name])
+            res = qdb.sql_connection.TRN.execute_fetchindex()
+            if not res:
+                raise qdb.exceptions.QiitaDBUnknownIDError(
+                    cmd_name, "software_command")
+            return Command(res[0][0])
 
     @property
     def publications(self):

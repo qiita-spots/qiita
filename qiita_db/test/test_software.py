@@ -294,6 +294,14 @@ class SoftwareTests(TestCase):
                qdb.software.Command(3)]
         self.assertEqual(qdb.software.Software(1).commands, exp)
 
+    def test_get_command(self):
+        s = qdb.software.Software(1)
+        obs = s.get_command('Split libraries FASTQ')
+        self.assertEqual(obs, qdb.software.Command(1))
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            s.get_command('UNKNOWN')
+
     def test_publications(self):
         self.assertEqual(qdb.software.Software(1).publications,
                          [['10.1038/nmeth.f.303', '20383131']])
