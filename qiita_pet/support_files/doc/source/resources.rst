@@ -45,7 +45,7 @@ communicates with.
 European Bioinformatics Institute (EBI) - European Nucleotide Archive (ENA)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`EBI <https://www.ebi.ac.uk/ena>`__ - `ENA <https://www.ebi.ac.uk/>`__ is a long
+`EBI <https://www.ebi.ac.uk/>`__ - `ENA <https://www.ebi.ac.uk/ena>`__ is a long
 term repository for sequence data.
 
 Visualization and Analysis of Microbial Population Structures (VAMPS)
