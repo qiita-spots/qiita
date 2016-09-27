@@ -186,6 +186,22 @@ class ArtifactTypeHandler(OauthBaseHandler):
 
         Parameters
         ----------
+        name : str
+            The artifact type name
+        description : str
+            The artifact type description
+        can_be_submitted_to_ebi : bool
+            Whether the artifact type can be submitted to EBI or not
+        can_be_submitted_to_vamps : bool
+            Whether the artifact type can be submitted to VAMPS or not
+        filepath_types : list of (str, bool)
+            The list filepath types that the new artifact type supports, and
+            if they're required or not in an artifact instance of this type
+
+        Raises
+        ------
+        HTTPError
+            If the artifact type already exists, with error code 400
         """
         a_type = self.get_argument('type_name')
         a_desc = self.get_argument('description')
