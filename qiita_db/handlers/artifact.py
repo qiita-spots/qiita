@@ -177,3 +177,24 @@ class ArtifactAPItestHandler(OauthBaseHandler):
             filepaths, artifact_type, name=name, prep_template=prep_template)
 
         self.write({'artifact': a.id})
+
+
+class ArtifactTypeHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self):
+        """Creates a new artifact type
+
+        Parameters
+        ----------
+        """
+        a_type = self.get_argument('type_name')
+        a_desc = self.get_argument('description')
+        ebi = self.get_argument('can_be_submitted_to_ebi')
+        vamps = self.get_argument('can_be_submitted_to_vamps')
+        fp_types = loads(self.get_argument('filepath_types'))
+
+        try:
+            qdb.artifact.Artifact.create_type(a_type, a_desc, ebi, vamps,
+                                              fp_types)
+        except qdb.exceptions.QiitaDBDuplicateError as e:
+            raise HTTPError(400, str(e))

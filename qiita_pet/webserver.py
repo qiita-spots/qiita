@@ -44,7 +44,8 @@ from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (
     JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
     ProcessingJobAPItestHandler)
-from qiita_db.handlers.artifact import ArtifactHandler, ArtifactAPItestHandler
+from qiita_db.handlers.artifact import (
+    ArtifactHandler, ArtifactAPItestHandler, ArtifactTypeHandler)
 from qiita_db.handlers.prep_template import (
     PrepTemplateDataHandler, PrepTemplateAPItestHandler,
     PrepTemplateDBHandler)
@@ -152,6 +153,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)/step/", ActiveStepHandler),
             (r"/qiita_db/jobs/(.*)/complete/", CompleteHandler),
             (r"/qiita_db/jobs/(.*)", JobHandler),
+            (r"/qiita_db/artifacts/types/", ArtifactTypeHandler),
             (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
             (r"/qiita_db/prep_template/(.*)/data/", PrepTemplateDataHandler),
             (r"/qiita_db/prep_template/(.*)/", PrepTemplateDBHandler),

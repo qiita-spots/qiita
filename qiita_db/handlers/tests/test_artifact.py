@@ -191,5 +191,28 @@ class ArtifactAPItestHandlerTests(OauthTestingBase):
                       obs.body)
 
 
+class ArtifactTypeHandlerTests(OauthTestingBase):
+    def test_post_no_header(self):
+        obs = self.post('/qiita_db/artifacts/types/', data={})
+        self.assertEqual(obs.code, 400)
+
+    def test_post(self):
+        data = {'type_name': 'new_type',
+                'description': 'some_description',
+                'can_be_submitted_to_ebi': False,
+                'can_be_submitted_to_vamps': False,
+                'filepath_types': dumps([("log", False),
+                                         ("raw_forward_seqs", True)])}
+        obs = self.post('/qiita_db/artifacts/types/', headers=self.header,
+                        data=data)
+        self.assertEqual(obs.code, 200)
+        self.assertIn(['new_type', 'some_description'],
+                      qdb.artifact.Artifact.types())
+
+        obs = self.post('/qiita_db/artifacts/types/', headers=self.header,
+                        data=data)
+        self.assertEqual(obs.code, 400)
+        self.assertIn('already exists', obs.body)
+
 if __name__ == '__main__':
     main()
