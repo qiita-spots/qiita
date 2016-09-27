@@ -44,15 +44,17 @@ from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (
     JobHandler, HeartbeatHandler, ActiveStepHandler, CompleteHandler,
     ProcessingJobAPItestHandler)
-from qiita_db.handlers.artifact import ArtifactHandler, ArtifactAPItestHandler
+from qiita_db.handlers.artifact import (
+    ArtifactHandler, ArtifactAPItestHandler, ArtifactTypeHandler)
 from qiita_db.handlers.prep_template import (
     PrepTemplateDataHandler, PrepTemplateAPItestHandler,
     PrepTemplateDBHandler)
 from qiita_db.handlers.oauth2 import TokenAuthHandler
 from qiita_db.handlers.reference import ReferenceHandler
 from qiita_db.handlers.core import ResetAPItestHandler
-from qiita_db.handlers.plugin import (PluginHandler, CommandHandler,
-                                      CommandListHandler)
+from qiita_db.handlers.plugin import (
+    PluginHandler, CommandHandler, CommandListHandler, CommandActivateHandler,
+    ReloadPluginAPItestHandler)
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
@@ -152,10 +154,13 @@ class Application(tornado.web.Application):
             (r"/qiita_db/jobs/(.*)/step/", ActiveStepHandler),
             (r"/qiita_db/jobs/(.*)/complete/", CompleteHandler),
             (r"/qiita_db/jobs/(.*)", JobHandler),
+            (r"/qiita_db/artifacts/types/", ArtifactTypeHandler),
             (r"/qiita_db/artifacts/(.*)/", ArtifactHandler),
             (r"/qiita_db/prep_template/(.*)/data/", PrepTemplateDataHandler),
             (r"/qiita_db/prep_template/(.*)/", PrepTemplateDBHandler),
             (r"/qiita_db/references/(.*)/", ReferenceHandler),
+            (r"/qiita_db/plugins/(.*)/(.*)/commands/(.*)/activate/",
+             CommandActivateHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/(.*)/", CommandHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/", CommandListHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler)
@@ -174,7 +179,8 @@ class Application(tornado.web.Application):
                 (r"/apitest/processing_job/", ProcessingJobAPItestHandler),
                 (r"/apitest/reset/", ResetAPItestHandler),
                 (r"/apitest/prep_template/", PrepTemplateAPItestHandler),
-                (r"/apitest/artifact/", ArtifactAPItestHandler)
+                (r"/apitest/artifact/", ArtifactAPItestHandler),
+                (r"/apitest/reload_plugins/", ReloadPluginAPItestHandler)
             ]
             handlers.extend(test_handlers)
 

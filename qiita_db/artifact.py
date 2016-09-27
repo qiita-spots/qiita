@@ -100,6 +100,57 @@ class Artifact(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql)
             return qdb.sql_connection.TRN.execute_fetchindex()
 
+    @staticmethod
+    def create_type(name, description, can_be_submitted_to_ebi,
+                    can_be_submitted_to_vamps, filepath_types):
+        """Creates a new artifact type in the system
+
+        Parameters
+        ----------
+        name : str
+            The artifact type name
+        description : str
+            The artifact type description
+        can_be_submitted_to_ebi : bool
+            Whether the artifact type can be submitted to EBI or not
+        can_be_submitted_to_vamps : bool
+            Whether the artifact type can be submitted to VAMPS or not
+        filepath_types : list of (str, bool)
+            The list filepath types that the new artifact type supports, and
+            if they're required or not in an artifact instance of this type
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBDuplicateError
+            If an artifact type with the same name already exists
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT EXISTS(
+                        SELECT *
+                        FROM qiita.artifact_type
+                        WHERE artifact_type=%s)"""
+            qdb.sql_connection.TRN.add(sql, [name])
+            if qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBDuplicateError(
+                    'artifact type', 'name: %s' % name)
+            sql = """INSERT INTO qiita.artifact_type
+                        (artifact_type, description, can_be_submitted_to_ebi,
+                         can_be_submitted_to_vamps)
+                     VALUES (%s, %s, %s, %s)
+                     RETURNING artifact_type_id"""
+            qdb.sql_connection.TRN.add(
+                sql, [name, description, can_be_submitted_to_ebi,
+                      can_be_submitted_to_vamps])
+            at_id = qdb.sql_connection.TRN.execute_fetchlast()
+            sql = """INSERT INTO qiita.artifact_type_filepath_type
+                        (artifact_type_id, filepath_type_id, required)
+                     VALUES (%s, %s, %s)"""
+            sql_args = [
+                [at_id, qdb.util.convert_to_id(fpt, 'filepath_type'), req]
+                for fpt, req in filepath_types]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
     @classmethod
     def copy(cls, artifact, prep_template):
         """Creates a copy of `artifact` and attaches it to `prep_template`

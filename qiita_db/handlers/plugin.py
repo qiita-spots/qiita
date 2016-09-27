@@ -7,10 +7,13 @@
 # -----------------------------------------------------------------------------
 
 from json import loads
+from glob import glob
+from os.path import join
 
 from tornado.web import HTTPError
 
 from .oauth2 import OauthBaseHandler, authenticate_oauth
+from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
 
@@ -97,17 +100,20 @@ class CommandListHandler(OauthBaseHandler):
             cmd_desc = self.get_argument('description')
             req_params = loads(self.get_argument('required_parameters'))
             opt_params = loads(self.get_argument('optional_parameters'))
+            outputs = self.get_argument('outputs', None)
+            if outputs:
+                outputs = loads(outputs)
             dflt_param_set = loads(self.get_argument('default_parameter_sets'))
 
             parameters = req_params
             parameters.update(opt_params)
 
             cmd = qdb.software.Command.create(
-                plugin, cmd_name, cmd_desc, parameters)
+                plugin, cmd_name, cmd_desc, parameters, outputs)
 
-            # params = opt_params
-            for name, vals in dflt_param_set.items():
-                qdb.software.DefaultParameters.create(name, cmd, **vals)
+            if dflt_param_set is not None:
+                for name, vals in dflt_param_set.items():
+                    qdb.software.DefaultParameters.create(name, cmd, **vals)
 
         self.finish()
 
@@ -184,3 +190,35 @@ class CommandHandler(OauthBaseHandler):
                 'default_parameter_sets': {
                     p.name: p.values for p in cmd.default_parameter_sets}}
         self.write(response)
+
+
+class CommandActivateHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self, plugin_name, plugin_version, cmd_name):
+        """Activates the command
+
+        Parameters
+        ----------
+        plugin_name : str
+            The plugin name
+        plugin_version : str
+            The plugin version
+        cmd_name : str
+            The command name
+        """
+        with qdb.sql_connection.TRN:
+            cmd = _get_command(plugin_name, plugin_version, cmd_name)
+            cmd.activate()
+
+        self.finish()
+
+
+class ReloadPluginAPItestHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self):
+        """Reloads the plugins"""
+        conf_files = glob(join(qiita_config.plugin_dir, "*.conf"))
+        for fp in conf_files:
+            s = qdb.software.Software.from_file(fp, update=True)
+            s.activate()
+        self.finish()

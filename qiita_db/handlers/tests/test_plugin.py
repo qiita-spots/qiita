@@ -77,6 +77,7 @@ class CommandListHandlerTests(OauthTestingBase):
             'optional_parameters': dumps({'param1': ['string', ''],
                                           'param2': ['float', '1.5'],
                                           'param3': ['boolean', 'True']}),
+            'outputs': dumps({'out1': 'BIOM'}),
             'default_parameter_sets': dumps(
                 {'dflt1': {'param1': 'test',
                            'param2': '2.4',
@@ -163,6 +164,38 @@ class CommandHandlerTests(OauthTestingBase):
                         'barcode_type': 'hamming_8'}}}
         self.assertEqual(loads(obs.body), exp)
 
+
+class CommandActivateHandlerTests(OauthTestingBase):
+    def test_post_command_does_not_exist(self):
+        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/'
+                        'UNKNOWN/activate/',
+                        headers=self.header, data={})
+        self.assertEqual(obs.code, 404)
+
+    def test_post_no_header(self):
+        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/'
+                        'Split%20libraries/activate/', data={})
+        self.assertEqual(obs.code, 400)
+
+    def test_post(self):
+        qdb.software.Software.deactivate_all()
+        self.assertFalse(qdb.software.Command(2).active)
+        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/'
+                        'Split%20libraries/activate/', headers=self.header,
+                        data={})
+        self.assertEqual(obs.code, 200)
+        self.assertTrue(qdb.software.Command(2).active)
+
+
+class ReloadPluginAPItestHandlerTests(OauthTestingBase):
+    def test_post_no_header(self):
+        obs = self.post('/apitest/reload_plugins/', data={})
+        self.assertEqual(obs.code, 400)
+
+    def test_post(self):
+        obs = self.post('/apitest/reload_plugins/', headers=self.header,
+                        data={})
+        self.assertEqual(obs.code, 200)
 
 if __name__ == '__main__':
     main()

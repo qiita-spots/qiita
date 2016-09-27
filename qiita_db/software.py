@@ -147,7 +147,7 @@ class Command(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def create(cls, software, name, description, parameters):
+    def create(cls, software, name, description, parameters, outputs=None):
         r"""Creates a new command in the system
 
         The supported types for the parameters are:
@@ -175,6 +175,9 @@ class Command(qdb.base.QiitaObject):
             format is: {parameter_name: (parameter_type, default)},
             where parameter_name, parameter_type and default are strings. If
             default is None.
+        outputs : dict, optional
+            The description of the outputs that this command generated. The
+            format is: {output_name: artifact_type}
 
         Returns
         -------
@@ -216,7 +219,7 @@ class Command(qdb.base.QiitaObject):
             ptype, dflt = vals
             # Check that the type is one of the supported types
             supported_types = ['string', 'integer', 'float', 'reference',
-                               'boolean']
+                               'boolean', 'prep_template']
             if ptype not in supported_types and not ptype.startswith(
                     ('choice', 'artifact')):
                 supported_types.extend(['choice', 'artifact'])
@@ -280,6 +283,17 @@ class Command(qdb.base.QiitaObject):
                     [pid, qdb.util.convert_to_id(at, 'artifact_type')]
                     for at in atypes]
                 qdb.sql_connection.TRN.add(sql_type, sql_params, many=True)
+
+            # Add the outputs to the command
+            if outputs:
+                sql = """INSERT INTO qiita.command_output
+                            (name, command_id, artifact_type_id)
+                         VALUES (%s, %s, %s)"""
+                sql_args = [
+                    [pname, c_id, qdb.util.convert_to_id(at, 'artifact_type')]
+                    for pname, at in outputs.items()]
+                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+                qdb.sql_connection.TRN.execute()
 
         return cls(c_id)
 
@@ -425,6 +439,31 @@ class Command(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchindex()
 
+    @property
+    def active(self):
+        """Returns if the command is active or not
+
+        Returns
+        -------
+        bool
+            Whether the command is active or not
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT active
+                     FROM qiita.software_command
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    def activate(self):
+        """Activates the command"""
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software_command
+                     SET active = %s
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [True, self.id])
+            return qdb.sql_connection.TRN.execute()
+
 
 class Software(qdb.base.QiitaObject):
     r"""A software package available in the system
@@ -455,6 +494,8 @@ class Software(qdb.base.QiitaObject):
         """Deactivates all the plugins in the system"""
         with qdb.sql_connection.TRN:
             sql = "UPDATE qiita.software SET active = False"
+            qdb.sql_connection.TRN.add(sql)
+            sql = "UPDATE qiita.software_command SET active = False"
             qdb.sql_connection.TRN.add(sql)
             qdb.sql_connection.TRN.execute()
 
