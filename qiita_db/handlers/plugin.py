@@ -184,3 +184,24 @@ class CommandHandler(OauthBaseHandler):
                 'default_parameter_sets': {
                     p.name: p.values for p in cmd.default_parameter_sets}}
         self.write(response)
+
+
+class CommandActivateHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self, plugin_name, plugin_version, cmd_name):
+        """Activates the command
+
+        Parameters
+        ----------
+        plugin_name : str
+            The plugin name
+        plugin_version : str
+            The plugin version
+        cmd_name : str
+            The command name
+        """
+        with qdb.sql_connection.TRN:
+            cmd = _get_command(plugin_name, plugin_version, cmd_name)
+            cmd.activate()
+
+        self.finish()

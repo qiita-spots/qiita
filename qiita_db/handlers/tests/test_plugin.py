@@ -164,5 +164,26 @@ class CommandHandlerTests(OauthTestingBase):
         self.assertEqual(loads(obs.body), exp)
 
 
+class CommandActivateHandlerTests(OauthTestingBase):
+    def test_post_command_does_not_exist(self):
+        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/'
+                        'UNKNOWN/activate/',
+                        headers=self.header, data={})
+        self.assertEqual(obs.code, 404)
+
+    def test_post_no_header(self):
+        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/'
+                        'Split%20libraries/activate/', data={})
+        self.assertEqual(obs.code, 400)
+
+    def test_post(self):
+        qdb.software.Software.deactivate_all()
+        self.assertFalse(qdb.software.Command(2).active)
+        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/'
+                        'Split%20libraries/activate/', headers=self.header,
+                        data={})
+        self.assertEqual(obs.code, 200)
+        self.assertTrue(qdb.software.Command(2).active)
+
 if __name__ == '__main__':
     main()

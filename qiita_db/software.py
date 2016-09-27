@@ -425,6 +425,31 @@ class Command(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchindex()
 
+    @property
+    def active(self):
+        """Returns if the command is active or not
+
+        Returns
+        -------
+        bool
+            Whether the command is active or not
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT active
+                     FROM qiita.software_command
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    def activate(self):
+        """Activates the command"""
+        with qdb.sql_connection.TRN:
+            sql = """UPDATE qiita.software_command
+                     SET active = %s
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [True, self.id])
+            return qdb.sql_connection.TRN.execute()
+
 
 class Software(qdb.base.QiitaObject):
     r"""A software package available in the system
@@ -455,6 +480,8 @@ class Software(qdb.base.QiitaObject):
         """Deactivates all the plugins in the system"""
         with qdb.sql_connection.TRN:
             sql = "UPDATE qiita.software SET active = False"
+            qdb.sql_connection.TRN.add(sql)
+            sql = "UPDATE qiita.software_command SET active = False"
             qdb.sql_connection.TRN.add(sql)
             qdb.sql_connection.TRN.execute()
 

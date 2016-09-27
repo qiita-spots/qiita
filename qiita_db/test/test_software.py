@@ -253,6 +253,13 @@ class CommandTests(TestCase):
             'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
 
+    def test_activate(self):
+        qdb.software.Software.deactivate_all()
+        tester = qdb.software.Command(1)
+        self.assertFalse(tester.active)
+        tester.activate()
+        self.assertTrue(tester.active)
+
 
 @qiita_test_checker()
 class SoftwareTests(TestCase):
