@@ -100,15 +100,17 @@ class CommandListHandler(OauthBaseHandler):
             cmd_desc = self.get_argument('description')
             req_params = loads(self.get_argument('required_parameters'))
             opt_params = loads(self.get_argument('optional_parameters'))
+            outputs = self.get_argument('outputs', None)
+            if outputs:
+                outputs = loads(outputs)
             dflt_param_set = loads(self.get_argument('default_parameter_sets'))
 
             parameters = req_params
             parameters.update(opt_params)
 
             cmd = qdb.software.Command.create(
-                plugin, cmd_name, cmd_desc, parameters)
+                plugin, cmd_name, cmd_desc, parameters, outputs)
 
-            # params = opt_params
             if dflt_param_set is not None:
                 for name, vals in dflt_param_set.items():
                     qdb.software.DefaultParameters.create(name, cmd, **vals)

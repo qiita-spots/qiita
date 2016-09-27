@@ -77,6 +77,7 @@ class CommandListHandlerTests(OauthTestingBase):
             'optional_parameters': dumps({'param1': ['string', ''],
                                           'param2': ['float', '1.5'],
                                           'param3': ['boolean', 'True']}),
+            'outputs': dumps({'out1': 'BIOM'}),
             'default_parameter_sets': dumps(
                 {'dflt1': {'param1': 'test',
                            'param2': '2.4',

@@ -147,7 +147,7 @@ class Command(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def create(cls, software, name, description, parameters, outputs):
+    def create(cls, software, name, description, parameters, outputs=None):
         r"""Creates a new command in the system
 
         The supported types for the parameters are:
@@ -175,7 +175,7 @@ class Command(qdb.base.QiitaObject):
             format is: {parameter_name: (parameter_type, default)},
             where parameter_name, parameter_type and default are strings. If
             default is None.
-        outputs : dict
+        outputs : dict, optional
             The description of the outputs that this command generated. The
             format is: {output_name: artifact_type}
 
@@ -285,14 +285,15 @@ class Command(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql_type, sql_params, many=True)
 
             # Add the outputs to the command
-            sql = """INSERT INTO qiita.command_output
-                        (name, command_id, artifact_type_id)
-                     VALUES (%s, %s, %s)"""
-            sql_args = [
-                [pname, c_id, qdb.util.convert_to_id(at, 'artifact_type')]
-                for pname, at in outputs.items()]
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-            qdb.sql_connection.TRN.execute()
+            if outputs:
+                sql = """INSERT INTO qiita.command_output
+                            (name, command_id, artifact_type_id)
+                         VALUES (%s, %s, %s)"""
+                sql_args = [
+                    [pname, c_id, qdb.util.convert_to_id(at, 'artifact_type')]
+                    for pname, at in outputs.items()]
+                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+                qdb.sql_connection.TRN.execute()
 
         return cls(c_id)
 
