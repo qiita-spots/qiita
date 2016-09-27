@@ -214,3 +214,5 @@ class ArtifactTypeHandler(OauthBaseHandler):
                                               fp_types)
         except qdb.exceptions.QiitaDBDuplicateError as e:
             raise HTTPError(400, str(e))
+
+        self.finish()

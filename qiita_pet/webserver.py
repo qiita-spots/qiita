@@ -53,7 +53,8 @@ from qiita_db.handlers.oauth2 import TokenAuthHandler
 from qiita_db.handlers.reference import ReferenceHandler
 from qiita_db.handlers.core import ResetAPItestHandler
 from qiita_db.handlers.plugin import (
-    PluginHandler, CommandHandler, CommandListHandler, CommandActivateHandler)
+    PluginHandler, CommandHandler, CommandListHandler, CommandActivateHandler,
+    ReloadPluginAPItestHandler)
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 if qiita_config.portal == "QIITA":
@@ -178,7 +179,8 @@ class Application(tornado.web.Application):
                 (r"/apitest/processing_job/", ProcessingJobAPItestHandler),
                 (r"/apitest/reset/", ResetAPItestHandler),
                 (r"/apitest/prep_template/", PrepTemplateAPItestHandler),
-                (r"/apitest/artifact/", ArtifactAPItestHandler)
+                (r"/apitest/artifact/", ArtifactAPItestHandler),
+                (r"/apitest/reload_plugins/", ReloadPluginAPItestHandler)
             ]
             handlers.extend(test_handlers)
 

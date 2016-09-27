@@ -29,6 +29,7 @@ class CommandTests(TestCase):
             'opt_int_param': ['integer', '4'],
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
             'opt_bool': ['boolean', 'False']}
+        self.outputs = {'out1': 'BIOM'}
 
     def test_get_commands_by_input_type(self):
         obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
@@ -202,11 +203,13 @@ class CommandTests(TestCase):
         #  no parameters
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.create(
-                self.software, "Test command", "Testing command", {})
+                self.software, "Test command", "Testing command", {},
+                self.outputs)
 
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.create(
-                self.software, "Test command", "Testing command", None)
+                self.software, "Test command", "Testing command", None,
+                self.outputs)
 
         # malformed params
         parameters = deepcopy(self.parameters)
@@ -214,7 +217,7 @@ class CommandTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.create(
                 self.software, "Test command", "Testing command",
-                parameters)
+                parameters, self.outputs)
 
         # unsupported parameter type
         parameters = deepcopy(self.parameters)
@@ -222,7 +225,7 @@ class CommandTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.create(
                 self.software, "Test command", "Testing command",
-                parameters)
+                parameters, self.outputs)
 
         # bad default choice
         parameters = deepcopy(self.parameters)
@@ -230,18 +233,19 @@ class CommandTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.create(
                 self.software, "Test command", "Testing command",
-                parameters)
+                parameters, self.outputs)
 
         # duplicate
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
             qdb.software.Command.create(
                 self.software, "Split libraries",
-                "This is a command for testing", self.parameters)
+                "This is a command for testing", self.parameters,
+                self.outputs)
 
     def test_create(self):
         obs = qdb.software.Command.create(
             self.software, "Test Command", "This is a command for testing",
-            self.parameters)
+            self.parameters, self.outputs)
         self.assertEqual(obs.name, "Test Command")
         self.assertEqual(obs.description, "This is a command for testing")
         exp_required = {'req_param': ('string', [None]),

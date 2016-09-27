@@ -204,7 +204,7 @@ class ProcessingJobAPItestHandlerTests(OauthTestingBase):
     def test_post_processing_job(self):
         data = {
             'user': 'demo@microbio.me',
-            'command': 3,
+            'command': dumps(['QIIME', '1.9.1', 'Pick closed-reference OTUs']),
             'parameters': dumps({"reference": 1,
                                  "sortmerna_e_value": 1,
                                  "sortmerna_max_pos": 10000,
@@ -225,7 +225,7 @@ class ProcessingJobAPItestHandlerTests(OauthTestingBase):
     def test_post_processing_job_status(self):
         data = {
             'user': 'demo@microbio.me',
-            'command': 3,
+            'command': dumps(['QIIME', '1.9.1', 'Pick closed-reference OTUs']),
             'status': 'running',
             'parameters': dumps({"reference": 1,
                                  "sortmerna_e_value": 1,
