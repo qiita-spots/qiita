@@ -186,5 +186,16 @@ class CommandActivateHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
         self.assertTrue(qdb.software.Command(2).active)
 
+
+class ReloadPluginAPItestHandlerTests(OauthTestingBase):
+    def test_post_no_header(self):
+        obs = self.post('/apitest/reload_plugins/', data={})
+        self.assertEqual(obs.code, 400)
+
+    def test_post(self):
+        obs = self.post('/apitest/reload_plugins/', headers=self.header,
+                        data={})
+        self.assertEqual(obs.code, 200)
+
 if __name__ == '__main__':
     main()
