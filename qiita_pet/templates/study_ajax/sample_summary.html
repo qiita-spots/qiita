@@ -145,30 +145,34 @@
     </div>
 
     <table class="table">
-      {% for category, summary in viewitems(stats) %}
+      {% for i, (category, summary) in enumerate(viewitems(stats)) %}
         <tr>
-          {% if editable %}
-            <td>
+          <td>
+            {% if editable %}
               <a class="btn btn-danger" onclick="delete_column('{{category}}');"><span class="glyphicon glyphicon-trash"></span></a>
-            </td>
-          {% end %}
-          {% if len(summary) == 1 %}
-            <td colspan="2">
-              <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
-            </td>
-          {% elif len(set([row[1] for row in summary])) == 1 %}
-            <td colspan="2">
-              <b>{{category}}</b>: All the values in this category are different.
-            </td>
-          {% else %}
-            <th colspan="2" align="center">{{category}}</th>
-            {% for row in summary %}
-            <tr>
-              <td width="5px">&nbsp;</td>
-              <td>{{row[0]}}</td>
-              <td>{{row[1]}}</td>
-            </tr>
+            {% else %}
+              &nbsp;
             {% end %}
+          </td>
+          <td colspan="2">
+            {% if len(summary) == 1 %}
+                <b>{{category}}</b>: <tt>{{summary[0][0]}}</tt> is repeated in all rows.
+            </td>
+            {% elif len(set([row[1] for row in summary])) == 1 %}
+                <b>{{category}}</b>: All the values in this category are different.
+              </td>
+            {% else %}
+                <b>{{category}}<b>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" class="btn" data-toggle="collapse" data-target=".{{i}}collapsed">values</button>
+              </td>
+              {% for row in summary %}
+              </tr>
+              <tr class="collapse {{i}}collapsed">
+                <td>&nbsp;</td>
+                <td>{{row[0]}}</td>
+                <td>{{row[1]}}</td>
+              {% end %}
           {% end %}
         </tr>
       {% end %}
