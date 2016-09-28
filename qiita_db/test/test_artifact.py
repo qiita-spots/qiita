@@ -95,7 +95,7 @@ class ArtifactTestsReadOnly(TestCase):
                          'rev_comp_mapping_barcodes': False,
                          'min_per_read_length_fraction': 0.75,
                          'barcode_type': 'golay_12',
-                         'phred_offset': ''})
+                         'phred_offset': 'auto'})
         self.assertEqual(obs, exp)
         obs = qdb.artifact.Artifact(3).processing_parameters
         exp = qdb.software.Parameters.load(
@@ -107,7 +107,7 @@ class ArtifactTestsReadOnly(TestCase):
                          'rev_comp_mapping_barcodes': True,
                          'min_per_read_length_fraction': 0.75,
                          'barcode_type': 'golay_12',
-                         'phred_offset': ''})
+                         'phred_offset': 'auto'})
         self.assertEqual(obs, exp)
 
     def test_visibility(self):
