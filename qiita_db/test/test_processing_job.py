@@ -128,7 +128,7 @@ class ProcessingJobTest(TestCase):
             '"sequence_max_n":0,"rev_comp_barcode":false,'
             '"rev_comp_mapping_barcodes":false,"rev_comp":false,'
             '"phred_quality_threshold":3,"barcode_type":"golay_12",'
-            '"max_barcode_errors":1.5,"input_data":1,"phred_offset":""}')
+            '"max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}')
         exp_params = qdb.software.Parameters.load(qdb.software.Command(1),
                                                   json_str=json_str)
         self.assertEqual(self.tester1.parameters, exp_params)
@@ -150,7 +150,7 @@ class ProcessingJobTest(TestCase):
             '"sequence_max_n":0,"rev_comp_barcode":false,'
             '"rev_comp_mapping_barcodes":true,"rev_comp":false,'
             '"phred_quality_threshold":3,"barcode_type":"golay_12",'
-            '"max_barcode_errors":1.5,"input_data":1,"phred_offset":""}')
+            '"max_barcode_errors":1.5,"input_data":1,"phred_offset":"auto"}')
         exp_params = qdb.software.Parameters.load(qdb.software.Command(1),
                                                   json_str=json_str)
         self.assertEqual(self.tester3.parameters, exp_params)
@@ -230,7 +230,7 @@ class ProcessingJobTest(TestCase):
             '"rev_comp": false, "phred_quality_threshold": 3, '
             '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
             '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
-            '"phred_offset": ""}')
+            '"phred_offset": "auto"}')
         exp_params = qdb.software.Parameters.load(exp_command,
                                                   json_str=json_str)
         exp_user = qdb.user.User('test@foo.bar')
@@ -405,7 +405,7 @@ class ProcessingJobTest(TestCase):
             '"rev_comp": false, "phred_quality_threshold": 3, '
             '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
             '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
-            '"phred_offset": ""}')
+            '"phred_offset": "auto"}')
         exp_params = qdb.software.Parameters.load(exp_command,
                                                   json_str=json_str)
         exp_user = qdb.user.User('test@foo.bar')
@@ -564,7 +564,7 @@ class ProcessingWorkflowTests(TestCase):
             '"rev_comp": false, "phred_quality_threshold": 3, '
             '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
             '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
-            '"phred_offset": ""}')
+            '"phred_offset": "auto"}')
         exp_params = qdb.software.Parameters.load(exp_command,
                                                   json_str=json_str)
         exp_user = qdb.user.User('test@foo.bar')
@@ -589,7 +589,7 @@ class ProcessingWorkflowTests(TestCase):
             '"rev_comp": false, "phred_quality_threshold": 3, '
             '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
             '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0, '
-            '"phred_offset": ""}')
+            '"phred_offset": "auto"}')
         exp_params = qdb.software.Parameters.load(exp_command,
                                                   json_str=json_str)
         exp_user = qdb.user.User('test@foo.bar')
@@ -649,7 +649,7 @@ class ProcessingWorkflowTests(TestCase):
                       'rev_comp_barcode': False,
                       'rev_comp_mapping_barcodes': False,
                       'sequence_max_n': 0,
-                      'phred_offset': ''}
+                      'phred_offset': 'auto'}
         self.assertEqual(obs_job.parameters.values, exp_params)
 
     def test_add_error(self):
@@ -665,7 +665,7 @@ class ProcessingWorkflowTests(TestCase):
             '"rev_comp": false, "phred_quality_threshold": 3, '
             '"rev_comp_barcode": false, "rev_comp_mapping_barcodes": false, '
             '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0,'
-            '"phred_offset": ""}')
+            '"phred_offset": "auto"}')
         exp_params = qdb.software.Parameters.load(exp_command,
                                                   json_str=json_str)
         exp_user = qdb.user.User('test@foo.bar')

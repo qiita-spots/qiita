@@ -32,12 +32,13 @@ DECLARE
     cmd_id      bigint;
     dflt_p      RECORD;
     a_vals      RECORD;
+    j_vals      RECORD;
 BEGIN
     -- select command id of interest
     SELECT command_id FROM qiita.software_command WHERE name = 'Split libraries FASTQ' INTO cmd_id;
 
     -- Update the phred_offset parameter type
-    UPDATE qiita.command_parameter SET parameter_type = 'choice:["auto", "33", "64"]'
+    UPDATE qiita.command_parameter SET parameter_type = 'choice:["auto", "33", "64"]', default_value = 'auto'
         WHERE parameter_name = 'phred_offset' AND command_id = cmd_id;
 
     -- Update all the default parameter sets to use "auto" instead of ""
@@ -60,5 +61,16 @@ BEGIN
         UPDATE qiita.artifact
             SET command_parameters = qiita.json_object_set_key(a_vals.command_parameters, 'phred_offset', 'auto'::varchar)
             WHERE artifact_id = a_vals.artifact_id;
+    END LOOP;
+
+    -- Update all the jobs that have been using this parameter set
+    FOR j_vals IN
+        SELECT *
+        FROM qiita.processing_job
+        WHERE command_id = cmd_id AND command_parameters->>'phred_offset' = ''
+    LOOP
+        UPDATE qiita.processing_job
+            SET command_parameters = qiita.json_object_set_key(j_vals.command_parameters, 'phred_offset', 'auto'::varchar)
+            WHERE processing_job_id = j_vals.processing_job_id;
     END LOOP;
 END $do$;
