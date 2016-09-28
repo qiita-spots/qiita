@@ -24,7 +24,7 @@
     var options = {
       nodes: {
         color: '#ffffff',
-        font: '16px arial black'
+        font: '14px arial black'
       },
       layout : {
         hierarchical: {
@@ -202,7 +202,15 @@
           nodes.push({id: data.node_labels[i][0], label: data.node_labels[i][1], shape: 'box'});
         }
 
-        $("#graph-or-new-artifact-div").html("<div class='row'><div class='col-md-12'><h4><a class='btn btn-info' id='show-hide-btn' onclick='toggle_graphs();'>-</a><i> Files network</i></h4>(Click nodes for more information)</div></div><div class='row'><div class='col-md-12 graph' id='graph-network-div'></div></div>");
+        $("#graph-or-new-artifact-div").html(
+          "<div class='row'>" +
+            "<div class='col-md-12'>" +
+              "<h4><a class='btn btn-info' id='show-hide-btn' onclick='toggle_graphs();'>-</a><i> Files network</i></h4>" +
+              "<b>(Click nodes for more information)</b>" +
+            "</div>" +
+          "</div>" +
+          "<div class='row'><div class='col-md-12 graph' style='width:90%; left:20px;' id='graph-network-div'>" +
+          "</div>");
         draw_graph(nodes, edges, "graph-network-div", function(params) {
           if(params.nodes.length === 1) {
             var artifact_id = +params.nodes[0];
