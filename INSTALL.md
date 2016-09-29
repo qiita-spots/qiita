@@ -125,10 +125,10 @@ the `Plugin` [qp-target-gene](https://github.com/qiita-spots/qp-target-gene) are
 required. To install these plugins, simply execute
 
 ```bash
-pip install https://github.com/qiita-spots/qiita_client
-pip install https://github.com/qiita-spots/qtp-biom
-pip install https://github.com/qiita-spots/qtp-target-gene
-pip install https://github.com/qiita-spots/qp-target-gene
+pip install git+https://github.com/qiita-spots/qiita_client
+pip install git+https://github.com/qiita-spots/qtp-biom
+pip install git+https://github.com/qiita-spots/qtp-target-gene
+pip install git+https://github.com/qiita-spots/qp-target-gene
 ```
 
 ## Configure Qiita
