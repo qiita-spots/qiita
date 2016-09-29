@@ -28,3 +28,4 @@ following documents:
    admin/index.rst
    dev/index.rst
    faq.rst
+   resources.rst
