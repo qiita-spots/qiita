@@ -94,7 +94,7 @@ class CommandTests(TestCase):
                       'rev_comp_barcode': ['bool', 'False'],
                       'rev_comp_mapping_barcodes': ['bool', 'False'],
                       'sequence_max_n': ['integer', '0'],
-                      'phred_offset': ['string', '']}
+                      'phred_offset': ['choice:["auto", "33", "64"]', 'auto']}
         self.assertEqual(qdb.software.Command(1).parameters, exp_params)
         exp_params = {
             'barcode_type': ['string', 'golay_12'],
@@ -144,7 +144,7 @@ class CommandTests(TestCase):
                       'rev_comp_barcode': ['bool', 'False'],
                       'rev_comp_mapping_barcodes': ['bool', 'False'],
                       'sequence_max_n': ['integer', '0'],
-                      'phred_offset': ['string', '']}
+                      'phred_offset': ['choice:["auto", "33", "64"]', 'auto']}
         self.assertEqual(qdb.software.Command(1).optional_parameters,
                          exp_params)
         exp_params = exp_params = {
@@ -606,7 +606,7 @@ class DefaultParametersTests(TestCase):
             sequence_max_n=0, rev_comp_barcode=False,
             rev_comp_mapping_barcodes=False, rev_comp=False,
             phred_quality_threshold=3, barcode_type="golay_12",
-            max_barcode_errors=1.5, phred_offset='')
+            max_barcode_errors=1.5, phred_offset='auto')
         self.assertTrue(obs)
 
         obs = qdb.software.DefaultParameters.exists(
@@ -614,7 +614,7 @@ class DefaultParametersTests(TestCase):
             sequence_max_n=0, rev_comp_barcode=False,
             rev_comp_mapping_barcodes=False, rev_comp=False,
             phred_quality_threshold=3, barcode_type="hamming_8",
-            max_barcode_errors=1.5, phred_offset='')
+            max_barcode_errors=1.5, phred_offset='auto')
         self.assertFalse(obs)
 
     def test_name(self):
@@ -626,7 +626,7 @@ class DefaultParametersTests(TestCase):
                'rev_comp': False, 'phred_quality_threshold': 3,
                'rev_comp_barcode': False, 'sequence_max_n': 0,
                'barcode_type': 'golay_12', 'rev_comp_mapping_barcodes': False,
-               'phred_offset': ''}
+               'phred_offset': 'auto'}
         self.assertEqual(qdb.software.DefaultParameters(1).values, exp)
 
     def test_command(self):
@@ -641,14 +641,14 @@ class DefaultParametersTests(TestCase):
             rev_comp_barcode=False, rev_comp_mapping_barcodes=False,
             rev_comp=False, phred_quality_threshold=3,
             barcode_type="hamming_8", max_barcode_errors=1.5,
-            phred_offset='')
+            phred_offset='auto')
         self.assertEqual(obs.name, "test_create")
 
         exp = {'max_bad_run_length': 3, 'min_per_read_length_fraction': 0.75,
                'sequence_max_n': 0, 'rev_comp_barcode': False,
                'rev_comp_mapping_barcodes': False, 'rev_comp': False,
                'phred_quality_threshold': 3, 'barcode_type': "hamming_8",
-               'max_barcode_errors': 1.5, 'phred_offset': ''}
+               'max_barcode_errors': 1.5, 'phred_offset': 'auto'}
         self.assertEqual(obs.values, exp)
         self.assertEqual(obs.command, cmd)
 
@@ -684,7 +684,7 @@ class ParametersTests(TestCase):
                     '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
                     '"min_per_read_length_fraction": 0.75, '
                     '"phred_quality_threshold": 3, "rev_comp": false, '
-                    '"rev_comp_barcode": false, "phred_offset": "", '
+                    '"rev_comp_barcode": false, "phred_offset": "auto", '
                     '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
         cmd = qdb.software.Command(1)
         obs = qdb.software.Parameters.load(cmd, json_str=json_str)
@@ -694,7 +694,7 @@ class ParametersTests(TestCase):
             "min_per_read_length_fraction": 0.75,
             "phred_quality_threshold": 3, "rev_comp": False,
             "rev_comp_barcode": False, "rev_comp_mapping_barcodes": False,
-            "sequence_max_n": 0, "phred_offset": ""}
+            "sequence_max_n": 0, "phred_offset": "auto"}
         self.assertEqual(obs.values, exp_values)
 
     def test_load_dictionary(self):
@@ -704,7 +704,7 @@ class ParametersTests(TestCase):
             "min_per_read_length_fraction": 0.75,
             "phred_quality_threshold": 3, "rev_comp": False,
             "rev_comp_barcode": False, "rev_comp_mapping_barcodes": False,
-            "sequence_max_n": 0, "phred_offset": ""}
+            "sequence_max_n": 0, "phred_offset": "auto"}
         cmd = qdb.software.Command(1)
         obs = qdb.software.Parameters.load(cmd, values_dict=exp_values)
         self.assertEqual(obs.values, exp_values)
@@ -714,7 +714,7 @@ class ParametersTests(TestCase):
                     '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
                     '"min_per_read_length_fraction": 0.75, '
                     '"phred_quality_threshold": 3, "rev_comp": false, '
-                    '"rev_comp_barcode": false, "phred_offset": "", '
+                    '"rev_comp_barcode": false, "phred_offset": "auto", '
                     '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
         cmd = qdb.software.Command(1)
         with self.assertRaises(qdb.exceptions.QiitaDBError):
@@ -725,7 +725,7 @@ class ParametersTests(TestCase):
             "barcode_type": "golay_12", "input_data": 1,
             "phred_quality_threshold": 3, "rev_comp": False,
             "rev_comp_barcode": False, "rev_comp_mapping_barcodes": False,
-            "sequence_max_n": 0, "phred_offset": ""}
+            "sequence_max_n": 0, "phred_offset": "auto"}
         cmd = qdb.software.Command(1)
         obs = qdb.software.Parameters.load(cmd, values_dict=values)
         values.update({
@@ -738,7 +738,7 @@ class ParametersTests(TestCase):
                     '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
                     '"min_per_read_length_fraction": 0.75, '
                     '"phred_quality_threshold": 3, "rev_comp": false, '
-                    '"rev_comp_barcode": false, "phred_offset": "",'
+                    '"rev_comp_barcode": false, "phred_offset": "auto",'
                     '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0,'
                     '"extra_param": 1}')
         cmd = qdb.software.Command(1)
@@ -754,7 +754,7 @@ class ParametersTests(TestCase):
                'rev_comp': False, 'phred_quality_threshold': 3,
                'rev_comp_barcode': False, 'sequence_max_n': 0,
                'barcode_type': 'golay_12', 'rev_comp_mapping_barcodes': False,
-               'input_data': 1, 'phred_offset': ''}
+               'input_data': 1, 'phred_offset': 'auto'}
         self.assertEqual(obs._values, exp)
 
         obs = qdb.software.Parameters.from_default_params(
@@ -766,7 +766,7 @@ class ParametersTests(TestCase):
                'rev_comp': False, 'phred_quality_threshold': 3,
                'rev_comp_barcode': False, 'sequence_max_n': 0,
                'barcode_type': 'golay_12', 'rev_comp_mapping_barcodes': False,
-               'input_data': 1, 'phred_offset': ''}
+               'input_data': 1, 'phred_offset': 'auto'}
         self.assertEqual(obs._values, exp)
 
     def test_from_default_params_error_missing_reqd(self):
@@ -799,7 +799,7 @@ class ParametersTests(TestCase):
                'rev_comp': False, 'phred_quality_threshold': 3,
                'rev_comp_barcode': False, 'sequence_max_n': 0,
                'barcode_type': 'golay_12', 'rev_comp_mapping_barcodes': False,
-               'phred_offset': '', 'input_data': 1}
+               'phred_offset': 'auto', 'input_data': 1}
         self.assertEqual(obs, exp)
 
     def test_dumps(self):
@@ -807,7 +807,7 @@ class ParametersTests(TestCase):
             qdb.software.DefaultParameters(1), {'input_data': 1}).dump()
         exp = ('{"barcode_type": "golay_12", "input_data": 1, '
                '"max_bad_run_length": 3, "max_barcode_errors": 1.5, '
-               '"min_per_read_length_fraction": 0.75, "phred_offset": "", '
+               '"min_per_read_length_fraction": 0.75, "phred_offset": "auto", '
                '"phred_quality_threshold": 3, "rev_comp": false, '
                '"rev_comp_barcode": false, '
                '"rev_comp_mapping_barcodes": false, "sequence_max_n": 0}')
