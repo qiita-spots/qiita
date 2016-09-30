@@ -197,11 +197,6 @@ class ArtifactTypeHandler(OauthBaseHandler):
         filepath_types : list of (str, bool)
             The list filepath types that the new artifact type supports, and
             if they're required or not in an artifact instance of this type
-
-        Raises
-        ------
-        HTTPError
-            If the artifact type already exists, with error code 400
         """
         a_type = self.get_argument('type_name')
         a_desc = self.get_argument('description')
@@ -212,7 +207,9 @@ class ArtifactTypeHandler(OauthBaseHandler):
         try:
             qdb.artifact.Artifact.create_type(a_type, a_desc, ebi, vamps,
                                               fp_types)
-        except qdb.exceptions.QiitaDBDuplicateError as e:
-            raise HTTPError(400, str(e))
+        except qdb.exceptions.QiitaDBDuplicateError:
+            # Ignoring this error as we want this endpoint in the rest api
+            # to be idempotent.
+            self.set_status(200, reason="Artifact type already exists")
 
         self.finish()

@@ -437,7 +437,15 @@ def start(port, master):
             raise
 
     click.echo("Qiita started on port %d" % port)
-    tornado.ioloop.IOLoop.instance().start()
+    ioloop = tornado.ioloop.IOLoop.instance()
+
+    if master:
+        def callback_function():
+            for s in qdb.software.Software.iter_active():
+                s.register_commands()
+
+        ioloop.add_timeout(ioloop.time() + 0.5, callback_function)
+    ioloop.start()
 
 # #############################################################################
 # PLUGIN COMMANDS

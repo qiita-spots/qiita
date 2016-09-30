@@ -32,17 +32,26 @@ class CommandTests(TestCase):
         self.outputs = {'out1': 'BIOM'}
 
     def test_get_commands_by_input_type(self):
+        qdb.software.Software.deactivate_all()
         obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
-        exp = [qdb.software.Command(1)]
+        self.assertEqual(obs, [])
+
+        cmd = qdb.software.Command(1)
+        cmd.activate()
+        obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
+        exp = [cmd]
         self.assertItemsEqual(obs, exp)
 
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'per_sample_FASTQ']))
-        exp = [qdb.software.Command(1)]
         self.assertItemsEqual(obs, exp)
 
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'SFF']))
+        self.assertEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'SFF'], active_only=False))
         exp = [qdb.software.Command(1), qdb.software.Command(2)]
         self.assertItemsEqual(obs, exp)
 
@@ -288,6 +297,23 @@ class SoftwareTests(TestCase):
         for f in self._clean_up_files:
             if exists(f):
                 remove(f)
+
+    def test_iter_active(self):
+        qdb.software.Software.deactivate_all()
+        obs = list(qdb.software.Software.iter_active())
+        self.assertEqual(obs, [])
+
+        s2 = qdb.software.Software(2)
+        s2.activate()
+        obs = list(qdb.software.Software.iter_active())
+        self.assertEqual(obs, [s2])
+
+        s1 = qdb.software.Software(1)
+        s3 = qdb.software.Software(3)
+        s1.activate()
+        s3.activate()
+        obs = list(qdb.software.Software.iter_active())
+        self.assertEqual(obs, [s1, s2, s3])
 
     def test_from_name_and_version(self):
         obs = qdb.software.Software.from_name_and_version('QIIME', '1.9.1')
