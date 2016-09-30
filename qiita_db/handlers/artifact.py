@@ -208,6 +208,8 @@ class ArtifactTypeHandler(OauthBaseHandler):
             qdb.artifact.Artifact.create_type(a_type, a_desc, ebi, vamps,
                                               fp_types)
         except qdb.exceptions.QiitaDBDuplicateError:
+            # Ignoring this error as we want this endpoint in the rest api
+            # to be idempotent.
             pass
 
         self.finish()
