@@ -9,11 +9,13 @@
 from json import dumps, loads
 from copy import deepcopy
 from future import standard_library
+from multiprocessing import Process
 import inspect
 import warnings
 
 import networkx as nx
 
+from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
 with standard_library.hooks():
@@ -493,6 +495,18 @@ class Software(qdb.base.QiitaObject):
     qiita_db.software.Command
     """
     _table = "software"
+
+    @classmethod
+    def iter_active(cls):
+        """Iterates over all active software"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT software_id
+                     FROM qiita.software
+                     WHERE active = True
+                     ORDER BY software_id"""
+            qdb.sql_connection.TRN.add(sql)
+            for s_id in qdb.sql_connection.TRN.execute_fetchflatten():
+                yield cls(s_id)
 
     @classmethod
     def deactivate_all(cls):
@@ -1014,6 +1028,15 @@ class Software(qdb.base.QiitaObject):
                      WHERE software_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             return qdb.sql_connection.TRN.execute_fetchlast()
+
+    def register_commands(self):
+        """Registers the software commands"""
+        url = "%s%s" % (qiita_config.base_url, qiita_config.portal_dir)
+        cmd = '%s "%s" "%s" "%s" "register" "ignored"' % (
+            qiita_config.plugin_launcher, self.environment_script,
+            self.start_script, url)
+        p = Process(target=qdb.processing_job._system_call, args=(cmd,))
+        p.start()
 
 
 class DefaultParameters(qdb.base.QiitaObject):

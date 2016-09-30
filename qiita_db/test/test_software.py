@@ -298,6 +298,23 @@ class SoftwareTests(TestCase):
             if exists(f):
                 remove(f)
 
+    def test_iter_active(self):
+        qdb.software.Software.deactivate_all()
+        obs = list(qdb.software.Software.iter_active())
+        self.assertEqual(obs, [])
+
+        s2 = qdb.software.Software(2)
+        s2.activate()
+        obs = list(qdb.software.Software.iter_active())
+        self.assertEqual(obs, [s2])
+
+        s1 = qdb.software.Software(1)
+        s3 = qdb.software.Software(3)
+        s1.activate()
+        s3.activate()
+        obs = list(qdb.software.Software.iter_active())
+        self.assertEqual(obs, [s1, s2, s3])
+
     def test_from_name_and_version(self):
         obs = qdb.software.Software.from_name_and_version('QIIME', '1.9.1')
         exp = qdb.software.Software(1)
