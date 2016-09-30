@@ -503,16 +503,19 @@ class SoftwareTests(TestCase):
         self._clean_up_files.append(fp)
         with open(fp, 'w') as f:
             f.write(CONF_TEMPLATE %
-                    ('QIIME', '1.9.1',
-                     'Quantitative Insights Into Microbial Ecology (QIIME) '
-                     'is an open-source bioinformatics pipeline for '
-                     'performing microbiome analysis from raw DNA '
-                     'sequencing data', 'source activate qiita',
-                     'start_target_gene', 'artifact transformation',
-                     '[["10.1038/nmeth.f.303", "20383131"]]', "client_id",
-                     client_secret))
+                    ('Target Gene type', '0.1.0',
+                     'Target gene artifact types plugin',
+                     'source activate qiita', 'start_target_gene_types',
+                     'artifact definition', '', 'client_id', 'client_secret'))
+
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
             qdb.software.Software.from_file(fp)
+
+        # But allow to update if update = True
+        obs = qdb.software.Software.from_file(fp, update=True)
+        self.assertEqual(obs, qdb.software.Software(3))
+        self.assertEqual(obs.client_id, 'client_id')
+        self.assertEqual(obs.client_secret, 'client_secret')
 
     def test_exists(self):
         self.assertTrue(qdb.software.Software.exists("QIIME", "1.9.1"))

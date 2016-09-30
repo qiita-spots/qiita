@@ -579,10 +579,27 @@ class Software(qdb.base.QiitaObject):
 
                 if (client_id != instance.client_id or
                         client_secret != instance.client_secret):
-                    raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                        'The (client_id, client_secret) pair of the plugin '
-                        '"%s" version "%s" does not match the one in the '
-                        'system' % (name, version))
+                    if update:
+                        sql = """INSERT INTO qiita.oauth_identifiers
+                                    (client_id, client_secret)
+                                 SELECT %s, %s
+                                 WHERE NOT EXISTS(SELECT *
+                                                  FROM qiita.oauth_identifiers
+                                                  WHERE client_id = %s
+                                                    AND client_secret = %s)"""
+                        qdb.sql_connection.TRN.add(
+                            sql, [client_id, client_secret,
+                                  client_id, client_secret])
+                        sql = """UPDATE qiita.oauth_software
+                                    SET client_id = %s
+                                    WHERE software_id = %s"""
+                        qdb.sql_connection.TRN.add(
+                            sql, [client_id, instance.id])
+                    else:
+                        raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                            'The (client_id, client_secret) pair of the '
+                            'plugin "%s" version "%s" does not match the one '
+                            'in the system' % (name, version))
 
                 if warning_values:
                     warnings.warn(
@@ -592,6 +609,7 @@ class Software(qdb.base.QiitaObject):
                         'information. Offending values: %s'
                         % (name, version, ", ".join(sorted(warning_values))),
                         qdb.exceptions.QiitaDBWarning)
+                qdb.sql_connection.TRN.execute()
         else:
             # This is a new plugin, create it
             instance = cls.create(
