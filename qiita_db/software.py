@@ -51,8 +51,9 @@ class Command(qdb.base.QiitaObject):
         ----------
         artifact_type : list of str
             The artifact types
-        active_only : bool
+        active_only : bool, optional
             If True, return only active commands, otherwise return all commands
+            Default: True
 
         Returns
         -------
@@ -68,7 +69,7 @@ class Command(qdb.base.QiitaObject):
                         JOIN qiita.software_command USING (command_id)
                      WHERE artifact_type IN %s"""
             if active_only:
-                sql = "%s AND active = True" % sql
+                sql += " AND active = True"
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_types)])
             for c_id in qdb.sql_connection.TRN.execute_fetchflatten():
                 yield cls(c_id)

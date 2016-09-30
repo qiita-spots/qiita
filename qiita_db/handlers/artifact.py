@@ -210,6 +210,6 @@ class ArtifactTypeHandler(OauthBaseHandler):
         except qdb.exceptions.QiitaDBDuplicateError:
             # Ignoring this error as we want this endpoint in the rest api
             # to be idempotent.
-            pass
+            self.set_status(200, reason="Artifact type already exists")
 
         self.finish()
