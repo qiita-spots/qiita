@@ -211,8 +211,7 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
 
         obs = self.post('/qiita_db/artifacts/types/', headers=self.header,
                         data=data)
-        self.assertEqual(obs.code, 400)
-        self.assertIn('already exists', obs.body)
+        self.assertEqual(obs.code, 200)
 
 if __name__ == '__main__':
     main()
