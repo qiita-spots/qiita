@@ -32,17 +32,26 @@ class CommandTests(TestCase):
         self.outputs = {'out1': 'BIOM'}
 
     def test_get_commands_by_input_type(self):
+        qdb.software.Software.deactivate_all()
         obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
-        exp = [qdb.software.Command(1)]
+        self.assertEqual(obs, [])
+
+        cmd = qdb.software.Command(1)
+        cmd.activate()
+        obs = list(qdb.software.Command.get_commands_by_input_type(['FASTQ']))
+        exp = [cmd]
         self.assertItemsEqual(obs, exp)
 
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'per_sample_FASTQ']))
-        exp = [qdb.software.Command(1)]
         self.assertItemsEqual(obs, exp)
 
         obs = list(qdb.software.Command.get_commands_by_input_type(
             ['FASTQ', 'SFF']))
+        self.assertEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'SFF'], active_only=False))
         exp = [qdb.software.Command(1), qdb.software.Command(2)]
         self.assertItemsEqual(obs, exp)
 

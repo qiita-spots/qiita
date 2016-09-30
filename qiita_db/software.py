@@ -42,13 +42,15 @@ class Command(qdb.base.QiitaObject):
     _table = "software_command"
 
     @classmethod
-    def get_commands_by_input_type(cls, artifact_types):
+    def get_commands_by_input_type(cls, artifact_types, active_only=True):
         """Returns the commands that can process the given artifact types
 
         Parameters
         ----------
         artifact_type : list of str
             The artifact types
+        active_only : bool
+            If True, return only active commands, otherwise return all commands
 
         Returns
         -------
@@ -61,7 +63,10 @@ class Command(qdb.base.QiitaObject):
                         JOIN qiita.parameter_artifact_type
                             USING (command_parameter_id)
                         JOIN qiita.artifact_type USING (artifact_type_id)
+                        JOIN qiita.software_command USING (command_id)
                      WHERE artifact_type IN %s"""
+            if active_only:
+                sql = "%s AND active = True" % sql
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_types)])
             for c_id in qdb.sql_connection.TRN.execute_fetchflatten():
                 yield cls(c_id)
