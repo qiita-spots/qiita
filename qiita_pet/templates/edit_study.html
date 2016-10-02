@@ -39,7 +39,7 @@ $(document).ready(function() {
         request = $.ajax({
           type: "GET",
           url: '{% raw qiita_config.portal_dir %}/check_study/',
-          data: {study_title: $("#study_title")[0].value {% if study %}, old_study_title: '{{study.title}}'{% end %} }
+          data: {study_title: $("#study_title")[0].value {% if study %}, old_study_title: "{% raw study.title.replace('"', '\\"') %}"{% end %} }
         });
 
         // callback handler that will be called on success

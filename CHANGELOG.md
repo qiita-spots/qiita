@@ -13,6 +13,7 @@ Version 0.2.0-dev (Changes since version 0.2.0 go here)
 * QIIME workflows for splitting libraries (SFF/FASTA-QUAL and FASTQ/per-sample-FASTQ) and for picking OTUs has been moved to a new target gene plugin.
 * An initial RESTapi has been introduced as a result of the plugin system, in which OAuth2 authentication is required to access the data.
 * The system has been ported to use HTTPS instead of HTTP.
+* The website now supports Mozilla Firefox 48 and above.
 
 Version 0.2.0 (2015-08-25)
 --------------------------
