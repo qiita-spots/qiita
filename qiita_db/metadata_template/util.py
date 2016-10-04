@@ -133,6 +133,12 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
         # The QIIME parser fixes the index and removes the #
         index = 'SampleID'
 
+    # Check that we don't have duplicate columns
+    col_names = [c.lower() for c in holdfile[0].strip().split('\t')]
+    if len(set(col_names)) != len(col_names):
+        raise qdb.exceptions.QiitaDBDuplicateHeaderError(
+            find_duplicates(col_names))
+
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string
     # keep_default:
@@ -151,7 +157,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
             keep_default_na=False,
             index_col=False,
             comment='\t',
-            mangle_dupe_cols=False,
             converters={index: lambda x: str(x).strip()})
     except UnicodeDecodeError:
         # Find row number and col number for utf-8 encoding errors
@@ -167,11 +172,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
                  for header, rows in viewitems(errors)]
         raise qdb.exceptions.QiitaDBError(
             'Non UTF-8 characters found in columns:\n' + '\n'.join(lines))
-
-    # Check that we don't have duplicate columns
-    if len(set(template.columns)) != len(template.columns):
-        raise qdb.exceptions.QiitaDBDuplicateHeaderError(
-            find_duplicates(template.columns))
 
     initial_columns = set(template.columns)
 
