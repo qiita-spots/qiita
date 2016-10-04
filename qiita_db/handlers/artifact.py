@@ -177,3 +177,39 @@ class ArtifactAPItestHandler(OauthBaseHandler):
             filepaths, artifact_type, name=name, prep_template=prep_template)
 
         self.write({'artifact': a.id})
+
+
+class ArtifactTypeHandler(OauthBaseHandler):
+    @authenticate_oauth
+    def post(self):
+        """Creates a new artifact type
+
+        Parameters
+        ----------
+        name : str
+            The artifact type name
+        description : str
+            The artifact type description
+        can_be_submitted_to_ebi : bool
+            Whether the artifact type can be submitted to EBI or not
+        can_be_submitted_to_vamps : bool
+            Whether the artifact type can be submitted to VAMPS or not
+        filepath_types : list of (str, bool)
+            The list filepath types that the new artifact type supports, and
+            if they're required or not in an artifact instance of this type
+        """
+        a_type = self.get_argument('type_name')
+        a_desc = self.get_argument('description')
+        ebi = self.get_argument('can_be_submitted_to_ebi')
+        vamps = self.get_argument('can_be_submitted_to_vamps')
+        fp_types = loads(self.get_argument('filepath_types'))
+
+        try:
+            qdb.artifact.Artifact.create_type(a_type, a_desc, ebi, vamps,
+                                              fp_types)
+        except qdb.exceptions.QiitaDBDuplicateError:
+            # Ignoring this error as we want this endpoint in the rest api
+            # to be idempotent.
+            self.set_status(200, reason="Artifact type already exists")
+
+        self.finish()

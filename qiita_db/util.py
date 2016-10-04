@@ -43,7 +43,7 @@ Methods
 from __future__ import division
 from future.builtins import zip
 from future.utils import viewitems
-from random import choice
+from random import SystemRandom
 from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
@@ -225,10 +225,11 @@ def create_rand_string(length, punct=True):
     punct: bool, optional
         Include punctuation as well as letters and numbers. Default True.
     """
-    chars = ''.join((ascii_letters, digits))
+    chars = ascii_letters + digits
     if punct:
-        chars = ''.join((chars, punctuation))
-    return ''.join(choice(chars) for i in range(length))
+        chars += punctuation
+    sr = SystemRandom()
+    return ''.join(sr.choice(chars) for i in xrange(length))
 
 
 def hash_password(password, hashedpw=None):

@@ -42,13 +42,30 @@ class ArtifactTestsReadOnly(TestCase):
         exp = []
         self.assertEqual(obs, exp)
 
-    def test_types(self):
+    def test_create_type(self):
         obs = qdb.artifact.Artifact.types()
         exp = [['BIOM', 'BIOM table'],
                ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None]]
         self.assertItemsEqual(obs, exp)
+
+        qdb.artifact.Artifact.create_type(
+            "NewType", "NewTypeDesc", False, False,
+            [("log", False), ("raw_forward_seqs", True)])
+
+        obs = qdb.artifact.Artifact.types()
+        exp = [['BIOM', 'BIOM table'],
+               ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+               ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
+               ['SFF', None], ['per_sample_FASTQ', None],
+               ['NewType', 'NewTypeDesc']]
+        self.assertItemsEqual(obs, exp)
+
+        with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
+            qdb.artifact.Artifact.create_type(
+                "NewType", "NewTypeDesc", False, False,
+                [("log", False), ("raw_forward_seqs", True)])
 
     def test_name(self):
         self.assertEqual(qdb.artifact.Artifact(1).name, "Raw data 1")
@@ -78,7 +95,7 @@ class ArtifactTestsReadOnly(TestCase):
                          'rev_comp_mapping_barcodes': False,
                          'min_per_read_length_fraction': 0.75,
                          'barcode_type': 'golay_12',
-                         'phred_offset': ''})
+                         'phred_offset': 'auto'})
         self.assertEqual(obs, exp)
         obs = qdb.artifact.Artifact(3).processing_parameters
         exp = qdb.software.Parameters.load(
@@ -90,7 +107,7 @@ class ArtifactTestsReadOnly(TestCase):
                          'rev_comp_mapping_barcodes': True,
                          'min_per_read_length_fraction': 0.75,
                          'barcode_type': 'golay_12',
-                         'phred_offset': ''})
+                         'phred_offset': 'auto'})
         self.assertEqual(obs, exp)
 
     def test_visibility(self):

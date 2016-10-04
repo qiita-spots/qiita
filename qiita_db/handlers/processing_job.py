@@ -153,13 +153,14 @@ class ProcessingJobAPItestHandler(OauthBaseHandler):
     @authenticate_oauth
     def post(self):
         user = self.get_argument('user', 'test@foo.bar')
-        cmd = self.get_argument('command')
+        s_name, s_version, cmd_name = loads(self.get_argument('command'))
         params_dict = self.get_argument('parameters')
         status = self.get_argument('status', None)
 
-        params = qdb.software.Parameters.load(
-            qdb.software.Command(cmd),
-            json_str=params_dict)
+        cmd = qdb.software.Software.from_name_and_version(
+            s_name, s_version).get_command(cmd_name)
+
+        params = qdb.software.Parameters.load(cmd, json_str=params_dict)
 
         job = qdb.processing_job.ProcessingJob.create(
             qdb.user.User(user), params)
