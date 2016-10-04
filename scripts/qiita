@@ -444,6 +444,9 @@ def start(port, master):
         def callback_function():
             for s in qdb.software.Software.iter_active():
                 s.register_commands()
+                # Not sure why this sleep is needed, but when testing in the
+                # test environment, some of the plugins were not registered
+                # unless this sleep was added here
                 sleep(0.5)
 
         ioloop.add_timeout(ioloop.time() + 0.5, callback_function)
