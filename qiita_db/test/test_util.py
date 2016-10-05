@@ -766,16 +766,16 @@ class UtilTests(TestCase):
         obs = qdb.util.infer_status([])
         self.assertEqual(obs, 'sandbox')
 
-        obs = qdb.util.infer_status([['private']])
+        obs = qdb.util.infer_status(['private'])
         self.assertEqual(obs, 'private')
 
-        obs = qdb.util.infer_status([['private'], ['public']])
+        obs = qdb.util.infer_status(['private', 'public'])
         self.assertEqual(obs, 'public')
 
-        obs = qdb.util.infer_status([['sandbox'], ['awaiting_approval']])
+        obs = qdb.util.infer_status(['sandbox', 'awaiting_approval'])
         self.assertEqual(obs, 'awaiting_approval')
 
-        obs = qdb.util.infer_status([['sandbox'], ['sandbox']])
+        obs = qdb.util.infer_status(['sandbox', 'sandbox'])
         self.assertEqual(obs, 'sandbox')
 
     def test_get_pubmed_ids_from_dois(self):
