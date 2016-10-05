@@ -1388,7 +1388,7 @@ def generate_study_list(study_ids, build_samples):
                 info['pmid'] = []
 
             # visibility
-            info["status"] = infer_status([info['artifacts_visibility']])
+            info["status"] = infer_status(info['artifacts_visibility'])
             del info['artifacts_visibility']
 
             # pi info
