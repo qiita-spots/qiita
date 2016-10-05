@@ -1290,9 +1290,12 @@ def generate_study_list(study_ids, build_samples):
                 WHERE artifact_type='BIOM' AND
                     study_id = qiita.study.study_id) AS artifact_biom_ts,
     - all the visibilities of all artifacts that belong to the study
-            (SELECT array_agg(DISTINCT visibility) FROM qiita.artifact
+            (SELECT array_agg(DISTINCT visibility)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                 LEFT JOIN qiita.visibility USING (visibility_id)
-                WHERE study_id=qiita.study.study_id)
+                WHERE study_id = qiita.study.study_id)
                 AS artifacts_visibility,
     - all the publication_doi that belong to the study
             (SELECT array_agg(publication_doi ORDER BY publication_doi)
@@ -1349,9 +1352,12 @@ def generate_study_list(study_ids, build_samples):
                     LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                     WHERE artifact_type='BIOM' AND
                         study_id = qiita.study.study_id) AS artifact_biom_ts,
-                (SELECT array_agg(DISTINCT visibility) FROM qiita.artifact
+                (SELECT array_agg(DISTINCT visibility)
+                    FROM qiita.study_artifact
+                    LEFT JOIN qiita.artifact USING (artifact_id)
+                    LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                     LEFT JOIN qiita.visibility USING (visibility_id)
-                    WHERE study_id=qiita.study.study_id)
+                    WHERE study_id = qiita.study.study_id)
                     AS artifacts_visibility,
                 (SELECT array_agg(publication_doi ORDER BY publication_doi)
                     FROM qiita.study_publication
