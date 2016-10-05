@@ -176,7 +176,7 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'shared': [],
             'pmid': [],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
-            'status': 'private',
+            'status': 'sandbox',
             'proc_data_info': [],
             'publication_doi': [],
             'study_abstract': 'abstract',
@@ -184,6 +184,7 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'ebi_study_accession': None,
             'study_title': 'My study',
             'number_samples_collected': 0})
+
         self.assertItemsEqual(obs, self.exp)
 
 

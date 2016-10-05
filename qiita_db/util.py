@@ -1371,7 +1371,7 @@ def generate_study_list(study_ids, build_samples):
                 FROM qiita.study
                 LEFT JOIN qiita.study_person ON (
                     study_person_id=principal_investigator_id)
-                WHERE study_id IN %s"""
+                WHERE study_id IN %s ORDER BY study_id"""
         qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
         infolist = []
         refs = {}
@@ -1389,9 +1389,9 @@ def generate_study_list(study_ids, build_samples):
 
             # visibility
             # infer_status expects a list of list of str
-            info["status"] = infer_status(
-                [[s] for s in info['artifacts_visibility']])
+            iav = info['artifacts_visibility']
             del info['artifacts_visibility']
+            info["status"] = infer_status([[s] for s in iav] if iav else [])
 
             # pi info
             info["pi"] = (info['pi_email'], info['pi_name'])
