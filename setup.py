@@ -113,6 +113,6 @@ setup(name='qiita-spots',
                         'gitpython', 'qiita-files'],
       dependency_links=[
         'https://github.com/qiita-spots/qiita-files/archive/master.zip#'
-        'egg=qiita-files'],
+        'egg=qiita-files-0.1.0-dev'],
       classifiers=classifiers
       )

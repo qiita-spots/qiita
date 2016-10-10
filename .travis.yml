@@ -26,8 +26,9 @@ install:
     pyzmq networkx pyparsing natsort mock future libgfortran seaborn
     'pandas>=0.18' 'matplotlib>=1.1.0' 'scipy>0.13.0' 'numpy>=1.7' 'h5py>=2.3.1'
   - source activate env_name
+  - pip install -U pip
   - pip install sphinx sphinx-bootstrap-theme coveralls 'ipython[all]==2.4.1'
-  - travis_retry pip install .
+  - travis_retry pip install . --process-dependency-links
   - 'echo "backend: Agg" > matplotlibrc'
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
