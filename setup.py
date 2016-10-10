@@ -110,6 +110,9 @@ setup(name='qiita-spots',
                         'h5py >= 2.3.1', 'biom-format', 'natsort', 'networkx',
                         'scikit-bio >= 0.2.3, < 0.3.0', 'wtforms == 2.0.1',
                         'moi', 'sphinx-bootstrap-theme', 'Sphinx >= 1.2.2',
-                        'gitpython'],
+                        'gitpython', 'qiita-files'],
+      dependency_links=[
+        'https://github.com/qiita-spots/qiita-files/archive/master.zip#'
+        'egg=qiita-files-0.1.0-dev'],
       classifiers=classifiers
       )
