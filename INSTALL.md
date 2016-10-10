@@ -109,11 +109,6 @@ Install the development version of moi:
 pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip --no-deps
 ```
 
-Install the development version of qiita-files:
-```bash
-pip install https://github.com/qiita-spots/qiita-files/archive/master.zip --no-deps
-```
-
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
 
 ```bash
