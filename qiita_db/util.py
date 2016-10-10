@@ -1290,9 +1290,12 @@ def generate_study_list(study_ids, build_samples):
                 WHERE artifact_type='BIOM' AND
                     study_id = qiita.study.study_id) AS artifact_biom_ts,
     - all the visibilities of all artifacts that belong to the study
-            (SELECT array_agg(DISTINCT visibility) FROM qiita.artifact
+            (SELECT array_agg(DISTINCT visibility)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                 LEFT JOIN qiita.visibility USING (visibility_id)
-                WHERE study_id=qiita.study.study_id)
+                WHERE study_id = qiita.study.study_id)
                 AS artifacts_visibility,
     - all the publication_doi that belong to the study
             (SELECT array_agg(publication_doi ORDER BY publication_doi)
@@ -1349,9 +1352,12 @@ def generate_study_list(study_ids, build_samples):
                     LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                     WHERE artifact_type='BIOM' AND
                         study_id = qiita.study.study_id) AS artifact_biom_ts,
-                (SELECT array_agg(DISTINCT visibility) FROM qiita.artifact
+                (SELECT array_agg(DISTINCT visibility)
+                    FROM qiita.study_artifact
+                    LEFT JOIN qiita.artifact USING (artifact_id)
+                    LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                     LEFT JOIN qiita.visibility USING (visibility_id)
-                    WHERE study_id=qiita.study.study_id)
+                    WHERE study_id = qiita.study.study_id)
                     AS artifacts_visibility,
                 (SELECT array_agg(publication_doi ORDER BY publication_doi)
                     FROM qiita.study_publication
@@ -1365,7 +1371,7 @@ def generate_study_list(study_ids, build_samples):
                 FROM qiita.study
                 LEFT JOIN qiita.study_person ON (
                     study_person_id=principal_investigator_id)
-                WHERE study_id IN %s"""
+                WHERE study_id IN %s ORDER BY study_id"""
         qdb.sql_connection.TRN.add(sql, [tuple(study_ids)])
         infolist = []
         refs = {}
@@ -1382,8 +1388,10 @@ def generate_study_list(study_ids, build_samples):
                 info['pmid'] = []
 
             # visibility
-            info["status"] = infer_status([info['artifacts_visibility']])
+            # infer_status expects a list of list of str
+            iav = info['artifacts_visibility']
             del info['artifacts_visibility']
+            info["status"] = infer_status([[s] for s in iav] if iav else [])
 
             # pi info
             info["pi"] = (info['pi_email'], info['pi_name'])

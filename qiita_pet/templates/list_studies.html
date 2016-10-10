@@ -129,6 +129,7 @@ $(document).ready(function() {
   });
 
   $('#studies-table').dataTable({
+      "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
       "sDom": '<"top">rti<"bottom"p><"clear">',
       "bLengthChange": false,
