@@ -22,10 +22,10 @@ from skbio.util import safe_md5
 from future.utils import viewitems
 
 from h5py import File
+from qiita_files.demux import to_hdf5
 
 from qiita_ware.ebi import EBISubmission
 from qiita_ware.exceptions import EBISubmissionError
-from qiita_ware.demux import to_hdf5
 from qiita_core.qiita_settings import qiita_config
 from qiita_db.util import get_mountpoint
 from qiita_db.study import Study, StudyPerson

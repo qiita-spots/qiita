@@ -10,10 +10,10 @@ from functools import partial
 from h5py import File
 from future.utils import viewitems, viewkeys
 from skbio.util import safe_md5, create_dir
+from qiita_files.demux import to_per_sample_ascii
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_ware.exceptions import EBISubmissionError
-from qiita_ware.demux import to_per_sample_ascii
 from qiita_ware.util import open_file
 from qiita_db.logger import LogEntry
 from qiita_db.ontology import Ontology

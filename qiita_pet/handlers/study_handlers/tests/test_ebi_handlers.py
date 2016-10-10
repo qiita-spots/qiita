@@ -12,12 +12,12 @@ from tempfile import mkstemp
 
 from h5py import File
 from mock import Mock
+from qiita_files.demux import to_hdf5
 
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
-from qiita_ware.demux import to_hdf5
 
 
 class TestEBISubmitHandler(TestHandlerBase):

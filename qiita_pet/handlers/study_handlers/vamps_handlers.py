@@ -8,9 +8,9 @@
 from __future__ import division
 
 from tornado.web import authenticated, HTTPError
+from qiita_files.demux import stats as demux_stats
 
 from qiita_ware.context import submit
-from qiita_ware.demux import stats as demux_stats
 from qiita_ware.dispatchable import submit_to_VAMPS
 from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_db.artifact import Artifact
