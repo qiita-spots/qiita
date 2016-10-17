@@ -68,6 +68,19 @@ class CommandTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBError):
             qdb.software.Command.get_html_generator('Unknown')
 
+    def test_get_validator(self):
+        obs = qdb.software.Command.get_validator('BIOM')
+        exp = qdb.software.Command(4)
+        self.assertEqual(obs, exp)
+
+        obs = qdb.software.Command.get_validator('Demultiplexed')
+        exp = qdb.software.Command(6)
+        self.assertEqual(obs, exp)
+
+    def test_get_validator_error(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBError):
+            qdb.software.Command.get_validator('Unknown')
+
     def test_exists(self):
         self.assertFalse(qdb.software.Command.exists(
             self.software, "donotexists"))
