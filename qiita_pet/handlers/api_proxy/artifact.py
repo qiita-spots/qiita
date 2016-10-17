@@ -16,8 +16,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import (create_raw_data, copy_raw_data,
-                                     delete_artifact)
+from qiita_ware.dispatchable import (copy_raw_data, delete_artifact)
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.metadata_template.prep_template import PrepTemplate
@@ -288,7 +287,8 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
          'message': message,
          'artifact': id}
     """
-    prep = PrepTemplate(int(prep_template_id))
+    prep_template_id = int(prep_template_id)
+    prep = PrepTemplate(prep_template_id)
     study_id = prep.study_id
 
     # First check if the user has access to the study
@@ -302,7 +302,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     else:
         uploads_path = get_mountpoint('uploads')[0][1]
         path_builder = partial(join, uploads_path, str(study_id))
-        cleaned_filepaths = []
+        cleaned_filepaths = {}
         for ftype, file_list in viewitems(filepaths):
             # JavaScript sends us this list as a comma-separated list
             for fp in file_list.split(','):
@@ -318,7 +318,9 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                     if exists['status'] != 'success':
                         return {'status': 'error',
                                 'message': 'File does not exist: %s' % fp}
-                    cleaned_filepaths.append((full_fp, ftype))
+                    if ftype not in cleaned_filepaths:
+                        cleaned_filepaths[ftype] = []
+                    cleaned_filepaths[ftype].append(full_fp)
 
         # This should never happen, but it doesn't hurt to actually have
         # a explicit check, in case there is something odd with the JS
@@ -326,13 +328,20 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
             return {'status': 'error',
                     'message': "Can't create artifact, no files provided."}
 
-        job_id = safe_submit(user_id, create_raw_data, artifact_type, prep,
-                             cleaned_filepaths, name=name)
+        command = Command.get_validator(artifact_type)
+        job = ProcessingJob.create(
+            User(user_id),
+            Parameters.load(command, values_dict={
+                'template': prep_template_id,
+                'files': dumps(cleaned_filepaths),
+                'artifact_type': artifact_type
+                }))
+        job.submit()
+        job_id = job.job_id
 
     r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id, dumps({'job_id': job_id}))
 
-    return {'status': 'success',
-            'message': ''}
+    return {'status': 'success', 'message': ''}
 
 
 def artifact_patch_request(user_id, req_op, req_path, req_value=None,
