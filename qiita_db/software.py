@@ -109,6 +109,41 @@ class Command(qdb.base.QiitaObject):
 
             return cls(res)
 
+    @classmethod
+    def get_validator(cls, artifact_type):
+        """Returns the command that validates the given artifact
+
+        Parameters
+        ----------
+        artifact_type : str
+            The artifact type to search the Validate for
+
+        Returns
+        -------
+        qiita_db.software.Command
+            The newly created command
+
+        Raises
+        ------
+        qdb.exceptions.QiitaDBError
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT command_id
+                     FROM qiita.software_command
+                        JOIN qiita.software_artifact_type USING (software_id)
+                        JOIN qiita.artifact_type USING (artifact_type_id)
+                     WHERE artifact_type = %s
+                        AND name = 'Validate'"""
+            qdb.sql_connection.TRN.add(sql, [artifact_type])
+            try:
+                res = qdb.sql_connection.TRN.execute_fetchlast()
+            except IndexError:
+                raise qdb.exceptions.QiitaDBError(
+                    "There is no command to generate the Validate for "
+                    "artifact type '%s'" % artifact_type)
+
+            return cls(res)
+
     def _check_id(self, id_):
         """Check that the provided ID actually exists in the database
 
