@@ -76,7 +76,7 @@ class Command(qdb.base.QiitaObject):
 
     @classmethod
     def get_html_generator(cls, artifact_type):
-        """Returns the command that genearete the HTML for the given artifact
+        """Returns the command that generete the HTML for the given artifact
 
         Parameters
         ----------
@@ -90,7 +90,8 @@ class Command(qdb.base.QiitaObject):
 
         Raises
         ------
-        qdb.exceptions.QiitaDBError
+        qdb.exceptions.QiitaDBError when the generete the HTML command can't
+        be found
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT command_id
@@ -125,7 +126,7 @@ class Command(qdb.base.QiitaObject):
 
         Raises
         ------
-        qdb.exceptions.QiitaDBError
+        qdb.exceptions.QiitaDBError when the Validate command can't be found
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT command_id
