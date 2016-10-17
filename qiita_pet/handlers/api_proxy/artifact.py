@@ -337,7 +337,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                 'artifact_type': artifact_type
                 }))
         job.submit()
-        job_id = job.job_id
+        job_id = job.id
 
     r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id, dumps({'job_id': job_id}))
 
