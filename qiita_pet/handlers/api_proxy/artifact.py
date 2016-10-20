@@ -299,6 +299,7 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
     if artifact_id:
         # if the artifact id has been provided, import the artifact
         job_id = safe_submit(user_id, copy_raw_data, prep, artifact_id)
+        is_qiita_job = False
     else:
         uploads_path = get_mountpoint('uploads')[0][1]
         path_builder = partial(join, uploads_path, str(study_id))
@@ -338,8 +339,10 @@ def artifact_post_req(user_id, filepaths, artifact_type, name,
                 }))
         job.submit()
         job_id = job.id
+        is_qiita_job = True
 
-    r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id, dumps({'job_id': job_id}))
+    r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep.id,
+                 dumps({'job_id': job_id, 'is_qiita_job': is_qiita_job}))
 
     return {'status': 'success', 'message': ''}
 
@@ -490,7 +493,7 @@ def artifact_delete_req(artifact_id, user_id):
 
     job_id = safe_submit(user_id, delete_artifact, artifact_id)
     r_client.set(PREP_TEMPLATE_KEY_FORMAT % pt_id,
-                 dumps({'job_id': job_id}))
+                 dumps({'job_id': job_id, 'is_qiita_job': False}))
 
     return {'status': 'success',
             'message': ''}
