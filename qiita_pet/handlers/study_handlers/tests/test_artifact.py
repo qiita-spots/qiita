@@ -23,6 +23,7 @@ from qiita_db.study import Study
 from qiita_db.util import get_mountpoint, get_count
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBWarning
+from qiita_db.processing_job import ProcessingJob
 
 
 class ArtifactGraphAJAXTests(TestHandlerBase):
@@ -126,16 +127,19 @@ class NewArtifactHandlerTests(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         # make sure new artifact created
-        obs = r_client.get('prep_template_%s' % self.prep.id)
+        obs = r_client.get('prep_template_%d' % self.prep.id)
         self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
-        new_artifact_id = get_count('qiita.artifact')
-        artifact = Artifact(new_artifact_id)
-        self.assertEqual(artifact.name, 'New Artifact Handler test')
-        self._files_to_remove.extend([fp for _, fp, _ in artifact.filepaths])
+        payload = loads(obs)
+        job_id = payload['job_id']
+        if payload['is_qiita_job']:
+            job = ProcessingJob(job_id)
+            while job.status not in ('success', 'error'):
+                sleep(0.05)
+        else:
+            redis_info = loads(r_client.get(job_id))
+            while redis_info['status_msg'] == 'Running':
+                sleep(0.05)
+                redis_info = loads(r_client.get(job_id))
 
 
 class ArtifactAJAXTests(TestHandlerBase):
@@ -149,10 +153,17 @@ class ArtifactAJAXTests(TestHandlerBase):
         # the test database
         obs = r_client.get('prep_template_1')
         self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        payload = loads(obs)
+        job_id = payload['job_id']
+        if payload['is_qiita_job']:
+            job = ProcessingJob(job_id)
+            while job.status not in ('success', 'error'):
+                sleep(0.05)
+        else:
+            redis_info = loads(r_client.get(job_id))
+            while redis_info['status_msg'] == 'Running':
+                sleep(0.05)
+                redis_info = loads(r_client.get(job_id))
 
 
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):

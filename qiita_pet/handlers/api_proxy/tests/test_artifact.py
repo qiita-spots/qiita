@@ -404,12 +404,7 @@ class TestArtifactAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        obs = r_client.get('prep_template_1')
-        self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        self._wait_for_job(1)
 
     def test_artifact_delete_req_no_access(self):
         obs = artifact_delete_req(self.artifact.id, 'demo@microbio.me')
