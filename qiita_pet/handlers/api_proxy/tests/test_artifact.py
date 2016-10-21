@@ -173,6 +173,7 @@ class TestArtifactAPI(TestCase):
             while redis_info['status_msg'] == 'Running':
                 sleep(0.05)
                 redis_info = loads(r_client.get(job_id))
+        sleep(0.05)
 
     def test_artifact_summary_get_request(self):
         # Artifact w/o summary
