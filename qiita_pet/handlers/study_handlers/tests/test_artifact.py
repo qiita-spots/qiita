@@ -20,7 +20,7 @@ from moi import r_client
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.artifact import Artifact
 from qiita_db.study import Study
-from qiita_db.util import get_mountpoint, get_count
+from qiita_db.util import get_mountpoint
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBWarning
 from qiita_db.processing_job import ProcessingJob
