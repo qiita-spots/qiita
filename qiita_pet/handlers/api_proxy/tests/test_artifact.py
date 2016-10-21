@@ -10,14 +10,13 @@ from os.path import join, exists, basename
 from os import remove, close
 from datetime import datetime
 from tempfile import mkstemp
-from json import loads
-from time import sleep
 
 import pandas as pd
 import numpy.testing as npt
 from moi import r_client
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.testing import wait_for_prep_information_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
@@ -158,22 +157,6 @@ class TestArtifactAPI(TestCase):
                 f.write('')
 
         r_client.flushdb()
-
-    def _wait_for_job(self, prep_id):
-        obs = r_client.get('prep_template_%d' % prep_id)
-        self.assertIsNotNone(obs)
-        payload = loads(obs)
-        job_id = payload['job_id']
-        if payload['is_qiita_job']:
-            job = ProcessingJob(job_id)
-            while job.status not in ('success', 'error'):
-                sleep(0.05)
-        else:
-            redis_info = loads(r_client.get(job_id))
-            while redis_info['status_msg'] == 'Running':
-                sleep(0.05)
-                redis_info = loads(r_client.get(job_id))
-        sleep(0.05)
 
     def test_artifact_summary_get_request(self):
         # Artifact w/o summary
@@ -405,7 +388,7 @@ class TestArtifactAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        self._wait_for_job(1)
+        wait_for_prep_information_job(1)
 
     def test_artifact_delete_req_no_access(self):
         obs = artifact_delete_req(self.artifact.id, 'demo@microbio.me')
@@ -427,7 +410,7 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
-        self._wait_for_job(pt.id)
+        wait_for_prep_information_job(pt.id)
 
         # Test importing an artifact
         # Create new prep template to attach artifact to
@@ -444,7 +427,7 @@ class TestArtifactAPI(TestCase):
                'message': ''}
         self.assertEqual(obs, exp)
 
-        self._wait_for_job(pt.id)
+        wait_for_prep_information_job(pt.id)
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
         a = Artifact(new_artifact_id)

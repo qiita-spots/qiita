@@ -11,19 +11,17 @@ from os.path import exists, join
 from os import remove, close
 from tempfile import mkstemp
 from json import loads
-from time import sleep
 
 import pandas as pd
 import numpy.testing as npt
-from moi import r_client
 
+from qiita_core.testing import wait_for_prep_information_job
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.artifact import Artifact
 from qiita_db.study import Study
 from qiita_db.util import get_mountpoint
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBWarning
-from qiita_db.processing_job import ProcessingJob
 
 
 class ArtifactGraphAJAXTests(TestHandlerBase):
@@ -127,19 +125,7 @@ class NewArtifactHandlerTests(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         # make sure new artifact created
-        obs = r_client.get('prep_template_%d' % self.prep.id)
-        self.assertIsNotNone(obs)
-        payload = loads(obs)
-        job_id = payload['job_id']
-        if payload['is_qiita_job']:
-            job = ProcessingJob(job_id)
-            while job.status not in ('success', 'error'):
-                sleep(0.05)
-        else:
-            redis_info = loads(r_client.get(job_id))
-            while redis_info['status_msg'] == 'Running':
-                sleep(0.05)
-                redis_info = loads(r_client.get(job_id))
+        wait_for_prep_information_job(self.prep.id)
 
 
 class ArtifactAJAXTests(TestHandlerBase):
@@ -151,19 +137,7 @@ class ArtifactAJAXTests(TestHandlerBase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        obs = r_client.get('prep_template_1')
-        self.assertIsNotNone(obs)
-        payload = loads(obs)
-        job_id = payload['job_id']
-        if payload['is_qiita_job']:
-            job = ProcessingJob(job_id)
-            while job.status not in ('success', 'error'):
-                sleep(0.05)
-        else:
-            redis_info = loads(r_client.get(job_id))
-            while redis_info['status_msg'] == 'Running':
-                sleep(0.05)
-                redis_info = loads(r_client.get(job_id))
+        wait_for_prep_information_job(1)
 
 
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):
