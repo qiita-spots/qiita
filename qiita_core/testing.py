@@ -15,10 +15,25 @@ from qiita_db.processing_job import ProcessingJob
 
 
 def wait_for_prep_information_job(prep_id, raise_if_none=True):
+    """Waits until a prep information job is completed
+
+    Parameters
+    ----------
+    prep_id : int
+        Prep template id
+    raise_if_none : bool, optional
+        If True, raise an AssertionError if the correspondent redis key
+        is empty. Default: True
+
+    Raises
+    ------
+    AssertionError
+        If `raise_if_none` is True and the correspondent redis key is not set
+    """
     res = r_client.get('prep_template_%d' % prep_id)
 
     if raise_if_none:
-        assert res is not None, "unexpectedly None"
+        raise AssertionError("unexpectedly None")
 
     if res is not None:
         payload = loads(res)
