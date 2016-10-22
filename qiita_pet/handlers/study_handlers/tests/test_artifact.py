@@ -11,16 +11,15 @@ from os.path import exists, join
 from os import remove, close
 from tempfile import mkstemp
 from json import loads
-from time import sleep
 
 import pandas as pd
 import numpy.testing as npt
-from moi import r_client
 
+from qiita_core.testing import wait_for_prep_information_job
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.artifact import Artifact
 from qiita_db.study import Study
-from qiita_db.util import get_mountpoint, get_count
+from qiita_db.util import get_mountpoint
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.exceptions import QiitaDBWarning
 
@@ -126,16 +125,7 @@ class NewArtifactHandlerTests(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         # make sure new artifact created
-        obs = r_client.get('prep_template_%s' % self.prep.id)
-        self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
-        new_artifact_id = get_count('qiita.artifact')
-        artifact = Artifact(new_artifact_id)
-        self.assertEqual(artifact.name, 'New Artifact Handler test')
-        self._files_to_remove.extend([fp for _, fp, _ in artifact.filepaths])
+        wait_for_prep_information_job(self.prep.id)
 
 
 class ArtifactAJAXTests(TestHandlerBase):
@@ -147,12 +137,7 @@ class ArtifactAJAXTests(TestHandlerBase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        obs = r_client.get('prep_template_1')
-        self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        wait_for_prep_information_job(1)
 
 
 class ArtifactAdminAJAXTestsReadOnly(TestHandlerBase):

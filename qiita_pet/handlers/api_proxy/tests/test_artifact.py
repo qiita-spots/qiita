@@ -10,14 +10,13 @@ from os.path import join, exists, basename
 from os import remove, close
 from datetime import datetime
 from tempfile import mkstemp
-from json import loads
-from time import sleep
 
 import pandas as pd
 import numpy.testing as npt
 from moi import r_client
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.testing import wait_for_prep_information_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
@@ -389,12 +388,7 @@ class TestArtifactAPI(TestCase):
         # This is needed so the clean up works - this is a distributed system
         # so we need to make sure that all processes are done before we reset
         # the test database
-        obs = r_client.get('prep_template_1')
-        self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        wait_for_prep_information_job(1)
 
     def test_artifact_delete_req_no_access(self):
         obs = artifact_delete_req(self.artifact.id, 'demo@microbio.me')
@@ -409,7 +403,6 @@ class TestArtifactAPI(TestCase):
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
         self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
 
-        new_artifact_id = get_count('qiita.artifact') + 1
         filepaths = {'raw_forward_seqs': 'uploaded_file.txt',
                      'raw_barcodes': 'update.txt'}
         obs = artifact_post_req(
@@ -417,18 +410,7 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
-
-        obs = r_client.get('prep_template_%d' % pt.id)
-        self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
-
-        # Instantiate the artifact to make sure it was made and
-        # to clean the environment
-        a = Artifact(new_artifact_id)
-        self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
+        wait_for_prep_information_job(pt.id)
 
         # Test importing an artifact
         # Create new prep template to attach artifact to
@@ -437,23 +419,18 @@ class TestArtifactAPI(TestCase):
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
         self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
 
-        new_artifact_id_2 = get_count('qiita.artifact') + 1
+        new_artifact_id = get_count('qiita.artifact') + 1
         obs = artifact_post_req(
-            'test@foo.bar', {}, 'FASTQ', 'New Test Artifact 2', pt.id,
-            new_artifact_id)
+            'test@foo.bar', {}, 'Demultiplexed', 'New Test Artifact 2',
+            pt.id, 3)
         exp = {'status': 'success',
                'message': ''}
         self.assertEqual(obs, exp)
 
-        obs = r_client.get('prep_template_%d' % pt.id)
-        self.assertIsNotNone(obs)
-        redis_info = loads(r_client.get(loads(obs)['job_id']))
-        while redis_info['status_msg'] == 'Running':
-            sleep(0.05)
-            redis_info = loads(r_client.get(loads(obs)['job_id']))
+        wait_for_prep_information_job(pt.id)
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
-        a = Artifact(new_artifact_id_2)
+        a = Artifact(new_artifact_id)
         self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
 
     def test_artifact_post_req_error(self):

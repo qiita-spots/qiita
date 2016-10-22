@@ -25,6 +25,7 @@ from qiita_db.study import Study
 from qiita_db.user import User
 from qiita_db.ontology import Ontology
 from qiita_db.metadata_template.prep_template import PrepTemplate
+from qiita_db.processing_job import ProcessingJob
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
@@ -113,24 +114,31 @@ def prep_template_ajax_get_req(user_id, prep_id):
         job_info = loads(job_info)
         job_id = job_info['job_id']
         if job_id:
-            redis_info = loads(r_client.get(job_id))
-            processing = redis_info['status_msg'] == 'Running'
+            if job_info['is_qiita_job']:
+                job = ProcessingJob(job_id)
+                processing = job.status in ('queued', 'running')
+                success = job.status == 'success'
+                alert_type = 'info' if processing or success else 'danger'
+                alert_msg = (job.log.msg.replace('\n', '</br>')
+                             if job.log is not None else "")
+            else:
+                redis_info = loads(r_client.get(job_id))
+                processing = redis_info['status_msg'] == 'Running'
+                success = redis_info['status_msg'] == 'Success'
+                alert_type = redis_info['return']['status']
+                alert_msg = redis_info['return']['message'].replace(
+                    '\n', '</br>')
+
             if processing:
                 alert_type = 'info'
                 alert_msg = 'This prep template is currently being updated'
-            elif redis_info['status_msg'] == 'Success':
-                alert_type = redis_info['return']['status']
-                alert_msg = redis_info['return']['message'].replace('\n',
-                                                                    '</br>')
+            elif success:
                 payload = {'job_id': None,
                            'status': alert_type,
-                           'message': alert_msg}
+                           'message': alert_msg,
+                           'is_qiita_job': job_info['is_qiita_job']}
                 r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                              dumps(payload))
-            else:
-                alert_type = redis_info['return']['status']
-                alert_msg = redis_info['return']['message'].replace('\n',
-                                                                    '</br>')
         else:
             processing = False
             alert_type = job_info['status']
@@ -437,7 +445,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
             fp = fp['file']
             job_id = safe_submit(user_id, update_prep_template, prep_id, fp)
             r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                         dumps({'job_id': job_id}))
+                         dumps({'job_id': job_id, 'is_qiita_job': False}))
         else:
             # We don't understand the attribute so return an error
             return {'status': 'error',
@@ -465,7 +473,7 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
                              prep_id, attribute, attr_id)
         # Store the job id attaching it to the sample template id
         r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
-                     dumps({'job_id': job_id}))
+                     dumps({'job_id': job_id, 'is_qiita_job': False}))
         return {'status': 'success', 'message': ''}
     else:
         return {'status': 'error',
