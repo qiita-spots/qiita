@@ -32,7 +32,7 @@ def wait_for_prep_information_job(prep_id, raise_if_none=True):
     """
     res = r_client.get('prep_template_%d' % prep_id)
 
-    if raise_if_none:
+    if raise_if_none and res is None:
         raise AssertionError("unexpectedly None")
 
     if res is not None:
