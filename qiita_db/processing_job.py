@@ -335,7 +335,7 @@ class ProcessingJob(qdb.base.QiitaObject):
     def _complete_artifact_definition(self, artifact_data):
         """"Performs the needed steps to complete an artifact definition job
 
-        In order to complete an artifact definition job we ned to create
+        In order to complete an artifact definition job we need to create
         the artifact, and then start all the jobs that were waiting for this
         artifact to be created. Note that each artifact definition job creates
         one and only one artifact.
@@ -393,6 +393,12 @@ class ProcessingJob(qdb.base.QiitaObject):
             {'filepaths': list of (str, str), 'artifact_type': str}
             where `filepaths` contains the list of filepaths and filepath types
             for the artifact and `artifact_type` the type of the artifact
+
+        Raises
+        ------
+        QiitaDBError
+            If there is more than one prep information attached to the new
+            artifact
         """
         for out_name, a_data in viewitems(artifacts_data):
             # Correct the format of the filepaths parameter so we can create
