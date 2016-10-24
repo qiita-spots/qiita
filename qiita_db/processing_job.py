@@ -372,12 +372,16 @@ class ProcessingJob(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(
                     sql, [a.id, job.id, cmd_out_id])
                 job._update_and_launch_children(mapping)
+                # Mark the parent job as success since the validation was
+                # successful
+                job._set_status('success')
             else:
                 # The artifact is uploaded by the user
                 pt = qdb.metadata_template.prep_template.PrepTemplate(
                     job_params['template'])
                 a = qdb.artifact.Artifact.create(
                     filepaths, atype, prep_template=pt)
+            self._set_status('success')
 
     def _complete_artifact_transformation(self, artifacts_data):
         """Performs the needed steps to complete an artifact transformation job
@@ -483,8 +487,16 @@ class ProcessingJob(qdb.base.QiitaObject):
                         self._complete_artifact_definition(a_data)
                     else:
                         self._complete_artifact_transformation(artifacts_data)
-                self._set_status('success')
             else:
+                if self.command.software.type == 'artifact definition':
+                    job_params = self.parameters.values
+                    if job_params['provenance'] is not None:
+                        # This artifact definition job is a result of a command
+                        # run, if it fails, set up the status of the "parent"
+                        # job also as failed, and assign the sem error message
+                        provenance = loads(job_params['provenance'])
+                        job = ProcessingJob(provenance['job'])
+                        job._set_error(error)
                 self._set_error(error)
 
     @property

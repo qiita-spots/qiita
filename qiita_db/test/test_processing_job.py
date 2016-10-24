@@ -283,6 +283,8 @@ class ProcessingJobTest(TestCase):
             job.submit()
 
     def test_complete_artifact_definition(self):
+        job = _create_job()
+        job._set_status('running')
         fd, fp = mkstemp(suffix="_table.biom")
         self._clean_up_files.append(fp)
         close(fd)
@@ -295,12 +297,13 @@ class ProcessingJobTest(TestCase):
             values_dict={'template': 1, 'files': fp,
                          'artifact_type': 'BIOM',
                          'provenance': dumps(
-                            {'job': 'd19f76ee-274e-4c1b-b3a2-a12d73507c55',
+                            {'job': job.id,
                              'cmd_out_id': 3})}
         )
         obs = qdb.processing_job.ProcessingJob.create(
             qdb.user.User('test@foo.bar'), params)
         obs._complete_artifact_definition(artifact_data)
+        self.assertEqual(job.status, 'success')
         # Upload case implicitly tested by "test_complete_type"
 
     def test_complete_artifact_transformation(self):
@@ -378,6 +381,27 @@ class ProcessingJobTest(TestCase):
         self.assertEqual(job.log,
                          qdb.logger.LogEntry.newest_records(numrecords=1)[0])
         self.assertEqual(job.log.msg, 'Job failure')
+
+        # Test the artifact definition case
+        job = _create_job()
+        job._set_status('running')
+
+        params = qdb.software.Parameters.load(
+            qdb.software.Command(4),
+            values_dict={'template': 1, 'files': 'ignored',
+                         'artifact_type': 'BIOM',
+                         'provenance': dumps(
+                            {'job': job.id,
+                             'cmd_out_id': 3})}
+        )
+        obs = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params)
+        obs.complete(False, error="Validation failure")
+        self.assertEqual(obs.status, 'error')
+        self.assertEqual(obs.log.msg, 'Validation failure')
+
+        self.assertEqual(job.status, 'error')
+        self.assertEqual(job.log.msg, 'Validation failure')
 
     def test_complete_error(self):
         with self.assertRaises(
@@ -479,8 +503,6 @@ class ProcessingJobTest(TestCase):
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
             job.outputs
 
-        job._set_status('success')
-
         fd, fp = mkstemp(suffix="_table.biom")
         self._clean_up_files.append(fp)
         close(fd)
@@ -500,6 +522,7 @@ class ProcessingJobTest(TestCase):
             qdb.user.User('test@foo.bar'), params)
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         obs._complete_artifact_definition(artifact_data)
+        self.assertEqual(job.status, 'success')
 
         obs = job.outputs
         self.assertEqual(
