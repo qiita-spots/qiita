@@ -11,6 +11,8 @@ from datetime import datetime
 from os.path import join
 from os import close
 from tempfile import mkstemp
+from json import dumps
+from time import sleep
 
 import networkx as nx
 import pandas as pd
@@ -90,6 +92,17 @@ class ProcessingJobTest(TestCase):
         self.tester4 = qdb.processing_job.ProcessingJob(
             "d19f76ee-274e-4c1b-b3a2-a12d73507c55")
         self._clean_up_files = []
+
+    def _get_all_job_ids(self):
+        sql = "SELECT processing_job_id FROM qiita.processing_job"
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchflatten()
+
+    def _wait_for_job(self, job):
+        while job.status not in ('error', 'success'):
+            sleep(0.05)
+        sleep(0.05)
 
     def test_exists(self):
         self.assertTrue(qdb.processing_job.ProcessingJob.exists(
@@ -269,6 +282,31 @@ class ProcessingJobTest(TestCase):
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             job.submit()
 
+    def test_complete_artifact_definition(self):
+        fd, fp = mkstemp(suffix="_table.biom")
+        self._clean_up_files.append(fp)
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('\n')
+
+        artifact_data = {'filepaths': [(fp, 'biom')], 'artifact_type': 'BIOM'}
+        params = qdb.software.Parameters.load(
+            qdb.software.Command(4),
+            values_dict={'template': 1, 'files': fp,
+                         'artifact_type': 'BIOM',
+                         'provenance': dumps(
+                            {'job': 'd19f76ee-274e-4c1b-b3a2-a12d73507c55',
+                             'cmd_out_id': 3})}
+        )
+        obs = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params)
+        obs._complete_artifact_definition(artifact_data)
+        # Upload case implicitly tested by "test_complete_type"
+
+    def test_complete_artifact_transformation(self):
+        # Implicitly tested by "test_complete"
+        pass
+
     def test_complete_type(self):
         fd, fp = mkstemp(suffix="_table.biom")
         self._clean_up_files.append(fp)
@@ -315,19 +353,23 @@ class ProcessingJobTest(TestCase):
         with open(fp, 'w') as f:
             f.write('\n')
 
-        exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         artifacts_data = {'OTU table': {'filepaths': [(fp, 'biom')],
                                         'artifact_type': 'BIOM'}}
 
         job = _create_job()
         job._set_status('running')
+        alljobs = set(self._get_all_job_ids())
+
         job.complete(True, artifacts_data=artifacts_data)
         self.assertTrue(job.status, 'success')
-        self.assertEqual(qdb.util.get_count('qiita.artifact'),
-                         exp_artifact_count)
-        self._clean_up_files.extend(
-            [afp for _, afp, _ in
-                qdb.artifact.Artifact(exp_artifact_count).filepaths])
+
+        obsjobs = set(self._get_all_job_ids())
+
+        self.assertEqual(len(obsjobs), len(alljobs) + 1)
+        job_id = obsjobs - alljobs
+        job_id = job_id.pop()
+        job = qdb.processing_job.ProcessingJob(job_id)
+        self._wait_for_job(job)
 
     def test_complete_failure(self):
         job = _create_job()
@@ -437,15 +479,28 @@ class ProcessingJobTest(TestCase):
         with self.assertRaises(QE.QiitaDBOperationNotPermittedError):
             job.outputs
 
-        fd, fp = mkstemp(suffix='_table.biom')
+        job._set_status('success')
+
+        fd, fp = mkstemp(suffix="_table.biom")
         self._clean_up_files.append(fp)
         close(fd)
         with open(fp, 'w') as f:
             f.write('\n')
+
+        artifact_data = {'filepaths': [(fp, 'biom')], 'artifact_type': 'BIOM'}
+        params = qdb.software.Parameters.load(
+            qdb.software.Command(4),
+            values_dict={'template': 1, 'files': fp,
+                         'artifact_type': 'BIOM',
+                         'provenance': dumps(
+                            {'job': job.id,
+                             'cmd_out_id': 3})}
+        )
+        obs = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'), params)
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
-        artifacts_data = {'OTU table': {'filepaths': [(fp, 'biom')],
-                                        'artifact_type': 'BIOM'}}
-        job.complete(True, artifacts_data=artifacts_data)
+        obs._complete_artifact_definition(artifact_data)
+
         obs = job.outputs
         self.assertEqual(
             obs, {'OTU table': qdb.artifact.Artifact(exp_artifact_count)})

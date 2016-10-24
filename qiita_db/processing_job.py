@@ -13,7 +13,7 @@ from multiprocessing import Process
 from os.path import join
 from itertools import chain
 from collections import defaultdict
-from json import dumps
+from json import dumps, loads
 
 from future.utils import viewitems, viewvalues
 import networkx as nx
@@ -332,6 +332,116 @@ class ProcessingJob(qdb.base.QiitaObject):
         p = Process(target=_job_submitter, args=(self, cmd))
         p.start()
 
+    def _complete_artifact_definition(self, artifact_data):
+        """"Performs the needed steps to complete an artifact definition job
+
+        In order to complete an artifact definition job we ned to create
+        the artifact, and then start all the jobs that were waiting for this
+        artifact to be created. Note that each artifact definition job creates
+        one and only one artifact.
+
+        Parameters
+        ----------
+        artfact_data : {'filepaths': list of (str, str), 'artifact_type': str}
+            Dict with the artifact information. `filepaths` contains the list
+            of filepaths and filepath types for the artifact and
+            `artifact_type` the type of the artifact
+        """
+        with qdb.sql_connection.TRN:
+            atype = artifact_data['artifact_type']
+            filepaths = artifact_data['filepaths']
+            # We need to differentiate if this artifact is the
+            # result of a previous job or uploading
+            job_params = self.parameters.values
+            if job_params['provenance'] is not None:
+                # The artifact is a result from a previous job
+                provenance = loads(job_params['provenance'])
+                job = ProcessingJob(provenance['job'])
+                parents = job.input_artifacts
+                params = job.parameters
+                a = qdb.artifact.Artifact.create(
+                    filepaths, atype, parents=parents,
+                    processing_parameters=params)
+                cmd_out_id = provenance['cmd_out_id']
+                mapping = {cmd_out_id: a.id}
+                sql = """INSERT INTO
+                            qiita.artifact_output_processing_job
+                            (artifact_id, processing_job_id,
+                            command_output_id)
+                         VALUES (%s, %s, %s)"""
+                qdb.sql_connection.TRN.add(
+                    sql, [a.id, job.id, cmd_out_id])
+                job._update_and_launch_children(mapping)
+            else:
+                # The artifact is uploaded by the user
+                pt = qdb.metadata_template.prep_template.PrepTemplate(
+                    job_params['template'])
+                a = qdb.artifact.Artifact.create(
+                    filepaths, atype, prep_template=pt)
+
+    def _complete_artifact_transformation(self, artifacts_data):
+        """Performs the needed steps to complete an artifact transformation job
+
+        In order to complete an artifact transformation job, we need to create
+        a validate job for each artifact output and submit it.
+
+        Parameters
+        ----------
+        artifacts_data : dict of dicts
+            The generated artifact information keyed by output name.
+            The format of each of the internal dictionaries must be
+            {'filepaths': list of (str, str), 'artifact_type': str}
+            where `filepaths` contains the list of filepaths and filepath types
+            for the artifact and `artifact_type` the type of the artifact
+        """
+        for out_name, a_data in viewitems(artifacts_data):
+            # Correct the format of the filepaths parameter so we can create
+            # a validate job
+            filepaths = defaultdict(list)
+            for fp, fptype in a_data['filepaths']:
+                filepaths[fptype].append(fp)
+            atype = a_data['artifact_type']
+
+            # The valdiate job needs a prep information file. In theory, a job
+            # can be generated from more that one prep information file, so
+            # we check here if we have one or more templates. At this moment,
+            # If we allow more than one template, there is a fair amount of
+            # changes that need to be done on the plugins, so we are going to
+            # restrict the number of templates to one. Note that at this moment
+            # there is no way of generating an artifact from 2 or more
+            # artifacts, so we can impose this limitation now and relax it
+            # later.
+            templates = set()
+            for artifact in self.input_artifacts:
+                templates.update(pt.id for pt in artifact.prep_templates)
+            if len(templates) > 1:
+                raise qdb.exceptions.QiitaDBError(
+                    "Currently only single prep template "
+                    "is allwoed, found %d" % len(templates))
+            template = templates.pop()
+
+            # Once the validate job completes, it needs to know if it has been
+            # generated from a command (and how) or if it has been uploaded.
+            # In order to differentiate these cases, we populate the provenance
+            # parameter with some information about the current job and how
+            # this artifact has been generated. This does not affect the
+            # plugins since they can ignore this parameter
+            cmd_out_id = qdb.util.convert_to_id(
+                out_name, "command_output", "name")
+            provenance = {'job': self.id,
+                          'cmd_out_id': cmd_out_id}
+
+            # Get the validator command for the current artifact type, create
+            # a new job and submit it.
+            cmd = qdb.software.Command.get_validator(atype)
+            validate_params = qdb.software.Parameters.load(
+                cmd, values_dict={'files': dumps(filepaths),
+                                  'artifact_type': atype,
+                                  'template': template,
+                                  'provenance': dumps(provenance)})
+            validate_job = ProcessingJob.create(self.user, validate_params)
+            validate_job.submit()
+
     def complete(self, success, artifacts_data=None, error=None):
         """Completes the job, either with a success or error status
 
@@ -362,42 +472,11 @@ class ProcessingJob(qdb.base.QiitaObject):
                         "Can't complete job: not in a running state")
                 if artifacts_data:
                     if self.command.software.type == 'artifact definition':
-                        # In this case, the behavior of artifact_data is
-                        # slightly different: we know that there is only 1
-                        # new artifact and it doesn't have a parent
+                        # There is only one artifact created
                         _, a_data = artifacts_data.popitem()
-                        atype = a_data['artifact_type']
-                        filepaths = a_data['filepaths']
-                        pt_id = self.parameters.values['template']
-                        pt = qdb.metadata_template.prep_template.PrepTemplate(
-                            pt_id)
-                        a = qdb.artifact.Artifact.create(
-                            filepaths, atype, prep_template=pt)
+                        self._complete_artifact_definition(a_data)
                     else:
-                        artifact_ids = {}
-                        for out_name, a_data in viewitems(artifacts_data):
-                            filepaths = a_data['filepaths']
-                            atype = a_data['artifact_type']
-                            parents = self.input_artifacts
-                            params = self.parameters
-                            a = qdb.artifact.Artifact.create(
-                                filepaths, atype, parents=parents,
-                                processing_parameters=params)
-                            cmd_out_id = qdb.util.convert_to_id(
-                                out_name, "command_output", "name")
-                            artifact_ids[cmd_out_id] = a.id
-                        if artifact_ids:
-                            sql = """INSERT INTO
-                                        qiita.artifact_output_processing_job
-                                        (artifact_id, processing_job_id,
-                                         command_output_id)
-                                     VALUES (%s, %s, %s)"""
-                            sql_params = [[aid, self.id, out_id]
-                                          for out_id, aid in viewitems(
-                                              artifact_ids)]
-                            qdb.sql_connection.TRN.add(sql, sql_params,
-                                                       many=True)
-                            self._update_and_launch_children(artifact_ids)
+                        self._complete_artifact_transformation(artifacts_data)
                 self._set_status('success')
             else:
                 self._set_error(error)
