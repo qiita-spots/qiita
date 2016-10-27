@@ -125,9 +125,13 @@ def prep_template_ajax_get_req(user_id, prep_id):
                 redis_info = loads(r_client.get(job_id))
                 processing = redis_info['status_msg'] == 'Running'
                 success = redis_info['status_msg'] == 'Success'
-                alert_type = redis_info['return']['status']
-                alert_msg = redis_info['return']['message'].replace(
-                    '\n', '</br>')
+                if redis_info['return'] is not None:
+                    alert_type = redis_info['return']['status']
+                    alert_msg = redis_info['return']['message'].replace(
+                        '\n', '</br>')
+                else:
+                    alert_type = 'info'
+                    alert_msg = ''
 
             if processing:
                 alert_type = 'info'
