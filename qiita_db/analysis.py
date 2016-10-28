@@ -866,11 +866,17 @@ class Analysis(qdb.base.QiitaStatusObject):
             for k, v in viewitems(samples):
                 a = qdb.artifact.Artifact(k)
                 p = a.processing_parameters
-                c = p.command
-                if c.name != 'Pick closed-reference OTUs':
-                    rename_dup_samples = True
-                    break
-                l = "%s.%d.%d" % (a.data_type, p.values['reference'], c.id)
+                if p is not None:
+                    c = p.command
+                    if c.name != 'Pick closed-reference OTUs':
+                        rename_dup_samples = True
+                        break
+                    values = p.values['reference']
+                    _id = c.id
+                else:
+                    values = 'None'
+                    _id = 'None'
+                l = "%s.%d.%d" % (a.data_type, values, _id)
                 if l not in grouped_samples:
                     grouped_samples[l] = []
                 grouped_samples[l].append((k, v))
