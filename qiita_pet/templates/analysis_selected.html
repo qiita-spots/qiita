@@ -106,8 +106,10 @@ $(document).ready(function() {
       <td>{{proc_info[pid]["algorithm"]}}</td>
       <td>
         <small>
-          {% for key, val in viewitems(proc_info[pid]["params"]) %}
-            <i>{{key}}:</i> {{val}} <br/>
+          {% if proc_info[pid]["params"] is not None %}
+            {% for key, val in viewitems(proc_info[pid]["params"]) %}
+              <i>{{key}}:</i> {{val}} <br/>
+            {% end %}
           {% end %}
         </small>
       </td>
@@ -139,8 +141,10 @@ $(document).ready(function() {
               <b>Algorithm</b>: {{proc_info[pid]["algorithm"]}} <br/>
               <b>Parameters</b>:
                 <small>
-                  {% for key, val in viewitems(proc_info[pid]["params"]) %}
-                    <i>{{key}}:</i> {{val}} <br/>
+                  {% if proc_info[pid]["params"] is not None %}
+                    {% for key, val in viewitems(proc_info[pid]["params"]) %}
+                      <i>{{key}}:</i> {{val}} <br/>
+                    {% end %}
                   {% end %}
                 </small>
               <br/>
