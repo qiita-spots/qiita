@@ -333,32 +333,34 @@ class SelectedSamplesHandler(BaseHandler):
         sel_data = defaultdict(dict)
         proc_data_info = {}
         sel_samps = self.current_user.default_analysis.samples
-        for pid, samps in viewitems(sel_samps):
-            proc_data = Artifact(pid)
-            sel_data[proc_data.study][pid] = samps
+        for aid, samples in viewitems(sel_samps):
+            a = Artifact(aid)
+            sel_data[a.study][aid] = samples
             # Also get processed data info
-            parameters = proc_data.processing_parameters
-            if parameters is None:
-                proc_data_info[pid] = {
-                    'processed_date': str(proc_data.timestamp),
-                    'algorithm': None,
-                    'reference_name': None,
-                    'reference_version': None,
-                    'sequence_filepath': None,
-                    'taxonomy_filepath': None,
-                    'tree_filepath': None,
-                    'data_type': proc_data.data_type}
+            processing_parameters = a.processing_parameters
+            if processing_parameters is None:
+                params = None
+                algorithm = None
             else:
-                reference = Reference(parameters.values['reference'])
-                proc_data_info[pid] = {
-                    'processed_date': str(proc_data.timestamp),
-                    'algorithm': parameters.command.name,
-                    'reference_name': reference.name,
-                    'reference_version': reference.version,
-                    'sequence_filepath': reference.sequence_fp,
-                    'taxonomy_filepath': reference.taxonomy_fp,
-                    'tree_filepath': reference.tree_fp,
-                    'data_type': proc_data.data_type}
+                cmd = processing_parameters.command
+                params = processing_parameters.values
+                if 'reference' in params:
+                    ref = Reference(params['reference'])
+                    del params['reference']
+
+                    params['reference_name'] = ref.name
+                    params['reference_version'] = ref.version
+                    params['sequence_filepath'] = ref.sequence_fp
+                    params['taxonomy_filepath'] = ref.taxonomy_fp
+                    params['tree_filepath'] = ref.tree_fp
+                algorithm = '%s (%s)' % (cmd.software.name, cmd.name)
+
+            proc_data_info[aid] = {
+                'processed_date': str(a.timestamp),
+                'algorithm': algorithm,
+                'data_type': a.data_type,
+                'params': params
+            }
 
         self.render("analysis_selected.html", sel_data=sel_data,
                     proc_info=proc_data_info)
