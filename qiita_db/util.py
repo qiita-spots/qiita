@@ -1432,8 +1432,9 @@ def generate_study_list(study_ids, build_samples):
                             del params[k]
 
                         # making sure that the reference is only created once
-                        rid = params.pop('reference')
-                        if rid not in refs:
+                        rid = (params.pop('reference')
+                               if 'reference' in params else None)
+                        if rid is not None and rid not in refs:
                             reference = qdb.reference.Reference(rid)
                             refs[rid] = {
                                 'name': reference.name,
