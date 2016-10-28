@@ -67,10 +67,10 @@ $(document).ready(function() {
   function format (name, d, row) {
       // `d` is the original data object for the row
       // create formatted cell with proc data table
-      var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Algorithm</th><th>Reference</th><th>Samples</th></tr>';
+      var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Samples</th><th>Algorithm</th><th>Parameters</th></tr>';
       for(i=0;i<d.proc_data_info.length;i++) {
         var proc_data = d.proc_data_info[i];
-        proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(\''+ name +'\' ,'+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.algorithm + '</td><td>' + proc_data.reference_name + ' ' + proc_data.reference_version + '</td><td>' + proc_data.samples.length + '</td></tr>';
+        proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(\''+ name +'\' ,'+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.samples.length + '</td><td>' + proc_data.algorithm + ' ' + proc_data.reference_version + '</td><td>' + proc_data.params + '</td></tr>';
       }
       proc_data_table += '</table>';
       return proc_data_table;
