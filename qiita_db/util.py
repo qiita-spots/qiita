@@ -1458,7 +1458,7 @@ def generate_study_list(study_ids, build_samples):
                             params['reference_version'] = refs[rid][
                                 'version']
 
-                        params['algorithm'] = '%s (%s)' % (
+                        proc_info['algorithm'] = '%s (%s)' % (
                             commands[cmd]['sfwn'], commands[cmd]['cmdn'])
                         proc_info['params'] = params
 
