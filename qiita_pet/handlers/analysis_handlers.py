@@ -338,17 +338,27 @@ class SelectedSamplesHandler(BaseHandler):
             sel_data[proc_data.study][pid] = samps
             # Also get processed data info
             parameters = proc_data.processing_parameters
-            reference = Reference(parameters.values['reference'])
-
-            proc_data_info[pid] = {
-                'processed_date': str(proc_data.timestamp),
-                'algorithm': parameters.command.name,
-                'reference_name': reference.name,
-                'reference_version': reference.version,
-                'sequence_filepath': reference.sequence_fp,
-                'taxonomy_filepath': reference.taxonomy_fp,
-                'tree_filepath': reference.tree_fp,
-                'data_type': proc_data.data_type}
+            if parameters is None:
+                proc_data_info[pid] = {
+                    'processed_date': str(proc_data.timestamp),
+                    'algorithm': None,
+                    'reference_name': None,
+                    'reference_version': None,
+                    'sequence_filepath': None,
+                    'taxonomy_filepath': None,
+                    'tree_filepath': None,
+                    'data_type': proc_data.data_type}
+            else:
+                reference = Reference(parameters.values['reference'])
+                proc_data_info[pid] = {
+                    'processed_date': str(proc_data.timestamp),
+                    'algorithm': parameters.command.name,
+                    'reference_name': reference.name,
+                    'reference_version': reference.version,
+                    'sequence_filepath': reference.sequence_fp,
+                    'taxonomy_filepath': reference.taxonomy_fp,
+                    'tree_filepath': reference.tree_fp,
+                    'data_type': proc_data.data_type}
 
         self.render("analysis_selected.html", sel_data=sel_data,
                     proc_info=proc_data_info)
