@@ -8,7 +8,8 @@ env:
     - TEST_ADD_STUDIES=True
 before_install:
   - redis-server --version
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  # --no-check-certificate to avoid failure with SSL
+  - wget --no-check-certificate https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda3/bin:$PATH
