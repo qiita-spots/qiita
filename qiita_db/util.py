@@ -1450,11 +1450,6 @@ def generate_study_list(study_ids, build_samples):
                                     'version': reference.version
                                 }
                             params['reference_name'] = refs[rid]['name']
-                            params['taxonomy_filepath'] = refs[rid][
-                                'taxonomy_fp']
-                            params['sequence_filepath'] = refs[rid][
-                                'sequence_fp']
-                            params['tree_filepath'] = refs[rid]['tree_fp']
                             params['reference_version'] = refs[rid][
                                 'version']
 

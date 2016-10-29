@@ -350,9 +350,6 @@ class SelectedSamplesHandler(BaseHandler):
 
                     params['reference_name'] = ref.name
                     params['reference_version'] = ref.version
-                    params['sequence_filepath'] = ref.sequence_fp
-                    params['taxonomy_filepath'] = ref.taxonomy_fp
-                    params['tree_filepath'] = ref.tree_fp
                 algorithm = '%s (%s)' % (cmd.software.name, cmd.name)
 
             proc_data_info[aid] = {
