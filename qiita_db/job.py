@@ -126,10 +126,12 @@ class Job(qdb.base.QiitaStatusObject):
                         AND input_file_reference_id = %s
                         AND input_file_software_command_id = %s
                   """.format(cls._table)
+            rid = (input_file_reference.id
+                   if input_file_reference is not None else None)
+            cid = (input_file_software_command.id
+                   if input_file_software_command is not None else None)
             qdb.sql_connection.TRN.add(
-                sql, [datatype_id, command_id, opts_json,
-                      input_file_reference.id,
-                      input_file_software_command.id])
+                sql, [datatype_id, command_id, opts_json, rid, cid])
             analyses = qdb.sql_connection.TRN.execute_fetchindex()
 
             if not analyses and return_existing:
@@ -289,10 +291,12 @@ class Job(qdb.base.QiitaStatusObject):
                                             input_file_software_command_id)
                      VALUES (%s, %s, %s, %s, %s, %s)
                      RETURNING job_id""".format(cls._table)
+            rid = (input_file_reference.id
+                   if input_file_reference is not None else None)
+            cid = (input_file_software_command.id
+                   if input_file_software_command is not None else None)
             qdb.sql_connection.TRN.add(
-                sql, [datatype_id, 1, command_id, opts_json,
-                      input_file_reference.id,
-                      input_file_software_command.id])
+                sql, [datatype_id, 1, command_id, opts_json, rid, cid])
             job_id = qdb.sql_connection.TRN.execute_fetchlast()
 
             # add job to analysis

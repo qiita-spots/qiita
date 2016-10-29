@@ -857,26 +857,23 @@ class Analysis(qdb.base.QiitaStatusObject):
 
             # figuring out if we are going to have duplicated samples, again
             # doing it here cause it's computational cheaper
-            # 1. merge samples per data_type, reference used and the command id
-            #    if not one of the tables is not 'Pick closed-reference OTUs'
-            #    it's safer to always rename. Note that grouped_samples is
-            #    basically how many biom tables we are going to create
+            # 1. merge samples per: data_type, reference used and
+            #                       the command id)
+            # Note that grouped_samples is basically how many biom tables we
+            # are going to create
             rename_dup_samples = False
             grouped_samples = {}
             for k, v in viewitems(samples):
                 a = qdb.artifact.Artifact(k)
                 p = a.processing_parameters
-                if p is not None:
-                    c = p.command
-                    if c.name != 'Pick closed-reference OTUs':
-                        rename_dup_samples = True
-                        break
-                    values = p.values['reference']
-                    _id = c.id
+                if p is not None and p.command is not None:
+                    ref = (str(p.values['reference'])
+                           if 'reference' in p.values else 'na')
+                    cid = str(p.command.id)
                 else:
-                    values = 'None'
-                    _id = 'None'
-                l = "%s.%d.%d" % (a.data_type, values, _id)
+                    ref = 'na'
+                    cid = 'na'
+                l = "%s.%s.%s" % (a.data_type, ref, cid)
                 if l not in grouped_samples:
                     grouped_samples[l] = []
                 grouped_samples[l].append((k, v))
