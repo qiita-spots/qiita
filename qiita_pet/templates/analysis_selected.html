@@ -108,7 +108,7 @@ $(document).ready(function() {
         <small>
           {% if proc_info[pid]["params"] is not None %}
             {% for key, val in viewitems(proc_info[pid]["params"]) %}
-              <i>{{key}}:</i> {{val}} <br/>
+              <i>{{key}}</i>: {{val}} <br/>
             {% end %}
           {% end %}
         </small>
@@ -143,7 +143,7 @@ $(document).ready(function() {
                 <small>
                   {% if proc_info[pid]["params"] is not None %}
                     {% for key, val in viewitems(proc_info[pid]["params"]) %}
-                      <i>{{key}}:</i> {{val}} <br/>
+                      <i>{{key}}</i>: {{val}} <br/>
                     {% end %}
                   {% end %}
                 </small>

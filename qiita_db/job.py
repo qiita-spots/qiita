@@ -363,8 +363,8 @@ class Job(qdb.base.QiitaStatusObject):
             db_comm = qdb.sql_connection.TRN.execute_fetchindex()[0]
 
             out_opt = loads(db_comm[1])
-            basedir = qdb.util.get_db_files_base_dir()
-            join_f = partial(join, join(basedir, "job"))
+            _, mp, _ = qdb.util.get_mountpoint('job', retrieve_subdir=True)[0]
+            join_f = partial(join, mp)
             for k in out_opt:
                 opts[k] = join_f("%s_%s_%s" % (self._id, db_comm[0],
                                                k.strip("-")))

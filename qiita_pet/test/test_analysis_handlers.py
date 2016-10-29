@@ -55,7 +55,6 @@ class TestAnalysisWaitHandler(TestHandlerBase):
             'commands': ['16S#command']
         }
         response = self.post('/analysis/wait/1', post_args)
-        print response.body
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
 
@@ -79,7 +78,6 @@ class TestSelectedSamplesHandler(TestHandlerBase):
     def test_get(self):
         response = self.get('/analysis/selected/')
         # Make sure page response loaded sucessfully
-        print response.body
         self.assertEqual(response.code, 200)
 
 

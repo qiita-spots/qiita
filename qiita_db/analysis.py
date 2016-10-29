@@ -858,7 +858,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             # figuring out if we are going to have duplicated samples, again
             # doing it here cause it's computational cheaper
             # 1. merge samples per: data_type, reference used and
-            #                       the command id)
+            # the command id
             # Note that grouped_samples is basically how many biom tables we
             # are going to create
             rename_dup_samples = False
