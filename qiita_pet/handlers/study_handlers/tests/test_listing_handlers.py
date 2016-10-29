@@ -48,6 +48,7 @@ PROC_DATA_INFO = [
     {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'data_type': '16S',
      'samples': SAMPLES}]
 
+
 class TestHelpers(TestHandlerBase):
     def setUp(self):
         super(TestHelpers, self).setUp()
