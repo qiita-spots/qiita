@@ -73,7 +73,7 @@ $(document).ready(function() {
         var params = '';
         var p = proc_data.params;
         for (var key in p) {
-          params += '<i>' + key + ':</i> ' + p[key] + '<br/>';
+          params += '<i>' + key + '</i>: ' + p[key] + '<br/>';
         }
         proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(\''+ name +'\' ,'+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.samples.length + '</td><td>' + proc_data.algorithm + '</td><td><small>' + params + '</small></td></tr>';
       }
