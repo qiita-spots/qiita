@@ -747,7 +747,7 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):
             qdb.artifact.Artifact.delete(obs.id)
 
-    def test_delete_error_in_construction_job(self):
+    def test_delete_in_construction_job(self):
         test = qdb.artifact.Artifact.create(
             self.filepaths_root, 'FASTQ', prep_template=self.prep_template)
         self._clean_up_files.extend([fp for _, fp, _ in test.filepaths])
@@ -762,8 +762,9 @@ class ArtifactTests(TestCase):
             qdb.user.User('test@foo.bar'),
             qdb.software.Parameters.load(qdb.software.Command(1),
                                          json_str=json_str))
-        with self.assertRaises(qdb.exceptions.QiitaDBArtifactDeletionError):
-            qdb.artifact.Artifact.delete(test.id)
+        qdb.artifact.Artifact.delete(test.id)
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.artifact.Artifact(test.id)
 
     def test_delete_error_running_job(self):
         test = qdb.artifact.Artifact.create(
