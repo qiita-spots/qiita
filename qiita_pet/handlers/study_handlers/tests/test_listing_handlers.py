@@ -22,96 +22,37 @@ from qiita_pet.handlers.study_handlers.listing_handlers import (
 from qiita_pet.handlers.base_handlers import BaseHandler
 
 
+SAMPLES = ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
+           '1.SKB5.640181', '1.SKB6.640176', '1.SKB7.640196', '1.SKB8.640193',
+           '1.SKB9.640200', '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
+           '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191',
+           '1.SKD8.640184', '1.SKD9.640182', '1.SKM1.640183', '1.SKM2.640199',
+           '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
+           '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
+GPARAMS = {'similarity': 0.97, 'reference_name': 'Greengenes',
+           'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000, 'threads': 1,
+           'sortmerna_coverage': 0.97, 'reference_version': u'13_8'}
+PROC_DATA_INFO = [
+    {'data_type': u'18S', 'algorithm': 'QIIME (Pick closed-reference OTUs)',
+     'pid': 4, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
+     'samples': SAMPLES},
+    {'data_type': '18S', 'algorithm': 'QIIME (Pick closed-reference OTUs)',
+     'pid': 5, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
+     'samples': SAMPLES},
+    {'data_type': '16S', 'algorithm': 'QIIME (Pick closed-reference OTUs)',
+     'pid': 6, 'processed_date': '2012-10-02 17:30:00',
+     'params': {'similarity': 0.97, 'reference_name': u'Silva',
+                'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000,
+                'threads': 1, 'sortmerna_coverage': 0.97,
+                'reference_version': 'test'}, 'samples': SAMPLES},
+    {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'data_type': '16S',
+     'samples': SAMPLES}]
+
+
 class TestHelpers(TestHandlerBase):
     def setUp(self):
         super(TestHelpers, self).setUp()
 
-        self.proc_data_exp = [{
-            'pid': 4,
-            'processed_date': '2012-10-02 17:30:00',
-            'data_type': '18S',
-            'algorithm': 'sortmerna',
-            'reference_name': 'Greengenes',
-            'reference_version': '13_8',
-            'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
-            'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
-            'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
-            'similarity': 0.97,
-            'sortmerna_max_pos': 10000,
-            'sortmerna_e_value': 1,
-            'sortmerna_coverage': 0.97,
-            'threads': 1,
-            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
-        }, {
-            'pid': 5,
-            'processed_date': '2012-10-02 17:30:00',
-            'data_type': '18S',
-            'algorithm': 'sortmerna',
-            'reference_name': 'Greengenes',
-            'reference_version': '13_8',
-            'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
-            'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
-            'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
-            'similarity': 0.97,
-            'sortmerna_max_pos': 10000,
-            'sortmerna_e_value': 1,
-            'sortmerna_coverage': 0.97,
-            'threads': 1,
-            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
-        }, {
-            'pid': 6,
-            'processed_date': '2012-10-02 17:30:00',
-            'data_type': '16S',
-            'algorithm': 'sortmerna',
-            'reference_name': 'Silva',
-            'reference_version': 'test',
-            'taxonomy_filepath': 'Silva_97_otu_taxonomy.txt',
-            'sequence_filepath': 'Silva_97_otus.fasta',
-            'tree_filepath': '',
-            'similarity': 0.97,
-            'sortmerna_max_pos': 10000,
-            'sortmerna_e_value': 1,
-            'sortmerna_coverage': 0.97,
-            'threads': 1,
-            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
-        }, {
-            'pid': 7,
-            'processed_date': '2012-10-02 17:30:00',
-            'data_type': '16S',
-            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
-        }]
         self.single_exp = {
             'study_id': 1,
             'status': 'private',
@@ -137,7 +78,7 @@ class TestHelpers(TestHandlerBase):
             'publication_doi': ['10.100/123456', '10.100/7891011'],
             'pmid': ['7891011', '123456'],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
-            'proc_data_info': self.proc_data_exp
+            'proc_data_info': PROC_DATA_INFO
         }
         self.exp = [self.single_exp]
 
@@ -299,153 +240,45 @@ class TestSearchStudiesAJAX(TestHandlerBase):
     def setUp(self):
         super(TestSearchStudiesAJAX, self).setUp()
         self.json = {
-            'iTotalRecords': 1, 'sEcho': 1021, 'iTotalDisplayRecords': 1,
+            'iTotalRecords': 1,
             'aaData': [{
-                'study_id': 1,
                 'status': 'private',
-                'study_abstract':
-                    'This is a preliminary study to examine the microbiota '
-                    'associated with the Cannabis plant. Soils samples '
-                    'from the bulk soil, soil associated with the roots, '
-                    'and the rhizosphere were extracted and the DNA '
-                    'sequenced. Roots from three independent plants of '
-                    'different strains were examined. These roots were '
-                    'obtained November 11, 2011 from plants that had been '
-                    'harvested in the summer. Future studies will attempt '
-                    'to analyze the soils and rhizospheres from the same '
-                    'location at different time points in the plant '
-                    'lifecycle.',
-                'metadata_complete': True,
-                'ebi_study_accession': 'EBI123456-BB',
-                'ebi_submission_status': 'submitted',
                 'ebi_info': ('<a href="http://www.ebi.ac.uk/ena/data/view/'
-                             'EBI123456-BB" target="_blank">EBI123456-BB</a> '
-                             '(submitted)'),
-                'study_title':
-                    'Identification of the Microbiomes for Cannabis Soils',
-                'number_samples_collected': 27,
+                             'EBI123456-BB" target="_blank">EBI123456-BB</a>'
+                             ' (submitted)'),
+                'study_title': ('Identification of the Microbiomes for '
+                                'Cannabis Soils'),
+                'proc_data_info': PROC_DATA_INFO,
+                'metadata_complete': True,
+                'ebi_submission_status': 'submitted',
+                'study_id': 1,
+                'ebi_study_accession': 'EBI123456-BB',
                 'shared': ('<a target="_blank" href="mailto:shared@foo.bar">'
                            'Shared</a>'),
-                'publication_doi': (
-                    '<a target="_blank" href="http://dx.doi.org/10.100/123456"'
-                    '>10.100/123456</a>, <a target="_blank" '
-                    'href="http://dx.doi.org/10.100/7891011">'
-                    '10.100/7891011</a>'),
-                'pmid': ('<a target="_blank" '
-                         'href="http://www.ncbi.nlm.nih.gov/pubmed/7891011">'
-                         '7891011</a>, <a target="_blank" '
+                'pmid': ('<a target="_blank" href="http://www.ncbi.nlm.nih.go'
+                         'v/pubmed/7891011">7891011</a>, <a target="_blank" '
                          'href="http://www.ncbi.nlm.nih.gov/pubmed/123456">'
                          '123456</a>'),
                 'pi': ('<a target="_blank" href="mailto:PI_dude@foo.bar">'
                        'PIDude</a>'),
-                'proc_data_info': [{
-                    'pid': 4,
-                    'processed_date': '2012-10-02 17:30:00',
-                    'data_type': '18S',
-                    'algorithm': 'sortmerna',
-                    'reference_name': 'Greengenes',
-                    'reference_version': '13_8',
-                    'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
-                    'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
-                    'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
-                    'similarity': 0.97,
-                    'sortmerna_max_pos': 10000,
-                    'sortmerna_e_value': 1,
-                    'sortmerna_coverage': 0.97,
-                    'threads': 1,
-                    'samples': ['1.SKB1.640202', '1.SKB2.640194',
-                                '1.SKB3.640195', '1.SKB4.640189',
-                                '1.SKB5.640181', '1.SKB6.640176',
-                                '1.SKB7.640196', '1.SKB8.640193',
-                                '1.SKB9.640200', '1.SKD1.640179',
-                                '1.SKD2.640178', '1.SKD3.640198',
-                                '1.SKD4.640185', '1.SKD5.640186',
-                                '1.SKD6.640190', '1.SKD7.640191',
-                                '1.SKD8.640184', '1.SKD9.640182',
-                                '1.SKM1.640183', '1.SKM2.640199',
-                                '1.SKM3.640197', '1.SKM4.640180',
-                                '1.SKM5.640177', '1.SKM6.640187',
-                                '1.SKM7.640188', '1.SKM8.640201',
-                                '1.SKM9.640192']
-                    }, {
-                    'pid': 5,
-                    'processed_date': '2012-10-02 17:30:00',
-                    'data_type': '18S',
-                    'algorithm': 'sortmerna',
-                    'reference_name': 'Greengenes',
-                    'reference_version': '13_8',
-                    'taxonomy_filepath': 'GreenGenes_13_8_97_otu_taxonomy.txt',
-                    'sequence_filepath': 'GreenGenes_13_8_97_otus.fasta',
-                    'tree_filepath': 'GreenGenes_13_8_97_otus.tree',
-                    'similarity': 0.97,
-                    'sortmerna_max_pos': 10000,
-                    'sortmerna_e_value': 1,
-                    'sortmerna_coverage': 0.97,
-                    'threads': 1,
-                    'samples': ['1.SKB1.640202', '1.SKB2.640194',
-                                '1.SKB3.640195', '1.SKB4.640189',
-                                '1.SKB5.640181', '1.SKB6.640176',
-                                '1.SKB7.640196', '1.SKB8.640193',
-                                '1.SKB9.640200', '1.SKD1.640179',
-                                '1.SKD2.640178', '1.SKD3.640198',
-                                '1.SKD4.640185', '1.SKD5.640186',
-                                '1.SKD6.640190', '1.SKD7.640191',
-                                '1.SKD8.640184', '1.SKD9.640182',
-                                '1.SKM1.640183', '1.SKM2.640199',
-                                '1.SKM3.640197', '1.SKM4.640180',
-                                '1.SKM5.640177', '1.SKM6.640187',
-                                '1.SKM7.640188', '1.SKM8.640201',
-                                '1.SKM9.640192']
-                    }, {
-                    'pid': 6,
-                    'processed_date': '2012-10-02 17:30:00',
-                    'data_type': '16S',
-                    'algorithm': 'sortmerna',
-                    'reference_name': 'Silva',
-                    'reference_version': 'test',
-                    'taxonomy_filepath': 'Silva_97_otu_taxonomy.txt',
-                    'sequence_filepath': 'Silva_97_otus.fasta',
-                    'tree_filepath': '',
-                    'similarity': 0.97,
-                    'sortmerna_max_pos': 10000,
-                    'sortmerna_e_value': 1,
-                    'sortmerna_coverage': 0.97,
-                    'threads': 1,
-                    'samples': ['1.SKB1.640202', '1.SKB2.640194',
-                                '1.SKB3.640195', '1.SKB4.640189',
-                                '1.SKB5.640181', '1.SKB6.640176',
-                                '1.SKB7.640196', '1.SKB8.640193',
-                                '1.SKB9.640200', '1.SKD1.640179',
-                                '1.SKD2.640178', '1.SKD3.640198',
-                                '1.SKD4.640185', '1.SKD5.640186',
-                                '1.SKD6.640190', '1.SKD7.640191',
-                                '1.SKD8.640184', '1.SKD9.640182',
-                                '1.SKM1.640183', '1.SKM2.640199',
-                                '1.SKM3.640197', '1.SKM4.640180',
-                                '1.SKM5.640177', '1.SKM6.640187',
-                                '1.SKM7.640188', '1.SKM8.640201',
-                                '1.SKM9.640192']
-                    }, {
-                    'pid': 7,
-                    'processed_date': '2012-10-02 17:30:00',
-                    'data_type': '16S',
-                    'samples': ['1.SKB1.640202', '1.SKB2.640194',
-                                '1.SKB3.640195', '1.SKB4.640189',
-                                '1.SKB5.640181', '1.SKB6.640176',
-                                '1.SKB7.640196', '1.SKB8.640193',
-                                '1.SKB9.640200', '1.SKD1.640179',
-                                '1.SKD2.640178', '1.SKD3.640198',
-                                '1.SKD4.640185', '1.SKD5.640186',
-                                '1.SKD6.640190', '1.SKD7.640191',
-                                '1.SKD8.640184', '1.SKD9.640182',
-                                '1.SKM1.640183', '1.SKM2.640199',
-                                '1.SKM3.640197', '1.SKM4.640180',
-                                '1.SKM5.640177', '1.SKM6.640187',
-                                '1.SKM7.640188', '1.SKM8.640201',
-                                '1.SKM9.640192']
-                    }]
-                }]
-            }
+                'publication_doi': ('<a target="_blank" href="http://dx.doi.'
+                                    'org/10.100/123456">10.100/123456</a>, '
+                                    '<a target="_blank" href="http://dx.doi.'
+                                    'org/10.100/7891011">10.100/7891011</a>'),
+                'study_abstract': (
+                    'This is a preliminary study to examine the microbiota '
+                    'associated with the Cannabis plant. Soils samples from '
+                    'the bulk soil, soil associated with the roots, and the '
+                    'rhizosphere were extracted and the DNA sequenced. Roots '
+                    'from three independent plants of different strains were '
+                    'examined. These roots were obtained November 11, 2011 '
+                    'from plants that had been harvested in the summer. '
+                    'Future studies will attempt to analyze the soils and '
+                    'rhizospheres from the same location at different time '
+                    'points in the plant lifecycle.'),
+                'number_samples_collected': 27}],
+            'sEcho': 1021,
+            'iTotalDisplayRecords': 1}
         self.empty = {'aaData': [],
                       'iTotalDisplayRecords': 0,
                       'iTotalRecords': 0,

@@ -876,8 +876,8 @@
 			<column name="log_id" type="bigint" jt="-5" >
 				<comment><![CDATA[Reference to error if status is error]]></comment>
 			</column>
-			<column name="input_file_reference_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="input_file_software_command_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="input_file_reference_id" type="bigint" jt="-5" />
+			<column name="input_file_software_command_id" type="bigint" jt="-5" />
 			<index name="pk_job" unique="PRIMARY_KEY" >
 				<column name="job_id" />
 			</index>
@@ -1916,12 +1916,12 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="processing_job_workflow" color="b2cdf7" x="2265" y="1710" />
 		<entity schema="qiita" name="processing_job_workflow_root" color="b2cdf7" x="2250" y="1590" />
 		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1995" y="1350" />
-		<entity schema="qiita" name="job" color="d0def5" x="405" y="1155" />
 		<entity schema="qiita" name="prep_template_processing_job" color="b2cdf7" x="1740" y="960" />
 		<entity schema="qiita" name="software_artifact_type" color="b2cdf7" x="2040" y="945" />
 		<entity schema="qiita" name="software_type" color="b2cdf7" x="2625" y="930" />
 		<entity schema="qiita" name="software" color="b2cdf7" x="2400" y="930" />
 		<entity schema="qiita" name="software_command" color="b2cdf7" x="2175" y="1215" />
+		<entity schema="qiita" name="job" color="d0def5" x="405" y="1155" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />

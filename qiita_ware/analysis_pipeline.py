@@ -104,11 +104,17 @@ class RunAnalysis(ParallelWrapper):
             # sample of the biom. This decision was discussed on the qiita
             # meeting on 02/24/16
             metadata = biom_table.metadata(biom_table.ids()[0])
-            reference_id = metadata['reference_id']
-            software_command_id = metadata['command_id']
+            rid = metadata['reference_id']
+            sci = metadata['command_id']
 
-            reference = Reference(reference_id)
-            tree = reference.tree_fp
+            if rid != 'na':
+                reference = Reference(rid)
+                tree = reference.tree_fp
+            else:
+                reference = None
+                tree = ''
+
+            cmd = Command(sci) if sci != 'na' else None
 
             for cmd_data_type, command in commands:
                 if data_type != cmd_data_type:
@@ -130,8 +136,8 @@ class RunAnalysis(ParallelWrapper):
                 if command == "Alpha Rarefaction":
                     opts["-n"] = 4
 
-                Job.create(data_type, command, opts, analysis, reference,
-                           Command(software_command_id), return_existing=True)
+                Job.create(data_type, command, opts, analysis, reference, cmd,
+                           return_existing=True)
 
         # Add the jobs
         job_nodes = []

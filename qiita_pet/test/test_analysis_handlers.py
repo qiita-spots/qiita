@@ -48,6 +48,16 @@ class TestAnalysisWaitHandler(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
 
+    def test_post_other_params(self):
+        post_args = {
+            'rarefaction-depth': '',
+            'merge-duplicated-sample-ids': 'on',
+            'commands': ['16S#command']
+        }
+        response = self.post('/analysis/wait/1', post_args)
+        # Make sure page response loaded sucessfully
+        self.assertEqual(response.code, 200)
+
 
 class TestAnalysisResultsHandler(TestHandlerBase):
 
@@ -60,6 +70,13 @@ class TestAnalysisResultsHandler(TestHandlerBase):
 class TestShowAnalysesHandler(TestHandlerBase):
     def test_get(self):
         response = self.get('/analysis/show/')
+        # Make sure page response loaded sucessfully
+        self.assertEqual(response.code, 200)
+
+
+class TestSelectedSamplesHandler(TestHandlerBase):
+    def test_get(self):
+        response = self.get('/analysis/selected/')
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
 
