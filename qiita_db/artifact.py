@@ -441,8 +441,7 @@ class Artifact(qdb.base.QiitaObject):
                                 USING (processing_job_status_id)
                         WHERE artifact_id = %s
                             AND processing_job_status IN (
-                                'queued', 'running', 'waiting',
-                                'in_construction'))"""
+                                'queued', 'running', 'waiting'))"""
             qdb.sql_connection.TRN.add(sql, [artifact_id])
             if qdb.sql_connection.TRN.execute_fetchlast():
                 raise qdb.exceptions.QiitaDBArtifactDeletionError(
