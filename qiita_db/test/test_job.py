@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 from os import remove, mkdir
-from os.path import join, exists
+from os.path import join, exists, isdir
 from shutil import rmtree
 from datetime import datetime
 
@@ -22,7 +22,6 @@ class JobTest(TestCase):
 
     def setUp(self):
         self._delete_path = []
-        self._delete_dir = []
 
         # creating a new job for testing
         self.options = {"option1": False, "option2": 25, "option3": "NEW"}
@@ -44,6 +43,7 @@ class JobTest(TestCase):
         self.job.add_results([(self.fp, "plain_text")])
         # folder
         self.dfp = join(self._job_folder, "my_folder")
+        self._delete_path.append(self.dfp)
         self.ffp = join(self.dfp, "%d_file_in_folder.html" % self.job_id)
         if not exists(self.dfp):
             mkdir(self.dfp)
@@ -53,12 +53,12 @@ class JobTest(TestCase):
         self.job.add_results([(self.dfp, "directory")])
 
     def tearDown(self):
-        # needs to be this way because map does not play well with remove and
-        # rmtree for python3
-        for item in self._delete_path:
-            remove(item)
-        for item in self._delete_dir:
-            rmtree(item)
+        for path in self._delete_path:
+            if exists(path):
+                if isdir(path):
+                    rmtree(path)
+                else:
+                    remove(path)
 
         if qdb.job.Job.exists(*self.job_create_params):
             qdb.job.Job.delete(self.job_id)
@@ -146,24 +146,6 @@ class JobTest(TestCase):
                             '{"--output_dir":null}')
             ]
         self.assertEqual(qdb.job.Job.get_commands(), exp)
-
-    def test_delete_files_and_folders(self):
-        qdb.job.Job.delete(self.job_id)
-        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            qdb.job.Job(self.job_id)
-
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.job_results_filepath WHERE job_id = "
-            "%d" % self.job_id)
-        self.assertEqual(obs, [])
-
-        obs = self.conn_handler.execute_fetchall(
-            "SELECT * FROM qiita.analysis_job WHERE job_id = %d" % self.job_id)
-        self.assertEqual(obs, [])
-
-        self.assertFalse(exists(self.fp))
-        self.assertFalse(exists(self.ffp))
-        self.assertFalse(exists(self.dfp))
 
     def test_create(self):
         """Makes sure creation works as expected"""
@@ -376,6 +358,16 @@ class CommandTest(TestCase):
             "Metabolomic": [com2, com3],
             "Metagenomic": [com2, com3],
         }
+
+        self._delete_path = []
+
+    def tearDown(self):
+        for path in self._delete_path:
+            if exists(path):
+                if isdir(path):
+                    rmtree(path)
+                else:
+                    remove(path)
 
     def test_get_commands_by_datatype(self):
         obs = qdb.job.Command.get_commands_by_datatype()

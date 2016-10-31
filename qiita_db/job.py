@@ -26,10 +26,8 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from json import loads
-from os.path import join, relpath, isdir
-from os import remove
+from os.path import join, relpath
 from glob import glob
-from shutil import rmtree
 from functools import partial
 from collections import defaultdict
 
@@ -212,16 +210,6 @@ class Job(qdb.base.QiitaStatusObject):
             qdb.sql_connection.TRN.add(sql, args)
 
             qdb.sql_connection.TRN.execute()
-
-            # remove files/folders attached to job
-            _, basedir = qdb.util.get_mountpoint("job")[0]
-            path_builder = partial(join, basedir)
-            for fp, _ in filepaths:
-                fp = path_builder(fp)
-                if isdir(fp):
-                    qdb.sql_connection.TRN.add_post_commit_func(rmtree, fp)
-                else:
-                    qdb.sql_connection.TRN.add_post_commit_func(remove, fp)
 
     @classmethod
     def create(cls, datatype, command, options, analysis,
