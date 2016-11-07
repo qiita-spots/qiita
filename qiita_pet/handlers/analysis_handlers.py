@@ -264,7 +264,7 @@ class ShowAnalysesHandler(BaseHandler):
     def post(self):
         analysis_id = int(self.get_argument('analysis_id'))
         analysis = Analysis(analysis_id)
-        analysis_name = analysis.name
+        analysis_name = analysis.name.decode('utf-8')
 
         check_analysis_access(self.current_user, analysis)
 
