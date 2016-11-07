@@ -131,7 +131,7 @@ class TestBuildStudyWithDBAccess(TestHelpers):
         # Now testing that admin also sees this study
         obs = _build_study_info(User('admin@foo.bar'), 'user')
         self.assertEqual(obs, self.exp)
-        
+
 
 class TestListStudiesHandler(TestHandlerBase):
     def test_get(self):
