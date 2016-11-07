@@ -149,6 +149,10 @@ def artifact_summary_get_request(user_id, artifact_id):
         if not artifact.study.has_access(user, no_public=True):
             files = []
 
+    processing_parameters = (artifact.processing_parameters.values
+                             if artifact.processing_parameters is not None
+                             else {})
+
     return {'status': 'success',
             'message': '',
             'name': artifact.name,
@@ -161,7 +165,8 @@ def artifact_summary_get_request(user_id, artifact_id):
             'files': files,
             'editable': artifact.study.can_edit(user),
             'study_id': artifact.study.id,
-            'prep_id': artifact.prep_templates[0].id}
+            'prep_id': artifact.prep_templates[0].id,
+            'processing_parameters': processing_parameters}
 
 
 def artifact_summary_post_request(user_id, artifact_id):

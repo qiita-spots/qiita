@@ -114,6 +114,13 @@
         <a class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete artifact {{artifact_id}}?')){ delete_artifact({{artifact_id}}) };"><span class="glyphicon glyphicon-trash"></span> Delete</a>
       {% end %}
     </h4>
+    <small>
+      <b>Processing parameters:</b>
+      {% for key in processing_parameters %}
+        <i>{%raw key%}</i>: <i>{%raw processing_parameters[key]%}</i>
+      {% end %}
+      <br/><br/>
+    </small>
   </div>
 </div>
 <div class='row'>
