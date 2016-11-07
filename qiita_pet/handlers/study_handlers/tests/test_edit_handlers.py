@@ -133,6 +133,7 @@ class TestStudyEditHandler(TestHandlerBase):
         self.assertEqual(study.title, 'New title - test post edit')
         self.assertEqual(study.publications, [])
 
+
 class TestCreateStudyAJAX(TestHandlerBase):
     def test_get(self):
         response = self.get('/check_study/', {'study_title': 'notreal'})
