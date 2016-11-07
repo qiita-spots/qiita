@@ -107,6 +107,31 @@ class TestStudyEditHandler(TestHandlerBase):
         self.assertTrue(check_count('qiita.study', study_count_before))
         self.assertEqual(study.title, 'New title - test post edit')
 
+    def test_post_edit_blank_doi(self):
+        study_count_before = get_count('qiita.study')
+        study = Study(1)
+        study_info = study.info
+
+        post_data = {
+            'new_people_names': [],
+            'new_people_emails': [],
+            'new_people_affiliations': [],
+            'new_people_addresses': [],
+            'new_people_phones': [],
+            'study_title': 'New title - test post edit',
+            'study_alias': study_info['study_alias'],
+            'publications_doi': '',
+            'study_abstract': study_info['study_abstract'],
+            'study_description': study_info['study_description'],
+            'principal_investigator': study_info['principal_investigator'].id,
+            'lab_person': study_info['lab_person'].id}
+
+        self.post('/study/edit/1', post_data)
+
+        # Check that the study was updated
+        self.assertTrue(check_count('qiita.study', study_count_before))
+        self.assertEqual(study.title, 'New title - test post edit')
+        self.assertEqual(study.publications, [])
 
 class TestCreateStudyAJAX(TestHandlerBase):
     def test_get(self):

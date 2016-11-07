@@ -289,6 +289,8 @@ class StudyEditHandler(BaseHandler):
             dois = dois[0].split(',')
             # Make sure that we strip the spaces from the pubmed ids
             the_study.publications = [(doi.strip(), None) for doi in dois]
+        elif the_study.publications != '':
+            the_study.publications = []
 
         self.render('index.html', message=msg, level='success')
 
