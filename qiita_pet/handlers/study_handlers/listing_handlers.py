@@ -22,7 +22,6 @@ from qiita_db.search import QiitaStudySearch
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBIncompatibleDatatypeError
 from qiita_db.util import (add_message, generate_study_list)
-from qiita_db.portal import Portal
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
@@ -73,12 +72,12 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
 
     # get list of studies for table
     if search_type == 'user':
-        if user.level != 'admin':
-            user_study_set = user.user_studies.union(user.shared_studies)
-            study_set = user_study_set - Study.get_by_status('public')
-        else:
-            portal_set = Portal(qiita_config.portal).get_studies()
-            study_set = portal_set - Study.get_by_status('public')
+        user_study_set = user.user_studies.union(user.shared_studies)
+        if user.level == 'admin':
+            user_study_set = (user_study_set |
+                              Study.get_by_status('sandbox') |
+                              Study.get_by_status('private'))
+        study_set = user_study_set - Study.get_by_status('public')
     elif search_type == 'public':
         study_set = Study.get_by_status('public')
     else:
