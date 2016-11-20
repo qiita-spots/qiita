@@ -729,6 +729,7 @@ class DBUtilTests(TestCase):
         self.assertItemsEqual(obs, exp)
 
 
+@qiita_test_checker()
 class UtilTests(TestCase):
     """Tests for the util functions that do not need to access the DB"""
 
@@ -813,6 +814,8 @@ class UtilTests(TestCase):
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 
+        qdb.artifact.Artifact(4).visibility = 'public'
+        exp_info[0]['status'] = 'public'
         exp_info[0]['proc_data_info'] = [{
             'data_type': '18S',
             'algorithm': 'QIIME (Pick closed-reference OTUs)',
@@ -834,7 +837,13 @@ class UtilTests(TestCase):
                         '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
                         '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
                         '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}, {
+                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}]
+        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True,
+                                                public_only=True)
+        self.assertEqual(obs_info, exp_info)
+
+        exp_info[0]['proc_data_info'].extend(
+           [{
             'data_type': '18S',
             'algorithm': 'QIIME (Pick closed-reference OTUs)',
             'pid': 5,
@@ -888,7 +897,7 @@ class UtilTests(TestCase):
                         '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
                         '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
                         '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'],
-            'data_type': '16S'}]
+            'data_type': '16S'}])
 
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
         self.assertEqual(obs_info, exp_info)

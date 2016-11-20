@@ -1223,7 +1223,7 @@ def supported_filepath_types(artifact_type):
         return qdb.sql_connection.TRN.execute_fetchindex()
 
 
-def generate_study_list(study_ids, build_samples):
+def generate_study_list(study_ids, build_samples, public_only=False):
     """Get general study information
 
     Parameters
@@ -1233,6 +1233,8 @@ def generate_study_list(study_ids, build_samples):
     build_samples : bool
         If true the sample information for each process artifact within each
         study will be included
+    public_only : bool, optional
+        If true, return only public BIOM artifacts. Default: false.
 
     Returns
     -------
@@ -1289,6 +1291,14 @@ def generate_study_list(study_ids, build_samples):
                 LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                 WHERE artifact_type='BIOM' AND
                     study_id = qiita.study.study_id) AS artifact_biom_ts,
+    - all the BIOM visibility sorted by artifact_id that belong to the study
+            (SELECT array_agg(visibility ORDER BY artifact_id)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                LEFT JOIN qiita.visibility USING (visibility_id)
+                WHERE artifact_type='BIOM' AND
+                    study_id = qiita.study.study_id) AS artifact_biom_vis,
     - all the visibilities of all artifacts that belong to the study
             (SELECT array_agg(DISTINCT visibility)
                 FROM qiita.study_artifact
@@ -1352,6 +1362,13 @@ def generate_study_list(study_ids, build_samples):
                     LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                     WHERE artifact_type='BIOM' AND
                         study_id = qiita.study.study_id) AS artifact_biom_ts,
+                (SELECT array_agg(visibility ORDER BY artifact_id)
+                    FROM qiita.study_artifact
+                    LEFT JOIN qiita.artifact USING (artifact_id)
+                    LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                    LEFT JOIN qiita.visibility USING (visibility_id)
+                    WHERE artifact_type='BIOM' AND
+                        study_id = qiita.study.study_id) AS artifact_biom_vis,
                 (SELECT array_agg(DISTINCT visibility)
                     FROM qiita.study_artifact
                     LEFT JOIN qiita.artifact USING (artifact_id)
@@ -1414,8 +1431,10 @@ def generate_study_list(study_ids, build_samples):
                 to_loop = zip(
                     info['artifact_biom_ids'], info['artifact_biom_dts'],
                     info['artifact_biom_ts'], info['artifact_biom_params'],
-                    info['artifact_biom_cmd'])
-                for artifact_id, dt, ts, params, cmd in to_loop:
+                    info['artifact_biom_cmd'], info['artifact_biom_vis'])
+                for artifact_id, dt, ts, params, cmd, vis in to_loop:
+                    if public_only and vis != 'public':
+                        continue
                     proc_info = {'processed_date': str(ts)}
                     proc_info['pid'] = artifact_id
                     proc_info['data_type'] = dt
@@ -1476,6 +1495,7 @@ def generate_study_list(study_ids, build_samples):
             del info["artifact_biom_ts"]
             del info["artifact_biom_params"]
             del info['artifact_biom_cmd']
+            del info['artifact_biom_vis']
 
             infolist.append(info)
 
