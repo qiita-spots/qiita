@@ -328,9 +328,9 @@ class TestStudyAPI(TestCase):
         exp = {
             'info': {
                 '16S': [
-                    {'status': 'sandbox', 'name': 'PREP 3 NAME',
+                    {'status': 'sandbox', 'name': 'PREP %d NAME' % pt.id,
                      'start_artifact': None, 'youngest_artifact': None,
-                     'ebi_experiment': False, 'id': 3,
+                     'ebi_experiment': False, 'id': pt.id,
                      'start_artifact_id': None}]
             },
             'message': '',
