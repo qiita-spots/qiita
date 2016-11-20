@@ -318,7 +318,9 @@ class TestStudyAPI(TestCase):
             metadata, study, "16S", 'Metagenomics')
 
         # making sure that the EBI values are empty
-        exp = {'2.Sample3': None, '2.Sample2': None, '2.Sample1': None}
+        exp = {('%d.Sample3' % study.id): None,
+               ('%d.Sample2' % study.id): None,
+               ('%d.Sample1' % study.id): None}
         self.assertEqual(pt.ebi_experiment_accessions, exp)
 
         # actual test
