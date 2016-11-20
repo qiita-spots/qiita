@@ -101,8 +101,8 @@ class ProcessingJobTest(TestCase):
 
     def _wait_for_job(self, job):
         while job.status not in ('error', 'success'):
-            sleep(0.05)
-        sleep(0.05)
+            sleep(0.5)
+        sleep(0.5)
 
     def test_exists(self):
         self.assertTrue(qdb.processing_job.ProcessingJob.exists(
@@ -369,9 +369,6 @@ class ProcessingJobTest(TestCase):
         obsjobs = set(self._get_all_job_ids())
 
         self.assertEqual(len(obsjobs), len(alljobs) + 1)
-        job_id = obsjobs - alljobs
-        job_id = job_id.pop()
-        job = qdb.processing_job.ProcessingJob(job_id)
         self._wait_for_job(job)
 
     def test_complete_failure(self):
