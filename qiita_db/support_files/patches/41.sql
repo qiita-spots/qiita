@@ -1,15 +1,6 @@
--- Oct 23, 2016
--- Adding provenance parameter to validate commands
+-- Oct 29, 2016
+-- Dropping command and reference NULL constraints from jobs so bioms
+-- without them can be analyzed
 
-DO $do$
-DECLARE
-    cmd  RECORD;
-BEGIN
-    FOR cmd IN
-        SELECT command_id FROM qiita.software_command WHERE name = 'Validate'
-    LOOP
-        INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type, required, default_value)
-            VALUES (cmd.command_id, 'provenance', 'string', 'False', NULL);
-
-    END LOOP;
-END $do$
+ALTER TABLE qiita.job ALTER COLUMN input_file_reference_id DROP NOT NULL;
+ALTER TABLE qiita.job ALTER COLUMN input_file_software_command_id DROP NOT NULL;

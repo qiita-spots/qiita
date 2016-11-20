@@ -69,7 +69,6 @@ $(document).ready(function() {
 {% end %}
 
 {% block content %}
-{% set static_info = {'data_type', 'processed_date', 'algorithm', 'reference_name', 'reference_version', 'sequence_filepath', 'taxonomy_filepath', 'tree_filepath'}%}
 &nbsp;<br/>
 <h1>Selected Samples</h1>
 <span id="ws-error" style="color:red"></span>
@@ -97,7 +96,7 @@ $(document).ready(function() {
     <h4>Processed Data</h4>
     <table class='table table-striped' id='study{{study.id}}-table'>
     <tr>
-      <th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Reference</th><th class="col-sm-1">Samples</th><th></th><th></th>
+      <th class="col-sm-1">id</th><th class="col-sm-1">Datatype</th><th class="col-sm-2">Processed Date</th><th class="col-sm-2">Algorithm</th><th class="col-sm-2">Parameters</th><th class="col-sm-1">Samples</th><th></th><th></th>
     </tr>
   {% for pid, samples in viewitems(proc_datas) %}
     <tr id="proc{{pid}}">
@@ -105,7 +104,15 @@ $(document).ready(function() {
       <td>{{proc_info[pid]["data_type"]}}</td>
       <td>{{proc_info[pid]["processed_date"]}}</td>
       <td>{{proc_info[pid]["algorithm"]}}</td>
-      <td>{{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}</td>
+      <td>
+        <small>
+          {% if proc_info[pid]["params"] is not None %}
+            {% for key, val in viewitems(proc_info[pid]["params"]) %}
+              <i>{{key}}</i>: {{val}} <br/>
+            {% end %}
+          {% end %}
+        </small>
+      </td>
       <td><span id="proc{{pid}}-sample-count">{% raw len(samples) %}</span></td>
       <td><a href="#" onclick="$('#proc{{pid}}-samples').toggle(); return false;">Show/Hide samples</a></td>
       <td><a href="#" onclick = 'remove_proc_data({{pid}}, {{study.id}})'>Remove</a></td>
@@ -132,12 +139,18 @@ $(document).ready(function() {
               <b>Datatype</b>: {{proc_info[pid]["data_type"]}} <br/>
               <b>Processed Date</b>: {{proc_info[pid]["processed_date"]}} <br/>
               <b>Algorithm</b>: {{proc_info[pid]["algorithm"]}} <br/>
-              <b>Reference</b>: {{proc_info[pid]["reference_name"]}} {{proc_info[pid]["reference_version"]}}<br/>
-  {% for key, val in viewitems(proc_info[pid]) %}
-    {% if key not in static_info %}
-      <b>{{key}}</b>: {{val}} <br/>
-    {% end %}
-  {% end %}
+              <b>Parameters</b>:
+                <small>
+                  {% if proc_info[pid]["params"] is not None %}
+                    {% for key, val in viewitems(proc_info[pid]["params"]) %}
+                      <i>{{key}}</i>: {{val}} <br/>
+                    {% end %}
+                  {% end %}
+                </small>
+              <br/>
+              {% for key, val in viewitems(proc_info[pid]) %}
+                <b>{{key}}</b>: {{val}} <br/>
+              {% end %}
             </div>
             <div class="modal-footer">
             </div>

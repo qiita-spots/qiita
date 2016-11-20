@@ -168,12 +168,14 @@ class TestStudyAPI(TestCase):
                        'name': 'PREP 1 NAME',
                        'start_artifact_id': 1,
                        'start_artifact': 'FASTQ',
-                       'youngest_artifact': 'BIOM - BIOM'}, {
+                       'youngest_artifact': 'BIOM - BIOM',
+                       'ebi_experiment': True}, {
                        'id': 2,
                        'status': 'private',
                        'name': 'PREP 2 NAME',
                        'start_artifact': 'BIOM',
                        'youngest_artifact': 'BIOM - BIOM',
+                       'ebi_experiment': True,
                        'start_artifact_id': 7}]}}
         self.assertEqual(obs, exp)
 
@@ -192,19 +194,22 @@ class TestStudyAPI(TestCase):
                             'name': 'PREP 1 NAME',
                             'start_artifact_id': 1,
                             'start_artifact': 'FASTQ',
-                            'youngest_artifact': 'BIOM - BIOM'},
+                            'youngest_artifact': 'BIOM - BIOM',
+                            'ebi_experiment': True},
                            {'id': 2,
                             'status': 'private',
                             'name': 'PREP 2 NAME',
                             'start_artifact_id': 7,
                             'start_artifact': 'BIOM',
-                            'youngest_artifact': 'BIOM - BIOM'}],
+                            'youngest_artifact': 'BIOM - BIOM',
+                            'ebi_experiment': True}],
                    '16S': [{'id': pt.id,
                             'status': 'sandbox',
                             'name': 'PREP %d NAME' % pt.id,
                             'start_artifact_id': None,
                             'start_artifact': None,
-                            'youngest_artifact': None}]}}
+                            'youngest_artifact': None,
+                            'ebi_experiment': False}]}}
         self.assertEqual(obs, exp)
 
         obs = study_prep_get_req(1, 'admin@foo.bar')
@@ -220,7 +225,8 @@ class TestStudyAPI(TestCase):
                             'name': 'PREP 1 NAME',
                             'start_artifact_id': 1,
                             'start_artifact': 'FASTQ',
-                            'youngest_artifact': 'BIOM - BIOM'}]}}
+                            'youngest_artifact': 'BIOM - BIOM',
+                            'ebi_experiment': True}]}}
         self.assertEqual(obs, exp)
         # Reset visibility of the artifacts
         for i in range(4, 0, -1):
