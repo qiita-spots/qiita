@@ -12,6 +12,7 @@ from datetime import datetime
 from os import close, remove
 from os.path import exists, join, basename
 from functools import partial
+from json import dumps
 
 import pandas as pd
 import networkx as nx
@@ -864,9 +865,22 @@ class ArtifactTests(TestCase):
             f.write('\n')
         data = {'OTU table': {'filepaths': [(fp, 'biom')],
                               'artifact_type': 'BIOM'}}
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                qdb.software.Command.get_validator('BIOM'),
+                values_dict={'files': dumps({'biom': [fp]}),
+                             'artifact_type': 'BIOM',
+                             'template': 1,
+                             'provenance': dumps(
+                                {'job': "bcc7ebcd-39c1-43e4-af2d-822e3589f14d",
+                                 'cmd_out_id': 3})}
+            )
+        )
+        job._set_status('running')
+        job.complete(True, artifacts_data=data)
         job = qdb.processing_job.ProcessingJob(
             "bcc7ebcd-39c1-43e4-af2d-822e3589f14d")
-        job.complete(True, artifacts_data=data)
         artifact = job.outputs['OTU table']
         self._clean_up_files.extend([afp for _, afp, _ in artifact.filepaths])
 
