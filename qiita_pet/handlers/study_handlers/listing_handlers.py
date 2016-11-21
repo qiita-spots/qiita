@@ -88,7 +88,8 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
         # No studies left so no need to continue
         return []
 
-    return generate_study_list([s.id for s in study_set], build_samples)
+    return generate_study_list([s.id for s in study_set], build_samples,
+                               public_only=(search_type == 'public'))
 
 
 class ListStudiesHandler(BaseHandler):
