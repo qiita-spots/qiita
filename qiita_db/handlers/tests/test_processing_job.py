@@ -14,6 +14,8 @@ from os import close, remove
 from os.path import exists
 
 from tornado.web import HTTPError
+import numpy.testing as npt
+import pandas as pd
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
@@ -175,8 +177,18 @@ class CompleteHandlerTests(OauthTestingBase):
         self.assertEqual(job.log.msg, 'Job failure')
 
     def test_post_job_success(self):
-        job = qdb.processing_job.ProcessingJob(
-            'd19f76ee-274e-4c1b-b3a2-a12d73507c55')
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
+            qdb.study.Study(1), '16S')
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                qdb.software.Command.get_validator('BIOM'),
+                values_dict={'template': pt.id, 'files':
+                             dumps({'BIOM': ['file']}),
+                             'artifact_type': 'BIOM'}))
         job._set_status('running')
 
         fd, fp = mkstemp(suffix='_table.biom')
@@ -192,7 +204,7 @@ class CompleteHandlerTests(OauthTestingBase):
              'artifacts': {'OTU table': {'filepaths': [(fp, 'biom')],
                                          'artifact_type': 'BIOM'}}})
         obs = self.post(
-            '/qiita_db/jobs/d19f76ee-274e-4c1b-b3a2-a12d73507c55/complete/',
+            '/qiita_db/jobs/%s/complete/' % job.id,
             payload, headers=self.header)
         self.assertEqual(obs.code, 200)
         self.assertEqual(job.status, 'success')
