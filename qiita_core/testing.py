@@ -39,12 +39,24 @@ def wait_for_prep_information_job(prep_id, raise_if_none=True):
         payload = loads(res)
         job_id = payload['job_id']
         if payload['is_qiita_job']:
-            job = ProcessingJob(job_id)
-            while job.status not in ('success', 'error'):
-                sleep(0.05)
+            wait_for_processing_job(job_id)
         else:
             redis_info = loads(r_client.get(job_id))
             while redis_info['status_msg'] == 'Running':
                 sleep(0.05)
                 redis_info = loads(r_client.get(job_id))
         sleep(0.05)
+
+
+def wait_for_processing_job(job_id):
+    """Waits unitl a processing job is completed
+
+    Parameters
+    ----------
+    job_id : str
+        Job id
+    """
+    job = ProcessingJob(job_id)
+    while job.status not in ('success', 'error'):
+        sleep(0.05)
+    sleep(0.05)
