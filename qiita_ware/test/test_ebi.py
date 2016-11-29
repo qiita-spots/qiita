@@ -8,7 +8,6 @@ from __future__ import division
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from warnings import simplefilter
 from os import remove
 from os.path import join, isdir, exists
 from shutil import rmtree
@@ -299,8 +298,6 @@ class TestEBISubmission(TestCase):
                                                          valid_metadata=False):
         """Creates new prep-template/demux-file to avoid duplication of code"""
 
-        # ignoring warnings generated when adding templates
-        simplefilter("ignore")
         # creating prep template without required EBI submission columns
         if not valid_metadata:
             metadata_dict = {
@@ -364,8 +361,6 @@ class TestEBISubmission(TestCase):
 
     def generate_new_study_with_preprocessed_data(self):
         """Creates a new study up to the processed data for testing"""
-        # ignoring warnings generated when adding templates
-        simplefilter("ignore")
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,

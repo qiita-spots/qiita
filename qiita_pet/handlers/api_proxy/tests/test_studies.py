@@ -7,9 +7,10 @@
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from datetime import datetime
-from os.path import exists, join, basename
+from os.path import exists, join, basename, isdir
 from os import remove, close
-from tempfile import mkstemp
+from shutil import rmtree
+from tempfile import mkstemp, mkdtemp
 
 import pandas as pd
 import numpy.testing as npt
@@ -29,7 +30,10 @@ class TestStudyAPI(TestCase):
     def tearDown(self):
         for fp in self._clean_up_files:
             if exists(fp):
-                remove(fp)
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
 
     def test_data_types_get_req(self):
         obs = data_types_get_req()
@@ -231,6 +235,103 @@ class TestStudyAPI(TestCase):
         # Reset visibility of the artifacts
         for i in range(4, 0, -1):
             qdb.artifact.Artifact(i).visibility = "private"
+
+    def test_study_prep_get_req_failed_EBI(self):
+        temp_dir = mkdtemp()
+        self._clean_up_files.append(temp_dir)
+        user_email = 'test@foo.bar'
+
+        # creating a (A) new study, (B) sample info, (C) prep without EBI
+        # values
+
+        # (A)
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 3,
+            "number_samples_promised": 3,
+            "study_alias": "Test EBI",
+            "study_description": "Study for testing EBI",
+            "study_abstract": "Study for testing EBI",
+            "emp_person_id": qdb.study.StudyPerson(2),
+            "principal_investigator_id": qdb.study.StudyPerson(3),
+            "lab_person_id": qdb.study.StudyPerson(1)
+        }
+        study = qdb.study.Study.create(
+            qdb.user.User(user_email), "Test EBI study", [1], info)
+
+        # (B)
+        metadata_dict = {
+            'Sample1': {'collection_timestamp': datetime(2015, 6, 1, 7, 0, 0),
+                        'physical_specimen_location': 'location1',
+                        'taxon_id': 9606,
+                        'scientific_name': 'homo sapiens',
+                        'Description': 'Test Sample 1'},
+            'Sample2': {'collection_timestamp': datetime(2015, 6, 2, 7, 0, 0),
+                        'physical_specimen_location': 'location1',
+                        'taxon_id': 9606,
+                        'scientific_name': 'homo sapiens',
+                        'Description': 'Test Sample 2'},
+            'Sample3': {'collection_timestamp': datetime(2015, 6, 3, 7, 0, 0),
+                        'physical_specimen_location': 'location1',
+                        'taxon_id': 9606,
+                        'scientific_name': 'homo sapiens',
+                        'Description': 'Test Sample 3'}
+        }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
+        qdb.metadata_template.sample_template.SampleTemplate.create(
+            metadata, study)
+
+        # (C)
+        metadata_dict = {
+            'Sample1': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                        'barcode': 'CGTAGAGCTCTC',
+                        'center_name': 'KnightLab',
+                        'platform': 'ILLUMINA',
+                        'instrument_model': 'Illumina MiSeq',
+                        'library_construction_protocol': 'Protocol ABC',
+                        'experiment_design_description': "Random value 1"},
+            'Sample2': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                        'barcode': 'CGTAGAGCTCTA',
+                        'center_name': 'KnightLab',
+                        'platform': 'ILLUMINA',
+                        'instrument_model': 'Illumina MiSeq',
+                        'library_construction_protocol': 'Protocol ABC',
+                        'experiment_design_description': "Random value 2"},
+            'Sample3': {'primer': 'GTGCCAGCMGCCGCGGTAA',
+                        'barcode': 'CGTAGAGCTCTT',
+                        'center_name': 'KnightLab',
+                        'platform': 'ILLUMINA',
+                        'instrument_model': 'Illumina MiSeq',
+                        'library_construction_protocol': 'Protocol ABC',
+                        'experiment_design_description': "Random value 3"},
+        }
+        metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
+                                          dtype=str)
+        pt = qdb.metadata_template.prep_template.PrepTemplate.create(
+            metadata, study, "16S", 'Metagenomics')
+
+        # making sure that the EBI values are empty
+        exp = {('%d.Sample3' % study.id): None,
+               ('%d.Sample2' % study.id): None,
+               ('%d.Sample1' % study.id): None}
+        self.assertEqual(pt.ebi_experiment_accessions, exp)
+
+        # actual test
+        obs = study_prep_get_req(study.id, user_email)
+        exp = {
+            'info': {
+                '16S': [
+                    {'status': 'sandbox', 'name': 'PREP %d NAME' % pt.id,
+                     'start_artifact': None, 'youngest_artifact': None,
+                     'ebi_experiment': False, 'id': pt.id,
+                     'start_artifact_id': None}]
+            },
+            'message': '',
+            'status': 'success'}
+        self.assertEqual(obs, exp)
 
     def test_study_prep_get_req_no_access(self):
         obs = study_prep_get_req(1, 'demo@microbio.me')

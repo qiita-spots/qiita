@@ -96,9 +96,9 @@ class TestDispatchable(TestCase):
                            "existing template: new_col\nThere are no "
                            "differences between the data stored in the DB and "
                            "the new data provided")}
-        self.assertEqual(obs['status'], exp['status'])
         self.assertItemsEqual(obs['message'].split('\n'),
                               exp['message'].split('\n'))
+        self.assertEqual(obs['status'], exp['status'])
 
     def test_delete_sample_template(self):
         obs = delete_sample_template(1)
@@ -115,9 +115,9 @@ class TestDispatchable(TestCase):
                           'existing template: new_col\nThere are no '
                           'differences between the data stored in the DB and '
                           'the new data provided'}
-        self.assertEqual(obs['status'], exp['status'])
         self.assertItemsEqual(obs['message'].split('\n'),
                               exp['message'].split('\n'))
+        self.assertEqual(obs['status'], exp['status'])
 
     def test_delete_sample_or_column(self):
         st = SampleTemplate(1)
