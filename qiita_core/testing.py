@@ -49,7 +49,7 @@ def wait_for_prep_information_job(prep_id, raise_if_none=True):
 
 
 def wait_for_processing_job(job_id):
-    """Waits unitl a processing job is completed
+    """Waits until a processing job is completed
 
     Parameters
     ----------

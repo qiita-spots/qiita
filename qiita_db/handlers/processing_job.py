@@ -7,13 +7,15 @@
 # -----------------------------------------------------------------------------
 
 from json import loads
+from sys import exc_info
+import traceback
 
 from tornado.web import HTTPError
 
 # We agreed before that qiita db should never import from
 # qiita_ware. However, this is part of the rest API and I think it
 # is acceptable to import from qiita_ware, specially to offload
-# processed to the ipython cluster
+# processing to the ipython cluster
 from qiita_ware.context import safe_submit
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
@@ -70,8 +72,8 @@ def _job_completer(job_id, payload):
     job = qdb.processing_job.ProcessingJob(job_id)
     try:
         job.complete(payload_success, artifacts, error)
-    except Exception as e:
-        job._set_error(str(e))
+    except:
+        job._set_error(traceback.format_exception(*exc_info()))
 
 
 class JobHandler(OauthBaseHandler):
