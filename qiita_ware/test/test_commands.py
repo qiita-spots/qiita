@@ -9,7 +9,6 @@ from __future__ import division
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from os.path import join
-from warnings import simplefilter
 from tempfile import mkdtemp
 import pandas as pd
 from datetime import datetime
@@ -62,8 +61,6 @@ class CommandsTests(TestCase):
 
     def generate_new_study_with_preprocessed_data(self):
         """Creates a new study up to the processed data for testing"""
-        # ignoring warnings generated when adding templates
-        simplefilter("ignore")
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,

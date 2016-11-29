@@ -10,9 +10,7 @@ from datetime import datetime
 from os.path import exists, join, basename, isdir
 from os import remove, close
 from shutil import rmtree
-from tempfile import mkstemp
-from warnings import simplefilter
-from tempfile import mkdtemp
+from tempfile import mkstemp, mkdtemp
 
 import pandas as pd
 import numpy.testing as npt
@@ -247,8 +245,6 @@ class TestStudyAPI(TestCase):
         # values
 
         # (A)
-        # ignoring warnings generated when adding templates
-        simplefilter("ignore")
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,
