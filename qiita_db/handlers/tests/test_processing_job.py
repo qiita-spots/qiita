@@ -17,6 +17,7 @@ from tornado.web import HTTPError
 import numpy.testing as npt
 import pandas as pd
 
+from qiita_core.testing import wait_for_processing_job
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
 from qiita_db.handlers.processing_job import _get_job
@@ -169,6 +170,7 @@ class CompleteHandlerTests(OauthTestingBase):
             '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/complete/',
             payload, headers=self.header)
         self.assertEqual(obs.code, 200)
+        wait_for_processing_job('bcc7ebcd-39c1-43e4-af2d-822e3589f14d')
         job = qdb.processing_job.ProcessingJob(
             'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')
         self.assertEqual(job.status, 'error')
@@ -206,6 +208,7 @@ class CompleteHandlerTests(OauthTestingBase):
         obs = self.post(
             '/qiita_db/jobs/%s/complete/' % job.id,
             payload, headers=self.header)
+        wait_for_processing_job(job.id)
         self.assertEqual(obs.code, 200)
         self.assertEqual(job.status, 'success')
         self.assertEqual(qdb.util.get_count('qiita.artifact'),

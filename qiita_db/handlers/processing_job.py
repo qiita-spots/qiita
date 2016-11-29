@@ -7,9 +7,16 @@
 # -----------------------------------------------------------------------------
 
 from json import loads
+from sys import exc_info
+import traceback
 
 from tornado.web import HTTPError
 
+# We agreed before that qiita db should never import from
+# qiita_ware. However, this is part of the rest API and I think it
+# is acceptable to import from qiita_ware, specially to offload
+# processing to the ipython cluster
+from qiita_ware.context import safe_submit
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
@@ -43,6 +50,30 @@ def _get_job(job_id):
         raise HTTPError(500, 'Error instantiating the job: %s' % str(e))
 
     return job
+
+
+def _job_completer(job_id, payload):
+    """Completes a job
+
+    Parameters
+    ----------
+    job_id : str
+        The job to complete
+    payload : dict
+        The parameters of the HTTP POST request that is completing the job
+    """
+    payload_success = payload['success']
+    if payload_success:
+        artifacts = payload['artifacts']
+        error = None
+    else:
+        artifacts = None
+        error = payload['error']
+    job = qdb.processing_job.ProcessingJob(job_id)
+    try:
+        job.complete(payload_success, artifacts, error)
+    except:
+        job._set_error(traceback.format_exception(*exc_info()))
 
 
 class JobHandler(OauthBaseHandler):
@@ -133,18 +164,12 @@ class CompleteHandler(OauthBaseHandler):
         with qdb.sql_connection.TRN:
             job = _get_job(job_id)
 
+            if job.status != 'running':
+                raise HTTPError(
+                    403, "Can't complete job: not in a running state")
+
             payload = loads(self.request.body)
-            payload_success = payload['success']
-            if payload_success:
-                artifacts = payload['artifacts']
-                error = None
-            else:
-                artifacts = None
-                error = payload['error']
-            try:
-                job.complete(payload_success, artifacts, error)
-            except qdb.exceptions.QiitaDBOperationNotPermittedError as e:
-                raise HTTPError(403, str(e))
+            safe_submit(job.user.email, _job_completer, job_id, payload)
 
         self.finish()
 
