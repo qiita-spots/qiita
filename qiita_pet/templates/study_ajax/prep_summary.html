@@ -23,8 +23,12 @@
     };
     var options = {
       nodes: {
+        color: {highlight: {border: "yellow"}},
         color: '#ffffff',
         font: '14px arial black'
+      },
+      edges: {
+        color: 'grey'
       },
       layout : {
         hierarchical: {
@@ -35,8 +39,15 @@
       },
       interaction: {
         dragNodes: false,
-        dragView: false,
-        zoomView: false
+        dragView: true,
+        zoomView: true,
+        selectConnectedEdges: false,
+        navigationButtons: true,
+        keyboard: true
+      },
+      groups: {
+        type: {shape: "ellipse", color: "#cef"},
+        job: {shape: "box", color: "#9fd"}
       }
     };
     network = new vis.Network(container, data, options);
@@ -201,6 +212,16 @@
         for(var i=0; i<data.node_labels.length; i++) {
           nodes.push({id: data.node_labels[i][0], label: data.node_labels[i][1], shape: 'box'});
         }
+
+
+
+
+
+
+
+
+
+
 
         $("#graph-or-new-artifact-div").html(
           "<div class='row'>" +
