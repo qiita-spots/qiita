@@ -301,32 +301,52 @@ class TestPrepAPI(TestCase):
 
     def test_prep_template_graph_get_req(self):
         obs = prep_template_graph_get_req(1, 'test@foo.bar')
-        exp = {'edge_list': [(1, 3), (1, 2), (2, 4), (2, 5), (2, 6)],
-               'node_labels': [(1, 'Raw data 1 - FASTQ'),
-                               (2, 'Demultiplexed 1 - Demultiplexed'),
-                               (3, 'Demultiplexed 2 - Demultiplexed'),
-                               (4, 'BIOM - BIOM'),
-                               (5, 'BIOM - BIOM'),
-                               (6, 'BIOM - BIOM')],
-               'status': 'success',
-               'message': ''}
-        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
-        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
-        self.assertEqual(obs['status'], exp['status'])
-        self.assertEqual(obs['message'], exp['message'])
+
+        # jobs are randomly generated then testing composition
+        self.assertEqual(obs['message'], '')
+        self.assertEqual(obs['status'], 'success')
+        self.assertEqual(11, len(obs['node_labels']))
+        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'), obs['node_labels'])
+        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'), obs['node_labels'])
+        self.assertIn(('artifact', 3, 'Demultiplexed 2 - Demultiplexed'), obs['node_labels'])
+        self.assertIn(('artifact', 4, 'BIOM - BIOM'), obs['node_labels'])
+        self.assertIn(('artifact', 5, 'BIOM - BIOM'), obs['node_labels'])
+        self.assertIn(('artifact', 6, 'BIOM - BIOM'), obs['node_labels'])
+        self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
+                                 if n == 'Pick closed-reference OTUs' and dt == 'job']))
+        self.assertEqual(2, len([n for dt, _, n in obs['node_labels']
+                                 if n == 'Split libraries FASTQ' and dt == 'job']))
+
+        self.assertEqual(10, len(obs['edge_list']))
+        self.assertEqual(2, len([x for x, y in obs['edge_list'] if x == 1]))
+        self.assertEqual(3, len([x for x, y in obs['edge_list'] if x == 2]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 2]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 3]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 4]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 5]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 6]))
 
         Artifact(4).visibility = "public"
         obs = prep_template_graph_get_req(1, 'demo@microbio.me')
-        exp = {'edge_list': [(1, 2), (2, 4)],
-               'node_labels': [(1, 'Raw data 1 - FASTQ'),
-                               (2, 'Demultiplexed 1 - Demultiplexed'),
-                               (4, 'BIOM - BIOM')],
-               'status': 'success',
-               'message': ''}
-        self.assertItemsEqual(obs['edge_list'], exp['edge_list'])
-        self.assertItemsEqual(obs['node_labels'], exp['node_labels'])
-        self.assertEqual(obs['status'], exp['status'])
-        self.assertEqual(obs['message'], exp['message'])
+        self.assertEqual(obs['message'], '')
+        self.assertEqual(obs['status'], 'success')
+        self.assertEqual(8, len(obs['node_labels']))
+        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'), obs['node_labels'])
+        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'), obs['node_labels'])
+        self.assertIn(('artifact', 4, 'BIOM - BIOM'), obs['node_labels'])
+        self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
+                                 if n == 'Pick closed-reference OTUs' and dt == 'job']))
+        self.assertEqual(2, len([n for dt, _, n in obs['node_labels']
+                                 if n == 'Split libraries FASTQ' and dt == 'job']))
+
+        self.assertEqual(10, len(obs['edge_list']))
+        self.assertEqual(2, len([x for x, y in obs['edge_list'] if x == 1]))
+        self.assertEqual(3, len([x for x, y in obs['edge_list'] if x == 2]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 2]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 3]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 4]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 5]))
+        self.assertEqual(1, len([x for x, y in obs['edge_list'] if y == 6]))
 
         # Reset visibility of the artifacts
         for i in range(4, 0, -1):

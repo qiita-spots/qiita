@@ -622,10 +622,28 @@ def prep_template_graph_get_req(prep_id, user_id):
     # We should filter for only the public artifacts if the user
     # doesn't have full access to the study
     full_access = Study(prep.study_id).can_edit(User(user_id))
+
+    G = prep.artifact.descendants_with_jobs
+
+    # n[0] is the data type: job/artifact
+    # n[1] is the object
+    node_labels = []
+    for n in G.nodes():
+        if n[0] == 'job':
+            name = n[1].command.name
+        elif n[0] == 'artifact':
+            if full_access or n[1].visibility == 'public':
+                name = '%s - %s' % (n[1].name, n[1].artifact_type)
+            else:
+                continue
+        node_labels.append((n[0], n[1].id, name))
+
+    return {'edge_list': [(n[1].id, m[1].id) for n, m in G.edges()],
+            'node_labels': node_labels,
+            'status': 'success',
+            'message': ''}
+
     G = prep.artifact.descendants
-    node_labels = [(n.id, ' - '.join([n.name, n.artifact_type]))
-                   for n in G.nodes()
-                   if full_access or n.visibility == 'public']
     node_ids = [id_ for id_, label in node_labels]
     edge_list = [(n.id, m.id) for n, m in G.edges()
                  if n.id in node_ids and m.id in node_ids]
