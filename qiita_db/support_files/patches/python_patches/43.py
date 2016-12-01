@@ -44,6 +44,11 @@ for aid in all_artifacts:
                 cmd_out = 'demultiplexed'
             elif cmd_out == 'BIOM':
                 cmd_out = 'OTU table'
+            else:
+                # the actual DB has other possible values in
+                # artifact_type
+                print cmd_out
+                continue
 
             cmd_out_id = qdb.util.convert_to_id(
                         cmd_out, "command_output", "name")
