@@ -408,7 +408,6 @@
     var options = {
       nodes: {
         shape: 'dot',
-        color: {highlight: {border: "yellow"}},
         font: {
             size: 16,
             color: '#000000'
@@ -443,7 +442,7 @@
         }
       }
     };
-    
+
     processing_network = new vis.Network(container, data, options);
     processing_network.on('select', function(params) {
       // Update the GUI with the information for the selected node type
