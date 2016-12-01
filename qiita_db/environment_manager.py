@@ -75,7 +75,6 @@ def create_layout_and_patch(test=False, verbose=False):
 
 
 def _populate_test_db():
-    print('Populating database with demo data')
     with qdb.sql_connection.TRN:
         with open(POPULATE_FP, 'U') as f:
             qdb.sql_connection.TRN.add(f.read())
@@ -385,10 +384,8 @@ def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
         for sql_patch_fp in sql_patch_files[next_patch_index:]:
             sql_patch_filename = basename(sql_patch_fp)
 
-            if sql_patch_filename == '43.sql':
-                # Populate the database
-                with open(POPULATE_FP, 'U') as f:
-                    qdb.sql_connection.TRN.add(f.read())
+            if sql_patch_filename == '43.sql' and test:
+                _populate_test_db()
 
             py_patch_fp = corresponding_py_patch(
                 splitext(basename(sql_patch_fp))[0] + '.py')

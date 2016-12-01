@@ -306,16 +306,24 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(11, len(obs['node_labels']))
-        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'), obs['node_labels'])
-        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'), obs['node_labels'])
-        self.assertIn(('artifact', 3, 'Demultiplexed 2 - Demultiplexed'), obs['node_labels'])
-        self.assertIn(('artifact', 4, 'BIOM - BIOM'), obs['node_labels'])
-        self.assertIn(('artifact', 5, 'BIOM - BIOM'), obs['node_labels'])
-        self.assertIn(('artifact', 6, 'BIOM - BIOM'), obs['node_labels'])
+        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'),
+                      obs['node_labels'])
+        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'),
+                      obs['node_labels'])
+        self.assertIn(('artifact', 3, 'Demultiplexed 2 - Demultiplexed'),
+                      obs['node_labels'])
+        self.assertIn(('artifact', 4, 'BIOM - BIOM'),
+                      obs['node_labels'])
+        self.assertIn(('artifact', 5, 'BIOM - BIOM'),
+                      obs['node_labels'])
+        self.assertIn(('artifact', 6, 'BIOM - BIOM'),
+                      obs['node_labels'])
         self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
-                                 if n == 'Pick closed-reference OTUs' and dt == 'job']))
+                                 if n == 'Pick closed-reference OTUs' and
+                                 dt == 'job']))
         self.assertEqual(2, len([n for dt, _, n in obs['node_labels']
-                                 if n == 'Split libraries FASTQ' and dt == 'job']))
+                                 if n == 'Split libraries FASTQ' and
+                                 dt == 'job']))
 
         self.assertEqual(10, len(obs['edge_list']))
         self.assertEqual(2, len([x for x, y in obs['edge_list'] if x == 1]))
@@ -331,13 +339,17 @@ class TestPrepAPI(TestCase):
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['status'], 'success')
         self.assertEqual(8, len(obs['node_labels']))
-        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'), obs['node_labels'])
-        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'), obs['node_labels'])
+        self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'),
+                      obs['node_labels'])
+        self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'),
+                      obs['node_labels'])
         self.assertIn(('artifact', 4, 'BIOM - BIOM'), obs['node_labels'])
         self.assertEqual(3, len([n for dt, _, n in obs['node_labels']
-                                 if n == 'Pick closed-reference OTUs' and dt == 'job']))
+                                 if n == 'Pick closed-reference OTUs' and
+                                 dt == 'job']))
         self.assertEqual(2, len([n for dt, _, n in obs['node_labels']
-                                 if n == 'Split libraries FASTQ' and dt == 'job']))
+                                 if n == 'Split libraries FASTQ' and
+                                 dt == 'job']))
 
         self.assertEqual(10, len(obs['edge_list']))
         self.assertEqual(2, len([x for x, y in obs['edge_list'] if x == 1]))
