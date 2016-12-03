@@ -334,7 +334,7 @@ class ArtifactTestsReadOnly(TestCase):
             self.assertIn(e, obs_nodes)
         self.assertEqual(5, len([e for dt, e in obs_nodes if dt == 'job']))
         obs_edges = obs.edges()
-        # as jobs are created at random we will only the number of pairs
+        # as jobs are created at random we will only check the number of pairs
         # matches and they are instances of what we expect
         self.assertEqual(10, len(obs_edges))
         self.assertEqual(2, len([x for x, y in obs_edges
