@@ -86,7 +86,7 @@ class QiitaBaseTest(TestCase):
 
 @qiita_test_checker()
 class QiitaStatusObjectTest(TestCase):
-    """Tests that the QittaStatusObject class functions act correctly"""
+    """Tests that the QiitaStatusObject class functions act correctly"""
 
     def setUp(self):
         # We need an actual subclass in order to test the equality functions

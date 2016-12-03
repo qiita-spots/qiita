@@ -1,5 +1,5 @@
 r"""
-Qitta analysis handlers for the Tornado webserver.
+Qiita analysis handlers for the Tornado webserver.
 
 """
 # -----------------------------------------------------------------------------
