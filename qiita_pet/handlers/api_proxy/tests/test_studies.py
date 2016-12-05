@@ -8,7 +8,7 @@
 from unittest import TestCase, main
 from datetime import datetime
 from os.path import exists, join, basename, isdir
-from os import remove, close
+from os import remove, close, mkdir
 from shutil import rmtree
 from tempfile import mkstemp, mkdtemp
 
@@ -84,8 +84,8 @@ class TestStudyAPI(TestCase):
                 'study_alias': 'Cannabis Soils',
                 'study_id': 1,
                 'most_recent_contact': datetime(2014, 5, 19, 16, 11),
-                'publications': [['10.100/123456', '123456'],
-                                 ['10.100/7891011', '7891011']],
+                'publication_doi': ['10.100/123456', '10.100/7891011'],
+                'publication_pid': ['123456', '7891011'],
                 'num_samples': 27,
                 'study_title': 'Identification of the Microbiomes for '
                                'Cannabis Soils',
@@ -142,7 +142,8 @@ class TestStudyAPI(TestCase):
                 'study_alias': 'FCM',
                 'study_id': new_study.id,
                 'most_recent_contact': datetime(2015, 5, 19, 16, 11),
-                'publications': [],
+                'publication_doi': [],
+                'publication_pid': [],
                 'num_samples': 25,
                 'study_title': 'Some New Study',
                 'number_samples_collected': 27},
@@ -388,8 +389,8 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success',
                'message': '',
                'remaining': ['uploaded_file.txt'],
-               'file_types': [('raw_barcodes', True, []),
-                              ('raw_forward_seqs', True, []),
+               'file_types': [('raw_forward_seqs', True, []),
+                              ('raw_barcodes', True, []),
                               ('raw_reverse_seqs', False, [])],
                'num_prefixes': 1,
                'artifacts': [(1, 'Identification of the Microbiomes for '
@@ -400,8 +401,8 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success',
                'message': '',
                'remaining': ['uploaded_file.txt'],
-               'file_types': [('raw_barcodes', True, []),
-                              ('raw_forward_seqs', True, []),
+               'file_types': [('raw_forward_seqs', True, []),
+                              ('raw_barcodes', True, []),
                               ('raw_reverse_seqs', False, [])],
                'num_prefixes': 1,
                'artifacts': [(1, 'Identification of the Microbiomes for '
@@ -430,8 +431,8 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success',
                'message': '',
                'remaining': [],
-               'file_types': [('raw_barcodes', True, []),
-                              ('raw_forward_seqs', True, []),
+               'file_types': [('raw_forward_seqs', True, []),
+                              ('raw_barcodes', True, []),
                               ('raw_reverse_seqs', False, [])],
                'num_prefixes': 1,
                'artifacts': [(1, 'Identification of the Microbiomes for '
@@ -442,8 +443,8 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success',
                'message': '',
                'remaining': [],
-               'file_types': [('raw_barcodes', True, []),
-                              ('raw_forward_seqs', True, []),
+               'file_types': [('raw_forward_seqs', True, []),
+                              ('raw_barcodes', True, []),
                               ('raw_reverse_seqs', False, [])],
                'num_prefixes': 1,
                'artifacts': []}
@@ -455,6 +456,8 @@ class TestStudyAPI(TestCase):
         fps = []
 
         for i in range(2):
+            if not exists(study_upload_dir):
+                mkdir(study_upload_dir)
             fd, fp = mkstemp(suffix=".sff", dir=study_upload_dir)
             close(fd)
             with open(fp, 'w') as f:

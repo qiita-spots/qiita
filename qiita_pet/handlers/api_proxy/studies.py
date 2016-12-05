@@ -68,7 +68,13 @@ def study_get_req(study_id, user_id):
     study = Study(study_id)
     study_info = study.info
     # Add needed info that is not part of the initial info pull
-    study_info['publications'] = study.publications
+    study_info['publication_doi'] = []
+    study_info['publication_pid'] = []
+    for pub, is_doi in study.publications:
+        if is_doi:
+            study_info['publication_doi'].append(pub)
+        else:
+            study_info['publication_pid'].append(pub)
     study_info['study_id'] = study.id
     study_info['study_title'] = study.title
     study_info['shared_with'] = [s.id for s in study.shared_with]

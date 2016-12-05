@@ -242,7 +242,8 @@ class Study(qdb.base.QiitaObject):
             qdb.util.get_table_cols('study'),
             qdb.util.get_table_cols('study_status'),
             qdb.util.get_table_cols('timeseries_type'),
-            qdb.util.get_table_cols('study_publication')))
+            # placeholder for table study_publication
+            ['publications']))
 
         if info_cols is None:
             info_cols = _info_cols
@@ -254,19 +255,19 @@ class Study(qdb.base.QiitaObject):
 
         with qdb.sql_connection.TRN:
             sql = """SELECT {0}
-                     FROM (
-                        qiita.study
-                        JOIN qiita.timeseries_type  USING (timeseries_type_id)
-                        LEFT JOIN (
-                            SELECT study_id, array_agg(
-                                    publication_doi ORDER BY publication_doi)
-                                AS publication_doi
+                     FROM qiita.study
+                     LEFT JOIN (
+                            SELECT study_id,
+                              array_agg(ARRAY[publication, is_doi::text])
+                                AS publications
                             FROM qiita.study_publication
-                            GROUP BY study_id) sp USING (study_id)
-                        JOIN qiita.study_portal USING (study_id)
-                        JOIN qiita.portal_type USING (portal_type_id))
+                            GROUP BY study_id)
+                                AS full_publications
+                        USING (study_id)
+                     JOIN qiita.timeseries_type  USING (timeseries_type_id)
+                     JOIN qiita.study_portal USING (study_id)
+                     JOIN qiita.portal_type USING (portal_type_id)
                     WHERE portal = %s""".format(search_cols)
-
             args = [qiita_config.portal]
             if study_ids is not None:
                 sql = "{0} AND study_id IN %s".format(sql)
@@ -645,11 +646,9 @@ class Study(qdb.base.QiitaObject):
             list of all the DOI and pubmed ids
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT doi, pubmed_id
-                     FROM qiita.publication p
-                        JOIN qiita.study_publication sp
-                            ON sp.publication_doi = p.doi
-                     WHERE sp.study_id = %s"""
+            sql = """SELECT publication, is_doi
+                     FROM qiita.study_publication
+                     WHERE study_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchindex()
 
@@ -677,37 +676,10 @@ class Study(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id])
 
             # Set the new ones
-            sql = """INSERT INTO qiita.publication (doi, pubmed_id)
-                     SELECT %s, %s
-                     WHERE NOT EXISTS(
-                        SELECT doi FROM qiita.publication WHERE doi = %s)"""
-            sql_args = [(doi, pmid, doi) for doi, pmid in values]
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-
             sql = """INSERT INTO qiita.study_publication
-                            (study_id, publication_doi)
-                     VALUES (%s, %s)"""
-            sql_args = [[self._id, doi] for doi, _ in values]
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-            qdb.sql_connection.TRN.execute()
-
-    def add_publications(self, publications):
-        """Add publications to study
-
-        Parameters
-        ----------
-        publications : list of (str, str)
-            A list with the (DOI, pubmed id) to associate with the study
-        """
-        with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.publication (doi, pubmed_id)
-                        VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, publications, many=True)
-
-            sql = """INSERT INTO qiita.study_publication
-                            (study_id, publication_doi)
-                        VALUES (%s, %s)"""
-            sql_args = [[self.id, doi] for doi, _ in publications]
+                            (study_id, publication, is_doi)
+                     VALUES (%s, %s, %s)"""
+            sql_args = [[self._id, pub, is_doi] for pub, is_doi in values]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
