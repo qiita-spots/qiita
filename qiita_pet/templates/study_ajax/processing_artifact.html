@@ -404,10 +404,16 @@
     // vis.Network needs.
     var container = $('#graph-network-div').get(0);
     var data = {nodes: nodes, edges: edges};
+
     var options = {
       nodes: {
-        color: {highlight: {border: "yellow"}},
-        font: '14px arial black'
+        shape: 'dot',
+        font: {
+            size: 16,
+            color: '#000000'
+        },
+        size: 13,
+        borderWidth: 2,
       },
       edges: {
         color: 'grey'
@@ -416,7 +422,7 @@
         hierarchical: {
           direction: "LR",
           sortMethod: "directed",
-          levelSeparation: 300
+          levelSeparation: 260
         }
       },
       interaction: {
@@ -424,15 +430,19 @@
         dragView: true,
         zoomView: true,
         selectConnectedEdges: false,
-        multiselect: true,
         navigationButtons: true,
         keyboard: true
       },
       groups: {
-        type: {shape: "ellipse", color: "#cef"},
-        job: {shape: "box", color: "#9fd"}
+        jobs: {
+          color: '#FF9152'
+        },
+        type: {
+          color: '#FFFFFF'
+        }
       }
     };
+
     processing_network = new vis.Network(container, data, options);
     processing_network.on('select', function(params) {
       // Update the GUI with the information for the selected node type

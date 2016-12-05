@@ -2,8 +2,9 @@
 {% block head %}
 {% set study_title = study_info['study_title'] %}
 {% set study_title_msg = study_title.replace('"', '\\"') %}
-<link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.css" type="text/css">
-<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.js"></script>
+<link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.min.css" type="text/css">
+<link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.min.js"></script>
 <script type="text/javascript">
   var network = null;
   // Track what prep template is currently being shown.
@@ -70,14 +71,24 @@
   function draw_graph(nodes, edges, target) {
     var container = document.getElementById(target);
     container.innerHTML = "";
+    var nodes = new vis.DataSet(nodes);
+    var edges = new vis.DataSet(edges);
     var data = {
       nodes: nodes,
       edges: edges
     };
     var options = {
       nodes: {
-        color: '#ffffff',
-        font: '16px arial black'
+        shape: 'dot',
+        font: {
+            size: 16,
+            color: '#000000'
+        },
+        size: 13,
+        borderWidth: 2,
+      },
+      edges: {
+        color: 'grey'
       },
       layout: {
         hierarchical: {
@@ -88,11 +99,21 @@
       },
       interaction: {
         dragNodes: false,
-        dragView: false,
-        zoomView: false
+        dragView: true,
+        zoomView: true,
+        selectConnectedEdges: false,
+        navigationButtons: true,
+        keyboard: true
+      },
+      groups: {
+        jobs: {
+          color: '#FF9152'
+        },
+        artifact: {
+          color: '#FFFFFF'
+        }
       }
     };
-    network = new vis.Network(container, data, options);
   }
 
   function fill_sample(sid) {

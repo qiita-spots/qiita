@@ -974,6 +974,39 @@ class Artifact(qdb.base.QiitaObject):
         return self._create_lineage_graph_from_edge_list(edges)
 
     @property
+    def descendants_with_jobs(self):
+        """Returns the descendants of the artifact with their jobs
+
+        Returns
+        -------
+        networkx.DiGraph
+            The descendants of the artifact
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT *
+                     FROM qiita.artifact_descendants_with_jobs(%s)"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            edges = qdb.sql_connection.TRN.execute_fetchindex()
+
+        lineage = nx.DiGraph()
+        if edges:
+            nodes = {}
+            for jid, pid, cid in edges:
+                if jid not in nodes:
+                    nodes[jid] = ('job', qdb.processing_job.ProcessingJob(jid))
+                if pid not in nodes:
+                    nodes[pid] = ('artifact', qdb.artifact.Artifact(pid))
+                if cid not in nodes:
+                    nodes[cid] = ('artifact', qdb.artifact.Artifact(cid))
+
+                lineage.add_edge(nodes[pid], nodes[jid])
+                lineage.add_edge(nodes[jid], nodes[cid])
+        else:
+            lineage.add_node(self)
+
+        return lineage
+
+    @property
     def children(self):
         """Returns the list of children of the artifact
 

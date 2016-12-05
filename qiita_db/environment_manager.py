@@ -53,7 +53,7 @@ def _check_db_exists(db, conn_handler):
     return (db,) in dbs
 
 
-def create_layout_and_patch(verbose=False):
+def create_layout_and_patch(test=False, verbose=False):
     r"""Builds the SQL layout and applies all the patches
 
     Parameters
@@ -71,11 +71,10 @@ def create_layout_and_patch(verbose=False):
 
         if verbose:
             print('Patching Database...')
-        patch(verbose=verbose)
+        patch(verbose=verbose, test=test)
 
 
 def _populate_test_db():
-    print('Populating database with demo data')
     with qdb.sql_connection.TRN:
         with open(POPULATE_FP, 'U') as f:
             qdb.sql_connection.TRN.add(f.read())
@@ -214,7 +213,8 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                   qiita_config.working_dir])
         qdb.sql_connection.TRN.execute()
 
-        create_layout_and_patch(verbose=True)
+        create_layout_and_patch(test=qiita_config.test_environment,
+                                verbose=True)
 
         if load_ontologies:
             _add_ontology_data()
@@ -262,7 +262,6 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
             print('Demo user successfully created')
 
         if qiita_config.test_environment:
-            _populate_test_db()
             print('Test environment successfully created')
         else:
             print('Production environment successfully created')
@@ -315,10 +314,7 @@ def drop_and_rebuild_tst_database():
         qdb.sql_connection.TRN.add(
             "UPDATE settings SET current_patch = 'unpatched'")
         # Create the database and apply patches
-        create_layout_and_patch()
-        # Populate the database
-        with open(POPULATE_FP, 'U') as f:
-            qdb.sql_connection.TRN.add(f.read())
+        create_layout_and_patch(test=True)
 
         qdb.sql_connection.TRN.execute()
 
@@ -361,7 +357,7 @@ def clean_test_environment():
     dummyfunc()
 
 
-def patch(patches_dir=PATCHES_DIR, verbose=False):
+def patch(patches_dir=PATCHES_DIR, verbose=False, test=False):
     """Patches the database schema based on the SETTINGS table
 
     Pulls the current patch from the settings table and applies all subsequent
@@ -387,6 +383,11 @@ def patch(patches_dir=PATCHES_DIR, verbose=False):
 
         for sql_patch_fp in sql_patch_files[next_patch_index:]:
             sql_patch_filename = basename(sql_patch_fp)
+
+            # patch 43.sql is when we started testing patches
+            if sql_patch_filename == '43.sql' and test:
+                _populate_test_db()
+
             py_patch_fp = corresponding_py_patch(
                 splitext(basename(sql_patch_fp))[0] + '.py')
             py_patch_filename = basename(py_patch_fp)

@@ -320,6 +320,45 @@ class ArtifactTestsReadOnly(TestCase):
         obs_edges = obs.edges()
         self.assertItemsEqual(obs_edges, [])
 
+    def test_descendants_with_jobs(self):
+        A = qdb.artifact.Artifact
+        obs = A(1).descendants_with_jobs
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        # as jobs are created at random we will only check that the artifacts
+        # are there and that the number of jobs matches
+        exp_nodes = [('artifact', A(1)), ('artifact', A(2)),
+                     ('artifact', A(3)), ('artifact', A(4)),
+                     ('artifact', A(5)), ('artifact', A(6))]
+        for e in exp_nodes:
+            self.assertIn(e, obs_nodes)
+        self.assertEqual(5, len([e for dt, e in obs_nodes if dt == 'job']))
+        obs_edges = obs.edges()
+        # as jobs are created at random we will only check the number of pairs
+        # matches and they are instances of what we expect
+        self.assertEqual(10, len(obs_edges))
+        self.assertEqual(2, len([x for x, y in obs_edges
+                                 if x[1] == A(1) and y[0] == 'job']))
+        self.assertEqual(3, len([x for x, y in obs_edges
+                                 if x[1] == A(2) and y[0] == 'job']))
+        self.assertEqual(1, len([y for x, y in obs_edges
+                                 if y[1] == A(2) and x[0] == 'job']))
+        self.assertEqual(1, len([y for x, y in obs_edges
+                                 if y[1] == A(3) and x[0] == 'job']))
+        self.assertEqual(1, len([y for x, y in obs_edges
+                                 if y[1] == A(4) and x[0] == 'job']))
+        self.assertEqual(1, len([y for x, y in obs_edges
+                                 if y[1] == A(5) and x[0] == 'job']))
+        self.assertEqual(1, len([y for x, y in obs_edges
+                                 if y[1] == A(6) and x[0] == 'job']))
+
+        obs = A(3).descendants
+        self.assertTrue(isinstance(obs, nx.DiGraph))
+        obs_nodes = obs.nodes()
+        self.assertItemsEqual(obs_nodes, [A(3)])
+        obs_edges = obs.edges()
+        self.assertItemsEqual(obs_edges, [])
+
     def test_children(self):
         exp = [qdb.artifact.Artifact(2), qdb.artifact.Artifact(3)]
         self.assertEqual(qdb.artifact.Artifact(1).children, exp)
@@ -366,9 +405,11 @@ class ArtifactTestsReadOnly(TestCase):
             qdb.processing_job.ProcessingJob(
                 'bcc7ebcd-39c1-43e4-af2d-822e3589f14d'),
             qdb.processing_job.ProcessingJob(
-                'b72369f9-a886-4193-8d3d-f7b504168e75')
-            ]
-        self.assertEqual(obs, exp)
+                'b72369f9-a886-4193-8d3d-f7b504168e75')]
+
+        # there are some extra jobs randomly generated, not testing those
+        for e in exp:
+            self.assertIn(e, obs)
 
     def test_jobs_cmd(self):
         cmd = qdb.software.Command(1)
@@ -383,7 +424,9 @@ class ArtifactTestsReadOnly(TestCase):
             qdb.processing_job.ProcessingJob(
                 'b72369f9-a886-4193-8d3d-f7b504168e75')
             ]
-        self.assertEqual(obs, exp)
+        # there are some extra jobs randomly generated, not testing those
+        for e in exp:
+            self.assertIn(e, obs)
 
         cmd = qdb.software.Command(2)
         obs = qdb.artifact.Artifact(1).jobs(cmd=cmd)
@@ -401,7 +444,9 @@ class ArtifactTestsReadOnly(TestCase):
             qdb.processing_job.ProcessingJob(
                 'b72369f9-a886-4193-8d3d-f7b504168e75')
             ]
-        self.assertEqual(obs, exp)
+        # there are some extra jobs randomly generated, not testing those
+        for e in exp:
+            self.assertIn(e, obs)
 
         obs = qdb.artifact.Artifact(1).jobs(status='running')
         exp = [qdb.processing_job.ProcessingJob(
@@ -424,7 +469,9 @@ class ArtifactTestsReadOnly(TestCase):
             qdb.processing_job.ProcessingJob(
                 'b72369f9-a886-4193-8d3d-f7b504168e75')
             ]
-        self.assertEqual(obs, exp)
+        # there are some extra jobs randomly generated, not testing those
+        for e in exp:
+            self.assertIn(e, obs)
 
         obs = qdb.artifact.Artifact(1).jobs(cmd=cmd, status='queued')
         exp = [qdb.processing_job.ProcessingJob(

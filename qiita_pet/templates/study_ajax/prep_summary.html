@@ -14,19 +14,30 @@
    * in the target div
    *
    */
-  function draw_graph(nodes, edges, target, on_select_f) {
+  function draw_graph(nodes, edges, target) {
     var container = document.getElementById(target);
     container.innerHTML = "";
+
+    var nodes = new vis.DataSet(nodes);
+    var edges = new vis.DataSet(edges);
     var data = {
       nodes: nodes,
       edges: edges
     };
     var options = {
       nodes: {
-        color: '#ffffff',
-        font: '14px arial black'
+        shape: 'dot',
+        font: {
+            size: 16,
+            color: '#000000'
+        },
+        size: 13,
+        borderWidth: 2,
       },
-      layout : {
+      edges: {
+        color: 'grey'
+      },
+      layout: {
         hierarchical: {
           direction: "LR",
           sortMethod: "directed",
@@ -35,13 +46,38 @@
       },
       interaction: {
         dragNodes: false,
-        dragView: false,
-        zoomView: false
+        dragView: true,
+        zoomView: true,
+        selectConnectedEdges: true,
+        navigationButtons: true,
+        keyboard: true
+      },
+      groups: {
+        jobs: {
+          color: '#FF9152'
+        },
+        artifact: {
+          color: '#FFFFFF'
+        }
       }
     };
-    network = new vis.Network(container, data, options);
 
-    network.on('select', on_select_f);
+    var network = new vis.Network(container, data, options);
+    network.on("click", function (properties) {
+      var ids = properties.nodes;
+      if (ids.length == 0) {
+        return
+      }
+      // [0] cause only users can only select 1 node
+      var clickedNode = nodes.get(ids)[0];
+
+      if (clickedNode.group == 'artifact') {
+        var artifact_id = +ids[0];
+        load_artifact_summary(artifact_id);
+      } else {
+        $("#prep-artifact-summary-div").html("");
+      }
+    });
   }
 
   /*
@@ -195,28 +231,23 @@
         var nodes = [];
 
         for(var i=0; i<data.edge_list.length; i++) {
-          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1]});
+          edges.push({from: data.edge_list[i][0], to: data.edge_list[i][1], arrows:'to'});
         }
-        // format nore depth data
+        // format more depth data
         for(var i=0; i<data.node_labels.length; i++) {
-          nodes.push({id: data.node_labels[i][0], label: data.node_labels[i][1], shape: 'box'});
+          nodes.push({id: data.node_labels[i][1], label: data.node_labels[i][2], group: data.node_labels[i][0]});
         }
 
         $("#graph-or-new-artifact-div").html(
           "<div class='row'>" +
             "<div class='col-md-12'>" +
               "<h4><a class='btn btn-info' id='show-hide-btn' onclick='toggle_graphs();'>-</a><i> Files network</i></h4>" +
-              "<b>(Click nodes for more information)</b>" +
+              "<b>(Click nodes for more information, blue are jobs)</b>" +
             "</div>" +
           "</div>" +
-          "<div class='row'><div class='col-md-12 graph' style='width:90%; left:20px;' id='graph-network-div'>" +
+          "<div class='row'><div class='col-md-12 graph' style='width:90%' id='graph-network-div'>" +
           "</div>");
-        draw_graph(nodes, edges, "graph-network-div", function(params) {
-          if(params.nodes.length === 1) {
-            var artifact_id = +params.nodes[0];
-            load_artifact_summary(artifact_id);
-          }
-        });
+        draw_graph(nodes, edges, "graph-network-div");
       });
   }
 
@@ -446,7 +477,7 @@
 
 <!-- Files graph or add artifact -->
 <div class="row">
-  <div class="col-md-10" id="graph-or-new-artifact-div">
+  <div class="col-md-12" style="width:90%;" id="graph-or-new-artifact-div">
   </div>
 </div>
 

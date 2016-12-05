@@ -224,5 +224,20 @@ class TestSQL(TestCase):
         obs = self.conn_handler.execute_fetchall(sql)
         self.assertEqual(exp, obs)
 
+    def test_artifact_descendants_with_jobs(self):
+        """Test SQL function artifact_descendants_with_jobs"""
+        exp = [['c350b068-add7-49a5-8846-604ac032cc88', 1, 2],
+               ['d883dab4-503b-45c2-815d-2126ff52dede', 1, 3],
+               ['a4c4b9b9-20ca-47f5-bd30-725cce71df2b', 2, 4],
+               ['624dce65-43a5-4156-a4b6-6c1d02114b67', 2, 5],
+               ['81bbe8d0-b4c2-42eb-ada9-f07c1c91e59f', 2, 6]]
+        sql = """SELECT * FROM qiita.artifact_descendants_with_jobs(1)"""
+        obs = self.conn_handler.execute_fetchall(sql)
+
+        # lopping on results to not test the job id as is randomly generated
+        for e, o in zip(exp, obs):
+            self.assertEqual(e[1:], o[1:])
+
+
 if __name__ == '__main__':
     main()
