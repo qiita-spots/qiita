@@ -238,7 +238,7 @@ def make_environment(load_ontologies, download_reference, add_demo_user):
                 VALUES
                 ('demo@microbio.me', 4,
                 '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe',
-                'Demo', 'Qitta Dev', '1345 Colorado Avenue', '303-492-1984')"""
+                'Demo', 'Qiita Dev', '1345 Colorado Avenue', '303-492-1984')"""
             qdb.sql_connection.TRN.add(sql)
             sql = """INSERT INTO qiita.analysis (email, name, description,
                                                  dflt, analysis_status_id)

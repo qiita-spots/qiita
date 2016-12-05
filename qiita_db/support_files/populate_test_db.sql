@@ -21,7 +21,7 @@ INSERT INTO qiita.qiita_user (email, user_level_id, password, name,
     '222-444-6789'),
     ('demo@microbio.me', 4,
     '$2a$12$gnUi8Qg.0tvW243v889BhOBhWLIHyIJjjgaG6dxuRJkUM8nXG9Efe', 'Demo',
-    'Qitta Dev', '1345 Colorado Avenue', '303-492-1984');
+    'Qiita Dev', '1345 Colorado Avenue', '303-492-1984');
 
 -- Insert some study persons
 INSERT INTO qiita.study_person (name, email, affiliation, address, phone) VALUES

@@ -49,9 +49,11 @@ class AuthCreateHandler(BaseHandler):
                 url = qiita_config.base_url + qiita_config.portal_dir
                 send_email(username, "QIITA: Verify Email Address", "Please "
                            "click the following link to verify email address: "
-                           "%s/auth/verify/%s?email=%s"
+                           "%s/auth/verify/%s?email=%s\n\nBy clicking you are "
+                           "accepting our term and conditions: "
+                           "%s/static/qiita_data_terms_of_use.html"
                            % (url, info['user_verify_code'],
-                              url_escape(username)))
+                              url_escape(username), url))
             except:
                 msg = ("Unable to send verification email. Please contact the "
                        "qiita developers at <a href='mailto:qiita-help"
