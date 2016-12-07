@@ -418,8 +418,9 @@ def start(port, master):
     r_client.delete('qiita-usernames')
     r_client.zadd('qiita-usernames', **{u: 0 for u in qdb.user.User.iter()})
 
-    if qiita_config.log_path:
-        options.log_file_prefix = qiita_config.log_path
+    if qiita_config.log_dir:
+        options.log_file_prefix = join(qiita_config.log_dir,
+                                       'qiita_%d.log' % port)
         options.logging = 'debug'
         parse_command_line()
     ssl_options = {"certfile": qiita_config.certificate_file,
