@@ -1060,5 +1060,14 @@ class ArtifactTests(TestCase):
         self.assertEqual(a.html_summary_fp[1], exp2)
         self.assertFalse(exists(exp1))
 
+    def test_descendants_with_jobs_one_element(self):
+        artifact = qdb.artifact.Artifact.create(
+            self.filepaths_root, 'FASTQ', prep_template=self.prep_template)
+
+        obs = self.prep_template.artifact.descendants_with_jobs.nodes()
+        exp = [('artifact', artifact)]
+        self.assertEqual(obs, exp)
+
+
 if __name__ == '__main__':
     main()
