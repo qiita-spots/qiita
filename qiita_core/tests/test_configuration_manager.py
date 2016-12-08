@@ -44,7 +44,7 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.conf_fp, self.conf_fp)
         self.assertTrue(obs.test_environment)
         self.assertEqual(obs.base_data_dir, "/tmp/")
-        self.assertEqual(obs.log_path, "/tmp/qiita.log")
+        self.assertEqual(obs.log_dir, "/tmp/")
         self.assertEqual(obs.base_url, "https://localhost")
         self.assertEqual(obs.max_upload_size, 100)
         self.assertTrue(obs.require_approval)
@@ -201,7 +201,7 @@ CONF = """
 TEST_ENVIRONMENT = TRUE
 
 # Absolute path to write log file to. If not given, no log file will be created
-LOG_PATH = /tmp/qiita.log
+LOG_DIR = /tmp/
 
 # Whether studies require admin approval to be made available
 REQUIRE_APPROVAL = True

@@ -17,7 +17,7 @@ import warnings
 from .exceptions import MissingConfigSection
 
 with standard_library.hooks():
-    from configparser import ConfigParser
+    from configparser import ConfigParser, Error, NoOptionError
 
 
 class ConfigurationManager(object):
@@ -35,7 +35,9 @@ class ConfigurationManager(object):
     base_url: str
         base URL for the website, in the form http://SOMETHING.com
     base_data_dir : str
-        Path to the base directorys where all data file are stored
+        Path to the base directory where all data files are stored.
+    log_dir : str
+        Path to the directory where the log files are saved.
     working_dir : str
         Path to the working directory
     max_upload_size : int
@@ -118,6 +120,11 @@ class ConfigurationManager(object):
         The script used to start the plugins
     plugin_dir : str
         The path to the directory containing the plugin configuration files
+
+    Raises
+    ------
+    Error
+        When an option is no longer available.
     """
     def __init__(self):
         # If conf_fp is None, we default to the test configuration file
@@ -157,7 +164,21 @@ class ConfigurationManager(object):
         self.base_data_dir = config.get('main', 'BASE_DATA_DIR') or \
             default_base_data_dir
 
-        self.log_path = config.get('main', 'LOG_PATH')
+        try:
+            log_path = config.get('main', 'LOG_PATH')
+            if log_path:
+                raise Error('The option LOG_PATH in the main section is no '
+                            'longer supported, use LOG_DIR instead.')
+        except NoOptionError:
+            pass
+
+        self.log_dir = config.get('main', 'LOG_DIR')
+        if self.log_dir:
+            # if the option is a directory, it will exist
+            if not isdir(self.log_dir):
+                raise ValueError("The LOG_DIR (%s) option is required to be a "
+                                 "directory." % self.log_dir)
+
         self.base_url = config.get('main', 'BASE_URL')
 
         if not isdir(self.base_data_dir):
