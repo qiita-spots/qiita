@@ -1002,7 +1002,7 @@ class Artifact(qdb.base.QiitaObject):
                 lineage.add_edge(nodes[pid], nodes[jid])
                 lineage.add_edge(nodes[jid], nodes[cid])
         else:
-            lineage.add_node(self)
+            lineage.add_node(('artifact', self))
 
         return lineage
 
