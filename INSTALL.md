@@ -112,7 +112,7 @@ pip install https://github.com/biocore/mustached-octo-ironman/archive/master.zip
 Install Qiita (this occurs through setuptools' `setup.py` file in the qiita directory):
 
 ```bash
-pip install -e .
+pip install -e . --process-dependency-links
 ```
 
 At this point, Qiita will be installed and the system will start. However,
