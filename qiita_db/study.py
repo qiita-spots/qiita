@@ -258,7 +258,7 @@ class Study(qdb.base.QiitaObject):
                      FROM qiita.study
                      LEFT JOIN (
                             SELECT study_id,
-                              array_agg(ARRAY[publication, is_doi::text])
+                            array_agg(row_to_json((publication, is_doi), true))
                                 AS publications
                             FROM qiita.study_publication
                             GROUP BY study_id)

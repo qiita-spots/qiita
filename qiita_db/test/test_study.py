@@ -209,9 +209,10 @@ class TestStudy(TestCase):
             'funding': None, 'vamps_id': None,
             'first_contact': datetime(2014, 5, 19, 16, 10),
             'principal_investigator_id': 3, 'timeseries_type_id': 1,
-            'publications': [
-                ['10.100/123456', 'true'], ['123456', 'false'],
-                ['10.100/7891011', 'true'], ['7891011', 'false']],
+            'publications': [{'f1': '10.100/123456', 'f2': True},
+                             {'f1': '123456', 'f2': False},
+                             {'f1': '10.100/7891011', 'f2': True},
+                             {'f1': '7891011', 'f2': False}],
             'study_alias': 'Cannabis Soils',
             'spatial_series': False,
             'study_abstract': 'This is a preliminary study to examine the '
@@ -243,9 +244,10 @@ class TestStudy(TestCase):
         exp = {
             'metadata_complete': True, 'reprocess': False,
             'timeseries_type': 'None',
-            'publications': [
-                ['10.100/123456', 'true'], ['123456', 'false'],
-                ['10.100/7891011', 'true'], ['7891011', 'false']],
+            'publications': [{'f1': '10.100/123456', 'f2': True},
+                             {'f1': '123456', 'f2': False},
+                             {'f1': '10.100/7891011', 'f2': True},
+                             {'f1': '7891011', 'f2': False}],
             'study_title': 'Identification of the Microbiomes for Cannabis '
             'Soils'}
         self.assertEqual(obs, exp)
@@ -264,9 +266,11 @@ class TestStudy(TestCase):
 
         s = qdb.study.Study.create(user, 'test_study_1', efo=[1], info=info)
         obs = qdb.study.Study.get_info(info_cols=exp_keys)
-        exp = [[True, [['10.100/123456', 'true'], ['123456', 'false'],
-                       ['10.100/7891011', 'true'], ['7891011', 'false']],
-                False, 'Identification of the Microbiomes for Cannabis Soils',
+        exp = [[True, [{'f1': '7891011', 'f2': False},
+                       {'f1': '10.100/7891011', 'f2': True},
+                       {'f1': '123456', 'f2': False},
+                       {'f1': '10.100/123456', 'f2': True}], False,
+                'Identification of the Microbiomes for Cannabis Soils',
                 'None'],
                [False, None, False, 'test_study_1', 'None']]
         self.assertEqual(obs, exp)

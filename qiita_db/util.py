@@ -1308,7 +1308,7 @@ def generate_study_list(study_ids, build_samples, public_only=False):
                 WHERE study_id = qiita.study.study_id)
                 AS artifacts_visibility,
     - all the publications that belong to the study
-            (SELECT array_agg(ARRAY[publication, is_doi::text]))
+            (SELECT array_agg((publication, is_doi)))
                 FROM qiita.study_publication
                 WHERE study_id=qiita.study.study_id) AS publications,
     - all names sorted by email of users that have access to the study
@@ -1376,7 +1376,7 @@ def generate_study_list(study_ids, build_samples, public_only=False):
                     LEFT JOIN qiita.visibility USING (visibility_id)
                     WHERE study_id = qiita.study.study_id)
                     AS artifacts_visibility,
-                (SELECT array_agg(ARRAY[publication, is_doi::text])
+                (SELECT array_agg(row_to_json((publication, is_doi), true))
                     FROM qiita.study_publication
                     WHERE study_id=qiita.study.study_id) AS publications,
                 (SELECT array_agg(name ORDER BY email) FROM qiita.study_users
@@ -1400,8 +1400,11 @@ def generate_study_list(study_ids, build_samples, public_only=False):
             info['publication_doi'] = []
             info['publication_pid'] = []
             if info['publications'] is not None:
-                for pub, is_doi in info['publications']:
-                    if is_doi == 'true':
+                for p in info['publications']:
+                    # f1-2 are the default names given
+                    pub = p['f1']
+                    is_doi = p['f2']
+                    if is_doi:
                         info['publication_doi'].append(pub)
                     else:
                         info['publication_pid'].append(pub)
