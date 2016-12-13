@@ -85,8 +85,9 @@ class TestEBISubmission(TestCase):
         self.assertEqual(e.investigation_type, 'Metagenomics')
         self.assertIsNone(e.new_investigation_type)
         self.assertItemsEqual(e.sample_template, e.samples)
-        self.assertItemsEqual(e.publications, [['10.100/123456', '123456'],
-                                               ['10.100/7891011', '7891011']])
+        self.assertItemsEqual(e.publications, [
+            ['10.100/123456', True], ['123456', False],
+            ['10.100/7891011', True], ['7891011', False]])
         self.assertEqual(e.action, action)
 
         self.assertEqual(e.ascp_reply, join(e.full_ebi_dir, 'ascp_reply.txt'))

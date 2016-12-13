@@ -346,11 +346,11 @@ class EBISubmission(object):
         # Add pubmed IDs
         if self.publications:
             study_links = ET.SubElement(study, 'STUDY_LINKS')
-            for doi, pmid in self.publications:
-                if doi is not None:
-                    self._get_publication_element(study_links, doi, 'DOI')
-                if pmid is not None:
-                    self._get_publication_element(study_links, pmid, 'PUBMED')
+            for pub, is_doi in self.publications:
+                if is_doi:
+                    self._get_publication_element(study_links, pub, 'DOI')
+                else:
+                    self._get_publication_element(study_links, pub, 'PUBMED')
 
         return study_set
 

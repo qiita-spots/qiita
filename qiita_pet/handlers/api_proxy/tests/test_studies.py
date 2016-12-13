@@ -389,8 +389,8 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success',
                'message': '',
                'remaining': ['uploaded_file.txt'],
-               'file_types': [('raw_forward_seqs', True, []),
-                              ('raw_barcodes', True, []),
+               'file_types': [('raw_barcodes', True, []),
+                              ('raw_forward_seqs', True, []),
                               ('raw_reverse_seqs', False, [])],
                'num_prefixes': 1,
                'artifacts': [(1, 'Identification of the Microbiomes for '
@@ -401,8 +401,8 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success',
                'message': '',
                'remaining': ['uploaded_file.txt'],
-               'file_types': [('raw_forward_seqs', True, []),
-                              ('raw_barcodes', True, []),
+               'file_types': [('raw_barcodes', True, []),
+                              ('raw_forward_seqs', True, []),
                               ('raw_reverse_seqs', False, [])],
                'num_prefixes': 1,
                'artifacts': [(1, 'Identification of the Microbiomes for '
@@ -431,8 +431,8 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success',
                'message': '',
                'remaining': [],
-               'file_types': [('raw_forward_seqs', True, []),
-                              ('raw_barcodes', True, []),
+               'file_types': [('raw_barcodes', True, []),
+                              ('raw_forward_seqs', True, []),
                               ('raw_reverse_seqs', False, [])],
                'num_prefixes': 1,
                'artifacts': [(1, 'Identification of the Microbiomes for '
@@ -443,8 +443,8 @@ class TestStudyAPI(TestCase):
         exp = {'status': 'success',
                'message': '',
                'remaining': [],
-               'file_types': [('raw_forward_seqs', True, []),
-                              ('raw_barcodes', True, []),
+               'file_types': [('raw_barcodes', True, []),
+                              ('raw_forward_seqs', True, []),
                               ('raw_reverse_seqs', False, [])],
                'num_prefixes': 1,
                'artifacts': []}
