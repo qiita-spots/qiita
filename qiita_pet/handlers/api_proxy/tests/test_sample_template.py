@@ -183,6 +183,13 @@ class TestSampleAPI(TestCase):
         self.assertEqual(obs_at, "error")
         self.assertEqual(obs_am, "Some</br>error")
 
+        # With job expired
+        r_client.set(key, dumps({'job_id': "non_existent_job"}))
+        obs_proc, obs_at, obs_am = get_sample_template_processing_status(1)
+        self.assertFalse(obs_proc)
+        self.assertEqual(obs_at, "")
+        self.assertEqual(obs_am, "")
+
     def test_sample_template_summary_get_req(self):
         obs = sample_template_summary_get_req(1, 'test@foo.bar')
         exp = {
