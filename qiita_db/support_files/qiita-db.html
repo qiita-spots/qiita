@@ -947,17 +947,7 @@ table {
 	processing_job references processing_job_status ( processing_job_status_id )</title>
 </path>
 <text x='2008' y='1515' transform='rotate(90 2008,1515)' title='Foreign Key fk_processing_job_status
-	processing_job references processing_job_status ( processing_job_status_id )' style='fill:#a1a0a0;'>processing_job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2175 1380 L 2160,1380' >
-	<title>Foreign Key fk_processing_job_validator
-	processing_job_validator references processing_job ( processing_job_id )</title>
-</path>
-<text x='2078' y='1375' transform='rotate(0 2078,1375)' title='Foreign Key fk_processing_job_validator
-	processing_job_validator references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2175 1395 L 2160,1395' >
-	<title>Foreign Key fk_processing_job_validator_0
-	processing_job_validator references processing_job ( validator_id -> processing_job_id )</title>
-</path>
-<text x='2114' y='1390' transform='rotate(0 2114,1390)' title='Foreign Key fk_processing_job_validator_0
-	processing_job_validator references processing_job ( validator_id -> processing_job_id )' style='fill:#a1a0a0;'>validator_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2355 1440 L 2355,1192 Q 2355,1185 2347,1185 L 2085,1185' >
+	processing_job references processing_job_status ( processing_job_status_id )' style='fill:#a1a0a0;'>processing_job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2355 1440 L 2355,1192 Q 2355,1185 2347,1185 L 2085,1185' >
 	<title>Foreign Key fk_default_workflow_edge_connections
 	default_workflow_edge_connections references command_output ( parent_output_id -> command_output_id )</title>
 </path>
@@ -972,7 +962,17 @@ table {
 	default_workflow_edge_connections references default_workflow_edge ( default_workflow_edge_id )</title>
 </path>
 <text x='2557' y='1465' transform='rotate(0 2557,1465)' title='Foreign Key fk_default_workflow_edge_connections_1
-	default_workflow_edge_connections references default_workflow_edge ( default_workflow_edge_id )' style='fill:#a1a0a0;'>default_workflow_edge_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	default_workflow_edge_connections references default_workflow_edge ( default_workflow_edge_id )' style='fill:#a1a0a0;'>default_workflow_edge_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2175 1380 L 2160,1380' >
+	<title>Foreign Key fk_processing_job_validator
+	processing_job_validator references processing_job ( processing_job_id )</title>
+</path>
+<text x='2078' y='1375' transform='rotate(0 2078,1375)' title='Foreign Key fk_processing_job_validator
+	processing_job_validator references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2175 1395 L 2160,1395' >
+	<title>Foreign Key fk_processing_job_validator_0
+	processing_job_validator references processing_job ( validator_id -> processing_job_id )</title>
+</path>
+<text x='2114' y='1390' transform='rotate(0 2114,1390)' title='Foreign Key fk_processing_job_validator_0
+	processing_job_validator references processing_job ( validator_id -> processing_job_id )' style='fill:#a1a0a0;'>validator_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1688' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1714.50 L 45.50 1695.50 Q 45.50 1688.50 52.50 1688.50 L 187.50 1688.50 Q 194.50 1688.50 194.50 1695.50 L 194.50 1714.50 L45.50 1714.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1702' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -2265,9 +2265,9 @@ Referred by artifact_processing_job ( processing_job_id )
 Referred by parent_processing_job ( parent_id -> processing_job_id ) 
 Referred by parent_processing_job ( child_id -> processing_job_id ) 
 Referred by prep_template_processing_job ( processing_job_id ) 
-Referred by processing_job_workflow_root ( processing_job_id ) 
 Referred by processing_job_validator ( processing_job_id ) 
-Referred by processing_job_validator ( validator_id -> processing_job_id ) </title></a>
+Referred by processing_job_validator ( validator_id -> processing_job_id ) 
+Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
   <use id='nn' x='1982' y='1377' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='1982' y='1376' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#processing_job.email'><text x='1998' y='1387'>email</text><title>email varchar not null
 The user that launched the job</title></a>
@@ -2290,17 +2290,6 @@ The last heartbeat received by this job</title></a>
   <a xlink:href='#processing_job.step'><text x='1998' y='1477'>step</text><title>step varchar</title></a>
   <a xlink:href='#processing_job.pending'><text x='1998' y='1492'>pending</text><title>pending varchar</title></a>
 
-<!-- ============= Table 'processing_job_validator' ============= -->
-<rect class='table' x='2190' y='1373' width='150' height='75' rx='7' ry='7' />
-<path d='M 2190.50 1399.50 L 2190.50 1380.50 Q 2190.50 1373.50 2197.50 1373.50 L 2332.50 1373.50 Q 2339.50 1373.50 2339.50 1380.50 L 2339.50 1399.50 L2190.50 1399.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#processing_job_validator'><text x='2197' y='1387' class='tableTitle'>processing_job_validator</text><title>Table qiita.processing_job_validator</title></a>
-  <use id='nn' x='2192' y='1407' xlink:href='#nn'/><a xlink:href='#processing_job_validator.processing_job_id'><use id='pk' x='2192' y='1406' xlink:href='#pk'/><title>Index  ( processing_job_id ) Primary Key  ( processing_job_id, validator_id ) </title></a>
-<a xlink:href='#processing_job_validator.processing_job_id'><text x='2208' y='1417'>processing_job_id</text><title>processing_job_id bigint not null</title></a>
-<a xlink:href='#processing_job_validator.processing_job_id'><use id='fk' x='2328' y='1406' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
-  <use id='nn' x='2192' y='1422' xlink:href='#nn'/><a xlink:href='#processing_job_validator.validator_id'><use id='pk' x='2192' y='1421' xlink:href='#pk'/><title>Index  ( validator_id ) Primary Key  ( processing_job_id, validator_id ) </title></a>
-<a xlink:href='#processing_job_validator.validator_id'><text x='2208' y='1432'>validator_id</text><title>validator_id bigint not null</title></a>
-<a xlink:href='#processing_job_validator.validator_id'><use id='fk' x='2328' y='1421' xlink:href='#fk'/><title>References processing_job ( validator_id -> processing_job_id ) </title></a>
-
 <!-- ============= Table 'default_workflow_edge_connections' ============= -->
 <rect class='table' x='2340' y='1448' width='210' height='90' rx='7' ry='7' />
 <path d='M 2340.50 1474.50 L 2340.50 1455.50 Q 2340.50 1448.50 2347.50 1448.50 L 2542.50 1448.50 Q 2549.50 1448.50 2549.50 1455.50 L 2549.50 1474.50 L2340.50 1474.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
@@ -2314,6 +2303,18 @@ The last heartbeat received by this job</title></a>
   <use id='nn' x='2342' y='1512' xlink:href='#nn'/><a xlink:href='#default_workflow_edge_connections.child_input_id'><use id='pk' x='2342' y='1511' xlink:href='#pk'/><title>Primary Key  ( default_workflow_edge_id, parent_output_id, child_input_id ) Index  ( child_input_id ) </title></a>
 <a xlink:href='#default_workflow_edge_connections.child_input_id'><text x='2358' y='1522'>child_input_id</text><title>child_input_id bigint not null</title></a>
 <a xlink:href='#default_workflow_edge_connections.child_input_id'><use id='fk' x='2538' y='1511' xlink:href='#fk'/><title>References command_parameter ( child_input_id -> command_parameter_id ) </title></a>
+
+<!-- ============= Table 'processing_job_validator' ============= -->
+<rect class='table' x='2190' y='1373' width='150' height='90' rx='7' ry='7' />
+<path d='M 2190.50 1399.50 L 2190.50 1380.50 Q 2190.50 1373.50 2197.50 1373.50 L 2332.50 1373.50 Q 2339.50 1373.50 2339.50 1380.50 L 2339.50 1399.50 L2190.50 1399.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#processing_job_validator'><text x='2197' y='1387' class='tableTitle'>processing_job_validator</text><title>Table qiita.processing_job_validator</title></a>
+  <use id='nn' x='2192' y='1407' xlink:href='#nn'/><a xlink:href='#processing_job_validator.processing_job_id'><use id='pk' x='2192' y='1406' xlink:href='#pk'/><title>Index  ( processing_job_id ) Primary Key  ( processing_job_id, validator_id ) </title></a>
+<a xlink:href='#processing_job_validator.processing_job_id'><text x='2208' y='1417'>processing_job_id</text><title>processing_job_id bigint not null</title></a>
+<a xlink:href='#processing_job_validator.processing_job_id'><use id='fk' x='2328' y='1406' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
+  <use id='nn' x='2192' y='1422' xlink:href='#nn'/><a xlink:href='#processing_job_validator.validator_id'><use id='pk' x='2192' y='1421' xlink:href='#pk'/><title>Index  ( validator_id ) Primary Key  ( processing_job_id, validator_id ) </title></a>
+<a xlink:href='#processing_job_validator.validator_id'><text x='2208' y='1432'>validator_id</text><title>validator_id bigint not null</title></a>
+<a xlink:href='#processing_job_validator.validator_id'><use id='fk' x='2328' y='1421' xlink:href='#fk'/><title>References processing_job ( validator_id -> processing_job_id ) </title></a>
+  <a xlink:href='#processing_job_validator.artifact_info'><text x='2208' y='1447'>artifact_info</text><title>artifact_info varchar</title></a>
 
 </g></svg>
 
@@ -6528,49 +6529,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='processing_job_validator'>Table processing_job_validator</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='processing_job_validator.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='processing_job_validator.validator_id'>validator&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;processing&#095;job&#095;validator </td>
-		<td> ON processing&#095;job&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processing&#095;job&#095;validator </td>
-		<td> ON validator&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;processing&#095;job&#095;validator&#095;0 primary key</td>
-		<td> ON processing&#095;job&#095;id&#044; validator&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_processing_job_validator</td>
-		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_processing_job_validator_0</td>
-		<td > ( validator&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='default_workflow_edge_connections'>Table default_workflow_edge_connections</a></th></tr>
 </thead>
 <tbody>
@@ -6620,6 +6578,54 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_default_workflow_edge_connections_1</td>
 		<td > ( default&#095;workflow&#095;edge&#095;id ) ref <a href='#default&#095;workflow&#095;edge'>default&#095;workflow&#095;edge</a> (default&#095;workflow&#095;edge&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='processing_job_validator'>Table processing_job_validator</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='processing_job_validator.processing_job_id'>processing&#095;job&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job_validator.validator_id'>validator&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='processing_job_validator.artifact_info'>artifact&#095;info</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;validator </td>
+		<td> ON processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;validator </td>
+		<td> ON validator&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;processing&#095;job&#095;validator&#095;0 primary key</td>
+		<td> ON processing&#095;job&#095;id&#044; validator&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_processing_job_validator</td>
+		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_processing_job_validator_0</td>
+		<td > ( validator&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
