@@ -924,6 +924,9 @@ class ArtifactTests(TestCase):
                                  'cmd_out_id': 3})}
             )
         )
+        parent = qdb.processing_job.ProcessingJob(
+            "bcc7ebcd-39c1-43e4-af2d-822e3589f14d")
+        parent._set_validator_jobs([job])
         job._set_status('running')
         job.complete(True, artifacts_data=data)
         job = qdb.processing_job.ProcessingJob(
