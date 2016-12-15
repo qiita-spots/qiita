@@ -282,6 +282,75 @@ class ProcessingJobTest(TestCase):
                 qdb.exceptions.QiitaDBOperationNotPermittedError):
             job.submit()
 
+    def test_complete_multiple_outputs(self):
+        # This test performs the test of multiple functions at the same
+        # time. "release", "release_validators" and
+        # "_set_validator_jobs" are tested here for correct execution.
+        # Those functions are designed to work together, so it becomes
+        # really hard to test each of the funrcions individually for
+        # successfull execution.
+        # We need to create a new command with multiple outputs, since
+        # in the test DB there is no command with such caracteristics
+        cmd = qdb.software.Command.create(
+            qdb.software.Software(1),
+            "TestCommand", "Test command",
+            {'input': ['artifact:["Demultiplexed"]', None]},
+            {'out1': 'BIOM', 'out2': 'BIOM'})
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                cmd,
+                values_dict={"input": 1}))
+        job._set_status("running")
+
+        fd, fp1 = mkstemp(suffix="_table.biom")
+        self._clean_up_files.append(fp1)
+        close(fd)
+        with open(fp1, 'w') as f:
+            f.write('\n')
+
+        fd, fp2 = mkstemp(suffix="_table.biom")
+        self._clean_up_files.append(fp2)
+        close(fd)
+        with open(fp2, 'w') as f:
+            f.write('\n')
+
+        params = qdb.software.Parameters.load(
+            qdb.software.Command(4),
+            values_dict={'template': 1, 'files': fp1,
+                         'artifact_type': 'BIOM',
+                         'provenance': dumps(
+                            {'job': job.id,
+                             'cmd_out_id': qdb.util.convert_to_id(
+                                'out1', "command_output", "name")})})
+        user = qdb.user.User('test@foo.bar')
+        obs1 = qdb.processing_job.ProcessingJob.create(user, params)
+        obs1._set_status('running')
+        params = qdb.software.Parameters.load(
+            qdb.software.Command(4),
+            values_dict={'template': 1, 'files': fp2,
+                         'artifact_type': 'BIOM',
+                         'provenance': dumps(
+                            {'job': job.id,
+                             'cmd_out_id': qdb.util.convert_to_id(
+                                'out1', "command_output", "name")})})
+        obs2 = qdb.processing_job.ProcessingJob.create(user, params)
+        obs2._set_status('running')
+        job._set_validator_jobs([obs1, obs2])
+
+        artifact_data_1 = {'filepaths': [(fp1, 'biom')],
+                           'artifact_type': 'BIOM'}
+        obs1._complete_artifact_definition(artifact_data_1)
+        self.assertEqual(obs1.status, 'waiting')
+        self.assertEqual(job.status, 'running')
+
+        artifact_data_2 = {'filepaths': [(fp2, 'biom')],
+                           'artifact_type': 'BIOM'}
+        obs2._complete_artifact_definition(artifact_data_2)
+        self.assertEqual(obs1.status, 'success')
+        self.assertEqual(obs2.status, 'success')
+        self.assertEqual(job.status, 'success')
+
     def test_complete_artifact_definition(self):
         job = _create_job()
         job._set_status('running')
@@ -291,7 +360,8 @@ class ProcessingJobTest(TestCase):
         with open(fp, 'w') as f:
             f.write('\n')
 
-        artifact_data = {'filepaths': [(fp, 'biom')], 'artifact_type': 'BIOM'}
+        artifact_data = {'filepaths': [(fp, 'biom')],
+                         'artifact_type': 'BIOM'}
         params = qdb.software.Parameters.load(
             qdb.software.Command(4),
             values_dict={'template': 1, 'files': fp,
@@ -302,6 +372,7 @@ class ProcessingJobTest(TestCase):
         )
         obs = qdb.processing_job.ProcessingJob.create(
             qdb.user.User('test@foo.bar'), params)
+        job._set_validator_jobs([obs])
         obs._complete_artifact_definition(artifact_data)
         self.assertEqual(job.status, 'success')
         # Upload case implicitly tested by "test_complete_type"
@@ -517,6 +588,7 @@ class ProcessingJobTest(TestCase):
         )
         obs = qdb.processing_job.ProcessingJob.create(
             qdb.user.User('test@foo.bar'), params)
+        job._set_validator_jobs([obs])
         exp_artifact_count = qdb.util.get_count('qiita.artifact') + 1
         obs._complete_artifact_definition(artifact_data)
         self.assertEqual(job.status, 'success')
