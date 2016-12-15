@@ -451,7 +451,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(
                     sql, [dumps(artifact_data), self.id])
                 qdb.sql_connection.TRN.execute()
-                # Cant' create the artifact until all validators are completed
+                # Can't create the artifact until all validators are completed
                 self._set_status('waiting')
                 job.release_validators()
             else:
