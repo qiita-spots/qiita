@@ -196,24 +196,31 @@ def get_sample_template_processing_status(st_id):
         job_info = loads(job_info)
         job_id = job_info['job_id']
         if job_id:
-            redis_info = loads(r_client.get(job_id))
-            processing = redis_info['status_msg'] == 'Running'
-            if processing:
-                alert_type = 'info'
-                alert_msg = 'This sample template is currently being processed'
-            elif redis_info['status_msg'] == 'Success':
-                alert_type = redis_info['return']['status']
-                alert_msg = redis_info['return']['message'].replace('\n',
-                                                                    '</br>')
-                payload = {'job_id': None,
-                           'status': alert_type,
-                           'message': alert_msg}
-                r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,
-                             dumps(payload))
+            redis_info = r_client.get(job_id)
+            if redis_info:
+                redis_info = loads(redis_info)
+                processing = redis_info['status_msg'] == 'Running'
+                if processing:
+                    alert_type = 'info'
+                    alert_msg = ('This sample template is currently being '
+                                 'processed')
+                elif redis_info['status_msg'] == 'Success':
+                    alert_type = redis_info['return']['status']
+                    alert_msg = redis_info['return']['message'].replace(
+                        '\n', '</br>')
+                    payload = {'job_id': None,
+                               'status': alert_type,
+                               'message': alert_msg}
+                    r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,
+                                 dumps(payload))
+                else:
+                    alert_type = redis_info['return']['status']
+                    alert_msg = redis_info['return']['message'].replace(
+                        '\n', '</br>')
             else:
-                alert_type = redis_info['return']['status']
-                alert_msg = redis_info['return']['message'].replace('\n',
-                                                                    '</br>')
+                processing = False
+                alert_type = ''
+                alert_msg = ''
         else:
             processing = False
             alert_type = job_info['status']

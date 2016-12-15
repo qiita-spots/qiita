@@ -243,6 +243,11 @@ class TestPrepSample(TestCase):
                    "template")
         self.assertEqual(obs_msg, exp_msg)
 
+    def test_can_be_extended_duplicated_column(self):
+        """test if the template can be extended"""
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            self.prep_template.can_be_extended([], ["season_environment"])
+
     def test_metadata_headers(self):
         PT = qdb.metadata_template.prep_template.PrepTemplate
         obs = PT.metadata_headers()
@@ -1002,6 +1007,13 @@ class TestPrepTemplate(TestCase):
             qdb.metadata_template.prep_template.PrepTemplate.create(
                 self.metadata, self.test_study, self.data_type_id,
                 'Not a term')
+
+    def test_create_duplicated_column_error(self):
+        """Create raises an error if the prep has a duplicated column name"""
+        self.metadata['season_environment'] = self.metadata['primer']
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError):
+            qdb.metadata_template.prep_template.PrepTemplate.create(
+                self.metadata, self.test_study, self.data_type_id)
 
     def test_delete_error(self):
         """Try to delete a prep template that already has preprocessed data"""

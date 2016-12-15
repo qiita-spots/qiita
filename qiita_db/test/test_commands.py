@@ -457,7 +457,7 @@ SAMPLE_TEMPLATE = (
 
 PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
-    'description\tebi_submission_accession\temp_status\tprimer\t'
+    'description_prep\tebi_submission_accession\temp_status\tprimer\t'
     'run_prefix\tstr_column\tplatform\tlibrary_construction_protocol\t'
     'experiment_design_description\tinstrument_model\n'
     'SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\tskb7\tNone\tEMP\t'

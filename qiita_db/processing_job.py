@@ -332,6 +332,93 @@ class ProcessingJob(qdb.base.QiitaObject):
         p = Process(target=_job_submitter, args=(self, cmd))
         p.start()
 
+    def release(self):
+        """Releases the job from the waiting status and creates the artifact
+
+        Returns
+        -------
+        dict of {int: int}
+            The mapping between the job output and the artifact
+        """
+        with qdb.sql_connection.TRN:
+            if self.command.software.type != 'artifact definition':
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Only artifact definition jobs can be released")
+
+            # Retrieve the artifact information from the DB
+            sql = """SELECT artifact_info
+                     FROM qiita.processing_job_validator
+                     WHERE validator_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            a_info = qdb.sql_connection.TRN.execute_fetchlast()
+
+            atype = a_info['artifact_type']
+            filepaths = a_info['filepaths']
+            provenance = loads(self.parameters.values['provenance'])
+            job = ProcessingJob(provenance['job'])
+            parents = job.input_artifacts
+            params = job.parameters
+
+            # Create the artifact
+            a = qdb.artifact.Artifact.create(
+                filepaths, atype, parents=parents,
+                processing_parameters=params)
+
+            cmd_out_id = provenance['cmd_out_id']
+            mapping = {cmd_out_id: a.id}
+            self._set_status('success')
+
+            return mapping
+
+    def release_validators(self):
+        """Allows all the validator job spawned by this job to complete"""
+        with qdb.sql_connection.TRN:
+            if self.command.software.type != 'artifact transformation':
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Only artifact transformation jobs can release validators")
+
+            # Check if all the validators are ready by checking that there is
+            # no validator processing job whose status is not waiting
+            sql = """SELECT COUNT(1)
+                     FROM qiita.processing_job_validator pjv
+                        JOIN qiita.processing_job pj ON
+                            pjv.validator_id = pj.processing_job_id
+                        JOIN qiita.processing_job_status USING
+                            (processing_job_status_id)
+                     WHERE pjv.processing_job_id = %s
+                        AND processing_job_status != %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id, 'waiting'])
+            remaining = qdb.sql_connection.TRN.execute_fetchlast()
+
+            if remaining == 0:
+                # All validators have completed
+                sql = """SELECT validator_id
+                         FROM qiita.processing_job_validator
+                         WHERE processing_job_id = %s"""
+                qdb.sql_connection.TRN.add(sql, [self.id])
+                mapping = {}
+                # Loop through all validator jobs and release them, allowing
+                # to create the artifacts. Note that if any artifact creation
+                # fails, the rollback operation will make sure that the
+                # previously created artifacts are not in there
+                for jid in qdb.sql_connection.TRN.execute_fetchflatten():
+                    vjob = ProcessingJob(jid)
+                    mapping.update(vjob.release())
+
+                sql = """INSERT INTO
+                            qiita.artifact_output_processing_job
+                            (artifact_id, processing_job_id,
+                            command_output_id)
+                         VALUES (%s, %s, %s)"""
+                sql_args = [[aid, self.id, outid]
+                            for outid, aid in viewitems(mapping)]
+                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+
+                self._update_and_launch_children(mapping)
+                self._set_status('success')
+            else:
+                self.step = "Validating outputs (%d remaining)" % remaining
+
     def _complete_artifact_definition(self, artifact_data):
         """"Performs the needed steps to complete an artifact definition job
 
@@ -357,31 +444,23 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # The artifact is a result from a previous job
                 provenance = loads(job_params['provenance'])
                 job = ProcessingJob(provenance['job'])
-                parents = job.input_artifacts
-                params = job.parameters
-                a = qdb.artifact.Artifact.create(
-                    filepaths, atype, parents=parents,
-                    processing_parameters=params)
-                cmd_out_id = provenance['cmd_out_id']
-                mapping = {cmd_out_id: a.id}
-                sql = """INSERT INTO
-                            qiita.artifact_output_processing_job
-                            (artifact_id, processing_job_id,
-                            command_output_id)
-                         VALUES (%s, %s, %s)"""
+
+                sql = """UPDATE qiita.processing_job_validator
+                         SET artifact_info = %s
+                         WHERE validator_id = %s"""
                 qdb.sql_connection.TRN.add(
-                    sql, [a.id, job.id, cmd_out_id])
-                job._update_and_launch_children(mapping)
-                # Mark the parent job as success since the validation was
-                # successful
-                job._set_status('success')
+                    sql, [dumps(artifact_data), self.id])
+                qdb.sql_connection.TRN.execute()
+                # Can't create the artifact until all validators are completed
+                self._set_status('waiting')
+                job.release_validators()
             else:
                 # The artifact is uploaded by the user
                 pt = qdb.metadata_template.prep_template.PrepTemplate(
                     job_params['template'])
-                a = qdb.artifact.Artifact.create(
+                qdb.artifact.Artifact.create(
                     filepaths, atype, prep_template=pt)
-            self._set_status('success')
+                self._set_status('success')
 
     def _complete_artifact_transformation(self, artifacts_data):
         """Performs the needed steps to complete an artifact transformation job
@@ -404,53 +483,82 @@ class ProcessingJob(qdb.base.QiitaObject):
             If there is more than one prep information attached to the new
             artifact
         """
-        for out_name, a_data in viewitems(artifacts_data):
-            # Correct the format of the filepaths parameter so we can create
-            # a validate job
-            filepaths = defaultdict(list)
-            for fp, fptype in a_data['filepaths']:
-                filepaths[fptype].append(fp)
-            atype = a_data['artifact_type']
+        validator_jobs = []
+        with qdb.sql_connection.TRN:
+            for out_name, a_data in viewitems(artifacts_data):
+                # Correct the format of the filepaths parameter so we can
+                # create a validate job
+                filepaths = defaultdict(list)
+                for fp, fptype in a_data['filepaths']:
+                    filepaths[fptype].append(fp)
+                atype = a_data['artifact_type']
 
-            # The valdiate job needs a prep information file. In theory, a job
-            # can be generated from more that one prep information file, so
-            # we check here if we have one or more templates. At this moment,
-            # If we allow more than one template, there is a fair amount of
-            # changes that need to be done on the plugins, so we are going to
-            # restrict the number of templates to one. Note that at this moment
-            # there is no way of generating an artifact from 2 or more
-            # artifacts, so we can impose this limitation now and relax it
-            # later.
-            templates = set()
-            for artifact in self.input_artifacts:
-                templates.update(pt.id for pt in artifact.prep_templates)
-            if len(templates) > 1:
-                raise qdb.exceptions.QiitaDBError(
-                    "Currently only single prep template "
-                    "is allwoed, found %d" % len(templates))
-            template = templates.pop()
+                # The valdiate job needs a prep information file. In theory,
+                # a job can be generated from more that one prep information
+                # file, so we check here if we have one or more templates. At
+                # this moment, If we allow more than one template, there is a
+                # fair amount of changes that need to be done on the plugins,
+                # so we are going to restrict the number of templates to one.
+                # Note that at this moment there is no way of generating an
+                # artifact from 2 or more artifacts, so we can impose this
+                # limitation now and relax it later.
+                templates = set()
+                for artifact in self.input_artifacts:
+                    templates.update(pt.id for pt in artifact.prep_templates)
+                if len(templates) > 1:
+                    raise qdb.exceptions.QiitaDBError(
+                        "Currently only single prep template "
+                        "is allowed, found %d" % len(templates))
+                template = templates.pop()
 
-            # Once the validate job completes, it needs to know if it has been
-            # generated from a command (and how) or if it has been uploaded.
-            # In order to differentiate these cases, we populate the provenance
-            # parameter with some information about the current job and how
-            # this artifact has been generated. This does not affect the
-            # plugins since they can ignore this parameter
-            cmd_out_id = qdb.util.convert_to_id(
-                out_name, "command_output", "name")
-            provenance = {'job': self.id,
-                          'cmd_out_id': cmd_out_id}
+                # Once the validate job completes, it needs to know if it has
+                # been generated from a command (and how) or if it has been
+                # uploaded. In order to differentiate these cases, we populate
+                # the provenance parameter with some information about the
+                # current job and how this artifact has been generated. This
+                # does not affect the plugins since they can ignore this
+                # parameter
+                cmd_out_id = qdb.util.convert_to_id(
+                    out_name, "command_output", "name")
+                provenance = {'job': self.id,
+                              'cmd_out_id': cmd_out_id}
 
-            # Get the validator command for the current artifact type, create
-            # a new job and submit it.
-            cmd = qdb.software.Command.get_validator(atype)
-            validate_params = qdb.software.Parameters.load(
-                cmd, values_dict={'files': dumps(filepaths),
-                                  'artifact_type': atype,
-                                  'template': template,
-                                  'provenance': dumps(provenance)})
-            validate_job = ProcessingJob.create(self.user, validate_params)
-            validate_job.submit()
+                # Get the validator command for the current artifact type and
+                # create a new job
+                cmd = qdb.software.Command.get_validator(atype)
+                validate_params = qdb.software.Parameters.load(
+                    cmd, values_dict={'files': dumps(filepaths),
+                                      'artifact_type': atype,
+                                      'template': template,
+                                      'provenance': dumps(provenance)})
+                validator_jobs.append(
+                    ProcessingJob.create(self.user, validate_params))
+
+            # Change the current step of the job
+            self.step = "Validating outputs (%d remaining)" % len(
+                validator_jobs)
+
+            # Link all the validator jobs with the current job
+            self._set_validator_jobs(validator_jobs)
+            # Submit all the validator jobs
+            for j in validator_jobs:
+                j.submit()
+
+    def _set_validator_jobs(self, validator_jobs):
+        """Sets the validator jobs for the current job
+
+        Parameters
+        ----------
+        validator_jobs : list of ProcessingJob
+            The validator_jobs for the current job
+        """
+        with qdb.sql_connection.TRN:
+            sql = """INSERT INTO qiita.processing_job_validator
+                        (processing_job_id, validator_id)
+                     VALUES (%s, %s)"""
+            sql_args = [[self.id, j.id] for j in validator_jobs]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
 
     def complete(self, success, artifacts_data=None, error=None):
         """Completes the job, either with a success or error status
