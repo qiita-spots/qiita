@@ -13,6 +13,7 @@ from os.path import join
 from time import strftime
 from copy import deepcopy
 import warnings
+from skbio.util import find_duplicates
 
 import pandas as pd
 
@@ -21,6 +22,30 @@ import qiita_db as qdb
 from .constants import (PREP_TEMPLATE_COLUMNS, TARGET_GENE_DATA_TYPES,
                         PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 from .base_metadata_template import BaseSample, MetadataTemplate
+
+
+def _check_duplicated_columns(prep_cols, sample_cols):
+    r"""Check for duplicated colums in the prep_cols and sample_cols
+
+    Parameters
+    ----------
+    prep_cols : list of str
+        Column names in the prep info file
+    sample_cols : list of str
+        Column names in the sample info file
+
+    Raises
+    ------
+    QiitaDBColumnError
+        If there are duplicated columns names in the sample and the prep
+    """
+    prep_cols.extend(sample_cols)
+    dups = find_duplicates(prep_cols)
+    if dups:
+        raise qdb.exceptions.QiitaDBColumnError(
+            'Duplicated column names in the sample and prep info '
+            'files: %s. You need to delete that duplicated field' %
+            ','.join(dups))
 
 
 class PrepSample(BaseSample):
@@ -113,6 +138,8 @@ class PrepTemplate(MetadataTemplate):
                 pt_cols.update(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
 
             md_template = cls._clean_validate_template(md_template, study.id)
+            _check_duplicated_columns(list(md_template.columns),
+                                      study.sample_template.categories())
 
             # Insert the metadata template
             sql = """INSERT INTO qiita.prep_template
@@ -358,6 +385,10 @@ class PrepTemplate(MetadataTemplate):
                                        "template has already been processed. "
                                        "No new samples can be added to the "
                                        "prep template")
+
+        _check_duplicated_columns(list(new_columns), qdb.study.Study(
+            self.study_id).sample_template.categories())
+
         return True, ""
 
     @property
