@@ -287,10 +287,10 @@ class ProcessingJobTest(TestCase):
         # time. "release", "release_validators" and
         # "_set_validator_jobs" are tested here for correct execution.
         # Those functions are designed to work together, so it becomes
-        # really hard to test each of the funrcions individually for
+        # really hard to test each of the functions individually for
         # successfull execution.
         # We need to create a new command with multiple outputs, since
-        # in the test DB there is no command with such caracteristics
+        # in the test DB there is no command with such characteristics
         cmd = qdb.software.Command.create(
             qdb.software.Software(1),
             "TestCommand", "Test command",
@@ -315,6 +315,10 @@ class ProcessingJobTest(TestCase):
         with open(fp2, 'w') as f:
             f.write('\n')
 
+        # `job` has 2 output artifacts. Each of these artifacts needs to be
+        # validated by 2 different validation jobs. We are creating those jobs
+        # here, and add in the 'procenance' parameter that links the original
+        # jobs with the validator jobs.
         params = qdb.software.Parameters.load(
             qdb.software.Command(4),
             values_dict={'template': 1, 'files': fp1,
@@ -336,14 +340,23 @@ class ProcessingJobTest(TestCase):
                                 'out1', "command_output", "name")})})
         obs2 = qdb.processing_job.ProcessingJob.create(user, params)
         obs2._set_status('running')
+        # Make sure that we link the original job with its validator jobs
         job._set_validator_jobs([obs1, obs2])
 
         artifact_data_1 = {'filepaths': [(fp1, 'biom')],
                            'artifact_type': 'BIOM'}
+        # Complete one of the validator jobs. This jobs should store all the
+        # information about the new artifact, but it does not create it. The
+        # job then goes to a "waiting" state, where it waits until all the
+        # validator jobs are completed.
         obs1._complete_artifact_definition(artifact_data_1)
         self.assertEqual(obs1.status, 'waiting')
         self.assertEqual(job.status, 'running')
 
+        # When we complete the second validation job, the previous validation
+        # job is realeaed from its waiting state. All jobs then create the
+        # artifacts in a single transaction, so either all of them successfully
+        # complete, or all of them fail.
         artifact_data_2 = {'filepaths': [(fp2, 'biom')],
                            'artifact_type': 'BIOM'}
         obs2._complete_artifact_definition(artifact_data_2)

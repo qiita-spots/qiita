@@ -508,7 +508,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                 if len(templates) > 1:
                     raise qdb.exceptions.QiitaDBError(
                         "Currently only single prep template "
-                        "is allwoed, found %d" % len(templates))
+                        "is allowed, found %d" % len(templates))
                 template = templates.pop()
 
                 # Once the validate job completes, it needs to know if it has
@@ -538,7 +538,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             self.step = "Validating outputs (%d remaining)" % len(
                 validator_jobs)
 
-            # Link all the valdiator jobs with the current job
+            # Link all the validator jobs with the current job
             self._set_validator_jobs(validator_jobs)
             # Submit all the validator jobs
             for j in validator_jobs:
