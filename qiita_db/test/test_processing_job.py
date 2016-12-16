@@ -394,6 +394,16 @@ class ProcessingJobTest(TestCase):
         # Implicitly tested by "test_complete"
         pass
 
+    def test_complete_no_artifact_data(self):
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                qdb.software.Command(5),
+                values_dict={"input_data": 1}))
+        job._set_status('running')
+        job.complete(True)
+        self.assertEqual(job.status, 'success')
+
     def test_complete_type(self):
         fd, fp = mkstemp(suffix="_table.biom")
         self._clean_up_files.append(fp)
@@ -448,7 +458,9 @@ class ProcessingJobTest(TestCase):
         alljobs = set(self._get_all_job_ids())
 
         job.complete(True, artifacts_data=artifacts_data)
-        self.assertTrue(job.status, 'success')
+        # The validator job spawn blocks this job in running state until
+        # the validator job is completed
+        self.assertEqual(job.status, 'running')
 
         obsjobs = set(self._get_all_job_ids())
 
