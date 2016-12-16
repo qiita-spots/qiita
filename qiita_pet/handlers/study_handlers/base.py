@@ -10,7 +10,7 @@ from __future__ import division
 from tornado.web import authenticated, HTTPError
 
 from qiita_pet.util import EBI_LINKIFIER
-from qiita_pet.handlers.util import to_int, doi_linkifier
+from qiita_pet.handlers.util import to_int, doi_linkifier, pubmed_linkifier
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
     study_prep_get_req, study_get_req, study_delete_req,
@@ -36,8 +36,9 @@ class StudyBaseInfoAJAX(BaseHandler):
         study = to_int(study_id)
         res = study_get_req(study, self.current_user.id)
         study_info = res['study_info']
-        study_doi = ' '.join(
-            [doi_linkifier(p) for p in study_info['publications']])
+        pdoi = [doi_linkifier([p]) for p in study_info['publication_doi']]
+        ppid = [pubmed_linkifier([p]) for p in study_info['publication_pid']]
+
         email = '<a href="mailto:{email}">{name} ({affiliation})</a>'
         pi = email.format(**study_info['principal_investigator'])
         if study_info['lab_person']:
@@ -55,8 +56,8 @@ class StudyBaseInfoAJAX(BaseHandler):
             ebi_info = '%s (%s)' % (links, study_info['ebi_submission_status'])
 
         self.render('study_ajax/base_info.html',
-                    study_info=study_info, publications=study_doi, pi=pi,
-                    contact=contact, editable=res['editable'],
+                    study_info=study_info, publications=', '.join(pdoi + ppid),
+                    pi=pi, contact=contact, editable=res['editable'],
                     share_access=share_access, ebi_info=ebi_info)
 
 

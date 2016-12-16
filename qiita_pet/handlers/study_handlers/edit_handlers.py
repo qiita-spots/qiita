@@ -49,7 +49,11 @@ class StudyEditorForm(Form):
     """
     study_title = StringField('Study Title', [validators.Required()])
     study_alias = StringField('Study Alias', [validators.Required()])
-    publication_doi = StringField('DOI')
+    publication_doi = StringField(
+        'DOI', description=('Just values, no links, comma separated values'))
+    publication_pid = StringField(
+        'PUBMED ID', description=('Just values, no links, comma '
+                                  'separated values'))
     study_abstract = TextAreaField('Study Abstract', [validators.Required()])
     study_description = StringField('Study Description',
                                     [validators.Required()])
@@ -81,8 +85,15 @@ class StudyEditorForm(Form):
 
             self.study_title.data = study.title.decode('utf-8')
             self.study_alias.data = study_info['study_alias'].decode('utf-8')
-            self.publication_doi.data = ",".join(
-                [doi for doi, _ in study.publications]).decode('utf-8')
+            dois = []
+            pids = []
+            for p, is_doi in study.publications:
+                if is_doi:
+                    dois.append(p)
+                else:
+                    pids.append(p)
+            self.publication_doi.data = ",".join(dois).decode('utf-8')
+            self.publication_pid.data = ",".join(pids).decode('utf-8')
             self.study_abstract.data = study_info[
                 'study_abstract'].decode('utf-8')
             self.study_description.data = study_info[
@@ -283,14 +294,20 @@ class StudyEditHandler(BaseHandler):
             the_study.environmental_packages = form_data.data[
                 'environmental_packages']
 
+        pubs = []
         dois = form_data.data['publication_doi']
         if dois and dois[0]:
             # The user can provide a comma-seprated list
             dois = dois[0].split(',')
             # Make sure that we strip the spaces from the pubmed ids
-            the_study.publications = [(doi.strip(), None) for doi in dois]
-        elif the_study.publications != '':
-            the_study.publications = []
+            pubs.extend([(doi.strip(), True) for doi in dois])
+        pids = form_data.data['publication_pid']
+        if pids and pids[0]:
+            # The user can provide a comma-seprated list
+            pids = pids[0].split(',')
+            # Make sure that we strip the spaces from the pubmed ids
+            pubs.extend([(pid.strip(), False) for pid in pids])
+        the_study.publications = pubs
 
         self.render('index.html', message=msg, level='success')
 

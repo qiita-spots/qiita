@@ -1307,10 +1307,10 @@ def generate_study_list(study_ids, build_samples, public_only=False):
                 LEFT JOIN qiita.visibility USING (visibility_id)
                 WHERE study_id = qiita.study.study_id)
                 AS artifacts_visibility,
-    - all the publication_doi that belong to the study
-            (SELECT array_agg(publication_doi ORDER BY publication_doi)
+    - all the publications that belong to the study
+            (SELECT array_agg((publication, is_doi)))
                 FROM qiita.study_publication
-                WHERE study_id=qiita.study.study_id) AS publication_doi,
+                WHERE study_id=qiita.study.study_id) AS publications,
     - all names sorted by email of users that have access to the study
             (SELECT array_agg(name ORDER BY email) FROM qiita.study_users
                 LEFT JOIN qiita.qiita_user USING (email)
@@ -1376,9 +1376,9 @@ def generate_study_list(study_ids, build_samples, public_only=False):
                     LEFT JOIN qiita.visibility USING (visibility_id)
                     WHERE study_id = qiita.study.study_id)
                     AS artifacts_visibility,
-                (SELECT array_agg(publication_doi ORDER BY publication_doi)
+                (SELECT array_agg(row_to_json((publication, is_doi), true))
                     FROM qiita.study_publication
-                    WHERE study_id=qiita.study.study_id) AS publication_doi,
+                    WHERE study_id=qiita.study.study_id) AS publications,
                 (SELECT array_agg(name ORDER BY email) FROM qiita.study_users
                     LEFT JOIN qiita.qiita_user USING (email)
                     WHERE study_id=qiita.study.study_id) AS shared_with_name,
@@ -1397,12 +1397,18 @@ def generate_study_list(study_ids, build_samples, public_only=False):
             info = dict(info)
 
             # publication info
-            if info['publication_doi'] is not None:
-                info['pmid'] = get_pubmed_ids_from_dois(
-                    info['publication_doi']).values()
-            else:
-                info['publication_doi'] = []
-                info['pmid'] = []
+            info['publication_doi'] = []
+            info['publication_pid'] = []
+            if info['publications'] is not None:
+                for p in info['publications']:
+                    # f1-2 are the default names given
+                    pub = p['f1']
+                    is_doi = p['f2']
+                    if is_doi:
+                        info['publication_doi'].append(pub)
+                    else:
+                        info['publication_pid'].append(pub)
+            del info['publications']
 
             # visibility
             # infer_status expects a list of list of str

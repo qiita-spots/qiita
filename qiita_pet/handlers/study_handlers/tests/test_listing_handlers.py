@@ -76,7 +76,7 @@ class TestHelpers(TestHandlerBase):
             'number_samples_collected': 27,
             'shared': [('shared@foo.bar', 'Shared')],
             'publication_doi': ['10.100/123456', '10.100/7891011'],
-            'pmid': ['7891011', '123456'],
+            'publication_pid': ['123456', '7891011'],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
             'proc_data_info': PROC_DATA_INFO
         }
@@ -115,7 +115,7 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'ebi_submission_status':
             'not submitted',
             'shared': [],
-            'pmid': [],
+            'publication_pid': [],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
             'status': 'sandbox',
             'proc_data_info': [],
@@ -259,16 +259,16 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                 'ebi_study_accession': 'EBI123456-BB',
                 'shared': ('<a target="_blank" href="mailto:shared@foo.bar">'
                            'Shared</a>'),
-                'pmid': ('<a target="_blank" href="http://www.ncbi.nlm.nih.go'
-                         'v/pubmed/7891011">7891011</a>, <a target="_blank" '
-                         'href="http://www.ncbi.nlm.nih.gov/pubmed/123456">'
-                         '123456</a>'),
+                'pubs': (
+                    '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/'
+                    'pubmed/123456">123456</a>, <a target="_blank" '
+                    'href="http://www.ncbi.nlm.nih.gov/pubmed/7891011">'
+                    '7891011</a>, <a target="_blank" href="http://dx.doi.org'
+                    '/10.100/123456">10.100/123456</a>, <a target="_blank" '
+                    'href="http://dx.doi.org/10.100/7891011">'
+                    '10.100/7891011</a>'),
                 'pi': ('<a target="_blank" href="mailto:PI_dude@foo.bar">'
                        'PIDude</a>'),
-                'publication_doi': ('<a target="_blank" href="http://dx.doi.'
-                                    'org/10.100/123456">10.100/123456</a>, '
-                                    '<a target="_blank" href="http://dx.doi.'
-                                    'org/10.100/7891011">10.100/7891011</a>'),
                 'study_abstract': (
                     'This is a preliminary study to examine the microbiota '
                     'associated with the Cannabis plant. Soils samples from '
@@ -301,6 +301,7 @@ class TestSearchStudiesAJAX(TestHandlerBase):
             'sEcho': '1021'
             })
         self.assertEqual(response.code, 200)
+
         # make sure responds properly
         self.assertEqual(loads(response.body), self.json)
 

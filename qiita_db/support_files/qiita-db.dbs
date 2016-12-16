@@ -1726,22 +1726,10 @@ Controlled Vocabulary]]></comment>
 		</table>
 		<table name="study_publication" >
 			<column name="study_id" type="bigint" jt="-5" mandatory="y" />
-			<column name="publication_doi" type="varchar" jt="12" mandatory="y" />
-			<index name="idx_study_publication" unique="NORMAL" >
-				<column name="study_id" />
-			</index>
-			<index name="idx_study_publication" unique="NORMAL" >
-				<column name="publication_doi" />
-			</index>
-			<index name="idx_study_publication_0" unique="PRIMARY_KEY" >
-				<column name="study_id" />
-				<column name="publication_doi" />
-			</index>
+			<column name="publication" type="varchar" jt="12" mandatory="y" />
+			<column name="is_doi" type="bool" jt="-7" />
 			<fk name="fk_study_publication_study" to_schema="qiita" to_table="study" >
 				<fk_column name="study_id" pk="study_id" />
-			</fk>
-			<fk name="fk_study_publication" to_schema="qiita" to_table="publication" >
-				<fk_column name="publication_doi" pk="doi" />
 			</fk>
 		</table>
 		<table name="study_sample" >
@@ -1909,7 +1897,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_sample" color="d0def5" x="1455" y="150" />
 		<entity schema="qiita" name="publication" color="b2cdf7" x="2175" y="795" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2235" y="555" />
-		<entity schema="qiita" name="study_publication" color="b2cdf7" x="1980" y="705" />
 		<entity schema="qiita" name="oauth_identifiers" color="b7c8e3" x="2490" y="720" />
 		<entity schema="qiita" name="oauth_software" color="b2cdf7" x="2340" y="720" />
 		<entity schema="qiita" name="analysis" color="d0def5" x="225" y="885" />
@@ -1944,6 +1931,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="processing_job" color="b2cdf7" x="1980" y="1335" />
 		<entity schema="qiita" name="default_workflow_edge_connections" color="b2cdf7" x="2340" y="1455" />
 		<entity schema="qiita" name="processing_job_validator" color="b2cdf7" x="2190" y="1380" />
+		<entity schema="qiita" name="study_publication" color="b2cdf7" x="1980" y="705" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />

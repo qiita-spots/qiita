@@ -209,7 +209,10 @@ class TestStudy(TestCase):
             'funding': None, 'vamps_id': None,
             'first_contact': datetime(2014, 5, 19, 16, 10),
             'principal_investigator_id': 3, 'timeseries_type_id': 1,
-            'publication_doi': ['10.100/123456', '10.100/7891011'],
+            'publications': [{'f1': '10.100/123456', 'f2': True},
+                             {'f1': '123456', 'f2': False},
+                             {'f1': '10.100/7891011', 'f2': True},
+                             {'f1': '7891011', 'f2': False}],
             'study_alias': 'Cannabis Soils',
             'spatial_series': False,
             'study_abstract': 'This is a preliminary study to examine the '
@@ -234,14 +237,17 @@ class TestStudy(TestCase):
 
         # Test get specific keys for single study
         exp_keys = ['metadata_complete', 'reprocess', 'timeseries_type',
-                    'publication_doi', 'study_title']
+                    'publications', 'study_title']
         obs = qdb.study.Study.get_info([1], exp_keys)
         self.assertEqual(len(obs), 1)
         obs = dict(obs[0])
         exp = {
             'metadata_complete': True, 'reprocess': False,
             'timeseries_type': 'None',
-            'publication_doi': ['10.100/123456', '10.100/7891011'],
+            'publications': [{'f1': '10.100/123456', 'f2': True},
+                             {'f1': '123456', 'f2': False},
+                             {'f1': '10.100/7891011', 'f2': True},
+                             {'f1': '7891011', 'f2': False}],
             'study_title': 'Identification of the Microbiomes for Cannabis '
             'Soils'}
         self.assertEqual(obs, exp)
@@ -260,7 +266,10 @@ class TestStudy(TestCase):
 
         s = qdb.study.Study.create(user, 'test_study_1', efo=[1], info=info)
         obs = qdb.study.Study.get_info(info_cols=exp_keys)
-        exp = [[True, ['10.100/123456', '10.100/7891011'], False,
+        exp = [[True, [{'f1': '7891011', 'f2': False},
+                       {'f1': '10.100/7891011', 'f2': True},
+                       {'f1': '123456', 'f2': False},
+                       {'f1': '10.100/123456', 'f2': True}], False,
                 'Identification of the Microbiomes for Cannabis Soils',
                 'None'],
                [False, None, False, 'test_study_1', 'None']]
@@ -697,7 +706,9 @@ class TestStudy(TestCase):
             qdb.user.User('test@foo.bar'), 'New study', [1], self.info)
         self.assertEqual(new.publications, [])
 
-        new_values = [['10.100/654321', None], ['10.100/1101987', None]]
+        new_values = [['10.100/654321', True],
+                      ['10.100/1101987', True],
+                      ['1101987', False]]
         new.publications = new_values
         self.assertEqual(new.publications, new_values)
         qdb.study.Study.delete(new.id)
@@ -777,17 +788,6 @@ class TestStudy(TestCase):
             'NOT Identification of the Microbiomes for Cannabis Soils 13', [1],
             self.info)
         self.assertEqual(new.prep_templates(), [])
-        qdb.study.Study.delete(new.id)
-
-    def test_add_publications(self):
-        new = qdb.study.Study.create(
-            qdb.user.User('test@foo.bar'),
-            'New study for test', [1],
-            self.info)
-        # self.assertEqual(new.publications, [])
-        # new.add_publications([('10.100/4544444', None)])
-        # exp = [['10.100/4544444', None]]
-        # self.assertEqual(new.publications, exp)
         qdb.study.Study.delete(new.id)
 
     def test_environmental_packages(self):

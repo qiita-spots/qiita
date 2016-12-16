@@ -789,11 +789,11 @@ class UtilTests(TestCase):
             'metadata_complete': True,
             'ebi_submission_status': 'submitted',
             'shared': [('shared@foo.bar', 'Shared')],
-            'pmid': ['7891011', '123456'],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
             'status': 'private',
             'proc_data_info': [],
             'publication_doi': ['10.100/123456', '10.100/7891011'],
+            'publication_pid': ['123456', '7891011'],
             'study_abstract': (
                 'This is a preliminary study to examine the microbiota '
                 'associated with the Cannabis plant. Soils samples from '
