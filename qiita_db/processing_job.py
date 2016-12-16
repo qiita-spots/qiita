@@ -595,6 +595,8 @@ class ProcessingJob(qdb.base.QiitaObject):
                         self._complete_artifact_definition(a_data)
                     else:
                         self._complete_artifact_transformation(artifacts_data)
+                else:
+                    self._set_status('success')
             else:
                 if self.command.software.type == 'artifact definition':
                     job_params = self.parameters.values

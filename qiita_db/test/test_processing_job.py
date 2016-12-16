@@ -394,6 +394,16 @@ class ProcessingJobTest(TestCase):
         # Implicitly tested by "test_complete"
         pass
 
+    def test_complete_no_artifact_data(self):
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                qdb.software.Command(5),
+                values_dict={"input_data": 1}))
+        job._set_status('running')
+        job.complete(True)
+        self.assertEqual(job.status, 'success')
+
     def test_complete_type(self):
         fd, fp = mkstemp(suffix="_table.biom")
         self._clean_up_files.append(fp)
@@ -448,7 +458,13 @@ class ProcessingJobTest(TestCase):
         alljobs = set(self._get_all_job_ids())
 
         job.complete(True, artifacts_data=artifacts_data)
-        self.assertTrue(job.status, 'success')
+        # When completing the previous job, it creates a new job that needs
+        # to validate the BIOM table that is being added as new artifact.
+        # Hence, this job is still in running state until the validation job
+        # is completed. Note that this is tested by making sure that the status
+        # of this job is running, and that we have one more job than before
+        # (see assertEqual with len of all jobs)
+        self.assertEqual(job.status, 'running')
 
         obsjobs = set(self._get_all_job_ids())
 
