@@ -207,12 +207,44 @@ class TestUtil(TestCase):
         obs = qdb.metadata_template.util.get_invalid_sample_names(one_invalid)
         self.assertItemsEqual(obs, [' ', ' ', ' '])
 
-    def test_get_invalid_column_names(self):
-        invalid = ['tax on', 'bla.', '.', '{', 'this|is', '4column']
-        valid = ['fine', 'select']
-        obs = qdb.metadata_template.util.get_invalid_column_names(
-            invalid + valid)
-        self.assertEqual(obs, invalid)
+    def test_validate_invalid_column_names(self):
+        # testing just pgsql
+        pgsql = ['select', 'column', 'just_fine1']
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
+            qdb.metadata_template.util.validate_invalid_column_names(pgsql)
+        self.assertEqual(str(error.exception),
+            'The following column names in the template contain PgSQL '
+            'reserved words: column, select.\nYou need to modify them.')
+
+        # testing just wrong chars
+        invalid = ['tax on', 'bla.', '.', '{', 'this|is',
+                   '4column', 'just_fine2']
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
+            qdb.metadata_template.util.validate_invalid_column_names(invalid)
+        self.assertEqual(str(error.exception),
+            'The following column names in the template contain invalid '
+            'chars: bla., ., tax on, this|is, {, 4column.\nYou need to '
+            'modify them.')
+
+        # testing just forbidden
+        forbidden = ['sampleid', 'just_fine3']
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
+            qdb.metadata_template.util.validate_invalid_column_names(forbidden)
+        self.assertEqual(str(error.exception),
+            'The following column names in the template contain invalid '
+            'values: sampleid.\nYou need to modify them.')
+
+        # testing all
+        _all = pgsql + invalid + forbidden
+        with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
+            qdb.metadata_template.util.validate_invalid_column_names(_all)
+        self.assertEqual(str(error.exception),
+            'The following column names in the template contain PgSQL '
+            'reserved words: column, select.\n'
+            'The following column names in the template contain invalid '
+            'chars: this|is, ., tax on, bla., {, 4column.\n'
+            'The following column names in the template contain invalid '
+            'values: sampleid.\nYou need to modify them.')
 
     def test_looks_like_qiime_mapping_file(self):
         obs = qdb.metadata_template.util.looks_like_qiime_mapping_file(

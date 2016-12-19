@@ -238,34 +238,65 @@ def get_invalid_sample_names(sample_names):
     return inv
 
 
-def get_invalid_column_names(column_names):
-    """Get a list of column names that are not SQL compliant
+def validate_invalid_column_names(column_names):
+    """Validate a list of column names that are not SQL compliant
 
     Parameters
     ----------
     column_names : iterable
         Iterable containing the column names to check.
 
-    Returns
-    -------
-    list
-        List of str objects where each object is an invalid column name.
+    Raises
+    ------
+    QiitaDBColumnError
+        If column_name is in get_pgsql_reserved_words or contains invalid
+        chars or is within the forbidden_values
 
     References
     ----------
     .. [1] postgresql SQL-SYNTAX-IDENTIFIERS: https://goo.gl/EF0cUV.
     """
+    column_names = set(column_names)
+
+    # testing for specific column names that are not included in the other
+    # tests.
+    forbidden_values = {
+        # https://github.com/biocore/qiita/issues/2026
+        'sampleid'
+    }
+    forbidden = forbidden_values & column_names
+
+    # pgsql reserved words
+    pgsql_reserved = (
+        qdb.metadata_template.util.get_pgsql_reserved_words() & column_names)
+
+    # invalid letters in headers
     valid_initial_char = letters
     valid_rest = set(letters+digits+'_')
-    inv = []
-
+    invalid = []
     for s in column_names:
         if s[0] not in valid_initial_char:
-            inv.append(s)
+            invalid.append(s)
         elif set(s) - valid_rest:
-            inv.append(s)
+            invalid.append(s)
 
-    return inv
+    error = []
+    if pgsql_reserved:
+        error.append(
+            "The following column names in the template contain PgSQL "
+            "reserved words: %s." % ", ".join(pgsql_reserved))
+    if invalid:
+        error.append(
+            "The following column names in the template contain invalid "
+            "chars: %s." % ", ".join(invalid))
+    if forbidden:
+        error.append(
+            "The following column names in the template contain invalid "
+            "values: %s." % ", ".join(forbidden))
+
+    if error:
+        raise qdb.exceptions.QiitaDBColumnError(
+            "%s\nYou need to modify them." % '\n'.join(error))
 
 
 def looks_like_qiime_mapping_file(fp):

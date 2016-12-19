@@ -514,21 +514,9 @@ class MetadataTemplate(qdb.base.QiitaObject):
         md_template.columns = [c.lower() for c in md_template.columns]
         # validating pgsql reserved words not to be column headers
         current_headers = set(md_template.columns.values)
-        reserved_words = qdb.metadata_template.util.get_pgsql_reserved_words()
-        overlap = reserved_words & current_headers
-        if overlap:
-            raise qdb.exceptions.QiitaDBColumnError(
-                "The following column names in the template contain PgSQL "
-                "reserved words: %s. You need to modify them." % ", ".join(
-                    overlap))
-        # validating invalid column names
-        invalid_ids = qdb.metadata_template.util.get_invalid_column_names(
+
+        qdb.metadata_template.util.validate_invalid_column_names(
             current_headers)
-        if invalid_ids:
-            raise qdb.exceptions.QiitaDBColumnError(
-                "The following column names in the template contain invalid "
-                "chars: %s. You need to modify them." % ", ".join(
-                    invalid_ids))
 
         # Prefix the sample names with the study_id
         qdb.metadata_template.util.prefix_sample_names_with_id(md_template,
