@@ -212,7 +212,8 @@ class TestUtil(TestCase):
         pgsql = ['select', 'column', 'just_fine1']
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
             qdb.metadata_template.util.validate_invalid_column_names(pgsql)
-        self.assertEqual(str(error.exception),
+        self.assertEqual(
+            str(error.exception),
             'The following column names in the template contain PgSQL '
             'reserved words: column, select.\nYou need to modify them.')
 
@@ -221,7 +222,8 @@ class TestUtil(TestCase):
                    '4column', 'just_fine2']
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
             qdb.metadata_template.util.validate_invalid_column_names(invalid)
-        self.assertEqual(str(error.exception),
+        self.assertEqual(
+            str(error.exception),
             'The following column names in the template contain invalid '
             'chars: bla., ., tax on, this|is, {, 4column.\nYou need to '
             'modify them.')
@@ -230,7 +232,8 @@ class TestUtil(TestCase):
         forbidden = ['sampleid', 'just_fine3']
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
             qdb.metadata_template.util.validate_invalid_column_names(forbidden)
-        self.assertEqual(str(error.exception),
+        self.assertEqual(
+            str(error.exception),
             'The following column names in the template contain invalid '
             'values: sampleid.\nYou need to modify them.')
 
@@ -238,7 +241,8 @@ class TestUtil(TestCase):
         _all = pgsql + invalid + forbidden
         with self.assertRaises(qdb.exceptions.QiitaDBColumnError) as error:
             qdb.metadata_template.util.validate_invalid_column_names(_all)
-        self.assertEqual(str(error.exception),
+        self.assertEqual(
+            str(error.exception),
             'The following column names in the template contain PgSQL '
             'reserved words: column, select.\n'
             'The following column names in the template contain invalid '
