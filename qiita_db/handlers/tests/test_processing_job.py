@@ -165,14 +165,26 @@ class CompleteHandlerTests(OauthTestingBase):
                          "Can't complete job: not in a running state")
 
     def test_post_job_failure(self):
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.prep_template.PrepTemplate.create,
+            pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}),
+            qdb.study.Study(1), '16S')
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                qdb.software.Command.get_validator('BIOM'),
+                values_dict={'template': pt.id, 'files':
+                             dumps({'BIOM': ['file']}),
+                             'artifact_type': 'BIOM'}))
+        job._set_status('running')
+
         payload = dumps({'success': False, 'error': 'Job failure'})
         obs = self.post(
-            '/qiita_db/jobs/bcc7ebcd-39c1-43e4-af2d-822e3589f14d/complete/',
+            '/qiita_db/jobs/%s/complete/' % job.id,
             payload, headers=self.header)
         self.assertEqual(obs.code, 200)
-        wait_for_processing_job('bcc7ebcd-39c1-43e4-af2d-822e3589f14d')
-        job = qdb.processing_job.ProcessingJob(
-            'bcc7ebcd-39c1-43e4-af2d-822e3589f14d')
+        wait_for_processing_job(job.id)
         self.assertEqual(job.status, 'error')
         self.assertEqual(job.log,
                          qdb.logger.LogEntry.newest_records(numrecords=1)[0])
