@@ -59,8 +59,9 @@ def _job_completer(job_id, payload):
         completing the job
     """
     import qiita_db as qdb
-    cmd = "%s %s %s '%s'" % (qiita_config.private_launcher, 'complete_job',
-                             job_id, payload)
+    cmd = "%s '%s' %s %s '%s'" % (qiita_config.private_launcher,
+                                  qiita_config.qiita_env, 'complete_job',
+                                  job_id, payload)
     std_out, std_err, return_value = qdb.processing_job._system_call(cmd)
     if return_value != 0:
         error = ("Can't submit private task 'complete job:\n"

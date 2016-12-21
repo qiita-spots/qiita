@@ -9,23 +9,22 @@
 # -----------------------------------------------------------------------------
 
 from subprocess import Popen, PIPE
-from qiita_core.qiita_settings import qiita_config
 
 import click
 
 
 @click.command()
+@click.argument('qiita_env', required=True, nargs=1)
 @click.argument('command', required=True, nargs=1)
 @click.argument('arguments', required=True, nargs=-1)
-def start(command, arguments):
+def start(qiita_env, command, arguments):
     """Starts the plugin environment"""
     cmd = ['qiita private', command]
     cmd.extend(["'%s'" % arg for arg in arguments])
     # When Popen executes, the shell is not in interactive mode,
     # so it is not sourcing any of the bash configuration files
     # We need to source it so the env_script are available
-    cmd = "source ~/.bash_profile; %s; %s" % (qiita_config.qiita_env,
-                                              ' '.join(cmd))
+    cmd = "source ~/.bash_profile; %s; %s" % (qiita_env, ' '.join(cmd))
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
     if proc.returncode and proc.returncode != 0:

@@ -222,7 +222,6 @@ class CompleteHandlerTests(OauthTestingBase):
             payload, headers=self.header)
         wait_for_processing_job(job.id)
         self.assertEqual(obs.code, 200)
-        self.assertEqual(job.log.msg, 'success')
         self.assertEqual(job.status, 'success')
         self.assertEqual(qdb.util.get_count('qiita.artifact'),
                          exp_artifact_count)
