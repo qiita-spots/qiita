@@ -58,6 +58,7 @@ def _job_completer(job_id, payload):
         The JSON string with the parameters of the HTTP POST request that is
         completing the job
     """
+    import qiita_db as qdb
     cmd = "%s %s %s '%s'" % (qiita_config.private_launcher, 'complete_job',
                              job_id, payload)
     std_out, std_err, return_value = qdb.processing_job._system_call(cmd)
