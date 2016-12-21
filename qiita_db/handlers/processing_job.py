@@ -9,6 +9,7 @@
 from json import loads
 from sys import exc_info
 import traceback
+from multiprocessing import Process
 
 from tornado.web import HTTPError
 
@@ -17,6 +18,7 @@ from tornado.web import HTTPError
 # is acceptable to import from qiita_ware, specially to offload
 # processing to the ipython cluster
 from qiita_ware.context import safe_submit
+from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
@@ -59,21 +61,18 @@ def _job_completer(job_id, payload):
     ----------
     job_id : str
         The job to complete
-    payload : dict
-        The parameters of the HTTP POST request that is completing the job
+    payload : str
+        The JSON string with the parameters of the HTTP POST request that is
+        completing the job
     """
-    payload_success = payload['success']
-    if payload_success:
-        artifacts = payload['artifacts']
-        error = None
-    else:
-        artifacts = None
-        error = payload['error']
-    job = qdb.processing_job.ProcessingJob(job_id)
-    try:
-        job.complete(payload_success, artifacts, error)
-    except:
-        job._set_error(traceback.format_exception(*exc_info()))
+    cmd = "%s %s %s '%s'" % (qiita_config.private_launcher, 'complete_job',
+                             job_id, payload)
+    std_out, std_err, return_value = qdb.processing_job._system_call(cmd)
+    if return_value != 0:
+        error = ("Can't submit private task 'complete job:\n"
+                 "Std output:%s\nStd error:%s'" % (std_out, std_err))
+        job = qdb.processing_job.ProcessingJob(job_id)
+        job.complete(False, error=error)
 
 
 class JobHandler(OauthBaseHandler):
@@ -168,8 +167,10 @@ class CompleteHandler(OauthBaseHandler):
                 raise HTTPError(
                     403, "Can't complete job: not in a running state")
 
-            payload = loads(self.request.body)
-            safe_submit(job.user.email, _job_completer, job_id, payload)
+            p = Process(target=_job_completer,
+                        args=(job_id, self.request.body))
+            p.start()
+            # safe_submit(job.user.email, _job_completer, job_id, payload)
 
         self.finish()
 
