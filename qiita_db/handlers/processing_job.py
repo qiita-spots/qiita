@@ -7,17 +7,10 @@
 # -----------------------------------------------------------------------------
 
 from json import loads
-from sys import exc_info
-import traceback
 from multiprocessing import Process
 
 from tornado.web import HTTPError
 
-# We agreed before that qiita db should never import from
-# qiita_ware. However, this is part of the rest API and I think it
-# is acceptable to import from qiita_ware, specially to offload
-# processing to the ipython cluster
-from qiita_ware.context import safe_submit
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
