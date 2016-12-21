@@ -48,6 +48,8 @@ class ConfigurationManagerTests(TestCase):
         self.assertEqual(obs.base_url, "https://localhost")
         self.assertEqual(obs.max_upload_size, 100)
         self.assertTrue(obs.require_approval)
+        self.assertEqual(obs.qiita_env, "source activate qiita")
+        self.assertEqual(obs.private_launcher, 'qiita-private-launcher')
         self.assertEqual(obs.plugin_launcher, "qiita-plugin-launcher")
         self.assertEqual(obs.plugin_dir, "/tmp/")
         self.assertEqual(
@@ -121,6 +123,7 @@ class ConfigurationManagerTests(TestCase):
         conf_setter('PLUGIN_DIR', '')
         conf_setter('CERTIFICATE_FILE', '')
         conf_setter('KEY_FILE', '')
+        conf_setter('QIITA_ENV', '')
 
         # Warning raised if No files will be allowed to be uploaded
         # Warning raised if no cookie_secret
@@ -167,6 +170,8 @@ class ConfigurationManagerTests(TestCase):
         conf_setter('VALID_UPLOAD_EXTENSION', '')
         with self.assertRaises(ValueError):
             obs._get_main(self.conf)
+
+        self.assertEqual(obs.qiita_env, "")
 
     def test_get_postgres(self):
         obs = ConfigurationManager()
@@ -223,6 +228,13 @@ BASE_DATA_DIR = /tmp/
 
 # Valid upload extension, comma separated. Empty for no uploads
 VALID_UPLOAD_EXTENSION = fastq,fastq.gz,txt,tsv,sff,fna,qual
+
+# The script used to start the qiita environment, if any
+# used to spawn private CLI to a cluster
+QIITA_ENV = source activate qiita
+
+# Script used for launching private Qiita tasks
+PRIVATE_LAUNCHER = qiita-private-launcher
 
 # Script used for launching plugins
 PLUGIN_LAUNCHER = qiita-plugin-launcher
