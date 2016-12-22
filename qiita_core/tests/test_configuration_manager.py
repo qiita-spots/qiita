@@ -36,6 +36,8 @@ class ConfigurationManagerTests(TestCase):
     def tearDown(self):
         if self.old_conf_fp is not None:
             environ['QIITA_CONFIG_FP'] = self.old_conf_fp
+        else:
+            del environ['QIITA_CONFIG_FP']
         remove(self.conf_fp)
 
     def test_init(self):

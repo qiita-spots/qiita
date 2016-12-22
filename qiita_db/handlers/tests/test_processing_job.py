@@ -136,7 +136,6 @@ class ActiveStepHandlerTests(OauthTestingBase):
 class CompleteHandlerTests(OauthTestingBase):
     def setUp(self):
         self._clean_up_files = []
-        environ['QIITA_CONFIG_FP'] = environ['MOI_CONFIG_FP']
         super(CompleteHandlerTests, self).setUp()
 
     def tearDown(self):
