@@ -10,7 +10,7 @@ from unittest import main, TestCase
 from tempfile import mkstemp
 from json import loads, dumps
 from datetime import datetime
-from os import close, remove, environ
+from os import close, remove
 from os.path import exists
 
 from tornado.web import HTTPError
