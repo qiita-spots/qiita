@@ -116,6 +116,10 @@ class ConfigurationManager(object):
         The portal subdirectory used in the URL
     portal_fp : str
         The filepath to the portal styling config file
+    qiita_env : str
+        The script used to start the qiita environment
+    private_launcher : str
+        The script used to start private jobs
     plugin_launcher : str
         The script used to start the plugins
     plugin_dir : str
@@ -191,6 +195,12 @@ class ConfigurationManager(object):
                              self.working_dir)
         self.max_upload_size = config.getint('main', 'MAX_UPLOAD_SIZE')
         self.require_approval = config.getboolean('main', 'REQUIRE_APPROVAL')
+
+        self.qiita_env = config.get('main', 'QIITA_ENV')
+        if not self.qiita_env:
+            self.qiita_env = ""
+
+        self.private_launcher = config.get('main', 'PRIVATE_LAUNCHER')
 
         self.plugin_launcher = config.get('main', 'PLUGIN_LAUNCHER')
         self.plugin_dir = config.get('main', 'PLUGIN_DIR')

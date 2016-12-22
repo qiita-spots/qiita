@@ -91,6 +91,13 @@ def plugins():
     pass
 
 
+# The private group holds commands that should never be called by the user
+# since they are used internally by Qiita to be able to distribute compute
+@qiita.group()
+def private():
+    pass
+
+
 @ware.group()
 def ebi():
     pass
@@ -482,6 +489,17 @@ def _activate_or_update_plugins(update=False):
 def update():
     """Updates the plugins in the database"""
     _activate_or_update_plugins(update=True)
+
+
+# #############################################################################
+# PRIVATE COMMANDS
+# #############################################################################
+@private.command()
+@click.argument('job_id', required=True, type=click.STRING)
+@click.argument('payload', required=True, type=click.STRING)
+def complete_job(job_id, payload):
+    qdb.commands.complete_job_cmd(job_id, payload)
+
 
 if __name__ == '__main__':
     qiita()
