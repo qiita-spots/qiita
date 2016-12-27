@@ -1062,6 +1062,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
             # Make sure that we are changing np.NaN by Nones
             df.where((pd.notnull(df)), None)
             df.set_index('sample_id', inplace=True, drop=True)
+            id_column_name = 'qiita_%sid' % (self._table_prefix)
+            df[id_column_name] = str(self.id)
 
             return df
 

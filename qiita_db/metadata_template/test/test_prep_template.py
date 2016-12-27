@@ -656,7 +656,7 @@ class TestPrepTemplate(TestCase):
             u'experiment_design_description', u'experiment_title', u'platform',
             u'instrument_model', u'samp_size', u'sequencing_meth',
             u'illumina_technology', u'sample_center', u'pcr_primers',
-            u'study_center'})
+            u'study_center', 'qiita_prep_id'})
 
     def test_clean_validate_template_error_bad_chars(self):
         """Raises an error if there are invalid characters in the sample names
@@ -1081,7 +1081,7 @@ class TestPrepTemplate(TestCase):
         self._clean_up_files.append(fp)
         with open(fp, 'U') as f:
             obs = f.read()
-        self.assertEqual(obs, EXP_PREP_TEMPLATE)
+        self.assertEqual(obs, EXP_PREP_TEMPLATE.format(pt.id))
 
     def test_investigation_type_setter(self):
         """Able to update the investigation type"""
@@ -1494,15 +1494,15 @@ EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
     'instrument_model\tlibrary_construction_protocol\tplatform\tprimer\t'
-    'run_prefix\tstr_column\n'
+    'qiita_prep_id\trun_prefix\tstr_column\n'
     '1.SKB7.640196\tCCTCTGAGAGCT\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t'
+    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
     's_G1_L002_sequences\tValue for sample 3\n'
     '1.SKB8.640193\tGTCCGCAAGTTA\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t'
+    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
     's_G1_L001_sequences\tValue for sample 1\n'
     '1.SKD8.640184\tCGTAGAGCTCTC\tANL\tTest Project\t\tEMP\tBBBB\t'
-    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t'
+    'Illumina MiSeq\tAAAA\tILLUMINA\tGTGCCAGCMGCCGCGGTAA\t{0}\t'
     's_G1_L001_sequences\tValue for sample 2\n')
 
 
