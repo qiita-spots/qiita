@@ -2182,7 +2182,8 @@ EXP_SAMPLE_TEMPLATE = (
 EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"
     "host_subject_id\tlatitude\tlongitude\tphysical_specimen_location\t"
-    "physical_specimen_remaining\tqiita_sample_id\tsample_type\tscientific_name\ttaxon_id\n"
+    "physical_specimen_remaining\tqiita_sample_id\tsample_type\t"
+    "scientific_name\ttaxon_id\n"
     "{0}.Sample1\t05/29/2014 12:24:15\tTest Sample 1\ttrue\tNotIdentified\t"
     "42.42\t41.41\tlocation1\ttrue\t{0}\ttype1\thomo sapiens\t9606\n"
     "{0}.Sample3\t05/29/2014 12:24:15\tTest Sample 3\ttrue\tNotIdentified\t"
