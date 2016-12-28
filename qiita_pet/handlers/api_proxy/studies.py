@@ -179,7 +179,7 @@ def study_prep_get_req(study_id, user_id):
                 info['start_artifact_id'] = start_artifact.id
                 info['youngest_artifact'] = '%s - %s' % (
                     youngest_artifact.name, youngest_artifact.artifact_type)
-                info['ebi_experiment'] = bool(
+                info['ebi_experiment'] = len(
                     [v for _, v in viewitems(prep.ebi_experiment_accessions)
                      if v is not None])
             else:
