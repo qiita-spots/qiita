@@ -82,7 +82,7 @@
     {% if alert_type != 'success' and alert_message != '' %}
       bootstrapAlert('{% raw alert_message %}', "{{alert_type}}");
     {% else %}
-      $('#bootstrap-alert').alert('close');
+      $('#alert-message').alert('close');
     {% end %}
   });
 
