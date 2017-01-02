@@ -33,36 +33,36 @@ class TestSUserAPI(TestCase):
         exp = {
             'status': 'success',
             'message': '',
-            'jobs': {
-                'd19f76ee-274e-4c1b-b3a2-a12d73507c55': {
-                    'status': 'error',
-                    'heartbeat': '2015-11-22 21:30:00',
-                    'params': {
-                        'reference': 1,
-                        'similarity': 0.97,
-                        'sortmerna_e_value': 1,
-                        'sortmerna_max_pos': 10000,
-                        'input_data': 2,
-                        'threads': 1,
-                        'sortmerna_coverage': 0.97},
-                    'name': 'Pick closed-reference OTUs'},
-                'b72369f9-a886-4193-8d3d-f7b504168e75': {
-                    'status': 'success',
-                    'heartbeat': '2015-11-22 21:15:00',
-                    'params': {
-                        'max_barcode_errors': 1.5,
-                        'sequence_max_n': 0,
-                        'max_bad_run_length': 3,
-                        'phred_offset': u'auto',
-                        'rev_comp': False,
-                        'phred_quality_threshold': 3,
-                        'input_data': 1,
-                        'rev_comp_barcode': False,
-                        'rev_comp_mapping_barcodes': True,
-                        'min_per_read_length_fraction': 0.75,
-                        'barcode_type': u'golay_12'},
-                    'name': 'Split libraries FASTQ'}}}
-        self.assertItemsEqual(obs, exp)
+            'jobs': [
+                {'id': 'd19f76ee-274e-4c1b-b3a2-a12d73507c55',
+                 'status': 'error',
+                 'heartbeat': '2015-11-22 21:30:00',
+                 'params': {
+                    'reference': 1,
+                    'similarity': 0.97,
+                    'sortmerna_e_value': 1,
+                    'sortmerna_max_pos': 10000,
+                    'input_data': 2,
+                    'threads': 1,
+                    'sortmerna_coverage': 0.97},
+                 'name': 'Pick closed-reference OTUs'},
+                {'id': 'b72369f9-a886-4193-8d3d-f7b504168e75',
+                 'status': 'success',
+                 'heartbeat': '2015-11-22 21:15:00',
+                 'params': {
+                    'max_barcode_errors': 1.5,
+                    'sequence_max_n': 0,
+                    'max_bad_run_length': 3,
+                    'phred_offset': u'auto',
+                    'rev_comp': False,
+                    'phred_quality_threshold': 3,
+                    'input_data': 1,
+                    'rev_comp_barcode': False,
+                    'rev_comp_mapping_barcodes': True,
+                    'min_per_read_length_fraction': 0.75,
+                    'barcode_type': u'golay_12'},
+                'name': 'Split libraries FASTQ'}]}
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':

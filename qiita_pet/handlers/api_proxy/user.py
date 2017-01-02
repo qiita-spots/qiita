@@ -29,7 +29,7 @@ def user_jobs_get_req(user):
      'template': {sample: {column: value, ...}, ...}
     """
 
-    response = {}
+    response = []
     cmds = {}
     for j in user.jobs():
         cmd = j.command
@@ -38,11 +38,11 @@ def user_jobs_get_req(user):
         ccmd = cmds[cmd]
         hb = j.heartbeat
         hb = "" if hb is None else hb.strftime("%Y-%m-%d %H:%M:%S")
-        response[j.id] = {
-            'name': ccmd.name,
-            'params': j.parameters.values,
-            'status': j.status,
-            'heartbeat': hb}
+        response.append({'id': j.id,
+                         'name': ccmd.name,
+                         'params': j.parameters.values,
+                         'status': j.status,
+                         'heartbeat': hb})
 
     return {'status': 'success',
             'message': '',
