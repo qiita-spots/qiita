@@ -3,10 +3,6 @@
 {% from future.utils import viewitems %}
 {% from qiita_core.qiita_settings import qiita_config %}
 
-<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.css" type="text/css">
-
-<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.min.js"></script>
-
 <script type="text/javascript">
 $(document).ready(function() {
     $('#error-table').dataTable({"order": [[1, "asc"]]});

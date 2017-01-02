@@ -1,3 +1,17 @@
+div.qiita-main {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+#qiita-processing {
+  position: absolute;
+  height: 100%;
+  width: 0%;
+  right: 0;
+  top: 0;
+}
+
 #template-content{
   padding: 10px;
   height: 100%;

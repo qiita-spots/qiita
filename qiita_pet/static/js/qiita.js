@@ -40,7 +40,6 @@ function show_hide(div) {
 	$('#' + div).toggle();
 }
 
-
 function delete_analysis(aname, analysis_id) {
   if (confirm('Are you sure you want to delete analysis: ' + aname + '?')) {
     var form = $("<form>")
@@ -56,5 +55,17 @@ function delete_analysis(aname, analysis_id) {
     .attr("value", "delete_analysis"));
     $("body").append(form);
     form.submit();
+  }
+}
+
+function show_hide_process_list() {
+  if ($("#qiita-main").width() == $("#qiita-main").parent().width()) {
+    $("#qiita-main").width("76%");
+    $("#qiita-processing").width("24%");
+    $("#qiita-processing").show();
+  } else {
+    $("#qiita-main").width("100%");
+    $("#qiita-processing").width("0%");
+    $("#qiita-processing").hide();
   }
 }
