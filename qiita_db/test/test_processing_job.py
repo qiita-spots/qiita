@@ -629,6 +629,18 @@ class ProcessingJobTest(TestCase):
             [afp for _, afp, _ in
                 qdb.artifact.Artifact(exp_artifact_count).filepaths])
 
+    def test_processing_job_worflow(self):
+        # testing None
+        job = qdb.processing_job.ProcessingJob(
+            "063e553b-327c-4818-ab4a-adfe58e49860")
+        self.assertIsNone(job.processing_job_worflow)
+
+        # testing actual workflow
+        job = qdb.processing_job.ProcessingJob(
+            "b72369f9-a886-4193-8d3d-f7b504168e75")
+        self.assertEqual(job.processing_job_worflow,
+                         qdb.processing_job.ProcessingWorkflow(1))
+
 
 @qiita_test_checker()
 class ProcessingWorkflowTests(TestCase):

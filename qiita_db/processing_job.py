@@ -850,6 +850,25 @@ class ProcessingJob(qdb.base.QiitaObject):
                 name: qdb.artifact.Artifact(aid)
                 for aid, name in qdb.sql_connection.TRN.execute_fetchindex()}
 
+    @property
+    def processing_job_worflow(self):
+        """The processing job worflow
+
+        Returns
+        -------
+        ProcessingWorkflow
+            The processing job workflow the job
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT processing_job_workflow_id
+                     FROM qiita.processing_job_workflow_root
+                     WHERE processing_job_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            r = qdb.sql_connection.TRN.execute_fetchindex()
+
+            return (None if not r
+                    else qdb.processing_job.ProcessingWorkflow(r[0][0]))
+
 
 class ProcessingWorkflow(qdb.base.QiitaObject):
     """Models a workflow defined by the user

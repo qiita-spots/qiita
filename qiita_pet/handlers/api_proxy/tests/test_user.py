@@ -45,7 +45,8 @@ class TestSUserAPI(TestCase):
                     'input_data': 2,
                     'threads': 1,
                     'sortmerna_coverage': 0.97},
-                 'name': 'Pick closed-reference OTUs'},
+                 'name': 'Pick closed-reference OTUs',
+                 'processing_job_workflow_id': ''},
                 {'id': 'b72369f9-a886-4193-8d3d-f7b504168e75',
                  'status': 'success',
                  'heartbeat': '2015-11-22 21:15:00',
@@ -61,7 +62,8 @@ class TestSUserAPI(TestCase):
                     'rev_comp_mapping_barcodes': True,
                     'min_per_read_length_fraction': 0.75,
                     'barcode_type': u'golay_12'},
-                 'name': 'Split libraries FASTQ'}]}
+                 'name': 'Split libraries FASTQ',
+                 'processing_job_workflow_id': 1}]}
         self.assertEqual(obs, exp)
 
 

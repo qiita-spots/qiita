@@ -38,11 +38,15 @@ def user_jobs_get_req(user):
         ccmd = cmds[cmd]
         hb = j.heartbeat
         hb = "" if hb is None else hb.strftime("%Y-%m-%d %H:%M:%S")
-        response.append({'id': j.id,
-                         'name': ccmd.name,
-                         'params': j.parameters.values,
-                         'status': j.status,
-                         'heartbeat': hb})
+        pjw = j.processing_job_worflow
+        wid = '' if pjw is None else pjw.id
+        response.append({
+            'id': j.id,
+            'name': ccmd.name,
+            'params': j.parameters.values,
+            'status': j.status,
+            'heartbeat': hb,
+            'processing_job_workflow_id': wid})
 
     return {'status': 'success',
             'message': '',
