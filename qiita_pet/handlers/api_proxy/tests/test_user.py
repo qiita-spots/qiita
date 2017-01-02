@@ -61,7 +61,7 @@ class TestSUserAPI(TestCase):
                     'rev_comp_mapping_barcodes': True,
                     'min_per_read_length_fraction': 0.75,
                     'barcode_type': u'golay_12'},
-                'name': 'Split libraries FASTQ'}]}
+                 'name': 'Split libraries FASTQ'}]}
         self.assertEqual(obs, exp)
 
 
