@@ -299,7 +299,7 @@
       });
 
     });
-    
+
     </script>
     {% block head %}{% end %}
   </head>
@@ -318,7 +318,7 @@
 
     <div id="qiita-main" class="qiita-main">
       <div id="navigation-bar" class="navbar navbar-inverse navbar-static-top navbar-custom" role="navigation">
-        <div class="container">
+        <div class="container-fluid">
           <div class="navbar-header">
             <!-- button that appears if the window is re-sized to a smaller size -->
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -411,9 +411,6 @@
               </li>
               <li class="dropdown">
                 <a href="#" onClick="show_hide_process_list()" id="dflt-sel-info"><span class="glyphicon glyphicon-tasks"></span></a>
-                <ul class="dropdown-menu" style="padding: 5px">
-                  <li> <span id="dflt-study-count"></span> Running:</li>
-                </ul>
               </li>
             </ul>
             <!-- otherwise show the login form -->
@@ -489,7 +486,7 @@
       {% end %}
 
       <!-- all templates should override this portion to present their main content -->
-      <div id="template-content" class="container" style="width:99%">
+      <div id="template-content" class="container-fluid" style="width:98%">
         {% block content %}{% end %}
       </div>
 
@@ -517,7 +514,7 @@
     </div>
 
     <div id="qiita-processing" class="pre-scrollable" style="max-height: 100%">
-      <div id="processing-jobs-table" style="padding: 5px 5px;">
+      <div id="processing-jobs-table" style="padding: 5px 5px; background-color: #DDD";">
         <h3>Processing Jobs</h3>
         Search: <input v-model="search">
         <hr>
