@@ -61,10 +61,14 @@ function delete_analysis(aname, analysis_id) {
 function show_hide_process_list() {
   if ($("#qiita-main").width() == $("#qiita-main").parent().width()) {
     $("#qiita-main").width("76%");
+    $("#user-studies-table").width("76%");
+    $("#studies-table").width("76%");
     $("#qiita-processing").width("24%");
     $("#qiita-processing").show();
   } else {
     $("#qiita-main").width("100%");
+    $("#user-studies-table").width("100%");
+    $("#studies-table").width("100%");
     $("#qiita-processing").width("0%");
     $("#qiita-processing").hide();
   }
