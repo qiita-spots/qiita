@@ -14,7 +14,7 @@
 {% end %}
 {% set message = globals().get('message', '') %}
 {% if maintenance is not None %}
-  {# maintenance mode takes precidence #}
+  {# maintenance mode takes precedence #}
   {% set level = 'danger' %}
   {% set message = maintenance %}
 {% elif sysmessage is not None %}
@@ -286,7 +286,7 @@
         </p>
       </div>
     {% end %}
-    
+
     <!-- all templates should override this portion to present their main content -->
     <div id="template-content" class="container" style="width:99%">
       {% block content %}{% end %}
