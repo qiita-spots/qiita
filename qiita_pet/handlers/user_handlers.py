@@ -1,4 +1,5 @@
 from tornado.web import authenticated, HTTPError
+from tornado.gen import coroutine
 from future.utils import viewitems
 from wtforms import Form, StringField, validators
 
@@ -190,6 +191,7 @@ class UserMessagesHander(BaseHandler):
 
 class UserJobs(BaseHandler):
     @authenticated
+    @coroutine
     def get(self):
         response = user_jobs_get_req(self.current_user)
         self.write(response)
