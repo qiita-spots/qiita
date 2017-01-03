@@ -191,7 +191,6 @@ class UserMessagesHander(BaseHandler):
 
 class UserJobs(BaseHandler):
     @authenticated
-    @coroutine
     def get(self):
         response = user_jobs_get_req(self.current_user)
         self.write(response)

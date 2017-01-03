@@ -30,12 +30,8 @@ def user_jobs_get_req(user):
     """
 
     response = []
-    cmds = {}
     for j in user.jobs():
-        cmd = j.command
-        if cmd not in cmds:
-            cmds[cmd] = cmd
-        name = cmds[cmd].name
+        name = j.command.name
         hb = j.heartbeat
         hb = "" if hb is None else hb.strftime("%Y-%m-%d %H:%M:%S")
         pjw = j.processing_job_worflow
