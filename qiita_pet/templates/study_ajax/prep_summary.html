@@ -399,7 +399,7 @@
     {% if alert_type != 'success' and alert_message != '' %}
       bootstrapAlert(decodeURIComponent("{% raw alert_message %}").replace(/\+/g,' '), "{{alert_type}}");
     {% else %}
-      $('#bootstrap-alert').alert('close');
+      $('#alert-message').alert('close');
     {% end %}
   });
 </script>

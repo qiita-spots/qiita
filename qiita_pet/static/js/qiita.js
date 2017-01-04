@@ -15,8 +15,8 @@ function bootstrapAlert(message, severity, timeout){
   timeout = timeout || -1;
 
   severity = typeof severity !== 'undefined' ? severity : 'danger';
-
-  var alertDiv = $('<div>', { 'class': 'alert fade in alert-'+severity, 'role': 'alert', 'id': 'bootstrap-alert'});
+  $("#alert-message").remove();
+  var alertDiv = $('<div>', { 'class': 'alert fade in alert-'+severity, 'role': 'alert', 'id': 'alert-message'});
 
   alertDiv.append('<a href="#" class="close" data-dismiss="alert">&times;</a>');
   alertDiv.append('<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>');
@@ -32,7 +32,7 @@ function bootstrapAlert(message, severity, timeout){
   $('body').prepend(alertDiv);
 
   if(timeout > 0) {
-   window.setTimeout(function() { $('#bootstrap-alert').alert('close'); }, timeout);
+   window.setTimeout(function() { $('#alert-message').alert('close'); }, timeout);
   }
 }
 
