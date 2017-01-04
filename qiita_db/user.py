@@ -55,6 +55,7 @@ class User(qdb.base.QiitaObject):
     private_analyses
     shared_analyses
     unread_messages
+    jobs
 
     Methods
     -------
@@ -659,6 +660,27 @@ class User(qdb.base.QiitaObject):
                           WHERE expiration IS NOT NULL)"""
             qdb.sql_connection.TRN.add(sql)
             qdb.sql_connection.TRN.execute()
+
+    def jobs(self):
+        """Return jobs created by the user
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        list of ProcessingJob
+
+        """
+        with qdb.sql_connection.TRN:
+            sql_info = [self._id]
+            sql = """SELECT processing_job_id
+                     FROM qiita.processing_job
+                     WHERE email = %s
+                     ORDER BY heartbeat DESC"""
+            qdb.sql_connection.TRN.add(sql, sql_info)
+            return [qdb.processing_job.ProcessingJob(p[0])
+                    for p in qdb.sql_connection.TRN.execute_fetchindex()]
 
 
 def validate_email(email):

@@ -3,6 +3,7 @@ from future.utils import viewitems
 from wtforms import Form, StringField, validators
 
 from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_pet.handlers.api_proxy import user_jobs_get_req
 from qiita_db.user import User
 from qiita_db.logger import LogEntry
 from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaDBError
@@ -185,3 +186,10 @@ class UserMessagesHander(BaseHandler):
 
         self.render("user_messages.html",
                     messages=self.current_user.messages())
+
+
+class UserJobs(BaseHandler):
+    @authenticated
+    def get(self):
+        response = user_jobs_get_req(self.current_user)
+        self.write(response)

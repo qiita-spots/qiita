@@ -17,7 +17,7 @@ from qiita_pet.handlers.auth_handlers import (
     AuthCreateHandler, AuthLoginHandler, AuthLogoutHandler, AuthVerifyHandler)
 from qiita_pet.handlers.user_handlers import (
     ChangeForgotPasswordHandler, ForgotPasswordHandler, UserProfileHandler,
-    UserMessagesHander)
+    UserMessagesHander, UserJobs)
 from qiita_pet.handlers.analysis_handlers import (
     SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
     ShowAnalysesHandler, ResultsHandler, SelectedSamplesHandler,
@@ -88,6 +88,7 @@ class Application(tornado.web.Application):
             (r"/auth/reset/(.*)", ChangeForgotPasswordHandler),
             (r"/profile/", UserProfileHandler),
             (r"/user/messages/", UserMessagesHander),
+            (r"/user/jobs/", UserJobs),
             (r"/results/(.*)", ResultsHandler,
              {"path": RES_PATH}),
             (r"/static/(.*)", tornado.web.StaticFileHandler,
