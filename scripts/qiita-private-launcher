@@ -31,7 +31,7 @@ source ~/.bash_profile
 @click.argument('arguments', required=True, nargs=-1)
 def start(qiita_env, command, arguments):
     """Starts the plugin environment"""
-    cmd = ['qiita private', command]
+    cmd = ['qiita-private', command]
     cmd.extend(["'%s'" % arg for arg in arguments])
     fd, fp = mkstemp(suffix=".sh")
     close(fd)
