@@ -600,7 +600,7 @@ class ProcessingJob(qdb.base.QiitaObject):
             else:
                 if self.command.software.type == 'artifact definition':
                     job_params = self.parameters.values
-                    if job_params['provenance'] is not None:
+                    if job_params.get('provenance') is not None:
                         # This artifact definition job is a result of a command
                         # run, if it fails, set up the status of the "parent"
                         # job also as failed, and assign the sem error message
