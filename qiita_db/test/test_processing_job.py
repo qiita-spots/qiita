@@ -404,6 +404,15 @@ class ProcessingJobTest(TestCase):
         job.complete(True)
         self.assertEqual(job.status, 'success')
 
+        job = qdb.processing_job.ProcessingJob.create(
+            qdb.user.User('test@foo.bar'),
+            qdb.software.Parameters.load(
+                qdb.software.Command(5),
+                values_dict={"input_data": 1}))
+        job._set_status('running')
+        job.complete(False, error='Some Error')
+        self.assertEqual(job.status, 'error')
+
     def test_complete_type(self):
         fd, fp = mkstemp(suffix="_table.biom")
         self._clean_up_files.append(fp)

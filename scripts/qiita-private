@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
+import click
+import qiita_db as qdb
+
+
+@click.group()
+def qiita_private():
+    pass
+
+
+@qiita_private.command()
+@click.argument('job_id', required=True, type=click.STRING)
+@click.argument('payload', required=True, type=click.STRING)
+def complete_job(job_id, payload):
+    qdb.commands.complete_job_cmd(job_id, payload)
+
+if __name__ == '__main__':
+    qiita_private()
