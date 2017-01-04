@@ -866,8 +866,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             r = qdb.sql_connection.TRN.execute_fetchindex()
 
-            return (None if not r
-                    else qdb.processing_job.ProcessingWorkflow(r[0][0]))
+            return (qdb.processing_job.ProcessingWorkflow(r[0][0]) if r
+                    else None)
 
 
 class ProcessingWorkflow(qdb.base.QiitaObject):

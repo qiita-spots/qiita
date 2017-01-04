@@ -8,6 +8,22 @@
 {% set user = current_user %}
 {% set qiita_version, qiita_sha = get_qiita_version() %}
 
+{% set level = globals().get('level', '') %}
+{% if level not in {'danger', 'success', 'info', 'warning'} %}
+    {% set level = 'info' %}
+{% end %}
+{% set message = globals().get('message', '') %}
+{% if maintenance is not None %}
+  {# maintenance mode takes precedence #}
+  {% set level = 'danger' %}
+  {% set message = maintenance %}
+{% elif sysmessage is not None %}
+  {# since this is a systemwide message, allow regular messages as well #}
+  {% set message = sysmessage + "<br />" + str(message) %}
+{% end %}
+
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
   <head>
@@ -305,16 +321,6 @@
   </head>
 
   <body style="padding-top: 0px; height: 100%" onload='overlay_check();'>
-    {% set level = globals().get('level', '') %}
-    {% set message = globals().get('message', '') %}
-    {% if maintenance is not None %}
-      {# maintenance mode takes precidence #}
-      {% set level = 'danger' %}
-      {% set message = maintenance %}
-    {% elif sysmessage is not None %}
-      {# since this is a systemwide message, allow regular messages as well #}
-      {% set message = sysmessage + "<br />" + str(message) %}
-    {% end %}
 
     <div id="qiita-main" class="qiita-main">
       <div id="navigation-bar" class="navbar navbar-inverse navbar-static-top navbar-custom" role="navigation">
@@ -489,6 +495,7 @@
       <div id="template-content" class="container-fluid" style="width:97%">
         {% block content %}{% end %}
       </div>
+    </div> <!--/.main nav-bar -->
 
       <div id="footer" style="font-size: 12px; text-align: center; z-index: 1000;">
         Thank you for using Qiita. For citations point to <a href="http://qiita.microbio.me">http://qiita.microbio.me</a>.

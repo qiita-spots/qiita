@@ -262,7 +262,10 @@ def validate_invalid_column_names(column_names):
     # tests.
     forbidden_values = {
         # https://github.com/biocore/qiita/issues/2026
-        'sampleid'
+        'sampleid',
+        # https://github.com/biocore/qiita/issues/1866
+        'qiita_study_id',
+        'qiita_prep_id'
     }
     forbidden = forbidden_values & column_names
 

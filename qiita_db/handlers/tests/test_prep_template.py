@@ -122,7 +122,8 @@ class PrepTemplateDataHandlerTests(OauthTestingBase):
             'sequencing_meth': 'Sequencing by synthesis',
             'study_center': 'CCME',
             'target_gene': '16S rRNA',
-            'target_subfragment': 'V4'}
+            'target_subfragment': 'V4',
+            'qiita_prep_id': '1'}
         self.assertEqual(obs, exp)
 
 

@@ -154,6 +154,7 @@ class TestPrepAPIReadOnly(TestCase):
             'sample_center': 'ANL',
             'samp_size': '.25,g',
             'barcode': 'ACGCACATACAA',
+            'qiita_prep_id': '1',
             'emp_status': 'EMP',
             'illumina_technology': 'MiSeq',
             'experiment_title': 'Cannabis Soil Microbiome',
@@ -237,6 +238,7 @@ class TestPrepAPIReadOnly(TestCase):
             'center_project_name': [],
             'sample_center': [('ANL', 27)],
             'samp_size': [('.25,g', 27)],
+            'qiita_prep_id': [('1', 27)],
             'barcode': [
                 ('AACTCCTGTGGA', 1), ('ACCTCAGTCAAG', 1), ('ACGCACATACAA', 1),
                 ('AGCAGGCACGAA', 1), ('AGCGCTCACATC', 1), ('ATATCGCGATGA', 1),
