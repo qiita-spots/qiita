@@ -115,7 +115,7 @@ class TestSampleAPI(TestCase):
             'host_subject_id': '1001:B4',
             'season_environment': 'winter',
             'temp': '15',
-            'qiita_sample_id': '1',
+            'qiita_study_id': '1',
             'country': 'GAZ:United States of America',
             'longitude': '68.5041623253',
             'tot_nitro': '1.41',
@@ -271,7 +271,7 @@ class TestSampleAPI(TestCase):
                     ('Not applicable', 1)],
                 'tot_nitro': [('1.3', 9), ('1.41', 9), ('1.51', 9)],
                 'depth': [('0.15', 27)],
-                'qiita_sample_id': [('1', 27)],
+                'qiita_study_id': [('1', 27)],
                 'anonymized_name': [
                     ('SKB1', 1), ('SKB2', 1), ('SKB3', 1), ('SKB4', 1),
                     ('SKB5', 1), ('SKB6', 1), ('SKB7', 1), ('SKB8', 1),

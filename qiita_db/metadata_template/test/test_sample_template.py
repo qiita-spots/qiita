@@ -1820,7 +1820,7 @@ class TestSampleTemplate(TestCase):
                 'latitude': '42.42',
                 'longitude': '41.41',
                 'taxon_id': '9606',
-                'qiita_sample_id': str(new_id),
+                'qiita_study_id': str(new_id),
                 'scientific_name': 'homo sapiens'},
             '%s.Sample2' % new_id: {
                 'physical_specimen_location': 'location1',
@@ -1834,7 +1834,7 @@ class TestSampleTemplate(TestCase):
                 'latitude': '4.2',
                 'longitude': '1.1',
                 'taxon_id': '9606',
-                'qiita_sample_id': str(new_id),
+                'qiita_study_id': str(new_id),
                 'scientific_name': 'homo sapiens'},
             '%s.Sample3' % new_id: {
                 'physical_specimen_location': 'location1',
@@ -1848,7 +1848,7 @@ class TestSampleTemplate(TestCase):
                 'latitude': '4.8',
                 'longitude': '4.41',
                 'taxon_id': '9606',
-                'qiita_sample_id': str(new_id),
+                'qiita_study_id': str(new_id),
                 'scientific_name': 'homo sapiens'},
             }
         exp = pd.DataFrame.from_dict(exp_dict, orient='index', dtype=str)
@@ -1885,7 +1885,7 @@ class TestSampleTemplate(TestCase):
             'water_content_soil', 'elevation', 'temp', 'tot_nitro',
             'samp_salinity', 'altitude', 'env_biome', 'country', 'ph',
             'anonymized_name', 'tot_org_carb', 'description_duplicate',
-            'env_feature', 'scientific_name', 'qiita_sample_id'})
+            'env_feature', 'scientific_name', 'qiita_study_id'})
 
     def test_check_restrictions(self):
         obs = self.tester.check_restrictions(
@@ -2170,7 +2170,7 @@ class TestSampleTemplate(TestCase):
 EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"
     "host_subject_id\tlatitude\tlongitude\tphysical_specimen_location\t"
-    "physical_specimen_remaining\tqiita_sample_id\tsample_type\t"
+    "physical_specimen_remaining\tqiita_study_id\tsample_type\t"
     "scientific_name\ttaxon_id\n"
     "{0}.Sample1\t05/29/2014 12:24:15\tTest Sample 1\ttrue\tNotIdentified\t"
     "42.42\t41.41\tlocation1\ttrue\t{0}\ttype1\thomo sapiens\t9606\n"
@@ -2182,7 +2182,7 @@ EXP_SAMPLE_TEMPLATE = (
 EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
     "sample_name\tcollection_timestamp\tdescription\tdna_extracted\t"
     "host_subject_id\tlatitude\tlongitude\tphysical_specimen_location\t"
-    "physical_specimen_remaining\tqiita_sample_id\tsample_type\t"
+    "physical_specimen_remaining\tqiita_study_id\tsample_type\t"
     "scientific_name\ttaxon_id\n"
     "{0}.Sample1\t05/29/2014 12:24:15\tTest Sample 1\ttrue\tNotIdentified\t"
     "42.42\t41.41\tlocation1\ttrue\t{0}\ttype1\thomo sapiens\t9606\n"
