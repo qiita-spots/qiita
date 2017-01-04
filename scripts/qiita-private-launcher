@@ -37,8 +37,6 @@ def start(qiita_env, command, arguments):
     close(fd)
     with open(fp, 'w') as f:
         f.write(SCRIPT % (qiita_env, ' '.join(cmd)))
-    with open("/home/travis/trying_to_debug.txt", "w") as f:
-        f.write(SCRIPT % (qiita_env, ' '.join(cmd)))
     cmd = "bash %s" % fp
     proc = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
