@@ -1,5 +1,4 @@
 from tornado.web import authenticated, HTTPError
-from tornado.gen import coroutine
 from future.utils import viewitems
 from wtforms import Form, StringField, validators
 
