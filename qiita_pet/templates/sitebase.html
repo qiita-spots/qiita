@@ -116,7 +116,7 @@
             type: 'PATCH',
             data: {'op': 'remove', 'path': '/' + workflow_id + '/' + job_id},
             success: function(data) {
-              if(data.stats == 'error') {
+              if(data.status == 'error') {
                 bootstrapAlert(data.message, "danger");
               }
               else {
@@ -206,19 +206,22 @@
         });
 
         // Based on http://codepen.io/willvincent/pen/LbeKKW
+        //    and   https://datatables.net/examples/api/row_details.html
 
         Vue.component('data-table-processing-jobs', {
-        template: '<table></table>',
+        template: '<table id="processing-jobs-datatables"></table>',
         props: ['jobs'],
         data() {
           return {
             headers: [
-              { title: ''},
-              { title: 'ID' },
+              { "className": 'more-info-processing-jobs',
+                "orderable": false,
+                "data": null,
+                "defaultContent": ''},
+              { title: 'Heartbeat' },
               { title: 'Name' },
               { title: 'Status' },
-              { title: 'Heartbeat' },
-              { title: 'Parameters' }
+              { title: 'Step' }
             ],
             rows: [] ,
             dtHandle: null
@@ -227,32 +230,36 @@
         watch: {
           jobs(val, oldVal) {
             let vm = this;
-            vm.rows = [];
-            // You should _probably_ check that this is changed data... but we'll skip that for this example.
-            val.forEach(function (item) {
-              // Fish out the specific column data for each item in your data set and push it to the appropriate place.
-              // Basically we're just building a multi-dimensional array here. If the data is _already_ in the right format you could
-              // skip this loop...
-              let row = [];
-              row.push('<button class="btn btn-danger btn-sm" onclick="remove_job(\'' + item.id + "', '" + item.processing_job_workflow_id + '\');"><span class="glyphicon glyphicon-trash"></span></button>')
-              row.push(item.id);
-              row.push(item.name);
-              row.push(item.status);
-              row.push(item.heartbeat);
-              let params = "";
-              for (k in item.params) {
-                params += '<b>' + k + '</b>: ' + item.params[k] + '<br/>';
-              }
-              row.push(params);
 
-              vm.rows.push(row);
-            });
+            if (JSON.stringify(val) !== JSON.stringify(oldVal)) {
+              vm.rows = [];
+              val.forEach(function (item) {
+                // Fish out the specific column data for each item in your data set and push it to the appropriate place.
+                // Basically we're just building a multi-dimensional array here. If the data is _already_ in the right format you could
+                // skip this loop...
+                let row = [];
+                row.push('')
+                row.push(item.heartbeat);
+                row.push(item.name);
+                row.push(item.status);
+                row.push(item.step);
+                row.push(item.id);
 
-            // Here's the magic to keeping the DataTable in sync.
-            // It must be cleared, new rows added, then redrawn!
-            vm.dtHandle.clear();
-            vm.dtHandle.rows.add(vm.rows);
-            vm.dtHandle.draw();
+                let params = "";
+                for (k in item.params) {
+                  params += '<b>' + k + '</b>: ' + item.params[k] + '<br/>';
+                }
+                row.push(params)
+                row.push(item.processing_job_workflow_id)
+                vm.rows.push(row);
+              });
+
+              // Here's the magic to keeping the DataTable in sync.
+              // It must be cleared, new rows added, then redrawn!
+              vm.dtHandle.clear();
+              vm.dtHandle.rows.add(vm.rows);
+              vm.dtHandle.draw();
+            }
           }
         },
         mounted() {
@@ -264,12 +271,31 @@
             data: vm.rows,
             searching: false,
             paging: false,
-            info: false
+            info: false,
+            order: [[1, 'desc']]
+          });
+
+          $('#processing-jobs-datatables').on('click', 'td.more-info-processing-jobs', function () {
+            var tr = $(this).closest('tr');
+            var row = vm.dtHandle.row( tr );
+
+            if ( row.child.isShown() ) {
+              // This row is already open - close it
+              row.child.hide();
+              tr.removeClass('shown');
+            }
+            else {
+              // Open this row
+              row.child( format_extra_info_processing_jobs(row.data()) ).show();
+              tr.addClass('shown');
+            }
           });
         }
       });
 
-      new Vue({
+      // this has to be global so we can update when we click on the processing
+      // jobs button
+      processing_jobs_vue = new Vue({
         el: '#processing-jobs-table',
         data: {
           jobs: [],
@@ -297,9 +323,9 @@
             });
           }
         },
-        mounted() {
-          let vm = this;
-          setInterval(function () {
+        methods: {
+          update_processing_job_data: function () {
+            let vm = this;
             $.ajax({
               url: "{% raw qiita_config.portal_dir %}/user/jobs/",
               success(response) {
@@ -310,10 +336,18 @@
                 }
               }
             });
-          }, 1000)
+          }
+        },
+        mounted() {
+          let vm = this;
+          setInterval(function (){
+            // the div is hidden
+            if ($("#qiita-main").width() != $("#qiita-main").parent().width()) {
+              vm.update_processing_job_data();
+            }
+          }, 30000);
         }
       });
-
     });
 
     </script>
@@ -522,7 +556,10 @@
 
     <div id="qiita-processing" class="pre-scrollable" style="max-height: 100%">
       <div id="processing-jobs-table" style="padding: 5px 5px;">
-        <h3>Processing Jobs</h3>
+        <h3>
+            Processing Jobs <br/>
+            <small>(skipping successful jobs)</small>
+        </h3>
         Search: <input v-model="search">
         <hr>
         <data-table-processing-jobs :jobs="filteredJobs"></data-table-processing-jobs>

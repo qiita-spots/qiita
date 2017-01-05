@@ -29,12 +29,45 @@ function bootstrapAlert(message, severity, timeout){
     alertDiv.append('<p style="text-align:center">Need help? Send us an <a href="mailto:qiita.help@gmail.com">email</a>.</p>');
   }
 
-  $('body').prepend(alertDiv);
+  $('#qiita-main').prepend(alertDiv);
 
   if(timeout > 0) {
    window.setTimeout(function() { $('#alert-message').alert('close'); }, timeout);
   }
 }
+
+function format_extra_info_processing_jobs ( data ) {
+    // `data` is the original data object for the row
+    // 0: blank +/- button
+    // 1: heartbeat
+    // 2: name
+    // 3: status
+    // 4: step
+    // 5: id
+    // 6: params
+    // 7: processing_job_workflow_id
+
+    let row = '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'+
+                '<tr>'+
+                    '<td><b>ID:</b></td>'+
+                    '<td>'+ data[5] +'</td>'+
+                '</tr>'+
+                '<tr>'+
+                    '<td colspan="2"><h5>Parameters:</h5>'+ data[6] +'</td>'+
+                '</tr>';
+    if (data[7] !== '') {
+      row += '<tr>'+
+                '<td colspan="2">'+
+                  '<button class="btn btn-danger btn-sm" onclick="remove_job(\''+ data[5] + "', '" + data[7] +'\');">'+
+                  '<span class="glyphicon glyphicon-trash"></span></button>'+
+                '</td>'
+             '</tr>';
+    }
+    row += '</table>';
+
+    return row
+}
+
 
 function show_hide(div) {
 	$('#' + div).toggle();
@@ -60,6 +93,8 @@ function delete_analysis(aname, analysis_id) {
 
 function show_hide_process_list() {
   if ($("#qiita-main").width() == $("#qiita-main").parent().width()) {
+    // let's update the job list
+    processing_jobs_vue.update_processing_job_data();
     $("#qiita-main").width("76%");
     $("#user-studies-table").width("76%");
     $("#studies-table").width("76%");

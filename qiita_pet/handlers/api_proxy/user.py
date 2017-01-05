@@ -11,7 +11,7 @@ from qiita_core.util import execute_as_transaction
 
 
 @execute_as_transaction
-def user_jobs_get_req(user, limit=10):
+def user_jobs_get_req(user, limit=30):
     """Gets the json of jobs
 
     Parameters
@@ -42,6 +42,7 @@ def user_jobs_get_req(user, limit=10):
             'params': j.parameters.values,
             'status': j.status,
             'heartbeat': hb,
+            'step': j.step,
             'processing_job_workflow_id': wid})
 
     return {'status': 'success',
