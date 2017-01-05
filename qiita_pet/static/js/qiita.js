@@ -55,7 +55,7 @@ function format_extra_info_processing_jobs ( data ) {
                 '<tr>'+
                     '<td colspan="2"><h5>Parameters:</h5>'+ data[6] +'</td>'+
                 '</tr>';
-    if (data[7] !== '') {
+    if (data[7] !== '' && data[3] === 'in_construction') {
       row += '<tr>'+
                 '<td colspan="2">'+
                   '<button class="btn btn-danger btn-sm" onclick="remove_job(\''+ data[5] + "', '" + data[7] +'\');">'+

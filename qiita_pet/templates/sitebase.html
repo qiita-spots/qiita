@@ -130,6 +130,9 @@
                     $('#run-btn').prop('disabled', true);
                   }
                   $("#processing-info-div").empty();
+                } else {
+                  processing_jobs_vue.update_processing_job_data();
+                  bootstrapAlert("Job deleted", "success", 10000);
                 }
               }
             }
