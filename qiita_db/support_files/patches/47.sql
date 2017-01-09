@@ -274,6 +274,9 @@ BEGIN
             -- Step 1.1.b: Associate the artifact with the analysis
             INSERT INTO qiita.analysis_artifact (analysis_id, artifact_id)
                 VALUES (analysis.analysis_id, initial_biom_id);
+            -- Step 1.1.c: Link the artifact with its file
+            INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
+                VALUES (initial_biom_id, biom_data.filepath_id);
 
             -- Step 1.2: Create the single rarefaction job
             -- Step 1.2.a: Add the row in the procesisng job table
