@@ -170,12 +170,15 @@ def create_rarefaction_job(depth, biom_artifact_id, analysis, srare_cmd_id):
     return job_id, params
 
 
-def transfer_file_to_artifact(a_timestamp, command_id, data_type_id, params,
-                              artifact_type_id, filepath_id):
+def transfer_file_to_artifact(analysis_id, a_timestamp, command_id,
+                              data_type_id, params, artifact_type_id,
+                              filepath_id):
     """Creates a new artifact with the given filepath id
 
     Parameters
     ----------
+    analysis_id : int
+        The analysis id to attach the artifact
     a_timestamp : datetime.datetime
         The generated timestamp of the artifact
     command_id : int
@@ -210,6 +213,11 @@ def transfer_file_to_artifact(a_timestamp, command_id, data_type_id, params,
         sql = """INSERT INTO qiita.artifact_filepath (artifact_id, filepath_id)
                  VALUES (%s, %s)"""
         TRN.add(sql, [artifact_id, filepath_id])
+        # Link the artifact with the analysis
+        sql = """INSERT INTO qiita.analysis_artifact
+                    (analysis_id, artifact_id)
+                 VALUES (%s, %s)"""
+        TRN.add(sql, [analysis_id, artifact_id])
 
     return artifact_id
 
@@ -245,8 +253,8 @@ def create_rarefied_biom_artifact(analysis, srare_cmd_id, biom_data, params,
         # Transfer the file to an artifact
         # Magic number 7: artifact type -> biom
         artifact_id = transfer_file_to_artifact(
-            analysis['timestamp'], srare_cmd_id, biom_data['data_type_id'],
-            params, 7, biom_data['filepath_id'])
+            analysis['analysis_id'], analysis['timestamp'], srare_cmd_id,
+            biom_data['data_type_id'], params, 7, biom_data['filepath_id'])
         # Link the artifact with its parent
         sql = """INSERT INTO qiita.parent_artifact (artifact_id, parent_id)
                  VALUES (%s, %s)"""
@@ -314,8 +322,9 @@ def transfer_job(analysis, command_id, params, input_artifact_id, job_data,
             TRN.add(sql, job_data['job_id'])
             filepath_id = TRN.execute_fetchlast()
             artifact_id = transfer_file_to_artifact(
-                analysis['timestamp'], command_id, biom_data['data_type_id'],
-                params, output_artifact_type_id, filepath_id)
+                analysis['analysis_id'], analysis['timestamp'], command_id,
+                biom_data['data_type_id'], params, output_artifact_type_id,
+                filepath_id)
 
             # Link the artifact with its parent
             sql = """INSERT INTO qiita.parent_artifact (artifact_id, parent_id)
@@ -639,8 +648,15 @@ with TRN:
 
                 transfer_job()
 
-# Delete old structures that are not used anymore
 with TRN:
+    # Unlink the analysis from the biom table filepaths
+    # Magic number 7 -> biom filepath type
+    sql = """DELETE FROM qiita.analysis_filepath
+             WHERE filepath_id IN (SELECT filepath_id
+                                   FROM qiita.filepath
+                                   WHERE filepath_type_id = 7)"""
+    TRN.add(sql)
+    # Delete old structures that are not used anymore
     TRN.add("DROP TABLE qiita.collection_job")
     TRN.add("DROP TABLE qiita.collection_analysis")
     TRN.add("DROP TABLE qiita.collection_users")
