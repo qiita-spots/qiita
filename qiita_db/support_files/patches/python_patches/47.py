@@ -654,6 +654,7 @@ with TRN:
     TRN.add("DROP TABLE qiita.job_status")
     TRN.add("DROP TABLE qiita.command_data_type")
     TRN.add("DROP TABLE qiita.command")
+    TRN.add("DROP TABLE analysis_status")
     TRN.execute()
 
 # Purge filepaths

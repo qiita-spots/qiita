@@ -40,9 +40,6 @@
 			<fk name="fk_analysis_user" to_schema="qiita" to_table="qiita_user" >
 				<fk_column name="email" pk="email" />
 			</fk>
-			<fk name="fk_analysis_analysis_status" to_schema="qiita" to_table="analysis_status" >
-				<fk_column name="analysis_status_id" pk="analysis_status_id" />
-			</fk>
 			<fk name="fk_analysis" to_schema="qiita" to_table="portal_type" >
 				<fk_column name="portal_type_id" pk="portal_type_id" />
 			</fk>
@@ -139,16 +136,6 @@
 			<fk name="fk_analysis_sample_artifact" to_schema="qiita" to_table="artifact" >
 				<fk_column name="artifact_id" pk="artifact_id" />
 			</fk>
-		</table>
-		<table name="analysis_status" >
-			<column name="analysis_status_id" type="bigserial" jt="-5" mandatory="y" />
-			<column name="status" type="varchar" jt="12" mandatory="y" />
-			<index name="pk_analysis_status" unique="PRIMARY_KEY" >
-				<column name="analysis_status_id" />
-			</index>
-			<index name="idx_analysis_status" unique="UNIQUE" >
-				<column name="status" />
-			</index>
 		</table>
 		<table name="analysis_users" >
 			<comment>Links analyses to the users they are shared with</comment>
@@ -1643,8 +1630,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="default_workflow_edge_connections" color="b2cdf7" x="870" y="1860" />
 		<entity schema="qiita" name="processing_job_validator" color="b2cdf7" x="720" y="1785" />
 		<entity schema="qiita" name="study_publication" color="b2cdf7" x="1815" y="795" />
-		<entity schema="qiita" name="analysis_status" color="d0def5" x="45" y="855" />
-		<entity schema="qiita" name="analysis" color="d0def5" x="210" y="765" />
 		<entity schema="qiita" name="analysis_users" color="d0def5" x="45" y="750" />
 		<entity schema="qiita" name="analysis_portal" color="a8c4ef" x="390" y="720" />
 		<entity schema="qiita" name="analysis_filepath" color="c0d4f3" x="405" y="840" />
@@ -1653,11 +1638,11 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="ontology" color="d0def5" x="1875" y="1530" />
 		<entity schema="qiita" name="analysis_artifact" color="b2cdf7" x="405" y="1080" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="720" y="1125" />
+		<entity schema="qiita" name="analysis" color="d0def5" x="210" y="765" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
 			<entity schema="qiita" name="analysis_users" />
-			<entity schema="qiita" name="analysis_status" />
 			<entity schema="qiita" name="analysis_sample" />
 			<entity schema="qiita" name="analysis_filepath" />
 			<entity schema="qiita" name="analysis_portal" />

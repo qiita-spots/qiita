@@ -702,7 +702,7 @@ table {
 	parent_processing_job references processing_job ( child_id -> processing_job_id )</title>
 </path>
 <text x='647' y='1960' transform='rotate(270 647,1960)' title='Foreign Key fk_parent_processing_job_0
-	parent_processing_job references processing_job ( child_id -> processing_job_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 780 2115 L 577,2115 Q 570,2115 570,2107 L 570,1942 Q 570,1935 562,1935 L 187,1935 Q 180,1935 180,1927 L 180,982 Q 180,975 187,975 L 352,975 Q 360,975 360,967 L 360,622 Q 360,615 352,615 L 262,615 Q 255,615 255,607 L 255,405' >
+	parent_processing_job references processing_job ( child_id -> processing_job_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 780 2115 L 577,2115 Q 570,2115 570,2107 L 570,1942 Q 570,1935 562,1935 L 172,1935 Q 165,1935 165,1927 L 165,367 Q 165,360 172,360 L 195,360' >
 	<title>Foreign Key fk_processing_job_workflow
 	processing_job_workflow references qiita_user ( email )</title>
 </path>
@@ -747,7 +747,12 @@ table {
 	software_command references software ( software_id )</title>
 </path>
 <text x='832' y='1645' transform='rotate(0 832,1645)' title='Foreign Key fk_soft_command_software
-	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 690 1755 L 712,1755 Q 720,1755 720,1747 L 720,1740' >
+	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 495 1875 L 487,1875 Q 480,1875 480,1882 L 480,1897 Q 480,1905 472,1905 L 157,1905 Q 150,1905 150,1897 L 150,352 Q 150,345 157,345 L 195,345' >
+	<title>Foreign Key fk_processing_job_qiita_user
+	processing_job references qiita_user ( email )</title>
+</path>
+<text x='469' y='1870' transform='rotate(0 469,1870)' title='Foreign Key fk_processing_job_qiita_user
+	processing_job references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 690 1755 L 712,1755 Q 720,1755 720,1747 L 720,1740' >
 	<title>Foreign Key fk_processing_job
 	processing_job references software_command ( command_id )</title>
 </path>
@@ -792,22 +797,7 @@ table {
 	study_publication references study ( study_id )</title>
 </path>
 <text x='1832' y='775' transform='rotate(270 1832,775)' title='Foreign Key fk_study_publication_study
-	study_publication references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 225 750 L 225,405' >
-	<title>Foreign Key fk_analysis_user
-	analysis references qiita_user ( email )</title>
-</path>
-<text x='227' y='745' transform='rotate(270 227,745)' title='Foreign Key fk_analysis_user
-	analysis references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 195 870 L 180,870' >
-	<title>Foreign Key fk_analysis_analysis_status
-	analysis references analysis_status ( analysis_status_id )</title>
-</path>
-<text x='99' y='865' transform='rotate(0 99,865)' title='Foreign Key fk_analysis_analysis_status
-	analysis references analysis_status ( analysis_status_id )' style='fill:#a1a0a0;'>analysis_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 750 L 300,600' >
-	<title>Foreign Key fk_analysis
-	analysis references portal_type ( portal_type_id )</title>
-</path>
-<text x='302' y='745' transform='rotate(270 302,745)' title='Foreign Key fk_analysis
-	analysis references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 135 765 L 195,765' >
+	study_publication references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 135 765 L 195,765' >
 	<title>Foreign Key fk_analysis_users_analysis
 	analysis_users references analysis ( analysis_id )</title>
 </path>
@@ -867,7 +857,17 @@ table {
 	analysis_artifact references artifact ( artifact_id )</title>
 </path>
 <text x='517' y='1090' transform='rotate(0 517,1090)' title='Foreign Key fk_analysis_artifact_artifact
-	analysis_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	analysis_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 225 750 L 225,405' >
+	<title>Foreign Key fk_analysis_user
+	analysis references qiita_user ( email )</title>
+</path>
+<text x='227' y='745' transform='rotate(270 227,745)' title='Foreign Key fk_analysis_user
+	analysis references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 750 L 300,600' >
+	<title>Foreign Key fk_analysis
+	analysis references portal_type ( portal_type_id )</title>
+</path>
+<text x='302' y='745' transform='rotate(270 302,745)' title='Foreign Key fk_analysis
+	analysis references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='1410' y='1733' width='150' height='120' rx='7' ry='7' />
 <path d='M 1410.50 1759.50 L 1410.50 1740.50 Q 1410.50 1733.50 1417.50 1733.50 L 1552.50 1733.50 Q 1559.50 1733.50 1559.50 1740.50 L 1559.50 1759.50 L1410.50 1759.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='1418' y='1747' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1442,7 +1442,8 @@ Referred by ebi_run_accession ( sample_id ) </title></a>
 Represents data in the system</title></a>
   <use id='nn' x='1202' y='957' xlink:href='#nn'/><a xlink:href='#artifact.artifact_id'><use id='pk' x='1202' y='956' xlink:href='#pk'/><title>Primary Key  ( artifact_id ) </title></a>
 <a xlink:href='#artifact.artifact_id'><text x='1218' y='967'>artifact_id</text><title>artifact_id bigserial not null</title></a>
-<a xlink:href='#artifact.artifact_id'><use id='ref' x='1338' y='956' xlink:href='#ref'/><title>Referred by analysis_sample ( artifact_id ) 
+<a xlink:href='#artifact.artifact_id'><use id='ref' x='1338' y='956' xlink:href='#ref'/><title>Referred by analysis_artifact ( artifact_id ) 
+Referred by analysis_sample ( artifact_id ) 
 Referred by artifact_filepath ( artifact_id ) 
 Referred by artifact_output_processing_job ( artifact_id ) 
 Referred by artifact_processing_job ( artifact_id ) 
@@ -1450,8 +1451,7 @@ Referred by ebi_run_accession ( artifact_id )
 Referred by parent_artifact ( artifact_id ) 
 Referred by parent_artifact ( parent_id -> artifact_id ) 
 Referred by prep_template ( artifact_id ) 
-Referred by study_artifact ( artifact_id ) 
-Referred by analysis_artifact ( artifact_id ) </title></a>
+Referred by study_artifact ( artifact_id ) </title></a>
   <use id='nn' x='1202' y='972' xlink:href='#nn'/><a xlink:href='#artifact.name'><text x='1218' y='982'>name</text><title>name varchar&#040;35&#041; not null</title></a>
   <use id='nn' x='1202' y='987' xlink:href='#nn'/><a xlink:href='#artifact.generated_timestamp'><text x='1218' y='997'>generated_timestamp</text><title>generated_timestamp timestamp not null</title></a>
   <a xlink:href='#artifact.command_id'><use id='idx' x='1202' y='1001' xlink:href='#idx'/><title>Index  ( command_id ) </title></a>
@@ -1872,47 +1872,6 @@ The last heartbeat received by this job</title></a>
   <use id='nn' x='1817' y='837' xlink:href='#nn'/><a xlink:href='#study_publication.publication'><text x='1833' y='847'>publication</text><title>publication varchar not null</title></a>
   <a xlink:href='#study_publication.is_doi'><text x='1833' y='862'>is_doi</text><title>is_doi bool</title></a>
 
-<!-- ============= Table 'analysis_status' ============= -->
-<rect class='table' x='45' y='848' width='135' height='75' rx='7' ry='7' />
-<path d='M 45.50 874.50 L 45.50 855.50 Q 45.50 848.50 52.50 848.50 L 172.50 848.50 Q 179.50 848.50 179.50 855.50 L 179.50 874.50 L45.50 874.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#analysis_status'><text x='71' y='862' class='tableTitle'>analysis_status</text><title>Table qiita.analysis_status</title></a>
-  <use id='nn' x='47' y='882' xlink:href='#nn'/><a xlink:href='#analysis_status.analysis_status_id'><use id='pk' x='47' y='881' xlink:href='#pk'/><title>Primary Key  ( analysis_status_id ) </title></a>
-<a xlink:href='#analysis_status.analysis_status_id'><text x='63' y='892'>analysis_status_id</text><title>analysis_status_id bigserial not null</title></a>
-<a xlink:href='#analysis_status.analysis_status_id'><use id='ref' x='168' y='881' xlink:href='#ref'/><title>Referred by analysis ( analysis_status_id ) </title></a>
-  <use id='nn' x='47' y='897' xlink:href='#nn'/><a xlink:href='#analysis_status.status'><use id='unq' x='47' y='896' xlink:href='#unq'/><title>Unique Index  ( status ) </title></a>
-<a xlink:href='#analysis_status.status'><text x='63' y='907'>status</text><title>status varchar not null</title></a>
-
-<!-- ============= Table 'analysis' ============= -->
-<rect class='table' x='210' y='758' width='135' height='180' rx='7' ry='7' />
-<path d='M 210.50 784.50 L 210.50 765.50 Q 210.50 758.50 217.50 758.50 L 337.50 758.50 Q 344.50 758.50 344.50 765.50 L 344.50 784.50 L210.50 784.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#analysis'><text x='256' y='772' class='tableTitle'>analysis</text><title>Table qiita.analysis
-Holds analysis information</title></a>
-  <use id='nn' x='212' y='792' xlink:href='#nn'/><a xlink:href='#analysis.analysis_id'><use id='pk' x='212' y='791' xlink:href='#pk'/><title>Primary Key  ( analysis_id ) </title></a>
-<a xlink:href='#analysis.analysis_id'><text x='228' y='802'>analysis_id</text><title>analysis_id bigserial not null
-Unique identifier for analysis</title></a>
-<a xlink:href='#analysis.analysis_id'><use id='ref' x='333' y='791' xlink:href='#ref'/><title>Referred by analysis_filepath ( analysis_id ) 
-Referred by analysis_portal ( analysis_id ) 
-Referred by analysis_sample ( analysis_id ) 
-Referred by analysis_users ( analysis_id ) 
-Referred by analysis_artifact ( analysis_id ) </title></a>
-  <use id='nn' x='212' y='807' xlink:href='#nn'/><a xlink:href='#analysis.email'><use id='idx' x='212' y='806' xlink:href='#idx'/><title>Index  ( email ) </title></a>
-<a xlink:href='#analysis.email'><text x='228' y='817'>email</text><title>email varchar not null
-Email for user who owns the analysis</title></a>
-<a xlink:href='#analysis.email'><use id='fk' x='333' y='806' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
-  <use id='nn' x='212' y='822' xlink:href='#nn'/><a xlink:href='#analysis.name'><text x='228' y='832'>name</text><title>name varchar not null
-Name of the analysis</title></a>
-  <use id='nn' x='212' y='837' xlink:href='#nn'/><a xlink:href='#analysis.description'><text x='228' y='847'>description</text><title>description varchar not null</title></a>
-  <use id='nn' x='212' y='852' xlink:href='#nn'/><a xlink:href='#analysis.analysis_status_id'><use id='idx' x='212' y='851' xlink:href='#idx'/><title>Index  ( analysis_status_id ) </title></a>
-<a xlink:href='#analysis.analysis_status_id'><text x='228' y='862'>analysis_status_id</text><title>analysis_status_id bigint not null</title></a>
-<a xlink:href='#analysis.analysis_status_id'><use id='fk' x='333' y='851' xlink:href='#fk'/><title>References analysis_status ( analysis_status_id ) </title></a>
-  <a xlink:href='#analysis.pmid'><text x='228' y='877'>pmid</text><title>pmid varchar
-PMID of paper from the analysis</title></a>
-  <a xlink:href='#analysis.timestamp'><text x='228' y='892'>timestamp</text><title>timestamp timestamptz default current&#095;timestamp</title></a>
-  <use id='nn' x='212' y='897' xlink:href='#nn'/><a xlink:href='#analysis.dflt'><text x='228' y='907'>dflt</text><title>dflt bool not null default false</title></a>
-  <use id='nn' x='212' y='912' xlink:href='#nn'/><a xlink:href='#analysis.portal_type_id'><use id='idx' x='212' y='911' xlink:href='#idx'/><title>Index  ( portal_type_id ) </title></a>
-<a xlink:href='#analysis.portal_type_id'><text x='228' y='922'>portal_type_id</text><title>portal_type_id bigint not null</title></a>
-<a xlink:href='#analysis.portal_type_id'><use id='fk' x='333' y='911' xlink:href='#fk'/><title>References portal_type ( portal_type_id ) </title></a>
-
 <!-- ============= Table 'analysis_users' ============= -->
 <rect class='table' x='45' y='743' width='90' height='75' rx='7' ry='7' />
 <path d='M 45.50 769.50 L 45.50 750.50 Q 45.50 743.50 52.50 743.50 L 127.50 743.50 Q 134.50 743.50 134.50 750.50 L 134.50 769.50 L45.50 769.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -2018,6 +1977,36 @@ Referred by prep_template ( data_type_id ) </title></a>
   <use id='nn' x='722' y='1167' xlink:href='#nn'/><a xlink:href='#data_type.data_type'><use id='unq' x='722' y='1166' xlink:href='#unq'/><title>Unique Index  ( data_type ) </title></a>
 <a xlink:href='#data_type.data_type'><text x='738' y='1177'>data_type</text><title>data_type varchar not null
 Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a>
+
+<!-- ============= Table 'analysis' ============= -->
+<rect class='table' x='210' y='758' width='135' height='180' rx='7' ry='7' />
+<path d='M 210.50 784.50 L 210.50 765.50 Q 210.50 758.50 217.50 758.50 L 337.50 758.50 Q 344.50 758.50 344.50 765.50 L 344.50 784.50 L210.50 784.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#analysis'><text x='256' y='772' class='tableTitle'>analysis</text><title>Table qiita.analysis
+Holds analysis information</title></a>
+  <use id='nn' x='212' y='792' xlink:href='#nn'/><a xlink:href='#analysis.analysis_id'><use id='pk' x='212' y='791' xlink:href='#pk'/><title>Primary Key  ( analysis_id ) </title></a>
+<a xlink:href='#analysis.analysis_id'><text x='228' y='802'>analysis_id</text><title>analysis_id bigserial not null
+Unique identifier for analysis</title></a>
+<a xlink:href='#analysis.analysis_id'><use id='ref' x='333' y='791' xlink:href='#ref'/><title>Referred by analysis_artifact ( analysis_id ) 
+Referred by analysis_filepath ( analysis_id ) 
+Referred by analysis_portal ( analysis_id ) 
+Referred by analysis_sample ( analysis_id ) 
+Referred by analysis_users ( analysis_id ) </title></a>
+  <use id='nn' x='212' y='807' xlink:href='#nn'/><a xlink:href='#analysis.email'><use id='idx' x='212' y='806' xlink:href='#idx'/><title>Index  ( email ) </title></a>
+<a xlink:href='#analysis.email'><text x='228' y='817'>email</text><title>email varchar not null
+Email for user who owns the analysis</title></a>
+<a xlink:href='#analysis.email'><use id='fk' x='333' y='806' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+  <use id='nn' x='212' y='822' xlink:href='#nn'/><a xlink:href='#analysis.name'><text x='228' y='832'>name</text><title>name varchar not null
+Name of the analysis</title></a>
+  <use id='nn' x='212' y='837' xlink:href='#nn'/><a xlink:href='#analysis.description'><text x='228' y='847'>description</text><title>description varchar not null</title></a>
+  <use id='nn' x='212' y='852' xlink:href='#nn'/><a xlink:href='#analysis.analysis_status_id'><use id='idx' x='212' y='851' xlink:href='#idx'/><title>Index  ( analysis_status_id ) </title></a>
+<a xlink:href='#analysis.analysis_status_id'><text x='228' y='862'>analysis_status_id</text><title>analysis_status_id bigint not null</title></a>
+  <a xlink:href='#analysis.pmid'><text x='228' y='877'>pmid</text><title>pmid varchar
+PMID of paper from the analysis</title></a>
+  <a xlink:href='#analysis.timestamp'><text x='228' y='892'>timestamp</text><title>timestamp timestamptz default current&#095;timestamp</title></a>
+  <use id='nn' x='212' y='897' xlink:href='#nn'/><a xlink:href='#analysis.dflt'><text x='228' y='907'>dflt</text><title>dflt bool not null default false</title></a>
+  <use id='nn' x='212' y='912' xlink:href='#nn'/><a xlink:href='#analysis.portal_type_id'><use id='idx' x='212' y='911' xlink:href='#idx'/><title>Index  ( portal_type_id ) </title></a>
+<a xlink:href='#analysis.portal_type_id'><text x='228' y='922'>portal_type_id</text><title>portal_type_id bigint not null</title></a>
+<a xlink:href='#analysis.portal_type_id'><use id='fk' x='333' y='911' xlink:href='#fk'/><title>References portal_type ( portal_type_id ) </title></a>
 
 </g></svg>
 
@@ -5285,122 +5274,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='analysis_status'>Table analysis_status</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='analysis_status.analysis_status_id'>analysis&#095;status&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='analysis_status.status'>status</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;analysis&#095;status primary key</td>
-		<td> ON analysis&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis&#095;status unique</td>
-		<td> ON status</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='3'><a name='analysis'>Table analysis</a></th></tr>
-<tr><td colspan='3'>Holds analysis information </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='analysis.analysis_id'>analysis&#095;id</a></td>
-		<td> bigserial  NOT NULL  </td>
-		<td> Unique identifier for analysis </td>
-	</tr>
-	<tr>
-		<td><a name='analysis.email'>email</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td> Email for user who owns the analysis </td>
-	</tr>
-	<tr>
-		<td><a name='analysis.name'>name</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td> Name of the analysis </td>
-	</tr>
-	<tr>
-		<td><a name='analysis.description'>description</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='analysis.analysis_status_id'>analysis&#095;status&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='analysis.pmid'>pmid</a></td>
-		<td> varchar   </td>
-		<td> PMID of paper from the analysis </td>
-	</tr>
-	<tr>
-		<td><a name='analysis.timestamp'>timestamp</a></td>
-		<td> timestamptz   DEFO current_timestamp </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='analysis.dflt'>dflt</a></td>
-		<td> bool  NOT NULL  DEFO false </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='analysis.portal_type_id'>portal&#095;type&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>pk&#095;analysis primary key</td>
-		<td> ON analysis&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis&#095;email </td>
-		<td> ON email</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis&#095;status&#095;id </td>
-		<td> ON analysis&#095;status&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis </td>
-		<td> ON portal&#095;type&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_analysis_user</td>
-		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_analysis_analysis_status</td>
-		<td > ( analysis&#095;status&#095;id ) ref <a href='#analysis&#095;status'>analysis&#095;status</a> (analysis&#095;status&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_analysis</td>
-		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='analysis_users'>Table analysis_users</a></th></tr>
 <tr><td colspan='3'>Links analyses to the users they are shared with </td></tr>
 </thead>
@@ -5751,6 +5624,89 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>		<td>idx&#095;data&#095;type unique</td>
 		<td> ON data&#095;type</td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='analysis'>Table analysis</a></th></tr>
+<tr><td colspan='3'>Holds analysis information </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='analysis.analysis_id'>analysis&#095;id</a></td>
+		<td> bigserial  NOT NULL  </td>
+		<td> Unique identifier for analysis </td>
+	</tr>
+	<tr>
+		<td><a name='analysis.email'>email</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Email for user who owns the analysis </td>
+	</tr>
+	<tr>
+		<td><a name='analysis.name'>name</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td> Name of the analysis </td>
+	</tr>
+	<tr>
+		<td><a name='analysis.description'>description</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='analysis.analysis_status_id'>analysis&#095;status&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='analysis.pmid'>pmid</a></td>
+		<td> varchar   </td>
+		<td> PMID of paper from the analysis </td>
+	</tr>
+	<tr>
+		<td><a name='analysis.timestamp'>timestamp</a></td>
+		<td> timestamptz   DEFO current_timestamp </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='analysis.dflt'>dflt</a></td>
+		<td> bool  NOT NULL  DEFO false </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='analysis.portal_type_id'>portal&#095;type&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;analysis primary key</td>
+		<td> ON analysis&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;email </td>
+		<td> ON email</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;status&#095;id </td>
+		<td> ON analysis&#095;status&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis </td>
+		<td> ON portal&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_analysis_user</td>
+		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis</td>
+		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
