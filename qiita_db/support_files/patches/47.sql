@@ -27,6 +27,10 @@ CREATE INDEX idx_analysis_artifact_artifact ON qiita.analysis_artifact (artifact
 ALTER TABLE qiita.analysis_artifact ADD CONSTRAINT fk_analysis_artifact_analysis FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id );
 ALTER TABLE qiita.analysis_artifact ADD CONSTRAINT fk_analysis_artifact_artifact FOREIGN KEY ( artifact_id ) REFERENCES qiita.artifact( artifact_id );
 
+-- Droping the analysis status column cause now it depends on the artifacts
+-- status, like the study does.
+ALTER TABLE qiita.analysis DROP COLUMN analysis_status_id;
+
 
 -- We can handle some of the special cases here, so we simplify the work in the
 -- python patch
