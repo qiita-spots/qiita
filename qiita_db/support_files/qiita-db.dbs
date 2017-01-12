@@ -14,7 +14,6 @@
 				<comment><![CDATA[Name of the analysis]]></comment>
 			</column>
 			<column name="description" type="varchar" jt="12" mandatory="y" />
-			<column name="analysis_status_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="pmid" type="varchar" jt="12" >
 				<comment><![CDATA[PMID of paper from the analysis]]></comment>
 			</column>
@@ -30,9 +29,6 @@
 			</index>
 			<index name="idx_analysis_email" unique="NORMAL" >
 				<column name="email" />
-			</index>
-			<index name="idx_analysis_status_id" unique="NORMAL" >
-				<column name="analysis_status_id" />
 			</index>
 			<index name="idx_analysis" unique="NORMAL" >
 				<column name="portal_type_id" />
