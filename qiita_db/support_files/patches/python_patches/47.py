@@ -59,7 +59,7 @@ def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
                  WHERE analysis_id = %s AND data_type_id = %s
                  GROUP BY artifact_id"""
         TRN.add(sql, [analysis['analysis_id'], biom_data['data_type_id']])
-        samples_by_artifact = TRN.execute_fetchlast()
+        samples_by_artifact = TRN.execute_fetchindex()
 
         # Create an empty BIOM table to be the new master table
         new_table = Table([], [], [])
@@ -427,7 +427,7 @@ with TRN:
     # Step 3: Add the parameters for the previous commands
     sql = """INSERT INTO qiita.command_parameter
                 (command_id, parameter_name, parameter_type, required)
-             VALUES (validate_id, 'template', 'prep_template', True)"""
+             VALUES (%s, %s, %s, %s)"""
     sql_args = [(validate_cmd_id, 'files', 'string', True),
                 (validate_cmd_id, 'artifact_type', 'string', True),
                 (html_summary_cmd_id, 'input_data', 'artifact', True)]
@@ -462,7 +462,7 @@ with TRN:
     # Step 6: Associate the plugin with the types that it defines
     sql = """INSERT INTO qiita.software_artifact_type
                 (software_id, artifact_type_id)
-             VALUES (%s, %s, %s)"""
+             VALUES (%s, %s)"""
     sql_args = [[divtype_id, dm_atype_id],
                 [divtype_id, rc_atype_id],
                 [divtype_id, ts_atype_id]]
@@ -616,7 +616,7 @@ with TRN:
                      FROM qiita.filepath
                         JOIN qiita.data_directory USING (data_directory_id)
                      WHERE filepath_id = %s"""
-            TRN.add(sql, biom_data['filepath_id'])
+            TRN.add(sql, [biom_data['filepath_id']])
             # Magic number 0: There is only a single row in the query result
             fp_info = TRN.execute_fetchindex()[0]
             filepath = join(db_dir, fp_info['mountpoint'], fp_info['filepath'])
