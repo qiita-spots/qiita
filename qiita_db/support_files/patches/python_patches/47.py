@@ -259,47 +259,6 @@ def create_rarefied_biom_artifact(analysis, srare_cmd_id, biom_data, params,
     return artifact_id
 
 
-def create_rarefaction_artifacts_and_job(analysis, biom_data, rarefied_table,
-                                         depth, srare_cmd_id,
-                                         srare_cmd_out_id):
-    """Creates the initial artifact and the rarefaction job
-
-    Parameters
-    ----------
-    analysis : dict
-        The analysis information
-    biom_data : dict
-        The biom information
-    rarefied_table : biom.Table
-        The rarefied table
-    depth : int
-        The table rarefaction depth
-    srare_cmd_id : int
-        The command id of "Single Rarefaction"
-    srare_cmd_out_id : int
-        The id of the single rarefaction output
-
-    Returns
-    -------
-    int
-        The new artifact id
-    """
-    # Create the initial unrarefied artifact
-    initial_biom_artifact_id = create_non_rarefied_biom_artifact(
-        analysis, biom_data, rarefied_table)
-
-    # Create the rarefaction job
-    rarefaction_job_id, params = create_rarefaction_job(
-        depth, initial_biom_artifact_id, analysis, srare_cmd_id)
-
-    # Create the rarefied artifact
-    rarefied_biom_artifact_id = create_rarefied_biom_artifact(
-        analysis, srare_cmd_id, biom_data, params, initial_biom_artifact_id,
-        rarefaction_job_id, srare_cmd_out_id)
-
-    return rarefied_biom_artifact_id
-
-
 def transfer_job(analysis, command_id, params, input_artifact_id, job_data,
                  cmd_out_id, biom_data, output_artifact_type_id):
     """Transfers the job from the old structure to the plugin structure
@@ -626,8 +585,17 @@ with TRN:
             depths = set(table.sum(axis='sample'))
             if len(depths) == 1:
                 # The BIOM table was rarefied
-                initial_biom_id = create_rarefaction_artifacts_and_job(
-                    analysis, biom_data, table, depths.pop(), srare_cmd_id,
+                # Create the initial unrarefied artifact
+                initial_biom_artifact_id = create_non_rarefied_biom_artifact(
+                    analysis, biom_data, table)
+                # Create the rarefaction job
+                rarefaction_job_id, params = create_rarefaction_job(
+                    depths.pop(), initial_biom_artifact_id, analysis,
+                    srare_cmd_id)
+                # Create the rarefied artifact
+                rarefied_biom_artifact_id = create_rarefied_biom_artifact(
+                    analysis, srare_cmd_id, biom_data, params,
+                    initial_biom_artifact_id, rarefaction_job_id,
                     srare_cmd_out_id)
             else:
                 # The BIOM table was not rarefied, use current table as initial
@@ -639,7 +607,7 @@ with TRN:
                      WHERE reverse(split_part(reverse(
                         options::json->>'--otu_table_fp'), '/', 1)) = %s"""
             TRN.add(sql, [filepath])
-            analysis_jobs = TRN.execute_fetchindex
+            analysis_jobs = TRN.execute_fetchindex()
             for job_data in analysis_jobs:
                 # Identify which command the current job exeucted
                 if job_data['command_id'] == 1:

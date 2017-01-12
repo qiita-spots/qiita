@@ -756,7 +756,7 @@ def purge_filepaths():
             # Remove the data
             fp = join(get_mountpoint_path_by_id(dd_id), fp)
             if exists(fp):
-                if fp_type is 'directory':
+                if fp_type == 'directory':
                     func = rmtree
                 else:
                     func = remove
