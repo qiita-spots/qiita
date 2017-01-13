@@ -657,7 +657,7 @@ table {
 	default_workflow_edge references default_workflow_node ( child_id -> default_workflow_node_id )</title>
 </path>
 <text x='1115' y='1735' transform='rotate(0 1115,1735)' title='Foreign Key fk_default_workflow_edge_0
-	default_workflow_edge references default_workflow_node ( child_id -> default_workflow_node_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 1680 L 232,1680 Q 225,1680 225,1672 L 225,1252 Q 225,1245 232,1245 L 1222,1245 Q 1230,1245 1230,1237 L 1230,1110' >
+	default_workflow_edge references default_workflow_node ( child_id -> default_workflow_node_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 1680 L 217,1680 Q 210,1680 210,1672 L 210,1252 Q 210,1245 217,1245 L 1222,1245 Q 1230,1245 1230,1237 L 1230,1110' >
 	<title>Foreign Key fk_artifact_processing_job
 	artifact_processing_job references artifact ( artifact_id )</title>
 </path>
@@ -667,7 +667,7 @@ table {
 	artifact_processing_job references processing_job ( processing_job_id )</title>
 </path>
 <text x='472' y='1735' transform='rotate(0 472,1735)' title='Foreign Key fk_artifact_processing_job_0
-	artifact_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 270 1785 L 247,1785 Q 240,1785 240,1777 L 240,1237 Q 240,1230 247,1230 L 1207,1230 Q 1215,1230 1215,1222 L 1215,1110' >
+	artifact_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 270 1785 L 232,1785 Q 225,1785 225,1777 L 225,1237 Q 225,1230 232,1230 L 1207,1230 Q 1215,1230 1215,1222 L 1215,1110' >
 	<title>Foreign Key fk_artifact_output_processing_job
 	artifact_output_processing_job references artifact ( artifact_id )</title>
 </path>
@@ -682,17 +682,12 @@ table {
 	artifact_output_processing_job references command_output ( command_output_id )</title>
 </path>
 <text x='472' y='1810' transform='rotate(0 472,1810)' title='Foreign Key fk_artifact_output_processing_job_1
-	artifact_output_processing_job references command_output ( command_output_id )' style='fill:#a1a0a0;'>command_output_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 2085 L 217,2085 Q 210,2085 210,2077 L 210,1177 Q 210,1170 217,1170 L 547,1170 Q 555,1170 555,1162 L 555,832 Q 555,825 562,825 L 660,825' >
+	artifact_output_processing_job references command_output ( command_output_id )' style='fill:#a1a0a0;'>command_output_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 300 2085 L 202,2085 Q 195,2085 195,2077 L 195,1177 Q 195,1170 202,1170 L 547,1170 Q 555,1170 555,1162 L 555,832 Q 555,825 562,825 L 660,825' >
 	<title>Foreign Key fk_reference_sequence_filepath
 	reference references filepath ( sequence_filepath -> filepath_id )</title>
 </path>
 <text x='205' y='2080' transform='rotate(0 205,2080)' title='Foreign Key fk_reference_sequence_filepath
-	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 300 2100 L 202,2100 Q 195,2100 195,2092 L 195,1192 Q 195,1185 202,1185 L 532,1185 Q 540,1185 540,1177 L 540,817 Q 540,810 547,810 L 660,810' >
-	<title>Foreign Key fk_reference_taxonomy_filepath
-	reference references filepath ( taxonomy_filepath -> filepath_id )</title>
-</path>
-<text x='202' y='2095' transform='rotate(0 202,2095)' title='Foreign Key fk_reference_taxonomy_filepath
-	reference references filepath ( taxonomy_filepath -> filepath_id )' style='fill:#a1a0a0;'>taxonomy_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 630 1965 L 630,1920' >
+	reference references filepath ( sequence_filepath -> filepath_id )' style='fill:#a1a0a0;'>sequence_filepath</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 630 1965 L 630,1920' >
 	<title>Foreign Key fk_parent_processing_job
 	parent_processing_job references processing_job ( parent_id -> processing_job_id )</title>
 </path>
@@ -702,11 +697,11 @@ table {
 	parent_processing_job references processing_job ( child_id -> processing_job_id )</title>
 </path>
 <text x='647' y='1960' transform='rotate(270 647,1960)' title='Foreign Key fk_parent_processing_job_0
-	parent_processing_job references processing_job ( child_id -> processing_job_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 780 2115 L 577,2115 Q 570,2115 570,2107 L 570,1942 Q 570,1935 562,1935 L 172,1935 Q 165,1935 165,1927 L 165,367 Q 165,360 172,360 L 195,360' >
+	parent_processing_job references processing_job ( child_id -> processing_job_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 780 2175 L 472,2175 Q 465,2175 465,2182 L 465,2227 Q 465,2235 457,2235 L 112,2235 Q 105,2235 105,2227 L 105,847 Q 105,840 112,840 L 157,840 Q 165,840 165,832 L 165,367 Q 165,360 172,360 L 195,360' >
 	<title>Foreign Key fk_processing_job_workflow
 	processing_job_workflow references qiita_user ( email )</title>
 </path>
-<text x='754' y='2110' transform='rotate(0 754,2110)' title='Foreign Key fk_processing_job_workflow
+<text x='754' y='2170' transform='rotate(0 754,2170)' title='Foreign Key fk_processing_job_workflow
 	processing_job_workflow references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 795 1980 L 795,1912 Q 795,1905 787,1905 L 690,1905' >
 	<title>Foreign Key fk_processing_job_workflow_roots_0
 	processing_job_workflow_root references processing_job ( processing_job_id )</title>
@@ -722,7 +717,7 @@ table {
 	prep_template_processing_job references prep_template ( prep_template_id )</title>
 </path>
 <text x='457' y='1375' transform='rotate(0 457,1375)' title='Foreign Key fk_prep_template_processing_job
-	prep_template_processing_job references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 285 1440 L 285,1747 Q 285,1755 277,1755 L 262,1755 Q 255,1755 255,1762 L 255,1882 Q 255,1890 262,1890 L 495,1890' >
+	prep_template_processing_job references prep_template ( prep_template_id )' style='fill:#a1a0a0;'>prep_template_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 285 1440 L 285,1747 Q 285,1755 277,1755 L 262,1755 Q 255,1755 255,1762 L 255,1927 Q 255,1935 262,1935 L 517,1935 Q 525,1935 525,1927 L 525,1920' >
 	<title>Foreign Key fk_prep_template_processing_job_0
 	prep_template_processing_job references processing_job ( processing_job_id )</title>
 </path>
@@ -747,7 +742,7 @@ table {
 	software_command references software ( software_id )</title>
 </path>
 <text x='832' y='1645' transform='rotate(0 832,1645)' title='Foreign Key fk_soft_command_software
-	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 495 1875 L 487,1875 Q 480,1875 480,1882 L 480,1897 Q 480,1905 472,1905 L 157,1905 Q 150,1905 150,1897 L 150,352 Q 150,345 157,345 L 195,345' >
+	software_command references software ( software_id )' style='fill:#a1a0a0;'>software_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 495 1875 L 487,1875 Q 480,1875 480,1882 L 480,1897 Q 480,1905 472,1905 L 97,1905 Q 90,1905 90,1897 L 90,862 Q 90,855 97,855 L 142,855 Q 150,855 150,847 L 150,352 Q 150,345 157,345 L 195,345' >
 	<title>Foreign Key fk_processing_job_qiita_user
 	processing_job references qiita_user ( email )</title>
 </path>
@@ -757,11 +752,11 @@ table {
 	processing_job references software_command ( command_id )</title>
 </path>
 <text x='697' y='1750' transform='rotate(0 697,1750)' title='Foreign Key fk_processing_job
-	processing_job references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 525 1920 L 525,1950' >
+	processing_job references software_command ( command_id )' style='fill:#a1a0a0;'>command_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 540 1920 L 540,1950' >
 	<title>Foreign Key fk_processing_job_status
 	processing_job references processing_job_status ( processing_job_status_id )</title>
 </path>
-<text x='538' y='1920' transform='rotate(90 538,1920)' title='Foreign Key fk_processing_job_status
+<text x='553' y='1920' transform='rotate(90 553,1920)' title='Foreign Key fk_processing_job_status
 	processing_job references processing_job_status ( processing_job_status_id )' style='fill:#a1a0a0;'>processing_job_status_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 585 1920 L 585,2077 Q 585,2085 592,2085 L 1312,2085 Q 1320,2085 1320,2077 L 1320,2070' >
 	<title>Foreign Key fk_processing_job_logging
 	processing_job references logging ( logging_id )</title>
@@ -867,7 +862,17 @@ table {
 	analysis references portal_type ( portal_type_id )</title>
 </path>
 <text x='302' y='745' transform='rotate(270 302,745)' title='Foreign Key fk_analysis
-	analysis references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	analysis references portal_type ( portal_type_id )' style='fill:#a1a0a0;'>portal_type_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 225 990 L 225,930' >
+	<title>Foreign Key fk_analysis_processing_job
+	analysis_processing_job references analysis ( analysis_id )</title>
+</path>
+<text x='227' y='985' transform='rotate(270 227,985)' title='Foreign Key fk_analysis_processing_job
+	analysis_processing_job references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 240 1080 L 240,1882 Q 240,1890 247,1890 L 495,1890' >
+	<title>Foreign Key fk_analysis_processing_job_pj
+	analysis_processing_job references processing_job ( processing_job_id )</title>
+</path>
+<text x='253' y='1080' transform='rotate(90 253,1080)' title='Foreign Key fk_analysis_processing_job_pj
+	analysis_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='1410' y='1733' width='150' height='120' rx='7' ry='7' />
 <path d='M 1410.50 1759.50 L 1410.50 1740.50 Q 1410.50 1733.50 1417.50 1733.50 L 1552.50 1733.50 Q 1559.50 1733.50 1559.50 1740.50 L 1559.50 1759.50 L1410.50 1759.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='1418' y='1747' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1814,7 +1819,8 @@ Referred by parent_processing_job ( child_id -> processing_job_id )
 Referred by prep_template_processing_job ( processing_job_id ) 
 Referred by processing_job_validator ( processing_job_id ) 
 Referred by processing_job_validator ( validator_id -> processing_job_id ) 
-Referred by processing_job_workflow_root ( processing_job_id ) </title></a>
+Referred by processing_job_workflow_root ( processing_job_id ) 
+Referred by analysis_processing_job ( processing_job_id ) </title></a>
   <use id='nn' x='512' y='1782' xlink:href='#nn'/><a xlink:href='#processing_job.email'><use id='idx' x='512' y='1781' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#processing_job.email'><text x='528' y='1792'>email</text><title>email varchar not null
 The user that launched the job</title></a>
@@ -1990,7 +1996,8 @@ Unique identifier for analysis</title></a>
 Referred by analysis_filepath ( analysis_id ) 
 Referred by analysis_portal ( analysis_id ) 
 Referred by analysis_sample ( analysis_id ) 
-Referred by analysis_users ( analysis_id ) </title></a>
+Referred by analysis_users ( analysis_id ) 
+Referred by analysis_processing_job ( analysis_id ) </title></a>
   <use id='nn' x='212' y='807' xlink:href='#nn'/><a xlink:href='#analysis.email'><use id='idx' x='212' y='806' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#analysis.email'><text x='228' y='817'>email</text><title>email varchar not null
 Email for user who owns the analysis</title></a>
@@ -2005,6 +2012,17 @@ PMID of paper from the analysis</title></a>
   <use id='nn' x='212' y='897' xlink:href='#nn'/><a xlink:href='#analysis.portal_type_id'><use id='idx' x='212' y='896' xlink:href='#idx'/><title>Index  ( portal_type_id ) </title></a>
 <a xlink:href='#analysis.portal_type_id'><text x='228' y='907'>portal_type_id</text><title>portal_type_id bigint not null</title></a>
 <a xlink:href='#analysis.portal_type_id'><use id='fk' x='318' y='896' xlink:href='#fk'/><title>References portal_type ( portal_type_id ) </title></a>
+
+<!-- ============= Table 'analysis_processing_job' ============= -->
+<rect class='table' x='135' y='998' width='150' height='75' rx='7' ry='7' />
+<path d='M 135.50 1024.50 L 135.50 1005.50 Q 135.50 998.50 142.50 998.50 L 277.50 998.50 Q 284.50 998.50 284.50 1005.50 L 284.50 1024.50 L135.50 1024.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#analysis_processing_job'><text x='144' y='1012' class='tableTitle'>analysis_processing_job</text><title>Table qiita.analysis_processing_job</title></a>
+  <use id='nn' x='137' y='1032' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.analysis_id'><use id='pk' x='137' y='1031' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( analysis_id ) </title></a>
+<a xlink:href='#analysis_processing_job.analysis_id'><text x='153' y='1042'>analysis_id</text><title>analysis_id bigint not null</title></a>
+<a xlink:href='#analysis_processing_job.analysis_id'><use id='fk' x='273' y='1031' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
+  <use id='nn' x='137' y='1047' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.processing_job_id'><use id='pk' x='137' y='1046' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( processing_job_id ) </title></a>
+<a xlink:href='#analysis_processing_job.processing_job_id'><text x='153' y='1057'>processing_job_id</text><title>processing_job_id varchar not null</title></a>
+<a xlink:href='#analysis_processing_job.processing_job_id'><use id='fk' x='273' y='1046' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
 
 </g></svg>
 
@@ -5696,6 +5714,49 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_analysis</td>
 		<td > ( portal&#095;type&#095;id ) ref <a href='#portal&#095;type'>portal&#095;type</a> (portal&#095;type&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='analysis_processing_job'>Table analysis_processing_job</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='analysis_processing_job.analysis_id'>analysis&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='analysis_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;processing&#095;job primary key</td>
+		<td> ON analysis&#095;id&#044; processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;processing&#095;job </td>
+		<td> ON analysis&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;processing&#095;job </td>
+		<td> ON processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_analysis_processing_job</td>
+		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis_processing_job_pj</td>
+		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
