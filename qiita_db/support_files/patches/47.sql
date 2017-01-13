@@ -71,3 +71,7 @@ DELETE FROM qiita.job_results_filepath WHERE job_id IN (
         SELECT * FROM qiita.analysis_job AJ WHERE J.job_id = AJ.job_id));
 DELETE FROM qiita.job J WHERE NOT EXISTS (
     SELECT * FROM qiita.analysis_job AJ WHERE J.job_id = AJ.job_id);
+
+-- In the analysis pipeline, an artifact can have mutliple datatypes
+-- (e.g. procrustes). Allow this by creating a new data_type being "multiomic"
+INSERT INTO qiita.data_type (data_type) VALUES ('Multiomic');
