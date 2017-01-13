@@ -44,7 +44,10 @@ CREATE INDEX idx_analysis_processing_job_pj ON qiita.analysis_processing_job ( p
 ALTER TABLE qiita.analysis_processing_job ADD CONSTRAINT fk_analysis_processing_job FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ;
 ALTER TABLE qiita.analysis_processing_job ADD CONSTRAINT fk_analysis_processing_job_pj FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
 
-
+-- Add a logging column in the analysis
+ALTER TABLE qiita.analysis ADD logging_id bigint  ;
+CREATE INDEX idx_analysis_0 ON qiita.analysis ( logging_id ) ;
+ALTER TABLE qiita.analysis ADD CONSTRAINT fk_analysis_logging FOREIGN KEY ( logging_id ) REFERENCES qiita.logging( logging_id )    ;
 
 -- We can handle some of the special cases here, so we simplify the work in the
 -- python patch
