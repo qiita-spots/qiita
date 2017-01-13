@@ -69,6 +69,30 @@ def _job_submitter(job, cmd):
         job.complete(False, error=error)
 
 
+def private_job_submitter(job_name, command, args):
+    """Submits a private job
+
+    Parameters
+    ----------
+    job_name : str
+        The name of the job
+    command: str
+        The private command to be executed
+    args: list of str
+        The arguments to the private command
+    """
+
+    cmd = "%s '%s' %s %s" % (qiita_config.private_launcher,
+                             qiita_config.qiita_env, command,
+                             ' '.join("'%s'" % a for a in args))
+    std_out, std_err, return_value = _system_call(cmd)
+    error = ""
+    if return_value != 0:
+        error = ("Can't submit private task '%s':\n"
+                 "Std output:%s\nStd error: %s" % (command, std_out, std_err))
+    return (return_value == 0), error
+
+
 class ProcessingJob(qdb.base.QiitaObject):
     r"""Models a job that executes a command in a set of artifacts
 
