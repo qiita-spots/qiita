@@ -31,6 +31,20 @@ ALTER TABLE qiita.analysis_artifact ADD CONSTRAINT fk_analysis_artifact_artifact
 -- status, like the study does.
 ALTER TABLE qiita.analysis DROP COLUMN analysis_status_id;
 
+-- Create a table to link the analysis with the jobs that create the initial
+-- artifacts
+CREATE TABLE qiita.analysis_processing_job (
+	analysis_id          bigint  NOT NULL,
+	processing_job_id    uuid  NOT NULL,
+	CONSTRAINT idx_analysis_processing_job PRIMARY KEY ( analysis_id, processing_job_id )
+ ) ;
+
+CREATE INDEX idx_analysis_processing_job_analysis ON qiita.analysis_processing_job ( analysis_id ) ;
+CREATE INDEX idx_analysis_processing_job_pj ON qiita.analysis_processing_job ( processing_job_id ) ;
+ALTER TABLE qiita.analysis_processing_job ADD CONSTRAINT fk_analysis_processing_job FOREIGN KEY ( analysis_id ) REFERENCES qiita.analysis( analysis_id )    ;
+ALTER TABLE qiita.analysis_processing_job ADD CONSTRAINT fk_analysis_processing_job_pj FOREIGN KEY ( processing_job_id ) REFERENCES qiita.processing_job( processing_job_id )    ;
+
+
 
 -- We can handle some of the special cases here, so we simplify the work in the
 -- python patch
