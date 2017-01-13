@@ -24,6 +24,7 @@
 				<defo>false</defo>
 			</column>
 			<column name="portal_type_id" type="bigint" jt="-5" mandatory="y" />
+			<column name="logging_id" type="bigint" jt="-5" />
 			<index name="pk_analysis" unique="PRIMARY_KEY" >
 				<column name="analysis_id" />
 			</index>
@@ -33,11 +34,17 @@
 			<index name="idx_analysis" unique="NORMAL" >
 				<column name="portal_type_id" />
 			</index>
+			<index name="idx_analysis_0" unique="NORMAL" >
+				<column name="logging_id" />
+			</index>
 			<fk name="fk_analysis_user" to_schema="qiita" to_table="qiita_user" >
 				<fk_column name="email" pk="email" />
 			</fk>
 			<fk name="fk_analysis" to_schema="qiita" to_table="portal_type" >
 				<fk_column name="portal_type_id" pk="portal_type_id" />
+			</fk>
+			<fk name="fk_analysis_logging" to_schema="qiita" to_table="logging" >
+				<fk_column name="logging_id" pk="logging_id" />
 			</fk>
 		</table>
 		<table name="analysis_artifact" >
@@ -1654,8 +1661,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="ontology" color="d0def5" x="1875" y="1530" />
 		<entity schema="qiita" name="analysis_artifact" color="b2cdf7" x="405" y="1080" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="720" y="1125" />
-		<entity schema="qiita" name="analysis" color="d0def5" x="210" y="765" />
 		<entity schema="qiita" name="analysis_processing_job" color="b2cdf7" x="135" y="1005" />
+		<entity schema="qiita" name="analysis" color="d0def5" x="210" y="765" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
