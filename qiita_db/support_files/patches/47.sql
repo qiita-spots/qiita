@@ -35,7 +35,8 @@ ALTER TABLE qiita.analysis DROP COLUMN analysis_status_id;
 -- artifacts
 CREATE TABLE qiita.analysis_processing_job (
 	analysis_id          bigint  NOT NULL,
-	processing_job_id    uuid  NOT NULL,
+	processing_job_id    uuid    NOT NULL,
+    datatype             varchar NOT NULL,
 	CONSTRAINT idx_analysis_processing_job PRIMARY KEY ( analysis_id, processing_job_id )
  ) ;
 
@@ -78,3 +79,14 @@ DELETE FROM qiita.job J WHERE NOT EXISTS (
 -- In the analysis pipeline, an artifact can have mutliple datatypes
 -- (e.g. procrustes). Allow this by creating a new data_type being "multiomic"
 INSERT INTO qiita.data_type (data_type) VALUES ('Multiomic');
+
+
+-- The valdiate command from BIOM will have an extra parameter, analysis
+-- Magic number -> 4 BIOM command_id -> known for sure since it was added in
+-- patch 36.sql
+INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type, required)
+    VALUES (4, 'analysis', 'analysis', FALSE);
+-- The template comand now becomes optional, since it can be added either to
+-- an analysis or to a prep template. command_parameter_id known from patch
+-- 36.sql
+UPDATE qiita.command_parameter SET required = FALSE WHERE command_parameter_id = 34;
