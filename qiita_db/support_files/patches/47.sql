@@ -36,7 +36,7 @@ ALTER TABLE qiita.analysis DROP COLUMN analysis_status_id;
 CREATE TABLE qiita.analysis_processing_job (
 	analysis_id          bigint  NOT NULL,
 	processing_job_id    uuid    NOT NULL,
-    datatype             varchar NOT NULL,
+    data_type             varchar NOT NULL,
 	CONSTRAINT idx_analysis_processing_job PRIMARY KEY ( analysis_id, processing_job_id )
  ) ;
 
