@@ -74,3 +74,22 @@ DELETE FROM qiita.job_results_filepath WHERE job_id IN (
         SELECT * FROM qiita.analysis_job AJ WHERE J.job_id = AJ.job_id));
 DELETE FROM qiita.job J WHERE NOT EXISTS (
     SELECT * FROM qiita.analysis_job AJ WHERE J.job_id = AJ.job_id);
+
+-- We are going to add a new special software type, and a new software.
+-- This is going to be used internally by Qiita, so submit the private jobs.
+-- This is needed for the analysis.
+INSERT INTO qiita.software_type (software_type, description)
+    VALUES ('private', 'Internal Qiita jobs');
+
+DO $do$
+DECLARE
+    qiita_sw_id     bigint;
+BEGIN
+    INSERT INTO qiita.software (name, version, description, environment_script, start_script, software_type_id, active)
+        VALUES ('Qiita', 'alpha', 'Internal Qiita jobs', 'source activate qiita', 'qiita-private', 3, True)
+        RETURNING software_id INTO qiita_sw_id;
+
+    INSERT INTO qiita.software_command (software_id, name, description)
+        VALUES (qiita_sw_id, '%s', '%s')
+        RETURNING coommand_id INTO
+END $do$
