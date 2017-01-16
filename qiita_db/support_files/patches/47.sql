@@ -3,7 +3,7 @@
 -- database backend that supports the analysis pipeline.
 -- After exploring the data on the database, we realized that
 -- there are a lot of inconsistencies in the data. Unfortunately, this
--- makes the process of trasnferring the data from the old structure
+-- makes the process of transferring the data from the old structure
 -- to the new one a bit more challenging, as we will need to handle
 -- different special cases. Furthermore, all the information needed is not
 -- present in the database, since it requires checking BIOM files. Due to these
