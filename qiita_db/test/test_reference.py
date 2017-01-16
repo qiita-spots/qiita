@@ -38,21 +38,20 @@ class ReferenceTests(TestCase):
 
     def test_create(self):
         """Correctly creates the rows in the DB for the reference"""
-        fp_count = qdb.util.get_count('qiita.filepath')
         # Check that the returned object has the correct id
         obs = qdb.reference.Reference.create(
             self.name, self.version, self.seqs_fp, self.tax_fp, self.tree_fp)
         self.assertEqual(obs.id, 3)
 
-        seqs_id = fp_count + 1
-        tax_id = fp_count + 2
-        tree_id = fp_count + 3
-
         # Check that the information on the database is correct
         obs = self.conn_handler.execute_fetchall(
             "SELECT * FROM qiita.reference WHERE reference_id=3")
-        exp = [[3, self.name, self.version, seqs_id, tax_id, tree_id]]
-        self.assertEqual(obs, exp)
+        self.assertEqual(obs[0][1], self.name)
+        self.assertEqual(obs[0][2], self.version)
+
+        seqs_id = obs[0][3]
+        tax_id = obs[0][4]
+        tree_id = obs[0][5]
 
         # Check that the filepaths have been correctly added to the DB
         obs = self.conn_handler.execute_fetchall(

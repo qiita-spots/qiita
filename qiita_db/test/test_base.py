@@ -45,8 +45,6 @@ class QiitaBaseTest(TestCase):
         # Checked through the __init__ call
         with self.assertRaises(IncompetentQiitaDeveloperError):
             qdb.base.QiitaObject(1)
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            qdb.base.QiitaStatusObject(1)
 
     def test_check_id(self):
         """Correctly checks if an id exists on the database"""
