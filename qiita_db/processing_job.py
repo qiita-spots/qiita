@@ -376,30 +376,49 @@ class ProcessingJob(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self.id])
             a_info = qdb.sql_connection.TRN.execute_fetchlast()
 
-            atype = a_info['artifact_type']
-            filepaths = a_info['filepaths']
             provenance = loads(self.parameters.values['provenance'])
             job = ProcessingJob(provenance['job'])
-            parents = job.input_artifacts
-            params = job.parameters
+            if 'data_type' in a_info:
+                # This job is resulting from a private job
+                parents = None
+                params = None
+                cmd_out_id = None
+                data_type = a_info['data_type']
+                analysis = qdb.analysis.Analysis(
+                    job.parameters.values['analysis'])
+                a_info = a_info['artifact_data']
+            else:
+                # This job is resulting from a plugin job
+                parents = job.input_artifacts
+                params = job.parameters
+                cmd_out_id = provenance['cmd_out_id']
+                analysis = None
+                data_type = None
 
             # Create the artifact
+            atype = a_info['artifact_type']
+            filepaths = a_info['filepaths']
             a = qdb.artifact.Artifact.create(
                 filepaths, atype, parents=parents,
-                processing_parameters=params)
+                processing_parameters=params,
+                analysis=analysis, data_type=data_type)
 
-            cmd_out_id = provenance['cmd_out_id']
-            mapping = {cmd_out_id: a.id}
             self._set_status('success')
+
+            mapping = {}
+            if cmd_out_id is not None:
+                mapping = {cmd_out_id: a.id}
 
             return mapping
 
     def release_validators(self):
         """Allows all the validator job spawned by this job to complete"""
         with qdb.sql_connection.TRN:
-            if self.command.software.type != 'artifact transformation':
+            if self.command.software.type not in ('artifact transformation',
+                                                  'private'):
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Only artifact transformation jobs can release validators")
+                    "Only artifact transformation and private jobs can "
+                    "release validators")
 
             # Check if all the validators are ready by checking that there is
             # no validator processing job whose status is not waiting
@@ -429,16 +448,17 @@ class ProcessingJob(qdb.base.QiitaObject):
                     vjob = ProcessingJob(jid)
                     mapping.update(vjob.release())
 
-                sql = """INSERT INTO
-                            qiita.artifact_output_processing_job
-                            (artifact_id, processing_job_id,
-                            command_output_id)
-                         VALUES (%s, %s, %s)"""
-                sql_args = [[aid, self.id, outid]
-                            for outid, aid in viewitems(mapping)]
-                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+                if mapping:
+                    sql = """INSERT INTO
+                                qiita.artifact_output_processing_job
+                                (artifact_id, processing_job_id,
+                                command_output_id)
+                             VALUES (%s, %s, %s)"""
+                    sql_args = [[aid, self.id, outid]
+                                for outid, aid in viewitems(mapping)]
+                    qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
-                self._update_and_launch_children(mapping)
+                    self._update_and_launch_children(mapping)
                 self._set_status('success')
             else:
                 self.step = "Validating outputs (%d remaining)" % remaining
@@ -468,6 +488,9 @@ class ProcessingJob(qdb.base.QiitaObject):
                 # The artifact is a result from a previous job
                 provenance = loads(job_params['provenance'])
                 job = ProcessingJob(provenance['job'])
+                if provenance.get('data_type') is not None:
+                    artifact_data = {'data_type': provenance['data_type'],
+                                     'artifact_data': artifact_data}
 
                 sql = """UPDATE qiita.processing_job_validator
                          SET artifact_info = %s
@@ -479,11 +502,26 @@ class ProcessingJob(qdb.base.QiitaObject):
                 self._set_status('waiting')
                 job.release_validators()
             else:
-                # The artifact is uploaded by the user
-                pt = qdb.metadata_template.prep_template.PrepTemplate(
-                    job_params['template'])
+                # The artifact is uploaded by the user or is the initial
+                # artifact of an analysis
+                if job_params['analysis'] is not None:
+                    pt = None
+                    an = qdb.analysis.Analysis(job_params['analysis'])
+                    sql = """SELECT data_type
+                             FROM qiita.analysis_processing_job
+                             WHERE analysis_id = %s
+                                AND processing_job_id = %s"""
+                    qdb.sql_connection.TRN.add(sql, [an.id, self.id])
+                    data_type = qdb.sql_connection.TRN.execute_fetchlast()
+                else:
+                    pt = qdb.metadata_template.prep_template.PrepTemplate(
+                        job_params['template'])
+                    an = None
+                    data_type = None
+
                 qdb.artifact.Artifact.create(
-                    filepaths, atype, prep_template=pt)
+                    filepaths, atype, prep_template=pt, analysis=an,
+                    data_type=data_type)
                 self._set_status('success')
 
     def _complete_artifact_transformation(self, artifacts_data):
