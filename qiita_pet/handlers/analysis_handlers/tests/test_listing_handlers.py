@@ -16,5 +16,6 @@ class TestListAnalysesHandler(TestHandlerBase):
         response = self.get('/analysis/list/')
         self.assertEqual(response.code, 200)
 
+
 if __name__ == '__main__':
     main()

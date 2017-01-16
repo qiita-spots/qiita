@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from .util import check_analysis_access
 from .listing_handlers import ListAnalysesHandler
 
-__all__ = ['ListAnalysesHandler']
+__all__ = ['ListAnalysesHandler', 'check_analysis_access']
