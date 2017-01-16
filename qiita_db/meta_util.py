@@ -109,17 +109,24 @@ def get_accessible_filepath_ids(user):
                 filepath_ids.update({fid for fid, _ in pt.get_filepaths()})
 
             # Then add the filepaths of the sample template
-            filepath_ids.update(
-                {fid
-                 for fid, _ in artifact.study.sample_template.get_filepaths()})
+            study = artifact.study
+            if study:
+                filepath_ids.update(
+                    {fid
+                     for fid, _ in study.sample_template.get_filepaths()})
 
         # Next, analyses
         # Same as before, there are public, private, and shared
         analyses = qdb.analysis.Analysis.get_by_status('public') | \
             user.private_analyses | user.shared_analyses
 
-        for analysis in analyses:
-            filepath_ids.update(analysis.all_associated_filepath_ids)
+        if analyses:
+            sql = """SELECT filepath_id
+                     FROM qiita.analysis_filepath
+                     WHERE analysis_id IN %s"""
+            sql_args = tuple([a.id for a in analyses])
+            qdb.sql_connection.TRN.add(sql, [sql_args])
+            filepath_ids.update(qdb.sql_connection.TRN.execute_fetchflatten())
 
         return filepath_ids
 
