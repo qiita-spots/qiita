@@ -660,11 +660,13 @@ class User(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql)
             qdb.sql_connection.TRN.execute()
 
-    def jobs(self):
+    def jobs(self, ignore_status=['success']):
         """Return jobs created by the user
 
         Parameters
         ----------
+        ignore_status, list of str
+            don't retieve jobs that have one of these status
 
         Returns
         -------
@@ -672,11 +674,29 @@ class User(qdb.base.QiitaObject):
 
         """
         with qdb.sql_connection.TRN:
-            sql_info = [self._id]
             sql = """SELECT processing_job_id
                      FROM qiita.processing_job
+                     LEFT JOIN qiita.processing_job_status
+                        USING (processing_job_status_id)
                      WHERE email = %s
-                     ORDER BY heartbeat DESC"""
+                  """
+
+            if ignore_status:
+                sql_info = [self._id, tuple(ignore_status)]
+                sql += "    AND processing_job_status NOT IN %s"
+            else:
+                sql_info = [self._id]
+
+            sql += """
+                     ORDER BY CASE processing_job_status
+                            WHEN 'in_construction' THEN 1
+                            WHEN 'running' THEN 2
+                            WHEN 'queued' THEN 3
+                            WHEN 'waiting' THEN 4
+                            WHEN 'error' THEN 5
+                            WHEN 'success' THEN 6
+                        END, heartbeat DESC"""
+
             qdb.sql_connection.TRN.add(sql, sql_info)
             return [qdb.processing_job.ProcessingJob(p[0])
                     for p in qdb.sql_connection.TRN.execute_fetchindex()]
