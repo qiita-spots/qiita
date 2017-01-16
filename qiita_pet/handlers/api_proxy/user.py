@@ -11,26 +11,26 @@ from qiita_core.util import execute_as_transaction
 
 
 @execute_as_transaction
-def user_jobs_get_req(user):
+def user_jobs_get_req(user, limit=30):
     """Gets the json of jobs
 
     Parameters
     ----------
-    prep_id : int
-        PrepTemplate id to get info for
-    user_id : str
-        User requesting the sample template info
+    user : User
+        The user from which you want to return all jobs
+    limit : int, optional
+        Maximum jobs to send, negative values will return all
 
     Returns
     -------
     dict of objects
     {'status': status,
      'message': message,
-     'template': {sample: {column: value, ...}, ...}
+     'template': {{column: value, ...}, ...}
     """
 
     response = []
-    for j in user.jobs():
+    for i, j in enumerate(user.jobs()):
         name = j.command.name
         hb = j.heartbeat
         hb = "" if hb is None else hb.strftime("%Y-%m-%d %H:%M:%S")
@@ -42,6 +42,7 @@ def user_jobs_get_req(user):
             'params': j.parameters.values,
             'status': j.status,
             'heartbeat': hb,
+            'step': j.step,
             'processing_job_workflow_id': wid})
 
     return {'status': 'success',
