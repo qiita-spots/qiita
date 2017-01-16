@@ -62,17 +62,8 @@ class SetupTest(TestCase):
     def test_reference(self):
         self.assertEqual(get_count("qiita.reference"), 2)
 
-    def test_job(self):
-        self.assertEqual(get_count("qiita.job"), 3)
-
     def test_analysis(self):
         self.assertEqual(get_count("qiita.analysis"), 10)
-
-    def test_analysis_job(self):
-        self.assertEqual(get_count("qiita.analysis_job"), 3)
-
-    def test_analysis_workflow(self):
-        self.assertEqual(get_count("qiita.analysis_workflow"), 2)
 
     def test_analysis_filepath(self):
         self.assertEqual(get_count("qiita.analysis_filepath"), 2)
@@ -82,12 +73,6 @@ class SetupTest(TestCase):
 
     def test_analysis_users(self):
         self.assertEqual(get_count("qiita.analysis_users"), 1)
-
-    def test_job_results_filepath(self):
-        self.assertEqual(get_count("qiita.job_results_filepath"), 2)
-
-    def test_command_data_type(self):
-        self.assertEqual(get_count("qiita.command_data_type"), 14)
 
     def test_ontology(self):
         self.assertTrue(check_count('qiita.ontology', 1))
