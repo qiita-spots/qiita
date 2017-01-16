@@ -87,7 +87,7 @@ class DBUtilTests(TestCase):
         self.assertEqual(
             qdb.util.convert_to_id("directory", "filepath_type"), 8)
         self.assertEqual(
-            qdb.util.convert_to_id("running", "analysis_status", "status"), 3)
+            qdb.util.convert_to_id("private", "visibility", "visibility"), 3)
         self.assertEqual(
             qdb.util.convert_to_id("EMP", "portal_type", "portal"), 2)
 
@@ -99,7 +99,9 @@ class DBUtilTests(TestCase):
     def test_get_artifact_types(self):
         obs = qdb.util.get_artifact_types()
         exp = {'SFF': 1, 'FASTA_Sanger': 2, 'FASTQ': 3, 'FASTA': 4,
-               'per_sample_FASTQ': 5, 'Demultiplexed': 6, 'BIOM': 7}
+               'per_sample_FASTQ': 5, 'Demultiplexed': 6, 'BIOM': 7,
+               'distance_matrix': 8L, 'rarefaction_curves': 9L,
+               'taxa_summary': 10L}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_artifact_types(key_by_id=True)
@@ -133,7 +135,7 @@ class DBUtilTests(TestCase):
         """Tests that get_data_types works with valid arguments"""
         obs = qdb.util.get_data_types()
         exp = {'16S': 1, '18S': 2, 'ITS': 3, 'Proteomic': 4, 'Metabolomic': 5,
-               'Metagenomic': 6}
+               'Metagenomic': 6, 'Multiomic': 7}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_data_types(key='data_type_id')
@@ -662,13 +664,6 @@ class DBUtilTests(TestCase):
         exp = {1: 'raw_data/1_s_G1_L001_sequences.fastq.gz',
                3: 'preprocessed_data/1_seqs.fna',
                test: 'FASTQ/2/%s' % basename(fp)}
-
-        self.assertEqual(obs, exp)
-
-    def test_check_access_to_analysis_result(self):
-        obs = qdb.util.check_access_to_analysis_result('test@foo.bar',
-                                                       '1_job_result.txt')
-        exp = [13]
 
         self.assertEqual(obs, exp)
 

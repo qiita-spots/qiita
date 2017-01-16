@@ -318,9 +318,8 @@ class User(qdb.base.QiitaObject):
                     qdb.sql_connection.TRN.add(sql)
 
                     an_sql = """INSERT INTO qiita.analysis
-                                    (email, name, description, dflt,
-                                     analysis_status_id)
-                                VALUES (%s, %s, %s, %s, 1)
+                                    (email, name, description, dflt)
+                                VALUES (%s, %s, %s, %s)
                                 RETURNING analysis_id"""
                     ap_sql = """INSERT INTO qiita.analysis_portal
                                     (analysis_id, portal_type_id)
