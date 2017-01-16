@@ -98,8 +98,8 @@ class DBUtilTests(TestCase):
 
     def test_get_artifact_types(self):
         obs = qdb.util.get_artifact_types()
-        exp = {'SFF': 1, 'FASTA_Sanger': 2, 'FASTQ': 3, 'FASTA': 4,
-               'per_sample_FASTQ': 5, 'Demultiplexed': 6, 'BIOM': 7}
+        exp = {'Demultiplexed': 6, 'FASTA_Sanger': 2, 'FASTQ': 3, 'BIOM': 7,
+               'per_sample_FASTQ': 5, 'SFF': 1, 'FASTA': 4}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_artifact_types(key_by_id=True)
