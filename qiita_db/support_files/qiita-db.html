@@ -872,11 +872,11 @@ table {
 	analysis_processing_job references analysis ( analysis_id )</title>
 </path>
 <text x='227' y='985' transform='rotate(270 227,985)' title='Foreign Key fk_analysis_processing_job
-	analysis_processing_job references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 240 1095 L 240,1882 Q 240,1890 247,1890 L 495,1890' >
+	analysis_processing_job references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 240 1080 L 240,1882 Q 240,1890 247,1890 L 495,1890' >
 	<title>Foreign Key fk_analysis_processing_job_pj
 	analysis_processing_job references processing_job ( processing_job_id )</title>
 </path>
-<text x='253' y='1095' transform='rotate(90 253,1095)' title='Foreign Key fk_analysis_processing_job_pj
+<text x='253' y='1080' transform='rotate(90 253,1080)' title='Foreign Key fk_analysis_processing_job_pj
 	analysis_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='1410' y='1733' width='150' height='120' rx='7' ry='7' />
 <path d='M 1410.50 1759.50 L 1410.50 1740.50 Q 1410.50 1733.50 1417.50 1733.50 L 1552.50 1733.50 Q 1559.50 1733.50 1559.50 1740.50 L 1559.50 1759.50 L1410.50 1759.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -2023,7 +2023,7 @@ PMID of paper from the analysis</title></a>
 <a xlink:href='#analysis.logging_id'><use id='fk' x='318' y='911' xlink:href='#fk'/><title>References logging ( logging_id ) </title></a>
 
 <!-- ============= Table 'analysis_processing_job' ============= -->
-<rect class='table' x='135' y='998' width='150' height='90' rx='7' ry='7' />
+<rect class='table' x='135' y='998' width='150' height='75' rx='7' ry='7' />
 <path d='M 135.50 1024.50 L 135.50 1005.50 Q 135.50 998.50 142.50 998.50 L 277.50 998.50 Q 284.50 998.50 284.50 1005.50 L 284.50 1024.50 L135.50 1024.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
 <a xlink:href='#analysis_processing_job'><text x='144' y='1012' class='tableTitle'>analysis_processing_job</text><title>Table qiita.analysis_processing_job</title></a>
   <use id='nn' x='137' y='1032' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.analysis_id'><use id='pk' x='137' y='1031' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( analysis_id ) </title></a>
@@ -2032,7 +2032,6 @@ PMID of paper from the analysis</title></a>
   <use id='nn' x='137' y='1047' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.processing_job_id'><use id='pk' x='137' y='1046' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( processing_job_id ) </title></a>
 <a xlink:href='#analysis_processing_job.processing_job_id'><text x='153' y='1057'>processing_job_id</text><title>processing_job_id varchar not null</title></a>
 <a xlink:href='#analysis_processing_job.processing_job_id'><use id='fk' x='273' y='1046' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
-  <use id='nn' x='137' y='1062' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.data_type'><text x='153' y='1072'>data_type</text><title>data_type varchar not null</title></a>
 
 </g></svg>
 
@@ -5756,11 +5755,6 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>
 		<td><a name='analysis_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='analysis_processing_job.data_type'>data&#095;type</a></td>
 		<td> varchar  NOT NULL  </td>
 		<td>  </td>
 	</tr>

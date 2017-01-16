@@ -18,8 +18,7 @@ Classes
 # -----------------------------------------------------------------------------
 from __future__ import division
 from itertools import product
-from os.path import join, basename
-from tarfile import open as taropen
+from os.path import join
 
 from future.utils import viewitems
 from biom import load_table
@@ -31,7 +30,7 @@ from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
 
-class Analysis(qdb.base.QiitaStatusObject):
+class Analysis(qdb.base.QiitaObject):
     """
     Analysis object to access to the Qiita Analysis information
 
@@ -41,15 +40,11 @@ class Analysis(qdb.base.QiitaStatusObject):
     name
     description
     samples
-    dropped_samples
     data_types
-    biom_tables
-    step
+    artifacts
     shared_with
     jobs
     pmid
-    parent
-    children
 
     Methods
     -------
@@ -63,24 +58,13 @@ class Analysis(qdb.base.QiitaStatusObject):
     exists
     create
     delete
+    add_artifact
+    set_error
     """
 
     _table = "analysis"
     _portal_table = "analysis_portal"
     _analysis_id_column = 'analysis_id'
-
-    def _lock_check(self):
-        """Raises QiitaDBStatusError if analysis is not in_progress"""
-        if self.check_status({"queued", "running", "public", "completed",
-                              "error"}):
-            raise qdb.exceptions.QiitaDBStatusError("Analysis is locked!")
-
-    def _status_setter_checks(self):
-        r"""Perform a check to make sure not setting status away from public
-        """
-        if self.check_status({"public"}):
-            raise qdb.exceptions.QiitaDBStatusError(
-                "Can't set status away from public!")
 
     @classmethod
     def get_by_status(cls, status):
@@ -97,19 +81,34 @@ class Analysis(qdb.base.QiitaStatusObject):
             All analyses in the database with the given status
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT analysis_id
-                     FROM qiita.{0}
-                        JOIN qiita.{0}_status USING (analysis_status_id)
-                        JOIN qiita.analysis_portal USING (analysis_id)
-                        JOIN qiita.portal_type USING (portal_type_id)
-                     WHERE status = %s AND portal = %s""".format(cls._table)
-            qdb.sql_connection.TRN.add(sql, [status, qiita_config.portal])
+            # Sandboxed analyses are the analyses that have not been started
+            # and hence they don't have an artifact yet
+            if status == 'sandbox':
+                sql = """SELECT DISTINCT analysis
+                         FROM qiita.analysis
+                            JOIN qiita.analysis_portal USING (analysis_id)
+                            JOIN qiita.portal_type USING (portal_type_id)
+                         WHERE portal = %s AND analysis_id NOT IN (
+                            SELECT analysis_id
+                            FROM qiita.analysis_artifact)"""
+                qdb.sql_connection.TRN.add(sql, [qiita_config.portal])
+            else:
+                sql = """SELECT DISTINCT analysis_id
+                         FROM qiita.analysis_artifact
+                            JOIN qiita.artifact USING (artifact_id)
+                            JOIN qiita.visibility USING (visibility_id)
+                            JOIN qiita.analysis_portal USING (analysis_id)
+                            JOIN qiita.portal_type USING (portal_type_id)
+                         WHERE visibility = %s AND portal = %s"""
+                qdb.sql_connection.TRN.add(sql, [status, qiita_config.portal])
+
             return set(
                 cls(aid)
                 for aid in qdb.sql_connection.TRN.execute_fetchflatten())
 
     @classmethod
-    def create(cls, owner, name, description, parent=None, from_default=False):
+    def create(cls, owner, name, description, from_default=False,
+               merge_duplicated_sample_ids=False):
         """Creates a new analysis on the database
 
         Parameters
@@ -120,49 +119,39 @@ class Analysis(qdb.base.QiitaStatusObject):
             Name of the analysis
         description : str
             Description of the analysis
-        parent : Analysis object, optional
-            The analysis this one was forked from
         from_default : bool, optional
             If True, use the default analysis to populate selected samples.
             Default False.
+        merge_duplicated_sample_ids : bool, optional
+            If the duplicated sample ids in the selected studies should be
+            merged or prepended with the artifact ids. False (default) prepends
+            the artifact id
+
+        Returns
+        -------
+        qdb.analysis.Analysis
+            The newly created analysis
         """
         with qdb.sql_connection.TRN:
-            status_id = qdb.util.convert_to_id(
-                'in_construction', 'analysis_status', 'status')
             portal_id = qdb.util.convert_to_id(
                 qiita_config.portal, 'portal_type', 'portal')
 
+            # Create the row in the analysis table
+            sql = """INSERT INTO qiita.{0}
+                        (email, name, description)
+                    VALUES (%s, %s, %s)
+                    RETURNING analysis_id""".format(cls._table)
+            qdb.sql_connection.TRN.add(
+                sql, [owner.id, name, description])
+            a_id = qdb.sql_connection.TRN.execute_fetchlast()
+
             if from_default:
-                # insert analysis and move samples into that new analysis
+                # Move samples into that new analysis
                 dflt_id = owner.default_analysis.id
-
-                sql = """INSERT INTO qiita.{0}
-                            (email, name, description, analysis_status_id)
-                        VALUES (%s, %s, %s, %s)
-                        RETURNING analysis_id""".format(cls._table)
-                qdb.sql_connection.TRN.add(
-                    sql, [owner.id, name, description, status_id])
-                a_id = qdb.sql_connection.TRN.execute_fetchlast()
-                # MAGIC NUMBER 3: command selection step
-                # needed so we skip the sample selection step
-                sql = """INSERT INTO qiita.analysis_workflow
-                            (analysis_id, step)
-                        VALUES (%s, %s)"""
-                qdb.sql_connection.TRN.add(sql, [a_id, 3])
-
                 sql = """UPDATE qiita.analysis_sample
                          SET analysis_id = %s
                          WHERE analysis_id = %s"""
                 qdb.sql_connection.TRN.add(sql, [a_id, dflt_id])
-            else:
-                # insert analysis information into table as "in construction"
-                sql = """INSERT INTO qiita.{0}
-                            (email, name, description, analysis_status_id)
-                         VALUES (%s, %s, %s, %s)
-                         RETURNING analysis_id""".format(cls._table)
-                qdb.sql_connection.TRN.add(
-                    sql, [owner.id, name, description, status_id])
-                a_id = qdb.sql_connection.TRN.execute_fetchlast()
 
             # Add to both QIITA and given portal (if not QIITA)
             sql = """INSERT INTO qiita.analysis_portal
@@ -176,14 +165,26 @@ class Analysis(qdb.base.QiitaStatusObject):
                 args.append([a_id, qp_id])
             qdb.sql_connection.TRN.add(sql, args, many=True)
 
-            # add parent if necessary
-            if parent:
-                sql = """INSERT INTO qiita.analysis_chain
-                            (parent_id, child_id)
-                         VALUES (%s, %s)"""
-                qdb.sql_connection.TRN.add(sql, [parent.id, a_id])
+            instance = cls(a_id)
 
-            return cls(a_id)
+            # Once the analysis is created, we can create the mapping file and
+            # the initial set of artifacts
+            plugin = qdb.software.Software.from_name_and_version(
+                'Qiita', 'alpha')
+            cmd = plugin.get_command('build_analysis_files')
+            params = qdb.software.Parameters.load(
+                cmd, values_dict={
+                    'analysis': a_id,
+                    'merge_dup_sample_ids': merge_duplicated_sample_ids})
+            job = qdb.processing_job.ProcessingJob.create(
+                owner, params)
+            sql = """INSERT INTO qiita.analysis_processing_job
+                        (analysis_id, processing_job_id)
+                     VALUES (%s, %s)"""
+            qdb.sql_connection.TRN.add(sql, [a_id, job.id])
+            qdb.sql_connection.TRN.execute()
+            job.submit()
+            return instance
 
     @classmethod
     def delete(cls, _id):
@@ -204,13 +205,18 @@ class Analysis(qdb.base.QiitaStatusObject):
             if not cls.exists(_id):
                 raise qdb.exceptions.QiitaDBUnknownIDError(_id, "analysis")
 
+            # Check if the analysis has any artifact
+            sql = """SELECT EXISTS(SELECT *
+                                   FROM qiita.analysis_artifact
+                                   WHERE analysis_id = %s)"""
+            qdb.sql_connection.TRN.add(sql, [_id])
+            if qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Can't delete analysis %d, has artifacts attached")
+
             sql = "DELETE FROM qiita.analysis_filepath WHERE {0} = %s".format(
                 cls._analysis_id_column)
             args = [_id]
-            qdb.sql_connection.TRN.add(sql, args)
-
-            sql = "DELETE FROM qiita.analysis_workflow WHERE {0} = %s".format(
-                cls._analysis_id_column)
             qdb.sql_connection.TRN.add(sql, args)
 
             sql = "DELETE FROM qiita.analysis_portal WHERE {0} = %s".format(
@@ -221,7 +227,7 @@ class Analysis(qdb.base.QiitaStatusObject):
                 cls._analysis_id_column)
             qdb.sql_connection.TRN.add(sql, args)
 
-            sql = """DELETE FROM qiita.collection_analysis
+            sql = """DELETE FROM qiita.analysis_processing_job
                      WHERE {0} = %s""".format(cls._analysis_id_column)
             qdb.sql_connection.TRN.add(sql, args)
 
@@ -346,7 +352,6 @@ class Analysis(qdb.base.QiitaStatusObject):
             Analysis is public
         """
         with qdb.sql_connection.TRN:
-            self._lock_check()
             sql = """UPDATE qiita.{0} SET description = %s
                      WHERE analysis_id = %s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [description, self._id])
@@ -369,34 +374,6 @@ class Analysis(qdb.base.QiitaStatusObject):
                      GROUP BY artifact_id"""
             qdb.sql_connection.TRN.add(sql, [self._id])
             return dict(qdb.sql_connection.TRN.execute_fetchindex())
-
-    @property
-    def dropped_samples(self):
-        """The samples that were selected but dropped in processing
-
-        Returns
-        -------
-        dict of sets
-            Format is {artifact_id: {sample_id, sample_id, ...}, ...}
-        """
-        with qdb.sql_connection.TRN:
-            bioms = self.biom_tables
-            if not bioms:
-                return {}
-
-            # get all samples selected for the analysis, converting lists to
-            # sets for fast searching. Overhead less this way
-            # for large analyses
-            all_samples = {k: set(v) for k, v in viewitems(self.samples)}
-
-            for biom, filepath in viewitems(bioms):
-                table = load_table(filepath)
-                ids = set(table.ids())
-                for k in all_samples:
-                    all_samples[k] = all_samples[k] - ids
-
-            # what's left are unprocessed samples, so return
-            return all_samples
 
     @property
     def data_types(self):
@@ -434,57 +411,14 @@ class Analysis(qdb.base.QiitaStatusObject):
                     for uid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
-    def all_associated_filepath_ids(self):
-        """Get all associated filepath_ids
-
-        Returns
-        -------
-        list
-        """
+    def artifacts(self):
         with qdb.sql_connection.TRN:
-            sql = """SELECT filepath_id
-                     FROM qiita.filepath
-                        JOIN qiita.analysis_filepath USING (filepath_id)
+            sql = """SELECT artifact_id
+                     FROM qiita.analysis_artifact
                      WHERE analysis_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            filepaths = set(qdb.sql_connection.TRN.execute_fetchflatten())
-
-            sql = """SELECT filepath_id
-                     FROM qiita.analysis_job
-                        JOIN qiita.job USING (job_id)
-                        JOIN qiita.job_results_filepath USING (job_id)
-                        JOIN qiita.filepath USING (filepath_id)
-                     WHERE analysis_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            return filepaths.union(
-                qdb.sql_connection.TRN.execute_fetchflatten())
-
-    @property
-    def biom_tables(self):
-        """The biom tables of the analysis
-
-        Returns
-        -------
-        dict
-            Dictonary in the form {data_type: full BIOM filepath}
-        """
-        fps = [(_id, fp) for _id, fp, ftype in qdb.util.retrieve_filepaths(
-            "analysis_filepath", "analysis_id", self._id)
-            if ftype == 'biom']
-
-        if fps:
-            fps_ids = [f[0] for f in fps]
-            with qdb.sql_connection.TRN:
-                sql = """SELECT filepath_id, data_type FROM qiita.filepath
-                            JOIN qiita.analysis_filepath USING (filepath_id)
-                            JOIN qiita.data_type USING (data_type_id)
-                            WHERE filepath_id IN %s"""
-                qdb.sql_connection.TRN.add(sql, [tuple(fps_ids)])
-                data_types = dict(qdb.sql_connection.TRN.execute_fetchindex())
-
-            return {data_types[_id]: f for _id, f in fps}
-        else:
-            return {}
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return [qdb.artifact.Artifact(aid)
+                    for aid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
     def mapping_file(self):
@@ -525,64 +459,20 @@ class Analysis(qdb.base.QiitaStatusObject):
             return None
 
     @property
-    def step(self):
-        """Returns the current step of the analysis
-
-        Returns
-        -------
-        str
-            The current step of the analysis
-
-        Raises
-        ------
-        ValueError
-            If the step is not set up
-        """
-        with qdb.sql_connection.TRN:
-            self._lock_check()
-            sql = """SELECT step FROM qiita.analysis_workflow
-                     WHERE analysis_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            try:
-                return qdb.sql_connection.TRN.execute_fetchlast()
-            except IndexError:
-                raise ValueError("Step not set yet!")
-
-    @step.setter
-    def step(self, value):
-        with qdb.sql_connection.TRN:
-            self._lock_check()
-            sql = """SELECT EXISTS(
-                        SELECT analysis_id
-                        FROM qiita.analysis_workflow
-                        WHERE analysis_id = %s)"""
-            qdb.sql_connection.TRN.add(sql, [self._id])
-            step_exists = qdb.sql_connection.TRN.execute_fetchlast()
-
-            if step_exists:
-                sql = """UPDATE qiita.analysis_workflow SET step = %s
-                         WHERE analysis_id = %s"""
-            else:
-                sql = """INSERT INTO qiita.analysis_workflow
-                            (step, analysis_id)
-                         VALUES (%s, %s)"""
-            qdb.sql_connection.TRN.add(sql, [value, self._id])
-            qdb.sql_connection.TRN.execute()
-
-    @property
     def jobs(self):
-        """A list of jobs included in the analysis
+        """The jobs generating the initial artifacts for the analysis
 
         Returns
         -------
-        list of qiita_db.job.Job
+        list of qiita_db.processing_job.Processing_job
             Job ids for jobs in analysis. Empty list if no jobs attached.
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT job_id FROM qiita.analysis_job
-                     WHERE analysis_id = %s""".format(self._table)
+            sql = """SELECT processing_job_id
+                     FROM qiita.analysis_processing_job
+                     WHERE analysis_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
-            return [qdb.job.Job(jid)
+            return [qdb.processing_job.ProcessingJob(jid)
                     for jid in qdb.sql_connection.TRN.execute_fetchflatten()]
 
     @property
@@ -619,22 +509,47 @@ class Analysis(qdb.base.QiitaStatusObject):
         An analysis should only ever have one PMID attached to it.
         """
         with qdb.sql_connection.TRN:
-            self._lock_check()
             sql = """UPDATE qiita.{0} SET pmid = %s
                      WHERE analysis_id = %s""".format(self._table)
             qdb.sql_connection.TRN.add(sql, [pmid, self._id])
             qdb.sql_connection.TRN.execute()
 
-    # @property
-    # def parent(self):
-    #     """Returns the id of the parent analysis this was forked from"""
-    #     return QiitaDBNotImplementedError()
-
-    # @property
-    # def children(self):
-    #     return QiitaDBNotImplementedError()
-
     # ---- Functions ----
+    def add_artifact(self, artifact):
+        """Adds an artifact to the analysis
+
+        Parameters
+        ----------
+        artifact : qiita_db.artifact.Artifact
+            The artifact to be added
+        """
+        with qdb.sql_connection.TRN:
+            sql = """INSERT INTO qiita.analysis_artifact
+                        (analysis_id, artifact_id)
+                     SELECT %s, %s
+                     WHERE NOT EXISTS(SELECT *
+                                      FROM qiita.analysis_artifact
+                                      WHERE analysis_id = %s
+                                        AND artifact_id = %s)"""
+            qdb.sql_connection.TRN.add(sql, [self.id, artifact.id,
+                                             self.id, artifact.id])
+
+    def set_error(self, error_msg):
+        """Sets the analysis error
+
+        Parameters
+        ----------
+        error_msg : str
+            The error message
+        """
+        with qdb.sql_connection.TRN:
+            le = qdb.logger.LogEntry.create('Runtime', error_msg)
+            sql = """UPDATE qiita.analysis
+                     SET logging_id = %s
+                     WHERE analysis_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [le.id, self.id])
+            qdb.sql_connection.TRN.execute()
+
     def has_access(self, user):
         """Returns whether the given user has access to the analysis
 
@@ -707,6 +622,21 @@ class Analysis(qdb.base.QiitaStatusObject):
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
             qdb.sql_connection.TRN.execute()
 
+    def _lock_samples(self):
+        """Only dflt analyses can have samples added/removed
+
+        Raises
+        ------
+        qiita_db.exceptions.QiitaDBOperationNotPermittedError
+            If the analysis is not a default analysis
+        """
+        with qdb.sql_connection.TRN:
+            sql = "SELECT dflt FROM qiita.analysis WHERE analysis_id = %s"
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            if not qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+                    "Can't add/remove samples from this analysis")
+
     def add_samples(self, samples):
         """Adds samples to the analysis
 
@@ -717,7 +647,7 @@ class Analysis(qdb.base.QiitaStatusObject):
             {artifact_id: [sample1, sample2, ...], ...}
         """
         with qdb.sql_connection.TRN:
-            self._lock_check()
+            self._lock_samples()
 
             for aid, samps in viewitems(samples):
                 # get previously selected samples for aid and filter them out
@@ -755,7 +685,7 @@ class Analysis(qdb.base.QiitaStatusObject):
           artifacts
         """
         with qdb.sql_connection.TRN:
-            self._lock_check()
+            self._lock_samples()
             if artifacts and samples:
                 sql = """DELETE FROM qiita.analysis_sample
                          WHERE analysis_id = %s
@@ -781,60 +711,15 @@ class Analysis(qdb.base.QiitaStatusObject):
             qdb.sql_connection.TRN.add(sql, args, many=True)
             qdb.sql_connection.TRN.execute()
 
-    def generate_tgz(self):
-        with qdb.sql_connection.TRN:
-            fps_ids = self.all_associated_filepath_ids
-            if not fps_ids:
-                raise qdb.exceptions.QiitaDBError(
-                    "The analysis %s do not have files attached, "
-                    "can't create the tgz file" % self.id)
-
-            sql = """SELECT filepath, data_directory_id FROM qiita.filepath
-                        WHERE filepath_id IN %s"""
-            qdb.sql_connection.TRN.add(sql, [tuple(fps_ids)])
-
-            full_fps = [join(qdb.util.get_mountpoint_path_by_id(mid), f)
-                        for f, mid in
-                        qdb.sql_connection.TRN.execute_fetchindex()]
-
-            _, analysis_mp = qdb.util.get_mountpoint('analysis')[0]
-            tgz = join(analysis_mp, '%d_files.tgz' % self.id)
-            try:
-                with taropen(tgz, "w:gz") as tar:
-                    for f in full_fps:
-                        tar.add(f, arcname=basename(f))
-                error_txt = ''
-                return_value = 0
-            except Exception as e:
-                error_txt = str(e)
-                return_value = 1
-
-            if return_value == 0:
-                self._add_file(tgz, 'tgz')
-
-        return '', error_txt, return_value
-
-    def build_files(self,
-                    rarefaction_depth=None,
-                    merge_duplicated_sample_ids=False):
+    def build_files(self, merge_duplicated_sample_ids):
         """Builds biom and mapping files needed for analysis
 
         Parameters
         ----------
-        rarefaction_depth : int, optional
-            Defaults to ``None``. If ``None``, do not rarefy. Otherwise, rarefy
-            all samples to this number of observations
-        merge_duplicated_sample_ids : bool, optional
+        merge_duplicated_sample_ids : bool
             If the duplicated sample ids in the selected studies should be
-            merged or prepended with the artifact ids. False (default) prepends
+            merged or prepended with the artifact ids. If false prepends
             the artifact id
-
-        Raises
-        ------
-        TypeError
-            If `rarefaction_depth` is not an integer
-        ValueError
-            If `rarefaction_depth` is less than or equal to zero
 
         Notes
         -----
@@ -842,13 +727,6 @@ class Analysis(qdb.base.QiitaStatusObject):
         Creates mapping file for requested samples
         """
         with qdb.sql_connection.TRN:
-            if rarefaction_depth is not None:
-                if type(rarefaction_depth) is not int:
-                    raise TypeError("rarefaction_depth must be in integer")
-                if rarefaction_depth <= 0:
-                    raise ValueError(
-                        "rarefaction_depth must be greater than 0")
-
             # in practice we could retrieve samples in each of the following
             # calls but this will mean calling the DB multiple times and will
             # make testing much harder as we will need to have analyses at
@@ -897,16 +775,17 @@ class Analysis(qdb.base.QiitaStatusObject):
                         dup_samples = dup_samples | s
 
             self._build_mapping_file(samples, rename_dup_samples)
-            self._build_biom_tables(grouped_samples, rarefaction_depth,
-                                    rename_dup_samples)
+            biom_files = self._build_biom_tables(
+                grouped_samples, rename_dup_samples)
 
-    def _build_biom_tables(self, grouped_samples, rarefaction_depth=None,
-                           rename_dup_samples=False):
+            return biom_files
+
+    def _build_biom_tables(self, grouped_samples, rename_dup_samples=False):
         """Build tables and add them to the analysis"""
         with qdb.sql_connection.TRN:
             base_fp = qdb.util.get_work_base_dir()
 
-            _, base_fp = qdb.util.get_mountpoint(self._table)[0]
+            biom_files = []
             for label, tables in viewitems(grouped_samples):
                 data_type, reference_id, command_id = label.split('.')
                 new_table = None
@@ -964,12 +843,6 @@ class Analysis(qdb.base.QiitaStatusObject):
                 samples_md = {sid: study_md for sid in new_table.ids()}
                 new_table.add_metadata(samples_md, axis='sample')
 
-                if rarefaction_depth is not None:
-                    new_table = new_table.subsample(rarefaction_depth)
-                    if len(new_table.ids()) == 0:
-                        raise RuntimeError(
-                            "All samples filtered out due to rarefacion level")
-
                 # write out the file
                 fn = "%d_analysis_dt-%s_r-%s_c-%s.biom" % (
                     self._id, data_type, reference_id, command_id)
@@ -979,7 +852,9 @@ class Analysis(qdb.base.QiitaStatusObject):
                         f, "Generated by Qiita. Analysis %d Datatype %s "
                         "Reference %s Command %s" % (self._id, data_type,
                                                      reference_id, command_id))
-                self._add_file(fn, "biom", data_type=data_type)
+
+                biom_files.append((data_type, biom_fp))
+        return biom_files
 
     def _build_mapping_file(self, samples, rename_dup_samples=False):
         """Builds the combined mapping file for all samples

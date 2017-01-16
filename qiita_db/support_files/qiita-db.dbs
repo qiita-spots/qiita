@@ -115,7 +115,6 @@
 		<table name="analysis_processing_job" >
 			<column name="analysis_id" type="bigint" jt="-5" mandatory="y" />
 			<column name="processing_job_id" type="varchar" jt="12" mandatory="y" />
-			<column name="data_type" type="varchar" jt="12" mandatory="y" />
 			<index name="idx_analysis_processing_job" unique="PRIMARY_KEY" >
 				<column name="analysis_id" />
 				<column name="processing_job_id" />

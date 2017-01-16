@@ -36,7 +36,6 @@ ALTER TABLE qiita.analysis DROP COLUMN analysis_status_id;
 CREATE TABLE qiita.analysis_processing_job (
 	analysis_id          bigint  NOT NULL,
 	processing_job_id    uuid    NOT NULL,
-    data_type             varchar NOT NULL,
 	CONSTRAINT idx_analysis_processing_job PRIMARY KEY ( analysis_id, processing_job_id )
  ) ;
 
@@ -90,3 +89,27 @@ INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type,
 -- an analysis or to a prep template. command_parameter_id known from patch
 -- 36.sql
 UPDATE qiita.command_parameter SET required = FALSE WHERE command_parameter_id = 34;
+
+-- We are going to add a new special software type, and a new software.
+-- This is going to be used internally by Qiita, so submit the private jobs.
+-- This is needed for the analysis.
+INSERT INTO qiita.software_type (software_type, description)
+    VALUES ('private', 'Internal Qiita jobs');
+
+DO $do$
+DECLARE
+    qiita_sw_id     bigint;
+    baf_cmd_id      bigint;
+BEGIN
+    INSERT INTO qiita.software (name, version, description, environment_script, start_script, software_type_id, active)
+        VALUES ('Qiita', 'alpha', 'Internal Qiita jobs', 'source activate qiita', 'qiita-private-2', 3, True)
+        RETURNING software_id INTO qiita_sw_id;
+
+    INSERT INTO qiita.software_command (software_id, name, description)
+        VALUES (qiita_sw_id, 'build_analysis_files', 'Builds the files needed for the analysis')
+        RETURNING command_id INTO baf_cmd_id;
+
+    INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type, required, default_value)
+        VALUES (baf_cmd_id, 'analysis', 'analysis', True, NULL),
+               (baf_cmd_id, 'merge_dup_sample_ids', 'bool', False, 'False');
+END $do$
