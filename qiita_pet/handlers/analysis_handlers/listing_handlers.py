@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from functools import partial
+from json import dumps
 
 from tornado.web import authenticated
 
@@ -82,3 +83,11 @@ class ListAnalysesHandler(BaseHandler):
 
         self.redirect(u"%s/analysis/list/?level=%s&message=%s"
                       % (qiita_config.portal_dir, level, msg))
+
+
+class AnalysisSummaryAJAX(BaseHandler):
+    @authenticated
+    @execute_as_transaction
+    def get(self):
+        info = self.current_user.default_analysis.summary_data()
+        self.write(dumps(info))

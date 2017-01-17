@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from .util import check_analysis_access
-from .listing_handlers import ListAnalysesHandler
+from .listing_handlers import ListAnalysesHandler, AnalysisSummaryAJAX
 
-__all__ = ['ListAnalysesHandler', 'check_analysis_access']
+__all__ = ['ListAnalysesHandler', 'AnalysisSummaryAJAX',
+           'check_analysis_access']

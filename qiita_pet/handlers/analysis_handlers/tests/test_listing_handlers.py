@@ -7,15 +7,21 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main
+from json import loads
 
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
-class TestListAnalysesHandler(TestHandlerBase):
-    def test_get(self):
+class TestListingHandlers(TestHandlerBase):
+    def test_get_list_analyses_handler(self):
         response = self.get('/analysis/list/')
         self.assertEqual(response.code, 200)
 
+    def test_get_analysis_summary_ajax(self):
+        response = self.get('/analysis/dflt/sumary/')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {"artifacts": 1, "studies": 1, "samples": 4})
 
 if __name__ == '__main__':
     main()
