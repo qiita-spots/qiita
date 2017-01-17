@@ -334,6 +334,15 @@ class Artifact(qdb.base.QiitaObject):
                 qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
                 instance = cls(a_id)
+                # inheriting visibility
+                visibilities = {a.visibility for a in instance.parents}
+                # set based on the "lowest" visibility
+                if 'sandbox' in visibilities:
+                    instance.visibility = 'sandbox'
+                elif 'private' in visibilities:
+                    instance.visibility = 'private'
+                else:
+                    instance.visibility = 'public'
             else:
                 dtype_id = qdb.util.convert_to_id(prep_template.data_type(),
                                                   "data_type")
