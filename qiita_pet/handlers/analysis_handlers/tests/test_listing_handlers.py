@@ -23,5 +23,10 @@ class TestListingHandlers(TestHandlerBase):
         self.assertEqual(loads(response.body),
                          {"artifacts": 1, "studies": 1, "samples": 4})
 
+    def test_get_selected_samples_handler(self):
+        response = self.get('/analysis/selected/')
+        # Make sure page response loaded sucessfully
+        self.assertEqual(response.code, 200)
+
 if __name__ == '__main__':
     main()

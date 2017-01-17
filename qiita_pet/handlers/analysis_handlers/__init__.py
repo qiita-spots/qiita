@@ -7,7 +7,8 @@
 # -----------------------------------------------------------------------------
 
 from .util import check_analysis_access
-from .listing_handlers import ListAnalysesHandler, AnalysisSummaryAJAX
+from .listing_handlers import (ListAnalysesHandler, AnalysisSummaryAJAX,
+                               SelectedSamplesHandler)
 
 __all__ = ['ListAnalysesHandler', 'AnalysisSummaryAJAX',
-           'check_analysis_access']
+           'SelectedSamplesHandler', 'check_analysis_access']
