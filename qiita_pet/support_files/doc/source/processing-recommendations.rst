@@ -47,12 +47,19 @@ Currently, we have the reference databases: Greengenes version 3_8-97, Silva 119
 Shotgun sequencing
 ------------------
 
-Here you need to start with per_sample_FASTQ, we recommend to only upload already QC-ed and adaptor and human sequences removed FASTQ files. However, we have a step for
-this preprocessing available in Qiita via `KneadData <https://bitbucket.org/biobakery/kneaddata/wiki/Home>`_.
+Qiita currently has one shotgun metagenomics data analysis pipeline. Note that this is the initial processing pipeline and we will be adding more soon.
 
-The recommended processing steps are:
+With that said, the current workflow is as follows:
 
-#. Remove adapters and human sequences from your files using KneadData. We currently have TruSeq3-PE-2 and NexteraPE-PE adaptor removal.
-#. Use `HUMAnN2 <https://bitbucket.org/biobakery/humann2/wiki/Home>`_ to generate BIOM tables.
+#. Removal of adapter sequence and host contamination using `KneadData <https://bitbucket.org/biobakery/kneaddata/wiki/Home>`_.
+#. Gene calling and pathway profiling using `HUMAnN2 <https://bitbucket.org/biobakery/humann2/wiki/Home>`_.
 
-For more information visit the `Shotgun Qiita Plugin GitHub page<https://github.com/qiita-spots/qp-shotgun>`.
+This workflow starts with per_sample_FASTQ files. We recommend only uploading sequences that have already been through QC and host /
+human sequence removal. However, all sequence files currently are required to go through KneadData to ensure they are ready for
+subsequent analyses. Currently, the KneadData command removes adaptor sequences (choice of TruSeq3-PE-2 and NexteraPE-PE) and
+sequences mapping to the human genome (additional host genomes will become available soon).
+
+Next, the QC'd sequences will be compared against reference databases to determine the presence and abundance of protein-coding functional genes and
+pathways using HUMAnN2. These are then summarized as BIOM tables, which can be used in subsequent analysis and visualization.
+
+For more information visit the `Shotgun Qiita Plugin GitHub page <https://github.com/qiita-spots/qp-shotgun>`.
