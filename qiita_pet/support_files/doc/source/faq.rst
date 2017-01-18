@@ -26,6 +26,8 @@ example go
 the "Upload instructions"
 `here <https://www.google.com/url?q=https%3A%2F%2Fvamps.mbl.edu%2Fmobe_workshop%2Fwiki%2Findex.php%2FMain_Page&sa=D&sntz=1&usg=AFQjCNE4PTOKIvFNlWtHmJyLLy11mfzF8A>`__.
 
+.. _example_study_processing_workflow:
+
 Example study processing workflow
 ---------------------------------
 
