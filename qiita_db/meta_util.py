@@ -25,8 +25,6 @@ Methods
 # -----------------------------------------------------------------------------
 from __future__ import division
 
-from itertools import chain
-
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
@@ -146,10 +144,10 @@ def get_lat_longs():
         qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
 
         sql = [('SELECT CAST(latitude AS FLOAT), '
-                       'CAST(longitude AS FLOAT) '
+                '       CAST(longitude AS FLOAT) '
                 'FROM qiita.%s '
                 'WHERE isnumeric(latitude) AND isnumeric(latitude)' % s)
-                for s in qdb.sql_connection.TRN.execute_fetchflatten()]
+               for s in qdb.sql_connection.TRN.execute_fetchflatten()]
         sql = ' UNION '.join(sql)
         qdb.sql_connection.TRN.add(sql)
 
