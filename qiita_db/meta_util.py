@@ -136,6 +136,7 @@ def get_lat_longs():
         s.id for s in qdb.portal.Portal(qiita_config.portal).get_studies()]
 
     with qdb.sql_connection.TRN:
+        # getting all tables in the portal
         sql = """SELECT DISTINCT table_name
                  FROM information_schema.columns
                  WHERE table_name SIMILAR TO 'sample_[0-9]+'
@@ -144,16 +145,12 @@ def get_lat_longs():
                     AND SPLIT_PART(table_name, '_', 2)::int IN %s;"""
         qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
 
-        sql = """SELECT CAST(latitude AS FLOAT), CAST(longitude AS FLOAT)
-                 FROM qiita.{0}
-                 WHERE isnumeric(latitude) AND isnumeric(latitude)"""
-        idx = qdb.sql_connection.TRN.index
+        sql = [('SELECT CAST(latitude AS FLOAT), '
+                       'CAST(longitude AS FLOAT) '
+                'FROM qiita.%s '
+                'WHERE isnumeric(latitude) AND isnumeric(latitude)' % s)
+                for s in qdb.sql_connection.TRN.execute_fetchflatten()]
+        sql = ' UNION '.join(sql)
+        qdb.sql_connection.TRN.add(sql)
 
-        portal_tables = qdb.sql_connection.TRN.execute_fetchflatten()
-
-        ebi_null = tuple(qdb.metadata_template.constants.EBI_NULL_VALUES)
-        for table in portal_tables:
-            qdb.sql_connection.TRN.add(sql.format(table), [ebi_null, ebi_null])
-
-        return list(
-            chain.from_iterable(qdb.sql_connection.TRN.execute()[idx:]))
+        return qdb.sql_connection.TRN.execute_fetchindex()
