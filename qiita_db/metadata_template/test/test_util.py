@@ -780,7 +780,7 @@ QIIME_TUTORIAL_MAP_DICT_FORM = {
                   'PC.607': 'Fast'},
     'DOB': {'PC.354': '20061218',
             'PC.607': '20071112'},
-    'description': {'PC.354': 'Control_mouse_I.D._354',
+    'Description': {'PC.354': 'Control_mouse_I.D._354',
                     'PC.607': 'Fasting_mouse_I.D._607'}
 }
 
