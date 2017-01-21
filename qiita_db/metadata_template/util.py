@@ -60,16 +60,13 @@ def prefix_sample_names_with_id(md_template, study_id):
         md_template.index.name = None
 
 
-def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
+def load_template_to_dataframe(fn, index='sample_name'):
     """Load a sample/prep template or a QIIME mapping file into a data frame
 
     Parameters
     ----------
     fn : str or file-like object
         filename of the template to load, or an already open template file
-    strip_whitespace : bool, optional
-        Defaults to True. Whether or not to strip whitespace from values in the
-        input file
     index : str, optional
         Defaults to 'sample_name'. The index to use in the loaded information
 
@@ -110,18 +107,27 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
     if not holdfile:
         raise ValueError('Empty file passed!')
 
-    # Strip all values in the cells in the input file, if requested
-    if strip_whitespace:
-        for pos, line in enumerate(holdfile):
-            holdfile[pos] = '\t'.join(d.strip(" \r\x0b\x0c")
-                                      for d in line.split('\t'))
+    # Strip all values in the cells in the input file
+    for pos, line in enumerate(holdfile):
+        cols = line.split('\t')
+        if pos == 0:
+            # get and clean the controlled columns
+            ccols = {'sample_name'}
+            ccols.update(qdb.metadata_template.constants.CONTROLLED_COLS)
+            newcols = [
+                c.lower().strip() if c.lower().strip() in ccols else c.strip()
+                for c in cols]
 
-    # get and clean the controlled columns
-    cols = holdfile[0].split('\t')
-    controlled_cols = {'sample_name'}
-    controlled_cols.update(qdb.metadata_template.constants.CONTROLLED_COLS)
-    holdfile[0] = '\t'.join(c.lower() if c.lower() in controlled_cols else c
-                            for c in cols)
+            # while we are here, let's check for duplicate columns headers
+            if len(set(newcols)) != len(newcols):
+                raise qdb.exceptions.QiitaDBDuplicateHeaderError(
+                    find_duplicates(newcols))
+        else:
+            # .strip will remove odd chars, newlines, tabs and multiple spaces
+            # but we need to read a new line at the end of the line (+ '\n')
+            newcols = [d.strip(" \r\x0b\x0c\n") for d in cols]
+
+        holdfile[pos] = '\t'.join(newcols) + '\n'
 
     if index == "#SampleID":
         # We're going to parse a QIIME mapping file. We are going to first
@@ -132,12 +138,6 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
         holdfile.insert(0, "%s\n" % '\t'.join(headers))
         # The QIIME parser fixes the index and removes the #
         index = 'SampleID'
-
-    # Check that we don't have duplicate columns
-    col_names = [c.lower() for c in holdfile[0].strip().split('\t')]
-    if len(set(col_names)) != len(col_names):
-        raise qdb.exceptions.QiitaDBDuplicateHeaderError(
-            find_duplicates(col_names))
 
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string
@@ -158,6 +158,9 @@ def load_template_to_dataframe(fn, strip_whitespace=True, index='sample_name'):
             index_col=False,
             comment='\t',
             converters={index: lambda x: str(x).strip()})
+        # remove newlines and tabs from fields
+        template.replace(to_replace='[\t\n\r\x0b\x0c]+', value='',
+                         regex=True, inplace=True)
     except UnicodeDecodeError:
         # Find row number and col number for utf-8 encoding errors
         headers = holdfile[0].strip().split('\t')
