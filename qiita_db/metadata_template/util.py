@@ -120,7 +120,7 @@ def load_template_to_dataframe(fn, index='sample_name'):
     # Strip all values in the cells in the input file
     for pos, line in enumerate(holdfile):
         cols = line.split('\t')
-        if pos == 0 and index!='SampleID':
+        if pos == 0 and index != 'SampleID':
             # get and clean the controlled columns
             ccols = {'sample_name'}
             ccols.update(qdb.metadata_template.constants.CONTROLLED_COLS)
