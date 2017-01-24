@@ -116,30 +116,30 @@ def load_template_to_dataframe(fn, index='sample_name'):
         holdfile.insert(0, "%s\n" % '\t'.join(headers))
         # The QIIME parser fixes the index and removes the #
         index = 'SampleID'
-    else:
-        # Strip all values in the cells in the input file
-        for pos, line in enumerate(holdfile):
-            cols = line.split('\t')
-            if pos == 0:
-                # get and clean the controlled columns
-                ccols = {'sample_name'}
-                ccols.update(qdb.metadata_template.constants.CONTROLLED_COLS)
-                newcols = [
-                    c.lower().strip() if c.lower().strip() in ccols
-                    else c.strip()
-                    for c in cols]
 
-                # while we are here, let's check for duplicate columns headers
-                if len(set(newcols)) != len(newcols):
-                    raise qdb.exceptions.QiitaDBDuplicateHeaderError(
-                        find_duplicates(newcols))
-            else:
-                # .strip will remove odd chars, newlines, tabs and multiple
-                # spaces but we need to read a new line at the end of the
-                # line (+ '\n')
-                newcols = [d.strip(" \r\x0b\x0c\n") for d in cols]
+    # Strip all values in the cells in the input file
+    for pos, line in enumerate(holdfile):
+        cols = line.split('\t')
+        if pos == 0 and index!='SampleID':
+            # get and clean the controlled columns
+            ccols = {'sample_name'}
+            ccols.update(qdb.metadata_template.constants.CONTROLLED_COLS)
+            newcols = [
+                c.lower().strip() if c.lower().strip() in ccols
+                else c.strip()
+                for c in cols]
 
-            holdfile[pos] = '\t'.join(newcols) + '\n'
+            # while we are here, let's check for duplicate columns headers
+            if len(set(newcols)) != len(newcols):
+                raise qdb.exceptions.QiitaDBDuplicateHeaderError(
+                    find_duplicates(newcols))
+        else:
+            # .strip will remove odd chars, newlines, tabs and multiple
+            # spaces but we need to read a new line at the end of the
+            # line(+'\n')
+            newcols = [d.strip(" \r\x0b\x0c\n") for d in cols]
+
+        holdfile[pos] = '\t'.join(newcols) + '\n'
 
     # index_col:
     #   is set as False, otherwise it is cast as a float and we want a string
