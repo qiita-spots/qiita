@@ -749,13 +749,14 @@ def purge_filepaths(delete_files=True):
         union_str = " UNION ".join(
             ["SELECT %s FROM qiita.%s WHERE %s IS NOT NULL" % (col, table, col)
              for table, col in qdb.sql_connection.TRN.execute_fetchindex()])
-        # Get all the filepaths from the filepath table that are not
-        # referenced from any place in the database
-        sql = """SELECT filepath_id, filepath, filepath_type, data_directory_id
-            FROM qiita.filepath FP JOIN qiita.filepath_type FPT
-                ON FP.filepath_type_id = FPT.filepath_type_id
-            WHERE filepath_id NOT IN (%s)""" % union_str
-        qdb.sql_connection.TRN.add(sql)
+        if union_str:
+            # Get all the filepaths from the filepath table that are not
+            # referenced from any place in the database
+            sql = """SELECT filepath_id, filepath, filepath_type, data_directory_id
+                FROM qiita.filepath FP JOIN qiita.filepath_type FPT
+                    ON FP.filepath_type_id = FPT.filepath_type_id
+                WHERE filepath_id NOT IN (%s)""" % union_str
+            qdb.sql_connection.TRN.add(sql)
 
         # We can now go over and remove all the filepaths
         sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
