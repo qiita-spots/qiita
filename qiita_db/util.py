@@ -714,7 +714,17 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
                 for fpid, fp, fp_type_, m, s in results]
 
 
-def purge_filepaths():
+def _rm_files(TRN, fp):
+    # Remove the data
+    if exists(fp):
+        if isdir(fp):
+            func = rmtree
+        else:
+            func = remove
+        TRN.add_post_commit_func(func, fp)
+
+
+def purge_filepaths(delete_files=True):
     r"""Goes over the filepath table and remove all the filepaths that are not
     used in any place
     """
@@ -751,18 +761,39 @@ def purge_filepaths():
         sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
         db_results = qdb.sql_connection.TRN.execute_fetchindex()
         for fp_id, fp, fp_type, dd_id in db_results:
-            qdb.sql_connection.TRN.add(sql, [fp_id])
+            if delete_files:
+                qdb.sql_connection.TRN.add(sql, [fp_id])
+                fp = join(get_mountpoint_path_by_id(dd_id), fp)
+                _rm_files(qdb.sql_connection.TRN, fp)
+            else:
+                print fp, fp_type
 
-            # Remove the data
-            fp = join(get_mountpoint_path_by_id(dd_id), fp)
-            if exists(fp):
-                if fp_type is 'directory':
-                    func = rmtree
-                else:
-                    func = remove
-                qdb.sql_connection.TRN.add_post_commit_func(func, fp)
+        if delete_files:
+            qdb.sql_connection.TRN.execute()
 
-        qdb.sql_connection.TRN.execute()
+
+def empty_trash_upload_folder(delete_files=True):
+    r"""Delete all files in the trash folder inside each of the upload
+    folders"""
+    gfp = partial(join, get_db_files_base_dir())
+    with qdb.sql_connection.TRN:
+        sql = """SELECT mountpoint
+                 FROM qiita.data_directory
+                 WHERE data_type = 'uploads'"""
+        qdb.sql_connection.TRN.add(sql)
+
+        for mp in qdb.sql_connection.TRN.execute_fetchflatten():
+            for path, dirs, files in walk(gfp(mp)):
+                if path.endswith('/trash'):
+                    if delete_files:
+                        for f in files:
+                            fp = join(path, f)
+                            _rm_files(qdb.sql_connection.TRN, fp)
+                    else:
+                        print files
+
+        if delete_files:
+            qdb.sql_connection.TRN.execute()
 
 
 def move_filepaths_to_upload_folder(study_id, filepaths):

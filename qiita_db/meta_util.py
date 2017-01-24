@@ -25,6 +25,16 @@ Methods
 # -----------------------------------------------------------------------------
 from __future__ import division
 
+from moi import r_client
+from os import stat
+from time import strftime, localtime
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from base64 import b64encode
+from urllib import quote
+from StringIO import StringIO
+from future.utils import viewitems
+
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
@@ -120,6 +130,147 @@ def get_accessible_filepath_ids(user):
             filepath_ids.update(analysis.all_associated_filepath_ids)
 
         return filepath_ids
+
+
+def update_redis_stats():
+    """Generate the system stats and save them in redis
+
+    Returns
+    -------
+    list of str
+        artifact filepaths that are not present in the file system
+    """
+    STUDY = qdb.study.Study
+    studies = {'public': STUDY.get_by_status('private'),
+               'private': STUDY.get_by_status('public'),
+               'sanbox': STUDY.get_by_status('sandbox')}
+    number_studies = {k: len(v) for k, v in viewitems(studies)}
+
+    number_of_samples = {}
+    ebi_samples = {}
+    for k, sts in viewitems(studies):
+        number_of_samples[k] = 0
+        for s in sts:
+            st = s.sample_template
+            if st is not None:
+                number_of_samples[k] += len(list(st.keys()))
+
+            ebi_samples_count = 0
+            for pt in s.prep_templates():
+                ebi_samples_count += len([
+                    1 for _, v in viewitems(pt.ebi_experiment_accessions)
+                    if v is not None and v != ''])
+            ebi_samples[s.id] = ebi_samples_count
+
+    num_users = qdb.util.get_count('qiita.qiita_user')
+
+    lat_longs = get_lat_longs()
+
+    num_studies_ebi = len(ebi_samples)
+    num_samples_ebi = sum([v for _, v in viewitems(ebi_samples)])
+
+    # generating file size stats
+    stats = []
+    missing_files = []
+    for k, sts in viewitems(studies):
+        for s in sts:
+            for a in s.artifacts():
+                for _, fp, dt in a.filepaths:
+                    try:
+                        s = stat(fp)
+                        stats.append((dt, s.st_size, strftime('%Y-%m',
+                                      localtime(s.st_ctime))))
+                    except:
+                        missing_files.append(fp)
+
+    summary = {}
+    all_dates = []
+    for ft, size, ym in stats:
+        if ft not in summary:
+            summary[ft] = {}
+        if ym not in summary[ft]:
+            summary[ft][ym] = 0
+            all_dates.append(ym)
+        summary[ft][ym] += size
+    all_dates = sorted(set(all_dates))
+
+    # sorting summaries
+    rm_from_data = ['html_summary', 'tgz', 'directory', 'raw_fasta', 'log',
+                    'biom', 'raw_sff', 'raw_qual']
+    ordered_summary = {}
+    for dt in summary:
+        if dt in rm_from_data:
+            continue
+        new_list = []
+        current_value = 0
+        for ad in all_dates:
+            if ad in summary[dt]:
+                current_value += summary[dt][ad]
+            new_list.append(current_value)
+        ordered_summary[dt] = new_list
+
+    plot_order = sorted([(k, ordered_summary[k][-1]) for k in ordered_summary],
+                        key=lambda x: x[1])
+
+    # helper function to generate y axis, modified from:
+    # http://stackoverflow.com/a/1094933
+    def sizeof_fmt(value, position):
+        number = None
+        for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+            if abs(value) < 1024.0:
+                number = "%3.1f%s" % (value, unit)
+                break
+            value /= 1024.0
+        if number is None:
+            number = "%.1f%s" % (value, 'Yi')
+        return number
+
+    all_dates_axis = range(len(all_dates))
+    plt.locator_params(axis='y', nbins=10)
+    plt.figure(figsize=(20, 10))
+    for k, v in plot_order:
+        plt.plot(all_dates_axis, ordered_summary[k], linewidth=2, label=k)
+
+    plt.xticks(all_dates_axis, all_dates)
+    plt.legend()
+    plt.grid()
+    ax = plt.gca()
+    ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(sizeof_fmt))
+    plt.xlabel('Date')
+    plt.ylabel('Storage space per data type')
+
+    plot = StringIO()
+    plt.savefig(plot, format='png')
+    plot.seek(0)
+    img = '<img src = "%s"/>' % (
+        'data:image/png;base64,' + quote(b64encode(plot.buf)))
+
+    portal = qiita_config.portal
+    keys = [
+        'number_studies', 'number_of_samples', 'num_users', 'lat_longs',
+        'num_studies_ebi', 'num_samples_ebi', 'img']
+    for k in keys:
+        redis_key = '%s:stats:%s' % (portal, k)
+
+        # storing dicts
+        if k == 'number_studies':
+            r_client.hmset(redis_key, number_studies)
+        elif k == 'number_of_samples':
+            r_client.hmset(redis_key, number_of_samples)
+        # single values
+        elif k == 'num_users':
+            r_client.set(redis_key, num_users)
+        elif k == 'num_studies_ebi':
+            r_client.set(redis_key, num_studies_ebi)
+        elif k == 'num_samples_ebi':
+            r_client.set(redis_key, num_samples_ebi)
+        elif k == 'img':
+            r_client.set(redis_key, img)
+        # storing tuples
+        elif k == 'lat_longs':
+            r_client.set(redis_key, lat_longs)
+
+    return missing_files
 
 
 def get_lat_longs():
