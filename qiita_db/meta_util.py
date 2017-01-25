@@ -34,6 +34,7 @@ from base64 import b64encode
 from urllib import quote
 from StringIO import StringIO
 from future.utils import viewitems
+from datetime import datetime
 
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
@@ -245,10 +246,12 @@ def update_redis_stats():
     img = '<img src = "%s"/>' % (
         'data:image/png;base64,' + quote(b64encode(plot.buf)))
 
+    time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
+
     portal = qiita_config.portal
     keys = [
         'number_studies', 'number_of_samples', 'num_users', 'lat_longs',
-        'num_studies_ebi', 'num_samples_ebi', 'img']
+        'num_studies_ebi', 'num_samples_ebi', 'img', 'time']
     for k in keys:
         redis_key = '%s:stats:%s' % (portal, k)
 
@@ -266,6 +269,8 @@ def update_redis_stats():
             r_client.set(redis_key, num_samples_ebi)
         elif k == 'img':
             r_client.set(redis_key, img)
+        elif k == 'time':
+            r_client.set(redis_key, time)
         # storing tuples
         elif k == 'lat_longs':
             r_client.set(redis_key, lat_longs)

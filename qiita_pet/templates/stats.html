@@ -54,17 +54,31 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
   <table width="100%">
   <thead>
     <tr>
-      <th>Number of studies</th>
-      <th>Number of samples</th>
-      <th>Number of users</th>
+      <th>Studies</th>
+      <th>Samples</th>
+      <th>Users</th>
     </tr>
   </thead>
     <tr>
-      <td>{{ num_studies }}</td>
-      <td>{{ num_samples }}</td>
+      <td>
+        {% for k in number_studies %}
+          <i>{{k}}</i>: {{number_studies[k]}}
+        {% end %}
+        <br/>
+        <i>Submitted to EBI</i>: {{ num_studies_ebi }}
+      </td>
+      <td>
+        {% for k in number_of_samples %}
+          <i>{{k}}</i>: {{number_of_samples[k]}}
+        {% end %}
+        <br/>
+        <i>Submitted to EBI</i>: {{ num_samples_ebi }}
+      </td>
       <td>{{ num_users }}</td>
     </tr>
   </table>
+  <br/>
+  <small>Generated on: {{time}}</small>
 </div>
 <div id="map-canvas"></div>
 

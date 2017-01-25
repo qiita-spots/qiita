@@ -211,9 +211,9 @@ class MetaUtilTests(TestCase):
             elif k == 'num_samples_ebi':
                 data = r_client.get(redis_key)
                 self.assertEqual(data, '54')
-            elif k == 'img':
-                # not testing image!
-                data = r_client.get(redis_key)
+            elif k in ['img', 'time']:
+                # not testing image or time!
+                pass
             # storing tuples and single values
             elif k == 'lat_longs':
                 data = r_client.get(redis_key)
