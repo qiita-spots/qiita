@@ -49,40 +49,40 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
 
 {% end %}
 {% block content %}
+  <div id="jumbotron" class="jumbotron">
+    <table width="100%">
+    <thead>
+      <tr>
+        <th>Studies</th>
+        <th>Samples</th>
+        <th>Users</th>
+      </tr>
+    </thead>
+      <tr>
+        <td>
+          {% for k in number_studies %}
+            <i>{{k}}</i>: {{number_studies[k]}}
+          {% end %}
+          <br/>
+          <i>Submitted to EBI</i>: {{ num_studies_ebi }}
+        </td>
+        <td>
+          {% for k in number_of_samples %}
+            <i>{{k}}</i>: {{number_of_samples[k]}}
+          {% end %}
+          <br/>
+          <i>Submitted to EBI</i>: {{ num_samples_ebi }}
+        </td>
+        <td>{{ num_users }}</td>
+      </tr>
+    </table>
+    <br/>
+    <small>Generated on: {{time}}</small>
+  </div>
 
-<div id="jumbotron" class="jumbotron">
-  <table width="100%">
-  <thead>
-    <tr>
-      <th>Studies</th>
-      <th>Samples</th>
-      <th>Users</th>
-    </tr>
-  </thead>
-    <tr>
-      <td>
-        {% for k in number_studies %}
-          <i>{{k}}</i>: {{number_studies[k]}}
-        {% end %}
-        <br/>
-        <i>Submitted to EBI</i>: {{ num_studies_ebi }}
-      </td>
-      <td>
-        {% for k in number_of_samples %}
-          <i>{{k}}</i>: {{number_of_samples[k]}}
-        {% end %}
-        <br/>
-        <i>Submitted to EBI</i>: {{ num_samples_ebi }}
-      </td>
-      <td>{{ num_users }}</td>
-    </tr>
-  </table>
-  <br/>
-  <small>Generated on: {{time}}</small>
-</div>
-<div id="map-canvas"></div>
+  <div id="map-canvas"></div>
 
-{% if random_study_id is not None %}
+  {% if random_study_id is not None %}
     <div id="jumbotron" class="jumbotron">
       <h2>Check out this random public study from the database!</h2>
       <h3>{{ random_study_title }}</h3>
@@ -95,5 +95,14 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
       {% end %}
       </p>
     </div>
-{% end %}
+  {% end %}
+
+  {% if img %}
+    <div>
+      <h5>Data usage</h5>
+      <img height="100%" width="100%" src="{% raw img %}"/>
+    </div>
+  {% end %}
+
+
 {% end %}

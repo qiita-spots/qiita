@@ -214,7 +214,7 @@ class MetaUtilTests(TestCase):
             elif k in ['img', 'time']:
                 # not testing image or time!
                 pass
-            # storing tuples and single values
+            # storing tuples
             elif k == 'lat_longs':
                 data = r_client.get(redis_key)
                 self.assertEqual(data, EXP_LAT_LONG)

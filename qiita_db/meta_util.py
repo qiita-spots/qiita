@@ -243,8 +243,7 @@ def update_redis_stats():
     plot = StringIO()
     plt.savefig(plot, format='png')
     plot.seek(0)
-    img = '<img src = "%s"/>' % (
-        'data:image/png;base64,' + quote(b64encode(plot.buf)))
+    img = 'data:image/png;base64,' + quote(b64encode(plot.buf))
 
     time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
 
@@ -302,7 +301,9 @@ def get_lat_longs():
         sql = [('SELECT CAST(latitude AS FLOAT), '
                 '       CAST(longitude AS FLOAT) '
                 'FROM qiita.%s '
-                'WHERE isnumeric(latitude) AND isnumeric(latitude)' % s)
+                'WHERE isnumeric(latitude) AND isnumeric(longitude) '
+                "AND latitude <> 'NaN' "
+                "AND longitude <> 'NaN' " % s)
                for s in qdb.sql_connection.TRN.execute_fetchflatten()]
         sql = ' UNION '.join(sql)
         qdb.sql_connection.TRN.add(sql)
