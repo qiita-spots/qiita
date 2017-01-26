@@ -255,37 +255,21 @@ def update_redis_stats():
     time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
 
     portal = qiita_config.portal
-    keys = [
-        'number_studies', 'number_of_samples', 'num_users', 'lat_longs',
-        'num_studies_ebi', 'num_samples_ebi', 'number_samples_ebi_prep',
-        'img', 'time']
-
-    for k in keys:
+    vals = [
+        ('number_studies', number_studies, r_client.hmset),
+        ('number_of_samples', number_of_samples, r_client.hmset),
+        ('num_users', num_users, r_client.set),
+        ('lat_longs', lat_longs, r_client.set),
+        ('num_studies_ebi', num_studies_ebi, r_client.set),
+        ('num_samples_ebi', num_samples_ebi, r_client.set),
+        ('number_samples_ebi_prep', number_samples_ebi_prep, r_client.set),
+        ('img', img, r_client.set),
+        ('time', time, r_client.set)]
+    for k, v, f in vals:
         redis_key = '%s:stats:%s' % (portal, k)
-        # important to "flush" variable to avoid errors
+        # important to "flush" variables to avoid errors
         r_client.delete(redis_key)
-
-        # storing dicts
-        if k == 'number_studies':
-            r_client.hmset(redis_key, number_studies)
-        elif k == 'number_of_samples':
-            r_client.hmset(redis_key, number_of_samples)
-        # single values
-        elif k == 'num_users':
-            r_client.set(redis_key, num_users)
-        elif k == 'num_studies_ebi':
-            r_client.set(redis_key, num_studies_ebi)
-        elif k == 'num_samples_ebi':
-            r_client.set(redis_key, num_samples_ebi)
-        elif k == 'number_samples_ebi_prep':
-            r_client.set(redis_key, number_samples_ebi_prep)
-        elif k == 'img':
-            r_client.set(redis_key, img)
-        elif k == 'time':
-            r_client.set(redis_key, time)
-        # storing tuples
-        elif k == 'lat_longs':
-            r_client.set(redis_key, lat_longs)
+        f(redis_key, v)
 
     return missing_files
 

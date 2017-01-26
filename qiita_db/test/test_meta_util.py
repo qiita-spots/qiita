@@ -184,44 +184,24 @@ class MetaUtilTests(TestCase):
     def test_update_redis_stats(self):
         qdb.meta_util.update_redis_stats()
 
-        # checking values from redis
         portal = qiita_config.portal
-        keys = [
-            'number_studies', 'number_of_samples', 'num_users', 'lat_longs',
-            'num_studies_ebi', 'num_samples_ebi', 'number_samples_ebi_prep',
-            'img']
-
-        for k in keys:
+        vals = [
+            ('number_studies', {'sanbox': '2', 'public': '0',
+                                'private': '1'}, r_client.hgetall),
+            ('number_of_samples', {'sanbox': '1', 'public': '0',
+                                   'private': '27'}, r_client.hgetall),
+            ('num_users', '4', r_client.get),
+            ('lat_longs', EXP_LAT_LONG, r_client.get),
+            ('num_studies_ebi', '3', r_client.get),
+            ('num_samples_ebi', '27', r_client.get),
+            ('number_samples_ebi_prep', '54', r_client.get)
+            # not testing img/time for simplicity
+            # ('img', r_client.get),
+            # ('time', r_client.get)
+            ]
+        for k, exp, f in vals:
             redis_key = '%s:stats:%s' % (portal, k)
-            # retrieving dicts
-            if k == 'number_studies':
-                data = r_client.hgetall(redis_key)
-                self.assertEqual(data, {'sanbox': '2', 'public': '0',
-                                        'private': '1'})
-            elif k == 'number_of_samples':
-                data = r_client.hgetall(redis_key)
-                self.assertEqual(data, {'sanbox': '1', 'public': '0',
-                                        'private': '27'})
-            # single values
-            elif k == 'num_users':
-                data = r_client.get(redis_key)
-                self.assertEqual(data, '4')
-            elif k == 'num_studies_ebi':
-                data = r_client.get(redis_key)
-                self.assertEqual(data, '3')
-            elif k == 'num_samples_ebi':
-                data = r_client.get(redis_key)
-                self.assertEqual(data, '27')
-            elif k == 'number_samples_ebi_prep':
-                data = r_client.get(redis_key)
-                self.assertEqual(data, '54')
-            elif k in ['img', 'time']:
-                # not testing image or time!
-                pass
-            # storing tuples
-            elif k == 'lat_longs':
-                data = r_client.get(redis_key)
-                self.assertEqual(data, EXP_LAT_LONG)
+            self.assertEqual(f(redis_key), exp)
 
 
 EXP_LAT_LONG = (
