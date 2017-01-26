@@ -45,8 +45,6 @@
       for(var i = 0; i < data.nodes.length; i++) {
         nodes.push({id: data.nodes[i][1], label: data.nodes[i][2], group: data.nodes[i][0]});
       }
-      console.log(nodes);
-      console.log(edges);
       draw_processing_graph(nodes, edges, 'analysis-network-div', populateContentArtifact, populateContentJob);
     })
       .fail(function(object, status, error_msg) {
