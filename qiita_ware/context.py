@@ -60,6 +60,14 @@ class Dispatch(object):
     def __init__(self):
         from moi import ctx_default
         self.demo = Client(profile=ctx_default)
+
+        # checking that at least 2 workers exist, see:
+        # https://github.com/biocore/qiita/issues/1066
+        workers = len(self.demo.ids)
+        if workers < 2:
+            raise ValueError('You need to have at least 2 IPython workers '
+                             'but you have %d' % workers)
+
         self.demo_lview = self.demo.load_balanced_view()
 
     def sync(self, data):
