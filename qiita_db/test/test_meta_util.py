@@ -38,40 +38,38 @@ class MetaUtilTests(TestCase):
     def _unshare_analyses(self):
         self.conn_handler.execute("DELETE FROM qiita.analysis_users")
 
-    def test_get_accessible_filepath_ids(self):
+    def test_validate_filepath_access_by_user(self):
         self._set_artifact_private()
 
         # shared has access to all study files and analysis files
-
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('shared@foo.bar'))
-        self.assertItemsEqual(obs, {
-            1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21})
+        user = qdb.user.User('shared@foo.bar')
+        for i in [1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
 
         # Now shared should not have access to the study files
         self._unshare_studies()
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('shared@foo.bar'))
-        self.assertItemsEqual(obs, {16, 14, 15, 13})
+        for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
+            self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
+
+        for i in [13, 14, 15, 16]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
 
         # Now shared should not have access to any files
         self._unshare_analyses()
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('shared@foo.bar'))
-        self.assertEqual(obs, set())
+        for i in [1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]:
+            self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
 
         # Now shared has access to public study files
         self._set_artifact_public()
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('shared@foo.bar'))
-        self.assertEqual(obs, {1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21})
+        for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
 
         # Test that it doesn't break: if the SampleTemplate hasn't been added
-        exp = {1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('test@foo.bar'))
-        self.assertEqual(obs, exp)
-
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,
@@ -87,24 +85,24 @@ class MetaUtilTests(TestCase):
         }
         qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), "Test study", [1], info)
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('test@foo.bar'))
-        self.assertEqual(obs, exp)
+        for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
 
         # test in case there is a prep template that failed
         self.conn_handler.execute(
             "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('test@foo.bar'))
-        self.assertEqual(obs, exp)
+        for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
 
         # admin should have access to everything
-        count = self.conn_handler.execute_fetchone("SELECT count(*) FROM "
-                                                   "qiita.filepath")[0]
-        exp = set(range(1, count + 1))
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('admin@foo.bar'))
-        self.assertEqual(obs, exp)
+        admin = qdb.user.User('admin@foo.bar')
+        fids = self.conn_handler.execute_fetchall(
+            "SELECT filepath_id FROM qiita.filepath")
+        for i in fids:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                admin, i[0]))
 
     def test_get_lat_longs(self):
         exp = [

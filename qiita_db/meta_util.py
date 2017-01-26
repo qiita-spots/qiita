@@ -13,7 +13,6 @@ Methods
 ..autosummary::
     :toctree: generated/
 
-    get_accessible_filepath_ids
     get_lat_longs
 """
 # -----------------------------------------------------------------------------
@@ -48,7 +47,7 @@ def _get_data_fpids(constructor, object_id):
         return {fpid for fpid, _, _ in obj.get_filepaths()}
 
 
-def get_accessible_filepath_ids(user):
+def validate_filepath_access_by_user(user, filepath_id):
     """Gets all filepaths that this user should have access to
 
     This gets all raw, preprocessed, and processed filepaths, for studies
@@ -59,67 +58,80 @@ def get_accessible_filepath_ids(user):
     ----------
     user : User object
         The user we are interested in
-
+    filepath_id : int
+        The filepath id
 
     Returns
     -------
-    set
-        A set of filepath ids
+    bool
+        If the user has access or not to the filepath_id
 
     Notes
     -----
-    Admins have access to all files, so all filepath ids are returned for
-    admins
+    Admins have access to all files so True is always returned
     """
     with qdb.sql_connection.TRN:
         if user.level == "admin":
+            return True
             # admins have access all files
-            qdb.sql_connection.TRN.add(
-                "SELECT filepath_id FROM qiita.filepath")
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
 
-        # First, the studies
-        # There are private and shared studies
-        studies = user.user_studies | user.shared_studies
+        access = False
 
-        filepath_ids = set()
-        for study in studies:
-            # Add the sample template files
-            if study.sample_template:
-                filepath_ids.update(
-                    {fid for fid, _ in study.sample_template.get_filepaths()})
-
-            # Add the prep template filepaths
-            for pt in study.prep_templates():
-                filepath_ids.update({fid for fid, _ in pt.get_filepaths()})
-
-            # Add the artifact filepaths
-            for artifact in study.artifacts():
-                filepath_ids.update({fid for fid, _, _ in artifact.filepaths})
-
-        # Next, the public artifacts
+        # check the public artifacts
         for artifact in qdb.artifact.Artifact.iter_public():
-            # Add the filepaths of the artifact
-            filepath_ids.update({fid for fid, _, _ in artifact.filepaths})
+            for fid, _, _ in artifact.filepaths:
+                if fid == filepath_id:
+                    access = True
+                    break
+            # prep templates
+            if not access:
+                for pt in artifact.prep_templates:
+                    for fid, _ in pt.get_filepaths():
+                        if fid == filepath_id:
+                            access = True
+                            break
+            # sample template
+            if not access:
+                for fid, _ in artifact.study.sample_template.get_filepaths():
+                    if fid == filepath_id:
+                        access = True
+                        break
 
-            # Then add the filepaths of the prep templates
-            for pt in artifact.prep_templates:
-                filepath_ids.update({fid for fid, _ in pt.get_filepaths()})
+        # check private and shared studies with the user
+        if not access:
+            studies = user.user_studies | user.shared_studies
+            for study in studies:
+                if study.sample_template:
+                    # sample info files
+                    for fid, _ in study.sample_template.get_filepaths():
+                        if fid == filepath_id:
+                            access = True
+                            break
+                    # prep info files
+                    if not access:
+                        for pt in study.prep_templates():
+                            for fid, _ in pt.get_filepaths():
+                                if fid == filepath_id:
+                                    access = True
+                                    break
+                    # artifacts
+                    if not access:
+                        for artifact in study.artifacts():
+                            for fid, _, _ in artifact.filepaths:
+                                if fid == filepath_id:
+                                    access = True
+                                    break
 
-            # Then add the filepaths of the sample template
-            filepath_ids.update(
-                {fid
-                 for fid, _ in artifact.study.sample_template.get_filepaths()})
+        # next analyses
+        if not access:
+            analyses = qdb.analysis.Analysis.get_by_status('public') | \
+                user.private_analyses | user.shared_analyses
+            for analysis in analyses:
+                if filepath_id in analysis.all_associated_filepath_ids:
+                    access = True
+                    break
 
-        # Next, analyses
-        # Same as before, there are public, private, and shared
-        analyses = qdb.analysis.Analysis.get_by_status('public') | \
-            user.private_analyses | user.shared_analyses
-
-        for analysis in analyses:
-            filepath_ids.update(analysis.all_associated_filepath_ids)
-
-        return filepath_ids
+        return access
 
 
 def get_lat_longs():
