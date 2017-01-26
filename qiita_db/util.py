@@ -727,6 +727,11 @@ def _rm_files(TRN, fp):
 def purge_filepaths(delete_files=True):
     r"""Goes over the filepath table and remove all the filepaths that are not
     used in any place
+
+    Parameters
+    ----------
+    delete_files : bool
+        if True it will actually delete the files
     """
     with qdb.sql_connection.TRN:
         # Get all the (table, column) pairs that reference to the filepath
@@ -775,7 +780,13 @@ def purge_filepaths(delete_files=True):
 
 def empty_trash_upload_folder(delete_files=True):
     r"""Delete all files in the trash folder inside each of the upload
-    folders"""
+    folders
+
+    Parameters
+    ----------
+    delete_files : bool
+        if True it will actually delete the files
+    """
     gfp = partial(join, get_db_files_base_dir())
     with qdb.sql_connection.TRN:
         sql = """SELECT mountpoint

@@ -50,6 +50,8 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
 {% end %}
 {% block content %}
   <div id="jumbotron" class="jumbotron">
+    <small>Generated on: {{time}}</small>
+    <br/><br/>
     <table width="100%">
     <thead>
       <tr>
@@ -61,23 +63,20 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
       <tr>
         <td>
           {% for k in number_studies %}
-            <i>{{k}}</i>: {{number_studies[k]}}
+            <i>{{k}}</i>: {{number_studies[k]}} <br/>
           {% end %}
-          <br/>
-          <i>Submitted to EBI</i>: {{ num_studies_ebi }}
+          <i>submitted to EBI</i>: {{ num_studies_ebi }}
         </td>
         <td>
           {% for k in number_of_samples %}
-            <i>{{k}}</i>: {{number_of_samples[k]}}
+            <i>{{k}}</i>: {{number_of_samples[k]}} <br/>
           {% end %}
-          <br/>
-          <i>Submitted to EBI</i>: {{ num_samples_ebi }}
+          <i>submitted to EBI</i>: {{ num_samples_ebi }} <br/>
+          <i>submitted to EBI (prep)</i>: {{ number_samples_ebi_prep }}
         </td>
         <td>{{ num_users }}</td>
       </tr>
     </table>
-    <br/>
-    <small>Generated on: {{time}}</small>
   </div>
 
   <div id="map-canvas"></div>

@@ -148,7 +148,8 @@ def update_redis_stats():
     number_studies = {k: len(v) for k, v in viewitems(studies)}
 
     number_of_samples = {}
-    ebi_samples = {}
+    ebi_samples_prep = {}
+    num_samples_ebi = 0
     for k, sts in viewitems(studies):
         number_of_samples[k] = 0
         for s in sts:
@@ -156,19 +157,25 @@ def update_redis_stats():
             if st is not None:
                 number_of_samples[k] += len(list(st.keys()))
 
-            ebi_samples_count = 0
+            ebi_samples_prep_count = 0
             for pt in s.prep_templates():
-                ebi_samples_count += len([
+                ebi_samples_prep_count += len([
                     1 for _, v in viewitems(pt.ebi_experiment_accessions)
                     if v is not None and v != ''])
-            ebi_samples[s.id] = ebi_samples_count
+            ebi_samples_prep[s.id] = ebi_samples_prep_count
+
+            if s.sample_template is not None:
+                num_samples_ebi += len([
+                    1 for _, v in viewitems(
+                        s.sample_template.ebi_sample_accessions)
+                    if v is not None and v != ''])
 
     num_users = qdb.util.get_count('qiita.qiita_user')
 
     lat_longs = get_lat_longs()
 
-    num_studies_ebi = len(ebi_samples)
-    num_samples_ebi = sum([v for _, v in viewitems(ebi_samples)])
+    num_studies_ebi = len(ebi_samples_prep)
+    number_samples_ebi_prep = sum([v for _, v in viewitems(ebi_samples_prep)])
 
     # generating file size stats
     stats = []
@@ -250,9 +257,13 @@ def update_redis_stats():
     portal = qiita_config.portal
     keys = [
         'number_studies', 'number_of_samples', 'num_users', 'lat_longs',
-        'num_studies_ebi', 'num_samples_ebi', 'img', 'time']
+        'num_studies_ebi', 'num_samples_ebi', 'number_samples_ebi_prep',
+        'img', 'time']
+
     for k in keys:
         redis_key = '%s:stats:%s' % (portal, k)
+        # important to "flush" variable to avoid errors
+        r_client.delete(redis_key)
 
         # storing dicts
         if k == 'number_studies':
@@ -266,6 +277,8 @@ def update_redis_stats():
             r_client.set(redis_key, num_studies_ebi)
         elif k == 'num_samples_ebi':
             r_client.set(redis_key, num_samples_ebi)
+        elif k == 'number_samples_ebi_prep':
+            r_client.set(redis_key, number_samples_ebi_prep)
         elif k == 'img':
             r_client.set(redis_key, img)
         elif k == 'time':

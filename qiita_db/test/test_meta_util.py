@@ -188,7 +188,8 @@ class MetaUtilTests(TestCase):
         portal = qiita_config.portal
         keys = [
             'number_studies', 'number_of_samples', 'num_users', 'lat_longs',
-            'num_studies_ebi', 'num_samples_ebi', 'img']
+            'num_studies_ebi', 'num_samples_ebi', 'number_samples_ebi_prep',
+            'img']
 
         for k in keys:
             redis_key = '%s:stats:%s' % (portal, k)
@@ -209,6 +210,9 @@ class MetaUtilTests(TestCase):
                 data = r_client.get(redis_key)
                 self.assertEqual(data, '3')
             elif k == 'num_samples_ebi':
+                data = r_client.get(redis_key)
+                self.assertEqual(data, '27')
+            elif k == 'number_samples_ebi_prep':
                 data = r_client.get(redis_key)
                 self.assertEqual(data, '54')
             elif k in ['img', 'time']:

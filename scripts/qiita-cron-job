@@ -23,26 +23,10 @@ from qiita_db.meta_util import update_redis_stats
 # cron job this script and responsible to define how often it should run
 
 
-def call_purge_filepaths():
-    """remove files from that are leftover in the qiita.filepath and are
-    present in the filesystem"""
-    purge_filepaths(True)
-
-
-def call_empty_trash_upload_folder():
-    """updates the redis stats information"""
-    empty_trash_upload_folder(True)
-
-
-def call_update_redis_stats():
-    """updates the redis stats information"""
-    update_redis_stats()
-
-
 def main():
-    call_purge_filepaths()
-    call_empty_trash_upload_folder()
-    call_update_redis_stats()
+    purge_filepaths(True)
+    empty_trash_upload_folder(True)
+    update_redis_stats()
 
 
 if __name__ == "__main__":

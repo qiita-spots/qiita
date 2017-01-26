@@ -17,12 +17,14 @@ class StatsHandler(BaseHandler):
         # initializing values
         number_studies, number_of_samples, num_users, time = '', '', '', ''
         lat_longs, num_studies_ebi, num_samples_ebi, img = '', '', '', ''
+        number_samples_ebi_prep = ''
 
         # checking values from redis
         portal = qiita_config.portal
         keys = [
             'number_studies', 'number_of_samples', 'num_users', 'lat_longs',
-            'num_studies_ebi', 'num_samples_ebi', 'img', 'time']
+            'num_studies_ebi', 'num_samples_ebi', 'number_samples_ebi_prep',
+            'img', 'time']
 
         for k in keys:
             redis_key = '%s:stats:%s' % (portal, k)
@@ -38,25 +40,28 @@ class StatsHandler(BaseHandler):
                 num_studies_ebi = r_client.get(redis_key)
             elif k == 'num_samples_ebi':
                 num_samples_ebi = r_client.get(redis_key)
+            elif k == 'num_samples_ebi':
+                num_samples_ebi = r_client.get(redis_key)
+            elif k == 'number_samples_ebi_prep':
+                number_samples_ebi_prep = r_client.get(redis_key)
             elif k == 'img':
-                # not testing image!
                 img = r_client.get(redis_key)
             elif k == 'time':
-                # not testing image!
                 time = r_client.get(redis_key)
             # storing tuples and single values
             elif k == 'lat_longs':
                 lat_longs = eval(r_client.get(redis_key))
 
         callback([number_studies, number_of_samples, num_users, lat_longs,
-                  num_studies_ebi, num_samples_ebi, img, time])
+                  num_studies_ebi, num_samples_ebi, number_samples_ebi_prep,
+                  img, time])
 
     @coroutine
     @execute_as_transaction
     def get(self):
         number_studies, number_of_samples, num_users, lat_longs, \
-            num_studies_ebi, num_samples_ebi, img, time \
-            = yield Task(self._get_stats)
+            num_studies_ebi, num_samples_ebi, number_samples_ebi_prep, \
+            img, time = yield Task(self._get_stats)
 
         # Pull a random public study from the database
         public_studies = Study.get_by_status('public')
@@ -75,7 +80,9 @@ class StatsHandler(BaseHandler):
                     number_studies=number_studies,
                     number_of_samples=number_of_samples, num_users=num_users,
                     lat_longs=lat_longs, num_studies_ebi=num_studies_ebi,
-                    num_samples_ebi=num_samples_ebi, img=img, time=time,
+                    num_samples_ebi=num_samples_ebi,
+                    number_samples_ebi_prep=number_samples_ebi_prep,
+                    img=img, time=time,
                     random_study_info=random_study_info,
                     random_study_title=random_study_title,
                     random_study_id=random_study_id)
