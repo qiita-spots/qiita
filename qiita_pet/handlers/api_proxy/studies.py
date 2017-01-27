@@ -16,6 +16,7 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import (supported_filepath_types,
                            get_files_from_uploads_folders)
 from qiita_pet.handlers.api_proxy.util import check_access
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 
 
 def data_types_get_req():
@@ -198,7 +199,7 @@ def study_prep_get_req(study_id, user_id):
 def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     """Returns the uploaded files for the study id categorized by artifact_type
 
-    It retrieves the files uploaded for the given study and tries to do a
+    It retrieves the files uploaded for the given study and tries to
     guess on how those files should be added to the artifact of the given
     type. Uses information on the prep template to try to do a better guess.
 
@@ -234,31 +235,48 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     remaining = []
 
     uploaded = get_files_from_uploads_folders(study_id)
-    pt = PrepTemplate(prep_template_id).to_dataframe()
+    pt = PrepTemplate(prep_template_id)
 
+    if pt.study_id != study_id:
+        raise IncompetentQiitaDeveloperError(
+            "The requested prep id (%d) doesn't belong to the study "
+            "(%d)" % (pt.study_id, study_id))
+
+    pt = pt.to_dataframe()
     ftypes_if = (ft.startswith('raw_') for ft, _ in supp_file_types
                  if ft != 'raw_sff')
     if any(ftypes_if) and 'run_prefix' in pt.columns:
         prep_prefixes = tuple(set(pt['run_prefix']))
         num_prefixes = len(prep_prefixes)
-        for _, filename in uploaded:
-            if filename.startswith(prep_prefixes):
-                selected.append(filename)
-            else:
-                remaining.append(filename)
+        # special case for per_sample_FASTQ
+        if artifact_type == 'per_sample_FASTQ':
+            # sorting prefixes by length to avoid collisions like: 100 1002
+            # 10003
+            prep_prefixes = sorted(prep_prefixes, key=len, reverse=True)
+            # group files by prefix
+            sfiles = {p: [f for _, f in uploaded if f.startswith(p)]
+                      for p in prep_prefixes}
+            for k, v in viewitems(sfiles):
+                len_files = len(v)
+                if len_files != 1 and len_files != 2:
+                    remaining.extend(v)
+                else:
+                    v.sort()
+                    selected.append(v)
+        else:
+            len_files = 1
+            for _, filename in uploaded:
+                if filename.startswith(prep_prefixes):
+                    selected.append(filename)
+                else:
+                    remaining.append(filename)
     else:
         num_prefixes = 0
         remaining = [f for _, f in uploaded]
 
-    # At this point we can't do anything smart about selecting by default
-    # the files for each type. The only thing that we can do is assume that
-    # the first in the supp_file_types list is the default one where files
-    # should be added in case of 'run_prefix' being present
-    file_types = [(fp_type, req, []) for fp_type, req in supp_file_types[1:]]
-    first = supp_file_types[0]
-    # Note that this works even if `run_prefix` is not in the prep template
-    # because selected is initialized to the empty list
-    file_types.insert(0, (first[0], first[1], selected))
+    # get file_types, format: filetype, required, list of files
+    file_types = [(t, req, [x[i] for x in selected if i+1 <= len_files])
+                  for i, (t, req) in enumerate(supp_file_types)]
 
     # Create a list of artifacts that the user has access to, in case that
     # he wants to import the files from another artifact

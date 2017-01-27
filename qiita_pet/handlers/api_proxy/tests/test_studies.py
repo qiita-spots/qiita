@@ -7,15 +7,16 @@
 # -----------------------------------------------------------------------------
 from unittest import TestCase, main
 from datetime import datetime
-from os.path import exists, join, basename, isdir
-from os import remove, close, mkdir
+from os.path import exists, join, isdir
+from os import remove
 from shutil import rmtree
-from tempfile import mkstemp, mkdtemp
+from tempfile import mkdtemp
 
 import pandas as pd
 import numpy.testing as npt
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.studies import (
     data_types_get_req, study_get_req, study_prep_get_req, study_delete_req,
@@ -282,7 +283,9 @@ class TestStudyAPI(TestCase):
         }
         metadata = pd.DataFrame.from_dict(metadata_dict, orient='index',
                                           dtype=str)
-        qdb.metadata_template.sample_template.SampleTemplate.create(
+        npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning,
+            qdb.metadata_template.sample_template.SampleTemplate.create,
             metadata, study)
 
         # (C)
@@ -409,6 +412,7 @@ class TestStudyAPI(TestCase):
                                  'Cannabis Soils (1) - Raw data 1 (1)')]}
         self.assertEqual(obs, exp)
 
+        # adding a new study for further testing
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,
@@ -422,58 +426,86 @@ class TestStudyAPI(TestCase):
             "principal_investigator_id": qdb.study.StudyPerson(3),
             "lab_person_id": qdb.study.StudyPerson(1)
         }
-
         new_study = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), "Some New Study to get files", [1],
             info)
 
-        obs = study_files_get_req('test@foo.bar', new_study.id, 1, 'FASTQ')
-        exp = {'status': 'success',
-               'message': '',
-               'remaining': [],
-               'file_types': [('raw_barcodes', True, []),
-                              ('raw_forward_seqs', True, []),
-                              ('raw_reverse_seqs', False, [])],
-               'num_prefixes': 1,
-               'artifacts': [(1, 'Identification of the Microbiomes for '
-                                 'Cannabis Soils (1) - Raw data 1 (1)')]}
+        # check that you can't call a this function using two unrelated
+        # study_id and prep_template_id
+        with self.assertRaises(IncompetentQiitaDeveloperError):
+            study_files_get_req('test@foo.bar', new_study.id, 1, 'FASTQ')
+
+    def test_study_files_get_req_per_sample_FASTQ(self):
+        study_id = 1
+        # adding a new prep for testing
+        PREP = qdb.metadata_template.prep_template.PrepTemplate
+        prep_info_dict = {
+            'SKB7.640196': {'run_prefix': 'test_1'},
+            'SKB8.640193': {'run_prefix': 'test_2'}
+        }
+        prep_info = pd.DataFrame.from_dict(prep_info_dict,
+                                           orient='index', dtype=str)
+        pt = npt.assert_warns(
+            qdb.exceptions.QiitaDBWarning, PREP.create, prep_info,
+            qdb.study.Study(study_id), "Metagenomic")
+
+        # getting the upload folder so we can test
+        study_upload_dir = join(
+            qdb.util.get_mountpoint("uploads")[0][1], str(study_id))
+
+        # adding just foward per sample FASTQ to the upload folder
+        filenames = ['test_1.R1.fastq.gz', 'test_2.R1.fastq.gz']
+        for f in filenames:
+            fpt = join(study_upload_dir, f)
+            open(fpt, 'w', 0).close()
+            self._clean_up_files.append(fpt)
+        obs = study_files_get_req(
+            'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
+        exp = {
+            'status': 'success', 'num_prefixes': 2, 'artifacts': [],
+            'remaining': [], 'message': '',
+            'file_types': [
+                ('raw_forward_seqs', True,
+                 ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
+                ('raw_reverse_seqs', False, [])]}
         self.assertEqual(obs, exp)
 
-        obs = study_files_get_req('admin@foo.bar', new_study.id, 1, 'FASTQ')
-        exp = {'status': 'success',
-               'message': '',
-               'remaining': [],
-               'file_types': [('raw_barcodes', True, []),
-                              ('raw_forward_seqs', True, []),
-                              ('raw_reverse_seqs', False, [])],
-               'num_prefixes': 1,
-               'artifacts': []}
+        # let's add reverse
+        filenames = ['test_1.R2.fastq.gz', 'test_2.R2.fastq.gz']
+        for f in filenames:
+            fpt = join(study_upload_dir, f)
+            open(fpt, 'w', 0).close()
+            self._clean_up_files.append(fpt)
+        obs = study_files_get_req(
+            'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
+        exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
+               'remaining': [], 'message': '',
+               'file_types': [('raw_forward_seqs', True,
+                               ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
+                              ('raw_reverse_seqs', False,
+                              ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz'])]}
         self.assertEqual(obs, exp)
 
-        # Create some 'sff' files
-        upload_dir = qdb.util.get_mountpoint("uploads")[0][1]
-        study_upload_dir = join(upload_dir, str(new_study.id))
-        fps = []
-
-        for i in range(2):
-            if not exists(study_upload_dir):
-                mkdir(study_upload_dir)
-            fd, fp = mkstemp(suffix=".sff", dir=study_upload_dir)
-            close(fd)
-            with open(fp, 'w') as f:
-                f.write('\n')
-            fps.append(fp)
-
-        self._clean_up_files.extend(fps)
-
-        obs = study_files_get_req('test@foo.bar', new_study.id, 1, 'SFF')
-        exp = {'status': 'success',
+        # let's an extra file that matches
+        filenames = ['test_1.R3.fastq.gz']
+        for f in filenames:
+            fpt = join(study_upload_dir, f)
+            open(fpt, 'w', 0).close()
+            self._clean_up_files.append(fpt)
+        obs = study_files_get_req(
+            'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
+        exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
+               'remaining': ['test_1.R1.fastq.gz', 'test_1.R2.fastq.gz',
+                             'test_1.R3.fastq.gz'],
                'message': '',
-               'remaining': [basename(fpath) for fpath in sorted(fps)],
-               'file_types': [('raw_sff', True, [])],
-               'num_prefixes': 0,
-               'artifacts': []}
+               'file_types': [('raw_forward_seqs', True,
+                               ['test_2.R1.fastq.gz']),
+                              ('raw_reverse_seqs', False,
+                              ['test_2.R2.fastq.gz'])]}
         self.assertEqual(obs, exp)
+
+        PREP.delete(pt.id)
+
 
 if __name__ == '__main__':
     main()
