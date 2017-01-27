@@ -49,26 +49,47 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
 
 {% end %}
 {% block content %}
+  <div id="jumbotron" class="jumbotron">
+    <small>Generated on: {{time}}</small>
+    <br/><br/>
+    <table width="100%">
+    <thead>
+      <tr>
+        <th>Studies</th>
+        <th>Samples</th>
+        <th>Users</th>
+      </tr>
+    </thead>
+      <tr>
+        <td>
+          {% for k in number_studies %}
+            <i>{{k}}</i>: {{ "{:,}".format(int(number_studies[k])) }} <br/>
+          {% end %}
+          {% if num_studies_ebi and num_studies_ebi is not None %}
+            <i>submitted to EBI</i>: {{ "{:,}".format(int(num_studies_ebi)) }}
+          {% end %}
+        </td>
+        <td>
+          {% for k in number_of_samples %}
+            <i>{{k}}</i>: {{ "{:,}".format(int(number_of_samples[k])) }} <br/>
+          {% end %}
+          {% if num_samples_ebi and num_samples_ebi is not None %}
+            <i>submitted to EBI</i>: {{ "{:,}".format(int(num_samples_ebi)) }} <br/>
+          {% end %}
+          {% if number_samples_ebi_prep and number_samples_ebi_prep is not None %}
+            <i>submitted to EBI (prep)</i>: {{ "{:,}".format(int(number_samples_ebi_prep)) }}
+          {% end %}
+        </td>
+        {% if num_users and num_users is not None %}
+          <td>{{ "{:,}".format(int(num_users)) }}</td>
+        {% end %}
+      </tr>
+    </table>
+  </div>
 
-<div id="jumbotron" class="jumbotron">
-  <table width="100%">
-  <thead>
-    <tr>
-      <th>Number of studies</th>
-      <th>Number of samples</th>
-      <th>Number of users</th>
-    </tr>
-  </thead>
-    <tr>
-      <td>{{ num_studies }}</td>
-      <td>{{ num_samples }}</td>
-      <td>{{ num_users }}</td>
-    </tr>
-  </table>
-</div>
-<div id="map-canvas"></div>
+  <div id="map-canvas"></div>
 
-{% if random_study_id is not None %}
+  {% if random_study_id is not None %}
     <div id="jumbotron" class="jumbotron">
       <h2>Check out this random public study from the database!</h2>
       <h3>{{ random_study_title }}</h3>
@@ -81,5 +102,14 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
       {% end %}
       </p>
     </div>
-{% end %}
+  {% end %}
+
+  {% if img %}
+    <div>
+      <h5>Data usage</h5>
+      <img height="100%" width="100%" src="{% raw img %}"/>
+    </div>
+  {% end %}
+
+
 {% end %}
