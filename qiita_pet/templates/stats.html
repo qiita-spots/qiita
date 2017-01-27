@@ -63,18 +63,26 @@ function setMarker(map, lat, lng, pinImage, pinShadow)
       <tr>
         <td>
           {% for k in number_studies %}
-            <i>{{k}}</i>: {{number_studies[k]}} <br/>
+            <i>{{k}}</i>: {{ "{:,}".format(int(number_studies[k])) }} <br/>
           {% end %}
-          <i>submitted to EBI</i>: {{ num_studies_ebi }}
+          {% if num_studies_ebi and num_studies_ebi is not None %}
+            <i>submitted to EBI</i>: {{ "{:,}".format(int(num_studies_ebi)) }}
+          {% end %}
         </td>
         <td>
           {% for k in number_of_samples %}
-            <i>{{k}}</i>: {{number_of_samples[k]}} <br/>
+            <i>{{k}}</i>: {{ "{:,}".format(int(number_of_samples[k])) }} <br/>
           {% end %}
-          <i>submitted to EBI</i>: {{ num_samples_ebi }} <br/>
-          <i>submitted to EBI (prep)</i>: {{ number_samples_ebi_prep }}
+          {% if num_samples_ebi and num_samples_ebi is not None %}
+            <i>submitted to EBI</i>: {{ "{:,}".format(int(num_samples_ebi)) }} <br/>
+          {% end %}
+          {% if number_samples_ebi_prep and number_samples_ebi_prep is not None %}
+            <i>submitted to EBI (prep)</i>: {{ "{:,}".format(int(number_samples_ebi_prep)) }}
+          {% end %}
         </td>
-        <td>{{ num_users }}</td>
+        {% if num_users and num_users is not None %}
+          <td>{{ "{:,}".format(int(num_users)) }}</td>
+        {% end %}
       </tr>
     </table>
   </div>

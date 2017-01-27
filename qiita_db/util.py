@@ -731,7 +731,7 @@ def purge_filepaths(delete_files=True):
     Parameters
     ----------
     delete_files : bool
-        if True it will actually delete the files
+        if True it will actually delete the files, if False print
     """
     with qdb.sql_connection.TRN:
         # Get all the (table, column) pairs that reference to the filepath
@@ -785,7 +785,7 @@ def empty_trash_upload_folder(delete_files=True):
     Parameters
     ----------
     delete_files : bool
-        if True it will actually delete the files
+        if True it will actually delete the files, if False print
     """
     gfp = partial(join, get_db_files_base_dir())
     with qdb.sql_connection.TRN:

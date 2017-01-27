@@ -188,7 +188,7 @@ def update_redis_stats():
                         s = stat(fp)
                         stats.append((dt, s.st_size, strftime('%Y-%m',
                                       localtime(s.st_ctime))))
-                    except:
+                    except OSError:
                         missing_files.append(fp)
 
     summary = {}
