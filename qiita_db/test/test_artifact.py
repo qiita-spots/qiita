@@ -46,7 +46,7 @@ class ArtifactTestsReadOnly(TestCase):
     def test_create_type(self):
         obs = qdb.artifact.Artifact.types()
         exp = [['BIOM', 'BIOM table'],
-               ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+               ['Demultiplexed', 'Demultiplexed and QC sequences'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None]]
         self.assertItemsEqual(obs, exp)
@@ -57,7 +57,7 @@ class ArtifactTestsReadOnly(TestCase):
 
         obs = qdb.artifact.Artifact.types()
         exp = [['BIOM', 'BIOM table'],
-               ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+               ['Demultiplexed', 'Demultiplexed and QC sequences'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None],
                ['NewType', 'NewTypeDesc']]
