@@ -238,6 +238,8 @@ class TestStudyAPI(TestCase):
         for i in range(4, 0, -1):
             qdb.artifact.Artifact(i).visibility = "private"
 
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
+
     def test_study_prep_get_req_failed_EBI(self):
         temp_dir = mkdtemp()
         self._clean_up_files.append(temp_dir)
@@ -336,6 +338,8 @@ class TestStudyAPI(TestCase):
             'message': '',
             'status': 'success'}
         self.assertEqual(obs, exp)
+
+        qdb.metadata_template.prep_template.PrepTemplate.delete(pt.id)
 
     def test_study_prep_get_req_no_access(self):
         obs = study_prep_get_req(1, 'demo@microbio.me')
@@ -463,7 +467,7 @@ class TestStudyAPI(TestCase):
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
         exp = {
             'status': 'success', 'num_prefixes': 2, 'artifacts': [],
-            'remaining': [], 'message': '',
+            'remaining': ['uploaded_file.txt'], 'message': '',
             'file_types': [
                 ('raw_forward_seqs', True,
                  ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
@@ -479,7 +483,7 @@ class TestStudyAPI(TestCase):
         obs = study_files_get_req(
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
         exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
-               'remaining': [], 'message': '',
+               'remaining': ['uploaded_file.txt'], 'message': '',
                'file_types': [('raw_forward_seqs', True,
                                ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
                               ('raw_reverse_seqs', False,
@@ -496,7 +500,7 @@ class TestStudyAPI(TestCase):
             'shared@foo.bar', 1, pt.id, 'per_sample_FASTQ')
         exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
                'remaining': ['test_1.R1.fastq.gz', 'test_1.R2.fastq.gz',
-                             'test_1.R3.fastq.gz'],
+                             'test_1.R3.fastq.gz', 'uploaded_file.txt'],
                'message': '',
                'file_types': [('raw_forward_seqs', True,
                                ['test_2.R1.fastq.gz']),

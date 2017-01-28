@@ -248,34 +248,28 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
     if any(ftypes_if) and 'run_prefix' in pt.columns:
         prep_prefixes = tuple(set(pt['run_prefix']))
         num_prefixes = len(prep_prefixes)
-        # special case for per_sample_FASTQ
-        if artifact_type == 'per_sample_FASTQ':
-            # sorting prefixes by length to avoid collisions like: 100 1002
-            # 10003
-            prep_prefixes = sorted(prep_prefixes, key=len, reverse=True)
-            # group files by prefix
-            sfiles = {p: [f for _, f in uploaded if f.startswith(p)]
-                      for p in prep_prefixes}
-            for k, v in viewitems(sfiles):
-                len_files = len(v)
-                if len_files != 1 and len_files != 2:
-                    remaining.extend(v)
-                else:
-                    v.sort()
-                    selected.append(v)
-        else:
-            len_files = 1
-            for _, filename in uploaded:
-                if filename.startswith(prep_prefixes):
-                    selected.append(filename)
-                else:
-                    remaining.append(filename)
+        # sorting prefixes by length to avoid collisions like: 100 1002
+        # 10003
+        prep_prefixes = sorted(prep_prefixes, key=len, reverse=True)
+        # group files by prefix
+        sfiles = {p: [f for _, f in uploaded if f.startswith(p)]
+                  for p in prep_prefixes}
+        inuse = [y for x in sfiles.values() for y in x]
+        remaining.extend([f for _, f in uploaded if f not in inuse])
+
+        for k, v in viewitems(sfiles):
+            len_files = len(v)
+            if len_files != 1 and len_files != 2:
+                remaining.extend(v)
+            else:
+                v.sort()
+                selected.append(v)
     else:
         num_prefixes = 0
         remaining = [f for _, f in uploaded]
 
     # get file_types, format: filetype, required, list of files
-    file_types = [(t, req, [x[i] for x in selected if i+1 <= len_files])
+    file_types = [(t, req, [x[i] for x in selected if i+1 <= len(x)])
                   for i, (t, req) in enumerate(supp_file_types)]
 
     # Create a list of artifacts that the user has access to, in case that
