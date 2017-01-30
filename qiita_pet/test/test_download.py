@@ -7,9 +7,11 @@
 # -----------------------------------------------------------------------------
 
 from unittest import main
+from mock import Mock
 
-# from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_pet.handlers.base_handlers import BaseHandler
+from qiita_db.user import User
 
 
 class TestDownloadHandler(TestHandlerBase):
@@ -30,7 +32,8 @@ class TestDownloadHandler(TestHandlerBase):
             "download is located at raw_data/1_s_G1_L001_sequences.fastq.gz"))
 
         # failure
-        # response = self.get('/download/1000')
+        response = self.get('/download/1000')
+        self.assertEqual(response.code, 404)
 
 
 class TestDownloadStudyBIOMSHandler(TestHandlerBase):
@@ -42,7 +45,6 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         super(TestDownloadStudyBIOMSHandler, self).tearDown()
 
     def test_download_study(self):
-        # check success
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         self.assertEqual(response.body, (
@@ -56,8 +58,14 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
             "processed_data/1_study_1001_closed_reference_otu_table_Silva.biom"
             "\nQIIME map file: templates/1_prep_1_qiime_19700101-000000.txt"))
 
-        # failure
-        # response = self.get('/download_study_bioms/2')
+        response = self.get('/download_study_bioms/200')
+        self.assertEqual(response.code, 405)
+
+        # changing user so we can test the failures
+        BaseHandler.get_current_user = Mock(
+            return_value=User("demo@microbio.me"))
+        response = self.get('/download_study_bioms/1')
+        self.assertEqual(response.code, 405)
 
 
 if __name__ == '__main__':

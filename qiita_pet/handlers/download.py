@@ -1,10 +1,9 @@
-from tornado.web import authenticated
+from tornado.web import authenticated, HTTPError
 
 from os.path import basename
 from datetime import datetime
 
 from .base_handlers import BaseHandler
-from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_pet.handlers.api_proxy import study_get_req
 from qiita_db.study import Study
 from qiita_db.util import filepath_id_to_rel_path, get_db_files_base_dir
@@ -19,8 +18,9 @@ class DownloadHandler(BaseHandler):
         fid = int(filepath_id)
 
         if not validate_filepath_access_by_user(self.current_user, fid):
-            raise QiitaPetAuthorizationError(
-                self.current_user, 'filepath id %s' % str(fid))
+            raise HTTPError(
+                404, "%s doesn't have access to "
+                "filepath_id: %s" % (self.current_user.email, str(fid)))
 
         relpath = filepath_id_to_rel_path(fid)
         fname = basename(relpath)
@@ -51,8 +51,9 @@ class DownloadStudyBIOMSHandler(BaseHandler):
         study_info = study_get_req(study_id, self.current_user.id)
 
         if study_info['status'] != 'success':
-            raise QiitaPetAuthorizationError(
-                self.current_user, 'study id %s' % str(study_id))
+            raise HTTPError(405, "%s: %s, %s" % (study_info['message'],
+                                                 self.current_user.email,
+                                                 str(study_id)))
 
         study = Study(study_id)
         user = self.current_user
