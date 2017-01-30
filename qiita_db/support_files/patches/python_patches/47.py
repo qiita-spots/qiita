@@ -630,9 +630,14 @@ with TRN:
                     # Beta diversity
                     cmd_id = bdiv_cmd_id
                     tree_fp = loads(job_data['options'])['--tree_fp']
-                    params = ('{"biom_table":%d,"tree":"%s","metrics":'
-                              '["unweighted_unifrac","weighted_unifrac"]}'
-                              % (initial_biom_id, tree_fp))
+                    if tree_fp:
+                        params = ('{"biom_table":%d,"tree":"%s","metrics":'
+                                  '["unweighted_unifrac","weighted_unifrac"]}'
+                                  % (initial_biom_id, tree_fp))
+                    else:
+                        params = ('{"biom_table":%d,"metrics":["bray_curtis",'
+                                  '"gower","canberra","pearson"]}'
+                                  % initial_biom_id)
                     output_artifact_type_id = dm_atype_id
                     cmd_out_id = bdiv_cmd_out_id
                 else:
@@ -646,7 +651,9 @@ with TRN:
                     output_artifact_type_id = rc_atype_id
                     cmd_out_id = arare_cmd_out_id
 
-                transfer_job()
+                transfer_job(analysis, cmd_id, params, initial_biom_id,
+                             job_data, cmd_out_id, biom_data,
+                             output_artifact_type_id)
 
 errors = []
 with TRN:
@@ -677,4 +684,5 @@ try:
 except Exception as e:
     errors.append("Error purging filepaths: %s" % str(e))
 
-print "\n".join(errors)
+if errors:
+    print "\n".join(errors)
