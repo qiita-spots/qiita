@@ -525,28 +525,28 @@ class TestSampleAPI(TestCase):
     def test_sample_template_patch_request(self):
         # Wrong operation operation
         obs = sample_template_patch_request(
-            "test@foo.bar", "add", "/1/columns/season_environment/")
+            "test@foo.bar", "add", "/1/10/columns/season_environment/")
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. '
-                          'Current supported operations: remove'}
+                          'Current supported operations: remove',
+               'row_id': 0}
         self.assertEqual(obs, exp)
         # Wrong path parameter
         obs = sample_template_patch_request(
-            "test@foo.bar", "remove", "/columns/season_environment/")
+            "test@foo.bar", "remove", "10/columns/season_environment/")
         exp = {'status': 'error',
                'message': 'Incorrect path parameter'}
         self.assertEqual(obs, exp)
         # No access
         obs = sample_template_patch_request(
-            "demo@microbio.me", "remove", "/1/columns/season_environment/")
+            "demo@microbio.me", "remove", "/1/10/columns/season_environment/")
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
         # Success
         obs = sample_template_patch_request(
-            "test@foo.bar", "remove", "/1/columns/season_environment/")
-        exp = {'status': 'success',
-               'message': ''}
+            "test@foo.bar", "remove", "/1/10/columns/season_environment/")
+        exp = {'status': 'success', 'message': '', 'row_id': '10'}
         self.assertEqual(obs, exp)
 
         # This is needed so the clean up works - this is a distributed system
