@@ -1661,8 +1661,8 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="ontology" color="d0def5" x="1875" y="1530" />
 		<entity schema="qiita" name="analysis_artifact" color="b2cdf7" x="405" y="1080" />
 		<entity schema="qiita" name="data_type" color="d0def5" x="720" y="1125" />
-		<entity schema="qiita" name="analysis_processing_job" color="b2cdf7" x="135" y="1005" />
 		<entity schema="qiita" name="analysis" color="d0def5" x="210" y="765" />
+		<entity schema="qiita" name="analysis_processing_job" color="b2cdf7" x="135" y="1005" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />

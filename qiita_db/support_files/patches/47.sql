@@ -35,7 +35,7 @@ ALTER TABLE qiita.analysis DROP COLUMN analysis_status_id;
 -- artifacts
 CREATE TABLE qiita.analysis_processing_job (
 	analysis_id          bigint  NOT NULL,
-	processing_job_id    uuid  NOT NULL,
+	processing_job_id    uuid    NOT NULL,
 	CONSTRAINT idx_analysis_processing_job PRIMARY KEY ( analysis_id, processing_job_id )
  ) ;
 
@@ -74,3 +74,42 @@ DELETE FROM qiita.job_results_filepath WHERE job_id IN (
         SELECT * FROM qiita.analysis_job AJ WHERE J.job_id = AJ.job_id));
 DELETE FROM qiita.job J WHERE NOT EXISTS (
     SELECT * FROM qiita.analysis_job AJ WHERE J.job_id = AJ.job_id);
+
+-- In the analysis pipeline, an artifact can have mutliple datatypes
+-- (e.g. procrustes). Allow this by creating a new data_type being "multiomic"
+INSERT INTO qiita.data_type (data_type) VALUES ('Multiomic');
+
+
+-- The valdiate command from BIOM will have an extra parameter, analysis
+-- Magic number -> 4 BIOM command_id -> known for sure since it was added in
+-- patch 36.sql
+INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type, required)
+    VALUES (4, 'analysis', 'analysis', FALSE);
+-- The template comand now becomes optional, since it can be added either to
+-- an analysis or to a prep template. command_parameter_id known from patch
+-- 36.sql
+UPDATE qiita.command_parameter SET required = FALSE WHERE command_parameter_id = 34;
+
+-- We are going to add a new special software type, and a new software.
+-- This is going to be used internally by Qiita, so submit the private jobs.
+-- This is needed for the analysis.
+INSERT INTO qiita.software_type (software_type, description)
+    VALUES ('private', 'Internal Qiita jobs');
+
+DO $do$
+DECLARE
+    qiita_sw_id     bigint;
+    baf_cmd_id      bigint;
+BEGIN
+    INSERT INTO qiita.software (name, version, description, environment_script, start_script, software_type_id, active)
+        VALUES ('Qiita', 'alpha', 'Internal Qiita jobs', 'source activate qiita', 'qiita-private-2', 3, True)
+        RETURNING software_id INTO qiita_sw_id;
+
+    INSERT INTO qiita.software_command (software_id, name, description)
+        VALUES (qiita_sw_id, 'build_analysis_files', 'Builds the files needed for the analysis')
+        RETURNING command_id INTO baf_cmd_id;
+
+    INSERT INTO qiita.command_parameter (command_id, parameter_name, parameter_type, required, default_value)
+        VALUES (baf_cmd_id, 'analysis', 'analysis', True, NULL),
+               (baf_cmd_id, 'merge_dup_sample_ids', 'bool', False, 'False');
+END $do$
