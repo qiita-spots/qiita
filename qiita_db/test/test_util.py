@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 from tempfile import mkstemp
-from os import close, remove
+from os import close, remove, makedirs
 from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
@@ -315,17 +315,20 @@ class DBUtilTests(TestCase):
 
         removed_fps = [
             join(raw_data_mp, '2_sequences_barcodes.fastq.gz'),
-            join(raw_data_mp, '2_sequences.fastq.gz')]
+            join(raw_data_mp, '2_sequences.fastq.gz'),
+            join(raw_data_mp, 'directory_test')]
 
-        for fp in removed_fps:
+        for fp in removed_fps[:-1]:
             with open(fp, 'w') as f:
                 f.write('\n')
+        makedirs(removed_fps[-1])
 
         sql = """INSERT INTO qiita.filepath
                     (filepath, filepath_type_id, checksum,
                      checksum_algorithm_id, data_directory_id)
                 VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
-                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5)
+                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
+                       ('directory_test', 8, '852952723', 1, 5)
                 RETURNING filepath_id"""
         fp_ids = self.conn_handler.execute_fetchall(sql)
 
@@ -337,7 +340,7 @@ class DBUtilTests(TestCase):
         for fp in removed_fps:
             self.assertTrue(exists(fp))
 
-        exp_count = qdb.util.get_count("qiita.filepath") - 2
+        exp_count = qdb.util.get_count("qiita.filepath") - 3
 
         qdb.util.purge_filepaths()
 
