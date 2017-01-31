@@ -14,6 +14,7 @@ from shutil import rmtree
 from datetime import datetime
 from functools import partial
 from string import punctuation
+from tarfile import open as topen
 
 import pandas as pd
 
@@ -741,6 +742,38 @@ class DBUtilTests(TestCase):
         obs = qdb.util.supported_filepath_types("BIOM")
         exp = [["biom", True], ["directory", False], ["log", False]]
         self.assertItemsEqual(obs, exp)
+
+    def test_generate_biom_and_metadata_release(self):
+        tgz, txt = qdb.util.generate_biom_and_metadata_release('private')
+        self.files_to_remove.extend([tgz, txt])
+
+        tgz_obs = [ti.name for ti in topen(tgz, "r:gz")]
+        tgz_exp = [
+            'processed_data/1_study_1001_closed_reference_otu_table.biom',
+            'templates/1_19700101-000000.txt',
+            'templates/1_prep_1_19700101-000000.txt',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom',
+            'templates/1_19700101-000000.txt',
+            'templates/1_prep_1_19700101-000000.txt',
+            ('processed_data/1_study_1001_closed_reference_otu_table_'
+             'Silva.biom'), 'templates/1_19700101-000000.txt',
+            'templates/1_prep_1_19700101-000000.txt']
+        self.assertEqual(tgz_obs, tgz_exp)
+
+        txt_obs = open(txt).readlines()
+        txt_exp = [
+            'biom_fp\tsample_fp\tprep_fp\tprep_id\tcommand\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            'templates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000'
+            '000.txt\t1\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            'templates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-0000'
+            '00.txt\t1\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table_Silva'
+            '.biom\ttemplates/1_19700101-000000.txt\ttemplates/1_prep_1_19700'
+            '101-000000.txt\t1\tPick closed-reference OTUs, Split libraries '
+            'FASTQ\n']
+        self.assertEqual(txt_obs, txt_exp)
 
 
 @qiita_test_checker()
