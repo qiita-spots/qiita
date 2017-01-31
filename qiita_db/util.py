@@ -1569,7 +1569,9 @@ def generate_biom_and_metadata_release(study_status):
         txt_name: the filepath of the new generated txt
     """
     studies = qdb.study.Study.get_by_status(study_status)
-    working_dir = ConfigurationManager().working_dir
+    qiita_config = ConfigurationManager()
+    working_dir = qiita_config.working_dir
+    portal = qiita_config.portal
     bdir = qdb.util.get_db_files_base_dir()
     bdir_len = len(bdir) + 1
 
@@ -1619,8 +1621,8 @@ def generate_biom_and_metadata_release(study_status):
     tgz_dir = join(working_dir, 'releases')
     if not exists(tgz_dir):
         makedirs(tgz_dir)
-    tgz_name = join(tgz_dir, '%s-%s.tgz' % (study_status, ts))
-    txt_name = join(tgz_dir, '%s-%s.txt' % (study_status, ts))
+    tgz_name = join(tgz_dir, '%s-%s-%s.tgz' % (portal, study_status, ts))
+    txt_name = join(tgz_dir, '%s-%s-%s.txt' % (portal, study_status, ts))
     with open(txt_name, 'w') as txt, topen(tgz_name, "w|gz") as tgz:
         # writing header for txt
         txt.write("biom_fp\tsample_fp\tprep_fp\tprep_id\tcommand\n")
