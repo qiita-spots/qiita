@@ -82,7 +82,80 @@
   }
 
   $(document).ready(function(){
-    populate_grap_div();
+    // populate_grap_div();
+
+    Vue.component('analysis-graph', {
+      template: '<div class="col-md-12 graph" style="width:90%" id="analysis-network-div">',
+      props: ['nodes', 'edges']
+    });
+
+    new Vue({
+      el: "#analysis-graph-vue",
+      data: {
+        nodes: [],
+        edges: []
+      },
+      methods: {
+        update_graph: function () {
+          let vm = this;
+          $.get("{% raw qiita_config.portal_dir %}/analysis/description/graph/", { analysis_id: {{analysis_id}}}, function(data) {
+            if (data.nodes.length == 0) {
+              vm.update_jobs();
+            }
+            else {
+              // Format edge list data
+              for(var i = 0; i < data.edges.length; i++) {
+                vm.edges.push({from: data.edges[i][0], to: data.edges[i][1], arrows:'to'});
+              }
+              // Format node list data
+              for(var i = 0; i < data.nodes.length; i++) {
+                vm.nodes.push({id: data.nodes[i][1], label: data.nodes[i][2], group: data.nodes[i][0]});
+              }
+              draw_processing_graph(vm.nodes, vm.edges, 'analysis-network-div', populateContentArtifact, populateContentJob);
+              $("#analysis-network-div").show();
+            }
+          })
+            .fail(function(object, status, error_msg) {
+              $("#analysis-network-div").html("Error loading graph: " + status + " " + error_msg);
+              $("#analysis-network-div").show();
+            }
+          );
+        },
+        update_jobs: function () {
+          let vm = this;
+          $.get("{% raw qiita_config.portal_dir %}/analysis/description/jobs/", { analysis_id: {{analysis_id}}}, function(data) {
+            $("#analysis-job-div").html("");
+            $("#analysis-job-div").append("<p>Hang tight, we are generating the initial set of files for your analysis: </p>");
+            for(var jobid in data){
+              var contents = "<b> Job: " + jobid + "</b> Status: " + data[jobid]['status'];
+              if (data[jobid]['step']) {
+                contents = contents + " Step: " + data[jobid]['step'] + "</br>";
+              }
+              if (data[jobid]['error']) {
+                contents = contents + " Error: " + data[jobid]['error'] + "</br>";
+              }
+              $("#analysis-job-div").append(contents);
+            }
+          })
+            .fail(function(object, status, error_msg) {
+              $("#analysis-job-div").html("Error loading job information: " + status + " " + error_msg);
+            }
+          );
+        }
+      },
+      mounted() {
+        let vm = this;
+        show_loading('{% raw qiita_config.portal_dir %}', 'analysis-network-div');
+        $("#analysis-network-div").hide();
+        vm.update_graph();
+        setInterval(function() {
+          // Only update if the graph has not been generated yet
+          if (vm.nodes.length == 0) {
+            vm.update_graph();
+          }
+      }, 5000);
+      }
+    })
   });
 
 </script>
@@ -108,11 +181,14 @@
     <b>(Click nodes for more information, blue are jobs)</b>
   </div>
 </div>
-<div class='row'>
-  <div class='col-md-12 graph' style='width:90%' id='analysis-network-div'>
+<div class='row' id="analysis-graph-vue">
+  <analysis-graph></analysis-graph>
+</div>
+<div class='row' id=''>
+  <div class='col-md-12' style='width:90%' id='analysis-job-div'>
   </div>
 </div>
-<div class='row'>
+<div class='row' id=''>
   <div class='col-md-12' style='width:90%' id='analysis-results'>
   </div>
 </div>
