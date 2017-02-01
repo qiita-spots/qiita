@@ -630,9 +630,14 @@ with TRN:
                     # Beta diversity
                     cmd_id = bdiv_cmd_id
                     tree_fp = loads(job_data['options'])['--tree_fp']
-                    params = ('{"biom_table":%d,"tree":"%s","metrics":'
-                              '["unweighted_unifrac","weighted_unifrac"]}'
-                              % (initial_biom_id, tree_fp))
+                    if tree_fp:
+                        params = ('{"biom_table":%d,"tree":"%s","metrics":'
+                                  '["unweighted_unifrac","weighted_unifrac"]}'
+                                  % (initial_biom_id, tree_fp))
+                    else:
+                        params = ('{"biom_table":%d,"metrics":["bray_curtis",'
+                                  '"gower","canberra","pearson"]}'
+                                  % initial_biom_id)
                     output_artifact_type_id = dm_atype_id
                     cmd_out_id = bdiv_cmd_out_id
                 else:
@@ -646,8 +651,11 @@ with TRN:
                     output_artifact_type_id = rc_atype_id
                     cmd_out_id = arare_cmd_out_id
 
-                transfer_job()
+                transfer_job(analysis, cmd_id, params, initial_biom_id,
+                             job_data, cmd_out_id, biom_data,
+                             output_artifact_type_id)
 
+errors = []
 with TRN:
     # Unlink the analysis from the biom table filepaths
     # Magic number 7 -> biom filepath type
@@ -656,22 +664,25 @@ with TRN:
                                    FROM qiita.filepath
                                    WHERE filepath_type_id = 7)"""
     TRN.add(sql)
-    # Delete old structures that are not used anymore
-    TRN.add("DROP TABLE qiita.collection_job")
-    TRN.add("DROP TABLE qiita.collection_analysis")
-    TRN.add("DROP TABLE qiita.collection_users")
-    TRN.add("DROP TABLE qiita.collection")
-    TRN.add("DROP TABLE qiita.collection_status")
-    TRN.add("DROP TABLE qiita.analysis_workflow")
-    TRN.add("DROP TABLE qiita.analysis_chain")
-    TRN.add("DROP TABLE qiita.analysis_job")
-    TRN.add("DROP TABLE qiita.job_results_filepath")
-    TRN.add("DROP TABLE qiita.job")
-    TRN.add("DROP TABLE qiita.job_status")
-    TRN.add("DROP TABLE qiita.command_data_type")
-    TRN.add("DROP TABLE qiita.command")
-    TRN.add("DROP TABLE qiita.analysis_status")
     TRN.execute()
 
+    # Delete old structures that are not used anymore
+    tables = ["collection_job", "collection_analysis", "collection_users",
+              "collection", "collection_status", "analysis_workflow",
+              "analysis_chain", "analysis_job", "job_results_filepath", "job",
+              "job_status", "command_data_type", "command", "analysis_status"]
+    for table in tables:
+        TRN.add("DROP TABLE qiita.%s" % table)
+        try:
+            TRN.execute()
+        except Exception as e:
+            errors.append("Error deleting table %s: %s" % (table, str(e)))
+
 # Purge filepaths
-purge_filepaths()
+try:
+    purge_filepaths()
+except Exception as e:
+    errors.append("Error purging filepaths: %s" % str(e))
+
+if errors:
+    print "\n".join(errors)
