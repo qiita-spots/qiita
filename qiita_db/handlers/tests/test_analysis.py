@@ -22,7 +22,7 @@ class UtilTests(TestCase):
         exp = qdb.analysis.Analysis(1)
         self.assertEqual(obs, exp)
 
-        # It doesn't eist
+        # It doesn't exist
         with self.assertRaises(HTTPError):
             _get_analysis(100)
 
