@@ -1768,7 +1768,7 @@ Controlled Vocabulary]]></comment>
 			<entity schema="qiita" name="oauth_software" />
 		</group>
 		<script name="Sql" id="SQL5888335" confirmed="y" >
-			<string><![CDATA[CREATE TABLE oauth_software ( 
+			<string><![CDATA[CREATE TABLE oauth_software (
 	software_id          bigint  NOT NULL,
 	client_id            bigint  NOT NULL,
 	CONSTRAINT idx_oauth_software PRIMARY KEY ( software_id, client_id )
