@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 from tempfile import mkstemp
-from os import close, remove, makedirs
+from os import close, remove, makedirs, mkdir
 from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
@@ -369,6 +369,20 @@ class DBUtilTests(TestCase):
 
     def test_purge_filepaths(self):
         self._common_purge_filpeaths_test()
+
+    def test_empty_trash_upload_folder(self):
+        # creating file to delete so we know it actually works
+        study_id = '1'
+        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1], study_id)
+        trash = join(uploads_fp, 'trash')
+        if not exists(trash):
+            mkdir(trash)
+        fp = join(trash, 'my_file_to_delete.txt')
+        open(fp, 'w').close()
+
+        self.assertTrue(exists(fp))
+        qdb.util.empty_trash_upload_folder()
+        self.assertFalse(exists(fp))
 
     def test_purge_filepaths_null_cols(self):
         # For more details about the source of the issue that motivates this

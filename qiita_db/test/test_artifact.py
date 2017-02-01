@@ -46,7 +46,7 @@ class ArtifactTestsReadOnly(TestCase):
     def test_create_type(self):
         obs = qdb.artifact.Artifact.types()
         exp = [['BIOM', 'BIOM table'],
-               ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+               ['Demultiplexed', 'Demultiplexed and QC sequences'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None],
                ['distance_matrix', 'Distance matrix holding pairwise '
@@ -61,7 +61,7 @@ class ArtifactTestsReadOnly(TestCase):
 
         obs = qdb.artifact.Artifact.types()
         exp = [['BIOM', 'BIOM table'],
-               ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+               ['Demultiplexed', 'Demultiplexed and QC sequences'],
                ['FASTA', None], ['FASTA_Sanger', None], ['FASTQ', None],
                ['SFF', None], ['per_sample_FASTQ', None],
                ['distance_matrix', 'Distance matrix holding pairwise '
@@ -733,7 +733,7 @@ class ArtifactTests(TestCase):
         self.assertEqual(obs.name, 'noname')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
-        self.assertEqual(obs.visibility, 'sandbox')
+        self.assertEqual(obs.visibility, 'private')
         self.assertEqual(obs.artifact_type, "Demultiplexed")
         self.assertEqual(obs.data_type, qdb.artifact.Artifact(1).data_type)
         self.assertTrue(obs.can_be_submitted_to_ebi)
@@ -765,7 +765,7 @@ class ArtifactTests(TestCase):
         self.assertEqual(obs.name, 'noname')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
-        self.assertEqual(obs.visibility, 'sandbox')
+        self.assertEqual(obs.visibility, 'private')
         self.assertEqual(obs.artifact_type, "Demultiplexed")
         self.assertEqual(obs.data_type, qdb.artifact.Artifact(1).data_type)
         self.assertTrue(obs.can_be_submitted_to_ebi)
@@ -797,7 +797,7 @@ class ArtifactTests(TestCase):
         self.assertEqual(obs.name, 'noname')
         self.assertTrue(before < obs.timestamp < datetime.now())
         self.assertEqual(obs.processing_parameters, exp_params)
-        self.assertEqual(obs.visibility, 'sandbox')
+        self.assertEqual(obs.visibility, 'private')
         self.assertEqual(obs.artifact_type, 'BIOM')
         self.assertEqual(obs.data_type, qdb.artifact.Artifact(2).data_type)
         self.assertFalse(obs.can_be_submitted_to_ebi)

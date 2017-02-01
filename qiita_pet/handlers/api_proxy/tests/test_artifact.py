@@ -102,7 +102,7 @@ class TestArtifactAPIReadOnly(TestCase):
         exp = {'message': '',
                'status': 'success',
                'types': [['BIOM', 'BIOM table'],
-                         ['Demultiplexed', 'Demultiplexed and QC sequeneces'],
+                         ['Demultiplexed', 'Demultiplexed and QC sequences'],
                          ['FASTA', None],
                          ['FASTA_Sanger', None],
                          ['FASTQ', None],
