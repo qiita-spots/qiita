@@ -29,3 +29,4 @@ following documents:
    dev/index.rst
    faq.rst
    resources.rst
+   processing-recommendations.rst

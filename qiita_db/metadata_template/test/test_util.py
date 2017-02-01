@@ -359,7 +359,8 @@ EXP_SAMPLE_TEMPLATE_SPACES = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1         \t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1         \t05/29/2014 12:24:51\tTest Sample 1\t"
+    '"True\t"\t"\nTrue"\t'
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
     "2.Sample2  \t05/29/2014 12:24:51\t"

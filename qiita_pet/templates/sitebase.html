@@ -321,7 +321,7 @@
             value = value.toLowerCase()
             return list.filter(function(item) {
               for (var k in item) {
-                if (item[k].toString().toLowerCase().indexOf(value) > -1) {
+                if (item[k] != null && item[k].toString().toLowerCase().indexOf(value) > -1) {
                   return true
                 }
               }
