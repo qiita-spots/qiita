@@ -58,31 +58,7 @@
     }
   };
 
-  function populate_grap_div() {
-    // Put the loading gif in the div
-    show_loading('{% raw qiita_config.portal_dir %}', 'analysis-network-div');
-    // Retrieve the information for the graph
-    $.get("{% raw qiita_config.portal_dir %}/analysis/description/graph/", { analysis_id: {{analysis_id}}}, function(data) {
-      var nodes = [];
-      var edges = [];
-      // Format edge list data
-      for(var i = 0; i < data.edges.length; i++) {
-        edges.push({from: data.edges[i][0], to: data.edges[i][1], arrows:'to'});
-      }
-      // Format node list data
-      for(var i = 0; i < data.nodes.length; i++) {
-        nodes.push({id: data.nodes[i][1], label: data.nodes[i][2], group: data.nodes[i][0]});
-      }
-      draw_processing_graph(nodes, edges, 'analysis-network-div', populateContentArtifact, populateContentJob);
-    })
-      .fail(function(object, status, error_msg) {
-        $("#analysis-network-div").html("Error loading graph: " + status + " " + error_msg);
-      }
-    );
-  }
-
   $(document).ready(function(){
-    // populate_grap_div();
 
     Vue.component('analysis-graph', {
       template: '<div class="col-md-12 graph" style="width:90%" id="analysis-network-div">',
@@ -113,11 +89,13 @@
               }
               draw_processing_graph(vm.nodes, vm.edges, 'analysis-network-div', populateContentArtifact, populateContentJob);
               $("#analysis-network-div").show();
+              $("#analysis-job-div").hide();
             }
           })
             .fail(function(object, status, error_msg) {
               $("#analysis-network-div").html("Error loading graph: " + status + " " + error_msg);
               $("#analysis-network-div").show();
+              $("#analysis-job-div").hide();
             }
           );
         },
