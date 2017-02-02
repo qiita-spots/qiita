@@ -11,7 +11,6 @@ from multiprocessing import Process
 
 from tornado.web import HTTPError
 
-from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 from .oauth2 import OauthBaseHandler, authenticate_oauth
 
@@ -59,13 +58,10 @@ def _job_completer(job_id, payload):
         completing the job
     """
     import qiita_db as qdb
-    cmd = "%s '%s' %s %s '%s'" % (qiita_config.private_launcher,
-                                  qiita_config.qiita_env, 'complete_job',
-                                  job_id, payload)
-    std_out, std_err, return_value = qdb.processing_job._system_call(cmd)
-    if return_value != 0:
-        error = ("Can't submit private task 'complete job:\n"
-                 "Std output:%s\nStd error:%s'" % (std_out, std_err))
+
+    success, error = qdb.processing_job.private_job_submitter(
+        "Complete job %s" % job_id, 'complete_job', [job_id, payload])
+    if not success:
         job = qdb.processing_job.ProcessingJob(job_id)
         job.complete(False, error=error)
 

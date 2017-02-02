@@ -852,17 +852,7 @@ table {
 	analysis_artifact references artifact ( artifact_id )</title>
 </path>
 <text x='517' y='1090' transform='rotate(0 517,1090)' title='Foreign Key fk_analysis_artifact_artifact
-	analysis_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 225 990 L 225,945' >
-	<title>Foreign Key fk_analysis_processing_job
-	analysis_processing_job references analysis ( analysis_id )</title>
-</path>
-<text x='227' y='985' transform='rotate(270 227,985)' title='Foreign Key fk_analysis_processing_job
-	analysis_processing_job references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 240 1080 L 240,1882 Q 240,1890 247,1890 L 495,1890' >
-	<title>Foreign Key fk_analysis_processing_job_pj
-	analysis_processing_job references processing_job ( processing_job_id )</title>
-</path>
-<text x='253' y='1080' transform='rotate(90 253,1080)' title='Foreign Key fk_analysis_processing_job_pj
-	analysis_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 225 750 L 225,405' >
+	analysis_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 225 750 L 225,405' >
 	<title>Foreign Key fk_analysis_user
 	analysis references qiita_user ( email )</title>
 </path>
@@ -877,7 +867,17 @@ table {
 	analysis references logging ( logging_id )</title>
 </path>
 <text x='337' y='925' transform='rotate(0 337,925)' title='Foreign Key fk_analysis_logging
-	analysis references logging ( logging_id )' style='fill:#a1a0a0;'>logging_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	analysis references logging ( logging_id )' style='fill:#a1a0a0;'>logging_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 225 990 L 225,945' >
+	<title>Foreign Key fk_analysis_processing_job
+	analysis_processing_job references analysis ( analysis_id )</title>
+</path>
+<text x='227' y='985' transform='rotate(270 227,985)' title='Foreign Key fk_analysis_processing_job
+	analysis_processing_job references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 240 1080 L 240,1882 Q 240,1890 247,1890 L 495,1890' >
+	<title>Foreign Key fk_analysis_processing_job_pj
+	analysis_processing_job references processing_job ( processing_job_id )</title>
+</path>
+<text x='253' y='1080' transform='rotate(90 253,1080)' title='Foreign Key fk_analysis_processing_job_pj
+	analysis_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='1410' y='1733' width='150' height='120' rx='7' ry='7' />
 <path d='M 1410.50 1759.50 L 1410.50 1740.50 Q 1410.50 1733.50 1417.50 1733.50 L 1552.50 1733.50 Q 1559.50 1733.50 1559.50 1740.50 L 1559.50 1759.50 L1410.50 1759.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='1418' y='1747' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -922,9 +922,8 @@ Referred by column_ontology ( column_name ) </title></a>
 <a xlink:href='#logging'><text x='1337' y='1957' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
   <use id='nn' x='1307' y='1977' xlink:href='#nn'/><a xlink:href='#logging.logging_id'><use id='pk' x='1307' y='1976' xlink:href='#pk'/><title>Primary Key  ( logging_id ) </title></a>
 <a xlink:href='#logging.logging_id'><text x='1323' y='1987'>logging_id</text><title>logging_id bigserial not null</title></a>
-<a xlink:href='#logging.logging_id'><use id='ref' x='1398' y='1976' xlink:href='#ref'/><title>Referred by processing_job ( logging_id ) 
-Referred by analysis ( logging_id ) 
-Referred by analysis ( logging_id ) </title></a>
+<a xlink:href='#logging.logging_id'><use id='ref' x='1398' y='1976' xlink:href='#ref'/><title>Referred by analysis ( logging_id ) 
+Referred by processing_job ( logging_id ) </title></a>
   <use id='nn' x='1307' y='1992' xlink:href='#nn'/><a xlink:href='#logging.time'><text x='1323' y='2002'>time</text><title>time timestamp not null
 Time the error was thrown</title></a>
   <use id='nn' x='1307' y='2007' xlink:href='#nn'/><a xlink:href='#logging.severity_id'><use id='idx' x='1307' y='2006' xlink:href='#idx'/><title>Index  ( severity_id ) </title></a>
@@ -1991,17 +1990,6 @@ Referred by prep_template ( data_type_id ) </title></a>
 <a xlink:href='#data_type.data_type'><text x='738' y='1177'>data_type</text><title>data_type varchar not null
 Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use</title></a>
 
-<!-- ============= Table 'analysis_processing_job' ============= -->
-<rect class='table' x='135' y='998' width='150' height='75' rx='7' ry='7' />
-<path d='M 135.50 1024.50 L 135.50 1005.50 Q 135.50 998.50 142.50 998.50 L 277.50 998.50 Q 284.50 998.50 284.50 1005.50 L 284.50 1024.50 L135.50 1024.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
-<a xlink:href='#analysis_processing_job'><text x='144' y='1012' class='tableTitle'>analysis_processing_job</text><title>Table qiita.analysis_processing_job</title></a>
-  <use id='nn' x='137' y='1032' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.analysis_id'><use id='pk' x='137' y='1031' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( analysis_id ) </title></a>
-<a xlink:href='#analysis_processing_job.analysis_id'><text x='153' y='1042'>analysis_id</text><title>analysis_id bigint not null</title></a>
-<a xlink:href='#analysis_processing_job.analysis_id'><use id='fk' x='273' y='1031' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
-  <use id='nn' x='137' y='1047' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.processing_job_id'><use id='pk' x='137' y='1046' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( processing_job_id ) </title></a>
-<a xlink:href='#analysis_processing_job.processing_job_id'><text x='153' y='1057'>processing_job_id</text><title>processing_job_id varchar not null</title></a>
-<a xlink:href='#analysis_processing_job.processing_job_id'><use id='fk' x='273' y='1046' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
-
 <!-- ============= Table 'analysis' ============= -->
 <rect class='table' x='210' y='758' width='120' height='180' rx='7' ry='7' />
 <path d='M 210.50 784.50 L 210.50 765.50 Q 210.50 758.50 217.50 758.50 L 322.50 758.50 Q 329.50 758.50 329.50 765.50 L 329.50 784.50 L210.50 784.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
@@ -2033,6 +2021,17 @@ PMID of paper from the analysis</title></a>
   <a xlink:href='#analysis.logging_id'><use id='idx' x='212' y='911' xlink:href='#idx'/><title>Index  ( logging_id ) </title></a>
 <a xlink:href='#analysis.logging_id'><text x='228' y='922'>logging_id</text><title>logging_id bigint</title></a>
 <a xlink:href='#analysis.logging_id'><use id='fk' x='318' y='911' xlink:href='#fk'/><title>References logging ( logging_id ) </title></a>
+
+<!-- ============= Table 'analysis_processing_job' ============= -->
+<rect class='table' x='135' y='998' width='150' height='75' rx='7' ry='7' />
+<path d='M 135.50 1024.50 L 135.50 1005.50 Q 135.50 998.50 142.50 998.50 L 277.50 998.50 Q 284.50 998.50 284.50 1005.50 L 284.50 1024.50 L135.50 1024.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#analysis_processing_job'><text x='144' y='1012' class='tableTitle'>analysis_processing_job</text><title>Table qiita.analysis_processing_job</title></a>
+  <use id='nn' x='137' y='1032' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.analysis_id'><use id='pk' x='137' y='1031' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( analysis_id ) </title></a>
+<a xlink:href='#analysis_processing_job.analysis_id'><text x='153' y='1042'>analysis_id</text><title>analysis_id bigint not null</title></a>
+<a xlink:href='#analysis_processing_job.analysis_id'><use id='fk' x='273' y='1031' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
+  <use id='nn' x='137' y='1047' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.processing_job_id'><use id='pk' x='137' y='1046' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( processing_job_id ) </title></a>
+<a xlink:href='#analysis_processing_job.processing_job_id'><text x='153' y='1057'>processing_job_id</text><title>processing_job_id varchar not null</title></a>
+<a xlink:href='#analysis_processing_job.processing_job_id'><use id='fk' x='273' y='1046' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
 
 </g></svg>
 
@@ -5658,49 +5657,6 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
-<tr><th colspan='3'><a name='analysis_processing_job'>Table analysis_processing_job</a></th></tr>
-</thead>
-<tbody>
-	<tr>
-		<td><a name='analysis_processing_job.analysis_id'>analysis&#095;id</a></td>
-		<td> bigint  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td><a name='analysis_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
-		<td> varchar  NOT NULL  </td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Indexes</b></th></tr>
-	<tr>		<td>idx&#095;analysis&#095;processing&#095;job primary key</td>
-		<td> ON analysis&#095;id&#044; processing&#095;job&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis&#095;processing&#095;job </td>
-		<td> ON analysis&#095;id</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>idx&#095;analysis&#095;processing&#095;job </td>
-		<td> ON processing&#095;job&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>fk_analysis_processing_job</td>
-		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>fk_analysis_processing_job_pj</td>
-		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
 <tr><th colspan='3'><a name='analysis'>Table analysis</a></th></tr>
 <tr><td colspan='3'>Holds analysis information </td></tr>
 </thead>
@@ -5781,6 +5737,49 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_analysis_logging</td>
 		<td > ( logging&#095;id ) ref <a href='#logging'>logging</a> (logging&#095;id) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='analysis_processing_job'>Table analysis_processing_job</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='analysis_processing_job.analysis_id'>analysis&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='analysis_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;processing&#095;job primary key</td>
+		<td> ON analysis&#095;id&#044; processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;processing&#095;job </td>
+		<td> ON analysis&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;processing&#095;job </td>
+		<td> ON processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_analysis_processing_job</td>
+		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis_processing_job_pj</td>
+		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
