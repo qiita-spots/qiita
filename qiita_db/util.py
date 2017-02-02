@@ -1553,12 +1553,12 @@ def generate_study_list(study_ids, build_samples, public_only=False):
     return infolist
 
 
-def generate_biom_and_metadata_release(study_status):
+def generate_biom_and_metadata_release(study_status='public'):
     """Generate a list of biom/meatadata filepaths and a tgz of those files
 
     Parameters
     ----------
-    study_status : str
+    study_status : str, optional
         The study status to search for. Note that this should always be set
         to 'public' but having this expose helps with testing
 
@@ -1577,15 +1577,16 @@ def generate_biom_and_metadata_release(study_status):
 
     data = []
     for s in studies:
+        # [0] latest is first, [1] only getting the filepath
+        sample_fp = s.sample_template.get_filepaths()[0][1]
+        if sample_fp.startswith(bdir):
+            sample_fp = sample_fp[bdir_len:]
+
         for a in s.artifacts():
             if a.artifact_type == 'BIOM':
                 if a.processing_parameters is None:
                     continue
 
-                # [0] latest is first, [1] only getting the filepath
-                sample_fp = a.study.sample_template.get_filepaths()[0][1]
-                if sample_fp.startswith(bdir):
-                    sample_fp = sample_fp[bdir_len:]
                 cmd_name = a.processing_parameters.command.name
 
                 # this loop is necessary as in theory an artifact can be

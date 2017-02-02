@@ -755,8 +755,8 @@ class DBUtilTests(TestCase):
             'processed_data/1_study_1001_closed_reference_otu_table.biom',
             'templates/1_19700101-000000.txt',
             'templates/1_prep_1_19700101-000000.txt',
-            ('processed_data/1_study_1001_closed_reference_otu_table_'
-             'Silva.biom'), 'templates/1_19700101-000000.txt',
+            'processed_data/1_study_1001_closed_reference_otu_table_'
+            'Silva.biom', 'templates/1_19700101-000000.txt',
             'templates/1_prep_1_19700101-000000.txt']
         self.assertEqual(tgz_obs, tgz_exp)
 
