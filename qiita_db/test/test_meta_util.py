@@ -32,12 +32,6 @@ class MetaUtilTests(TestCase):
         self.conn_handler.execute(
             "UPDATE qiita.artifact SET visibility_id=2")
 
-    def _unshare_studies(self):
-        self.conn_handler.execute("DELETE FROM qiita.study_users")
-
-    def _unshare_analyses(self):
-        self.conn_handler.execute("DELETE FROM qiita.analysis_users")
-
     def test_validate_filepath_access_by_user(self):
         self._set_artifact_private()
 
@@ -48,17 +42,16 @@ class MetaUtilTests(TestCase):
                 user, i))
 
         # Now shared should not have access to the study files
-        self._unshare_studies()
+        qdb.study.Study(1).unshare(user)
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
-
         for i in [13, 14, 15, 16]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
 
         # Now shared should not have access to any files
-        self._unshare_analyses()
+        qdb.analysis.Analysis(1).unshare(user)
         for i in [1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]:
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
@@ -83,7 +76,7 @@ class MetaUtilTests(TestCase):
             "principal_investigator_id": 1,
             "lab_person_id": 1
         }
-        qdb.study.Study.create(
+        study = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), "Test study", [1], info)
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
@@ -103,6 +96,12 @@ class MetaUtilTests(TestCase):
         for i in fids:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 admin, i[0]))
+
+        # returning to origina sharing
+        qdb.study.Study(1).share(user)
+        qdb.analysis.Analysis(1).share(user)
+        qdb.study.Study.delete(study.id)
+
 
     def test_get_lat_longs(self):
         exp = [
