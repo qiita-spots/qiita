@@ -103,7 +103,6 @@ class MetaUtilTests(TestCase):
         qdb.analysis.Analysis(1).share(user)
         qdb.study.Study.delete(study.id)
 
-
     def test_get_lat_longs(self):
         exp = [
             [74.0894932572, 65.3283470202],
@@ -168,7 +167,7 @@ class MetaUtilTests(TestCase):
         }
 
         md_ext = pd.DataFrame.from_dict(md, orient='index', dtype=str)
-        qdb.metadata_template.sample_template.SampleTemplate.create(
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
             md_ext, study)
 
         qiita_config.portal = 'EMP'
@@ -177,19 +176,21 @@ class MetaUtilTests(TestCase):
         exp = [[42.42, 41.41]]
 
         self.assertItemsEqual(obs, exp)
+        qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
+        qdb.study.Study.delete(study.id)
 
     def test_update_redis_stats(self):
         qdb.meta_util.update_redis_stats()
 
         portal = qiita_config.portal
         vals = [
-            ('number_studies', {'sanbox': '2', 'public': '0',
-                                'private': '1'}, r_client.hgetall),
-            ('number_of_samples', {'sanbox': '1', 'public': '0',
-                                   'private': '27'}, r_client.hgetall),
+            ('number_studies', {'sanbox': '0', 'public': '1',
+                                'private': '0'}, r_client.hgetall),
+            ('number_of_samples', {'sanbox': '0', 'public': '27',
+                                   'private': '0'}, r_client.hgetall),
             ('num_users', '4', r_client.get),
             ('lat_longs', EXP_LAT_LONG, r_client.get),
-            ('num_studies_ebi', '3', r_client.get),
+            ('num_studies_ebi', '1', r_client.get),
             ('num_samples_ebi', '27', r_client.get),
             ('number_samples_ebi_prep', '54', r_client.get)
             # not testing img/time for simplicity
@@ -202,19 +203,19 @@ class MetaUtilTests(TestCase):
 
 
 EXP_LAT_LONG = (
-    '[[0.291867635913, 68.5945325743], [68.0991287718, 34.8360987059],'
-    ' [10.6655599093, 70.784770579], [40.8623799474, 6.66444220187],'
+    '[[60.1102854322, 74.7123248382], [23.1218032799, 42.838497795],'
+    ' [3.21190859967, 26.8138925876], [74.0894932572, 65.3283470202],'
+    ' [53.5050692395, 31.6056761814], [12.6245524972, 96.0693176066],'
+    ' [43.9614715197, 82.8516734159], [10.6655599093, 70.784770579],'
+    ' [78.3634273709, 74.423907894], [82.8302905615, 86.3615778099],'
+    ' [44.9725384282, 66.1920014699], [4.59216095574, 63.5115213108],'
+    ' [57.571893782, 32.5563076447], [40.8623799474, 6.66444220187],'
+    ' [95.2060749748, 27.3592668624], [38.2627021402, 3.48274264219],'
     ' [13.089194595, 92.5274472082], [84.0030227585, 66.8954849864],'
-    ' [12.7065957714, 84.9722975792], [78.3634273709, 74.423907894],'
-    ' [82.8302905615, 86.3615778099], [53.5050692395, 31.6056761814],'
-    ' [43.9614715197, 82.8516734159], [29.1499460692, 82.1270418227],'
-    ' [23.1218032799, 42.838497795], [12.6245524972, 96.0693176066],'
-    ' [38.2627021402, 3.48274264219], [74.0894932572, 65.3283470202],'
-    ' [35.2374368957, 68.5041623253], [4.59216095574, 63.5115213108],'
-    ' [95.2060749748, 27.3592668624], [68.51099627, 2.35063674718],'
-    ' [85.4121476399, 15.6526750776], [60.1102854322, 74.7123248382],'
-    ' [3.21190859967, 26.8138925876], [57.571893782, 32.5563076447],'
-    ' [44.9725384282, 66.1920014699], [42.42, 41.41]]')
+    ' [68.51099627, 2.35063674718], [29.1499460692, 82.1270418227],'
+    ' [35.2374368957, 68.5041623253], [12.7065957714, 84.9722975792],'
+    ' [0.291867635913, 68.5945325743], [85.4121476399, 15.6526750776],'
+    ' [68.0991287718, 34.8360987059]]')
 
 if __name__ == '__main__':
     main()
