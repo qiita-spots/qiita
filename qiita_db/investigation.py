@@ -23,7 +23,7 @@ import qiita_db as qdb
 REQUIRED_KEYS = {"name", "description", "contact_person"}
 
 
-class Investigation(qdb.base.QiitaStatusObject):
+class Investigation(qdb.base.QiitaObject):
     """
     Study object to access to the Qiita Study information
 

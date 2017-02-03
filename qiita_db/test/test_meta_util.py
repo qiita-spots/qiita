@@ -46,13 +46,13 @@ class MetaUtilTests(TestCase):
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('shared@foo.bar'))
         self.assertItemsEqual(obs, {
-            1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21})
+            1, 2, 3, 4, 5, 9, 12, 16, 17, 18, 19, 20, 21})
 
         # Now shared should not have access to the study files
         self._unshare_studies()
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('shared@foo.bar'))
-        self.assertItemsEqual(obs, {16, 14, 15, 13})
+        self.assertItemsEqual(obs, {16})
 
         # Now shared should not have access to any files
         self._unshare_analyses()
@@ -64,10 +64,11 @@ class MetaUtilTests(TestCase):
         self._set_artifact_public()
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('shared@foo.bar'))
-        self.assertEqual(obs, {1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21})
+        self.assertEqual(
+            obs, {1, 2, 3, 4, 5, 9, 12, 15, 16, 17, 18, 19, 20, 21, 22})
 
         # Test that it doesn't break: if the SampleTemplate hasn't been added
-        exp = {1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}
+        exp = {1, 2, 3, 4, 5, 9, 12, 15, 16, 17, 18, 19, 20, 21, 22}
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('test@foo.bar'))
         self.assertEqual(obs, exp)
@@ -99,9 +100,11 @@ class MetaUtilTests(TestCase):
         self.assertEqual(obs, exp)
 
         # admin should have access to everything
-        count = self.conn_handler.execute_fetchone("SELECT count(*) FROM "
-                                                   "qiita.filepath")[0]
+        count = self.conn_handler.execute_fetchone(
+            "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
         exp = set(range(1, count + 1))
+        exp.discard(13)
+        exp.discard(14)
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('admin@foo.bar'))
         self.assertEqual(obs, exp)

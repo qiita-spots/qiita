@@ -72,13 +72,6 @@ class TestPortal(TestCase):
             qdb.portal.Portal.delete("QIITA")
 
         qdb.portal.Portal.create("NEWPORTAL2", "SOMEDESC")
-        # Add analysis to this new portal and make sure error raised
-        qiita_config.portal = "NEWPORTAL2"
-        qdb.analysis.Analysis.create(
-            qdb.user.User("test@foo.bar"), "newportal analysis", "desc")
-        qiita_config.portal = "QIITA"
-        with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.portal.Portal.delete("NEWPORTAL2")
 
         # Add study to this new portal and make sure error raised
         info = {
