@@ -256,10 +256,14 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
                   for p in prep_prefixes}
         inuse = [y for x in sfiles.values() for y in x]
         remaining.extend([f for _, f in uploaded if f not in inuse])
+        supp_file_types_len = len(supp_file_types)
 
         for k, v in viewitems(sfiles):
             len_files = len(v)
-            if len_files != 1 and len_files != 2:
+            # if the number of files in the k group is larger than the
+            # available columns add to the remaining group, if not put them in
+            # the selected group
+            if len_files > supp_file_types_len:
                 remaining.extend(v)
             else:
                 v.sort()

@@ -439,7 +439,7 @@ class TestStudyAPI(TestCase):
         with self.assertRaises(IncompetentQiitaDeveloperError):
             study_files_get_req('test@foo.bar', new_study.id, 1, 'FASTQ')
 
-    def test_study_files_get_req_per_sample_FASTQ(self):
+    def test_study_files_get_req_multiple(self):
         study_id = 1
         # adding a new prep for testing
         PREP = qdb.metadata_template.prep_template.PrepTemplate
@@ -506,6 +506,23 @@ class TestStudyAPI(TestCase):
                                ['test_2.R1.fastq.gz']),
                               ('raw_reverse_seqs', False,
                               ['test_2.R2.fastq.gz'])]}
+        self.assertEqual(obs, exp)
+
+        # now if we select FASTQ we have 3 columns so the extra file should go
+        # to the 3rd column
+        obs = study_files_get_req(
+            'shared@foo.bar', 1, pt.id, 'FASTQ')
+        exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
+               'remaining': ['uploaded_file.txt'],
+               'message': '',
+               'artifacts': [(1, 'Identification of the Microbiomes for '
+                                 'Cannabis Soils (1) - Raw data 1 (1)')],
+               'file_types': [
+                ('raw_barcodes', True,
+                 ['test_2.R1.fastq.gz', 'test_1.R1.fastq.gz']),
+                ('raw_forward_seqs', True,
+                 ['test_2.R2.fastq.gz', 'test_1.R2.fastq.gz']),
+                ('raw_reverse_seqs', False, ['test_1.R3.fastq.gz'])]}
         self.assertEqual(obs, exp)
 
         PREP.delete(pt.id)
