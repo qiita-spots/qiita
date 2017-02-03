@@ -1560,7 +1560,8 @@ def generate_biom_and_metadata_release(study_status='public'):
     ----------
     study_status : str, optional
         The study status to search for. Note that this should always be set
-        to 'public' but having this expose helps with testing
+        to 'public' but having this exposed as helps with testing. The other
+        options are 'private' and 'sandbox'
 
     Returns
     -------
@@ -1626,9 +1627,9 @@ def generate_biom_and_metadata_release(study_status='public'):
     with open(txt_name, 'w') as txt, topen(tgz_name, "w|gz") as tgz:
         # writing header for txt
         txt.write("biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n")
-        for biom_fp, sample_fp, prep_fp, prep_id, human_cmd in data:
+        for biom_fp, sample_fp, prep_fp, artifact_id, human_cmd in data:
             txt.write("%s\t%s\t%s\t%s\t%s\n" % (
-                biom_fp, sample_fp, prep_fp, prep_id, human_cmd))
+                biom_fp, sample_fp, prep_fp, artifact_id, human_cmd))
             tgz.add(join(bdir, biom_fp), arcname=biom_fp, recursive=False)
             tgz.add(join(bdir, sample_fp), arcname=sample_fp, recursive=False)
             tgz.add(join(bdir, prep_fp), arcname=prep_fp, recursive=False)

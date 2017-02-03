@@ -747,7 +747,9 @@ class DBUtilTests(TestCase):
         tgz, txt = qdb.util.generate_biom_and_metadata_release('private')
         self.files_to_remove.extend([tgz, txt])
 
-        tgz_obs = [ti.name for ti in topen(tgz, "r:gz")]
+        tmp = topen(tgz, "r:gz")
+        tgz_obs = [ti.name for ti in tmp]
+        tmp.close()
         tgz_exp = [
             'processed_data/1_study_1001_closed_reference_otu_table.biom',
             'templates/1_19700101-000000.txt',
@@ -760,7 +762,9 @@ class DBUtilTests(TestCase):
             'templates/1_prep_1_19700101-000000.txt']
         self.assertEqual(tgz_obs, tgz_exp)
 
-        txt_obs = open(txt).readlines()
+        tmp = open(txt)
+        txt_obs = tmp.readlines()
+        tmp.close()
         txt_exp = [
             'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
             'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
