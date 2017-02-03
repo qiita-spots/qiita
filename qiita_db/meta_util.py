@@ -13,7 +13,6 @@ Methods
 ..autosummary::
     :toctree: generated/
 
-    get_accessible_filepath_ids
     get_lat_longs
 """
 # -----------------------------------------------------------------------------
@@ -59,78 +58,97 @@ def _get_data_fpids(constructor, object_id):
         return {fpid for fpid, _, _ in obj.get_filepaths()}
 
 
-def get_accessible_filepath_ids(user):
-    """Gets all filepaths that this user should have access to
-
-    This gets all raw, preprocessed, and processed filepaths, for studies
-    that the user has access to, as well as all the mapping files and biom
-    tables associated with the analyses that the user has access to.
+def validate_filepath_access_by_user(user, filepath_id):
+    """Validates if the user has access to the filepath_id
 
     Parameters
     ----------
     user : User object
         The user we are interested in
-
+    filepath_id : int
+        The filepath id
 
     Returns
     -------
-    set
-        A set of filepath ids
+    bool
+        If the user has access or not to the filepath_id
 
     Notes
     -----
-    Admins have access to all files, so all filepath ids are returned for
-    admins
+    Admins have access to all files so True is always returned
     """
-    with qdb.sql_connection.TRN:
+    TRN = qdb.sql_connection.TRN
+    with TRN:
         if user.level == "admin":
             # admins have access all files
-            qdb.sql_connection.TRN.add(
-                "SELECT filepath_id FROM qiita.filepath")
-            return set(qdb.sql_connection.TRN.execute_fetchflatten())
+            return True
 
-        # First, the studies
-        # There are private and shared studies
-        studies = user.user_studies | user.shared_studies
+        sql = """SELECT
+            (SELECT array_agg(artifact_id)
+             FROM qiita.artifact_filepath
+             WHERE filepath_id = {0}) AS artifact,
+            (SELECT array_agg(study_id)
+             FROM qiita.sample_template_filepath
+             WHERE filepath_id = {0}) AS sample_info,
+            (SELECT array_agg(prep_template_id)
+             FROM qiita.prep_template_filepath
+             WHERE filepath_id = {0}) AS prep_info,
+            (SELECT array_agg(job_id)
+             FROM qiita.job_results_filepath
+             WHERE filepath_id = {0}) AS job_results,
+            (SELECT array_agg(analysis_id)
+             FROM qiita.analysis_filepath
+             WHERE filepath_id = {0}) AS analysis""".format(filepath_id)
+        TRN.add(sql)
 
-        filepath_ids = set()
-        for study in studies:
-            # Add the sample template files
-            if study.sample_template:
-                filepath_ids.update(
-                    {fid for fid, _ in study.sample_template.get_filepaths()})
+        arid, sid, pid, jid, anid = TRN.execute_fetchflatten()
 
-            # Add the prep template filepaths
-            for pt in study.prep_templates():
-                filepath_ids.update({fid for fid, _ in pt.get_filepaths()})
-
-            # Add the artifact filepaths
-            for artifact in study.artifacts():
-                filepath_ids.update({fid for fid, _, _ in artifact.filepaths})
-
-        # Next, the public artifacts
-        for artifact in qdb.artifact.Artifact.iter_public():
-            # Add the filepaths of the artifact
-            filepath_ids.update({fid for fid, _, _ in artifact.filepaths})
-
-            # Then add the filepaths of the prep templates
-            for pt in artifact.prep_templates:
-                filepath_ids.update({fid for fid, _ in pt.get_filepaths()})
-
-            # Then add the filepaths of the sample template
-            filepath_ids.update(
-                {fid
-                 for fid, _ in artifact.study.sample_template.get_filepaths()})
-
-        # Next, analyses
-        # Same as before, there are public, private, and shared
-        analyses = qdb.analysis.Analysis.get_by_status('public') | \
-            user.private_analyses | user.shared_analyses
-
-        for analysis in analyses:
-            filepath_ids.update(analysis.all_associated_filepath_ids)
-
-        return filepath_ids
+        # artifacts
+        if arid:
+            # [0] cause we should only have 1
+            artifact = qdb.artifact.Artifact(arid[0])
+            if artifact.visibility == 'public':
+                return True
+            else:
+                # let's take the visibility via the Study
+                return artifact.study.has_access(user)
+        # sample info files
+        elif sid:
+            # the visibility of the sample info file is given by the
+            # study visibility
+            # [0] cause we should only have 1
+            return qdb.study.Study(sid[0]).has_access(user)
+        # prep info files
+        elif pid:
+            # the prep access is given by it's artifacts, if the user has
+            # access to any artifact, it should have access to the prep
+            # [0] cause we should only have 1
+            a = qdb.metadata_template.prep_template.PrepTemplate(
+                pid[0]).artifact
+            if (a.visibility == 'public' or a.study.has_access(user)):
+                return True
+            else:
+                for c in a.descendants.nodes():
+                    if (c.visibility == 'public' or c.study.has_access(user)):
+                        return True
+            return False
+        # analyses
+        elif anid or jid:
+            if jid:
+                # [0] cause we should only have 1
+                sql = """SELECT analysis_id FROM qiita.analysis_job
+                         WHERE job_id = {0}""".format(jid[0])
+                TRN.add(sql)
+                aid = TRN.execute_fetchlast()
+            else:
+                aid = anid[0]
+            # [0] cause we should only have 1
+            analysis = qdb.analysis.Analysis(aid)
+            if analysis.status == 'public':
+                return True
+            else:
+                return analysis in (
+                    user.private_analyses | user.shared_analyses)
 
 
 def update_redis_stats():
