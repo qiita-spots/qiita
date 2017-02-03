@@ -45,8 +45,6 @@ class QiitaBaseTest(TestCase):
         # Checked through the __init__ call
         with self.assertRaises(IncompetentQiitaDeveloperError):
             qdb.base.QiitaObject(1)
-        with self.assertRaises(IncompetentQiitaDeveloperError):
-            qdb.base.QiitaStatusObject(1)
 
     def test_check_id(self):
         """Correctly checks if an id exists on the database"""
@@ -83,60 +81,6 @@ class QiitaBaseTest(TestCase):
         new = qdb.study.Study(1)
         self.assertNotEqual(self.tester, new)
 
-
-@qiita_test_checker()
-class QiitaStatusObjectTest(TestCase):
-    """Tests that the QiitaStatusObject class functions act correctly"""
-
-    def setUp(self):
-        # We need an actual subclass in order to test the equality functions
-        self.tester = qdb.analysis.Analysis(1)
-
-    def test_status(self):
-        """Correctly returns the status of the object"""
-        self.assertEqual(self.tester.status, "in_construction")
-
-    def test_check_status_single(self):
-        """check_status works passing a single status"""
-        self.assertTrue(self.tester.check_status(["in_construction"]))
-        self.assertFalse(self.tester.check_status(["queued"]))
-
-    def test_check_status_exclude_single(self):
-        """check_status works passing a single status and the exclude flag"""
-        self.assertTrue(self.tester.check_status(["public"], exclude=True))
-        self.assertFalse(self.tester.check_status(["in_construction"],
-                         exclude=True))
-
-    def test_check_status_list(self):
-        """check_status work passing a list of status"""
-        self.assertTrue(self.tester.check_status(
-            ["in_construction", "queued"]))
-        self.assertFalse(self.tester.check_status(
-            ["public", "queued"]))
-
-    def test_check_status_exclude_list(self):
-        """check_status work passing a list of status and the exclude flag"""
-        self.assertTrue(self.tester.check_status(
-            ["public", "queued"], exclude=True))
-        self.assertFalse(self.tester.check_status(
-            ["in_construction", "queued"], exclude=True))
-
-    def test_check_status_unknown_status(self):
-        """check_status raises an error if an invalid status is provided"""
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo"])
-
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo"], exclude=True)
-
-    def test_check_status_unknown_status_list(self):
-        """check_status raises an error if an invalid status list is provided
-        """
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo", "bar"])
-
-        with self.assertRaises(ValueError):
-            self.tester.check_status(["foo", "bar"], exclude=True)
 
 if __name__ == '__main__':
     main()
