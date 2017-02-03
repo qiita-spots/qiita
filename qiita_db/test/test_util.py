@@ -762,16 +762,16 @@ class DBUtilTests(TestCase):
 
         txt_obs = open(txt).readlines()
         txt_exp = [
-            'biom_fp\tsample_fp\tprep_fp\tprep_id\tcommand\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
-            'templates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000'
-            '000.txt\t1\tPick closed-reference OTUs, Split libraries FASTQ\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
-            'templates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-0000'
-            '00.txt\t1\tPick closed-reference OTUs, Split libraries FASTQ\n',
-            'processed_data/1_study_1001_closed_reference_otu_table_Silva'
-            '.biom\ttemplates/1_19700101-000000.txt\ttemplates/1_prep_1_19700'
-            '101-000000.txt\t1\tPick closed-reference OTUs, Split libraries '
+            'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
+            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
+            '.txt\t4\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
+            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
+            '.txt\t5\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
+            'm\ttemplates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-'
+            '000000.txt\t6\tPick closed-reference OTUs, Split libraries '
             'FASTQ\n']
         self.assertEqual(txt_obs, txt_exp)
 

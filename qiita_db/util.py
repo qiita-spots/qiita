@@ -1607,7 +1607,7 @@ def generate_biom_and_metadata_release(study_status='public'):
                         continue
                     if fp.startswith(bdir):
                         fp = fp[bdir_len:]
-                    # format: (biom_fp, sample_fp, prep_fp, prep_id,
+                    # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
                     #          human readable name)
                     for pt in a.prep_templates:
                         for _, prep_fp in pt.get_filepaths():
@@ -1615,7 +1615,7 @@ def generate_biom_and_metadata_release(study_status='public'):
                                 break
                         if prep_fp.startswith(bdir):
                             prep_fp = prep_fp[bdir_len:]
-                        data.append((fp, sample_fp, prep_fp, pt.id, human_cmd))
+                        data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
 
     # writing text and tgz file
     ts = datetime.now().strftime('%m%d%y-%H%M%S')
@@ -1626,7 +1626,7 @@ def generate_biom_and_metadata_release(study_status='public'):
     txt_name = join(tgz_dir, '%s-%s-%s.txt' % (portal, study_status, ts))
     with open(txt_name, 'w') as txt, topen(tgz_name, "w|gz") as tgz:
         # writing header for txt
-        txt.write("biom_fp\tsample_fp\tprep_fp\tprep_id\tcommand\n")
+        txt.write("biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n")
         for biom_fp, sample_fp, prep_fp, prep_id, human_cmd in data:
             txt.write("%s\t%s\t%s\t%s\t%s\n" % (
                 biom_fp, sample_fp, prep_fp, prep_id, human_cmd))
