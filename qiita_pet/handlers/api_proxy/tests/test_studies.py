@@ -512,7 +512,7 @@ class TestStudyAPI(TestCase):
         # to the 3rd column
         obs = study_files_get_req(
             'shared@foo.bar', 1, pt.id, 'FASTQ')
-        exp = {'status': 'success', 'num_prefixes': 2, 'artifacts': [],
+        exp = {'status': 'success', 'num_prefixes': 2,
                'remaining': ['uploaded_file.txt'],
                'message': '',
                'artifacts': [(1, 'Identification of the Microbiomes for '
