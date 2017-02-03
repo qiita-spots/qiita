@@ -1582,40 +1582,39 @@ def generate_biom_and_metadata_release(study_status='public'):
         if sample_fp.startswith(bdir):
             sample_fp = sample_fp[bdir_len:]
 
-        for a in s.artifacts():
-            if a.artifact_type == 'BIOM':
-                if a.processing_parameters is None:
+        for a in s.artifacts(artifact_type='BIOM'):
+            if a.processing_parameters is None:
+                continue
+
+            cmd_name = a.processing_parameters.command.name
+
+            # this loop is necessary as in theory an artifact can be
+            # generated from multiple prep info files
+            human_cmd = []
+            for p in a.parents:
+                pp = p.processing_parameters
+                pp_cmd_name = pp.command.name
+                if pp_cmd_name == 'Trimming':
+                    human_cmd.append('%s @ %s' % (
+                        cmd_name, str(pp.values['length'])))
+                else:
+                    human_cmd.append('%s, %s' % (cmd_name, pp_cmd_name))
+            human_cmd = ', '.join(human_cmd)
+
+            for _, fp, fp_type in a.filepaths:
+                if fp_type != 'biom' or 'only-16s' in fp:
                     continue
-
-                cmd_name = a.processing_parameters.command.name
-
-                # this loop is necessary as in theory an artifact can be
-                # generated from multiple prep info files
-                human_cmd = []
-                for p in a.parents:
-                    pp = p.processing_parameters
-                    pp_cmd_name = pp.command.name
-                    if pp_cmd_name == 'Trimming':
-                        human_cmd.append('%s @ %s' % (
-                            cmd_name, str(pp.values['length'])))
-                    else:
-                        human_cmd.append('%s, %s' % (cmd_name, pp_cmd_name))
-                human_cmd = ', '.join(human_cmd)
-
-                for _, fp, fp_type in a.filepaths:
-                    if fp_type != 'biom' or 'only-16s' in fp:
-                        continue
-                    if fp.startswith(bdir):
-                        fp = fp[bdir_len:]
-                    # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
-                    #          human readable name)
-                    for pt in a.prep_templates:
-                        for _, prep_fp in pt.get_filepaths():
-                            if 'qiime' not in prep_fp:
-                                break
-                        if prep_fp.startswith(bdir):
-                            prep_fp = prep_fp[bdir_len:]
-                        data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
+                if fp.startswith(bdir):
+                    fp = fp[bdir_len:]
+                # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
+                #          human readable name)
+                for pt in a.prep_templates:
+                    for _, prep_fp in pt.get_filepaths():
+                        if 'qiime' not in prep_fp:
+                            break
+                    if prep_fp.startswith(bdir):
+                        prep_fp = prep_fp[bdir_len:]
+                    data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
 
     # writing text and tgz file
     ts = datetime.now().strftime('%m%d%y-%H%M%S')
