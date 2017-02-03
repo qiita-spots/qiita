@@ -285,10 +285,17 @@ class Artifact(qdb.base.QiitaObject):
                 "at least one filepath is required.")
 
         # Check that the combination of parameters is correct
+<<<<<<< HEAD
         counts = Counter([bool(parents or processing_parameters),
                           prep_template is not None,
                           bool(analysis or data_type)])
         if counts[True] != 1:
+=======
+        counts = (int(bool(parents or processing_parameters)) +
+                  int(prep_template is not None) +
+                  int(bool(analysis or data_type)))
+        if counts != 1:
+>>>>>>> e0947010415172a3e7142e38005b27ea7cb90eab
             # More than one parameter has been provided
             raise qdb.exceptions.QiitaDBArtifactCreationError(
                 "One and only one of parents, prep template or analysis must "
@@ -364,6 +371,7 @@ class Artifact(qdb.base.QiitaObject):
                 # If an artifact has parents, it can be either from the
                 # processing pipeline or the analysis pipeline. Decide which
                 # one here
+<<<<<<< HEAD
                 studies = set()
                 analyses = set()
                 for p in parents:
@@ -373,6 +381,14 @@ class Artifact(qdb.base.QiitaObject):
                         studies.add(s.id)
                     if a is not None:
                         analyses.add(a.id)
+=======
+                studies = {p.study for p in parents}
+                analyses = {p.analysis for p in parents}
+                studies.discard(None)
+                analyses.discard(None)
+                studies = {s.id for s in studies}
+                analyses = {a.id for a in analyses}
+>>>>>>> e0947010415172a3e7142e38005b27ea7cb90eab
 
                 # The first 2 cases should never happen, but it doesn't hurt
                 # to check them
@@ -424,6 +440,7 @@ class Artifact(qdb.base.QiitaObject):
                 sql_args = [(instance.id, p.id) for p in parents]
                 qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
+<<<<<<< HEAD
                 # inheriting visibility
                 visibilities = {a.visibility for a in instance.parents}
                 # set based on the "lowest" visibility
@@ -433,6 +450,8 @@ class Artifact(qdb.base.QiitaObject):
                     instance.visibility = 'private'
                 else:
                     instance.visibility = 'public'
+=======
+>>>>>>> e0947010415172a3e7142e38005b27ea7cb90eab
             elif prep_template:
                 # This artifact is uploaded by the user in the
                 # processing pipeline
