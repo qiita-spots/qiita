@@ -847,7 +847,16 @@ class TestStudy(TestCase):
         study = qdb.study.Study(1)
         study.tags = [tig for tig, tag in obs]
         # and checking that everything went fine
-        self.assertEqual(exp, study.tags)
+        self.assertEqual(obs, study.tags)
+
+        # making sure that everything is overwritten
+        obs.pop()
+        study.tags = [tig for tig, tag in obs]
+        self.assertEqual(obs, study.tags)
+
+        # cleaning tags
+        study.tags = []
+        self.assertEqual(study.tags, [])
 
 
 if __name__ == "__main__":

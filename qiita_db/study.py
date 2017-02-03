@@ -984,16 +984,22 @@ class Study(qdb.base.QiitaObject):
             The tag ids of the study
         """
         with qdb.sql_connection.TRN:
-            sql = """INSERT INTO qiita.per_study_tags (study_tag_id, study_id)
-                     SELECT %s, %s
-                        WHERE
-                            NOT EXISTS (
-                                SELECT study_tag_id, study_id
-                                FROM qiita.per_study_tags
-                                WHERE study_tag_id = %s AND study_id = %s
-                            )"""
-            sql_args = [[tid, self._id, tid, self._id] for tid in tag_ids]
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            sql = """DELETE FROM qiita.per_study_tags WHERE study_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self._id])
+            qdb.sql_connection.TRN.execute()
+
+            if tag_ids:
+                sql = """INSERT INTO qiita.per_study_tags
+                            (study_tag_id, study_id)
+                         SELECT %s, %s
+                            WHERE
+                                NOT EXISTS (
+                                    SELECT study_tag_id, study_id
+                                    FROM qiita.per_study_tags
+                                    WHERE study_tag_id = %s AND study_id = %s
+                                )"""
+                sql_args = [[tid, self._id, tid, self._id] for tid in tag_ids]
+                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             return qdb.sql_connection.TRN.execute()
 
 # --- methods ---
