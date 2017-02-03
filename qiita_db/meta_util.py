@@ -128,7 +128,7 @@ def validate_filepath_access_by_user(user, filepath_id):
             if (a.visibility == 'public' or a.study.has_access(user)):
                 return True
             else:
-                for c in a.children:
+                for c in a.descendants.nodes():
                     if (c.visibility == 'public' or c.study.has_access(user)):
                         return True
             return False
