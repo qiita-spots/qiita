@@ -1,3 +1,10 @@
+<script type="text/javascript">
+  $(document).ready(function () {
+    autoscroll_prep_list();
+  });
+</script>
+
+
 {% from future.utils import viewitems %}
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -5,10 +12,10 @@
   </div>
   <div id="summary-table-div">
     <table class="table">
-      {% for category, summary in viewitems(stats) %}
-        <tr>
+      {% for i, (category, summary) in enumerate(stats, -1) %}
+        <tr id="row_{{i}}">
           <td>
-            <a class="btn btn-danger" onclick="delete_prep_column({{pid}}, '{{category}}');"><span class="glyphicon glyphicon-trash"></span></a>
+              <a class="btn btn-danger" onclick="delete_prep_column({{pid}}, '{{category}}', {{i}});"><span class="glyphicon glyphicon-trash"></span></a>
           </td>
         {% if len(summary) == 1 %}
           <td colspan="2">
