@@ -832,6 +832,23 @@ class TestStudy(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBStatusError):
             self.study.environmental_packages = ['air']
 
+    def test_study_tags(self):
+        # inserting new tags
+        user = qdb.user.User('test@foo.bar')
+        tags = ['this is my tag', 'I want GOLD!!']
+        qdb.study.Study.insert_tags(user, tags)
+
+        # testing that insertion went fine
+        obs = qdb.study.Study.get_tags()
+        exp = [[i + 1, tag] for i, tag in enumerate(tags)]
+        self.assertEqual(obs, exp)
+
+        # assigning the tags to study
+        study = qdb.study.Study(1)
+        study.tags = [tig for tig, tag in obs]
+        # and checking that everything went fine
+        self.assertEqual(exp, study.tags)
+
 
 if __name__ == "__main__":
     main()
