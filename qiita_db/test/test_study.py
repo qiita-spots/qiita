@@ -845,6 +845,7 @@ class TestStudy(TestCase):
 
         # assigning the tags to study
         study = qdb.study.Study(1)
+        self.assertEqual(study.tags, [])
         study.tags = [tig for tig, tag in obs]
         # and checking that everything went fine
         self.assertEqual(obs, study.tags)
