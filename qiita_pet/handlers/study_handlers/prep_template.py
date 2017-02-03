@@ -44,9 +44,11 @@ class PrepTemplateSummaryAJAX(BaseHandler):
     @authenticated
     def get(self):
         prep_id = to_int(self.get_argument('prep_id'))
+
         res = prep_template_summary_get_req(prep_id, self.current_user.id)
+
         self.render('study_ajax/prep_summary_table.html', pid=prep_id,
-                    stats=res['summary'])
+                    stats=res['summary'], editable=res['editable'])
 
 
 class PrepTemplateAJAX(BaseHandler):
@@ -54,11 +56,14 @@ class PrepTemplateAJAX(BaseHandler):
     def get(self):
         """Send formatted summary page of prep template"""
         prep_id = to_int(self.get_argument('prep_id'))
+        row_id = self.get_argument('row_id', '0')
 
         res = prep_template_ajax_get_req(self.current_user.id, prep_id)
         res['prep_id'] = prep_id
+        res['row_id'] = row_id
         # Escape the message just in case javascript breaking characters in it
         res['alert_message'] = url_escape(res['alert_message'])
+
         self.render('study_ajax/prep_summary.html', **res)
 
 

@@ -299,7 +299,8 @@ def prep_template_summary_get_req(prep_id, user_id):
         Format {'status': status,
                 'message': message,
                 'num_samples': value,
-                'category': [(val1, count1), (val2, count2), ...], ...}
+                'category': [(val1, count1), (val2, count2), ...],
+                'editable': bool}
     """
     exists = _check_prep_template_exists(int(prep_id))
     if exists['status'] != 'success':
@@ -309,17 +310,21 @@ def prep_template_summary_get_req(prep_id, user_id):
     access_error = check_access(prep.study_id, user_id)
     if access_error:
         return access_error
+
+    editable = Study(prep.study_id).can_edit(User(user_id))
     df = prep.to_dataframe()
     out = {'num_samples': df.shape[0],
-           'summary': {},
+           'summary': [],
            'status': 'success',
-           'message': ''}
+           'message': '',
+           'editable': editable}
 
-    cols = list(df.columns)
+    cols = sorted(list(df.columns))
     for column in cols:
         counts = df[column].value_counts()
-        out['summary'][str(column)] = [(str(key), counts[key])
-                                       for key in natsorted(counts.index)]
+        out['summary'].append(
+            (str(column), [(str(key), counts[key])
+                           for key in natsorted(counts.index)]))
     return out
 
 
@@ -417,10 +422,11 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
 
     Returns
     -------
-    dict of {str, str}
+    dict of {str, str, str}
         A dictionary with the following keys:
         - status: str, whether if the request is successful or not
         - message: str, if the request is unsuccessful, a human readable error
+        - row_id: str, the row_id that we tried to delete
     """
     req_path = [v for v in req_path.split('/') if v]
     if req_op == 'replace':
@@ -458,13 +464,15 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
 
         return {'status': status, 'message': msg}
     elif req_op == 'remove':
-        # The structure of the path should be /prep_id/{columns|samples}/name
-        if len(req_path) != 3:
+        # The structure of the path should be:
+        # /prep_id/row_id/{columns|samples}/name
+        if len(req_path) != 4:
             return {'status': 'error',
                     'message': 'Incorrect path parameter'}
         prep_id = int(req_path[0])
-        attribute = req_path[1]
-        attr_id = req_path[2]
+        row_id = req_path[1]
+        attribute = req_path[2]
+        attr_id = req_path[3]
 
         # Check if the user actually has access to the study
         pt = PrepTemplate(prep_id)
@@ -478,12 +486,13 @@ def prep_template_patch_req(user_id, req_op, req_path, req_value=None,
         # Store the job id attaching it to the sample template id
         r_client.set(PREP_TEMPLATE_KEY_FORMAT % prep_id,
                      dumps({'job_id': job_id, 'is_qiita_job': False}))
-        return {'status': 'success', 'message': ''}
+        return {'status': 'success', 'message': '', 'row_id': row_id}
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '
                            'Current supported operations: replace, remove'
-                           % req_op}
+                           % req_op,
+                'row_id': '0'}
 
 
 def prep_template_samples_get_req(prep_id, user_id):
