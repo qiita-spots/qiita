@@ -5,7 +5,7 @@ CREATE TABLE qiita.study_tags (
   study_tag_id bigserial NOT NULL,
   email varchar NOT NULL,
   study_tag varchar NOT NULL,
-  CONSTRAINT pk_study_tag UNIQUE ( study_tag_id ),
+  CONSTRAINT pk_study_tag UNIQUE ( study_tag ),
   CONSTRAINT pk_study_tag_id PRIMARY KEY ( study_tag_id )
 ) ;
 
