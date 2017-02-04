@@ -986,7 +986,6 @@ class Study(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             sql = """DELETE FROM qiita.per_study_tags WHERE study_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id])
-            qdb.sql_connection.TRN.execute()
 
             if tag_ids:
                 sql = """INSERT INTO qiita.per_study_tags
@@ -1000,7 +999,8 @@ class Study(qdb.base.QiitaObject):
                                 )"""
                 sql_args = [[tid, self._id, tid, self._id] for tid in tag_ids]
                 qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-            return qdb.sql_connection.TRN.execute()
+
+            qdb.sql_connection.TRN.execute()
 
 # --- methods ---
     def artifacts(self, dtype=None, artifact_type=None):
