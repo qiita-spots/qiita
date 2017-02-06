@@ -1574,14 +1574,11 @@ def generate_biom_and_metadata_release(study_status='public'):
     working_dir = qiita_config.working_dir
     portal = qiita_config.portal
     bdir = qdb.util.get_db_files_base_dir()
-    bdir_len = len(bdir) + 1
 
     data = []
     for s in studies:
         # [0] latest is first, [1] only getting the filepath
-        sample_fp = s.sample_template.get_filepaths()[0][1]
-        if sample_fp.startswith(bdir):
-            sample_fp = sample_fp[bdir_len:]
+        sample_fp = relpath(s.sample_template.get_filepaths()[0][1], bdir)
 
         for a in s.artifacts(artifact_type='BIOM'):
             if a.processing_parameters is None:
@@ -1605,16 +1602,14 @@ def generate_biom_and_metadata_release(study_status='public'):
             for _, fp, fp_type in a.filepaths:
                 if fp_type != 'biom' or 'only-16s' in fp:
                     continue
-                if fp.startswith(bdir):
-                    fp = fp[bdir_len:]
+                fp = relpath(fp, bdir)
                 # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
                 #          human readable name)
                 for pt in a.prep_templates:
                     for _, prep_fp in pt.get_filepaths():
                         if 'qiime' not in prep_fp:
                             break
-                    if prep_fp.startswith(bdir):
-                        prep_fp = prep_fp[bdir_len:]
+                    prep_fp = relpath(prep_fp, bdir)
                     data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
 
     # writing text and tgz file
