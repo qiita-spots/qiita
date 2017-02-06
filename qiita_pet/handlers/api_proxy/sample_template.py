@@ -521,13 +521,15 @@ def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
     if req_op == 'remove':
         req_path = [v for v in req_path.split('/') if v]
 
-        if len(req_path) != 3:
+        # format: study_id/row_id/column|sample/attribute_id
+        if len(req_path) != 4:
             return {'status': 'error',
                     'message': 'Incorrect path parameter'}
 
         st_id = req_path[0]
-        attribute = req_path[1]
-        attr_id = req_path[2]
+        row_id = req_path[1]
+        attribute = req_path[2]
+        attr_id = req_path[3]
 
         # Check if the user actually has access to the template
         st = SampleTemplate(st_id)
@@ -542,9 +544,10 @@ def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
         r_client.set(SAMPLE_TEMPLATE_KEY_FORMAT % st_id,
                      dumps({'job_id': job_id}))
 
-        return {'status': 'success', 'message': ''}
+        return {'status': 'success', 'message': '', 'row_id': row_id}
 
     else:
         return {'status': 'error',
                 'message': 'Operation "%s" not supported. '
-                           'Current supported operations: remove' % req_op}
+                           'Current supported operations: remove' % req_op,
+                'row_id': 0}

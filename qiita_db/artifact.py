@@ -11,7 +11,6 @@ from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
 from os import remove
-from collections import Counter
 
 import networkx as nx
 

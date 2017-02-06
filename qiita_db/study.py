@@ -464,6 +464,42 @@ class Study(qdb.base.QiitaObject):
 
             qdb.sql_connection.TRN.execute()
 
+    @classmethod
+    def get_tags(cls):
+        """Returns the available study tags
+
+        Returns
+        -------
+        list of DictCursor
+            Table-like structure of metadata, one tag per row. Can be
+            accessed as a list of dictionaries, keyed on column name.
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT study_tag_id, study_tag
+                     FROM qiita.study_tags"""
+
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchindex()
+
+    @classmethod
+    def insert_tags(cls, user, tags):
+        """Insert available study tags
+
+        Parameters
+        ----------
+        user : qiita_db.user.User
+            The user adding the tags
+        tags : list of str
+            The list of tags to add
+        """
+        with qdb.sql_connection.TRN:
+            sql = """INSERT INTO qiita.study_tags (email, study_tag)
+                     VALUES (%s, %s)"""
+            sql_args = [[user.email, tag] for tag in tags]
+
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+            qdb.sql_connection.TRN.execute()
+
 
 # --- Attributes ---
     @property
@@ -921,7 +957,52 @@ class Study(qdb.base.QiitaObject):
 
     ebi_submission_status.__doc__.format(', '.join(_VALID_EBI_STATUS))
 
-    # --- methods ---
+    @property
+    def tags(self):
+        """Returns the tags of the study
+
+        Returns
+        -------
+        list of str
+            The study tags
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT study_tag_id, study_tag
+                        FROM qiita.study_tags
+                        LEFT JOIN qiita.per_study_tags USING (study_tag_id)
+                        WHERE study_id = {0}""".format(self._id)
+            qdb.sql_connection.TRN.add(sql)
+            return qdb.sql_connection.TRN.execute_fetchindex()
+
+    @tags.setter
+    def tags(self, tag_ids):
+        """Sets the tags of the study
+
+        Parameters
+        ----------
+        tag_ids : list of int
+            The tag ids of the study
+        """
+        with qdb.sql_connection.TRN:
+            sql = """DELETE FROM qiita.per_study_tags WHERE study_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self._id])
+
+            if tag_ids:
+                sql = """INSERT INTO qiita.per_study_tags
+                            (study_tag_id, study_id)
+                         SELECT %s, %s
+                            WHERE
+                                NOT EXISTS (
+                                    SELECT study_tag_id, study_id
+                                    FROM qiita.per_study_tags
+                                    WHERE study_tag_id = %s AND study_id = %s
+                                )"""
+                sql_args = [[tid, self._id, tid, self._id] for tid in tag_ids]
+                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+
+            qdb.sql_connection.TRN.execute()
+
+# --- methods ---
     def artifacts(self, dtype=None, artifact_type=None):
         """Returns the list of artifacts associated with the study
 

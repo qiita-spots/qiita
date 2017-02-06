@@ -18,18 +18,18 @@
    * sample information
    *
    */
-  function delete_column(column_name) {
+  function delete_column(column_name, row_id) {
     if(confirm("Are you sure you want to delete '" + column_name + "' information?")) {
       $.ajax({
         url: '{% raw qiita_config.portal_dir %}/study/description/sample_template/',
         type: 'PATCH',
-        data: {'op': 'remove', 'path': '/{{study_id}}/columns/' + column_name},
+        data: {'op': 'remove', 'path': '/{{study_id}}/' + row_id + '/columns/' + column_name},
         success: function(data) {
           if(data.status == 'error') {
             bootstrapAlert(data.message, "danger");
           }
           else {
-            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_id}} });
+            populate_main_div('{% raw qiita_config.portal_dir %}/study/description/sample_template/', { study_id: {{study_id}}, row_id: row_id });
           }
         }
       });
@@ -82,6 +82,14 @@
     {% else %}
       $('#alert-message').alert('close');
     {% end %}
+
+    // taken from: http://stackoverflow.com/a/2906009
+    if ({{row_id}} > 1) {
+      var container = $("html, body"), scrollTo = $("#row_{{row_id}}");
+      container.animate({
+          scrollTop: scrollTo.offset().top - container.offset().top + container.scrollTop()
+      });
+    }
   });
 </script>
 
@@ -145,11 +153,11 @@
     </div>
 
     <table class="table">
-      {% for i, (category, summary) in enumerate(viewitems(stats)) %}
-        <tr>
+      {% for i, (category, summary) in enumerate(viewitems(stats), -1) %}
+        <tr id="row_{{i}}">
           <td>
             {% if editable %}
-              <a class="btn btn-danger" onclick="delete_column('{{category}}');"><span class="glyphicon glyphicon-trash"></span></a>
+              <a class="btn btn-danger" onclick="delete_column('{{category}}', {{i}});"><span class="glyphicon glyphicon-trash"></span></a>
             {% else %}
               &nbsp;
             {% end %}
