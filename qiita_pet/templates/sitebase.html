@@ -34,6 +34,7 @@
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap-theme.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/chosen.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/css/style.css" type="text/css">
     {% if portal_styling.custom_css %}
     <style type="text/css">
@@ -44,6 +45,8 @@
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery-ui.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/bootstrap.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/chosen.jquery.min.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.min.js" type="text/javascript"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vue.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/js/qiita.js"></script>
 
     <link rel="shortcut icon" href="{% raw qiita_config.portal_dir %}/static/img/favicon.ico">
@@ -92,6 +95,91 @@
         }
       }
 
+      /*
+       * Remove a job from the workflow
+       *
+       * @param job_id str The id of the job to be removed
+       *
+       * This function executes an AJAX call to remove the given job from the
+       * current workflow and updates the graph accordingly
+       *
+       */
+      function remove_job(job_id, workflow_id = undefined) {
+        var update_graph = false;
+        if (workflow_id === undefined) {
+          workflow_id = $("#graph-network-div").attr("data-wf-id");
+          update_graph = true;
+        }
+        if(confirm("Are you sure you want to delete the job " + job_id + "? All jobs depending on this job will also be removed.")) {
+          $.ajax({
+            url: '{% raw qiita_config.portal_dir %}/study/process/workflow/',
+            type: 'PATCH',
+            data: {'op': 'remove', 'path': '/' + workflow_id + '/' + job_id},
+            success: function(data) {
+              if(data.status == 'error') {
+                bootstrapAlert(data.message, "danger");
+              }
+              else {
+                if (update_graph) {
+                  remove_job_node_from_graph(job_id);
+                  var job_count = nodes.get({filter: function(item) {
+                    return item.group == "job";
+                  }}).length;
+                  $("#graph-network-div").attr("data-wf-job-count", job_count);
+                  if (job_count == 0) {
+                    $('#run-btn').prop('disabled', true);
+                  }
+                  $("#processing-info-div").empty();
+                } else {
+                  processing_jobs_vue.update_processing_job_data();
+                  bootstrapAlert("Job deleted", "success", 10000);
+                }
+              }
+            }
+          });
+        }
+      }
+
+      /*
+       * Remove a job node from the network visualization
+       *
+       * @param job_id str The id of the job
+       *
+       * This function removes the given job and its children from the
+       * network visualization
+       *
+       */
+      function remove_job_node_from_graph(job_id) {
+        var queue = [job_id];
+        var edge_list = edges.get();
+        var current;
+        var edge;
+        while(queue.length !== 0) {
+          current = queue.pop();
+          for(var i in edge_list) {
+            edge = edge_list[i];
+            if(edge.from == current) {
+              if($.inArray(edge.to, queue) == -1) {
+                queue.push(edge.to);
+              }
+              edges.remove(edge.id);
+            }
+          }
+          nodes.remove(current);
+        }
+        var edges_to_remove = edges.get(
+          {filter: function(item) {
+            return item.to == job_id;
+          }});
+        var edge_ids = [];
+        $(edges_to_remove).each(function(i){
+          edge_ids.push(edges_to_remove[i].id);
+        });
+
+        edges.remove(edge_ids);
+        processing_network.redraw();
+      }
+
       $(document).ready(function() {
         $.getJSON("{% raw qiita_config.portal_dir %}/analysis/dflt/sumary/", function(result) {
             if(parseInt(result.studies) > 0) {
@@ -119,199 +207,367 @@
             }
           });
         });
+
+        // Based on http://codepen.io/willvincent/pen/LbeKKW
+        //    and   https://datatables.net/examples/api/row_details.html
+
+        Vue.component('data-table-processing-jobs', {
+        template: '<table id="processing-jobs-datatables"></table>',
+        props: ['jobs'],
+        data() {
+          return {
+            headers: [
+              { "className": 'more-info-processing-jobs',
+                "orderable": false,
+                "data": null,
+                "defaultContent": ''},
+              { title: 'Heartbeat' },
+              { title: 'Name' },
+              { title: 'Status' },
+              { title: 'Step' }
+            ],
+            rows: [] ,
+            dtHandle: null
+          }
+        },
+        watch: {
+          jobs(val, oldVal) {
+            let vm = this;
+
+            if (JSON.stringify(val) !== JSON.stringify(oldVal)) {
+              vm.rows = [];
+              val.forEach(function (item) {
+                // Fish out the specific column data for each item in your data set and push it to the appropriate place.
+                // Basically we're just building a multi-dimensional array here. If the data is _already_ in the right format you could
+                // skip this loop...
+                let row = [];
+                row.push('')
+                row.push(item.heartbeat);
+                row.push(item.name);
+                row.push(item.status);
+                row.push(item.step);
+                row.push(item.id);
+
+                let params = "";
+                for (k in item.params) {
+                  params += '<b>' + k + '</b>: ' + item.params[k] + '<br/>';
+                }
+                row.push(params)
+                row.push(item.processing_job_workflow_id)
+                vm.rows.push(row);
+              });
+
+              // Here's the magic to keeping the DataTable in sync.
+              // It must be cleared, new rows added, then redrawn!
+              vm.dtHandle.clear();
+              vm.dtHandle.rows.add(vm.rows);
+              vm.dtHandle.draw();
+            }
+          }
+        },
+        mounted() {
+          let vm = this;
+          // Instantiate the datatable and store the reference to the instance in our dtHandle element.
+          vm.dtHandle = $(this.$el).DataTable({
+            // Specify whatever options you want, at a minimum these:
+            columns: vm.headers,
+            data: vm.rows,
+            searching: false,
+            paging: false,
+            info: false,
+            order: [[1, 'desc']]
+          });
+
+          $('#processing-jobs-datatables').on('click', 'td.more-info-processing-jobs', function () {
+            var tr = $(this).closest('tr');
+            var row = vm.dtHandle.row( tr );
+
+            if ( row.child.isShown() ) {
+              // This row is already open - close it
+              row.child.hide();
+              tr.removeClass('shown');
+            }
+            else {
+              // Open this row
+              row.child( format_extra_info_processing_jobs(row.data()) ).show();
+              tr.addClass('shown');
+            }
+          });
+        }
       });
-      </script>
+
+      // this has to be global so we can update when we click on the processing
+      // jobs button
+      processing_jobs_vue = new Vue({
+        el: '#processing-jobs-table',
+        data: {
+          jobs: [],
+          search: ''
+        },
+        computed: {
+          filteredJobs() {
+            let jobs = this.jobs;
+            return this.$options.filters.filterBy(jobs, this.search);
+          }
+        },
+        filters: {
+          filterBy: function (list, value) {
+            if (value === "") {
+              return list
+            }
+            value = value.toLowerCase()
+            return list.filter(function(item) {
+              for (var k in item) {
+                if (item[k] != null && item[k].toString().toLowerCase().indexOf(value) > -1) {
+                  return true
+                }
+              }
+              return false;
+            });
+          }
+        },
+        methods: {
+          update_processing_job_data: function () {
+            let vm = this;
+            $.ajax({
+              url: "{% raw qiita_config.portal_dir %}/user/jobs/",
+              success(response) {
+                if (typeof response.jobs === 'undefined' || response.status !== 'success') {
+                  vm.jobs = []
+                } else {
+                  vm.jobs = response.jobs;
+                }
+              }
+            });
+          }
+        },
+        mounted() {
+          let vm = this;
+          setInterval(function (){
+            // the div is hidden
+            if ($("#qiita-main").width() != $("#qiita-main").parent().width()) {
+              vm.update_processing_job_data();
+            }
+          }, 30000);
+        }
+      });
+    });
+
+    </script>
     {% block head %}{% end %}
   </head>
 
   <body style="padding-top: 0px; height: 100%" onload='overlay_check();'>
-    <div id="navigation-bar" class="navbar navbar-inverse navbar-static-top navbar-custom" role="navigation">
-      <div class="container">
-        <div class="navbar-header">
-          <!-- button that appears if the window is re-sized to a smaller size -->
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-        </div>
 
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            <li>
-              <!-- qiita logo -->
-              <a class="navbar-brand" rel="home" href="{% raw qiita_config.portal_dir %}/" title="{{portal_styling.title}}">
-                <img style="max-width:100px; margin-top: -7px;" src="{% raw qiita_config.portal_dir %}{{portal_styling.logo}}">
-              </a>
-            </li>
-            <!-- analysis menu -->
-            {% if user %}
-            <li class="dropdown">
-              <a href="#" data-toggle="dropdown" class="dropdown-toggle" id="analysis-drop-down">Analysis<b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li><a href="{% raw qiita_config.portal_dir %}/study/list/">Create new analysis</a>
-                <li id="selected_samples_menu"><a id="selected_samples_link" href="{% raw qiita_config.portal_dir %}/analysis/selected/">Create From Selected Samples</a></li>
-                <li><a href="{% raw qiita_config.portal_dir %}/analysis/show/">See Previous Analyses</a></li>
-              </ul>
-            </li>
-            <li class="dropdown">
-              <a href="#" data-toggle="dropdown" class="dropdown-toggle">Study<b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li><a href="{% raw qiita_config.portal_dir %}/study/create/">Create Study</a></li>
-                <li><a href="{% raw qiita_config.portal_dir %}/study/list/">View Studies</a></li>
-              </ul>
-            </li>
-              {% set user_level = user.level %}
-              {% if user_level == 'admin' %}
-            <li class="dropdown">
-              <a href="#" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                {% if qiita_config.portal == "QIITA" %}
-                <li><a href="{% raw qiita_config.portal_dir %}/admin/error/">View Errors</a></li>
-                <li><a href="{% raw qiita_config.portal_dir %}/admin/approval/">View Studies awaiting approval</a></li>
-                <li><a href="{% raw qiita_config.portal_dir %}/admin/portals/studies/">Edit study portal connections</a></li>
-                {% else %}
-                <li><a href="/">Admin tasks can only be done in the main Qiita portal</a></li>
-                {% end %}
-              </ul>
-            </li>
-              {% elif user_level == 'dev' %}
-            <li class="dropdown">
-              <a href="#" data-toggle="dropdown" class="dropdown-toggle">Dev<b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li><a href="{% raw qiita_config.portal_dir %}/admin/error/">View Errors</a></li>
-              </ul>
-            </li>
-              {% end %}
-            {% end %}
-          </ul>
-          <!-- show user name and logout button if there's a user logged in -->
-          {% if user %}
-          <ul class="nav navbar-nav navbar-right">
-            <li>
-              <a href="{% raw qiita_config.portal_dir %}/profile/">Welcome {{user.id}}</a>
-            </li>
-            <li>
-              <a href="{% raw qiita_config.portal_dir %}/auth/logout/">Log Out</a>
-            </li>
-            <li class="dropdown">
-              {% set user_messages = current_user.messages(5) %}
-              {% set unread =  len(current_user.unread_messages) %}
-              <a href="{% raw qiita_config.portal_dir %}/user/messages/"><span class="glyphicon glyphicon-envelope"></span> {% if unread > 0 %}<span style="color:red">({{unread}})</span>{% end %}</a>
-              <ul class="dropdown-menu info-menu" style="padding: 5px">
-              {% if user_messages %}
-                {% for _, um, ts, read, _ in user_messages %}
-                  <li class="truncated" {% if read %}style="color:gray;"{% end %}>{%raw um %}<br /><span style="font-size:60%;{% if read %}color:gray;{% end %}">{{ts}}</span></li>
-                {% end %}
-              {% else %}
-                <li>You have no messages</li>
-              {% end %}
-              </ul>
-            </li>
-            <li class="dropdown">
-              <a href="{% raw qiita_config.portal_dir %}/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span></a>
-              <ul class="dropdown-menu" style="padding: 5px">
-                <li> <span id="dflt-study-count"></span> Studies</li>
-                <li><span id="dflt-pd-count"></span> Processed Data</li>
-                <li><span id="dflt-samp-count"></span> Samples</li>
-              </ul>
-            </li>
-          </ul>
-          <!-- otherwise show the login form -->
-          {% elif  maintenance is None %}
-          <ul class="nav navbar-nav">
-            <li>
-              <a href="{% raw qiita_config.portal_dir %}/auth/forgot/">Forgot Password</a>
-            </li>
-          </ul>
-          <form action="{% raw qiita_config.portal_dir %}/auth/create/" class="navbar-form navbar-right">
-            <input type="submit" value="Sign up" class="btn btn-info">
-          </form>
-          <form class="navbar-form navbar-right" role="form" action="{% raw qiita_config.portal_dir %}/auth/login/" method="post">
-            <div class="form-group">
-              <input tabindex="1" type="text" id="username" name="username" placeholder="Email" class="form-control">
-            </div>
-            <div class="form-group">
-              <input tabindex="2" type="password" id="password" name="password" placeholder="Password" class="form-control">
-            </div>
-            <button tabindex="3" type="submit" class="btn btn-success">Sign in</button>
-          </form>
-          {% end %}
-          <ul class="nav navbar-nav">
-            <!-- generic elements -->
-            <li class="dropdown">
-              <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li>
-                  <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
-                </li>
-                <li>
-                  <a href="{% raw qiita_config.portal_dir %}/stats/">Stats</a>
-                </li>
-                <li>
-                  <a href="http://github.com/biocore/qiita">GitHub</a>
-                </li>
-                <li role="separator" class="divider"></li>
-                <li>
-                  {% if qiita_sha=="" %}
-                    <a href="#">
+    <div id="qiita-main" class="qiita-main">
+      <div id="navigation-bar" class="navbar navbar-inverse navbar-static-top navbar-custom" role="navigation">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <!-- button that appears if the window is re-sized to a smaller size -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+
+          <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li>
+                <!-- qiita logo -->
+                <a class="navbar-brand" rel="home" href="{% raw qiita_config.portal_dir %}/" title="{{portal_styling.title}}">
+                  <img style="max-width:100px; margin-top: -7px;" src="{% raw qiita_config.portal_dir %}{{portal_styling.logo}}">
+                </a>
+              </li>
+              <!-- analysis menu -->
+              {% if user %}
+              <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle" id="analysis-drop-down">Analysis<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% raw qiita_config.portal_dir %}/study/list/">Create new analysis</a>
+                  <li id="selected_samples_menu"><a id="selected_samples_link" href="{% raw qiita_config.portal_dir %}/analysis/selected/">Create From Selected Samples</a></li>
+                  <li><a href="{% raw qiita_config.portal_dir %}/analysis/show/">See Previous Analyses</a></li>
+                </ul>
+              </li>
+              <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Study<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% raw qiita_config.portal_dir %}/study/create/">Create Study</a></li>
+                  <li><a href="{% raw qiita_config.portal_dir %}/study/list/">View Studies</a></li>
+                </ul>
+              </li>
+                {% set user_level = user.level %}
+                {% if user_level == 'admin' %}
+              <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Admin<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  {% if qiita_config.portal == "QIITA" %}
+                  <li><a href="{% raw qiita_config.portal_dir %}/admin/error/">View Errors</a></li>
+                  <li><a href="{% raw qiita_config.portal_dir %}/admin/approval/">View Studies awaiting approval</a></li>
+                  <li><a href="{% raw qiita_config.portal_dir %}/admin/portals/studies/">Edit study portal connections</a></li>
                   {% else %}
-                    <a href="https://github.com/biocore/qiita/commit/{{qiita_sha}}">
+                  <li><a href="/">Admin tasks can only be done in the main Qiita portal</a></li>
                   {% end %}
-                    <h6>
-                      <b>Current version:</b></br>
-                      {{qiita_version}} {{qiita_sha[0:7]}}
-                    </h6>
-                  </a>
-                </li>
+                </ul>
+              </li>
+                {% elif user_level == 'dev' %}
+              <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Dev<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href="{% raw qiita_config.portal_dir %}/admin/error/">View Errors</a></li>
+                </ul>
+              </li>
+                {% end %}
+              {% end %}
+            </ul>
+            <!-- show user name and logout button if there's a user logged in -->
+            {% if user %}
+            <ul class="nav navbar-nav navbar-right">
+              <li>
+                <a href="{% raw qiita_config.portal_dir %}/profile/">Welcome {{user.id}}</a>
+              </li>
+              <li>
+                <a href="{% raw qiita_config.portal_dir %}/auth/logout/">Log Out</a>
+              </li>
+              <li class="dropdown">
+                {% set user_messages = current_user.messages(5) %}
+                {% set unread =  len(current_user.unread_messages) %}
+                <a href="{% raw qiita_config.portal_dir %}/user/messages/"><span class="glyphicon glyphicon-envelope"></span> {% if unread > 0 %}<span style="color:red">({{unread}})</span>{% end %}</a>
+                <ul class="dropdown-menu info-menu" style="padding: 5px">
+                {% if user_messages %}
+                  {% for _, um, ts, read, _ in user_messages %}
+                    <li class="truncated" {% if read %}style="color:gray;"{% end %}>{%raw um %}<br /><span style="font-size:60%;{% if read %}color:gray;{% end %}">{{ts}}</span></li>
+                  {% end %}
+                {% else %}
+                  <li>You have no messages</li>
+                {% end %}
+                </ul>
+              </li>
+              <li class="dropdown">
+                <a href="{% raw qiita_config.portal_dir %}/analysis/selected/" id="dflt-sel-info"><span class="glyphicon glyphicon-list-alt"></span></a>
+                <ul class="dropdown-menu" style="padding: 5px">
+                  <li> <span id="dflt-study-count"></span> Studies</li>
+                  <li><span id="dflt-pd-count"></span> Processed Data</li>
+                  <li><span id="dflt-samp-count"></span> Samples</li>
+                </ul>
+              </li>
+              <li class="dropdown">
+                <a href="#" onClick="show_hide_process_list()" id="dflt-sel-info"><span class="glyphicon glyphicon-tasks"></span></a>
+              </li>
+            </ul>
+            <!-- otherwise show the login form -->
+            {% elif  maintenance is None %}
+            <ul class="nav navbar-nav">
+              <li>
+                <a href="{% raw qiita_config.portal_dir %}/auth/forgot/">Forgot Password</a>
+              </li>
+            </ul>
+            <form action="{% raw qiita_config.portal_dir %}/auth/create/" class="navbar-form navbar-right">
+              <input type="submit" value="Sign up" class="btn btn-info">
+            </form>
+            <form class="navbar-form navbar-right" role="form" action="{% raw qiita_config.portal_dir %}/auth/login/" method="post">
+              <div class="form-group">
+                <input tabindex="1" type="text" id="username" name="username" placeholder="Email" class="form-control">
+              </div>
+              <div class="form-group">
+                <input tabindex="2" type="password" id="password" name="password" placeholder="Password" class="form-control">
+              </div>
+              <button tabindex="3" type="submit" class="btn btn-success">Sign in</button>
+            </form>
+            {% end %}
+            <ul class="nav navbar-nav">
+              <!-- generic elements -->
+              <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
+                  </li>
+                  <li>
+                    <a href="{% raw qiita_config.portal_dir %}/stats/">Stats</a>
+                  </li>
+                  <li>
+                    <a href="http://github.com/biocore/qiita">GitHub</a>
+                  </li>
+                  <li role="separator" class="divider"></li>
+                  <li>
+                    {% if qiita_sha=="" %}
+                      <a href="#">
+                    {% else %}
+                      <a href="https://github.com/biocore/qiita/commit/{{qiita_sha}}">
+                    {% end %}
+                      <h6>
+                        <b>Current version:</b></br>
+                        {{qiita_version}} {{qiita_sha[0:7]}}
+                      </h6>
+                    </a>
+                  </li>
 
-              </ul>
-            </li>
-          </ul>
-          <ul class="nav navbar-nav">
-            <li>
-              <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
-            </li>
-          </ul>
-        </div><!--/.navbar-collapse -->
+                </ul>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <li>
+                <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
+              </li>
+            </ul>
+          </div> <!--/.navbar-collapse -->
+        </div>
+      </div> <!--/.main nav-bar -->
+
+      {% if message != '' %}
+          {% if level not in {'danger', 'success', 'info', 'warning'} %}
+              {% set level = 'info' %}
+          {% end %}
+          <div class="alert alert-{{ level }} alert-dismissable">
+            <a href="#" class="close" data-dismiss="alert">&times;</a>
+            <p align="center">
+              {% raw message %}
+            </p>
+          </div>
+      {% end %}
+
+      <!-- all templates should override this portion to present their main content -->
+      <div id="template-content" class="container-fluid" style="width:97%">
+        {% block content %}{% end %}
       </div>
     </div> <!--/.main nav-bar -->
 
-    {% if message != '' %}
-      <div class="alert alert-{{ level }} alert-dismissable" id="main-alert-window">
-        <a href="#" class="close" data-dismiss="alert">&times;</a>
-        <p align="center">
-          {% raw message %}
-        </p>
+      <div id="footer" style="font-size: 12px; text-align: center; z-index: 1000;">
+        Thank you for using Qiita. For citations point to <a href="http://qiita.microbio.me">http://qiita.microbio.me</a>.
+        <br/>
+        Questions? <a href="mailto:qiita.help@gmail.com">qiita.help@gmail.com</a>
+        <br/>
+        Read our <a href="{% raw qiita_config.portal_dir %}/static/qiita_data_terms_of_use.html">terms and conditions</a>.
       </div>
-    {% end %}
-
-    <!-- all templates should override this portion to present their main content -->
-    <div id="template-content" class="container" style="width:99%">
-      {% block content %}{% end %}
+      <div id="overlay" class="navbar-brand" style="visibility: hidden; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; font-size: 13px; text-align: center; z-index: 1000; background-color: #333333; color: #FFFFFF;">
+          <img src="{% raw qiita_config.portal_dir %}{{portal_styling.logo}}" alt="Qiita logo" id="small-logo"/>
+          <h1>This site only works with the following browsers</h1>
+          <p id="explanation"><strong>Chrome >= {{allowed_min_browser_versions['chrome']}}:</strong> You can download Chrome from <a href="https://www.google.com/chrome/browser/">here</a> or you can find instructions on how to update it <a href="https://support.google.com/chrome/answer/95414?hl=en">here</a></p>
+          {% if 'safari' in allowed_min_browser_versions %}
+            <p id="explanation"><strong>Safari >= {{allowed_min_browser_versions['safari']}}:</strong> You can update Safari following <a href="http://support.apple.com/en-us/HT6104">these</a> instructions.</p>
+          {% end %}
+          {% if 'firefox' in allowed_min_browser_versions %}
+            <p id="explanation"><strong>Firefox >= {{allowed_min_browser_versions['firefox']}}:</strong> For instructions on how to install or update Firefox go <a href="https://support.mozilla.org/en-US/kb/update-firefox-latest-version">here.</a></p>
+          {% end %}
+          {% if 'IE' in allowed_min_browser_versions %}
+            <p id="explanation"><strong>Internet Explorer >= {{allowed_min_browser_versions['IE']}}:</strong> For instructions on how to update IE go <a href="http://windows.microsoft.com/en-us/internet-explorer">here.</a></p>
+          {% end %}
+      </div>
     </div>
 
-    <div id="footer" style="font-size: 12px; text-align: center; z-index: 1000;">
-      Thank you for using Qiita. For citations point to <a href="http://qiita.microbio.me">http://qiita.microbio.me</a>.
-      <br/>
-      Questions? <a href="mailto:qiita.help@gmail.com">qiita.help@gmail.com</a>
-      <br/>
-      Read our <a href="{% raw qiita_config.portal_dir %}/static/qiita_data_terms_of_use.html">terms and conditions</a>.
+    <div id="qiita-processing" class="pre-scrollable" style="max-height: 100%">
+      <div id="processing-jobs-table" style="padding: 5px 5px;">
+        <h3>
+            Processing Jobs <br/>
+            <small>(skipping successful jobs)</small>
+        </h3>
+        Search: <input v-model="search">
+        <hr>
+        <data-table-processing-jobs :jobs="filteredJobs"></data-table-processing-jobs>
+      </div>
     </div>
-    <div id="overlay" class="navbar-brand" style="visibility: hidden; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; font-size: 13px; text-align: center; z-index: 1000; background-color: #333333; color: #FFFFFF;">
-        <img src="{% raw qiita_config.portal_dir %}{{portal_styling.logo}}" alt="Qiita logo" id="small-logo"/>
-        <h1>This site only works with the following browsers</h1>
-        <p id="explanation"><strong>Chrome >= {{allowed_min_browser_versions['chrome']}}:</strong> You can download Chrome from <a href="https://www.google.com/chrome/browser/">here</a> or you can find instructions on how to update it <a href="https://support.google.com/chrome/answer/95414?hl=en">here</a></p>
-        {% if 'safari' in allowed_min_browser_versions %}
-          <p id="explanation"><strong>Safari >= {{allowed_min_browser_versions['safari']}}:</strong> You can update Safari following <a href="http://support.apple.com/en-us/HT6104">these</a> instructions.</p>
-        {% end %}
-        {% if 'firefox' in allowed_min_browser_versions %}
-          <p id="explanation"><strong>Firefox >= {{allowed_min_browser_versions['firefox']}}:</strong> For instructions on how to install or update Firefox go <a href="https://support.mozilla.org/en-US/kb/update-firefox-latest-version">here.</a></p>
-        {% end %}
-        {% if 'IE' in allowed_min_browser_versions %}
-          <p id="explanation"><strong>Internet Explorer >= {{allowed_min_browser_versions['IE']}}:</strong> For instructions on how to update IE go <a href="http://windows.microsoft.com/en-us/internet-explorer">here.</a></p>
-        {% end %}
-    </div>
+
   </body>
 </html>

@@ -420,6 +420,15 @@ class Artifact(qdb.base.QiitaObject):
                 sql_args = [(instance.id, p.id) for p in parents]
                 qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
+                # inheriting visibility
+                visibilities = {a.visibility for a in instance.parents}
+                # set based on the "lowest" visibility
+                if 'sandbox' in visibilities:
+                    instance.visibility = 'sandbox'
+                elif 'private' in visibilities:
+                    instance.visibility = 'private'
+                else:
+                    instance.visibility = 'public'
             elif prep_template:
                 # This artifact is uploaded by the user in the
                 # processing pipeline

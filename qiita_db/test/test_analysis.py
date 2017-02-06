@@ -1,14 +1,9 @@
 from unittest import TestCase, main
-from tempfile import mkstemp
-from os import remove, close
+from os import remove
 from os.path import exists, join, basename
 from shutil import move
-from time import sleep
-from datetime import datetime
 
-from future.utils import viewitems
 from biom import load_table
-import pandas as pd
 from pandas.util.testing import assert_frame_equal
 from functools import partial
 import numpy.testing as npt

@@ -359,7 +359,10 @@ class SoftwareTests(TestCase):
     def test_commands(self):
         exp = [qdb.software.Command(1), qdb.software.Command(2),
                qdb.software.Command(3)]
-        self.assertEqual(qdb.software.Software(1).commands, exp)
+        obs = qdb.software.Software(1).commands
+        self.assertEqual(len(obs), 7)
+        for e in exp:
+            self.assertIn(e, obs)
 
     def test_get_command(self):
         s = qdb.software.Software(1)

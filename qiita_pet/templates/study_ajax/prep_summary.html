@@ -181,18 +181,18 @@
    * prep information
    *
    */
-  function delete_prep_column(prep_id, column_name) {
+  function delete_prep_column(prep_id, column_name, row_id) {
     if(confirm("Are you sure you want to delete '" + column_name + "' information?")) {
       $.ajax({
         url: '{% raw qiita_config.portal_dir %}/prep_template/',
         type: 'PATCH',
-        data: {'op': 'remove', 'path': '/' + prep_id + '/columns/' + column_name},
+        data: {'op': 'remove', 'path': '/' + prep_id + '/' + row_id + '/columns/' + column_name},
         success: function(data) {
           if(data.status == 'error') {
             bootstrapAlert(data.message, "danger");
           }
           else {
-            populate_main_div('/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}} });
+            populate_main_div('/study/description/prep_template/', { prep_id: prep_id, study_id: {{study_id}}, row_id: row_id });
           }
         }
       });
@@ -243,6 +243,7 @@
             "<div class='col-md-12'>" +
               "<h4><a class='btn btn-info' id='show-hide-btn' onclick='toggle_graphs();'>-</a><i> Files network</i></h4>" +
               "<b>(Click nodes for more information, blue are jobs)</b>" +
+              "<br/>Check our data <a target='_blank' href='{% raw qiita_config.portal_dir %}/static/doc/html/processing-recommendations.html' onclick='return !window.open(this.href, \"Qiita processing recommendations\", \"width=800,height=500\")'>processing recommendations</a>." +
             "</div>" +
           "</div>" +
           "<div class='row'><div class='col-md-12 graph' style='width:90%' id='graph-network-div'>" +
@@ -328,6 +329,22 @@
     }
   }
 
+  /*
+   * Autoscroll prep info list
+   *
+   * This is a helper function so we can scroll once the prep table is ready
+   */
+  function autoscroll_prep_list() {
+    // taken from: http://stackoverflow.com/a/2906009
+    if ({{row_id}} > 1) {
+      var container = $("html, body"), scrollTo = $("#row_{{row_id}}");
+
+      container.animate({
+          scrollTop: scrollTo.offset().top - container.offset().top + container.scrollTop()
+      });
+    }
+  }
+
   $(document).ready(function () {
     if("{{investigation_type}}" !== "None") {
       // The prep information already has an investigation type
@@ -401,6 +418,8 @@
     {% else %}
       $('#alert-message').alert('close');
     {% end %}
+
+
   });
 </script>
 

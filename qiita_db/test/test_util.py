@@ -8,12 +8,13 @@
 
 from unittest import TestCase, main
 from tempfile import mkstemp
-from os import close, remove, makedirs
+from os import close, remove, makedirs, mkdir
 from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
 from functools import partial
 from string import punctuation
+from tarfile import open as topen
 
 import pandas as pd
 
@@ -370,6 +371,20 @@ class DBUtilTests(TestCase):
     def test_purge_filepaths(self):
         self._common_purge_filpeaths_test()
 
+    def test_empty_trash_upload_folder(self):
+        # creating file to delete so we know it actually works
+        study_id = '1'
+        uploads_fp = join(qdb.util.get_mountpoint("uploads")[0][1], study_id)
+        trash = join(uploads_fp, 'trash')
+        if not exists(trash):
+            mkdir(trash)
+        fp = join(trash, 'my_file_to_delete.txt')
+        open(fp, 'w').close()
+
+        self.assertTrue(exists(fp))
+        qdb.util.empty_trash_upload_folder()
+        self.assertFalse(exists(fp))
+
     def test_purge_filepaths_null_cols(self):
         # For more details about the source of the issue that motivates this
         # test: http://www.depesz.com/2008/08/13/nulls-vs-not-in/
@@ -725,6 +740,42 @@ class DBUtilTests(TestCase):
         obs = qdb.util.supported_filepath_types("BIOM")
         exp = [["biom", True], ["directory", False], ["log", False]]
         self.assertItemsEqual(obs, exp)
+
+    def test_generate_biom_and_metadata_release(self):
+        tgz, txt = qdb.util.generate_biom_and_metadata_release('private')
+        self.files_to_remove.extend([tgz, txt])
+
+        tmp = topen(tgz, "r:gz")
+        tgz_obs = [ti.name for ti in tmp]
+        tmp.close()
+        tgz_exp = [
+            'processed_data/1_study_1001_closed_reference_otu_table.biom',
+            'templates/1_19700101-000000.txt',
+            'templates/1_prep_1_19700101-000000.txt',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom',
+            'templates/1_19700101-000000.txt',
+            'templates/1_prep_1_19700101-000000.txt',
+            'processed_data/1_study_1001_closed_reference_otu_table_'
+            'Silva.biom', 'templates/1_19700101-000000.txt',
+            'templates/1_prep_1_19700101-000000.txt']
+        self.assertEqual(tgz_obs, tgz_exp)
+
+        tmp = open(txt)
+        txt_obs = tmp.readlines()
+        tmp.close()
+        txt_exp = [
+            'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
+            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
+            '.txt\t4\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
+            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
+            '.txt\t5\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
+            'm\ttemplates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-'
+            '000000.txt\t6\tPick closed-reference OTUs, Split libraries '
+            'FASTQ\n']
+        self.assertEqual(txt_obs, txt_exp)
 
 
 @qiita_test_checker()

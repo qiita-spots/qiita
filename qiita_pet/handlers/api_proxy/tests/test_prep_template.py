@@ -206,40 +206,9 @@ class TestPrepAPIReadOnly(TestCase):
 
     def test_prep_template_summary_get_req(self):
         obs = prep_template_summary_get_req(1, 'test@foo.bar')
-        exp = {'summary': {
-            'experiment_center': [('ANL', 27)],
-            'center_name': [('ANL', 27)],
-            'run_center': [('ANL', 27)],
-            'run_prefix': [('s_G1_L001_sequences', 27)],
-            'primer': [('GTGCCAGCMGCCGCGGTAA', 27)],
-            'target_gene': [('16S rRNA', 27)],
-            'sequencing_meth': [('Sequencing by synthesis', 27)],
-            'run_date': [('8/1/12', 27)],
-            'platform': [('Illumina', 27)],
-            'pcr_primers': [('FWD:GTGCCAGCMGCCGCGGTAA; '
-                             'REV:GGACTACHVGGGTWTCTAAT', 27)],
-            'library_construction_protocol': [(
-                'This analysis was done as in Caporaso et al 2011 Genome '
-                'research. The PCR primers (F515/R806) were developed against '
-                'the V4 region of the 16S rRNA (both bacteria and archaea), '
-                'which we determined would yield optimal community clustering '
-                'with reads of this length using a procedure similar to that '
-                'of ref. 15. [For reference, this primer pair amplifies the '
-                'region 533_786 in the Escherichia coli strain 83972 sequence '
-                '(greengenes accession no. prokMSA_id:470367).] The reverse '
-                'PCR primer is barcoded with a 12-base error-correcting Golay '
-                'code to facilitate multiplexing of up to 1,500 samples per '
-                'lane, and both PCR primers contain sequencer adapter '
-                'regions.', 27)],
-            'experiment_design_description': [(
-                'micro biome of soil and rhizosphere of cannabis plants from '
-                'CA', 27)],
-            'study_center': [('CCME', 27)],
-            'center_project_name': [],
-            'sample_center': [('ANL', 27)],
-            'samp_size': [('.25,g', 27)],
-            'qiita_prep_id': [('1', 27)],
-            'barcode': [
+        exp = {
+            'status': 'success', 'message': '',
+            'summary': [('barcode', [
                 ('AACTCCTGTGGA', 1), ('ACCTCAGTCAAG', 1), ('ACGCACATACAA', 1),
                 ('AGCAGGCACGAA', 1), ('AGCGCTCACATC', 1), ('ATATCGCGATGA', 1),
                 ('ATGGCCTGACTA', 1), ('CATACACGCACC', 1), ('CCACCCAGTAAC', 1),
@@ -248,15 +217,44 @@ class TestPrepAPIReadOnly(TestCase):
                 ('CGTAGAGCTCTC', 1), ('CGTGCACAATTG', 1), ('GATAGCACTCGT', 1),
                 ('GCGGACTATTCA', 1), ('GTCCGCAAGTTA', 1), ('TAATGGTCGTAG', 1),
                 ('TAGCGCGAACTT', 1), ('TCGACCAAACAC', 1), ('TGAGTGGTCTGT', 1),
-                ('TGCTACAGACGT', 1), ('TGGTTATGGCAC', 1), ('TTGCACCGTCGA', 1)],
-            'emp_status': [('EMP', 27)],
-            'illumina_technology': [('MiSeq', 27)],
-            'experiment_title': [('Cannabis Soil Microbiome', 27)],
-            'target_subfragment': [('V4', 27)],
-            'instrument_model': [('Illumina MiSeq', 27)]},
-            'num_samples': 27,
-            'status': 'success',
-            'message': ''}
+                ('TGCTACAGACGT', 1), ('TGGTTATGGCAC', 1), ('TTGCACCGTCGA', 1)
+            ]), ('center_name', [('ANL', 27)]), ('center_project_name', []),
+                ('emp_status', [('EMP', 27)]),
+                ('experiment_center', [('ANL', 27)]),
+                ('experiment_design_description', [
+                    ('micro biome of soil and rhizosphere of cannabis plants '
+                     'from CA', 27)]),
+                ('experiment_title', [('Cannabis Soil Microbiome', 27)]),
+                ('illumina_technology', [('MiSeq', 27)]),
+                ('instrument_model', [('Illumina MiSeq', 27)]),
+                ('library_construction_protocol', [
+                    ('This analysis was done as in Caporaso et al 2011 Genome '
+                     'research. The PCR primers (F515/R806) were developed '
+                     'against the V4 region of the 16S rRNA (both bacteria '
+                     'and archaea), which we determined would yield optimal '
+                     'community clustering with reads of this length using a '
+                     'procedure similar to that of ref. 15. [For reference, '
+                     'this primer pair amplifies the region 533_786 in the '
+                     'Escherichia coli strain 83972 sequence (greengenes '
+                     'accession no. prokMSA_id:470367).] The reverse PCR '
+                     'primer is barcoded with a 12-base error-correcting '
+                     'Golay code to facilitate multiplexing of up to 1,500 '
+                     'samples per lane, and both PCR primers contain '
+                     'sequencer adapter regions.', 27)]),
+                ('pcr_primers', [(
+                    'FWD:GTGCCAGCMGCCGCGGTAA; REV:GGACTACHVGGGTWTCTAAT', 27)]),
+                ('platform', [('Illumina', 27)]),
+                ('primer', [('GTGCCAGCMGCCGCGGTAA', 27)]),
+                ('qiita_prep_id', [('1', 27)]), ('run_center', [('ANL', 27)]),
+                ('run_date', [('8/1/12', 27)]),
+                ('run_prefix', [('s_G1_L001_sequences', 27)]),
+                ('samp_size', [('.25,g', 27)]),
+                ('sample_center', [('ANL', 27)]),
+                ('sequencing_meth', [('Sequencing by synthesis', 27)]),
+                ('study_center', [('CCME', 27)]),
+                ('target_gene', [('16S rRNA', 27)]),
+                ('target_subfragment', [('V4', 27)])],
+            'editable': True, 'num_samples': 27}
         self.assertEqual(obs, exp)
 
     def test_prep_template_summary_get_req_no_access(self):
@@ -476,8 +474,8 @@ class TestPrepAPI(TestCase):
         # Delete a prep template column
         obs = prep_template_patch_req(
             'test@foo.bar', 'remove',
-            '/%s/columns/target_subfragment/' % pt.id)
-        exp = {'status': 'success', 'message': ''}
+            '/%s/10/columns/target_subfragment/' % pt.id)
+        exp = {'status': 'success', 'message': '', 'row_id': '10'}
         self.assertEqual(obs, exp)
         self._wait_for_parallel_job('prep_template_%s' % pt.id)
         self.assertNotIn('target_subfragment', pt.categories())
@@ -489,7 +487,8 @@ class TestPrepAPI(TestCase):
             'Cancer Genomics')
         exp = {'status': 'error',
                'message': 'Operation "add" not supported. '
-                          'Current supported operations: replace, remove'}
+                          'Current supported operations: replace, remove',
+               'row_id': '0'}
         self.assertEqual(obs, exp)
         # Incorrect path parameter
         obs = prep_template_patch_req(

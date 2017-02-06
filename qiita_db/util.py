@@ -54,8 +54,10 @@ from shutil import move, rmtree, copy as shutil_copy
 from json import dumps
 from datetime import datetime
 from itertools import chain
+from tarfile import open as topen
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
 
 
@@ -714,9 +716,24 @@ def retrieve_filepaths(obj_fp_table, obj_id_column, obj_id, sort=None,
                 for fpid, fp, fp_type_, m, s in results]
 
 
-def purge_filepaths():
+def _rm_files(TRN, fp):
+    # Remove the data
+    if exists(fp):
+        if isdir(fp):
+            func = rmtree
+        else:
+            func = remove
+        TRN.add_post_commit_func(func, fp)
+
+
+def purge_filepaths(delete_files=True):
     r"""Goes over the filepath table and remove all the filepaths that are not
     used in any place
+
+    Parameters
+    ----------
+    delete_files : bool
+        if True it will actually delete the files, if False print
     """
     with qdb.sql_connection.TRN:
         # Get all the (table, column) pairs that reference to the filepath
@@ -739,30 +756,58 @@ def purge_filepaths():
         union_str = " UNION ".join(
             ["SELECT %s FROM qiita.%s WHERE %s IS NOT NULL" % (col, table, col)
              for table, col in qdb.sql_connection.TRN.execute_fetchindex()])
-        # Get all the filepaths from the filepath table that are not
-        # referenced from any place in the database
-        sql = """SELECT filepath_id, filepath, filepath_type, data_directory_id
-            FROM qiita.filepath FP JOIN qiita.filepath_type FPT
-                ON FP.filepath_type_id = FPT.filepath_type_id
-            WHERE filepath_id NOT IN (%s)""" % union_str
-        qdb.sql_connection.TRN.add(sql)
+        if union_str:
+            # Get all the filepaths from the filepath table that are not
+            # referenced from any place in the database
+            sql = """SELECT filepath_id, filepath, filepath_type, data_directory_id
+                FROM qiita.filepath FP JOIN qiita.filepath_type FPT
+                    ON FP.filepath_type_id = FPT.filepath_type_id
+                WHERE filepath_id NOT IN (%s)""" % union_str
+            qdb.sql_connection.TRN.add(sql)
 
         # We can now go over and remove all the filepaths
         sql = "DELETE FROM qiita.filepath WHERE filepath_id=%s"
         db_results = qdb.sql_connection.TRN.execute_fetchindex()
         for fp_id, fp, fp_type, dd_id in db_results:
-            qdb.sql_connection.TRN.add(sql, [fp_id])
+            if delete_files:
+                qdb.sql_connection.TRN.add(sql, [fp_id])
+                fp = join(get_mountpoint_path_by_id(dd_id), fp)
+                _rm_files(qdb.sql_connection.TRN, fp)
+            else:
+                print fp, fp_type
 
-            # Remove the data
-            fp = join(get_mountpoint_path_by_id(dd_id), fp)
-            if exists(fp):
-                if fp_type == 'directory':
-                    func = rmtree
-                else:
-                    func = remove
-                qdb.sql_connection.TRN.add_post_commit_func(func, fp)
+        if delete_files:
+            qdb.sql_connection.TRN.execute()
 
-        qdb.sql_connection.TRN.execute()
+
+def empty_trash_upload_folder(delete_files=True):
+    r"""Delete all files in the trash folder inside each of the upload
+    folders
+
+    Parameters
+    ----------
+    delete_files : bool
+        if True it will actually delete the files, if False print
+    """
+    gfp = partial(join, get_db_files_base_dir())
+    with qdb.sql_connection.TRN:
+        sql = """SELECT mountpoint
+                 FROM qiita.data_directory
+                 WHERE data_type = 'uploads'"""
+        qdb.sql_connection.TRN.add(sql)
+
+        for mp in qdb.sql_connection.TRN.execute_fetchflatten():
+            for path, dirs, files in walk(gfp(mp)):
+                if path.endswith('/trash'):
+                    if delete_files:
+                        for f in files:
+                            fp = join(path, f)
+                            _rm_files(qdb.sql_connection.TRN, fp)
+                    else:
+                        print files
+
+        if delete_files:
+            qdb.sql_connection.TRN.execute()
 
 
 def move_filepaths_to_upload_folder(study_id, filepaths):
@@ -1463,3 +1508,87 @@ def generate_study_list(study_ids, build_samples, public_only=False):
             infolist.append(info)
 
     return infolist
+
+
+def generate_biom_and_metadata_release(study_status='public'):
+    """Generate a list of biom/meatadata filepaths and a tgz of those files
+
+    Parameters
+    ----------
+    study_status : str, optional
+        The study status to search for. Note that this should always be set
+        to 'public' but having this exposed as helps with testing. The other
+        options are 'private' and 'sandbox'
+
+    Returns
+    -------
+    str, str
+        tgz_name: the filepath of the new generated tgz
+        txt_name: the filepath of the new generated txt
+    """
+    studies = qdb.study.Study.get_by_status(study_status)
+    qiita_config = ConfigurationManager()
+    working_dir = qiita_config.working_dir
+    portal = qiita_config.portal
+    bdir = qdb.util.get_db_files_base_dir()
+    bdir_len = len(bdir) + 1
+
+    data = []
+    for s in studies:
+        # [0] latest is first, [1] only getting the filepath
+        sample_fp = s.sample_template.get_filepaths()[0][1]
+        if sample_fp.startswith(bdir):
+            sample_fp = sample_fp[bdir_len:]
+
+        for a in s.artifacts(artifact_type='BIOM'):
+            if a.processing_parameters is None:
+                continue
+
+            cmd_name = a.processing_parameters.command.name
+
+            # this loop is necessary as in theory an artifact can be
+            # generated from multiple prep info files
+            human_cmd = []
+            for p in a.parents:
+                pp = p.processing_parameters
+                pp_cmd_name = pp.command.name
+                if pp_cmd_name == 'Trimming':
+                    human_cmd.append('%s @ %s' % (
+                        cmd_name, str(pp.values['length'])))
+                else:
+                    human_cmd.append('%s, %s' % (cmd_name, pp_cmd_name))
+            human_cmd = ', '.join(human_cmd)
+
+            for _, fp, fp_type in a.filepaths:
+                if fp_type != 'biom' or 'only-16s' in fp:
+                    continue
+                if fp.startswith(bdir):
+                    fp = fp[bdir_len:]
+                # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
+                #          human readable name)
+                for pt in a.prep_templates:
+                    for _, prep_fp in pt.get_filepaths():
+                        if 'qiime' not in prep_fp:
+                            break
+                    if prep_fp.startswith(bdir):
+                        prep_fp = prep_fp[bdir_len:]
+                    data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
+
+    # writing text and tgz file
+    ts = datetime.now().strftime('%m%d%y-%H%M%S')
+    tgz_dir = join(working_dir, 'releases')
+    if not exists(tgz_dir):
+        makedirs(tgz_dir)
+    tgz_name = join(tgz_dir, '%s-%s-%s.tgz' % (portal, study_status, ts))
+    txt_name = join(tgz_dir, '%s-%s-%s.txt' % (portal, study_status, ts))
+    with open(txt_name, 'w') as txt, topen(tgz_name, "w|gz") as tgz:
+        # writing header for txt
+        txt.write("biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n")
+        for biom_fp, sample_fp, prep_fp, artifact_id, human_cmd in data:
+            txt.write("%s\t%s\t%s\t%s\t%s\n" % (
+                biom_fp, sample_fp, prep_fp, artifact_id, human_cmd))
+            tgz.add(join(bdir, biom_fp), arcname=biom_fp, recursive=False)
+            tgz.add(join(bdir, sample_fp), arcname=sample_fp, recursive=False)
+            tgz.add(join(bdir, prep_fp), arcname=prep_fp, recursive=False)
+
+    return tgz_name, txt_name

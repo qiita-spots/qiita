@@ -1,7 +1,36 @@
+#qiita-main {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+#qiita-processing {
+  position: absolute;
+  height: 100%;
+  width: 0%;
+  right: 0;
+  top: 0;
+}
 #template-content{
   padding: 10px;
   height: 100%;
   width: 100%;
+}
+
+td.more-info-processing-jobs{
+  cursor: pointer;
+  background: url('../img//details_open.png') no-repeat center center;
+}
+tr.shown td.more-info-processing-jobs {
+    background: url('../img//details_close.png') no-repeat center center;
+}
+
+.blinking-message {
+  animation: blinker 2s linear infinite;
+}
+
+@keyframes blinker {
+  50% { opacity: 0.3; background: #CCC;}
+  100% { opacity: 1.0; background: #FFF;}
 }
 
 /* table in the study description that holds the investigation type elements */
