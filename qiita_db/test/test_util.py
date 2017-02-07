@@ -779,6 +779,62 @@ class DBUtilTests(TestCase):
             'FASTQ\n']
         self.assertEqual(txt_obs, txt_exp)
 
+        # whatever the configuration was, we will change to settings so we can
+        # test the other option when dealing with the end '/'
+        with qdb.sql_connection.TRN:
+            qdb.sql_connection.TRN.add(
+                "SELECT base_data_dir FROM settings")
+            obdr = qdb.sql_connection.TRN.execute_fetchlast()
+            if obdr[-1] == '/':
+                bdr = obdr[:-1]
+            else:
+                bdr = obdr + '/'
+
+            qdb.sql_connection.TRN.add(
+                "UPDATE settings SET base_data_dir = '%s'" % bdr)
+            bdr = qdb.sql_connection.TRN.execute()
+
+        tgz, txt = qdb.util.generate_biom_and_metadata_release('private')
+        self.files_to_remove.extend([tgz, txt])
+
+        tmp = topen(tgz, "r:gz")
+        tgz_obs = [ti.name for ti in tmp]
+        tmp.close()
+        tgz_exp = [
+            'processed_data/1_study_1001_closed_reference_otu_table.biom',
+            'templates/1_19700101-000000.txt',
+            'templates/1_prep_1_19700101-000000.txt',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom',
+            'templates/1_19700101-000000.txt',
+            'templates/1_prep_1_19700101-000000.txt',
+            'processed_data/1_study_1001_closed_reference_otu_table_'
+            'Silva.biom', 'templates/1_19700101-000000.txt',
+            'templates/1_prep_1_19700101-000000.txt']
+        self.assertEqual(tgz_obs, tgz_exp)
+
+        tmp = open(txt)
+        txt_obs = tmp.readlines()
+        tmp.close()
+        txt_exp = [
+            'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
+            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
+            '.txt\t4\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
+            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
+            '.txt\t5\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
+            'm\ttemplates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-'
+            '000000.txt\t6\tPick closed-reference OTUs, Split libraries '
+            'FASTQ\n']
+        self.assertEqual(txt_obs, txt_exp)
+
+        # returning configuration
+        with qdb.sql_connection.TRN:
+                    qdb.sql_connection.TRN.add(
+                        "UPDATE settings SET base_data_dir = '%s'" % obdr)
+                    bdr = qdb.sql_connection.TRN.execute()
+
 
 @qiita_test_checker()
 class UtilTests(TestCase):
