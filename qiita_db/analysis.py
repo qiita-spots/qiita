@@ -212,7 +212,8 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [_id])
             if qdb.sql_connection.TRN.execute_fetchlast():
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
-                    "Can't delete analysis %d, has artifacts attached")
+                    "Can't delete analysis %d, has artifacts attached"
+                    % _id)
 
             sql = "DELETE FROM qiita.analysis_filepath WHERE {0} = %s".format(
                 cls._analysis_id_column)
@@ -265,7 +266,6 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [analysis_id, qiita_config.portal])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    # ---- Properties ----
     @property
     def owner(self):
         """The owner of the analysis
@@ -514,7 +514,6 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [pmid, self._id])
             qdb.sql_connection.TRN.execute()
 
-    # ---- Functions ----
     def add_artifact(self, artifact):
         """Adds an artifact to the analysis
 

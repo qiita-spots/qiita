@@ -5,7 +5,7 @@ from os.path import basename
 from .base_handlers import BaseHandler
 from qiita_pet.exceptions import QiitaPetAuthorizationError
 from qiita_db.util import filepath_id_to_rel_path
-from qiita_db.meta_util import get_accessible_filepath_ids
+from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_core.util import execute_as_transaction
 
 
@@ -13,15 +13,13 @@ class DownloadHandler(BaseHandler):
     @authenticated
     @execute_as_transaction
     def get(self, filepath_id):
-        filepath_id = int(filepath_id)
-        # Check access to file
-        accessible_filepaths = get_accessible_filepath_ids(self.current_user)
+        fid = int(filepath_id)
 
-        if filepath_id not in accessible_filepaths:
+        if not validate_filepath_access_by_user(self.current_user, fid):
             raise QiitaPetAuthorizationError(
-                self.current_user, 'filepath id %s' % str(filepath_id))
+                self.current_user, 'filepath id %s' % str(fid))
 
-        relpath = filepath_id_to_rel_path(filepath_id)
+        relpath = filepath_id_to_rel_path(fid)
         fname = basename(relpath)
 
         # If we don't have nginx, write a file that indicates this

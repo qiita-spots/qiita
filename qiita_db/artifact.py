@@ -11,7 +11,6 @@ from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
 from os import remove
-from collections import Counter
 
 import networkx as nx
 
@@ -285,10 +284,10 @@ class Artifact(qdb.base.QiitaObject):
                 "at least one filepath is required.")
 
         # Check that the combination of parameters is correct
-        counts = Counter([bool(parents or processing_parameters),
-                          prep_template is not None,
-                          bool(analysis or data_type)])
-        if counts[True] != 1:
+        counts = (int(bool(parents or processing_parameters)) +
+                  int(prep_template is not None) +
+                  int(bool(analysis or data_type)))
+        if counts != 1:
             # More than one parameter has been provided
             raise qdb.exceptions.QiitaDBArtifactCreationError(
                 "One and only one of parents, prep template or analysis must "
@@ -364,15 +363,12 @@ class Artifact(qdb.base.QiitaObject):
                 # If an artifact has parents, it can be either from the
                 # processing pipeline or the analysis pipeline. Decide which
                 # one here
-                studies = set()
-                analyses = set()
-                for p in parents:
-                    s = p.study
-                    a = p.analysis
-                    if s is not None:
-                        studies.add(s.id)
-                    if a is not None:
-                        analyses.add(a.id)
+                studies = {p.study for p in parents}
+                analyses = {p.analysis for p in parents}
+                studies.discard(None)
+                analyses.discard(None)
+                studies = {s.id for s in studies}
+                analyses = {a.id for a in analyses}
 
                 # The first 2 cases should never happen, but it doesn't hurt
                 # to check them
