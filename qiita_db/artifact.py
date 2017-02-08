@@ -429,6 +429,7 @@ class Artifact(qdb.base.QiitaObject):
                     instance.visibility = 'private'
                 else:
                     instance.visibility = 'public'
+
             elif prep_template:
                 # This artifact is uploaded by the user in the
                 # processing pipeline
