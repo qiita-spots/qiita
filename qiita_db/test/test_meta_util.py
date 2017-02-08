@@ -47,6 +47,7 @@ class MetaUtilTests(TestCase):
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
+
         for i in [15, 16]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
