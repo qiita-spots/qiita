@@ -8,22 +8,6 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.sql_connection import TRN
 
-
-old_formats = [
-    # 4 digits year
-    '%m/%d/%Y %H:%M:%S', '%m/%d/%Y %H:%M', '%m/%d/%Y %H', '%m/%d/%Y',
-    '%m/%Y', '%Y',
-    # 2 digits year
-    '%m/%d/%y %H:%M:%S', '%m/%d/%y %H:%M', '%m/%d/%y %H', '%m/%d/%y',
-    '%m/%y', '%y']
-new_formats = [
-    # 4 digits year
-    '%m/%d/%Y %H:%M:%S', '%m/%d/%Y %H:%M', '%m/%d/%Y %H', '%m/%d/%Y',
-    '%m/%Y', '%Y',
-    # 2 digits year
-    '%m/%d/%y %H:%M:%S', '%m/%d/%y %H:%M', '%m/%d/%y %H', '%m/%d/%y',
-    '%m/%y', '%y']
-
 # getting columns in each info file that we need to check for
 cols_sample = [col
                for key, vals in viewitems(SAMPLE_TEMPLATE_COLUMNS)
