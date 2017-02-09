@@ -148,6 +148,171 @@ def validate_filepath_access_by_user(user, filepath_id):
 def update_redis_stats():
     """Generate the system stats and save them in redis
 
+<<<<<<< HEAD
+            # Then add the filepaths of the sample template
+            study = artifact.study
+            if study:
+                filepath_ids.update(
+                    {fid
+                     for fid, _ in study.sample_template.get_filepaths()})
+
+        # Next, analyses
+        # Same as before, there are public, private, and shared
+        analyses = qdb.analysis.Analysis.get_by_status('public') | \
+            user.private_analyses | user.shared_analyses
+
+        if analyses:
+            sql = """SELECT filepath_id
+                     FROM qiita.analysis_filepath
+                     WHERE analysis_id IN %s"""
+            sql_args = tuple([a.id for a in analyses])
+            qdb.sql_connection.TRN.add(sql, [sql_args])
+            filepath_ids.update(qdb.sql_connection.TRN.execute_fetchflatten())
+
+        return filepath_ids
+=======
+    Returns
+    -------
+    list of str
+        artifact filepaths that are not present in the file system
+    """
+    STUDY = qdb.study.Study
+    studies = {'public': STUDY.get_by_status('private'),
+               'private': STUDY.get_by_status('public'),
+               'sanbox': STUDY.get_by_status('sandbox')}
+    number_studies = {k: len(v) for k, v in viewitems(studies)}
+
+    number_of_samples = {}
+    ebi_samples_prep = {}
+    num_samples_ebi = 0
+    for k, sts in viewitems(studies):
+        number_of_samples[k] = 0
+        for s in sts:
+            st = s.sample_template
+            if st is not None:
+                number_of_samples[k] += len(list(st.keys()))
+
+            ebi_samples_prep_count = 0
+            for pt in s.prep_templates():
+                ebi_samples_prep_count += len([
+                    1 for _, v in viewitems(pt.ebi_experiment_accessions)
+                    if v is not None and v != ''])
+            ebi_samples_prep[s.id] = ebi_samples_prep_count
+
+            if s.sample_template is not None:
+                num_samples_ebi += len([
+                    1 for _, v in viewitems(
+                        s.sample_template.ebi_sample_accessions)
+                    if v is not None and v != ''])
+
+    num_users = qdb.util.get_count('qiita.qiita_user')
+
+    lat_longs = get_lat_longs()
+
+    num_studies_ebi = len(ebi_samples_prep)
+    number_samples_ebi_prep = sum([v for _, v in viewitems(ebi_samples_prep)])
+
+    # generating file size stats
+    stats = []
+    missing_files = []
+    for k, sts in viewitems(studies):
+        for s in sts:
+            for a in s.artifacts():
+                for _, fp, dt in a.filepaths:
+                    try:
+                        s = stat(fp)
+                        stats.append((dt, s.st_size, strftime('%Y-%m',
+                                      localtime(s.st_ctime))))
+                    except OSError:
+                        missing_files.append(fp)
+
+    summary = {}
+    all_dates = []
+    for ft, size, ym in stats:
+        if ft not in summary:
+            summary[ft] = {}
+        if ym not in summary[ft]:
+            summary[ft][ym] = 0
+            all_dates.append(ym)
+        summary[ft][ym] += size
+    all_dates = sorted(set(all_dates))
+
+    # sorting summaries
+    rm_from_data = ['html_summary', 'tgz', 'directory', 'raw_fasta', 'log',
+                    'biom', 'raw_sff', 'raw_qual']
+    ordered_summary = {}
+    for dt in summary:
+        if dt in rm_from_data:
+            continue
+        new_list = []
+        current_value = 0
+        for ad in all_dates:
+            if ad in summary[dt]:
+                current_value += summary[dt][ad]
+            new_list.append(current_value)
+        ordered_summary[dt] = new_list
+
+    plot_order = sorted([(k, ordered_summary[k][-1]) for k in ordered_summary],
+                        key=lambda x: x[1])
+
+    # helper function to generate y axis, modified from:
+    # http://stackoverflow.com/a/1094933
+    def sizeof_fmt(value, position):
+        number = None
+        for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+            if abs(value) < 1024.0:
+                number = "%3.1f%s" % (value, unit)
+                break
+            value /= 1024.0
+        if number is None:
+            number = "%.1f%s" % (value, 'Yi')
+        return number
+
+    all_dates_axis = range(len(all_dates))
+    plt.locator_params(axis='y', nbins=10)
+    plt.figure(figsize=(20, 10))
+    for k, v in plot_order:
+        plt.plot(all_dates_axis, ordered_summary[k], linewidth=2, label=k)
+
+    plt.xticks(all_dates_axis, all_dates)
+    plt.legend()
+    plt.grid()
+    ax = plt.gca()
+    ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(sizeof_fmt))
+    plt.xlabel('Date')
+    plt.ylabel('Storage space per data type')
+
+    plot = StringIO()
+    plt.savefig(plot, format='png')
+    plot.seek(0)
+    img = 'data:image/png;base64,' + quote(b64encode(plot.buf))
+
+    time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
+
+    portal = qiita_config.portal
+    vals = [
+        ('number_studies', number_studies, r_client.hmset),
+        ('number_of_samples', number_of_samples, r_client.hmset),
+        ('num_users', num_users, r_client.set),
+        ('lat_longs', lat_longs, r_client.set),
+        ('num_studies_ebi', num_studies_ebi, r_client.set),
+        ('num_samples_ebi', num_samples_ebi, r_client.set),
+        ('number_samples_ebi_prep', number_samples_ebi_prep, r_client.set),
+        ('img', img, r_client.set),
+        ('time', time, r_client.set)]
+    for k, v, f in vals:
+        redis_key = '%s:stats:%s' % (portal, k)
+        # important to "flush" variables to avoid errors
+        r_client.delete(redis_key)
+        f(redis_key, v)
+
+    return missing_files
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
+
+
+def update_redis_stats():
+    """Generate the system stats and save them in redis
+
     Returns
     -------
     list of str

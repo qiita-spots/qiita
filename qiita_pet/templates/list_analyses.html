@@ -1,0 +1,60 @@
+{% extends sitebase.html %}
+
+{% block head %}
+<script type="text/javascript">
+  $(document).ready(function(){
+    {% if analyses %}
+      $('#no-analyses').hide()
+    {% end %}
+  });
+</script>
+{% end %}
+
+{%block content %}
+
+<div id='no-analyses' class='jumbotron'>
+  <h1>No Analyses available</h1>
+  <h3><a href="{% raw qiita_config.portal_dir %}/study/list/">Create an analysis</a></h3>
+</div>
+
+{% if analyses %}
+  <table class="table">
+    <tr>
+      <th>Analysis Name</th>
+      <th>Analysis Description</th>
+      <th>Timestamp</th>
+      <th>Mapping File</th>
+      <th>Biom Files</th>
+      <th>tgz Files</th>
+      <th>Delete?</th>
+    </tr>
+    {% for analysis in analyses %}
+      {% set _id = analysis.id %}
+      <tr>
+        <td>
+          <a href="{% raw qiita_config.portal_dir %}/analysis/description/{{analysis.id}}/">{{analysis.name}}</a>
+        </td>
+        <td>
+         {{analysis.description}}
+       </td>
+        <td>
+         {{ analysis.timestamp.strftime("%m/%d/%y %H:%M:%S")}}
+        </td>
+        <td>
+          {% raw mappings[_id] %}
+        </td>
+        <td>
+          {% raw bioms[_id] %}
+        </td>
+        <td>
+          {% raw tgzs[_id] %}
+        </td>
+        <td>
+         <a class="btn btn-danger glyphicon glyphicon-trash" onclick="delete_analysis('{{analysis.name}}', {{analysis.id}});"></a>
+        </td>
+      </tr>
+    {% end %}
+  </table>
+{% end %}
+
+{% end %}

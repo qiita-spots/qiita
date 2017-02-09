@@ -861,6 +861,12 @@ table {
 	<title>Foreign Key fk_investigation_study
 	investigation_study references investigation ( investigation_id )</title>
 </path>
+<<<<<<< HEAD
+<text x='517' y='1090' transform='rotate(0 517,1090)' title='Foreign Key fk_analysis_artifact_artifact
+	analysis_artifact references artifact ( artifact_id )' style='fill:#a1a0a0;'>artifact_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 225 750 L 225,405' >
+	<title>Foreign Key fk_analysis_user
+	analysis references qiita_user ( email )</title>
+=======
 <text x='2392' y='355' transform='rotate(0 2392,355)' title='Foreign Key fk_investigation_study
 	investigation_study references investigation ( investigation_id )' style='fill:#a1a0a0;'>investigation_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2250 345 L 2115,345' >
 	<title>Foreign Key fk_investigation_study_study
@@ -875,6 +881,7 @@ table {
 	per_study_tags references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2505 525 L 2505,540' >
 	<title>Foreign Key fk_per_study_tags_study_tags
 	per_study_tags references study_tags ( study_tag_id )</title>
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 </path>
 <text x='2518' y='525' transform='rotate(90 2518,525)' title='Foreign Key fk_per_study_tags_study_tags
 	per_study_tags references study_tags ( study_tag_id )' style='fill:#a1a0a0;'>study_tag_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2205 465 L 2115,465' >
@@ -886,6 +893,31 @@ table {
 	<title>Foreign Key fk_study_tags_qiita_user
 	study_tags references qiita_user ( email )</title>
 </path>
+<<<<<<< HEAD
+<text x='337' y='925' transform='rotate(0 337,925)' title='Foreign Key fk_analysis_logging
+	analysis references logging ( logging_id )' style='fill:#a1a0a0;'>logging_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 225 990 L 225,945' >
+	<title>Foreign Key fk_analysis_processing_job
+	analysis_processing_job references analysis ( analysis_id )</title>
+</path>
+<text x='227' y='985' transform='rotate(270 227,985)' title='Foreign Key fk_analysis_processing_job
+	analysis_processing_job references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 240 1080 L 240,1882 Q 240,1890 247,1890 L 495,1890' >
+	<title>Foreign Key fk_analysis_processing_job_pj
+	analysis_processing_job references processing_job ( processing_job_id )</title>
+</path>
+<text x='253' y='1080' transform='rotate(90 253,1080)' title='Foreign Key fk_analysis_processing_job_pj
+	analysis_processing_job references processing_job ( processing_job_id )' style='fill:#a1a0a0;'>processing_job_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+<rect class='table' x='1410' y='1733' width='150' height='120' rx='7' ry='7' />
+<path d='M 1410.50 1759.50 L 1410.50 1740.50 Q 1410.50 1733.50 1417.50 1733.50 L 1552.50 1733.50 Q 1559.50 1733.50 1559.50 1740.50 L 1559.50 1759.50 L1410.50 1759.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#controlled_vocab_values'><text x='1418' y='1747' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
+  <use id='nn' x='1412' y='1767' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.vocab_value_id'><use id='pk' x='1412' y='1766' xlink:href='#pk'/><title>Primary Key  ( vocab_value_id ) </title></a>
+<a xlink:href='#controlled_vocab_values.vocab_value_id'><text x='1428' y='1777'>vocab_value_id</text><title>vocab_value_id bigserial not null</title></a>
+  <use id='nn' x='1412' y='1782' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.controlled_vocab_id'><use id='idx' x='1412' y='1781' xlink:href='#idx'/><title>Index  ( controlled_vocab_id ) </title></a>
+<a xlink:href='#controlled_vocab_values.controlled_vocab_id'><text x='1428' y='1792'>controlled_vocab_id</text><title>controlled_vocab_id bigint not null</title></a>
+<a xlink:href='#controlled_vocab_values.controlled_vocab_id'><use id='fk' x='1548' y='1781' xlink:href='#fk'/><title>References controlled_vocab ( controlled_vocab_id ) </title></a>
+  <use id='nn' x='1412' y='1797' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.term'><text x='1428' y='1807'>term</text><title>term varchar not null</title></a>
+  <use id='nn' x='1412' y='1812' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.order_by'><text x='1428' y='1822'>order_by</text><title>order_by varchar not null</title></a>
+  <a xlink:href='#controlled_vocab_values.default_item'><text x='1428' y='1837'>default_item</text><title>default_item varchar</title></a>
+=======
 <text x='2419' y='610' transform='rotate(0 2419,610)' title='Foreign Key fk_study_tags_qiita_user
 	study_tags references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1703' width='150' height='120' rx='7' ry='7' />
@@ -899,6 +931,7 @@ table {
   <use id='nn' x='47' y='1767' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.term'><text x='63' y='1777'>term</text><title>term varchar not null</title></a>
   <use id='nn' x='47' y='1782' xlink:href='#nn'/><a xlink:href='#controlled_vocab_values.order_by'><text x='63' y='1792'>order_by</text><title>order_by varchar not null</title></a>
   <a xlink:href='#controlled_vocab_values.default_item'><text x='63' y='1807'>default_item</text><title>default_item varchar</title></a>
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 
 <!-- ============= Table 'column_controlled_vocabularies' ============= -->
 <rect class='table' x='270' y='1493' width='195' height='75' rx='7' ry='7' />
@@ -939,6 +972,16 @@ Links analyses to the users they are shared with</title></a>
 <a xlink:href='#analysis_users.email'><use id='fk' x='138' y='956' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
 
 <!-- ============= Table 'logging' ============= -->
+<<<<<<< HEAD
+<rect class='table' x='1305' y='1943' width='105' height='120' rx='7' ry='7' />
+<path d='M 1305.50 1969.50 L 1305.50 1950.50 Q 1305.50 1943.50 1312.50 1943.50 L 1402.50 1943.50 Q 1409.50 1943.50 1409.50 1950.50 L 1409.50 1969.50 L1305.50 1969.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
+<a xlink:href='#logging'><text x='1337' y='1957' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
+  <use id='nn' x='1307' y='1977' xlink:href='#nn'/><a xlink:href='#logging.logging_id'><use id='pk' x='1307' y='1976' xlink:href='#pk'/><title>Primary Key  ( logging_id ) </title></a>
+<a xlink:href='#logging.logging_id'><text x='1323' y='1987'>logging_id</text><title>logging_id bigserial not null</title></a>
+<a xlink:href='#logging.logging_id'><use id='ref' x='1398' y='1976' xlink:href='#ref'/><title>Referred by analysis ( logging_id ) 
+Referred by processing_job ( logging_id ) </title></a>
+  <use id='nn' x='1307' y='1992' xlink:href='#nn'/><a xlink:href='#logging.time'><text x='1323' y='2002'>time</text><title>time timestamp not null
+=======
 <rect class='table' x='735' y='1523' width='105' height='120' rx='7' ry='7' />
 <path d='M 735.50 1549.50 L 735.50 1530.50 Q 735.50 1523.50 742.50 1523.50 L 832.50 1523.50 Q 839.50 1523.50 839.50 1530.50 L 839.50 1549.50 L735.50 1549.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
 <a xlink:href='#logging'><text x='767' y='1537' class='tableTitle'>logging</text><title>Table qiita.logging</title></a>
@@ -947,6 +990,7 @@ Links analyses to the users they are shared with</title></a>
 <a xlink:href='#logging.logging_id'><use id='ref' x='828' y='1556' xlink:href='#ref'/><title>Referred by analysis ( logging_id ) 
 Referred by processing_job ( logging_id ) </title></a>
   <use id='nn' x='737' y='1572' xlink:href='#nn'/><a xlink:href='#logging.time'><text x='753' y='1582'>time</text><title>time timestamp not null
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 Time the error was thrown</title></a>
   <use id='nn' x='737' y='1587' xlink:href='#nn'/><a xlink:href='#logging.severity_id'><use id='idx' x='737' y='1586' xlink:href='#idx'/><title>Index  ( severity_id ) </title></a>
 <a xlink:href='#logging.severity_id'><text x='753' y='1597'>severity_id</text><title>severity_id integer not null</title></a>
@@ -2011,6 +2055,39 @@ The institution with which this person is affiliated</title></a>
 <a xlink:href='#per_study_tags.study_id'><text x='2508' y='502'>study_id</text><title>study_id integer not null</title></a>
 <a xlink:href='#per_study_tags.study_id'><use id='fk' x='2583' y='491' xlink:href='#fk'/><title>References study ( study_id ) </title></a>
 
+<<<<<<< HEAD
+<!-- ============= Table 'analysis' ============= -->
+<rect class='table' x='210' y='758' width='120' height='180' rx='7' ry='7' />
+<path d='M 210.50 784.50 L 210.50 765.50 Q 210.50 758.50 217.50 758.50 L 322.50 758.50 Q 329.50 758.50 329.50 765.50 L 329.50 784.50 L210.50 784.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#analysis'><text x='248' y='772' class='tableTitle'>analysis</text><title>Table qiita.analysis
+Holds analysis information</title></a>
+  <use id='nn' x='212' y='792' xlink:href='#nn'/><a xlink:href='#analysis.analysis_id'><use id='pk' x='212' y='791' xlink:href='#pk'/><title>Primary Key  ( analysis_id ) </title></a>
+<a xlink:href='#analysis.analysis_id'><text x='228' y='802'>analysis_id</text><title>analysis_id bigserial not null
+Unique identifier for analysis</title></a>
+<a xlink:href='#analysis.analysis_id'><use id='ref' x='318' y='791' xlink:href='#ref'/><title>Referred by analysis_artifact ( analysis_id ) 
+Referred by analysis_filepath ( analysis_id ) 
+Referred by analysis_portal ( analysis_id ) 
+Referred by analysis_processing_job ( analysis_id ) 
+Referred by analysis_sample ( analysis_id ) 
+Referred by analysis_users ( analysis_id ) </title></a>
+  <use id='nn' x='212' y='807' xlink:href='#nn'/><a xlink:href='#analysis.email'><use id='idx' x='212' y='806' xlink:href='#idx'/><title>Index  ( email ) </title></a>
+<a xlink:href='#analysis.email'><text x='228' y='817'>email</text><title>email varchar not null
+Email for user who owns the analysis</title></a>
+<a xlink:href='#analysis.email'><use id='fk' x='318' y='806' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+  <use id='nn' x='212' y='822' xlink:href='#nn'/><a xlink:href='#analysis.name'><text x='228' y='832'>name</text><title>name varchar not null
+Name of the analysis</title></a>
+  <use id='nn' x='212' y='837' xlink:href='#nn'/><a xlink:href='#analysis.description'><text x='228' y='847'>description</text><title>description varchar not null</title></a>
+  <a xlink:href='#analysis.pmid'><text x='228' y='862'>pmid</text><title>pmid varchar
+PMID of paper from the analysis</title></a>
+  <a xlink:href='#analysis.timestamp'><text x='228' y='877'>timestamp</text><title>timestamp timestamptz default current&#095;timestamp</title></a>
+  <use id='nn' x='212' y='882' xlink:href='#nn'/><a xlink:href='#analysis.dflt'><text x='228' y='892'>dflt</text><title>dflt bool not null default false</title></a>
+  <use id='nn' x='212' y='897' xlink:href='#nn'/><a xlink:href='#analysis.portal_type_id'><use id='idx' x='212' y='896' xlink:href='#idx'/><title>Index  ( portal_type_id ) </title></a>
+<a xlink:href='#analysis.portal_type_id'><text x='228' y='907'>portal_type_id</text><title>portal_type_id bigint not null</title></a>
+<a xlink:href='#analysis.portal_type_id'><use id='fk' x='318' y='896' xlink:href='#fk'/><title>References portal_type ( portal_type_id ) </title></a>
+  <a xlink:href='#analysis.logging_id'><use id='idx' x='212' y='911' xlink:href='#idx'/><title>Index  ( logging_id ) </title></a>
+<a xlink:href='#analysis.logging_id'><text x='228' y='922'>logging_id</text><title>logging_id bigint</title></a>
+<a xlink:href='#analysis.logging_id'><use id='fk' x='318' y='911' xlink:href='#fk'/><title>References logging ( logging_id ) </title></a>
+=======
 <!-- ============= Table 'study_experimental_factor' ============= -->
 <rect class='table' x='2220' y='458' width='165' height='75' rx='7' ry='7' />
 <path d='M 2220.50 484.50 L 2220.50 465.50 Q 2220.50 458.50 2227.50 458.50 L 2377.50 458.50 Q 2384.50 458.50 2384.50 465.50 L 2384.50 484.50 L2220.50 484.50 ' style='fill:url(#tableHeaderGradient1); stroke:none;' />
@@ -2046,6 +2123,18 @@ EFO ontological link of experimental factors to studies</title></a>
   <use id='nn' x='2462' y='612' xlink:href='#nn'/><a xlink:href='#study_tags.email'><use id='idx' x='2462' y='611' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study_tags.email'><text x='2478' y='622'>email</text><title>email varchar not null</title></a>
 <a xlink:href='#study_tags.email'><use id='fk' x='2553' y='611' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
+
+<!-- ============= Table 'analysis_processing_job' ============= -->
+<rect class='table' x='135' y='998' width='150' height='75' rx='7' ry='7' />
+<path d='M 135.50 1024.50 L 135.50 1005.50 Q 135.50 998.50 142.50 998.50 L 277.50 998.50 Q 284.50 998.50 284.50 1005.50 L 284.50 1024.50 L135.50 1024.50 ' style='fill:url(#tableHeaderGradient2); stroke:none;' />
+<a xlink:href='#analysis_processing_job'><text x='144' y='1012' class='tableTitle'>analysis_processing_job</text><title>Table qiita.analysis_processing_job</title></a>
+  <use id='nn' x='137' y='1032' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.analysis_id'><use id='pk' x='137' y='1031' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( analysis_id ) </title></a>
+<a xlink:href='#analysis_processing_job.analysis_id'><text x='153' y='1042'>analysis_id</text><title>analysis_id bigint not null</title></a>
+<a xlink:href='#analysis_processing_job.analysis_id'><use id='fk' x='273' y='1031' xlink:href='#fk'/><title>References analysis ( analysis_id ) </title></a>
+  <use id='nn' x='137' y='1047' xlink:href='#nn'/><a xlink:href='#analysis_processing_job.processing_job_id'><use id='pk' x='137' y='1046' xlink:href='#pk'/><title>Primary Key  ( analysis_id, processing_job_id ) Index  ( processing_job_id ) </title></a>
+<a xlink:href='#analysis_processing_job.processing_job_id'><text x='153' y='1057'>processing_job_id</text><title>processing_job_id varchar not null</title></a>
+<a xlink:href='#analysis_processing_job.processing_job_id'><use id='fk' x='273' y='1046' xlink:href='#fk'/><title>References processing_job ( processing_job_id ) </title></a>
 
 </g></svg>
 
@@ -5737,6 +5826,17 @@ Controlled Vocabulary </td>
 	<tr>
 		<td><a name='timeseries_type.timeseries_type'>timeseries&#095;type</a></td>
 		<td> varchar  NOT NULL  </td>
+<<<<<<< HEAD
+		<td> Data type &#040;16S&#044; metabolome&#044; etc&#041; the job will use </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>pk&#095;data&#095;type primary key</td>
+		<td> ON data&#095;type&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;data&#095;type unique</td>
+		<td> ON data&#095;type</td>
+=======
 		<td>  </td>
 	</tr>
 	<tr>
@@ -5751,6 +5851,7 @@ Controlled Vocabulary </td>
 	</tr>
 	<tr>		<td>idx&#095;timeseries&#095;type unique</td>
 		<td> ON timeseries&#095;type&#044; intervention&#095;type</td>
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 		<td>  </td>
 	</tr>
 </tbody>
@@ -5759,7 +5860,12 @@ Controlled Vocabulary </td>
 <br/><br/>
 <table class='bordered'>
 <thead>
+<<<<<<< HEAD
+<tr><th colspan='3'><a name='analysis'>Table analysis</a></th></tr>
+<tr><td colspan='3'>Holds analysis information </td></tr>
+=======
 <tr><th colspan='3'><a name='study_tags'>Table study_tags</a></th></tr>
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 </thead>
 <tbody>
 	<tr>
@@ -5794,6 +5900,49 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>fk_study_tags_qiita_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='3'><a name='analysis_processing_job'>Table analysis_processing_job</a></th></tr>
+</thead>
+<tbody>
+	<tr>
+		<td><a name='analysis_processing_job.analysis_id'>analysis&#095;id</a></td>
+		<td> bigint  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td><a name='analysis_processing_job.processing_job_id'>processing&#095;job&#095;id</a></td>
+		<td> varchar  NOT NULL  </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Indexes</b></th></tr>
+	<tr>		<td>idx&#095;analysis&#095;processing&#095;job primary key</td>
+		<td> ON analysis&#095;id&#044; processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;processing&#095;job </td>
+		<td> ON analysis&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>idx&#095;analysis&#095;processing&#095;job </td>
+		<td> ON processing&#095;job&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='3'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>fk_analysis_processing_job</td>
+		<td > ( analysis&#095;id ) ref <a href='#analysis'>analysis</a> (analysis&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>fk_analysis_processing_job_pj</td>
+		<td > ( processing&#095;job&#095;id ) ref <a href='#processing&#095;job'>processing&#095;job</a> (processing&#095;job&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>

@@ -8,9 +8,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+<<<<<<< HEAD
+from qiita_db.util import purge_filepaths, empty_trash_upload_folder
+=======
 from qiita_db.util import (
     purge_filepaths, empty_trash_upload_folder,
     generate_biom_and_metadata_release)
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 from qiita_db.meta_util import update_redis_stats
 
 
@@ -20,7 +24,10 @@ from qiita_db.meta_util import update_redis_stats
 # 2. empty_trash_upload_folder: remove files that are present in the trash
 #    of the upload folders
 # 3. update_redis_stats: updates the redis stats information
+<<<<<<< HEAD
+=======
 # 4. generate public releases of biom tables and metadata
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 #
 # Note that is responsability of the Qiita install system admin to add to a
 # cron job this script and responsible to define how often it should run
@@ -30,7 +37,10 @@ def main():
     purge_filepaths(True)
     empty_trash_upload_folder(True)
     update_redis_stats()
+<<<<<<< HEAD
+=======
     generate_biom_and_metadata_release('public')
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 
 
 if __name__ == "__main__":
