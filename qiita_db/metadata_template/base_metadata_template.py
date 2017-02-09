@@ -1439,11 +1439,11 @@ class MetadataTemplate(qdb.base.QiitaObject):
                             val = str(val)
                             formats = [
                                 # 4 digits year
-                                '%m/%d/%Y %H:%M:%S', '%m/%d/%Y %H:%M',
-                                '%m/%d/%Y %H', '%m/%d/%Y', '%m/%Y', '%Y',
+                                '%m-%d-%Y %H:%M:%S', '%m-%d-%Y %H:%M',
+                                '%m-%d-%Y %H', '%m-%d-%Y', '%m-%Y', '%Y',
                                 # 2 digits year
-                                '%m/%d/%y %H:%M:%S', '%m/%d/%y %H:%M',
-                                '%m/%d/%y %H', '%m/%d/%y', '%m/%y', '%y'
+                                '%m-%d-%y %H:%M:%S', '%m-%d-%y %H:%M',
+                                '%m-%d-%y %H', '%m-%d-%y', '%m-%y', '%y'
                                 ]
                             date = None
                             for fmt in formats:

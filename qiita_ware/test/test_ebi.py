@@ -842,7 +842,7 @@ center_name="%(center_name)s">
         <TAG>assigned_from_geo</TAG><VALUE>n</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>collection_timestamp</TAG><VALUE>11/11/11 13:00:00</VALUE>
+        <TAG>collection_timestamp</TAG><VALUE>11-11-11 13:00:00</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>common_name</TAG><VALUE>soil metagenome</VALUE>
@@ -933,7 +933,7 @@ center_name="%(center_name)s">
         <TAG>assigned_from_geo</TAG><VALUE>n</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
-        <TAG>collection_timestamp</TAG><VALUE>11/11/11 13:00:00</VALUE>
+        <TAG>collection_timestamp</TAG><VALUE>11-11-11 13:00:00</VALUE>
       </SAMPLE_ATTRIBUTE>
       <SAMPLE_ATTRIBUTE>
         <TAG>common_name</TAG><VALUE>soil metagenome</VALUE>

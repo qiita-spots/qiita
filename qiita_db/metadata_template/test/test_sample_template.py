@@ -113,7 +113,7 @@ class TestSample(TestCase):
         """
         self.assertEqual(self.tester['physical_specimen_location'], 'ANL')
         self.assertEqual(self.tester['collection_timestamp'],
-                         '11/11/11 13:00:00')
+                         '11-11-11 13:00:00')
         self.assertTrue(self.tester['dna_extracted'])
 
     def test_getitem_dynamic(self):
@@ -152,7 +152,7 @@ class TestSample(TestCase):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {'ANL', 'true', 'true', 'ENVO:soil', '11/11/11 13:00:00',
+        exp = {'ANL', 'true', 'true', 'ENVO:soil', '11-11-11 13:00:00',
                '1001:M7', 'Cannabis Soil Microbiome', 'winter', 'n',
                '64.6 sand, 17.6 silt, 17.8 clay', '1118232', '0.15', '3483',
                'root metagenome', '0.164', '114', '15', '1.41', '7.15', '0',
@@ -170,7 +170,7 @@ class TestSample(TestCase):
                ('physical_specimen_remaining', 'true'),
                ('dna_extracted', 'true'),
                ('sample_type', 'ENVO:soil'),
-               ('collection_timestamp', '11/11/11 13:00:00'),
+               ('collection_timestamp', '11-11-11 13:00:00'),
                ('host_subject_id', '1001:M7'),
                ('description', 'Cannabis Soil Microbiome'),
                ('season_environment', 'winter'), ('assigned_from_geo', 'n'),
