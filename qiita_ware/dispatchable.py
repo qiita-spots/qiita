@@ -5,9 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from .analysis_pipeline import RunAnalysis
 from qiita_ware.commands import submit_EBI, submit_VAMPS
-from qiita_db.analysis import Analysis
 
 
 def submit_to_ebi(preprocessed_data_id, submission_type):
@@ -18,16 +16,6 @@ def submit_to_ebi(preprocessed_data_id, submission_type):
 def submit_to_VAMPS(preprocessed_data_id):
     """Submit a study to VAMPS"""
     return submit_VAMPS(preprocessed_data_id)
-
-
-def run_analysis(analysis_id, commands, comm_opts=None,
-                 rarefaction_depth=None, merge_duplicated_sample_ids=False,
-                 **kwargs):
-    """Run an analysis"""
-    analysis = Analysis(analysis_id)
-    ar = RunAnalysis(**kwargs)
-    return ar(analysis, commands, comm_opts, rarefaction_depth,
-              merge_duplicated_sample_ids)
 
 
 def create_raw_data(artifact_type, prep_template, filepaths, name=None):
