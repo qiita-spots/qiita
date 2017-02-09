@@ -108,6 +108,7 @@ function show_hide_process_list() {
     $("#qiita-processing").hide();
   }
 }
+<<<<<<< HEAD
 
 /*
  * Draw the artifact + jobs processing graph
@@ -209,3 +210,5 @@ function show_hide_process_list() {
  function show_loading(portal_dir, target) {
      $("#" + target).html("<img src='" + portal_dir + "/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
  }
+=======
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89

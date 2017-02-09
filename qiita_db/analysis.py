@@ -212,7 +212,12 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [_id])
             if qdb.sql_connection.TRN.execute_fetchlast():
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
+<<<<<<< HEAD
                     "Can't delete analysis %d, has artifacts attached")
+=======
+                    "Can't delete analysis %d, has artifacts attached"
+                    % _id)
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 
             sql = "DELETE FROM qiita.analysis_filepath WHERE {0} = %s".format(
                 cls._analysis_id_column)
@@ -265,7 +270,6 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [analysis_id, qiita_config.portal])
             return qdb.sql_connection.TRN.execute_fetchlast()
 
-    # ---- Properties ----
     @property
     def owner(self):
         """The owner of the analysis
@@ -514,7 +518,10 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [pmid, self._id])
             qdb.sql_connection.TRN.execute()
 
+<<<<<<< HEAD
     # ---- Functions ----
+=======
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
     def add_artifact(self, artifact):
         """Adds an artifact to the analysis
 
@@ -777,9 +784,15 @@ class Analysis(qdb.base.QiitaObject):
             self._build_mapping_file(samples, rename_dup_samples)
             biom_files = self._build_biom_tables(
                 grouped_samples, rename_dup_samples)
+<<<<<<< HEAD
 
             return biom_files
 
+=======
+
+            return biom_files
+
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
     def _build_biom_tables(self, grouped_samples, rename_dup_samples=False):
         """Build tables and add them to the analysis"""
         with qdb.sql_connection.TRN:

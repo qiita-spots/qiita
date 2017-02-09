@@ -33,16 +33,11 @@ class MetaUtilTests(TestCase):
         self.conn_handler.execute(
             "UPDATE qiita.artifact SET visibility_id=2")
 
-    def _unshare_studies(self):
-        self.conn_handler.execute("DELETE FROM qiita.study_users")
-
-    def _unshare_analyses(self):
-        self.conn_handler.execute("DELETE FROM qiita.analysis_users")
-
-    def test_get_accessible_filepath_ids(self):
+    def test_validate_filepath_access_by_user(self):
         self._set_artifact_private()
 
         # shared has access to all study files and analysis files
+<<<<<<< HEAD
 
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('shared@foo.bar'))
@@ -54,15 +49,32 @@ class MetaUtilTests(TestCase):
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('shared@foo.bar'))
         self.assertItemsEqual(obs, {16})
+=======
+        user = qdb.user.User('shared@foo.bar')
+        for i in [1, 2, 3, 4, 5, 9, 12, 15, 16, 17, 18, 19, 20, 21]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
+
+        # Now shared should not have access to the study files
+        qdb.study.Study(1).unshare(user)
+        for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
+            self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
+
+        for i in [15, 16]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 
         # Now shared should not have access to any files
-        self._unshare_analyses()
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('shared@foo.bar'))
-        self.assertEqual(obs, set())
+        qdb.analysis.Analysis(1).unshare(user)
+        for i in [1, 2, 3, 4, 5, 9, 12, 15, 16, 17, 18, 19, 20, 21]:
+            self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
 
         # Now shared has access to public study files
         self._set_artifact_public()
+<<<<<<< HEAD
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('shared@foo.bar'))
         self.assertEqual(
@@ -74,6 +86,13 @@ class MetaUtilTests(TestCase):
             qdb.user.User('test@foo.bar'))
         self.assertEqual(obs, exp)
 
+=======
+        for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
+
+        # Test that it doesn't break: if the SampleTemplate hasn't been added
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
         info = {
             "timeseries_type_id": 1,
             "metadata_complete": True,
@@ -87,20 +106,21 @@ class MetaUtilTests(TestCase):
             "principal_investigator_id": 1,
             "lab_person_id": 1
         }
-        qdb.study.Study.create(
+        study = qdb.study.Study.create(
             qdb.user.User('test@foo.bar'), "Test study", [1], info)
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('test@foo.bar'))
-        self.assertEqual(obs, exp)
+        for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
 
         # test in case there is a prep template that failed
         self.conn_handler.execute(
             "INSERT INTO qiita.prep_template (data_type_id) VALUES (2)")
-        obs = qdb.meta_util.get_accessible_filepath_ids(
-            qdb.user.User('test@foo.bar'))
-        self.assertEqual(obs, exp)
+        for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                user, i))
 
         # admin should have access to everything
+<<<<<<< HEAD
         count = self.conn_handler.execute_fetchone(
             "SELECT last_value FROM qiita.filepath_filepath_id_seq")[0]
         exp = set(range(1, count + 1))
@@ -109,6 +129,19 @@ class MetaUtilTests(TestCase):
         obs = qdb.meta_util.get_accessible_filepath_ids(
             qdb.user.User('admin@foo.bar'))
         self.assertEqual(obs, exp)
+=======
+        admin = qdb.user.User('admin@foo.bar')
+        fids = self.conn_handler.execute_fetchall(
+            "SELECT filepath_id FROM qiita.filepath")
+        for i in fids:
+            self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
+                admin, i[0]))
+
+        # returning to origina sharing
+        qdb.study.Study(1).share(user)
+        qdb.analysis.Analysis(1).share(user)
+        qdb.study.Study.delete(study.id)
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 
     def test_get_lat_longs(self):
         exp = [
@@ -174,7 +207,7 @@ class MetaUtilTests(TestCase):
         }
 
         md_ext = pd.DataFrame.from_dict(md, orient='index', dtype=str)
-        qdb.metadata_template.sample_template.SampleTemplate.create(
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
             md_ext, study)
 
         qiita_config.portal = 'EMP'
@@ -183,12 +216,18 @@ class MetaUtilTests(TestCase):
         exp = [[42.42, 41.41]]
 
         self.assertItemsEqual(obs, exp)
+<<<<<<< HEAD
+=======
+        qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
+        qdb.study.Study.delete(study.id)
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 
     def test_update_redis_stats(self):
         qdb.meta_util.update_redis_stats()
 
         portal = qiita_config.portal
         vals = [
+<<<<<<< HEAD
             ('number_studies', {'sanbox': '2', 'public': '0',
                                 'private': '1'}, r_client.hgetall),
             ('number_of_samples', {'sanbox': '1', 'public': '0',
@@ -196,6 +235,15 @@ class MetaUtilTests(TestCase):
             ('num_users', '4', r_client.get),
             ('lat_longs', EXP_LAT_LONG, r_client.get),
             ('num_studies_ebi', '3', r_client.get),
+=======
+            ('number_studies', {'sanbox': '0', 'public': '1',
+                                'private': '0'}, r_client.hgetall),
+            ('number_of_samples', {'sanbox': '0', 'public': '27',
+                                   'private': '0'}, r_client.hgetall),
+            ('num_users', '4', r_client.get),
+            ('lat_longs', EXP_LAT_LONG, r_client.get),
+            ('num_studies_ebi', '1', r_client.get),
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
             ('num_samples_ebi', '27', r_client.get),
             ('number_samples_ebi_prep', '54', r_client.get)
             # not testing img/time for simplicity
@@ -208,6 +256,7 @@ class MetaUtilTests(TestCase):
 
 
 EXP_LAT_LONG = (
+<<<<<<< HEAD
     '[[0.291867635913, 68.5945325743], [68.0991287718, 34.8360987059],'
     ' [10.6655599093, 70.784770579], [40.8623799474, 6.66444220187],'
     ' [13.089194595, 92.5274472082], [84.0030227585, 66.8954849864],'
@@ -221,6 +270,21 @@ EXP_LAT_LONG = (
     ' [85.4121476399, 15.6526750776], [60.1102854322, 74.7123248382],'
     ' [3.21190859967, 26.8138925876], [57.571893782, 32.5563076447],'
     ' [44.9725384282, 66.1920014699], [42.42, 41.41]]')
+=======
+    '[[60.1102854322, 74.7123248382], [23.1218032799, 42.838497795],'
+    ' [3.21190859967, 26.8138925876], [74.0894932572, 65.3283470202],'
+    ' [53.5050692395, 31.6056761814], [12.6245524972, 96.0693176066],'
+    ' [43.9614715197, 82.8516734159], [10.6655599093, 70.784770579],'
+    ' [78.3634273709, 74.423907894], [82.8302905615, 86.3615778099],'
+    ' [44.9725384282, 66.1920014699], [4.59216095574, 63.5115213108],'
+    ' [57.571893782, 32.5563076447], [40.8623799474, 6.66444220187],'
+    ' [95.2060749748, 27.3592668624], [38.2627021402, 3.48274264219],'
+    ' [13.089194595, 92.5274472082], [84.0030227585, 66.8954849864],'
+    ' [68.51099627, 2.35063674718], [29.1499460692, 82.1270418227],'
+    ' [35.2374368957, 68.5041623253], [12.7065957714, 84.9722975792],'
+    ' [0.291867635913, 68.5945325743], [85.4121476399, 15.6526750776],'
+    ' [68.0991287718, 34.8360987059]]')
+>>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
 
 if __name__ == '__main__':
     main()

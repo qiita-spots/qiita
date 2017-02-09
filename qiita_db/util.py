@@ -54,8 +54,10 @@ from shutil import move, rmtree, copy as shutil_copy
 from json import dumps
 from datetime import datetime
 from itertools import chain
+from tarfile import open as topen
 
 from qiita_core.exceptions import IncompetentQiitaDeveloperError
+from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
 
 
@@ -1506,3 +1508,82 @@ def generate_study_list(study_ids, build_samples, public_only=False):
             infolist.append(info)
 
     return infolist
+
+
+def generate_biom_and_metadata_release(study_status='public'):
+    """Generate a list of biom/meatadata filepaths and a tgz of those files
+
+    Parameters
+    ----------
+    study_status : str, optional
+        The study status to search for. Note that this should always be set
+        to 'public' but having this exposed as helps with testing. The other
+        options are 'private' and 'sandbox'
+
+    Returns
+    -------
+    str, str
+        tgz_name: the filepath of the new generated tgz
+        txt_name: the filepath of the new generated txt
+    """
+    studies = qdb.study.Study.get_by_status(study_status)
+    qiita_config = ConfigurationManager()
+    working_dir = qiita_config.working_dir
+    portal = qiita_config.portal
+    bdir = qdb.util.get_db_files_base_dir()
+
+    data = []
+    for s in studies:
+        # [0] latest is first, [1] only getting the filepath
+        sample_fp = relpath(s.sample_template.get_filepaths()[0][1], bdir)
+
+        for a in s.artifacts(artifact_type='BIOM'):
+            if a.processing_parameters is None:
+                continue
+
+            cmd_name = a.processing_parameters.command.name
+
+            # this loop is necessary as in theory an artifact can be
+            # generated from multiple prep info files
+            human_cmd = []
+            for p in a.parents:
+                pp = p.processing_parameters
+                pp_cmd_name = pp.command.name
+                if pp_cmd_name == 'Trimming':
+                    human_cmd.append('%s @ %s' % (
+                        cmd_name, str(pp.values['length'])))
+                else:
+                    human_cmd.append('%s, %s' % (cmd_name, pp_cmd_name))
+            human_cmd = ', '.join(human_cmd)
+
+            for _, fp, fp_type in a.filepaths:
+                if fp_type != 'biom' or 'only-16s' in fp:
+                    continue
+                fp = relpath(fp, bdir)
+                # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
+                #          human readable name)
+                for pt in a.prep_templates:
+                    for _, prep_fp in pt.get_filepaths():
+                        if 'qiime' not in prep_fp:
+                            break
+                    prep_fp = relpath(prep_fp, bdir)
+                    data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
+
+    # writing text and tgz file
+    ts = datetime.now().strftime('%m%d%y-%H%M%S')
+    tgz_dir = join(working_dir, 'releases')
+    if not exists(tgz_dir):
+        makedirs(tgz_dir)
+    tgz_name = join(tgz_dir, '%s-%s-%s.tgz' % (portal, study_status, ts))
+    txt_name = join(tgz_dir, '%s-%s-%s.txt' % (portal, study_status, ts))
+    with open(txt_name, 'w') as txt, topen(tgz_name, "w|gz") as tgz:
+        # writing header for txt
+        txt.write("biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n")
+        for biom_fp, sample_fp, prep_fp, artifact_id, human_cmd in data:
+            txt.write("%s\t%s\t%s\t%s\t%s\n" % (
+                biom_fp, sample_fp, prep_fp, artifact_id, human_cmd))
+            tgz.add(join(bdir, biom_fp), arcname=biom_fp, recursive=False)
+            tgz.add(join(bdir, sample_fp), arcname=sample_fp, recursive=False)
+            tgz.add(join(bdir, prep_fp), arcname=prep_fp, recursive=False)
+
+    return tgz_name, txt_name

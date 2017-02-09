@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Jan 5, 2017
 -- Move the analysis to the plugin system. This is a major rewrite of the
 -- database backend that supports the analysis pipeline.
@@ -9,7 +8,7 @@
 -- different special cases. Furthermore, all the information needed is not
 -- present in the database, since it requires checking BIOM files. Due to these
 -- reason, the vast majority of the data transfer is done in the python patch
--- 47.py
+-- 51.py
 
 -- In this file we are just creating the new data structures. The old
 -- datastructure will be dropped in the python patch once all data has been
@@ -114,24 +113,3 @@ BEGIN
         VALUES (baf_cmd_id, 'analysis', 'analysis', True, NULL),
                (baf_cmd_id, 'merge_dup_sample_ids', 'bool', False, 'False');
 END $do$
-=======
--- Feb 3, 2017
--- adding study tagging system
-
-CREATE TABLE qiita.study_tags (
-  study_tag_id bigserial NOT NULL,
-  email varchar NOT NULL,
-  study_tag varchar NOT NULL,
-  CONSTRAINT pk_study_tag UNIQUE ( study_tag ),
-  CONSTRAINT pk_study_tag_id PRIMARY KEY ( study_tag_id )
-) ;
-
-CREATE INDEX idx_study_tag_id ON qiita.study_tags ( study_tag_id ) ;
-ALTER TABLE qiita.study_tags ADD CONSTRAINT fk_study_tags FOREIGN KEY ( email ) REFERENCES qiita.qiita_user( email );
-
-CREATE TABLE qiita.per_study_tags (
-  study_tag_id bigint NOT NULL,
-  study_id bigint NOT NULL,
-  CONSTRAINT pk_per_study_tags PRIMARY KEY ( study_tag_id, study_id )
-) ;
->>>>>>> ee170a08ec44fceb6c20b278279b8ce4b3d10a89
