@@ -94,8 +94,41 @@ def analyisis_graph_handler_get_request(analysis_id, user):
 class AnalysisGraphHandler(BaseHandler):
     @authenticated
     @execute_as_transaction
-    def get(self):
-        analysis_id = to_int(self.get_argument('analysis_id'))
+    def get(self, analysis_id):
+        analysis_id = to_int(analysis_id)
         response = analyisis_graph_handler_get_request(
+            analysis_id, self.current_user)
+        self.write(response)
+
+
+def analyisis_job_handler_get_request(analysis_id, user):
+    """Returns the job information of the analysis
+
+    Parameters
+    ----------
+    analysis_id: int
+        The analysis id
+    user : qiita_db.user.User
+        The user performing the request
+
+    Returns
+    -------
+    dict with the jobs information
+    """
+    analysis = Analysis(analysis_id)
+    # Check if the user actually has access to the analysis
+    check_analysis_access(user, analysis)
+    return {
+        j.id: {'status': j.status, 'step': j.step,
+               'error': j.log.msg if j.log else ""}
+        for j in analysis.jobs}
+
+
+class AnalysisJobsHandler(BaseHandler):
+    @authenticated
+    @execute_as_transaction
+    def get(self, analysis_id):
+        analysis_id = to_int(analysis_id)
+        response = analyisis_job_handler_get_request(
             analysis_id, self.current_user)
         self.write(response)
