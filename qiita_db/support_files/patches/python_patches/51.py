@@ -59,6 +59,6 @@ if cols_prep:
         for table, columns in viewitems(dict(TRN.execute_fetchindex())):
             # [1] the format is table_# so taking the #
             pt = PrepTemplate(int(table.split('_')[1]))
-            pt_df = st.to_dataframe()[columns]
+            pt_df = pt.to_dataframe()[columns]
             pt_df.replace({'/': '-'}, regex=True, inplace=True)
             pt.update(pt_df)
