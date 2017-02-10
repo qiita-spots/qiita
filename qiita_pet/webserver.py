@@ -29,10 +29,12 @@ from qiita_pet.handlers.study_handlers import (
     VAMPSHandler, PrepTemplateGraphAJAX,
     ProcessArtifactHandler, ListCommandsHandler, ListOptionsHandler,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX,
-    StudyDeleteAjax, ArtifactAdminAJAX, ArtifactAJAX,
+    StudyDeleteAjax, ArtifactAdminAJAX,
     NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
-    PrepTemplateSummaryAJAX, ArtifactSummaryAJAX,
+    PrepTemplateSummaryAJAX,  # ArtifactSummaryAJAX,
     WorkflowHandler, WorkflowRunHandler, JobAJAX, AutocompleteHandler)
+from qiita_pet.handlers.artifact_handlers import (
+    ArtifactSummaryAJAX, ArtifactAJAX)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
@@ -92,6 +94,7 @@ class Application(tornado.web.Application):
             (r"/user/jobs/", UserJobs),
             (r"/static/(.*)", tornado.web.StaticFileHandler,
              {"path": STATIC_PATH}),
+            # Analysis handlers
             (r"/analysis/list/", ListAnalysesHandler),
             (r"/analysis/dflt/sumary/", AnalysisSummaryAJAX),
             (r"/analysis/create/", CreateAnalysisHandler),
@@ -106,6 +109,7 @@ class Application(tornado.web.Application):
             (r"/admin/approval/", StudyApprovalList),
             (r"/admin/artifact/", ArtifactAdminAJAX),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
+            # Study handlers
             (r"/study/create/", StudyEditHandler),
             (r"/study/edit/(.*)", StudyEditHandler),
             (r"/study/list/", ListStudiesHandler),
@@ -123,8 +127,10 @@ class Application(tornado.web.Application):
             (r"/study/sharing/autocomplete/", AutocompleteHandler),
             (r"/study/new_prep_template/", NewPrepTemplateAjax),
             (r"/prep/graph/", PrepTemplateGraphAJAX),
+            # Artifact handlers
             (r"/artifact/", ArtifactAJAX),
             (r"/artifact/graph/", ArtifactGraphAJAX),
+            (r"/artifact/summary/", ArtifactSummaryAJAX),
             (r"/prep_template/", PrepTemplateHandler),
             (r"/ontology/", OntologyHandler),
             # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.
@@ -133,7 +139,7 @@ class Application(tornado.web.Application):
             (r"/study/description/sample_summary/", SampleAJAX),
             (r"/study/description/prep_summary/", PrepTemplateSummaryAJAX),
             (r"/study/description/prep_template/", PrepTemplateAJAX),
-            (r"/study/description/artifact_summary/", ArtifactSummaryAJAX),
+            # (r"/study/description/artifact_summary/", ArtifactSummaryAJAX),
             (r"/study/description/baseinfo/", StudyBaseInfoAJAX),
             (r"/study/description/data_type_menu/", DataTypesMenuAJAX),
             (r"/study/description/(.*)", StudyIndexHandler),

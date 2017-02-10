@@ -34,7 +34,7 @@
   function populateContentArtifact(artifactId) {
     // Put the loading gif in the div
     show_loading('{% raw qiita_config.portal_dir %}', 'analysis-results');
-    $.get('{% raw qiita_config.portal_dir %}/study/description/artifact_summary/', {'artifact_id': artifactId}, function(data){
+    $.get('{% raw qiita_config.portal_dir %}/artifact/summary/', {'artifact_id': artifactId}, function(data){
       $("#analysis-results").html(data);
     })
       .fail(function(object, status, error_msg) {
