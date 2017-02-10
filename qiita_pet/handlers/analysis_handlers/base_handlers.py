@@ -78,16 +78,20 @@ def analyisis_graph_handler_get_request(analysis_id, user):
             obj = n[1]
             if obj_type == 'job':
                 name = obj.command.name
+            elif not full_access and not obj.visibility == 'public':
+                # The object is an artifact, it is not public and the user
+                # doesn't have full access, so we don't include it in the
+                # graph
+                continue
             else:
-                if full_access or obj.visibility == 'public':
-                    name = '%s - %s' % (obj.name, obj.artifact_type)
-                else:
-                    continue
+                name = '%s - %s' % (obj.name, obj.artifact_type)
             nodes.add((obj_type, obj.id, name))
 
         edges.update({(s[1].id, t[1].id) for s, t in g.edges()})
 
-    # Transforming to lists so they are JSON serializable
+    # Nodes and Edges are sets, but the set object can't be serialized using
+    # JSON. Transforming them to lists so when this is returned to the GUI
+    # over HTTP can be JSONized.
     return {'edges': list(edges), 'nodes': list(nodes)}
 
 
