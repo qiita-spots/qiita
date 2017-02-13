@@ -300,7 +300,7 @@ class TestAnalysis(TestCase):
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
-                            '05/29/14 12:24:51',
+                            '2014-05-29 12:24:51',
                             'host_subject_id': 'NotIdentified',
                             'Description': 'Test Sample 1',
                             'str_column': 'Value for sample 1',
@@ -314,7 +314,7 @@ class TestAnalysis(TestCase):
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
-                            '05/29/14 12:24:51',
+                            '2014-05-29 12:24:51',
                             'host_subject_id': 'NotIdentified',
                             'Description': 'Test Sample 2',
                             'str_column': 'Value for sample 2',
@@ -328,7 +328,7 @@ class TestAnalysis(TestCase):
                             'sample_type': 'type1',
                             'required_sample_info_status': 'received',
                             'collection_timestamp':
-                            '05/29/14 12:24:51',
+                            '2014-05-29 12:24:51',
                             'host_subject_id': 'NotIdentified',
                             'Description': 'Test Sample 3',
                             'str_column': 'Value for sample 3',
@@ -602,14 +602,13 @@ class TestAnalysis(TestCase):
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,
                          analysis._build_mapping_file, samples)
         obs = analysis.mapping_file
+
         exp = self.get_fp("%s_analysis_mapping.txt" % analysis.id)
         self.assertEqual(obs, exp)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             obs, index='#SampleID')
-        exp = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.util.load_template_to_dataframe,
+        exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.map_exp_fp, index='#SampleID')
         assert_frame_equal(obs, exp)
 
@@ -622,9 +621,7 @@ class TestAnalysis(TestCase):
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             analysis.mapping_file, index='#SampleID')
-        exp = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.util.load_template_to_dataframe,
+        exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.duplicated_samples_not_merged, index='#SampleID')
 
         # assert_frame_equal assumes same order on the rows, thus sorting
@@ -641,9 +638,7 @@ class TestAnalysis(TestCase):
                          analysis._build_mapping_file, samples)
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             analysis.mapping_file, index='#SampleID')
-        exp = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.util.load_template_to_dataframe,
+        exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.map_exp_fp, index='#SampleID')
         assert_frame_equal(obs, exp)
 

@@ -87,7 +87,7 @@ class TestSampleAPI(TestCase):
         self.assertEqual(len(obs['template']), 27)
         self.assertEqual(str(
             obs['template']['1.SKB2.640194']['collection_timestamp']),
-            '11/11/11 13:00:00')
+            '2011-11-11 13:00:00')
         del obs['template']['1.SKB2.640194']['collection_timestamp']
         self.assertEqual(obs['template']['1.SKB2.640194'], {
             'physical_specimen_location': 'ANL',
@@ -237,7 +237,7 @@ class TestSampleAPI(TestCase):
                     ('Diesel Root', 3), ('Diesel bulk', 3)],
                 'elevation': [('114', 27)],
                 'description': [('Cannabis Soil Microbiome', 27)],
-                'collection_timestamp': [('11/11/11 13:00:00', 27)],
+                'collection_timestamp': [('2011-11-11 13:00:00', 27)],
                 'physical_specimen_remaining': [('true', 27)],
                 'dna_extracted': [('true', 27)],
                 'taxon_id': [('410658', 9), ('939928', 9), ('1118232', 9)],
@@ -474,11 +474,12 @@ class TestSampleAPI(TestCase):
     def test_sample_template_filepaths_get_req(self):
         templates_dir = qdb.util.get_mountpoint('templates')[0][1]
         obs = sample_template_filepaths_get_req(1, 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': '',
-               'filepaths': [(17, join(templates_dir,
-                              '1_19700101-000000.txt'))]}
-        self.assertEqual(obs, exp)
+        # have to check each key individually as the filepaths will change
+        self.assertEqual(obs['status'], 'success')
+        self.assertEqual(obs['message'], '')
+        # [0] the fp_id is the first element, that should change
+        fp_ids = [fp[0] for fp in obs['filepaths']]
+        self.assertItemsEqual(fp_ids, [17, 22])
 
     def test_sample_template_filepaths_get_req_no_access(self):
         obs = sample_template_filepaths_get_req(1, 'demo@microbio.me')

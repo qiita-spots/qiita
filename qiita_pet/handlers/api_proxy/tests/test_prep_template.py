@@ -70,8 +70,8 @@ class TestPrepAPIReadOnly(TestCase):
                'message': '',
                'name': "Prep information 1",
                'files': ["uploaded_file.txt"],
-               'download_prep': 20,
-               'download_qiime': 21,
+               'download_prep': 23,
+               'download_qiime': 24,
                'num_samples': 27,
                'num_columns': 22,
                'investigation_type': 'Metagenomics',
@@ -174,18 +174,12 @@ class TestPrepAPIReadOnly(TestCase):
 
     def test_prep_template_filepaths_get_req(self):
         obs = prep_template_filepaths_get_req(1, 'test@foo.bar')
-        exp = {'status': 'success',
-               'message': '',
-               'filepaths': [
-                   (21, join(get_mountpoint('templates')[0][1],
-                             '1_prep_1_qiime_19700101-000000.txt')),
-                   (20, join(get_mountpoint('templates')[0][1],
-                             '1_prep_1_19700101-000000.txt')),
-                   (19, join(get_mountpoint('templates')[0][1],
-                             '1_prep_1_qiime_19700101-000000.txt')),
-                   (18, join(get_mountpoint('templates')[0][1],
-                             '1_prep_1_19700101-000000.txt'))]}
-        self.assertEqual(obs, exp)
+        # have to check each key individually as the filepaths will change
+        self.assertEqual(obs['status'], 'success')
+        self.assertEqual(obs['message'], '')
+        # [0] the fp_id is the first element, that should change
+        fp_ids = [fp[0] for fp in obs['filepaths']]
+        self.assertItemsEqual(fp_ids, [18, 19, 20, 21, 23, 24])
 
     def test_prep_template_filepaths_get_req_no_access(self):
         obs = prep_template_filepaths_get_req(1, 'demo@microbio.me')

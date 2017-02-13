@@ -255,7 +255,7 @@ SUMMARY_STATS = {
                         ('TTGCACCGTCGA', 1)],
     'center_name': [('ANL', 27)],
     'center_project_name': [('None', 27)],
-    'collection_timestamp': [('11-11-11 13:00:00', 27)],
+    'collection_timestamp': [('2011-11-11 13:00:00', 27)],
     'common_name': [('rhizosphere metagenome', 9),
                     ('root metagenome', 9),
                     ('soil metagenome', 9)],

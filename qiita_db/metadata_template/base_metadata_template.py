@@ -1430,7 +1430,11 @@ class MetadataTemplate(qdb.base.QiitaObject):
             else:
                 valid_null = qdb.metadata_template.constants.EBI_NULL_VALUES
                 for column, datatype in viewitems(restriction.columns):
-                    for sample, val in viewitems(self.get_category(column)):
+                    # sorting by key (sample id) so we always check in the
+                    # same order, helpful for testing
+                    cats_by_column = self.get_category(column)
+                    for sample in sorted(cats_by_column):
+                        val = cats_by_column[sample]
                         # ignore if valid null value
                         if val in valid_null:
                             continue
@@ -1439,11 +1443,8 @@ class MetadataTemplate(qdb.base.QiitaObject):
                             val = str(val)
                             formats = [
                                 # 4 digits year
-                                '%m-%d-%Y %H:%M:%S', '%m-%d-%Y %H:%M',
-                                '%m-%d-%Y %H', '%m-%d-%Y', '%m-%Y', '%Y',
-                                # 2 digits year
-                                '%m-%d-%y %H:%M:%S', '%m-%d-%y %H:%M',
-                                '%m-%d-%y %H', '%m-%d-%y', '%m-%y', '%y'
+                                '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M',
+                                '%Y-%m-%d %H', '%Y-%m-%d', '%Y-%m', '%Y'
                                 ]
                             date = None
                             for fmt in formats:
