@@ -472,7 +472,6 @@ class TestSampleAPI(TestCase):
                                'exist' % self.new_study.id})
 
     def test_sample_template_filepaths_get_req(self):
-        templates_dir = qdb.util.get_mountpoint('templates')[0][1]
         obs = sample_template_filepaths_get_req(1, 'test@foo.bar')
         # have to check each key individually as the filepaths will change
         self.assertEqual(obs['status'], 'success')

@@ -2122,7 +2122,7 @@ class TestSampleTemplate(TestCase):
             self.assertEqual(len(warn), 1)
             # the order might change so testing by elements
             self.assertItemsEqual(str(warn[0].message).split('\n'),
-                             exp_message.split('\n'))
+                                  exp_message.split('\n'))
 
     def test_validate_errors_timestampB_year4digits(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',

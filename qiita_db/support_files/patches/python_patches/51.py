@@ -9,7 +9,6 @@ from qiita_db.metadata_template.sample_template import SampleTemplate
 from qiita_db.sql_connection import TRN
 
 
-
 # getting columns in each info file that we need to check for
 cols_sample = [col
                for key, vals in viewitems(SAMPLE_TEMPLATE_COLUMNS)
@@ -20,6 +19,7 @@ cols_prep = [col
                 [col
                  for key, vals in viewitems(PREP_TEMPLATE_COLUMNS_TARGET_GENE)
                  for col, dt in viewitems(vals.columns)])
+
 
 def transform_date(value):
     # for the way the patches are applied we need to have this import and
