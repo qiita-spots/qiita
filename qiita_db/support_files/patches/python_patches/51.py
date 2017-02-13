@@ -26,34 +26,34 @@ def transform_date(value):
     # the next 2 variables within this function
     from datetime import datetime
 
-    old_formats = [
+    # old format : new format
+    formats = {
         # 4 digits year
-        '%m/%d/%Y %H:%M:%S', '%m-%d-%Y %H:%M',
-        '%m/%d/%Y %H', '%m-%d-%Y', '%m-%Y', '%Y',
+        '%m/%d/%Y %H:%M:%S': '%Y-%m-%d %H:%M:%S',
+        '%m-%d-%Y %H:%M': '%Y-%m-%d %H:%M',
+        '%m/%d/%Y %H': '%Y-%m-%d %H',
+        '%m-%d-%Y': '%Y-%m-%d',
+        '%m-%Y': '%Y-%m',
+        '%Y': '%Y',
         # 2 digits year
-        '%m/%d/%y %H:%M:%S', '%m-%d-%y %H:%M',
-        '%m/%d/%y %H', '%m-%d-%y', '%m-%y', '%y'
-        ]
-
-    new_formats = [
-        # 4 digits year
-        '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M',
-        '%Y-%m-%d %H', '%Y-%m-%d', '%Y-%m', '%Y'
-    ]
+        '%m/%d/%y %H:%M:%S': '%Y-%m-%d %H:%M:%S',
+        '%m-%d-%y %H:%M': '%Y-%m-%d %H:%M',
+        '%m/%d/%y %H': '%Y-%m-%d %H',
+        '%m-%d-%y': '%Y-%m-%d',
+        '%m-%y': '%Y-%m',
+        '%y': '%Y'
+    }
 
     # loop over the old formats to see which one is it
     date = None
-    for i, fmt in enumerate(old_formats):
+    for i, fmt in enumerate(formats):
         try:
             date = datetime.strptime(value, fmt)
             break
         except ValueError:
             pass
     if date is not None:
-        # if i > 5 means that we are on the 2 digit year
-        if i > 5:
-            i -= 6
-        value = date.strftime(new_formats[i])
+        value = date.strftime(formats[fmt])
     return value
 
 if cols_sample:
