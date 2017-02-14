@@ -570,6 +570,24 @@ class Analysis(qdb.base.QiitaObject):
             return self in Analysis.get_by_status('public') | \
                 user.private_analyses | user.shared_analyses
 
+    def can_edit(self, user):
+        """Returns whether the given user can edit the analysis
+
+        Parameters
+        ----------
+        user : User object
+            User we are checking edit permissions for
+
+        Returns
+        -------
+        bool
+            Whether user can edit the study or not
+        """
+        # The analysis is editable only ifg the user is the owner, is in the
+        # shared list or the user is an admin
+        return (user.level in {'superuser', 'admin'} or self.owner == user or
+                user in self.shared_with)
+
     def summary_data(self):
         """Return number of studies, artifacts, and samples selected
 

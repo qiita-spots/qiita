@@ -162,6 +162,13 @@ class TestAnalysis(TestCase):
         self.assertFalse(
             self.analysis.has_access(qdb.user.User("demo@microbio.me")))
 
+    def test_can_edit(self):
+        a = qdb.analysis.Analysis(1)
+        self.assertTrue(a.can_edit(qdb.user.User('test@foo.bar')))
+        self.assertTrue(a.can_edit(qdb.user.User('shared@foo.bar')))
+        self.assertTrue(a.can_edit(qdb.user.User('admin@foo.bar')))
+        self.assertFalse(a.can_edit(qdb.user.User('demo@microbio.me')))
+
     def test_create_nonqiita_portal(self):
         qiita_config.portal = "EMP"
         obs = qdb.analysis.Analysis.create(
