@@ -51,6 +51,11 @@ class TestBaseHandlersUtils(TestCase):
 
 class TestBaseHandlers(TestHandlerBase):
     def test_post_create_analysis_handler(self):
+        user = User('test@foo.bar')
+        dflt_analysis = user.default_analysis
+        dflt_analysis.add_samples(
+            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                 '1.SKM9.640192', '1.SKM4.640180']})
         args = {'name': 'New Test Analysis',
                 'description': 'Test Analysis Description'}
         response = self.post('/analysis/create/', args)
@@ -64,7 +69,7 @@ class TestBaseHandlers(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
     def test_get_analysis_graph_handler(self):
-        response = self.get('/analysis/description/graph/', {'analysis_id': 1})
+        response = self.get('/analysis/description/1/graph/')
         self.assertEqual(response.code, 200)
         # The job id is randomly generated in the test environment. Gather
         # it here. There is only 1 job in the first artifact of the analysis
@@ -77,6 +82,23 @@ class TestBaseHandlers(TestHandlerBase):
         self.assertItemsEqual(obs, exp)
         self.assertItemsEqual(obs['edges'], exp['edges'])
         self.assertItemsEqual(obs['nodes'], exp['nodes'])
+
+    def test_get_analysis_jobs_handler(self):
+        user = User('test@foo.bar')
+        dflt_analysis = user.default_analysis
+        dflt_analysis.add_samples(
+            {4: ['1.SKB8.640193', '1.SKD8.640184', '1.SKB7.640196',
+                 '1.SKM9.640192', '1.SKM4.640180']})
+        new = Analysis.create(user, "newAnalysis", "A New Analysis",
+                              from_default=True)
+        response = self.get('/analysis/description/%s/jobs/' % new.id)
+        self.assertEqual(response.code, 200)
+
+        # There is only one job
+        job_id = new.jobs[0].id
+        obs = loads(response.body)
+        exp = {job_id: {'status': 'queued', 'step': None, 'error': ""}}
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':

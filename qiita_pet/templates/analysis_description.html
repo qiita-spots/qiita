@@ -77,37 +77,94 @@
     }
   };
 
-  /**
-   * Draws the aritfact + job graph in the `analysis-network-div`
-   *
-   */
-  function populate_grap_div() {
-    // Put the loading gif in the div
-    show_loading('{% raw qiita_config.portal_dir %}', 'analysis-network-div');
-    // Retrieve the information for the graph
-    $.get("{% raw qiita_config.portal_dir %}/analysis/description/graph/", { analysis_id: {{analysis_id}}}, function(data) {
-      var nodes = [];
-      var edges = [];
-      // Format edge list data
-      for(var i = 0; i < data.edges.length; i++) {
-        edges.push({from: data.edges[i][0], to: data.edges[i][1], arrows:'to'});
-      }
-      // Format node list data
-      for(var i = 0; i < data.nodes.length; i++) {
-        nodes.push({id: data.nodes[i][1], label: data.nodes[i][2], group: data.nodes[i][0]});
-      }
-      draw_processing_graph(nodes, edges, 'analysis-network-div', populateContentArtifact, populateContentJob);
-    })
-      .fail(function(object, status, error_msg) {
-        $("#analysis-network-div").html("Error loading graph: " + status + " " + error_msg);
-      }
-    );
-  }
-
   $(document).ready(function(){
-    populate_grap_div();
-  });
+    // Create the new VUE component that is going to hold the artifact + job graph
+    Vue.component('analysis-graph', {
+      template: '<div class="col-md-12 graph" style="width:90%" id="analysis-network-div">',
+      props: ['nodes', 'edges']
+    });
 
+    new Vue({
+      el: "#analysis-graph-vue",
+      data: {
+        nodes: [],
+        edges: []
+      },
+      methods: {
+        update_graph: function () {
+          let vm = this;
+          $.get("{% raw qiita_config.portal_dir %}/analysis/description/" + {{analysis_id}} + "/graph/", function(data) {
+            // If there are no nodes in the graph, it means that we are waiting
+            // for the jobs to generate the initial set of artifacts. Update
+            // the job list
+            if (data.nodes.length == 0) {
+              vm.update_jobs();
+            }
+            else {
+              // The initial set of artifacts has been created! Format the graph
+              // data in a way that Vis.Network likes it
+              // Format edge list data
+              for(var i = 0; i < data.edges.length; i++) {
+                vm.edges.push({from: data.edges[i][0], to: data.edges[i][1], arrows:'to'});
+              }
+              // Format node list data
+              for(var i = 0; i < data.nodes.length; i++) {
+                vm.nodes.push({id: data.nodes[i][1], label: data.nodes[i][2], group: data.nodes[i][0]});
+              }
+              draw_processing_graph(vm.nodes, vm.edges, 'analysis-network-div', populateContentArtifact, populateContentJob);
+              // At this point we can show the graph and hide the job list
+              $("#analysis-network-div").show();
+              $("#analysis-job-div").hide();
+            }
+          })
+            .fail(function(object, status, error_msg) {
+              // Show an error message if something wrong happen, rather than
+              // leaving the spinning wheel of death in there.
+              $("#analysis-network-div").html("Error loading graph: " + status + " " + error_msg);
+              $("#analysis-network-div").show();
+              $("#analysis-job-div").hide();
+            }
+          );
+        },
+        update_jobs: function () {
+          let vm = this;
+          $.get("{% raw qiita_config.portal_dir %}/analysis/description/" + {{analysis_id}} +  "/jobs/", function(data) {
+            $("#analysis-job-div").html("");
+            $("#analysis-job-div").append("<p>Hang tight, we are generating the initial set of files for your analysis: </p>");
+            for(var jobid in data){
+              var contents = "<b> Job: " + jobid + "</b> Status: " + data[jobid]['status'];
+              // Only show step if error if they actually have a useful message
+              if (data[jobid]['step']) {
+                contents = contents + " Step: " + data[jobid]['step'] + "</br>";
+              }
+              if (data[jobid]['error']) {
+                contents = contents + " Error: " + data[jobid]['error'] + "</br>";
+              }
+              $("#analysis-job-div").append(contents);
+            }
+          })
+            .fail(function(object, status, error_msg) {
+              $("#analysis-job-div").html("Error loading job information: " + status + " " + error_msg);
+            }
+          );
+        }
+      },
+      mounted() {
+        let vm = this;
+        show_loading('{% raw qiita_config.portal_dir %}', 'analysis-network-div');
+        $("#analysis-network-div").hide();
+        // This call to udpate graph will take care of updating the jobs
+        // if the graph is not available
+        vm.update_graph();
+        setInterval(function() {
+          // Only update if the graph has not been generated yet
+          if (vm.nodes.length == 0) {
+            vm.update_graph();
+          }
+        }, 5000);
+      }
+    })
+  });
 </script>
 <style>
 .graph {
@@ -131,8 +188,11 @@
     <b>(Click nodes for more information, blue are jobs)</b>
   </div>
 </div>
+<div class='row' id="analysis-graph-vue">
+  <analysis-graph></analysis-graph>
+</div>
 <div class='row'>
-  <div class='col-md-12 graph' style='width:90%' id='analysis-network-div'>
+  <div class='col-md-12' style='width:90%' id='analysis-job-div'>
   </div>
 </div>
 <div class='row'>
