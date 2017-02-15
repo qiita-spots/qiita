@@ -27,14 +27,14 @@ from qiita_pet.handlers.study_handlers import (
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
     VAMPSHandler, PrepTemplateGraphAJAX,
-    ProcessArtifactHandler, ListCommandsHandler, ListOptionsHandler,
+    ListCommandsHandler, ListOptionsHandler,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX,
     StudyDeleteAjax, ArtifactAdminAJAX,
     NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
     PrepTemplateSummaryAJAX,  # ArtifactSummaryAJAX,
     WorkflowHandler, WorkflowRunHandler, JobAJAX, AutocompleteHandler)
 from qiita_pet.handlers.artifact_handlers import (
-    ArtifactSummaryAJAX, ArtifactAJAX)
+    ArtifactSummaryAJAX, ArtifactAJAX, ProcessArtifactHandler)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
@@ -118,7 +118,6 @@ class Application(tornado.web.Application):
             (r"/study/process/workflow/run/", WorkflowRunHandler),
             (r"/study/process/workflow/", WorkflowHandler),
             (r"/study/process/job/", JobAJAX),
-            (r"/study/process/", ProcessArtifactHandler),
             (r"/study/list/socket/", SelectSamplesHandler),
             (r"/study/search/(.*)", SearchStudiesAJAX),
             (r"/study/new_artifact/", NewArtifactHandler),
@@ -130,6 +129,7 @@ class Application(tornado.web.Application):
             # Artifact handlers
             (r"/artifact/graph/", ArtifactGraphAJAX),
             (r"/artifact/(.*)/summary/", ArtifactSummaryAJAX),
+            (r"/artifact/(.*)/process/", ProcessArtifactHandler),
             (r"/artifact/(.*)/", ArtifactAJAX),
             (r"/prep_template/", PrepTemplateHandler),
             (r"/ontology/", OntologyHandler),

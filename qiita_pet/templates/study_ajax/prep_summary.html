@@ -26,6 +26,10 @@
       populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
   };
 
+  function load_process_artifact_ui(artifact_id) {
+      populate_main_div('{% raw qiita_config.portal_dir %}/study/process/', {artifact_id: artifact_id });
+  };
+
   /*
    * Function to draw a vis.Network
    *

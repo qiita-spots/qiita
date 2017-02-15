@@ -7,5 +7,6 @@
 # -----------------------------------------------------------------------------
 
 from .base_handlers import ArtifactSummaryAJAX, ArtifactAJAX
+from .process_handlers import ProcessArtifactHandler
 
-__all__ = ['ArtifactSummaryAJAX', 'ArtifactAJAX']
+__all__ = ['ArtifactSummaryAJAX', 'ArtifactAJAX', 'ProcessArtifactHandler']
