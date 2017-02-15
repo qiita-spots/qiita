@@ -229,7 +229,7 @@ function change_artifact_name(portal_dir, artifact_id, new_name, on_success_func
     success: on_success_func,
     error: function(object, status, error_msg) {
       // Something went wrong, show the message
-      bootstrapAlert("Error deleting artifact: " + error_msg, "danger");
+      bootstrapAlert("Error changing artifact name: " + error_msg, "danger");
     }
   });
 }
