@@ -492,7 +492,7 @@ with TRN:
         # Beta Diversity
         (bdiv_cmd_id, 'tree', 'string', False, ''),
         (bdiv_cmd_id, 'metrics',
-         'mchoice:["abund_jaccard","binary_chisq","binary_chord",'
+         'choice:["abund_jaccard","binary_chisq","binary_chord",'
          '"binary_euclidean","binary_hamming","binary_jaccard",'
          '"binary_lennon","binary_ochiai","binary_otu_gain","binary_pearson",'
          '"binary_sorensen_dice","bray_curtis","bray_curtis_faith",'
@@ -560,12 +560,8 @@ with TRN:
     sql_args = [
         [sum_taxa_cmd_id, 'Defaults',
          '{"sort": false, "metadata_category": ""}'],
-        [bdiv_cmd_id, 'Non-phylogenetic',
-         '{"metrics": ["bray_curtis", "gower", "canberra", "pearson"], '
-         '"tree": ""}'],
-        [bdiv_cmd_id, 'Phylogenetic',
-         '{"metrics": ["unweighted_unifrac", "weighted_unifrac"], '
-         '"tree": ""}'],
+        [bdiv_cmd_id, 'Unweighted UniFrac',
+         '{"metrics": "unweighted_unifrac", "tree": ""}'],
         [arare_cmd_id, 'Defaults',
          '{"max_rare_depth": "Default", "tree": "", "num_steps": 10, '
          '"min_rare_depth": 10}'],
