@@ -214,7 +214,7 @@ function show_loading(portal_dir, target) {
  *
  * Function to update the name of an artifact
  *
- * @param portal_dir: string. The portat that qiita is running under
+ * @param portal_dir: string. The portal that qiita is running under
  * @param artifact_id: int. The artifact to be changed
  * @param new_name: string. The new artifact name
  * @param on_success_func: function. Function to execute when the name has been
