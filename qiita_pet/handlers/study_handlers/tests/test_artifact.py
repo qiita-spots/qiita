@@ -168,5 +168,6 @@ class ArtifactAdminAJAXTests(TestHandlerBase):
 
         self.assertEqual(Artifact(3).visibility, 'sandbox')
 
+
 if __name__ == "__main__":
     main()

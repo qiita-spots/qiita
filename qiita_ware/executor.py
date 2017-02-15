@@ -97,4 +97,5 @@ def _submit(ctx, user, parameters):
     ctx.submit_async(_redis_wrap, execute, redis_deets, job.id)
     return job.id
 
+
 plugin_submit = partial(_submit, context)

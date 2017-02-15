@@ -88,5 +88,6 @@ class ReferenceTests(TestCase):
         ref = qdb.reference.Reference(2)
         self.assertEqual(ref.tree_fp, '')
 
+
 if __name__ == '__main__':
     main()

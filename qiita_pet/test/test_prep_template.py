@@ -74,5 +74,6 @@ class TestPrepTemplateHandler(TestHandlerBase):
                        "with it"}
         self.assertEqual(loads(response.body), exp)
 
+
 if __name__ == '__main__':
     main()

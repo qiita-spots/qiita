@@ -56,6 +56,7 @@ def transform_date(value):
         value = date.strftime(formats[fmt])
     return value
 
+
 if cols_sample:
     with TRN:
         # a few notes: just getting the preps with duplicated values; ignoring

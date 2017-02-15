@@ -182,6 +182,7 @@ class TestFilePathOpening(TestCase):
 
         os.remove(name)
 
+
 # comment indicates the expected random value
 sequences = [
     ('a_1', 'AATTGGCC-a1'),  # 2, 3624216819017203053

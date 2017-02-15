@@ -64,5 +64,6 @@ class UtilTests(TestCase):
         # testing just the version
         self.assertEqual(exp_version, qdb.__version__)
 
+
 if __name__ == '__main__':
     main()

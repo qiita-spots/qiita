@@ -35,5 +35,6 @@ class TestOntology(TestCase):
                'message': 'Ontology "ONTOLOGY" does not exist'}
         self.assertEqual(obs, exp)
 
+
 if __name__ == '__main__':
     main()

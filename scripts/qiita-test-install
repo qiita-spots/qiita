@@ -271,6 +271,7 @@ class QiitaConfig(TestCase):
             ('.'.join(map(str, version)), str_acceptable_min_version,
              str_acceptable_max_version))
 
+
 system_info_header = """
 System information
 ==================
