@@ -514,6 +514,26 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [pmid, self._id])
             qdb.sql_connection.TRN.execute()
 
+    @property
+    def can_be_publicized(self):
+        """Returns whether the analysis can be made public
+
+        Returns
+        -------
+        bool
+            Whether the analysis can be publicized or not
+        """
+        # The analysis can be made public if all the artifacts used
+        # to get the samples from are public
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT artifact_id
+                     FROM qiita.analysis_sample
+                     WHERE analysis_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return all(
+                [qdb.artifact.Artifact(aid).visibility == 'public'
+                 for aid in qdb.sql_connection.TRN.execute_fetchflatten()])
+
     def add_artifact(self, artifact):
         """Adds an artifact to the analysis
 
