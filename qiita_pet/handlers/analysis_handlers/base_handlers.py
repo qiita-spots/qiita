@@ -6,7 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from json import loads
+
 from tornado.web import authenticated
+from moi import r_client
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
@@ -29,16 +32,49 @@ class CreateAnalysisHandler(BaseHandler):
                       % (qiita_config.portal_dir, analysis.id))
 
 
+def analysis_description_handler_get_request(analysis_id, user):
+    """Returns the analysis information
+
+    Parameters
+    ----------
+    analysis_id : int
+        The analysis id
+    user : qiita_db.user.User
+        The user performing the request
+    """
+    analysis = Analysis(analysis_id)
+    check_analysis_access(user, analysis)
+
+    job_info = r_client.get("analysis_%s" % analysis.id)
+    alert_type = 'info'
+    alert_msg = ''
+    if job_info:
+        job_info = loads(job_info)
+        job_id = job_info['job_id']
+        if job_id:
+            redis_info = loads(r_client.get(job_id))
+            if redis_info['status_msg'] == 'running':
+                alert_msg = 'An artifact is being deleted from this analysis'
+            elif redis_info['return'] is not None:
+                alert_type = redis_info['return']['status']
+                alert_msg = redis_info['return']['message'].replace(
+                    '\n', '</br>')
+
+    return {'analysis_name': analysis.name,
+            'analysis_id': analysis.id,
+            'analysis_description': analysis.description,
+            'alert_type': alert_type,
+            'alert_msg': alert_msg}
+
+
 class AnalysisDescriptionHandler(BaseHandler):
     @authenticated
     @execute_as_transaction
     def get(self, analysis_id):
-        analysis = Analysis(analysis_id)
-        check_analysis_access(self.current_user, analysis)
+        res = analysis_description_handler_get_request(analysis_id,
+                                                       self.current_user)
 
-        self.render("analysis_description.html", analysis_name=analysis.name,
-                    analysis_id=analysis_id,
-                    analysis_description=analysis.description)
+        self.render("analysis_description.html", **res)
 
 
 def analyisis_graph_handler_get_request(analysis_id, user):

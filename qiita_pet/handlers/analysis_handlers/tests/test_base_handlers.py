@@ -7,20 +7,56 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
-from json import loads
+from json import loads, dumps
 
 from tornado.web import HTTPError
+from moi import r_client
 
 from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.analysis_handlers.base_handlers import (
-    analyisis_graph_handler_get_request)
+    analyisis_graph_handler_get_request,
+    analysis_description_handler_get_request)
 
 
 @qiita_test_checker()
 class TestBaseHandlersUtils(TestCase):
+    def tearDown(self):
+        r_client.flushdb()
+
+    def test_analysis_description_handler_get_request(self):
+        obs = analysis_description_handler_get_request(1, User('test@foo.bar'))
+        exp = {'analysis_name': 'SomeAnalysis',
+               'analysis_id': 1,
+               'analysis_description': 'A test analysis',
+               'alert_type': 'info',
+               'alert_msg': ''}
+        self.assertEqual(obs, exp)
+
+        r_client.set('analysis_1', dumps({'job_id': 'job_id'}))
+        r_client.set('job_id', dumps({'status_msg': 'running'}))
+        obs = analysis_description_handler_get_request(1, User('test@foo.bar'))
+        exp = {'analysis_name': 'SomeAnalysis',
+               'analysis_id': 1,
+               'analysis_description': 'A test analysis',
+               'alert_type': 'info',
+               'alert_msg': 'An artifact is being deleted from this analysis'}
+        self.assertEqual(obs, exp)
+
+        r_client.set('job_id', dumps(
+            {'status_msg': 'Success',
+             'return': {'status': 'danger',
+                        'message': 'Error deleting artifact'}}))
+        obs = analysis_description_handler_get_request(1, User('test@foo.bar'))
+        exp = {'analysis_name': 'SomeAnalysis',
+               'analysis_id': 1,
+               'analysis_description': 'A test analysis',
+               'alert_type': 'danger',
+               'alert_msg': 'Error deleting artifact'}
+        self.assertEqual(obs, exp)
+
     def test_analyisis_graph_handler_get_request(self):
         obs = analyisis_graph_handler_get_request(1, User('test@foo.bar'))
         # The job id is randomly generated in the test environment. Gather

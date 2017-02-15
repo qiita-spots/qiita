@@ -7,17 +7,24 @@
 # -----------------------------------------------------------------------------
 
 from os.path import basename
+from json import dumps
 
 from tornado.web import authenticated
+from moi import r_client
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import safe_execution
 from qiita_pet.exceptions import QiitaHTTPError
+from qiita_ware.context import safe_submit
+from qiita_ware.dispatchable import delete_artifact
 from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Parameters
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.util import get_visibilities
+
+
+PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
 
 def check_artifact_access(user, artifact):
@@ -147,12 +154,12 @@ def artifact_summary_get_request(user, artifact_id):
                     btn_base % ('request approval for', 'awaiting_approval',
                                 'Request approval'))
 
-        elif user.level == 'admin' and visibility == 'awaiting_approval':
-            # The approve artifact button only appears if the user is an admin
-            # the artifact is waiting to be approvaed and the qiita config
-            # requires artifact approval
-            buttons.append(btn_base % ('approve', 'private',
-                                       'Approve artifact'))
+            elif user.level == 'admin' and visibility == 'awaiting_approval':
+                # The approve artifact button only appears if the user is an
+                # admin the artifact is waiting to be approvaed and the qiita
+                # config requires artifact approval
+                buttons.append(btn_base % ('approve', 'private',
+                                           'Approve artifact'))
 
         if visibility == 'private':
             # The make public button only appears if the artifact is private
@@ -207,10 +214,7 @@ def artifact_summary_get_request(user, artifact_id):
             'processing_jobs': processing_jobs,
             'summary': summary,
             'job': job_info,
-            'errored_jobs': errored_jobs
-            # 'prep_id': artifact.prep_templates[0].id,
-            # 'study_id': artifact.analysis.id
-            }
+            'errored_jobs': errored_jobs}
 
 
 def artifact_summary_post_request(user, artifact_id):
@@ -340,7 +344,40 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
                                   'supported operations: replace' % req_op)
 
 
+def artifact_post_req(user, artifact_id):
+    """Deletes the artifact
+
+    Parameters
+    ----------
+    user : qiita_db.user.User
+        The user requesting the action
+    artifact_id : int
+        Id of the artifact being deleted
+    """
+    artifact_id = int(artifact_id)
+    artifact = Artifact(artifact_id)
+    check_artifact_access(user, artifact)
+
+    analysis = artifact.analysis
+
+    if analysis:
+        # Do something when deleting in the analysis part to keep track of it
+        redis_key = "analysis_%s" % analysis.id
+    else:
+        pt_id = artifact.prep_templates[0].id
+        redis_key = PREP_TEMPLATE_KEY_FORMAT % pt_id
+
+    job_id = safe_submit(user.id, delete_artifact, artifact_id)
+    r_client.set(redis_key, dumps({'job_id': job_id, 'is_qiita_job': False}))
+
+
 class ArtifactAJAX(BaseHandler):
+    @authenticated
+    def post(self, artifact_id):
+        with safe_execution():
+            artifact_post_req(self.current_user, artifact_id)
+        self.finish()
+
     @authenticated
     def patch(self, artifact_id):
         """Patches a prep template in the system

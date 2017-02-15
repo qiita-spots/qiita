@@ -15,6 +15,17 @@
     load_template_graph();
   }
 
+  /**
+   *
+   * This function is needed by the artifact subsection of the page. After the
+   * artifact is sent for deletion, we need to populate the main div with
+   * the current prep id
+   *
+   */
+  function reload_UI_post_artifact_delete() {
+      populate_main_div('{% raw qiita_config.portal_dir %}/study/description/prep_template/', { prep_id: {{prep_id}}, study_id: {{study_id}} });
+  };
+
   /*
    * Function to draw a vis.Network
    *
@@ -306,10 +317,12 @@
    */
   function populateContentArtifact(artifact_id) {
     show_loading("prep-artifact-summary-div");
-    $.get('{% raw qiita_config.portal_dir %}/study/description/artifact_summary/', {'artifact_id': artifact_id})
-      .done(function ( data ) {
-        $("#prep-artifact-summary-div").html(data);
-      });
+    $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/summary/', function(data) {
+      $("#prep-artifact-summary-div").html(data);
+    })
+     .fail(function(object, status, error_msg) {
+       $("#prep-artifact-summary-div").html("Error loading artifact information " + object.statusText);
+     });
   }
 
   /*

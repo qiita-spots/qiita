@@ -15,6 +15,17 @@
   }
 
   /**
+   *
+   * This function is needed by the artifact subsection of the page. After the
+   * artifact is sent for deletion, we need to reload the current page to
+   * update the UI.
+   *
+   */
+  function reload_UI_post_artifact_delete() {
+      location.reload();
+  }
+
+  /**
    * Creates the HTML with the job information and adds it to `target`
    *
    * @param data: dict. The job information
@@ -182,6 +193,10 @@
 
     // Add the vue object to the div, so we avoid to have global variables
     $("#analysis-network-div").data('data-graph-vue', vueGraph);
+
+    {% if alert_msg %}
+      bootstrapAlert("{{alert_msg}}", "{{alert_type}}");
+    {% end %}
   });
 </script>
 <style>
