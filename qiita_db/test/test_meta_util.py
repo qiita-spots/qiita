@@ -184,9 +184,9 @@ class MetaUtilTests(TestCase):
 
         portal = qiita_config.portal
         vals = [
-            ('number_studies', {'sanbox': '0', 'public': '0',
+            ('number_studies', {'sandbox': '0', 'public': '0',
                                 'private': '1'}, r_client.hgetall),
-            ('number_of_samples', {'sanbox': '0', 'public': '0',
+            ('number_of_samples', {'sandbox': '0', 'public': '0',
                                    'private': '27'}, r_client.hgetall),
             ('num_users', '4', r_client.get),
             ('lat_longs', EXP_LAT_LONG, r_client.get),
