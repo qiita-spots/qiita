@@ -7,7 +7,21 @@
 # -----------------------------------------------------------------------------
 
 from __future__ import division
+
+from tornado.web import HTTPError
+
 from qiita_core.exceptions import QiitaError
+
+
+class QiitaHTTPError(HTTPError):
+    def __init__(self, status_code=500, log_message=None, *args, **kwargs):
+        super(QiitaHTTPError, self).__init__(
+            status_code, log_message, *args, **kwargs)
+        # Propagating the log_message to "reason" makes sure that the
+        # error message that we are adding gets sent to the user,
+        # unless we specifically have already added a different message
+        if not self.reason:
+            self.reason = log_message
 
 
 class QiitaPetAuthorizationError(QiitaError):
