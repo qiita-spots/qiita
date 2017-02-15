@@ -7,6 +7,8 @@
 # 3) Transfer all the data in the old structures to the plugin structures
 # 4) Delete old structures
 
+from string import ascii_letters, digits
+from random import SystemRandom
 from os.path import join, exists, basename
 from os import makedirs
 from json import loads
@@ -444,6 +446,18 @@ with TRN:
                 ['rarefaction_curves', 'rarefaction_curves', True, True],
                 ['taxa_summary', 'taxa_summary', True, True]]
     TRN.add(sql, sql_args, many=True)
+
+    # Step 8: Give a new client id/client secret pair to the plugins
+    sql = """INSERT INTO qiita.oauth_identifiers (client_id, client_secret)
+                VALUES (%s, %s)"""
+    sr = SystemRandom()
+    chars = ascii_letters + digits
+    client_id = ''.join(sr.choice(chars) for i in range(50))
+    client_secret = ''.join(sr.choice(chars) for i in range(255))
+    TRN.add(sql, [client_id, client_secret])
+    sql = """INSERT INTO qiita.oauth_software (client_id, software_id)
+                VALUES (%s, %s)"""
+    TRN.add(sql, [client_id, divtype_id])
 
     # Create the new commands that execute the current analyses. In qiita,
     # the only commands that where available are Summarize Taxa, Beta
