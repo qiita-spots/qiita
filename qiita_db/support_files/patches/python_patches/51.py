@@ -553,6 +553,26 @@ with TRN:
     TRN.add(sql, ['rarefied_table', srare_cmd_id, biom_atype_id])
     srare_cmd_out_id = TRN.execute_fetchlast()
 
+    # Step 6: Add default parameter sets
+    sql = """INSERT INTO qiita.default_parameter_set
+                (command_id, parameter_set_name, parameter_set)
+             VALUES (%s, %s, %s)"""
+    sql_args = [
+        [sum_taxa_cmd_id, 'Defaults',
+         '{"sort": false, "metadata_category": ""}'],
+        [bdiv_cmd_id, 'Non-phylogenetic',
+         '{"metrics": ["bray_curtis", "gower", "canberra", "pearson"], '
+         '"tree": ""}'],
+        [bdiv_cmd_id, 'Phylogenetic',
+         '{"metrics": ["unweighted_unifrac", "weighted_unifrac"], '
+         '"tree": ""}'],
+        [arare_cmd_id, 'Defaults',
+         '{"max_rare_depth": "Default", "tree": "", "num_steps": 10, '
+         '"min_rare_depth": 10}'],
+        [srare_cmd_id, 'Defaults',
+         '{"subsample_multinomial": "False"}']]
+    TRN.add(sql, sql_args, many=True)
+
 # At this point we are ready to start transferring the data from the old
 # structures to the new structures. Overview of the procedure:
 # Step 1: Add initial set of artifacts up to rarefied table
