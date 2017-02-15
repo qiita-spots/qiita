@@ -919,6 +919,21 @@ class ArtifactTests(TestCase):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
             qdb.artifact.Artifact(test.id)
 
+        # Analysis artifact
+        parameters = qdb.software.Parameters.from_default_params(
+            qdb.software.DefaultParameters(1), {'input_data': 1})
+        test = qdb.artifact.Artifact.create(
+            self.filepaths_processed, "Demultiplexed",
+            parents=[qdb.artifact.Artifact(9)],
+            processing_parameters=parameters)
+
+        self._clean_up_files.extend(
+            [join(uploads_fp, basename(fp)) for _, fp, _ in test.filepaths])
+        qdb.artifact.Artifact.delete(test.id)
+
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            qdb.artifact.Artifact(test.id)
+
     def test_delete_with_html(self):
         fd, html_fp = mkstemp(suffix=".html")
         close(fd)
