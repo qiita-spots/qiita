@@ -11,6 +11,7 @@ from json import loads
 
 from tornado.web import HTTPError
 
+from qiita_core.util import qiita_test_checker
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_pet.test.tornado_test_base import TestHandlerBase
@@ -18,6 +19,7 @@ from qiita_pet.handlers.analysis_handlers.base_handlers import (
     analyisis_graph_handler_get_request)
 
 
+@qiita_test_checker()
 class TestBaseHandlersUtils(TestCase):
     def test_analyisis_graph_handler_get_request(self):
         obs = analyisis_graph_handler_get_request(1, User('test@foo.bar'))
