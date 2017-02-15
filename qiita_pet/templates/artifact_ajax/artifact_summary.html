@@ -52,15 +52,19 @@
    *
    */
   function set_artifact_visibility(visibility, aid) {
-    $.post('{% raw qiita_config.portal_dir %}/admin/artifact/', {artifact_id: +aid, visibility: visibility})
-      .done(function ( data ) {
-        var status = "info";
-        if(data["status"] == "error") { status = "danger"; }
-        //Show for 4 seconds (4000 ms), then remove
-        bootstrapAlert(data.message.replace("\n", "<br/>"), status);
-        //update buttons to match new status
-        load_artifact_summary(aid);
-      });
+    $.ajax({
+      url: '{% raw qiita_config.portal_dir %}/artifact/' + aid + '/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/visibility/', 'value': visibility},
+      success: function(data) {
+        // Reload the artifact summary page so we can update the buttons
+        populateContentArtifact(aid);
+      },
+      error: function(object, status, error_msg) {
+        // Something went wrong, show the message
+        bootstrapAlert("Error changing artifact visiblity: " + error_msg, "danger");
+      }
+    });
   }
 
   /**

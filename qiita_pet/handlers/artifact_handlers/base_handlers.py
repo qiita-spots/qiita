@@ -17,6 +17,7 @@ from qiita_pet.exceptions import QiitaHTTPError
 from qiita_db.artifact import Artifact
 from qiita_db.software import Command, Parameters
 from qiita_db.processing_job import ProcessingJob
+from qiita_db.util import get_visibilities
 
 
 def check_artifact_access(user, artifact):
@@ -131,7 +132,7 @@ def artifact_summary_get_request(user, artifact_id):
         # If the artifact is part of an analysis, we don't require admin
         # approval, and the artifact can be made public only if all the
         # artifacts used to create the initial artifact set are public
-        if analysis.can_be_publicized:
+        if analysis.can_be_publicized and visibility != 'public':
             buttons.append(btn_base % ('make public', 'public', 'Make public'))
 
     else:
@@ -313,6 +314,23 @@ def artifact_patch_request(user, artifact_id, req_op, req_path, req_value=None,
         if attribute == 'name':
             artifact.name = req_value
             return
+        elif attribute == 'visibility':
+            if req_value not in get_visibilities():
+                raise QiitaHTTPError(400, 'Unknown visibility value: %s'
+                                          % req_value)
+            # Set the approval to private if needs approval and admin
+            if req_value == 'private':
+                if not qiita_config.require_approval:
+                    artifact.visibility = 'private'
+                # Set the approval to private if approval not required
+                elif user.level == 'admin':
+                    artifact.visibility = 'private'
+                # Trying to set approval without admin privileges
+                else:
+                    raise QiitaHTTPError(403, 'User does not have permissions '
+                                              'to approve change')
+            else:
+                artifact.visibility = req_value
         else:
             # We don't understand the attribute so return an error
             raise QiitaHTTPError(404, 'Attribute "%s" not found. Please, '

@@ -252,9 +252,10 @@ class TestBaseHandlersUtils(TestCase):
 
     def test_artifact_patch_request(self):
         a = Artifact(1)
+        test_user = User('test@foo.bar')
         self.assertEqual(a.name, 'Raw data 1')
 
-        artifact_patch_request(User('test@foo.bar'), 1, 'replace', '/name/',
+        artifact_patch_request(test_user, 1, 'replace', '/name/',
                                req_value='NEW_NAME')
         self.assertEqual(a.name, 'NEW_NAME')
 
@@ -268,23 +269,44 @@ class TestBaseHandlersUtils(TestCase):
 
         # Incorrect path parameter
         with self.assertRaises(QiitaHTTPError):
-            artifact_patch_request(User('test@foo.bar'), 1, 'replace',
+            artifact_patch_request(test_user, 1, 'replace',
                                    '/name/wrong/', req_value='NEW_NAME')
 
         # Missing value
         with self.assertRaises(QiitaHTTPError):
-            artifact_patch_request(User('test@foo.bar'), 1, 'replace',
+            artifact_patch_request(test_user, 1, 'replace',
                                    '/name/')
 
         # Wrong attribute
         with self.assertRaises(QiitaHTTPError):
-            artifact_patch_request(User('test@foo.bar'), 1, 'replace',
+            artifact_patch_request(test_user, 1, 'replace',
                                    '/wrong/', req_value='NEW_NAME')
 
         # Wrong operation
         with self.assertRaises(QiitaHTTPError):
-            artifact_patch_request(User('test@foo.bar'), 1, 'add', '/name/',
+            artifact_patch_request(test_user, 1, 'add', '/name/',
                                    req_value='NEW_NAME')
+
+        # Changing visibility
+        self.assertEqual(a.visibility, 'private')
+        artifact_patch_request(test_user, 1, 'replace', '/visibility/',
+                               req_value='sandbox')
+        self.assertEqual(a.visibility, 'sandbox')
+
+        # Admin can change to private
+        artifact_patch_request(User('admin@foo.bar'), 1, 'replace',
+                               '/visibility/', req_value='private')
+        self.assertEqual(a.visibility, 'private')
+
+        # Test user can't change to private
+        with self.assertRaises(QiitaHTTPError):
+            artifact_patch_request(test_user, 1, 'replace', '/visibility/',
+                                   req_value='private')
+
+        # Unkown req value
+        with self.assertRaises(QiitaHTTPError):
+            artifact_patch_request(test_user, 1, 'replace', '/visibility/',
+                                   req_value='wrong')
 
 
 class TestBaseHandlers(TestHandlerBase):

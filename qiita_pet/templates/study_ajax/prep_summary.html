@@ -86,7 +86,7 @@
 
       if (clickedNode.group == 'artifact') {
         var artifact_id = +ids[0];
-        load_artifact_summary(artifact_id);
+        populateContentArtifact(artifact_id);
       } else {
         $("#prep-artifact-summary-div").html("");
       }
@@ -304,7 +304,7 @@
    * This function executes an AJAX call to populate the prep-artifact-summary-div
    *
    */
-  function load_artifact_summary(artifact_id) {
+  function populateContentArtifact(artifact_id) {
     show_loading("prep-artifact-summary-div");
     $.get('{% raw qiita_config.portal_dir %}/study/description/artifact_summary/', {'artifact_id': artifact_id})
       .done(function ( data ) {
