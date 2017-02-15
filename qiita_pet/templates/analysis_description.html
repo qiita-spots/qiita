@@ -3,6 +3,18 @@
 <script type="text/javascript">
 
   /**
+   *
+   * This function is needed by the artifact subsection of the page. Since the
+   * artifact can be either embedded in the analysis pipeline or in the study
+   * pipeline, we take advantage of the templating system to abstract the way
+   * the graph should be updated. In the analysis pipeline (current) the graph
+   * is reloaded by calling the update_graph function of the Vue component.
+   */
+  function reload_graph() {
+    $("#analysis-network-div").data('data-graph-vue').update_graph();
+  }
+
+  /**
    * Creates the HTML with the job information and adds it to `target`
    *
    * @param data: dict. The job information

@@ -65,16 +65,19 @@
 
   /**
    *
+   * This function is called when the artifact name is successfully changed.
    *
+   * @param: data. Ignored
    */
   function name_changed(data) {
+    // Hide the modal to change the artifact name
     $("#update-artifact-name").modal('hide');
+    // Update the name of the artifact in the GUI
     $("#summary-title").text($('#new-artifact-name').val());
+    // Reset the value in the modal to an empty string
     $('#new-artifact-name').val("");
-    // TODO: update the given graph
-    // In the study side -> load_template_graph();
-    // In the analysis side ->
-    $("#analysis-network-div").data('data-graph-vue').update_graph();
+    // Reload the artifact/jobs graph so the new name is shown in it
+    reload_graph();
   }
 
   /**

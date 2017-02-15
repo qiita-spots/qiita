@@ -2,6 +2,19 @@
 <script type="text/javascript">
   var network;
 
+  /**
+   *
+   * This function is needed by the artifact subsection of the page. Since the
+   * artifact can be either embedded in the analysis pipeline or in the study
+   * pipeline, we take advantage of the templating system to abstract the way
+   * the graph should be updated. In the study pipeline (current) the graph
+   * is simply relaoded by calling load_template_graph.
+   *
+   */
+  function reload_graph() {
+    load_template_graph();
+  }
+
   /*
    * Function to draw a vis.Network
    *
