@@ -128,9 +128,9 @@ class Application(tornado.web.Application):
             (r"/study/new_prep_template/", NewPrepTemplateAjax),
             (r"/prep/graph/", PrepTemplateGraphAJAX),
             # Artifact handlers
-            (r"/artifact/", ArtifactAJAX),
             (r"/artifact/graph/", ArtifactGraphAJAX),
-            (r"/artifact/summary/", ArtifactSummaryAJAX),
+            (r"/artifact/(.*)/summary/", ArtifactSummaryAJAX),
+            (r"/artifact/(.*)/", ArtifactAJAX),
             (r"/prep_template/", PrepTemplateHandler),
             (r"/ontology/", OntologyHandler),
             # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.

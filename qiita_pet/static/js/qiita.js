@@ -223,9 +223,9 @@ function show_loading(portal_dir, target) {
  */
 function change_artifact_name(portal_dir, artifact_id, new_name, on_success_func) {
   $.ajax({
-    url: portal_dir + '/artifact/',
+    url: portal_dir + '/artifact/' + artifact_id + '/',
     type: 'PATCH',
-    data: {'op': 'replace', 'path': '/' + artifact_id + '/name/', 'value': new_name, 'artifact_id': artifact_id},
+    data: {'op': 'replace', 'path': '/name/', 'value': new_name},
     success: on_success_func,
     error: function(object, status, error_msg) {
       // Something went wrong, show the message
