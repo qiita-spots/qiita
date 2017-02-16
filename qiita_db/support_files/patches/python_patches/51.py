@@ -45,15 +45,17 @@ def transform_date(value):
     }
 
     # loop over the old formats to see which one is it
-    date = None
-    for i, fmt in enumerate(formats):
-        try:
-            date = datetime.strptime(value, fmt)
-            break
-        except ValueError:
-            pass
-    if date is not None:
-        value = date.strftime(formats[fmt])
+    if value is not None:
+        date = None
+        for i, fmt in enumerate(formats):
+            try:
+                date = datetime.strptime(value, fmt)
+                break
+            except ValueError:
+                pass
+        if date is not None:
+            value = date.strftime(formats[fmt])
+
     return value
 
 
