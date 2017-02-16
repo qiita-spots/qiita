@@ -934,5 +934,6 @@ class Transaction(object):
         """
         self._post_rollback_funcs.append((func, args, kwargs))
 
+
 # Singleton pattern, create the transaction for the entire system
 TRN = Transaction()

@@ -162,7 +162,7 @@ def update_redis_stats():
     STUDY = qdb.study.Study
     studies = {'public': STUDY.get_by_status('public'),
                'private': STUDY.get_by_status('private'),
-               'sanbox': STUDY.get_by_status('sandbox')}
+               'sandbox': STUDY.get_by_status('sandbox')}
     number_studies = {k: len(v) for k, v in viewitems(studies)}
 
     number_of_samples = {}
@@ -192,7 +192,8 @@ def update_redis_stats():
 
     lat_longs = get_lat_longs()
 
-    num_studies_ebi = len(ebi_samples_prep)
+    num_studies_ebi = len([k for k, v in viewitems(ebi_samples_prep)
+                           if v >= 1])
     number_samples_ebi_prep = sum([v for _, v in viewitems(ebi_samples_prep)])
 
     # generating file size stats

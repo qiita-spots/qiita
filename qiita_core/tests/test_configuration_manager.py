@@ -201,6 +201,7 @@ class ConfigurationManagerTests(TestCase):
         obs._get_portal(self.conf)
         self.assertEqual(obs.portal_dir, "/gold_portal")
 
+
 CONF = """
 # ------------------------------ Main settings --------------------------------
 [main]

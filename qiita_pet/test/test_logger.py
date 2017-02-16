@@ -14,5 +14,6 @@ class TestLogEntryViewerHandler(TestHandlerBase):
         response = self.post('/admin/error/', {'numrecords': 20})
         self.assertEqual(response.code, 405)
 
+
 if __name__ == "__main__":
     main()

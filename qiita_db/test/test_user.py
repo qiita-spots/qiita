@@ -473,5 +473,6 @@ class UserTest(TestCase):
         # no jobs
         self.assertEqual(qdb.user.User('admin@foo.bar').jobs(), [])
 
+
 if __name__ == "__main__":
     main()

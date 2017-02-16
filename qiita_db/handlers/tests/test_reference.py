@@ -51,5 +51,6 @@ class ReferenceHandler(OauthTestingBase):
         exp = {'name': 'Greengenes', 'version': '13_8', 'files': fps}
         self.assertEqual(loads(obs.body), exp)
 
+
 if __name__ == '__main__':
     main()

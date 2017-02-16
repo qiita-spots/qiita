@@ -274,5 +274,6 @@ class ProcessingJobAPItestHandlerTests(OauthTestingBase):
         self.assertEqual(qdb.processing_job.ProcessingJob(job_id).status,
                          'running')
 
+
 if __name__ == '__main__':
     main()

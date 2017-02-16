@@ -84,4 +84,5 @@ class PortalStyleManager(object):
         """Get the configuration of the study_list section"""
         self.example_search = config.get('study_list', 'EXAMPLE_SEARCH')
 
+
 portal_styling = PortalStyleManager()
