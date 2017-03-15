@@ -97,6 +97,7 @@ def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
         TRN.add(sql, [analysis['timestamp'], biom_data['data_type_id'],
                       4, 7, False])
         artifact_id = TRN.execute_fetchlast()
+
         # Associate the artifact with the analysis
         sql = """INSERT INTO qiita.analysis_artifact
                     (analysis_id, artifact_id)
@@ -400,6 +401,9 @@ with TRN:
              VALUES (%s, %s, %s, %s)"""
     sql_args = [(validate_cmd_id, 'files', 'string', True),
                 (validate_cmd_id, 'artifact_type', 'string', True),
+                (validate_cmd_id, 'template', 'prep_template', False),
+                (validate_cmd_id, 'analysis', 'analysis', False),
+                (validate_cmd_id, 'provenance', 'string', False),
                 (html_summary_cmd_id, 'input_data', 'artifact', True)]
     TRN.add(sql, sql_args, many=True)
 
@@ -505,7 +509,7 @@ with TRN:
         (sum_taxa_cmd_id, 'sort', 'bool', False, 'False'),
         # Beta Diversity
         (bdiv_cmd_id, 'tree', 'string', False, ''),
-        (bdiv_cmd_id, 'metrics',
+        (bdiv_cmd_id, 'metric',
          'choice:["abund_jaccard","binary_chisq","binary_chord",'
          '"binary_euclidean","binary_hamming","binary_jaccard",'
          '"binary_lennon","binary_ochiai","binary_otu_gain","binary_pearson",'
@@ -515,12 +519,21 @@ with TRN:
          '"pearson","soergel","spearman_approx","specprof","unifrac",'
          '"unifrac_g","unifrac_g_full_tree","unweighted_unifrac",'
          '"unweighted_unifrac_full_tree","weighted_normalized_unifrac",'
-         '"weighted_unifrac"]', False, '["binary_jaccard","bray_curtis"]'),
+         '"weighted_unifrac"]', False, '"binary_jaccard"'),
         # Alpha rarefaction
         (arare_cmd_id, 'tree', 'string', False, ''),
         (arare_cmd_id, 'num_steps', 'integer', False, 10),
         (arare_cmd_id, 'min_rare_depth', 'integer', False, 10),
         (arare_cmd_id, 'max_rare_depth', 'integer', False, 'Default'),
+        (arare_cmd_id, 'metrics',
+         'mchoice:["ace","berger_parker_d","brillouin_d","chao1","chao1_ci",'
+         '"dominance","doubles","enspie","equitability","esty_ci",'
+         '"fisher_alpha","gini_index","goods_coverage","heip_e",'
+         '"kempton_taylor_q","margalef","mcintosh_d","mcintosh_e",'
+         '"menhinick","michaelis_menten_fit","observed_otus",'
+         '"observed_species","osd","simpson_reciprocal","robbins",'
+         '"shannon","simpson","simpson_e","singles","strong","PD_whole_tree"]',
+         False, '["chao1","observed_otus"]'),
         # Single rarefaction
         (srare_cmd_id, 'depth', 'integer', True, None),
         (srare_cmd_id, 'subsample_multinomial', 'bool', False, 'False')
@@ -578,7 +591,7 @@ with TRN:
          '{"metrics": "unweighted_unifrac", "tree": ""}'],
         [arare_cmd_id, 'Defaults',
          '{"max_rare_depth": "Default", "tree": "", "num_steps": 10, '
-         '"min_rare_depth": 10}'],
+         '"min_rare_depth": 10, "metrics": ["chao1", "observed_otus"]}'],
         [srare_cmd_id, 'Defaults',
          '{"subsample_multinomial": "False"}']]
     TRN.add(sql, sql_args, many=True)
