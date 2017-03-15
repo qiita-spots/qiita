@@ -10,6 +10,7 @@ The following is a full list of the available tutorials:
    prepare-information-files
    ebi-submission
    getting-started
+   sharing
    analyze-data
    no-raw-sequences
    join-paired-end-reads

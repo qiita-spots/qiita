@@ -72,5 +72,6 @@ class TestPrepFilesHandler(TestHandlerBase):
             {'type': 'BIOM', 'prep_file': 'uploaded_file.txt', 'study_id': 1})
         self.assertEqual(response.code, 405)
 
+
 if __name__ == "__main__":
     main()

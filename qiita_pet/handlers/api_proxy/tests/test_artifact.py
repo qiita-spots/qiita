@@ -510,5 +510,6 @@ class TestArtifactAPI(TestCase):
                'message': 'Unknown visiblity value: BADSTAT'}
         self.assertEqual(obs, exp)
 
+
 if __name__ == "__main__":
     main()

@@ -113,7 +113,7 @@ class TestSample(TestCase):
         """
         self.assertEqual(self.tester['physical_specimen_location'], 'ANL')
         self.assertEqual(self.tester['collection_timestamp'],
-                         '11/11/11 13:00:00')
+                         '2011-11-11 13:00:00')
         self.assertTrue(self.tester['dna_extracted'])
 
     def test_getitem_dynamic(self):
@@ -152,7 +152,7 @@ class TestSample(TestCase):
         """values returns an iterator over the values"""
         obs = self.tester.values()
         self.assertTrue(isinstance(obs, Iterable))
-        exp = {'ANL', 'true', 'true', 'ENVO:soil', '11/11/11 13:00:00',
+        exp = {'ANL', 'true', 'true', 'ENVO:soil', '2011-11-11 13:00:00',
                '1001:M7', 'Cannabis Soil Microbiome', 'winter', 'n',
                '64.6 sand, 17.6 silt, 17.8 clay', '1118232', '0.15', '3483',
                'root metagenome', '0.164', '114', '15', '1.41', '7.15', '0',
@@ -170,7 +170,7 @@ class TestSample(TestCase):
                ('physical_specimen_remaining', 'true'),
                ('dna_extracted', 'true'),
                ('sample_type', 'ENVO:soil'),
-               ('collection_timestamp', '11/11/11 13:00:00'),
+               ('collection_timestamp', '2011-11-11 13:00:00'),
                ('host_subject_id', '1001:M7'),
                ('description', 'Cannabis Soil Microbiome'),
                ('season_environment', 'winter'), ('assigned_from_geo', 'n'),
@@ -261,7 +261,7 @@ class TestSampleTemplate(TestCase):
                         'physical_specimen_remaining': 'true',
                         'dna_extracted': 'true',
                         'sample_type': 'type1',
-                        'collection_timestamp': '05/29/2014 12:24:15',
+                        'collection_timestamp': '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 1',
                         'latitude': '42.42',
@@ -272,7 +272,7 @@ class TestSampleTemplate(TestCase):
                         'physical_specimen_remaining': 'true',
                         'dna_extracted': 'true',
                         'sample_type': 'type1',
-                        'collection_timestamp': '05/29/2014 12:24:15',
+                        'collection_timestamp': '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 2',
                         'latitude': '4.2',
@@ -283,7 +283,7 @@ class TestSampleTemplate(TestCase):
                         'physical_specimen_remaining': 'true',
                         'dna_extracted': 'true',
                         'sample_type': 'type1',
-                        'collection_timestamp': '05/29/2014 12:24:15',
+                        'collection_timestamp': '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 3',
                         'latitude': '4.8',
@@ -336,7 +336,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '6',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 1',
                         'latitude': '42.42',
@@ -348,7 +348,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '5',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'the only one',
                         'Description': 'Test Sample 2',
                         'latitude': '4.2',
@@ -360,7 +360,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '10',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 3',
                         'latitude': '4.8',
@@ -377,7 +377,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '6',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 1',
                         'latitude': '42.42',
@@ -389,7 +389,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '5',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'the only one',
                         'Description': 'Test Sample 2',
                         'latitude': '4.2',
@@ -401,7 +401,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '10',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 3',
                         'latitude': '4.8',
@@ -413,7 +413,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '10',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 4',
                         'latitude': '4.8',
@@ -430,7 +430,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '6',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 1',
                         'latitude': '42.42',
@@ -443,7 +443,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '5',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'the only one',
                         'Description': 'Test Sample 2',
                         'latitude': '4.2',
@@ -456,7 +456,7 @@ class TestSampleTemplate(TestCase):
                         'dna_extracted': 'true',
                         'sample_type': '10',
                         'collection_timestamp':
-                        '05/29/2014 12:24:15',
+                        '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 3',
                         'latitude': '4.8',
@@ -775,7 +775,7 @@ class TestSampleTemplate(TestCase):
                           'dna_extracted': 'true',
                           'sample_type': 'type1',
                           'collection_timestamp':
-                          '05/29/2014 12:24:15',
+                          '2014-05-29 12:24:15',
                           'host_subject_id': 'NotIdentified',
                           'description': 'Test Sample 1',
                           'latitude': '42.42',
@@ -787,7 +787,7 @@ class TestSampleTemplate(TestCase):
                           'dna_extracted': 'true',
                           'sample_type': 'type1',
                           'collection_timestamp':
-                          '05/29/2014 12:24:15',
+                          '2014-05-29 12:24:15',
                           'host_subject_id': 'NotIdentified',
                           'description': 'Test Sample 2',
                           'latitude': '4.2',
@@ -799,7 +799,7 @@ class TestSampleTemplate(TestCase):
                           'dna_extracted': 'true',
                           'sample_type': 'type1',
                           'collection_timestamp':
-                          '05/29/2014 12:24:15',
+                          '2014-05-29 12:24:15',
                           'host_subject_id': 'NotIdentified',
                           'description': 'Test Sample 3',
                           'latitude': '4.8',
@@ -908,7 +908,7 @@ class TestSampleTemplate(TestCase):
         self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 1",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -920,7 +920,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.Sample2" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 2",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -932,7 +932,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.Sample3" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 3",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -974,7 +974,7 @@ class TestSampleTemplate(TestCase):
         self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.12.Sample1" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 1",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -986,7 +986,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.12.Sample2" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 2",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -998,7 +998,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.12.Sample3" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 3",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1040,7 +1040,7 @@ class TestSampleTemplate(TestCase):
         self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.foo.Sample1" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 1",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1052,7 +1052,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.bar.Sample2" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 2",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1064,7 +1064,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.foo.Sample3" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 3",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1108,7 +1108,7 @@ class TestSampleTemplate(TestCase):
         self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 1",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1120,7 +1120,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.Sample2" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 2",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1132,7 +1132,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.Sample3" % new_id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 3",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1343,7 +1343,7 @@ class TestSampleTemplate(TestCase):
                         'physical_specimen_remaining': 'true',
                         'dna_extracted': 'true',
                         'sample_type': 'type1',
-                        'collection_timestamp': '05/29/2014 12:24:15',
+                        'collection_timestamp': '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 4',
                         'latitude': '42.42',
@@ -1354,7 +1354,7 @@ class TestSampleTemplate(TestCase):
                         'physical_specimen_remaining': 'true',
                         'dna_extracted': 'true',
                         'sample_type': 'type1',
-                        'collection_timestamp': '05/29/2014 12:24:15',
+                        'collection_timestamp': '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 5',
                         'latitude': '42.42',
@@ -1379,7 +1379,7 @@ class TestSampleTemplate(TestCase):
         self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 1",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1391,7 +1391,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.Sample2" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 2",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1403,7 +1403,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.Sample3" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 3",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1419,7 +1419,7 @@ class TestSampleTemplate(TestCase):
                 'physical_specimen_remaining': 'true',
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 4',
                 'latitude': '42.42',
@@ -1431,7 +1431,7 @@ class TestSampleTemplate(TestCase):
                 'physical_specimen_remaining': 'true',
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 5',
                 'latitude': '42.42',
@@ -1452,7 +1452,7 @@ class TestSampleTemplate(TestCase):
             'physical_specimen_remaining': 'true',
             'dna_extracted': 'true',
             'sample_type': 'type1',
-            'collection_timestamp': '05/29/2014 12:24:15',
+            'collection_timestamp': '2014-05-29 12:24:15',
             'host_subject_id': 'NotIdentified',
             'Description': 'Test Sample 4',
             'latitude': '42.42',
@@ -1484,7 +1484,7 @@ class TestSampleTemplate(TestCase):
         self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 1",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1496,7 +1496,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.Sample2" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 2",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1508,7 +1508,7 @@ class TestSampleTemplate(TestCase):
                 'taxon_id': '9606',
                 'scientific_name': 'homo sapiens'},
             "%s.Sample3" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 3",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1524,7 +1524,7 @@ class TestSampleTemplate(TestCase):
                 'physical_specimen_remaining': 'true',
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 4',
                 'latitude': '42.42',
@@ -1566,7 +1566,7 @@ class TestSampleTemplate(TestCase):
         self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 1",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1580,7 +1580,7 @@ class TestSampleTemplate(TestCase):
                 'texture': 'val1',
                 'tot_nitro': 'val_1'},
             "%s.Sample2" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 2",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1594,7 +1594,7 @@ class TestSampleTemplate(TestCase):
                 'texture': 'val2',
                 'tot_nitro': 'val_2'},
             "%s.Sample3" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 3",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1620,7 +1620,7 @@ class TestSampleTemplate(TestCase):
             'physical_specimen_remaining': 'true',
             'dna_extracted': 'true',
             'sample_type': 'type1',
-            'collection_timestamp': '05/29/2014 12:24:15',
+            'collection_timestamp': '2014-05-29 12:24:15',
             'host_subject_id': 'NotIdentified',
             'Description': 'Test Sample 4',
             'latitude': '42.42',
@@ -1652,7 +1652,7 @@ class TestSampleTemplate(TestCase):
         self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 1",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1665,7 +1665,7 @@ class TestSampleTemplate(TestCase):
                 'scientific_name': 'homo sapiens',
                 'tot_nitro': 'val1'},
             "%s.Sample2" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 2",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1678,7 +1678,7 @@ class TestSampleTemplate(TestCase):
                 'scientific_name': 'homo sapiens',
                 'tot_nitro': 'val2'},
             "%s.Sample3" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 3",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1695,7 +1695,7 @@ class TestSampleTemplate(TestCase):
                 'physical_specimen_remaining': 'true',
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 4',
                 'latitude': '42.42',
@@ -1716,7 +1716,7 @@ class TestSampleTemplate(TestCase):
             'physical_specimen_remaining': 'true',
             'dna_extracted': 'true',
             'sample_type': 'type1',
-            'collection_timestamp': '05/29/2014 12:24:15',
+            'collection_timestamp': '2014-05-29 12:24:15',
             'host_subject_id': 'NotIdentified',
             'Description': 'Test Sample 4',
             'latitude': '42.42',
@@ -1747,7 +1747,7 @@ class TestSampleTemplate(TestCase):
         self.assertItemsEqual(st.categories(), exp_categories)
         exp_dict = {
             "%s.Sample1" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Changed",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1760,7 +1760,7 @@ class TestSampleTemplate(TestCase):
                 'scientific_name': 'homo sapiens',
                 'tot_nitro': 'val1'},
             "%s.Sample2" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 2",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1773,7 +1773,7 @@ class TestSampleTemplate(TestCase):
                 'scientific_name': 'Changed dynamic',
                 'tot_nitro': 'val2'},
             "%s.Sample3" % st.id: {
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'description': "Test Sample 3",
                 'dna_extracted': 'true',
                 'host_subject_id': "NotIdentified",
@@ -1790,7 +1790,7 @@ class TestSampleTemplate(TestCase):
                 'physical_specimen_remaining': 'true',
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
-                'collection_timestamp': '05/29/2014 12:24:15',
+                'collection_timestamp': '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 4',
                 'latitude': '42.42',
@@ -1814,7 +1814,7 @@ class TestSampleTemplate(TestCase):
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
                 'collection_timestamp':
-                '05/29/2014 12:24:15',
+                '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 1',
                 'latitude': '42.42',
@@ -1828,7 +1828,7 @@ class TestSampleTemplate(TestCase):
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
                 'collection_timestamp':
-                '05/29/2014 12:24:15',
+                '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 2',
                 'latitude': '4.2',
@@ -1842,7 +1842,7 @@ class TestSampleTemplate(TestCase):
                 'dna_extracted': 'true',
                 'sample_type': 'type1',
                 'collection_timestamp':
-                '05/29/2014 12:24:15',
+                '2014-05-29 12:24:15',
                 'host_subject_id': 'NotIdentified',
                 'description': 'Test Sample 3',
                 'latitude': '4.8',
@@ -2084,11 +2084,11 @@ class TestSampleTemplate(TestCase):
 
     def test_validate_errors_timestampA_year4digits(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '09/20/2016 12:00')
+                                '2016-09-20 12:00')
         self.metadata.set_value('Sample2', 'collection_timestamp',
-                                '9/20/2016 12')
+                                '2016-09-20 12')
         self.metadata.set_value('Sample3', 'collection_timestamp',
-                                '09/20/2016')
+                                '2016-09-20')
 
         with catch_warnings(record=True) as warn:
             qdb.metadata_template.sample_template.SampleTemplate.create(
@@ -2098,21 +2098,35 @@ class TestSampleTemplate(TestCase):
 
     def test_validate_errors_timestampA_year2digits(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '09/20/16 12:00')
+                                '16-09-20 12:00')
         self.metadata.set_value('Sample2', 'collection_timestamp',
                                 '9/20/16 12')
         self.metadata.set_value('Sample3', 'collection_timestamp',
-                                '09/20/16')
+                                '09-20-16')
 
         with catch_warnings(record=True) as warn:
-            qdb.metadata_template.sample_template.SampleTemplate.create(
+            st = qdb.metadata_template.sample_template.SampleTemplate.create(
                 self.metadata, self.new_study)
-            # the warnings should be empty
-            self.assertEqual(warn, [])
+            exp_message = (
+                'Some functionality will be disabled due to missing '
+                'columns:\n\t'
+                'Sample "{0}.Sample1", column "collection_timestamp", '
+                'wrong value "16-09-20 12:00";\n\t'
+                'Sample "{0}.Sample2", column "collection_timestamp", '
+                'wrong value "9/20/16 12";\n\t'
+                'Sample "{0}.Sample3", column "collection_timestamp", '
+                'wrong value "09-20-16".\n'
+                'See the Templates tutorial '
+                'for a description of these fields.'.format(st.id))
+            # warnings is a list of 1 element
+            self.assertEqual(len(warn), 1)
+            # the order might change so testing by elements
+            self.assertItemsEqual(str(warn[0].message).split('\n'),
+                                  exp_message.split('\n'))
 
     def test_validate_errors_timestampB_year4digits(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '12/2016')
+                                '2016-12')
         self.metadata.set_value('Sample2', 'collection_timestamp',
                                 '2016')
         with catch_warnings(record=True) as warn:
@@ -2123,14 +2137,24 @@ class TestSampleTemplate(TestCase):
 
     def test_validate_errors_timestampB_year2digits(self):
         self.metadata.set_value('Sample1', 'collection_timestamp',
-                                '12/16')
+                                '16-12')
         self.metadata.set_value('Sample2', 'collection_timestamp',
                                 '16')
         with catch_warnings(record=True) as warn:
-            qdb.metadata_template.sample_template.SampleTemplate.create(
+            st = qdb.metadata_template.sample_template.SampleTemplate.create(
                 self.metadata, self.new_study)
-            # the warnings should be empty
-            self.assertEqual(warn, [])
+            exp_message = (
+                'Some functionality will be disabled due to missing '
+                'columns:\n\t'
+                'Sample "{0}.Sample1", column "collection_timestamp", wrong '
+                'value "16-12";\n\t'
+                'Sample "{0}.Sample2", column "collection_timestamp", wrong '
+                'value "16".\n'
+                'See the Templates tutorial for a description '
+                'of these fields.'.format(st.id))
+            # warnings is a list of 1 element
+            self.assertEqual(len(warn), 1)
+            self.assertEqual(str(warn[0].message), exp_message)
 
     def test_delete_column(self):
         st = qdb.metadata_template.sample_template.SampleTemplate.create(
@@ -2146,7 +2170,7 @@ class TestSampleTemplate(TestCase):
                         'physical_specimen_remaining': 'true',
                         'dna_extracted': 'true',
                         'sample_type': 'type1',
-                        'collection_timestamp': '05/29/2014 12:24:15',
+                        'collection_timestamp': '2014-05-29 12:24:15',
                         'host_subject_id': 'NotIdentified',
                         'Description': 'Test Sample 4',
                         'latitude': '42.42',
@@ -2172,11 +2196,11 @@ EXP_SAMPLE_TEMPLATE = (
     "host_subject_id\tlatitude\tlongitude\tphysical_specimen_location\t"
     "physical_specimen_remaining\tqiita_study_id\tsample_type\t"
     "scientific_name\ttaxon_id\n"
-    "{0}.Sample1\t05/29/2014 12:24:15\tTest Sample 1\ttrue\tNotIdentified\t"
+    "{0}.Sample1\t2014-05-29 12:24:15\tTest Sample 1\ttrue\tNotIdentified\t"
     "42.42\t41.41\tlocation1\ttrue\t{0}\ttype1\thomo sapiens\t9606\n"
-    "{0}.Sample2\t05/29/2014 12:24:15\tTest Sample 2\ttrue\tNotIdentified\t"
+    "{0}.Sample2\t2014-05-29 12:24:15\tTest Sample 2\ttrue\tNotIdentified\t"
     "4.2\t1.1\tlocation1\ttrue\t{0}\ttype1\thomo sapiens\t9606\n"
-    "{0}.Sample3\t05/29/2014 12:24:15\tTest Sample 3\ttrue\tNotIdentified\t"
+    "{0}.Sample3\t2014-05-29 12:24:15\tTest Sample 3\ttrue\tNotIdentified\t"
     "4.8\t4.41\tlocation1\ttrue\t{0}\ttype1\thomo sapiens\t9606\n")
 
 EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
@@ -2184,9 +2208,9 @@ EXP_SAMPLE_TEMPLATE_FEWER_SAMPLES = (
     "host_subject_id\tlatitude\tlongitude\tphysical_specimen_location\t"
     "physical_specimen_remaining\tqiita_study_id\tsample_type\t"
     "scientific_name\ttaxon_id\n"
-    "{0}.Sample1\t05/29/2014 12:24:15\tTest Sample 1\ttrue\tNotIdentified\t"
+    "{0}.Sample1\t2014-05-29 12:24:15\tTest Sample 1\ttrue\tNotIdentified\t"
     "42.42\t41.41\tlocation1\ttrue\t{0}\ttype1\thomo sapiens\t9606\n"
-    "{0}.Sample3\t05/29/2014 12:24:15\tTest Sample 3\ttrue\tNotIdentified\t"
+    "{0}.Sample3\t2014-05-29 12:24:15\tTest Sample 3\ttrue\tNotIdentified\t"
     "4.8\t4.41\tlocation1\ttrue\t{0}\ttype1\thomo sapiens\t9606\n")
 
 

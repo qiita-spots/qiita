@@ -59,5 +59,6 @@ class TestUserJobsHandler(TestHandlerBase):
         response = self.get('/user/jobs/')
         self.assertEqual(response.code, 200)
 
+
 if __name__ == "__main__":
     main()

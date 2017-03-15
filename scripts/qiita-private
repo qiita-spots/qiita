@@ -23,5 +23,6 @@ def qiita_private():
 def complete_job(job_id, payload):
     qdb.commands.complete_job_cmd(job_id, payload)
 
+
 if __name__ == '__main__':
     qiita_private()

@@ -915,6 +915,8 @@ class TestPrepTemplate(TestCase):
         exp = pd.read_csv(
             exp_fp, sep='\t', infer_datetime_format=False,
             parse_dates=False, index_col=False, comment='\t')
+        obs = obs.reindex_axis(sorted(obs.columns), axis=1)
+        exp = exp.reindex_axis(sorted(exp.columns), axis=1)
 
         assert_frame_equal(obs, exp)
 
