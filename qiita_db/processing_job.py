@@ -504,7 +504,8 @@ class ProcessingJob(qdb.base.QiitaObject):
             else:
                 # The artifact is uploaded by the user or is the initial
                 # artifact of an analysis
-                if job_params['analysis'] is not None:
+                if ('analysis' in job_params and
+                        job_params['analysis'] is not None):
                     pt = None
                     an = qdb.analysis.Analysis(job_params['analysis'])
                     sql = """SELECT data_type
