@@ -589,7 +589,7 @@ with TRN:
         [sum_taxa_cmd_id, 'Defaults',
          '{"sort": false, "metadata_category": ""}'],
         [bdiv_cmd_id, 'Unweighted UniFrac',
-         '{"metrics": "unweighted_unifrac", "tree": ""}'],
+         '{"metric": "unweighted_unifrac", "tree": ""}'],
         [arare_cmd_id, 'Defaults',
          '{"max_rare_depth": "Default", "tree": "", "num_steps": 10, '
          '"min_rare_depth": 10, "metrics": ["chao1", "observed_otus"]}'],
@@ -652,7 +652,10 @@ with TRN:
                     srare_cmd_out_id)
             else:
                 # The BIOM table was not rarefied, use current table as initial
-                initial_biom_id = transfer_file_to_artifact()
+                initial_biom_id = transfer_file_to_artifact(
+                    analysis['analysis_id'], analysis['timestamp'], None,
+                    biom_data['data_type_id'], None, 7,
+                    biom_data['filepath_id'])
 
             # Loop through all the jobs that used this biom table as input
             sql = """SELECT *
