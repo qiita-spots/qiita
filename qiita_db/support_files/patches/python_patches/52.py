@@ -76,6 +76,7 @@ def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
             # Note that we are sure that the biom table exists for sure, so
             # no need to check if biom_fp is undefined
             biom_table = load_table(biom_fp)
+            samples = set(samples).intersection(biom_table.ids())
             biom_table.filter(samples, axis='sample', inplace=True)
             new_table = new_table.merge(biom_table)
             ids_map.update({sid: "%d.%s" % (a_id, sid)
