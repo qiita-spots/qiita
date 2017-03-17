@@ -568,11 +568,21 @@ class ProcessingJob(qdb.base.QiitaObject):
                 templates = set()
                 for artifact in self.input_artifacts:
                     templates.update(pt.id for pt in artifact.prep_templates)
+                template = None
+                analysis = None
                 if len(templates) > 1:
                     raise qdb.exceptions.QiitaDBError(
                         "Currently only single prep template "
                         "is allowed, found %d" % len(templates))
-                template = templates.pop()
+                elif len(templates) == 1:
+                    template = templates.pop()
+                else:
+                    # In this case we have 0 templates. What this means is that
+                    # this artifact is being generated in the analysis pipeline
+                    # All the artifacts included in the analysis pipeline
+                    # belong to the same analysis, so we can just ask the
+                    # first artifact for the analysis that it belongs to
+                    analysis = self.input_artifacts[0].analysis.id
 
                 # Once the validate job completes, it needs to know if it has
                 # been generated from a command (and how) or if it has been
@@ -593,6 +603,7 @@ class ProcessingJob(qdb.base.QiitaObject):
                     cmd, values_dict={'files': dumps(filepaths),
                                       'artifact_type': atype,
                                       'template': template,
+                                      'analysis': analysis,
                                       'provenance': dumps(provenance)})
                 validator_jobs.append(
                     ProcessingJob.create(self.user, validate_params))
