@@ -299,44 +299,44 @@ EXP_SAMPLE_TEMPLATE = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
     "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t05/29/2014 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_MULTICASE = (
     "sAmPle_Name\tcollection_timestamp\tDescription\thas_extracted_data\t"
     "has_physical_specimen\thost_Subject_id\tint_column\tlatitude\tLongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\tstr_CoLumn\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
     "\t1\t42.42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t05/29/2014 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4.2\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_LAT_ALL_INT = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
     "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t05/29/2014 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_LAT_MIXED_FLOAT_INT = (
     "sample_name\tcollection_timestamp\tdescription\thas_extracted_data\t"
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\tstr_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\tNotIdentified"
     "\t1\t42\t41.41\tlocation1\treceived\ttype1\tValue for sample 1\n"
-    "2.Sample2\t05/29/2014 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
+    "2.Sample2\t2014-05-29 12:24:51\tTest Sample 2\tTrue\tTrue\tNotIdentified"
     "\t2\t4\t1.1\tlocation1\treceived\ttype1\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\tTrue\tNotIdentified"
     "\t3\t4.8\t4.41\tlocation1\treceived\ttype1\tValue for sample 3\n")
 
 EXP_SAMPLE_TEMPLATE_DUPE_COLS = (
@@ -344,13 +344,13 @@ EXP_SAMPLE_TEMPLATE_DUPE_COLS = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\tstr_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\tValue for sample 1\n"
-    "2.Sample2\t05/29/2014 12:24:51\t"
+    "2.Sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tValue for sample 2\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\tValue for sample 3\n")
 
@@ -359,14 +359,14 @@ EXP_SAMPLE_TEMPLATE_SPACES = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1         \t05/29/2014 12:24:51\tTest Sample 1\t"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\t"
     '"True\t"\t"\nTrue"\t'
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2  \t05/29/2014 12:24:51\t"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
@@ -375,13 +375,13 @@ EXP_SAMPLE_TEMPLATE_WHITESPACE = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2\t      05/29/2014 12:24:51 \t"
+    "2.Sample2\t      2014-05-29 12:24:51 \t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\t Value for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\t   Test Sample 3 \tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\t   Test Sample 3 \tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
@@ -390,13 +390,13 @@ EXP_SAMPLE_TEMPLATE_SPACES_EMPTY_ROW = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1         \t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2  \t05/29/2014 12:24:51\t"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
     "\t\t\t\t\t\t\t\t\t\t\t\t\n"
@@ -407,13 +407,13 @@ EXP_ST_SPACES_EMPTY_COLUMN = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\t\n"
-    "2.Sample1         \t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1         \t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\t\n"
-    "2.Sample2  \t05/29/2014 12:24:51\t"
+    "2.Sample2  \t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\t\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\t\n")
 
@@ -422,13 +422,13 @@ EXP_SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "002.000\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "002.000\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "1.11111\t05/29/2014 12:24:51\t"
+    "1.11111\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tValue for sample 2\n"
-    "0.12121\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "0.12121\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
@@ -437,16 +437,16 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAMES = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2\t05/29/2014 12:24:51\t"
+    "2.Sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
-    "\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
     "\t\t\t\t\t\t\t\t\t\t\t\n"
@@ -457,13 +457,13 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAMES_SOME_SPACES = (
     "has_physical_specimen\thost_subject_id\tint_column\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t1\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2\t05/29/2014 12:24:51\t"
+    "2.Sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t2\t4.2\t1.1\tlocation1\t"
     "received\ttype1\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t3\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n"
     "\t\t\t\t\t \t\t\t\t\t \t\t\n"
@@ -474,13 +474,13 @@ SAMPLE_TEMPLATE_EMPTY_COLUMN = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "\n"
-    "2.Sample2\t05/29/2014 12:24:51\t"
+    "2.Sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\t\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "\n")
 
@@ -489,13 +489,13 @@ SAMPLE_TEMPLATE_COLUMN_WITH_NAS = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "NA\n"
-    "2.Sample2\t05/29/2014 12:24:51\t"
+    "2.Sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tNA\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "NA\n")
 
@@ -504,13 +504,13 @@ SAMPLE_TEMPLATE_NO_SAMPLE_NAME = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "NotIdentified\t42.42\t41.41\tlocation1\treceived\ttype1\t"
     "NA\n"
-    "2.Sample2\t05/29/2014 12:24:51\t"
+    "2.Sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\tNotIdentified\t4.2\t1.1\tlocation1\treceived\t"
     "type1\tNA\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\tNotIdentified\t4.8\t4.41\tlocation1\treceived\ttype1\t"
     "NA\n")
 
@@ -519,13 +519,13 @@ SAMPLE_TEMPLATE_INVALID_LONGITUDE_COLUMNS = (
     "has_physical_specimen\thost_subject_id\tlatitude\tlongitude\t"
     "physical_location\trequired_sample_info_status\tsample_type\t"
     "str_column\n"
-    "2.Sample1\t05/29/2014 12:24:51\tTest Sample 1\tTrue\tTrue\t"
+    "2.Sample1\t2014-05-29 12:24:51\tTest Sample 1\tTrue\tTrue\t"
     "1\t11.42\t41.41\tlocation1\treceived\ttype1\t"
     "Value for sample 1\n"
-    "2.Sample2\t05/29/2014 12:24:51\t"
+    "2.Sample2\t2014-05-29 12:24:51\t"
     "Test Sample 2\tTrue\tTrue\1\t4.2\tXXX\tlocation1\treceived\t"
     "type1\tValue for sample 2\n"
-    "2.Sample3\t05/29/2014 12:24:51\tTest Sample 3\tTrue\t"
+    "2.Sample3\t2014-05-29 12:24:51\tTest Sample 3\tTrue\t"
     "True\1\t4.8\t4.XXXXX41\tlocation1\treceived\ttype1\t"
     "Value for sample 3\n")
 
@@ -555,9 +555,9 @@ SAMPLE_TEMPLATE_NULLS_DICT = {
 }
 
 SAMPLE_TEMPLATE_DICT_FORM = {
-    'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
-                             '2.Sample2': '05/29/2014 12:24:51',
-                             '2.Sample3': '05/29/2014 12:24:51'},
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
     'description': {'2.Sample1': 'Test Sample 1',
                     '2.Sample2': 'Test Sample 2',
                     '2.Sample3': 'Test Sample 3'},
@@ -594,9 +594,9 @@ SAMPLE_TEMPLATE_DICT_FORM = {
     }
 
 SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
-    'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
-                             '2.Sample2': '05/29/2014 12:24:51',
-                             '2.Sample3': '05/29/2014 12:24:51'},
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
     'description': {'2.Sample1': 'Test Sample 1',
                     '2.Sample2': 'Test Sample 2',
                     '2.Sample3': 'Test Sample 3'},
@@ -633,9 +633,9 @@ SAMPLE_TEMPLATE_LAT_ALL_INT_DICT = {
     }
 
 SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
-    'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
-                             '2.Sample2': '05/29/2014 12:24:51',
-                             '2.Sample3': '05/29/2014 12:24:51'},
+    'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                             '2.Sample2': '2014-05-29 12:24:51',
+                             '2.Sample3': '2014-05-29 12:24:51'},
     'description': {'2.Sample1': 'Test Sample 1',
                     '2.Sample2': 'Test Sample 2',
                     '2.Sample3': 'Test Sample 3'},
@@ -672,9 +672,9 @@ SAMPLE_TEMPLATE_MIXED_FLOAT_INT_DICT = {
     }
 
 SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
-    'collection_timestamp': {'002.000': '05/29/2014 12:24:51',
-                             '1.11111': '05/29/2014 12:24:51',
-                             '0.12121': '05/29/2014 12:24:51'},
+    'collection_timestamp': {'002.000': '2014-05-29 12:24:51',
+                             '1.11111': '2014-05-29 12:24:51',
+                             '0.12121': '2014-05-29 12:24:51'},
     'description': {'002.000': 'Test Sample 1',
                     '1.11111': 'Test Sample 2',
                     '0.12121': 'Test Sample 3'},
@@ -707,9 +707,9 @@ SAMPLE_TEMPLATE_NUMBER_SAMPLE_NAMES_DICT_FORM = {
                    '0.12121': 'Value for sample 3'}}
 
 ST_EMPTY_COLUMN_DICT_FORM = \
-    {'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
-                              '2.Sample2': '05/29/2014 12:24:51',
-                              '2.Sample3': '05/29/2014 12:24:51'},
+    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                              '2.Sample2': '2014-05-29 12:24:51',
+                              '2.Sample3': '2014-05-29 12:24:51'},
      'description': {'2.Sample1': 'Test Sample 1',
                      '2.Sample2': 'Test Sample 2',
                      '2.Sample3': 'Test Sample 3'},
@@ -739,9 +739,9 @@ ST_EMPTY_COLUMN_DICT_FORM = \
                      '2.Sample3': 'type1'}}
 
 ST_COLUMN_WITH_NAS_DICT_FORM = \
-    {'collection_timestamp': {'2.Sample1': '05/29/2014 12:24:51',
-                              '2.Sample2': '05/29/2014 12:24:51',
-                              '2.Sample3': '05/29/2014 12:24:51'},
+    {'collection_timestamp': {'2.Sample1': '2014-05-29 12:24:51',
+                              '2.Sample2': '2014-05-29 12:24:51',
+                              '2.Sample3': '2014-05-29 12:24:51'},
      'description': {'2.Sample1': 'Test Sample 1',
                      '2.Sample2': 'Test Sample 2',
                      '2.Sample3': 'Test Sample 3'},

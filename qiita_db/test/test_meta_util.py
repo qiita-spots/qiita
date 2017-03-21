@@ -33,12 +33,6 @@ class MetaUtilTests(TestCase):
         self.conn_handler.execute(
             "UPDATE qiita.artifact SET visibility_id=2")
 
-    def _unshare_studies(self):
-        self.conn_handler.execute("DELETE FROM qiita.study_users")
-
-    def _unshare_analyses(self):
-        self.conn_handler.execute("DELETE FROM qiita.analysis_users")
-
     def test_validate_filepath_access_by_user(self):
         self._set_artifact_private()
 
@@ -49,17 +43,16 @@ class MetaUtilTests(TestCase):
                 user, i))
 
         # Now shared should not have access to the study files
-        self._unshare_studies()
+        qdb.study.Study(1).unshare(user)
         for i in [1, 2, 3, 4, 5, 9, 12, 17, 18, 19, 20, 21]:
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
-
         for i in [13, 14, 15, 16]:
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
 
         # Now shared should not have access to any files
-        self._unshare_analyses()
+        qdb.analysis.Analysis(1).unshare(user)
         for i in [1, 2, 3, 4, 5, 9, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]:
             self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
                 user, i))
@@ -105,6 +98,9 @@ class MetaUtilTests(TestCase):
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 admin, i[0]))
 
+        # returning to original sharing
+        qdb.study.Study(1).share(user)
+        qdb.analysis.Analysis(1).share(user)
         qdb.study.Study.delete(study.id)
 
     def test_get_lat_longs(self):
@@ -159,7 +155,7 @@ class MetaUtilTests(TestCase):
                 'physical_specimen_remaining': True,
                 'dna_extracted': True,
                 'sample_type': 'type1',
-                'collection_timestamp': '05/29/14 12:24:51',
+                'collection_timestamp': '2014-05-29 12:24:51',
                 'host_subject_id': 'NotIdentified',
                 'Description': 'Test Sample 4',
                 'str_column': 'Value for sample 4',
@@ -171,7 +167,7 @@ class MetaUtilTests(TestCase):
         }
 
         md_ext = pd.DataFrame.from_dict(md, orient='index', dtype=str)
-        qdb.metadata_template.sample_template.SampleTemplate.create(
+        st = qdb.metadata_template.sample_template.SampleTemplate.create(
             md_ext, study)
 
         qiita_config.portal = 'EMP'
@@ -180,6 +176,8 @@ class MetaUtilTests(TestCase):
         exp = [[42.42, 41.41]]
 
         self.assertItemsEqual(obs, exp)
+        qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
+        qdb.study.Study.delete(study.id)
 
         qdb.metadata_template.sample_template.SampleTemplate.delete(study.id)
         qdb.study.Study.delete(study.id)
@@ -189,10 +187,10 @@ class MetaUtilTests(TestCase):
 
         portal = qiita_config.portal
         vals = [
-            ('number_studies', {'sanbox': '0', 'public': '1',
-                                'private': '0'}, r_client.hgetall),
-            ('number_of_samples', {'sanbox': '0', 'public': '27',
-                                   'private': '0'}, r_client.hgetall),
+            ('number_studies', {'sandbox': '0', 'public': '0',
+                                'private': '1'}, r_client.hgetall),
+            ('number_of_samples', {'sandbox': '0', 'public': '0',
+                                   'private': '27'}, r_client.hgetall),
             ('num_users', '4', r_client.get),
             ('lat_longs', EXP_LAT_LONG, r_client.get),
             ('num_studies_ebi', '1', r_client.get),
@@ -221,6 +219,7 @@ EXP_LAT_LONG = (
     ' [35.2374368957, 68.5041623253], [12.7065957714, 84.9722975792],'
     ' [0.291867635913, 68.5945325743], [85.4121476399, 15.6526750776],'
     ' [68.0991287718, 34.8360987059]]')
+    
 
 if __name__ == '__main__':
     main()

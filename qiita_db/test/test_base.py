@@ -138,5 +138,6 @@ class QiitaStatusObjectTest(TestCase):
         with self.assertRaises(ValueError):
             self.tester.check_status(["foo", "bar"], exclude=True)
 
+
 if __name__ == '__main__':
     main()

@@ -67,5 +67,6 @@ class LoggerTests(TestCase):
         log_entry.clear_info()
         self.assertEqual(log_entry.info, [])
 
+
 if __name__ == '__main__':
     main()

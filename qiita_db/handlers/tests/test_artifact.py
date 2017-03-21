@@ -213,5 +213,6 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
                         data=data)
         self.assertEqual(obs.code, 200)
 
+
 if __name__ == '__main__':
     main()

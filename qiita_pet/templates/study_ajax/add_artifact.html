@@ -91,9 +91,6 @@
 <form action="{% raw qiita_config.portal_dir %}/study/new_artifact/" method="POST" id="create-artifact-form">
   <div class="row">
     <div class="col-md-12">
-      <b>Name:</b> <input type="text" id="name" name="name" maxlength="35" required>
-    </div>
-    <div class="col-md-12">
       <b>Select type:</b>
       <select name="artifact-type" id="artifact-type">
         <option value="">Choose a type...</option>
@@ -101,6 +98,9 @@
           <option value="{{t}}">{{t}} - {{desc}}</option>
         {% end %}
       </select>
+    </div>
+    <div class="col-md-12">
+      <b>Add a name for the file:</b> <input type="text" id="name" name="name" maxlength="35" required>
     </div>
   </div>
   <div id="files-selector" hidden>

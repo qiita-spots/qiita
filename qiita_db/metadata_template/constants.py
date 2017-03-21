@@ -89,4 +89,5 @@ def _col_iterator():
             for cols in viewkeys(restriction.columns):
                 yield cols
 
+
 CONTROLLED_COLS = set(col for col in _col_iterator())

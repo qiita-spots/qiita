@@ -355,5 +355,6 @@ class TestSearchStudiesAJAX(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), self.empty)
 
+
 if __name__ == "__main__":
     main()

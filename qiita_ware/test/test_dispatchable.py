@@ -181,5 +181,6 @@ class TestDispatchable(TestCase):
                           '"samples" and "columns"'}
         self.assertEqual(obs, exp)
 
+
 if __name__ == '__main__':
     main()

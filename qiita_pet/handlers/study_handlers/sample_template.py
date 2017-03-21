@@ -74,6 +74,8 @@ class SampleTemplateAJAX(BaseHandler):
     def get(self):
         """Send formatted summary page of sample template"""
         study_id = self.get_argument('study_id')
+        row_id = self.get_argument('row_id', '0')
+
         files = [f for _, f in get_files_from_uploads_folders(study_id)
                  if f.endswith(('txt', 'tsv'))]
         data_types = sorted(data_types_get_req()['data_types'])
@@ -95,6 +97,7 @@ class SampleTemplateAJAX(BaseHandler):
         stats['files'] = files
         stats['study_id'] = study_id
         stats['data_types'] = data_types
+        stats['row_id'] = row_id
         # URL encode in case message has javascript-breaking characters in it
         stats['alert_message'] = url_escape(stats['alert_message'])
         self.render('study_ajax/sample_summary.html', **stats)
