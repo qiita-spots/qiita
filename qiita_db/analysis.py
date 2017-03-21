@@ -603,7 +603,7 @@ class Analysis(qdb.base.QiitaObject):
         bool
             Whether user can edit the study or not
         """
-        # The analysis is editable only ifg the user is the owner, is in the
+        # The analysis is editable only if the user is the owner, is in the
         # shared list or the user is an admin
         return (user.level in {'superuser', 'admin'} or self.owner == user or
                 user in self.shared_with)
