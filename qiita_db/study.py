@@ -475,11 +475,23 @@ class Study(qdb.base.QiitaObject):
             accessed as a list of dictionaries, keyed on column name.
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT study_tag_id, study_tag
-                     FROM qiita.study_tags"""
+            sql = """SELECT qiita.user_level.name AS user_level,
+                        array_agg(study_tag)
+                    FROM qiita.study_tags
+                    LEFT JOIN qiita.qiita_user USING (email)
+                    LEFT JOIN qiita.user_level USING (user_level_id)
+                    GROUP BY qiita.user_level.name"""
 
             qdb.sql_connection.TRN.add(sql)
-            return qdb.sql_connection.TRN.execute_fetchindex()
+            results = dict(qdb.sql_connection.TRN.execute_fetchindex())
+            # when the system is empty,
+            # it's possible to get an empty dict, fixing
+            if 'admin' not in results:
+                results['admin'] = []
+            if 'user' not in results:
+                results['user'] = []
+
+            return results
 
     @classmethod
     def insert_tags(cls, user, tags):
@@ -493,13 +505,14 @@ class Study(qdb.base.QiitaObject):
             The list of tags to add
         """
         with qdb.sql_connection.TRN:
+            email = user.email
             sql = """INSERT INTO qiita.study_tags (email, study_tag)
-                     VALUES (%s, %s)"""
-            sql_args = [[user.email, tag] for tag in tags]
+                     SELECT %s, %s WHERE NOT EXISTS (
+                        SELECT 1 FROM qiita.study_tags WHERE study_tag = %s)"""
+            sql_args = [[email, tag, tag] for tag in tags]
 
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
-
 
 # --- Attributes ---
     @property
@@ -967,40 +980,12 @@ class Study(qdb.base.QiitaObject):
             The study tags
         """
         with qdb.sql_connection.TRN:
-            sql = """SELECT study_tag_id, study_tag
+            sql = """SELECT study_tag
                         FROM qiita.study_tags
-                        LEFT JOIN qiita.per_study_tags USING (study_tag_id)
+                        LEFT JOIN qiita.per_study_tags USING (study_tag)
                         WHERE study_id = {0}""".format(self._id)
             qdb.sql_connection.TRN.add(sql)
-            return qdb.sql_connection.TRN.execute_fetchindex()
-
-    @tags.setter
-    def tags(self, tag_ids):
-        """Sets the tags of the study
-
-        Parameters
-        ----------
-        tag_ids : list of int
-            The tag ids of the study
-        """
-        with qdb.sql_connection.TRN:
-            sql = """DELETE FROM qiita.per_study_tags WHERE study_id = %s"""
-            qdb.sql_connection.TRN.add(sql, [self._id])
-
-            if tag_ids:
-                sql = """INSERT INTO qiita.per_study_tags
-                            (study_tag_id, study_id)
-                         SELECT %s, %s
-                            WHERE
-                                NOT EXISTS (
-                                    SELECT study_tag_id, study_id
-                                    FROM qiita.per_study_tags
-                                    WHERE study_tag_id = %s AND study_id = %s
-                                )"""
-                sql_args = [[tid, self._id, tid, self._id] for tid in tag_ids]
-                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
-
-            qdb.sql_connection.TRN.execute()
+            return [t[0] for t in qdb.sql_connection.TRN.execute_fetchindex()]
 
 # --- methods ---
     def artifacts(self, dtype=None, artifact_type=None):
@@ -1151,6 +1136,68 @@ class Study(qdb.base.QiitaObject):
                      WHERE study_id = %s AND email = %s"""
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
             qdb.sql_connection.TRN.execute()
+
+    def add_tags(self, user, tags):
+        """Sets the tags of the study
+
+        Parameters
+        ----------
+        user: User object
+            The user to unshare the study with
+        tags : list of str
+            The tags to add to the study
+
+        Returns
+        -------
+        str
+            Warnings during insertion
+        """
+        message = ''
+        # converting to set just to facilitate operations
+        system_tags_admin = set(self.get_tags()['admin'])
+        user_level = user.level
+        current_tags = set(self.tags)
+        to_delete = current_tags - set(tags)
+        to_add = set(tags) - current_tags
+
+        with qdb.sql_connection.TRN:
+            sql = """DELETE FROM qiita.per_study_tags WHERE study_id = %s"""
+            if user_level != 'admin':
+                admin_tags = set(self.tags) & system_tags_admin
+
+                if admin_tags:
+                    sql += ' AND study_tag NOT IN %s'
+                    qdb.sql_connection.TRN.add(
+                        sql, [self._id, tuple(admin_tags)])
+                    message += 'You cannot remove: %s' % ', '.join(admin_tags)
+            else:
+                qdb.sql_connection.TRN.add(sql, [self._id])
+
+            if tags:
+                self.insert_tags(user, tags)
+
+                if user_level != 'admin':
+                    ttags = set(tags)
+                    tags = ttags - system_tags_admin
+                    if len(tags) != len(ttags):
+                        message += 'Only admins can assing: %s' % ', '.join(
+                            ttags - tags)
+
+                sql = """INSERT INTO qiita.per_study_tags
+                            (study_tag, study_id)
+                         SELECT %s, %s
+                            WHERE
+                                NOT EXISTS (
+                                    SELECT study_tag, study_id
+                                    FROM qiita.per_study_tags
+                                    WHERE study_tag = %s AND study_id = %s
+                                )"""
+                sql_args = [[tag, self._id, tag, self._id] for tag in tags]
+                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+
+            qdb.sql_connection.TRN.execute()
+
+            return message
 
 
 class StudyPerson(qdb.base.QiitaObject):

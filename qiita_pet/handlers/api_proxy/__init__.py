@@ -26,7 +26,7 @@ from .prep_template import (
     prep_template_patch_req)
 from .studies import (
     data_types_get_req, study_get_req, study_prep_get_req, study_delete_req,
-    study_files_get_req)
+    study_files_get_req, study_patch_request)
 from .artifact import (artifact_graph_get_req, artifact_types_get_req,
                        artifact_post_req, artifact_get_req,
                        artifact_status_put_req, artifact_delete_req,
