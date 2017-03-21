@@ -97,7 +97,7 @@ class DownloadStudyBIOMSHandler(BaseHandler):
         self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('Expires', '0')
         self.set_header('Cache-Control', 'no-cache')
-        self.set_header('X-Accel-Files', 'zip')
+        self.set_header('X-Archive-Files', 'zip')
         for fp, n in to_download:
             self.set_header('X-Accel-Redirect', '/protected/' + fp)
         self.set_header('Content-Disposition',
