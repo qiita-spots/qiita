@@ -1,6 +1,7 @@
 from tornado.web import authenticated, HTTPError
 
-from os.path import basename
+from os.path import basename, getsize, join
+from os import walk
 from datetime import datetime
 
 from .base_handlers import BaseHandler
@@ -71,35 +72,46 @@ class DownloadStudyBIOMSHandler(BaseHandler):
                     if (i == 0 and not vfabu(user, fid)):
                         to_add = False
                         break
-                    if path.startswith(basedir):
-                        path = path[basedir_len:]
-                    to_download.append((path, data_type))
+                    if data_type == 'directory':
+                        # If we have a directory, we actually need to list
+                        # all the files from the directory so NGINX can
+                        # actually download all of them
+                        for dp, _, fps in walk(path):
+                            for fname in fps:
+                                fullpath = join(dp, fname)
+                                spath = fullpath
+                                if fullpath.startswith(basedir):
+                                    spath = fullpath[basedir_len:]
+                                to_download.append((fullpath, spath, spath))
+                    elif path.startswith(basedir):
+                        spath = path[basedir_len:]
+                        to_download.append((fullpath, spath, spath))
+                    else:
+                        to_download.append((path, path, path))
 
                 if to_add:
                     for pt in a.prep_templates:
                         qmf = pt.qiime_map_fp
                         if qmf is not None:
+                            sqmf = qmf
                             if qmf.startswith(basedir):
                                 qmf = qmf[basedir_len:]
-                            to_download.append((qmf, 'QIIME map file'))
+                            to_download.append(
+                                (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
+                                            % a.id))
 
         # If we don't have nginx, write a file that indicates this
-        all_files = '\n'.join(['%s: %s' % (n, fp) for fp, n in to_download])
-        self.write("This installation of Qiita was not equipped with nginx, "
-                   "so it is incapable of serving files. The files you "
-                   "attempted to download are located at:\n%s" % all_files)
+        all_files = '\n'.join(["- %s /protected/%s %s" % (getsize(fp), sfp, n)
+                               for fp, sfp, n in to_download])
+        self.write("%s\n" % all_files)
 
         zip_fn = 'study_%d_%s.zip' % (
             study_id, datetime.now().strftime('%m%d%y-%H%M%S'))
 
         self.set_header('Content-Description', 'File Transfer')
-        self.set_header('Content-Type', 'application/octet-stream')
-        self.set_header('Content-Transfer-Encoding', 'binary')
         self.set_header('Expires', '0')
         self.set_header('Cache-Control', 'no-cache')
         self.set_header('X-Archive-Files', 'zip')
-        for fp, n in to_download:
-            self.set_header('X-Accel-Redirect', '/protected/' + fp)
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % zip_fn)
         self.finish()
