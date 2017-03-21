@@ -47,16 +47,16 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
     def test_download_study(self):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, (
+        self.assertRegexpMatches(response.body, (
             "This installation of Qiita was not equipped with nginx, so it "
             "is incapable of serving files. The files you attempted to "
             "download are located at:\nbiom: processed_data/1_study_1001_"
             "closed_reference_otu_table.biom\nQIIME map file: templates/"
-            "1_prep_1_qiime_19700101-000000.txt\nbiom: processed_data/"
+            "1_prep_1_qiime_[0-9]*-[0-9]*.txt\nbiom: processed_data/"
             "1_study_1001_closed_reference_otu_table.biom\nQIIME map file: "
-            "templates/1_prep_1_qiime_19700101-000000.txt\nbiom: "
+            "templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt\nbiom: "
             "processed_data/1_study_1001_closed_reference_otu_table_Silva.biom"
-            "\nQIIME map file: templates/1_prep_1_qiime_19700101-000000.txt"))
+            "\nQIIME map file: templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt"))
 
         response = self.get('/download_study_bioms/200')
         self.assertEqual(response.code, 405)

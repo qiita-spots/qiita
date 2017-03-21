@@ -179,9 +179,6 @@ class MetaUtilTests(TestCase):
         qdb.metadata_template.sample_template.SampleTemplate.delete(st.id)
         qdb.study.Study.delete(study.id)
 
-        qdb.metadata_template.sample_template.SampleTemplate.delete(study.id)
-        qdb.study.Study.delete(study.id)
-
     def test_update_redis_stats(self):
         qdb.meta_util.update_redis_stats()
 
