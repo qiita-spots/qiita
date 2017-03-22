@@ -528,12 +528,6 @@ class TestStudyAPI(TestCase):
 
         PREP.delete(pt.id)
 
-    def test_study_tags_request(self):
-        obs = study_tags_request()
-        exp = {'status': 'success', 'message': '',
-               'tags': {'admin': [], 'user': []}}
-        self.assertEqual(obs, exp)
-
     def test_study_get_tags_request(self):
         obs = study_get_tags_request('shared@foo.bar', 1)
         exp = {'status': 'success', 'message': '', 'tags': []}
@@ -545,9 +539,21 @@ class TestStudyAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_study_tags_patch_request(self):
+        # adding test for study_tags_request here as it makes sense to check
+        # that the tags were added
+        obs = study_tags_request()
+        exp = {'status': 'success', 'message': '',
+               'tags': {'admin': [], 'user': []}}
+        self.assertEqual(obs, exp)
+
         obs = study_tags_patch_request(
             'shared@foo.bar', 1, 'replace', '/tags', ['testA', 'testB'])
         exp = {'status': 'success', 'message': ''}
+        self.assertEqual(obs, exp)
+
+        obs = study_tags_request()
+        exp = {'status': 'success', 'message': '',
+               'tags': {'admin': [], 'user': ['testA', 'testB']}}
         self.assertEqual(obs, exp)
 
         # check errors
