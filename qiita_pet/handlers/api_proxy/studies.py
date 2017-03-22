@@ -82,8 +82,6 @@ def study_get_req(study_id, user_id):
     study_info['status'] = study.status
     study_info['ebi_study_accession'] = study.ebi_study_accession
     study_info['ebi_submission_status'] = study.ebi_submission_status
-    study_info['all_study_tags'] = Study.get_tags()
-    study_info['study_tags'] = study.tags
 
     # Clean up StudyPerson objects to string for display
     pi = study_info['principal_investigator']
@@ -300,8 +298,53 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
             'artifacts': artifact_options}
 
 
-def study_patch_request(user_id, study_id,
-                        req_op, req_path, req_value=None, req_from=None):
+def study_tags_request():
+    """Retrieve available study tags
+
+    Returns
+    -------
+    dict of {str, str}
+        A dictionary with the following keys:
+        - status: str, whether if the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
+        - tags: {level: value, ..., ...}
+    """
+    return {'status': 'success',
+            'message': '',
+            'tags': Study.get_tags()}
+
+
+def study_get_tags_request(user_id, study_id):
+    """Retrieve available study tags for study_id
+
+    Parameters
+    ----------
+    user_id : int
+        The id of the user performing the operation
+    study_id : int
+        The id of the study on which we will be performing the operation
+
+    Returns
+    -------
+    dict of {str, str}
+        A dictionary with the following keys:
+        - status: str, whether if the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
+        - tags: [value, ..., ...]
+    """
+
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
+    study = Study(study_id)
+
+    return {'status': 'success',
+            'message': '',
+            'tags': study.tags}
+
+
+def study_tags_patch_request(user_id, study_id,
+                             req_op, req_path, req_value=None, req_from=None):
     """Modifies an attribute of the artifact
 
     Parameters
@@ -339,10 +382,6 @@ def study_patch_request(user_id, study_id,
         if access_error:
             return access_error
         study = Study(study_id)
-
-        if not req_value:
-            return {'status': 'error',
-                    'message': 'A value is required'}
 
         if attribute == 'tags':
             message = study.add_tags(User(user_id), req_value)
