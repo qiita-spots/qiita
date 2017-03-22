@@ -5,11 +5,19 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from qiita_pet.handlers.base_handler import BaseHandler
+from qiita_db.study import Study
+from qiita_db.exceptions import QiitaDBUnknownIDError
+from qiita_pet.handlers.util import to_int
+from qiita_pet.handlers.base_handlers import BaseHandler
 
 class StudyHandler(BaseHandler):
-    def get(self, id):
+    def get(self, study_id):
 
-        self.set_status(404)
-        self.write({'message': 'Study not found'})
-        self.finish()
+        study_id = to_int(study_id)
+        try:
+            Study(study_id)
+        except QiitaDBUnknownIDError:
+            self.set_status(404)
+            self.write({'message': 'Study not found'})
+        finally:
+            self.finish()

@@ -8,32 +8,34 @@
 
 from unittest import main
 
+from tornado.escape import json_decode
+
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
 class StudyHandlerTests(TestHandlerBase):
 
     def test_get_valid(self):
-        response = self.get('/api/v1/study/10317')
+        response = self.get('/api/v1/study/1')
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.content, {'exists': True})
+        self.assertEqual(response.body, "")
 
     def test_get_invalid(self):
         response = self.get('/api/v1/study/0')
         self.assertEqual(response.code, 404)
-        self.assertEqual(response.content, {'message': 'Study not found'})
+        self.assertEqual(json_decode(response.body),
+                         {'message': 'Study not found'})
 
     def test_get_invalid_negative(self):
         response = self.get('/api/v1/study/-1')
         self.assertEqual(response.code, 404)
-        self.assertEqual(response.content, {'message': 'Study not found'})
+        # not asserting the body content as this is not a valid URI according
+        # to the regex associating the handler to the webserver
 
     def test_get_invalid_namespace(self):
         response = self.get('/api/v1/study/1.11111')
-
-        # we think this will be wrong, and it will really be Tornado vomit
         self.assertEqual(response.code, 404)
-        self.assertEqual(response.content, {'message': 'Study not found'})
+        # not asserting the body content as this is not a valid URI according
 
 
 if __name__ == '__main__':
