@@ -39,7 +39,7 @@ class StudyIndexHandler(BaseHandler):
         req_op = self.get_argument('op')
         req_path = self.get_argument('path')
         req_value = self.request.arguments.get('value[]', None)
-        req_form= self.get_argument('form', None)
+        req_form = self.get_argument('form', None)
 
         response = study_patch_request(self.current_user.id, study_id,
                                        req_op, req_path, req_value, req_form)

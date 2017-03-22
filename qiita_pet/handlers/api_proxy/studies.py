@@ -300,7 +300,6 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
             'artifacts': artifact_options}
 
 
-
 def study_patch_request(user_id, study_id,
                         req_op, req_path, req_value=None, req_from=None):
     """Modifies an attribute of the artifact

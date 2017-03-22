@@ -1160,44 +1160,51 @@ class Study(qdb.base.QiitaObject):
         to_delete = current_tags - set(tags)
         to_add = set(tags) - current_tags
 
-        with qdb.sql_connection.TRN:
-            sql = """DELETE FROM qiita.per_study_tags WHERE study_id = %s"""
-            if user_level != 'admin':
-                admin_tags = set(self.tags) & system_tags_admin
+        if to_delete or to_add:
+            with qdb.sql_connection.TRN:
+                if to_delete:
+                    if user_level != 'admin':
+                        admin_tags = to_delete & system_tags_admin
+                        if admin_tags:
+                            message += 'You cannot remove: %s' % ', '.join(
+                                admin_tags)
+                        to_delete = to_delete - admin_tags
 
-                if admin_tags:
-                    sql += ' AND study_tag NOT IN %s'
-                    qdb.sql_connection.TRN.add(
-                        sql, [self._id, tuple(admin_tags)])
-                    message += 'You cannot remove: %s' % ', '.join(admin_tags)
-            else:
-                qdb.sql_connection.TRN.add(sql, [self._id])
+                    if to_delete:
+                        sql = """DELETE FROM qiita.per_study_tags
+                                     WHERE study_id = %s AND study_tag IN %s"""
+                        qdb.sql_connection.TRN.add(
+                            sql, [self._id, tuple(to_delete)])
 
-            if tags:
-                self.insert_tags(user, tags)
+                if to_add:
+                    if user_level != 'admin':
+                        admin_tags = to_add & system_tags_admin
+                        if admin_tags:
+                            message += ('Only admins can assing: '
+                                        '%s' % ', '.join(admin_tags))
+                        to_add = to_add - admin_tags
 
-                if user_level != 'admin':
-                    ttags = set(tags)
-                    tags = ttags - system_tags_admin
-                    if len(tags) != len(ttags):
-                        message += 'Only admins can assing: %s' % ', '.join(
-                            ttags - tags)
+                    if to_add:
+                        self.insert_tags(user, to_add)
 
-                sql = """INSERT INTO qiita.per_study_tags
-                            (study_tag, study_id)
-                         SELECT %s, %s
-                            WHERE
-                                NOT EXISTS (
-                                    SELECT study_tag, study_id
-                                    FROM qiita.per_study_tags
-                                    WHERE study_tag = %s AND study_id = %s
-                                )"""
-                sql_args = [[tag, self._id, tag, self._id] for tag in tags]
-                qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+                        sql = """INSERT INTO qiita.per_study_tags
+                                    (study_tag, study_id)
+                                 SELECT %s, %s
+                                    WHERE
+                                        NOT EXISTS (
+                                            SELECT study_tag, study_id
+                                            FROM qiita.per_study_tags
+                                            WHERE study_tag = %s
+                                                AND study_id = %s
+                                        )"""
+                        sql_args = [[t, self._id, t, self._id] for t in to_add]
+                        qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
-            qdb.sql_connection.TRN.execute()
+                qdb.sql_connection.TRN.execute()
+        else:
+            message = 'No changes in the tags.'
 
-            return message
+        return message
 
 
 class StudyPerson(qdb.base.QiitaObject):
