@@ -61,6 +61,8 @@ if qiita_config.portal == "QIITA":
     from qiita_pet.handlers.portal import (
         StudyPortalHandler, StudyPortalAJAXHandler)
 
+from qiita_pet.handlers.rest import StudyHandler as WeDontKnowWhatToCallThis
+
 
 DIRNAME = dirname(__file__)
 STATIC_PATH = join(DIRNAME, "static")
@@ -164,7 +166,8 @@ class Application(tornado.web.Application):
              CommandActivateHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/(.*)/", CommandHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/", CommandListHandler),
-            (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler)
+            (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
+            (r"/api/v1/study/([0-9]+)", WeDontKnowWhatToCallThis)
         ]
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal
