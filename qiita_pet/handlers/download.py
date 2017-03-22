@@ -7,7 +7,8 @@ from datetime import datetime
 from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import study_get_req
 from qiita_db.study import Study
-from qiita_db.util import filepath_id_to_rel_path, get_db_files_base_dir
+from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
+                           compute_checksum)
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_core.util import execute_as_transaction
 
@@ -87,6 +88,10 @@ class DownloadStudyBIOMSHandler(BaseHandler):
                         spath = path[basedir_len:]
                         to_download.append((path, spath, spath))
                     else:
+                        # We are not aware of any case that can trigger this
+                        # situation, but we wanted to be overly cautious
+                        # There is no test for this line cause we don't know
+                        # how to trigger it
                         to_download.append((path, path, path))
 
                 if to_add:
@@ -101,7 +106,8 @@ class DownloadStudyBIOMSHandler(BaseHandler):
                                             % a.id))
 
         # If we don't have nginx, write a file that indicates this
-        all_files = '\n'.join(["- %s /protected/%s %s" % (getsize(fp), sfp, n)
+        all_files = '\n'.join(["%s %s /protected/%s %s"
+                               % (compute_checksum(fp), getsize(fp), sfp, n)
                                for fp, sfp, n in to_download])
         self.write("%s\n" % all_files)
 
