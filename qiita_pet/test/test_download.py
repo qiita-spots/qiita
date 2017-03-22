@@ -122,6 +122,18 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 405)
 
+        a.visibility = 'public'
+        response = self.get('/download_study_bioms/1')
+        self.assertEqual(response.code, 200)
+        exp = (
+            '[0-9]* 39752 /protected/BIOM/{0}/otu_table.biom '
+            'BIOM/{0}/otu_table.biom\n'
+            '[0-9]* 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
+            'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
+            '[0-9]* 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
+            'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
+        self.assertRegexpMatches(response.body, exp)
+
 
 if __name__ == '__main__':
     main()
