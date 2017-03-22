@@ -47,16 +47,25 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
     def test_download_study(self):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
-        self.assertRegexpMatches(response.body, (
-            "This installation of Qiita was not equipped with nginx, so it "
-            "is incapable of serving files. The files you attempted to "
-            "download are located at:\nbiom: processed_data/1_study_1001_"
-            "closed_reference_otu_table.biom\nQIIME map file: templates/"
-            "1_prep_1_qiime_[0-9]*-[0-9]*.txt\nbiom: processed_data/"
-            "1_study_1001_closed_reference_otu_table.biom\nQIIME map file: "
-            "templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt\nbiom: "
-            "processed_data/1_study_1001_closed_reference_otu_table_Silva.biom"
-            "\nQIIME map file: templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt"))
+        exp = (
+            '- 1256812 /protected/processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom\n'
+            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/4_mapping_file.txt\n'
+            '- 1256812 /protected/processed_data/1_study_1001_closed_reference'
+            '_otu_table.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table.biom\n'
+            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/5_mapping_file.txt\n'
+            '- 1256812 /protected/processed_data/1_study_1001_closed_reference'
+            '_otu_table_Silva.biom processed_data/1_study_1001_closed_'
+            'reference_otu_table_Silva.biom\n'
+            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/6_mapping_file.txt\n'
+            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n')
+        self.assertRegexpMatches(response.body, exp)
 
         response = self.get('/download_study_bioms/200')
         self.assertEqual(response.code, 405)

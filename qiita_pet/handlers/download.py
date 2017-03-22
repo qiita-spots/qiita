@@ -85,7 +85,7 @@ class DownloadStudyBIOMSHandler(BaseHandler):
                                 to_download.append((fullpath, spath, spath))
                     elif path.startswith(basedir):
                         spath = path[basedir_len:]
-                        to_download.append((fullpath, spath, spath))
+                        to_download.append((path, spath, spath))
                     else:
                         to_download.append((path, path, path))
 
@@ -95,7 +95,7 @@ class DownloadStudyBIOMSHandler(BaseHandler):
                         if qmf is not None:
                             sqmf = qmf
                             if qmf.startswith(basedir):
-                                qmf = qmf[basedir_len:]
+                                sqmf = qmf[basedir_len:]
                             to_download.append(
                                 (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
                                             % a.id))
