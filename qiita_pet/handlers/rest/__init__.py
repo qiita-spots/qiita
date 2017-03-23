@@ -7,6 +7,9 @@
 # -----------------------------------------------------------------------------
 
 from .study import StudyHandler
-from .study_samples import StudySamplesHandler, StudySamplesInfoHandler
+from .study_samples import (StudySamplesHandler, StudySamplesInfoHandler,
+                            StudySamplesCategoriesHandler)
 
-__all__ = ['StudyHandler', 'StudySamplesHandler', 'StudySamplesInfoHandler']
+
+__all__ = ['StudyHandler', 'StudySamplesHandler', 'StudySamplesInfoHandler',
+           'StudySamplesCategoriesHandler']
