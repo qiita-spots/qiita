@@ -17,9 +17,20 @@ class StudyHandler(BaseHandler):
     def get(self, study_id):
         study_id = to_int(study_id)
         try:
-            Study(study_id)
+            s = Study(study_id)
         except QiitaDBUnknownIDError:
             self.set_status(404)
             self.write({'message': 'Study not found'})
-        finally:
             self.finish()
+            return
+
+        info = s.info
+        self.write({'title': s.title,
+                    'contacts': {'principal-investigator': [
+                                     info['principal_investigator'].name,
+                                     info['principal_investigator'].email],
+                                 'lab-person': [
+                                     info['lab_person'].name,
+                                     info['lab_person'].email]},
+                    'abstract': info['study_abstract']})
+        self.finish()

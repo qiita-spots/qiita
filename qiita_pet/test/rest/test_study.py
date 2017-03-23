@@ -26,9 +26,27 @@ class StudyHandlerTests(TestHandlerBase):
         super(StudyHandlerTests, self).setUp()
 
     def test_get_valid(self):
+        exp = {u'title': u'Identification of the Microbiomes for Cannabis Soils',
+               u'contacts': {'principal-investigator': [u'PIDude',
+                                                        u'PI_dude@foo.bar'],
+                             'lab-person': [u'LabDude', u'lab_dude@foo.bar']},
+               u'abstract': (u'This is a preliminary study to examine the '
+                              'microbiota associated with the Cannabis plant. '
+                              'Soils samples from the bulk soil, soil '
+                              'associated with the roots, and the rhizosphere '
+                              'were extracted and the DNA sequenced. Roots '
+                              'from three independent plants of different '
+                              'strains were examined. These roots were '
+                              'obtained November 11, 2011 from plants that '
+                              'had been harvested in the summer. Future '
+                              'studies will attempt to analyze the soils and '
+                              'rhizospheres from the same location at '
+                              'different time points in the plant lifecycle.')}
+
         response = self.get('/api/v1/study/1', headers=self.headers)
         self.assertEqual(response.code, 200)
-        self.assertEqual(response.body, "")
+        obs = json_decode(response.body)
+        self.assertEqual(obs, exp)
 
     def test_get_invalid(self):
         response = self.get('/api/v1/study/0', headers=self.headers)
