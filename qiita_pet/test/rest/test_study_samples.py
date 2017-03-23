@@ -26,7 +26,7 @@ class StudySamplesHandlerTests(TestHandlerBase):
         r_client.expire(self.client_token, 5)
 
         self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudyHandlerTests, self).setUp()
+        super(StudySamplesHandlerTests, self).setUp()
 
     def test_get_valid(self):
         exp = sorted(['1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195',
@@ -48,7 +48,7 @@ class StudySamplesHandlerTests(TestHandlerBase):
         response = self.get('/api/v1/study/0/samples', headers=self.headers)
         self.assertEqual(response.code, 404)
         obs = json_decode(response.body)
-        self.assertEqual(sorted(obs), exp)
+        self.assertEqual(obs, exp)
 
     def test_get_study_no_samples(self):
         info = {
