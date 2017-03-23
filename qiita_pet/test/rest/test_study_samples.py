@@ -77,5 +77,74 @@ class StudySamplesHandlerTests(TestHandlerBase):
         self.assertEqual(obs, exp)
 
 
+class StudySamplesInfoHandlerTests(TestHandlerBase):
+    def setUp(self):
+        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
+        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
+        r_client.hset(self.client_token, 'client_id', 'test123123123')
+        r_client.hset(self.client_token, 'grant_type', 'client')
+        r_client.expire(self.client_token, 5)
+
+        self.headers = {'Authorization': 'Bearer ' + self.client_token}
+        super(StudySamplesInfoHandlerTests, self).setUp()
+
+    def test_get_valid(self):
+        exp = {'number-of-samples': 27,
+               'categories': ['season_environment',
+                              'assigned_from_geo', 'texture', 'taxon_id',
+                              'depth', 'host_taxid', 'common_name',
+                              'water_content_soil', 'elevation', 'temp',
+                              'tot_nitro', 'samp_salinity', 'altitude',
+                              'env_biome', 'country', 'ph', 'anonymized_name',
+                              'tot_org_carb', 'description_duplicate',
+                              'env_feature', 'physical_specimen_location',
+                              'physical_specimen_remaining', 'dna_extracted',
+                              'sample_type', 'collection_timestamp',
+                              'host_subject_id', 'description',
+                              'latitude', 'longitude', 'scientific_name']}
+        response = self.get('/api/v1/study/1/samples/info',
+                            headers=self.headers)
+        self.assertEqual(response.code, 200)
+        obs = json_decode(response.body)
+        self.assertEqual(obs.keys(), exp.keys())
+        self.assertEqual(obs['number-of-samples'], exp['number-of-samples'])
+        self.assertItemsEqual(obs['categories'], exp['categories'])
+
+    def test_get_study_does_not_exist(self):
+        exp = {'message': 'Study not found'}
+        response = self.get('/api/v1/study/0/samples/info',
+                            headers=self.headers)
+        self.assertEqual(response.code, 404)
+        obs = json_decode(response.body)
+        self.assertEqual(obs, exp)
+
+    def test_get_no_samples(self):
+        # /api/v1/study/%d/samples/info -> {'number-of-samples':<int>,
+                                        #   'categories': [<str>]}
+        info = {
+            "timeseries_type_id": 1,
+            "metadata_complete": True,
+            "mixs_compliant": True,
+            "number_samples_collected": 25,
+            "number_samples_promised": 28,
+            "study_alias": "FCM",
+            "study_description": "DESC",
+            "study_abstract": "ABS",
+            "principal_investigator_id": StudyPerson(3),
+            'first_contact': datetime(2015, 5, 19, 16, 10),
+            'most_recent_contact': datetime(2015, 5, 19, 16, 11),
+        }
+
+        new_study = Study.create(User('test@foo.bar'),
+                                 "Some New Study for test", [1],
+                                 info)
+        exp = {'number-of-samples': 0, 'categories': []}
+        response = self.get('/api/v1/study/%d/samples/info' % new_study.id,
+                            headers=self.headers)
+        self.assertEqual(response.code, 200)
+        obs = json_decode(response.body)
+        self.assertEqual(obs, exp)
+
+
 if __name__ == '__main__':
     main()
