@@ -31,11 +31,23 @@ class StudyPersonHandler(RESTHandler):
         self.finish()
 
     # @authenticate_oauth
-    # POST
-    # /api/v1/person?name=FooMaister&affilliation=University%20of%20Southampton
-    # get_argument(name)
-    # get_argument(email)
-    # get_argument(phone)
-    # get_argument(afilliation)
-    def post(self):
-        pass
+    def post(self, *args, **kwargs):
+        name = self.get_argument('name')
+        affiliation = self.get_argument('affiliation')
+        email = self.get_argument('email')
+
+        phone = self.get_argument('phone', None)
+        address = self.get_argument('address', None)
+
+        if StudyPerson.exists(name, affiliation):
+            self.set_status(409)
+            self.write({'message': 'Person already exists'})
+            self.finish()
+            return
+
+        p = StudyPerson.create(name=name, affiliation=affiliation, email=email,
+                               phone=phone, address=address)
+
+        self.write({'id': p.id})
+        self.finish()
+

@@ -11,6 +11,7 @@ from unittest import main
 from tornado.escape import json_decode
 from moi import r_client
 
+from qiita_db.study import StudyPerson
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
@@ -63,6 +64,34 @@ class StudyPersonHandlerTests(TestHandlerBase):
         self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
         self.assertEqual(obs, exp)
+
+    def test_post_new_person(self):
+        body = {'name': 'Boaty McBoatFace', 'affiliation': 'UCSD',
+                'email': 'boat@ucsd.edu', 'phone': '720-876-5309'}
+
+        response = self.post('/api/v1/person', data=body)
+        self.assertEqual(response.code, 200)
+        obs = json_decode(response.body)
+        exp = StudyPerson.from_name_and_affiliation(body['name'],
+                                                    body['affiliation']).id
+        self.assertEqual(exp, obs['id'])
+
+    def test_post_existing(self):
+        body = {'name': 'LabDude', 'affiliation': 'knight lab',
+                'email': 'lab_dude@foo.bar', 'phone': '121-222-3333'}
+
+        response = self.post('/api/v1/person', data=body)
+        self.assertEqual(response.code, 409)
+        obs = json_decode(response.body)
+        exp = {'message': 'Person already exists'}
+        self.assertEqual(exp, obs)
+
+    def test_post_incomplete_details(self):
+        body = {'affiliation': 'knight lab',
+                'email': 'lab_dude@foo.bar', 'phone': '121-222-3333'}
+
+        response = self.post('/api/v1/person', data=body)
+        self.assertEqual(response.code, 400)
 
 
 if __name__ == '__main__':
