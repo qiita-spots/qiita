@@ -9,7 +9,8 @@
 from .study import StudyHandler
 from .study_samples import (StudySamplesHandler, StudySamplesInfoHandler,
                             StudySamplesCategoriesHandler)
+from .study_person import StudyPersonHandler
 
 
 __all__ = ['StudyHandler', 'StudySamplesHandler', 'StudySamplesInfoHandler',
-           'StudySamplesCategoriesHandler']
+           'StudySamplesCategoriesHandler', 'StudyPersonHandler']

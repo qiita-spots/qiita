@@ -1214,6 +1214,36 @@ class StudyPerson(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
+    def from_name_and_affiliation(cls, name, affiliation):
+        """Gets a StudyPerson object based on the name and affiliation
+
+        Parameters
+        ----------
+        name: str
+            Name of the person
+        affiliation : str
+            institution with which the person is affiliated
+
+        Returns
+        -------
+        StudyPerson
+            The StudyPerson for the name and affiliation
+        """
+
+
+        with qdb.sql_connection.TRN:
+
+            if not cls.exists(name, affiliation):
+                raise qdb.exceptions.QiitaDBLookupError(
+                        'Study person does not exist')
+            sql = """SELECT study_person_id FROM qiita.{0}
+                        WHERE name = %s
+                     AND affiliation = %s""".format(cls._table)
+            qdb.sql_connection.TRN.add(sql, [name, affiliation])
+            return cls(int(qdb.sql_connection.TRN.execute_fetchlast()))
+
+
+    @classmethod
     def create(cls, name, email, affiliation, address=None, phone=None):
         """Create a StudyPerson object, checking if person already exists.
 
