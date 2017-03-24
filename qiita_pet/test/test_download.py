@@ -67,16 +67,19 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         biom_fp = join(tmp_dir, 'otu_table.biom')
         smr_dir = join(tmp_dir, 'sortmerna_picked_otus')
         log_dir = join(smr_dir, 'seqs_otus.log')
+        tgz = join(tmp_dir, 'sortmerna_picked_otus.tgz')
 
         with biom_open(biom_fp, 'w') as f:
             et.to_hdf5(f, "test")
         makedirs(smr_dir)
         with open(log_dir, 'w') as f:
             f.write('\n')
+        with open(tgz, 'w') as f:
+            f.write('\n')
 
         self._clean_up_files.append(tmp_dir)
 
-        files_biom = [(biom_fp, 'biom'), (smr_dir, 'directory')]
+        files_biom = [(biom_fp, 'biom'), (smr_dir, 'directory'), (tgz, 'tgz')]
 
         params = Parameters.from_default_params(
             Command(3).default_parameter_sets.next(), {'input_data': 1})
@@ -88,28 +91,28 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '[0-9]* 1256812 /protected/processed_data/1_study_1001_closed_'
+            '- 1256812 /protected/processed_data/1_study_1001_closed_'
             'reference_otu_table.biom processed_data/1_study_1001_closed_'
             'reference_otu_table.biom\n'
-            '[0-9]* 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/4_mapping_file.txt\n'
-            '[0-9]* 1256812 /protected/processed_data/'
+            '- 1256812 /protected/processed_data/'
             '1_study_1001_closed_reference_otu_table.biom processed_data/'
             '1_study_1001_closed_reference_otu_table.biom\n'
-            '[0-9]* 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/5_mapping_file.txt\n'
-            '[0-9]* 1256812 /protected/processed_data/'
+            '- 1256812 /protected/processed_data/'
             '1_study_1001_closed_reference_otu_table_Silva.biom processed_data'
             '/1_study_1001_closed_reference_otu_table_Silva.biom\n'
-            '[0-9]* 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
+            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/6_mapping_file.txt\n'
-            '[0-9]* 36615 /protected/templates/1_prep_2_qiime_[0-9]*-'
+            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-'
             '[0-9]*.txt mapping_files/7_mapping_file.txt\n'
-            '[0-9]* 39752 /protected/BIOM/{0}/otu_table.biom '
+            '- 39752 /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
-            '[0-9]* 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
+            '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
-            '[0-9]* 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
+            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
             'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
         self.assertRegexpMatches(response.body, exp)
 
@@ -126,11 +129,11 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         response = self.get('/download_study_bioms/1')
         self.assertEqual(response.code, 200)
         exp = (
-            '[0-9]* 39752 /protected/BIOM/{0}/otu_table.biom '
+            '- 39752 /protected/BIOM/{0}/otu_table.biom '
             'BIOM/{0}/otu_table.biom\n'
-            '[0-9]* 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
+            '- 1 /protected/BIOM/{0}/sortmerna_picked_otus/seqs_otus.log '
             'BIOM/{0}/sortmerna_picked_otus/seqs_otus.log\n'
-            '[0-9]* 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
+            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.'
             'txt mapping_files/{0}_mapping_file.txt\n'.format(a.id))
         self.assertRegexpMatches(response.body, exp)
 

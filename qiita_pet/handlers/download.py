@@ -7,8 +7,7 @@ from datetime import datetime
 from .base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import study_get_req
 from qiita_db.study import Study
-from qiita_db.util import (filepath_id_to_rel_path, get_db_files_base_dir,
-                           compute_checksum)
+from qiita_db.util import filepath_id_to_rel_path, get_db_files_base_dir
 from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_core.util import execute_as_transaction
 
@@ -73,6 +72,10 @@ class DownloadStudyBIOMSHandler(BaseHandler):
                     if (i == 0 and not vfabu(user, fid)):
                         to_add = False
                         break
+                    # ignore if tgz as they could create problems and the
+                    # raw data is in the folder
+                    if data_type == 'tgz':
+                        continue
                     if data_type == 'directory':
                         # If we have a directory, we actually need to list
                         # all the files from the directory so NGINX can
@@ -106,8 +109,7 @@ class DownloadStudyBIOMSHandler(BaseHandler):
                                             % a.id))
 
         # If we don't have nginx, write a file that indicates this
-        all_files = '\n'.join(["%s %s /protected/%s %s"
-                               % (compute_checksum(fp), getsize(fp), sfp, n)
+        all_files = '\n'.join(["- %s /protected/%s %s" % (getsize(fp), sfp, n)
                                for fp, sfp, n in to_download])
         self.write("%s\n" % all_files)
 
