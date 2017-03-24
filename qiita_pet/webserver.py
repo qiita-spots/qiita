@@ -173,7 +173,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/plugins/(.*)/(.*)/commands/", CommandListHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
             (r"/api/v1/study/([0-9]+)", WeDontKnowWhatToCallThis),
-            (r"/api/v1/study/([0-9]+)/samples?(.*)",
+            (r"/api/v1/study/([0-9]+)/samples/categories=([a-zA-Z\-0-9\.:,_]*)",
                 WeDontKnowWhatToCallThisTheFourth),
             (r"/api/v1/study/([0-9]+)/samples", WeDontKnowWhatToCallThisJr),
             (r"/api/v1/study/([0-9]+)/samples/info", WeDontKnowWhatToCallThisJrJr)

@@ -165,7 +165,7 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
         exp = {'header': ['ph', 'country'],
                'samples': df}
 
-        response = self.get('/api/v1/study/1/samples?ph,country',
+        response = self.get('/api/v1/study/1/samples/categories=ph,country',
                             headers=self.headers)
         self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
@@ -179,7 +179,7 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
         exp = {'header': ['country'],
                'samples': df}
 
-        response = self.get('/api/v1/study/1/samples?country',
+        response = self.get('/api/v1/study/1/samples/categories=country',
                             headers=self.headers)
         self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
@@ -187,7 +187,7 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
 
     def test_get_valid_two_arg_one_bad(self):
         exp = {'message': 'Category not found'}
-        response = self.get('/api/v1/study/1/samples?country,foo',
+        response = self.get('/api/v1/study/1/samples/categories=country,foo',
                             headers=self.headers)
         self.assertEqual(response.code, 404)
         obs = json_decode(response.body)
@@ -195,7 +195,7 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
 
     def test_get_study_does_not_exist(self):
         exp = {'message': 'Study not found'}
-        response = self.get('/api/v1/study/0/samples?foo',
+        response = self.get('/api/v1/study/0/samples/categories=foo',
                             headers=self.headers)
         self.assertEqual(response.code, 404)
         obs = json_decode(response.body)
@@ -203,7 +203,7 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
 
     def test_get_bad_category(self):
         exp = {'message': 'Category not found'}
-        response = self.get('/api/v1/study/1/samples?foo',
+        response = self.get('/api/v1/study/1/samples/categories=foo',
                             headers=self.headers)
         self.assertEqual(response.code, 404)
         obs = json_decode(response.body)
@@ -211,7 +211,7 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
 
     def test_get_no_category(self):
         exp = {'message': 'No categories specified'}
-        response = self.get('/api/v1/study/1/samples?',
+        response = self.get('/api/v1/study/1/samples/categories=',
                             headers=self.headers)
         self.assertEqual(response.code, 405)
         obs = json_decode(response.body)
@@ -239,7 +239,7 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
                                  info)
 
         exp = {'message': 'Category not found'}
-        response = self.get('/api/v1/study/%d/samples?foo' % new_study.id,
+        response = self.get('/api/v1/study/%d/samples/categories=foo' % new_study.id,
                             headers=self.headers)
         self.assertEqual(response.code, 404)
         obs = json_decode(response.body)
