@@ -98,7 +98,7 @@ class MetaUtilTests(TestCase):
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 admin, i[0]))
 
-        # returning to origina sharing
+        # returning to original sharing
         qdb.study.Study(1).share(user)
         qdb.analysis.Analysis(1).share(user)
         qdb.study.Study.delete(study.id)
