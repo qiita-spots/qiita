@@ -47,6 +47,7 @@ class StudyHandlerTests(TestHandlerBase):
         self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
         self.assertEqual(obs, exp)
+        self.fail('The return content needs to be expanded')
 
     def test_get_invalid(self):
         response = self.get('/api/v1/study/0', headers=self.headers)
@@ -65,6 +66,65 @@ class StudyHandlerTests(TestHandlerBase):
         self.assertEqual(response.code, 404)
         # not asserting the body content as this is not a valid URI according
 
+    def test_post_malformed_study(self):
+        response = self.post('/api/v1/study', data={'foo': 'bar'})
+        self.assertEqual(response.code, 400)
+
+    def test_post_already_exists(self):
+        response = self.post('/api/v1/study',
+                             data={u'title': (u'Identification of the '
+                                               'Microbiomes for Cannabis '
+                                               'Soils')})
+        self.assertEqual(response.code, 409)
+
+    def test_post_valid(self):
+        payload = {'title': 'foo',
+                   'study_abstract': 'stuff',
+                   'study_description': 'asdasd',
+                   'efo': [1],
+                   'owner': 'admin@foo.bar',
+                   'study_alias': 'blah',
+                   'contacts': {'principal_investigator': [u'PIDude',
+                                                           u'PI_dude@foo.bar'],
+                                'lab_person': [u'LabDude',
+                                               u'lab_dude@foo.bar']}}
+        response = self.post('/api/v1/study', data=payload)
+        self.assertEqual(response.code, 201)
+        study_id = json_decode(response.body)
+        study = Study(int(study_id))
+
+        self.assertEqual(study.info['title'], payload['title'])
+        self.assertEqual(study.info['study_abstract'],
+                         payload['study_abstract'])
+        self.assertEqual(study.info['study_description'],
+                         payload['study_description'])
+        self.assertEqual(study.info['study_alias'], payload['study_alias'])
+        self.assertEqual(study.efo, payload['efo'])
+        self.assertEqual(study.owner.email, payload['owner'])
+        self.assertEqual(study.info['principal_investigator'].name,
+                         payload['contacts']['principal_investigator'][0])
+        self.assertEqual(study.info['principal_investigator'].email,
+                         payload['contacts']['principal_investigator'][1])
+        self.assertEqual(study.info['lab_person'].name,
+                         payload['contacts']['lab_person'][0])
+        self.assertEqual(study.info['lab_person'].email,
+                         payload['contacts']['lab_person'][1])
+
+    def test_post_invalid_user(self):
+        payload = {'title': 'foo',
+                   'study_abstract': 'stuff',
+                   'study_description': 'asdasd',
+                   'study_alias': 'asd',
+                   'efo': [1],
+                   'user': 'does-not-exist@foo.bar',
+                   'contacts': {'principal-investigator': [u'PIDude',
+                                                           u'PI_dude@foo.bar'],
+                                'lab-person': [u'LabDude',
+                                               u'lab_dude@foo.bar']}}
+        response = self.post('/api/v1/study', data=payload)
+        self.assertEqual(response.code, 403)
+        obs = json_decode(response.body)
+        self.assertEqual(obs, {'message': 'Unknown user'})
 
 if __name__ == '__main__':
     main()
