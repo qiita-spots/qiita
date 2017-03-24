@@ -69,7 +69,7 @@ class StudyPersonHandlerTests(TestHandlerBase):
         body = {'name': 'Boaty McBoatFace', 'affiliation': 'UCSD',
                 'email': 'boat@ucsd.edu', 'phone': '720-876-5309'}
 
-        response = self.post('/api/v1/person', data=body)
+        response = self.post('/api/v1/person', data=body, headers=self.headers)
         self.assertEqual(response.code, 200)
         obs = json_decode(response.body)
         exp = StudyPerson.from_name_and_affiliation(body['name'],
@@ -80,7 +80,7 @@ class StudyPersonHandlerTests(TestHandlerBase):
         body = {'name': 'LabDude', 'affiliation': 'knight lab',
                 'email': 'lab_dude@foo.bar', 'phone': '121-222-3333'}
 
-        response = self.post('/api/v1/person', data=body)
+        response = self.post('/api/v1/person', data=body, headers=self.headers)
         self.assertEqual(response.code, 409)
         obs = json_decode(response.body)
         exp = {'message': 'Person already exists'}
@@ -90,7 +90,7 @@ class StudyPersonHandlerTests(TestHandlerBase):
         body = {'affiliation': 'knight lab',
                 'email': 'lab_dude@foo.bar', 'phone': '121-222-3333'}
 
-        response = self.post('/api/v1/person', data=body)
+        response = self.post('/api/v1/person', data=body, headers=self.headers)
         self.assertEqual(response.code, 400)
 
 
