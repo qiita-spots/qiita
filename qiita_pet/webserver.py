@@ -67,7 +67,8 @@ from qiita_pet.handlers.rest import (
     StudySamplesHandler as WeDontKnowWhatToCallThisJr,
     StudySamplesInfoHandler as WeDontKnowWhatToCallThisJrJr,
     StudySamplesCategoriesHandler as WeDontKnowWhatToCallThisTheFourth,
-    StudyPersonHandler as WeDontKnowWhatToCallThisTheFifth)
+    StudyPersonHandler as WeDontKnowWhatToCallThisTheFifth,
+    StudyCreatorHandler as WeDontKnowWhatToCallThisSr)
 
 
 DIRNAME = dirname(__file__)
@@ -173,6 +174,7 @@ class Application(tornado.web.Application):
             (r"/qiita_db/plugins/(.*)/(.*)/commands/(.*)/", CommandHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/", CommandListHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
+            (r"/api/v1/study$", WeDontKnowWhatToCallThisSr),
             (r"/api/v1/study/([0-9]+)", WeDontKnowWhatToCallThis),
             (r"/api/v1/study/([0-9]+)/samples/categories=([a-zA-Z\-0-9\.:,_]*)",
                 WeDontKnowWhatToCallThisTheFourth),

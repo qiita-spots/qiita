@@ -5,6 +5,7 @@ except ImportError:  # py3
     from urllib.parse import urlencode
 
 from tornado.testing import AsyncHTTPTestCase
+from tornado.escape import json_encode
 from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.environment_manager import clean_test_environment
@@ -35,9 +36,11 @@ class TestHandlerBase(AsyncHTTPTestCase):
                 url += '?%s' % data
         return self._fetch(url, 'GET', headers=headers)
 
-    def post(self, url, data, headers=None, doseq=True):
+    def post(self, url, data, headers=None, doseq=True, asjson=False):
         if data is not None:
-            if isinstance(data, dict):
+            if asjson:
+                data = json_encode(data)
+            elif isinstance(data, dict):
                 data = urlencode(data, doseq=doseq)
         return self._fetch(url, 'POST', data, headers)
 

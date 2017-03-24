@@ -14,6 +14,7 @@ from .rest_handler import RESTHandler
 
 
 class StudyPersonHandler(RESTHandler):
+    @authenticate_oauth
     def get(self, *args, **kwargs):
         name = self.get_argument('name')
         affiliation = self.get_argument('affiliation')
@@ -30,7 +31,7 @@ class StudyPersonHandler(RESTHandler):
                     'id': p.id})
         self.finish()
 
-    # @authenticate_oauth
+    @authenticate_oauth
     def post(self, *args, **kwargs):
         name = self.get_argument('name')
         affiliation = self.get_argument('affiliation')
@@ -48,6 +49,7 @@ class StudyPersonHandler(RESTHandler):
         p = StudyPerson.create(name=name, affiliation=affiliation, email=email,
                                phone=phone, address=address)
 
+        self.set_status(201)
         self.write({'id': p.id})
         self.finish()
 

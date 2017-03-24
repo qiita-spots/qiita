@@ -70,7 +70,7 @@ class StudyPersonHandlerTests(TestHandlerBase):
                 'email': 'boat@ucsd.edu', 'phone': '720-876-5309'}
 
         response = self.post('/api/v1/person', data=body, headers=self.headers)
-        self.assertEqual(response.code, 200)
+        self.assertEqual(response.code, 201)
         obs = json_decode(response.body)
         exp = StudyPerson.from_name_and_affiliation(body['name'],
                                                     body['affiliation']).id

@@ -11,6 +11,7 @@ from unittest import main
 from tornado.escape import json_decode
 from moi import r_client
 
+from qiita_db.study import Study
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
@@ -66,19 +67,26 @@ class StudyHandlerTests(TestHandlerBase):
         self.assertEqual(response.code, 404)
         # not asserting the body content as this is not a valid URI according
 
+
+class StudyCreatorTests(TestHandlerBase):
+    def setUp(self):
+        self.client_token = 'SOMEAUTHTESTINGTOKENHERE21222'
+        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
+        r_client.hset(self.client_token, 'client_id', 'test123123123')
+        r_client.hset(self.client_token, 'grant_type', 'client')
+        r_client.expire(self.client_token, 5)
+
+        self.headers = {'Authorization': 'Bearer ' + self.client_token}
+        super(StudyCreatorTests, self).setUp()
+
     def test_post_malformed_study(self):
-        response = self.post('/api/v1/study', data={'foo': 'bar'})
+        response = self.post('/api/v1/study', data={'foo': 'bar'},
+                             headers=self.headers, asjson=True)
         self.assertEqual(response.code, 400)
 
     def test_post_already_exists(self):
-        response = self.post('/api/v1/study',
-                             data={u'title': (u'Identification of the '
-                                               'Microbiomes for Cannabis '
-                                               'Soils')})
-        self.assertEqual(response.code, 409)
-
-    def test_post_valid(self):
-        payload = {'title': 'foo',
+        payload = {'title': 'Identification of the Microbiomes for Cannabis '
+                            'Soils',
                    'study_abstract': 'stuff',
                    'study_description': 'asdasd',
                    'efo': [1],
@@ -88,12 +96,31 @@ class StudyHandlerTests(TestHandlerBase):
                                                            u'PI_dude@foo.bar'],
                                 'lab_person': [u'LabDude',
                                                u'lab_dude@foo.bar']}}
-        response = self.post('/api/v1/study', data=payload)
+        response = self.post('/api/v1/study', data=payload, asjson=True,
+                             headers=self.headers)
+        self.assertEqual(response.code, 409)
+        obs = json_decode(response.body)
+        self.assertEqual(obs,
+                         {'message': 'Study title already exists'})
+
+    def test_post_valid(self):
+        payload = {'title': 'foo',
+                   'study_abstract': 'stuff',
+                   'study_description': 'asdasd',
+                   'efo': [1],
+                   'owner': 'admin@foo.bar',
+                   'study_alias': 'blah',
+                   'contacts': {'principal_investigator': [u'PIDude',
+                                                           u'Wash U'],
+                                'lab_person': [u'LabDude',
+                                               u'knight lab']}}
+        response = self.post('/api/v1/study', data=payload,
+                             headers=self.headers, asjson=True)
         self.assertEqual(response.code, 201)
-        study_id = json_decode(response.body)
+        study_id = json_decode(response.body)['id']
         study = Study(int(study_id))
 
-        self.assertEqual(study.info['title'], payload['title'])
+        self.assertEqual(study.title, payload['title'])
         self.assertEqual(study.info['study_abstract'],
                          payload['study_abstract'])
         self.assertEqual(study.info['study_description'],
@@ -103,25 +130,26 @@ class StudyHandlerTests(TestHandlerBase):
         self.assertEqual(study.owner.email, payload['owner'])
         self.assertEqual(study.info['principal_investigator'].name,
                          payload['contacts']['principal_investigator'][0])
-        self.assertEqual(study.info['principal_investigator'].email,
+        self.assertEqual(study.info['principal_investigator'].affiliation,
                          payload['contacts']['principal_investigator'][1])
         self.assertEqual(study.info['lab_person'].name,
                          payload['contacts']['lab_person'][0])
-        self.assertEqual(study.info['lab_person'].email,
+        self.assertEqual(study.info['lab_person'].affiliation,
                          payload['contacts']['lab_person'][1])
 
     def test_post_invalid_user(self):
         payload = {'title': 'foo',
                    'study_abstract': 'stuff',
                    'study_description': 'asdasd',
-                   'study_alias': 'asd',
                    'efo': [1],
-                   'user': 'does-not-exist@foo.bar',
-                   'contacts': {'principal-investigator': [u'PIDude',
-                                                           u'PI_dude@foo.bar'],
-                                'lab-person': [u'LabDude',
-                                               u'lab_dude@foo.bar']}}
-        response = self.post('/api/v1/study', data=payload)
+                   'owner': 'doesnotexist@foo.bar',
+                   'study_alias': 'blah',
+                   'contacts': {'principal_investigator': [u'PIDude',
+                                                           u'Wash U'],
+                                'lab_person': [u'LabDude',
+                                               u'knight lab']}}
+        response = self.post('/api/v1/study', data=payload,
+                             headers=self.headers, asjson=True)
         self.assertEqual(response.code, 403)
         obs = json_decode(response.body)
         self.assertEqual(obs, {'message': 'Unknown user'})

@@ -6,11 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from .study import StudyHandler
+from .study import StudyHandler, StudyCreatorHandler
 from .study_samples import (StudySamplesHandler, StudySamplesInfoHandler,
                             StudySamplesCategoriesHandler)
 from .study_person import StudyPersonHandler
 
 
 __all__ = ['StudyHandler', 'StudySamplesHandler', 'StudySamplesInfoHandler',
-           'StudySamplesCategoriesHandler', 'StudyPersonHandler']
+           'StudySamplesCategoriesHandler', 'StudyPersonHandler',
+           'StudyCreatorHandler']
