@@ -1229,13 +1229,11 @@ class StudyPerson(qdb.base.QiitaObject):
         StudyPerson
             The StudyPerson for the name and affiliation
         """
-
-
         with qdb.sql_connection.TRN:
-
             if not cls.exists(name, affiliation):
                 raise qdb.exceptions.QiitaDBLookupError(
                         'Study person does not exist')
+
             sql = """SELECT study_person_id FROM qiita.{0}
                         WHERE name = %s
                      AND affiliation = %s""".format(cls._table)
