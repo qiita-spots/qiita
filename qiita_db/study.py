@@ -1137,15 +1137,15 @@ class Study(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
             qdb.sql_connection.TRN.execute()
 
-    def add_tags(self, user, tags):
+    def updata_tags(self, user, tags):
         """Sets the tags of the study
 
         Parameters
         ----------
         user: User object
-            The user to unshare the study with
+            The user reqesting the study tags update
         tags : list of str
-            The tags to add to the study
+            The tags to update within the study
 
         Returns
         -------
@@ -1180,7 +1180,7 @@ class Study(qdb.base.QiitaObject):
                     if user_level != 'admin':
                         admin_tags = to_add & system_tags_admin
                         if admin_tags:
-                            message += ('Only admins can assing: '
+                            message += ('Only admins can assign: '
                                         '%s' % ', '.join(admin_tags))
                         to_add = to_add - admin_tags
 

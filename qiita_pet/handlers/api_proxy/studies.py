@@ -384,7 +384,7 @@ def study_tags_patch_request(user_id, study_id,
         study = Study(study_id)
 
         if attribute == 'tags':
-            message = study.add_tags(User(user_id), req_value)
+            message = study.updata_tags(User(user_id), req_value)
             return {'status': 'success',
                     'message': message}
         else:

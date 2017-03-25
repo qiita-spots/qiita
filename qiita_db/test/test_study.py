@@ -855,19 +855,19 @@ class TestStudy(TestCase):
         # assigning the tags to study as user
         study = qdb.study.Study(1)
         tags = ['this is my tag', 'actual GOLD!']
-        message = study.add_tags(user, tags)
+        message = study.updata_tags(user, tags)
         self.assertItemsEqual(study.tags, tags[:1])
-        self.assertEqual(message, 'Only admins can assing: actual GOLD!')
+        self.assertEqual(message, 'Only admins can assign: actual GOLD!')
         # now like admin
-        message = study.add_tags(admin, tags)
+        message = study.updata_tags(admin, tags)
         self.assertItemsEqual(study.tags, tags)
         self.assertEqual(message, '')
 
         # cleaning tags
-        message = study.add_tags(user, [])
+        message = study.updata_tags(user, [])
         self.assertEqual(study.tags, ['actual GOLD!'])
         self.assertEqual(message, 'You cannot remove: actual GOLD!')
-        message = study.add_tags(admin, [])
+        message = study.updata_tags(admin, [])
         self.assertEqual(study.tags, [])
         self.assertEqual(message, '')
 
