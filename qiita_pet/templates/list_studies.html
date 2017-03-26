@@ -1,8 +1,9 @@
 {% extends sitebase.html %}
 {% block head %}
 
-<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.css" type="text/css">
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.min.css" type="text/css">
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
+<link href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.tagit.css" rel="stylesheet" type="text/css">
 
 <style>
 td.details-control {
@@ -12,6 +13,8 @@ td.details-control {
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
+
 <script type="text/javascript">
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
@@ -48,11 +51,35 @@ function fillAbstract(table, row) {
   $('#abstract-text-area').text($('#'+table).dataTable().fnGetData(row, 3));
 }
 
+var admin_tags = [];
+var user_tags = [];
+var tag_selected = '';
 $(document).ready(function() {
   var user_studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&search_type=user&sEcho=" + Math.floor(Math.random()*1001);
   var studies_ajaxURL = "{% raw qiita_config.portal_dir %}/study/search/?&user={{current_user.id}}&search_type=public&sEcho=" + Math.floor(Math.random()*1001);
 
   init_sharing("{% raw qiita_config.portal_dir %}");
+
+  // we need to generate the tags before the study list so we can populate the
+  // tags within the study list
+  $("#studyTags").tagit({
+    readOnly: true,
+    onTagClicked: function(evt, ui) {
+      var tag = $('.tagit').tagit('tagLabel', ui.tag);
+      var current_color = ui.tag.css('border-color');
+      $('.tagit-choice').each(function(){ $(this).css('border-color', '#D3D3D3') });
+      if (current_color != 'rgb(0, 0, 0)') {
+        ui.tag.css('border-color', '#000');
+        tag_selected = tag;
+      } else {
+        tag_selected = '';
+      }
+      $('#user-studies-table').DataTable().draw();
+      $('#studies-table').DataTable().draw();
+    },
+  });
+  update_tags();
+
   $("#search-waiting").hide();
   moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
   moi.add_callback('sel', show_alert);
@@ -101,7 +128,20 @@ $(document).ready(function() {
         }, targets: [1]},
         // render the title cell
         {"render": function ( data, type, row, meta ) {
-            return "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\"><span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='{% raw qiita_config.portal_dir %}/study/description/"+ row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
+            result = "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\">" +
+              "<span class='glyphicon glyphicon-file' aria-hidden='true'></span></a> | <a href='{% raw qiita_config.portal_dir %}/study/description/" +
+              row.study_id +"' id='study"+ meta.row +"-title'>"+ data +"</a>";
+            // adding tags
+            for (var i in row['study_tags']) {
+              var tag = row['study_tags'][i];
+              var level = 'info';
+              if (jQuery.inArray(tag, admin_tags) >= 0) {
+                level = 'warning';
+              }
+              result += ' <span class="label label-' + level + '">' + tag + '</span>';
+            }
+            return result
+
         }, targets: [2]},
         {"render": function ( data, type, row, meta ) {
             var glyph = 'remove';
@@ -212,6 +252,18 @@ $(document).ready(function() {
     $('#studies-table').DataTable().search(search_text).draw();
   });
 
+  // adding tag search/filter
+  $.fn.dataTable.ext.search.push(
+    function( settings, data, data_idx, row ) {
+      if (tag_selected == '') {
+        return true;
+      } else if (jQuery.inArray(tag_selected, row['study_tags']) >= 0) {
+          return true;
+      }
+      return false;
+    }
+  );
+
   // connecting paging size
   $('#user-studies-table').on('length.dt', function (e, settings, len) {
     $('#studies-table').DataTable().page.len(len).draw();
@@ -248,7 +300,36 @@ $(document).ready(function() {
 
       return false;
   });
-} );
+});
+
+function update_tags(){
+  $.ajax({
+    type: "GET",
+    url: "{% raw qiita_config.portal_dir %}/study/get_tags/",
+    dataType: "json",
+    async: false,
+    success: function( data ) {
+      admin_tags = data.tags.admin;
+      user_tags = data.tags.user;
+    }
+  });
+  jQuery.each(admin_tags.concat(user_tags), function( index, value ) {
+    $("#studyTags").tagit("createTag", value);
+  });
+  // for some unknown reason when we have tagit -> onTagClicked, the css/color
+  // is not respected; thus coloring here
+  var color_user = '#1E90FF';
+  var color_admin = '#FFA500';
+  $('.tagit-choice').children('a').each(function(){
+    var element = $(this);
+    var tag = element.text();
+    var color = color_user;
+    if (jQuery.inArray(tag, admin_tags) >= 0) {
+      color = color_admin;
+    }
+    element.css('color', color)
+  });
+}
 
 function add_metacat(metacat) {
   document.getElementById('searchbox').value += (" " + metacat);
@@ -257,26 +338,41 @@ function add_metacat(metacat) {
 
 {% end %}
 {% block content %}
+
 <!--User Studies-->
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
     <h3 class="gray-msg">Your Studies (includes shared with you)</h3>
     <table id="user-studies-table" class="table table-bordered gray-msg">
-        <thead>
-            <tr>
-                <th>Expand</th>
-                <th>Add to analysis</th>
-                <th>Title</th>
-                <th>Abstract</th>
-                <th>Study ID</th>
-                <th>Samples</th>
-                <th>Shared With These Users</th>
-                <th>Principal Investigator</th>
-                <th>Publications</th>
-                <th>Status</th>
-                <th>EBI</th>
-            </tr>
-        </thead>
+      <thead>
+        <tr>
+          <th>Expand</th>
+          <th>Add to analysis</th>
+          <th>Title</th>
+          <th>Abstract</th>
+          <th>Study ID</th>
+          <th>Samples</th>
+          <th>Shared With These Users</th>
+          <th>Principal Investigator</th>
+          <th>Publications</th>
+          <th>Status</th>
+          <th>EBI</th>
+        </tr>
+      </thead>
+      <thead>
+        <tr>
+          <td colspan="11">
+            <h5 class="gray-msg">
+              Filter studies by tags:
+              <small>(
+                <span style="color: #FFA500">Admin</span>,
+                <span style="color: #1E90FF">User</span>
+              )</small>
+            </h5>
+            <ul id="studyTags"></ul>
+          </td>
+        </tr>
+      </thead>
     </table>
     <h3 class="gray-msg">Other Studies</h3>
     <table id="studies-table" class="table table-bordered gray-msg">
@@ -296,6 +392,7 @@ function add_metacat(metacat) {
     </table>
   </div>
 </div>
+
 <!--Abstract Modal-->
 <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="study-abstract-modal">
   <div class="modal-dialog modal-med">
