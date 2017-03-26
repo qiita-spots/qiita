@@ -78,6 +78,7 @@ class TestHelpers(TestHandlerBase):
             'publication_doi': ['10.100/123456', '10.100/7891011'],
             'publication_pid': ['123456', '7891011'],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
+            'study_tags': None,
             'proc_data_info': PROC_DATA_INFO
         }
         self.exp = [self.single_exp]
@@ -124,6 +125,7 @@ class TestBuildStudyWithDBAccess(TestHelpers):
             'study_id': 2,
             'ebi_study_accession': None,
             'study_title': 'My study',
+            'study_tags': None,
             'number_samples_collected': 0})
 
         self.assertItemsEqual(obs, self.exp)
@@ -280,7 +282,8 @@ class TestSearchStudiesAJAX(TestHandlerBase):
                     'Future studies will attempt to analyze the soils and '
                     'rhizospheres from the same location at different time '
                     'points in the plant lifecycle.'),
-                'number_samples_collected': 27}],
+                'number_samples_collected': 27,
+                'study_tags': None}],
             'sEcho': 1021,
             'iTotalDisplayRecords': 1}
         self.empty = {'aaData': [],
