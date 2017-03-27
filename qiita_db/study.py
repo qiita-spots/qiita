@@ -1137,7 +1137,7 @@ class Study(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [self._id, user.id])
             qdb.sql_connection.TRN.execute()
 
-    def updata_tags(self, user, tags):
+    def update_tags(self, user, tags):
         """Sets the tags of the study
 
         Parameters

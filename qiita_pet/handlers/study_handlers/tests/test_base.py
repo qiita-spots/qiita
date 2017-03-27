@@ -75,6 +75,10 @@ class TestStudyTags(OauthTestingBase):
         self.assertEqual(response.code, 200)
         self.assertEqual(response.body, exp)
 
+        # test error
+        response = self.get('/study/tags/bla')
+        self.assertEqual(response.code, 400)
+
     def test_patch(self):
         arguments = {'op': 'replace', 'path': '/tags',
                      'value[]': "['testA', 'testB']"}
@@ -82,13 +86,17 @@ class TestStudyTags(OauthTestingBase):
 
         self.assertEqual(obs.code, 200)
         self.assertEqual(obs.body, '{"status": "success", "message": ""}')
-
         # checking the tags were added
         response = self.get('/study/tags/1')
         exp = ('{"status": "success", "message": "", "tags": '
                '["[\'testA\', \'testB\']"]}')
         self.assertEqual(response.code, 200)
         self.assertEqual(response.body, exp)
+
+        arguments = {'op': 'replace', 'path': '/tags',
+                     'value[]': "['testA', 'testB']"}
+        obs = self.patch('/study/tags/b', headers=self.header, data=arguments)
+        self.assertEqual(obs.code, 400)
 
 
 if __name__ == "__main__":
