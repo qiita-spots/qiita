@@ -65,3 +65,17 @@ A few more instructions: for the example above the workflow should be:
    perform closed OTU picking against the latest version of Greengenes and can
    be quite time consuming depending on the number of samples and the depth
    of sequencing.
+
+.. _issues_unzip:
+
+How to solve unzip errors?
+--------------------------
+
+When downloading large zip files within Qiita there is a change that you will get
+an error like: **"start of central directory not found; zipfile corrupt"**. This issue
+arises from using old versions of zip and you need to have unzip >= 6.0.0. To check
+you unzip version you can run: `unzip -v`.
+
+To update your unzip for most operating systems you can simply use your regular package
+admin program. However, for Mac we suggest using
+`this version of unzip <ftp://ftp.microbio.me/pub/qiita/unzip>`__.
