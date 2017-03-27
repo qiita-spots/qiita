@@ -23,14 +23,21 @@ class StudyHandler(RESTHandler):
             return
 
         info = study.info
+        pi = info['principal_investigator']
+        lp = info['lab_person']
         self.write({'title': study.title,
-                    'contacts': {'principal-investigator': [
-                                     info['principal_investigator'].name,
-                                     info['principal_investigator'].email],
-                                 'lab-person': [
-                                     info['lab_person'].name,
-                                     info['lab_person'].email]},
-                    'abstract': info['study_abstract']})
+                    'contacts': {'principal_investigator': [
+                                     pi.name,
+                                     pi.affiliation,
+                                     pi.email],
+                                 'lab_person': [
+                                     lp.name,
+                                     lp.affiliation,
+                                     lp.email]},
+                    'study_abstract': info['study_abstract'],
+                    'study_description': info['study_description'],
+                    'study_alias': info['study_alias'],
+                    'efo': study.efo})
         self.finish()
 
 
