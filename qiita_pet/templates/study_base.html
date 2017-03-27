@@ -239,7 +239,8 @@
       <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/study/upload/{{study_info['study_id']}}"><span class="glyphicon glyphicon-upload"></span> Upload Files</a>
       <button class="btn btn-default btn-block" onclick="populate_main_div('{% raw qiita_config.portal_dir %}/study/new_prep_template/', { study_id: {{study_info['study_id']}} })" id="add-new-preparation-btn"><span class="glyphicon glyphicon-plus-sign"></span> Add New Preparation</button>
     {% end %}
-    <a class="btn btn-default btn-block" href="/download_study_bioms/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> All QIIME maps and BIOMs</a>
+    <a class="btn btn-default btn-block" href="{% raw qiita_config.portal_dir %}/download_study_bioms/{{study_info['study_id']}}"><span class="glyphicon glyphicon-download-alt"></span> All QIIME maps and BIOMs</a>
+    <div style="text-align: center;"><small><a href="{% raw qiita_config.portal_dir %}/static/doc/html/faq.html#how-to-solve-unzip-errors">Issues opening the downloaded zip?</a></small></div>
 
     <div id="data-types-menu"></div>
   </div>
