@@ -42,7 +42,7 @@ class TestDownloadHandler(TestHandlerBase):
 
         # failure
         response = self.get('/download/1000')
-        self.assertEqual(response.code, 404)
+        self.assertEqual(response.code, 403)
 
 
 class TestDownloadStudyBIOMSHandler(TestHandlerBase):

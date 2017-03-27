@@ -20,7 +20,7 @@ class DownloadHandler(BaseHandler):
 
         if not validate_filepath_access_by_user(self.current_user, fid):
             raise HTTPError(
-                404, "%s doesn't have access to "
+                403, "%s doesn't have access to "
                 "filepath_id: %s" % (self.current_user.email, str(fid)))
 
         relpath = filepath_id_to_rel_path(fid)
