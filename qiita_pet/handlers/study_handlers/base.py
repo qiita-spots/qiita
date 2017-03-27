@@ -13,8 +13,8 @@ from qiita_pet.util import EBI_LINKIFIER
 from qiita_pet.handlers.util import to_int, doi_linkifier, pubmed_linkifier
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.api_proxy import (
-    study_prep_get_req, study_get_req, study_delete_req,
-    study_files_get_req)
+    study_prep_get_req, study_get_req, study_delete_req, study_tags_request,
+    study_tags_patch_request, study_get_tags_request, study_files_get_req)
 
 
 class StudyIndexHandler(BaseHandler):
@@ -93,3 +93,37 @@ class StudyFilesAJAX(BaseHandler):
         res = study_files_get_req(self.current_user.id, study_id, pt_id, atype)
 
         self.render('study_ajax/artifact_file_selector.html', **res)
+
+
+class StudyGetTags(BaseHandler):
+    @authenticated
+    def get(self):
+        response = study_tags_request()
+        self.write(response)
+
+
+class StudyTags(BaseHandler):
+    @authenticated
+    def get(self, study_id):
+        study_id = to_int(study_id)
+
+        response = study_get_tags_request(self.current_user.id, study_id)
+        self.write(response)
+
+    @authenticated
+    def patch(self, study_id):
+        """Patches a prep template in the system
+
+        Follows the JSON PATCH specification:
+        https://tools.ietf.org/html/rfc6902
+        """
+        study_id = to_int(study_id)
+        req_op = self.get_argument('op')
+        req_path = self.get_argument('path')
+        req_value = self.request.arguments.get('value[]', None)
+        req_form = self.get_argument('form', None)
+
+        response = study_tags_patch_request(
+            self.current_user.id, study_id, req_op, req_path,
+            req_value, req_form)
+        self.write(response)

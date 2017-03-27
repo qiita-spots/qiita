@@ -1,24 +1,138 @@
 {% from qiita_core.qiita_settings import qiita_config %}
 
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
+<link href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.tagit.css" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
+<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
 <script type="text/javascript">
-$(document).ready(function () {
-  init_sharing("{% raw qiita_config.portal_dir %}");
-  update_share();
-});
+  var admin_tags = [];
+  var user_tags = [];
+  var available_tags = []
+  var assigned_tags = [];
+
+  function update_tags(){
+    $.ajax({
+      type: "GET",
+      url: "{% raw qiita_config.portal_dir %}/study/get_tags/",
+      dataType: "json",
+      async: false,
+      success: function( data ) {
+        admin_tags = data.tags.admin;
+        user_tags = data.tags.user;
+        available_tags = admin_tags.concat(user_tags);
+      }
+    });
+    $.ajax({
+      type: "GET",
+      url: "{% raw qiita_config.portal_dir %}/study/tags/{{study_info['study_id']}}",
+      dataType: "json",
+      async: false,
+      success: function( data ) {
+        assigned_tags = data.tags
+      }
+    });
+  }
+
+  function update_gui_tags(){
+    jQuery.each(assigned_tags, function( index, value ) {
+      $("#studyTags").tagit("createTag", value);
+    });
+  }
+
+  $(document).ready(function () {
+    init_sharing("{% raw qiita_config.portal_dir %}");
+    update_share();
+    update_tags();
+
+    var color_previously = '#32CD32';
+    var color_admin = '#FFA500';
+    var color_new =  '#1E90FF';
+    $("#studyTags").tagit({
+        width: 'auto',
+        autocomplete: {delay: 0, minLength: 1},
+        availableTags: available_tags,
+        removeConfirmation: false,
+        caseSensitive: false,
+        placeholderText: "Add more tags",
+        fieldName: "studyTags",
+        afterTagAdded: function(evt, ui) {
+          var tag = $('.tagit').tagit('tagLabel', ui.tag);
+          var color = color_new;
+          if (jQuery.inArray(tag, admin_tags) != -1) {
+            color = color_admin;
+          } else if (jQuery.inArray(tag, assigned_tags) == -1) {
+            color = color_previously;
+          }
+          ui.tag.css('color', color);
+        }
+    });
+    update_gui_tags();
+  });
+
+  function tags_patch() {
+    var study_tags = $("#studyTags").tagit("assignedTags");
+    $.ajax({
+      url: "{% raw qiita_config.portal_dir %}/study/tags/{{study_info['study_id']}}",
+      type: 'PATCH',
+      data: {'op': 'replace',
+             'path': '/tags',
+             'value': study_tags
+           },
+      success: function(data) {
+        if(data.status == 'error') {
+          bootstrapAlert(data.message, "danger");
+        }
+        else {
+          if (data.message == ''){
+            bootstrapAlert("Tags updated. " + data.message, "success", 10000);
+          } else {
+            bootstrapAlert("Tags updated. " + data.message, "warning", 10000);
+          }
+          // updating display
+          update_tags();
+          $("#studyTags").tagit("removeAll");
+          update_gui_tags();
+        }
+      }
+    });
+  }
 </script>
 <p style="font-weight:bold;">Abstract</p>
 <p>{{study_info['study_abstract']}}</p>
-Study ID:  {{study_info['study_id']}}<br />
-Publications: {% raw publications %}<br />
-PI: {% raw pi %}<br />
-Lab Contact: {% raw contact %}<br />
-Shared With: <span id="shared_html_{{study_info['study_id']}}">
-</span><br/>
-Samples: {{study_info['num_samples']}}<br />
-EBI: {% raw ebi_info %}<br />
+<table border="0">
+  <tr>
+    <td valign="top" width="400px">
+      <b>Study ID:</b> {{study_info['study_id']}}<br />
+      <b>Publications:</b> {% raw publications %}<br />
+      <b>PI:</b> {% raw pi %}<br />
+      <b>Lab Contact:</b> {% raw contact %}<br />
+      <b>Shared With:</b> <span id="shared_html_{{study_info['study_id']}}"></span><br/>
+      <b>Samples:</b> {{study_info['num_samples']}}<br />
+      <b>EBI:</b> {% raw ebi_info %}<br />
+    </td>
+    <td width="25px">&nbsp;</td>
+    <td>
+      <form method="post">
+        <b>Study Tags</b>
+        <br/>
+        <small>
+          <span style="color: #FFA500">Previously admin</span>,
+          <span style="color: #1E90FF">Previously assigned</span>,
+          <span style="color: #32CD32">New</span>
+        </small>
+
+        <ul id="studyTags"></ul>
+        <small>
+          New tags are linked to the user that created them.
+          Report <a href="mailto:qiita.help@gmail.com">abuse</a>.
+        </small>
+        <br/>
+        <button type="submit" class="btn btn-default" onclick="tags_patch(); return false;">Save tags</button>
+      </form>
+    </td>
+  </tr>
+</table>
 
 {% if share_access %}
 <a class="btn btn-default" data-toggle="modal" data-target="#share-study-modal-view" onclick="modify_sharing({{study_info['study_id']}});"><span class="glyphicon glyphicon-share"></span> Share</a>

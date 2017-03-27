@@ -296,3 +296,103 @@ def study_files_get_req(user_id, study_id, prep_template_id, artifact_type):
             'file_types': file_types,
             'num_prefixes': num_prefixes,
             'artifacts': artifact_options}
+
+
+def study_tags_request():
+    """Retrieve available study tags
+
+    Returns
+    -------
+    dict of {str, str}
+        A dictionary with the following keys:
+        - status: str, whether if the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
+        - tags: {level: value, ..., ...}
+    """
+    return {'status': 'success',
+            'message': '',
+            'tags': Study.get_tags()}
+
+
+def study_get_tags_request(user_id, study_id):
+    """Retrieve available study tags for study_id
+
+    Parameters
+    ----------
+    user_id : int
+        The id of the user performing the operation
+    study_id : int
+        The id of the study on which we will be performing the operation
+
+    Returns
+    -------
+    dict of {str, str}
+        A dictionary with the following keys:
+        - status: str, whether if the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
+        - tags: [value, ..., ...]
+    """
+
+    access_error = check_access(study_id, user_id)
+    if access_error:
+        return access_error
+    study = Study(study_id)
+
+    return {'status': 'success',
+            'message': '',
+            'tags': study.tags}
+
+
+def study_tags_patch_request(user_id, study_id,
+                             req_op, req_path, req_value=None, req_from=None):
+    """Modifies an attribute of the artifact
+
+    Parameters
+    ----------
+    user_id : int
+        The id of the user performing the patch operation
+    study_id : int
+        The id of the study on which we will be performing the patch operation
+    req_op : str
+        The operation to perform on the study
+    req_path : str
+        The attribute to patch
+    req_value : str, optional
+        The value that needs to be modified
+    req_from : str, optional
+        The original path of the element
+
+    Returns
+    -------
+    dict of {str, str}
+        A dictionary with the following keys:
+        - status: str, whether if the request is successful or not
+        - message: str, if the request is unsuccessful, a human readable error
+    """
+    if req_op == 'replace':
+        req_path = [v for v in req_path.split('/') if v]
+        if len(req_path) != 1:
+            return {'status': 'error',
+                    'message': 'Incorrect path parameter'}
+
+        attribute = req_path[0]
+
+        # Check if the user actually has access to the study
+        access_error = check_access(study_id, user_id)
+        if access_error:
+            return access_error
+        study = Study(study_id)
+
+        if attribute == 'tags':
+            message = study.update_tags(User(user_id), req_value)
+            return {'status': 'success',
+                    'message': message}
+        else:
+            # We don't understand the attribute so return an error
+            return {'status': 'error',
+                    'message': 'Attribute "%s" not found. '
+                               'Please, check the path parameter' % attribute}
+    else:
+        return {'status': 'error',
+                'message': 'Operation "%s" not supported. '
+                           'Current supported operations: replace' % req_op}

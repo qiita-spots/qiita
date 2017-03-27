@@ -26,7 +26,7 @@ def user_jobs_get_req(user, limit=30):
     dict of objects
     {'status': status,
      'message': message,
-     'template': {{column: value, ...}, ...}
+     'jobs': {{column: value, ...}, ...}
     """
 
     response = []

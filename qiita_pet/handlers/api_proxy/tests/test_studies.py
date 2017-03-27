@@ -20,6 +20,7 @@ from qiita_core.exceptions import IncompetentQiitaDeveloperError
 import qiita_db as qdb
 from qiita_pet.handlers.api_proxy.studies import (
     data_types_get_req, study_get_req, study_prep_get_req, study_delete_req,
+    study_tags_request, study_get_tags_request, study_tags_patch_request,
     study_files_get_req)
 
 
@@ -526,6 +527,57 @@ class TestStudyAPI(TestCase):
         self.assertEqual(obs, exp)
 
         PREP.delete(pt.id)
+
+    def test_study_get_tags_request(self):
+        obs = study_get_tags_request('shared@foo.bar', 1)
+        exp = {'status': 'success', 'message': '', 'tags': []}
+        self.assertEqual(obs, exp)
+
+        # check error
+        obs = study_get_tags_request('shared@foo.bar', 2)
+        exp = {'message': 'Study does not exist', 'status': 'error'}
+        self.assertEqual(obs, exp)
+
+    def test_study_tags_patch_request(self):
+        # adding test for study_tags_request here as it makes sense to check
+        # that the tags were added
+        obs = study_tags_request()
+        exp = {'status': 'success', 'message': '',
+               'tags': {'admin': [], 'user': []}}
+        self.assertEqual(obs, exp)
+
+        obs = study_tags_patch_request(
+            'shared@foo.bar', 1, 'replace', '/tags', ['testA', 'testB'])
+        exp = {'status': 'success', 'message': ''}
+        self.assertEqual(obs, exp)
+
+        obs = study_tags_request()
+        exp = {'status': 'success', 'message': '',
+               'tags': {'admin': [], 'user': ['testA', 'testB']}}
+        self.assertEqual(obs, exp)
+
+        # check errors
+        obs = study_tags_patch_request(
+            'shared@foo.bar', 1, 'no-exists', '/tags', ['testA', 'testB'])
+        exp = {'message': ('Operation "no-exists" not supported. Current '
+               'supported operations: replace'), 'status': 'error'}
+        self.assertEqual(obs, exp)
+
+        obs = study_tags_patch_request(
+            'shared@foo.bar', 1, 'replace', '/tags/na', ['testA', 'testB'])
+        exp = {'message': 'Incorrect path parameter', 'status': 'error'}
+        self.assertEqual(obs, exp)
+
+        obs = study_tags_patch_request(
+            'shared@foo.bar', 2, 'replace', '/tags', ['testA', 'testB'])
+        exp = {'message': 'Study does not exist', 'status': 'error'}
+        self.assertEqual(obs, exp)
+
+        obs = study_tags_patch_request(
+            'shared@foo.bar', 1, 'replace', '/na')
+        exp = {'message': ('Attribute "na" not found. Please, check the '
+                           'path parameter'), 'status': 'error'}
+        self.assertEqual(obs, exp)
 
 
 if __name__ == '__main__':
