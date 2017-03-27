@@ -896,12 +896,12 @@ def filepath_id_to_rel_path(filepath_id):
                     LEFT JOIN qiita.artifact_filepath USING (filepath_id)
                  WHERE filepath_id = %s"""
         qdb.sql_connection.TRN.add(sql, [filepath_id])
+        # It should be only one row
         mp, fp, sd, a_id = qdb.sql_connection.TRN.execute_fetchindex()[0]
         if sd:
             result = join(mp, str(a_id), fp)
         else:
             result = join(mp, fp)
-        # It should be only one row
         return result
 
 
