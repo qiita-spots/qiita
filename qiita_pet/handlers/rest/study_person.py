@@ -52,4 +52,3 @@ class StudyPersonHandler(RESTHandler):
         self.set_status(201)
         self.write({'id': p.id})
         self.finish()
-
