@@ -84,8 +84,3 @@ class StudySamplesInfoHandler(RESTHandler):
 
         self.write(json_encode(info))
         self.finish()
-
-## validate if we can get a category out
-## on info, provide detail about what headers are feasible
-# s.sample_template.metadata_headers()
-

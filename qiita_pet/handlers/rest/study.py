@@ -13,8 +13,8 @@ from qiita_db.handlers.oauth2 import authenticate_oauth
 from qiita_db.study import StudyPerson, Study
 from qiita_db.user import User
 from .rest_handler import RESTHandler
-from qiita_db.metadata_template.constants import (SAMPLE_TEMPLATE_COLUMNS,
-                                                  PREP_TEMPLATE_COLUMNS)
+from qiita_db.metadata_template.constants import SAMPLE_TEMPLATE_COLUMNS
+
 
 class StudyHandler(RESTHandler):
     # /api/v1/study/<int>
@@ -134,11 +134,6 @@ class StudyStatusHandler(RESTHandler):
         if study is None:
             return
 
-        status = {'is_public': study.status == 'public',
-                  'has_sample_information': study.sample_template is not None,
-                  'sample_information_has_warnings': False,
-                  'preparations':[]}
-
         public = study.status == 'public'
         st = study.sample_template
         sample_information = st is not None
@@ -170,4 +165,3 @@ class StudyStatusHandler(RESTHandler):
                     'preparations': preparations})
         self.set_status(200)
         self.finish()
-

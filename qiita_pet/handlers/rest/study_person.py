@@ -5,7 +5,6 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
-from tornado.escape import json_encode
 
 from qiita_db.handlers.oauth2 import authenticate_oauth
 from qiita_db.study import StudyPerson
@@ -52,4 +51,3 @@ class StudyPersonHandler(RESTHandler):
         self.set_status(201)
         self.write({'id': p.id})
         self.finish()
-

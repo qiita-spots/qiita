@@ -52,7 +52,8 @@ class StudyPersonHandlerTests(TestHandlerBase):
         self.assertEqual(obs, exp)
 
     def test_get_invalid_query_string(self):
-        response = self.get('/api/v1/person?name=LabDude', headers=self.headers)
+        response = self.get('/api/v1/person?name=LabDude',
+                            headers=self.headers)
         self.assertEqual(response.code, 400)
 
     def test_get_valid_extra_arguments(self):

@@ -159,9 +159,8 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
 
     def test_get_valid_two_arg(self):
         df = Study(1).sample_template.to_dataframe()
-        df = df[['ph','country']]
-        df = {idx: [row['ph'], row['country']]
-               for idx, row in df.iterrows()}
+        df = df[['ph', 'country']]
+        df = {idx: [row['ph'], row['country']] for idx, row in df.iterrows()}
         exp = {'header': ['ph', 'country'],
                'samples': df}
 
@@ -173,11 +172,9 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
 
     def test_get_valid_one_arg(self):
         df = Study(1).sample_template.to_dataframe()
-        df = df[['ph','country']]
-        df = {idx: [row['country']]
-               for idx, row in df.iterrows()}
-        exp = {'header': ['country'],
-               'samples': df}
+        df = df[['ph', 'country']]
+        df = {idx: [row['country']] for idx, row in df.iterrows()}
+        exp = {'header': ['country'], 'samples': df}
 
         response = self.get('/api/v1/study/1/samples/categories=country',
                             headers=self.headers)
@@ -239,8 +236,8 @@ class StudySamplesCategoriesHandlerTests(TestHandlerBase):
                                  info)
 
         exp = {'message': 'Category not found'}
-        response = self.get('/api/v1/study/%d/samples/categories=foo' % new_study.id,
-                            headers=self.headers)
+        response = self.get('/api/v1/study/%d/samples/categories=foo' %
+                            new_study.id, headers=self.headers)
         self.assertEqual(response.code, 404)
         obs = json_decode(response.body)
         self.assertEqual(obs, exp)

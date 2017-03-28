@@ -27,7 +27,8 @@ class StudyHandlerTests(TestHandlerBase):
         super(StudyHandlerTests, self).setUp()
 
     def test_get_valid(self):
-        exp = {u'title': u'Identification of the Microbiomes for Cannabis Soils',
+        exp = {u'title': u'Identification of the Microbiomes for Cannabis '
+                         u'Soils',
                u'contacts': {'principal_investigator': [u'PIDude',
                                                         u'Wash U',
                                                         u'PI_dude@foo.bar'],
@@ -36,21 +37,21 @@ class StudyHandlerTests(TestHandlerBase):
                                             u'lab_dude@foo.bar']},
                u'study_abstract':
                    (u'This is a preliminary study to examine the '
-                     'microbiota associated with the Cannabis plant. '
-                     'Soils samples from the bulk soil, soil '
-                     'associated with the roots, and the rhizosphere '
-                     'were extracted and the DNA sequenced. Roots '
-                     'from three independent plants of different '
-                     'strains were examined. These roots were '
-                     'obtained November 11, 2011 from plants that '
-                     'had been harvested in the summer. Future '
-                     'studies will attempt to analyze the soils and '
-                     'rhizospheres from the same location at '
-                     'different time points in the plant lifecycle.'),
-                'study_description': (u'Analysis of the Cannabis Plant '
-                                       'Microbiome'),
-                'efo': [1],
-                'study_alias': 'Cannabis Soils'}
+                    u'microbiota associated with the Cannabis plant. '
+                    u'Soils samples from the bulk soil, soil '
+                    u'associated with the roots, and the rhizosphere '
+                    u'were extracted and the DNA sequenced. Roots '
+                    u'from three independent plants of different '
+                    u'strains were examined. These roots were '
+                    u'obtained November 11, 2011 from plants that '
+                    u'had been harvested in the summer. Future '
+                    u'studies will attempt to analyze the soils and '
+                    u'rhizospheres from the same location at '
+                    u'different time points in the plant lifecycle.'),
+               u'study_description': (u'Analysis of the Cannabis Plant '
+                                      u'Microbiome'),
+               u'efo': [1],
+               u'study_alias': 'Cannabis Soils'}
 
         response = self.get('/api/v1/study/1', headers=self.headers)
         self.assertEqual(response.code, 200)
@@ -188,7 +189,7 @@ class StudyStatusHandlerTests(TestHandlerBase):
                'sample_information_has_warnings': False,
                'preparations': [{'id': 1, 'has_artifact': True},
                                 {'id': 2, 'has_artifact': True}]
-              }
+               }
         obs = json_decode(response.body)
         self.assertEqual(obs, exp)
 

@@ -7,7 +7,6 @@
 # -----------------------------------------------------------------------------
 from qiita_db.study import Study
 from qiita_db.exceptions import QiitaDBUnknownIDError
-from qiita_db.handlers.oauth2 import authenticate_oauth
 from qiita_pet.handlers.util import to_int
 from qiita_pet.handlers.base_handlers import BaseHandler
 
