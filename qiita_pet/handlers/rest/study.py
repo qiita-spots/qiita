@@ -17,7 +17,6 @@ from qiita_db.metadata_template.constants import SAMPLE_TEMPLATE_COLUMNS
 
 
 class StudyHandler(RESTHandler):
-    # /api/v1/study/<int>
 
     @authenticate_oauth
     def get(self, study_id):
@@ -45,6 +44,7 @@ class StudyHandler(RESTHandler):
 
 
 class StudyCreatorHandler(RESTHandler):
+
     @authenticate_oauth
     def post(self, *args, **kwargs):
         try:

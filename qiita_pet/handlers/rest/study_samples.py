@@ -12,7 +12,6 @@ from .rest_handler import RESTHandler
 
 
 class StudySamplesHandler(RESTHandler):
-    # /api/v1/study/<int>/samples
 
     @authenticate_oauth
     def get(self, study_id):
@@ -30,7 +29,6 @@ class StudySamplesHandler(RESTHandler):
 
 
 class StudySamplesCategoriesHandler(RESTHandler):
-    # /api/v1/study/<int>/samples?foo
 
     @authenticate_oauth
     def get(self, study_id, categories):
@@ -64,7 +62,6 @@ class StudySamplesCategoriesHandler(RESTHandler):
 
 
 class StudySamplesInfoHandler(RESTHandler):
-    # /api/v1/study/<int>/samples/info
 
     @authenticate_oauth
     def get(self, study_id):

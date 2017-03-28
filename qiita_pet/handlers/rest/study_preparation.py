@@ -9,7 +9,7 @@
 import os
 
 import pandas as pd
-from tornado.escape import json_encode, json_decode
+from tornado.escape import json_decode
 
 from qiita_db.util import get_mountpoint
 from qiita_db.artifact import Artifact
@@ -21,7 +21,6 @@ from .rest_handler import RESTHandler
 
 
 class StudyPrepCreatorHandler(RESTHandler):
-    # /api/v1/study/<int>/preparation/
     # TODO: do something smart about warnings, perhaps this should go in its
     # own endpoint i.e. /api/v1/study/<int>/preparation/validate
 
@@ -50,7 +49,7 @@ class StudyPrepCreatorHandler(RESTHandler):
 
 
 class StudyPrepArtifactCreatorHandler(RESTHandler):
-    # /api/v1/study/<int>/preparation/<int>/artifact
+
     @authenticate_oauth
     def post(self, study_id, prep_id):
         study = self.study_boilerplate(study_id)
