@@ -52,11 +52,9 @@ class StudyPrepCreatorTests(TestHandlerBase):
                              data=prep_table.T.to_dict(),
                              headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
-        exp = {'message': 'Samples found in prep template but not sample '
-                          'template: 1.100.SKB7.640196, 1.100.SKD8.640184, '
-                          '1.100.SKB8.640193'}
         obs = json_decode(response.body)
-        self.assertEqual(obs, exp)
+        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertGreater(len(obs['message']), 0)
 
     def test_post_valid_study(self):
         prep = StringIO(EXP_PREP_TEMPLATE.format(1))
@@ -65,7 +63,7 @@ class StudyPrepCreatorTests(TestHandlerBase):
         response = self.post('/api/v1/study/1/preparation?data_type=16S',
                              data=prep_table.T.to_dict(),
                              headers=self.headers, asjson=True)
-        self.assertEqual(response.code, 200)
+        self.assertEqual(response.code, 201)
         exp = json_decode(response.body)
         exp_prep = PrepTemplate(exp['id']).to_dataframe()
 
@@ -100,6 +98,7 @@ class StudyPrepArtifactCreatorTests(TestHandlerBase):
         exp = {'message': 'Study not found'}
         self.assertEqual(response.code, 404)
         obs = json_decode(response.body)
+        self.assertEqual(obs, exp)
 
     def test_post_non_existant_prep(self):
         uri = '/api/v1/study/1/preparation/1337/artifact'
@@ -111,6 +110,7 @@ class StudyPrepArtifactCreatorTests(TestHandlerBase):
         exp = {'message': 'Preparation not found'}
         self.assertEqual(response.code, 404)
         obs = json_decode(response.body)
+        self.assertEqual(obs, exp)
 
     def test_post_unknown_artifact_type(self):
         uri = '/api/v1/study/1/preparation/1/artifact'
@@ -119,9 +119,10 @@ class StudyPrepArtifactCreatorTests(TestHandlerBase):
                 'artifact_name': 'a name is a name'}
 
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
-        exp = {'message': '"foo" is not a recognized artifact_type'}
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
+        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertGreater(len(obs['message']), 0)
 
     def test_post_unknown_filepath_type_id(self):
         uri = '/api/v1/study/1/preparation/1/artifact'
@@ -130,9 +131,10 @@ class StudyPrepArtifactCreatorTests(TestHandlerBase):
                 'artifact_name': 'a name is a name'}
 
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
-        exp = {'message': '123123 is not a recognized file path type id'}
         self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
+        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertGreater(len(obs['message']), 0)
 
     def test_post_files_notfound(self):
         uri = '/api/v1/study/1/preparation/1/artifact'
@@ -141,12 +143,11 @@ class StudyPrepArtifactCreatorTests(TestHandlerBase):
                 'artifact_name': 'a name is a name'}
 
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
-        exp = {'message': 'foo.txt, bar.txt not found in uploads'}
-        self.assertEqual(response.code, 404)
+        self.assertEqual(response.code, 406)
         obs = json_decode(response.body)
+        self.assertEqual(list(obs.keys()), ['message'])
+        self.assertGreater(len(obs['message']), 0)
 
-    # 1 -> fwd or rev sequences in fastq
-    # 3 -> barcodes
     def test_post_valid(self):
         dontcare, uploads_dir = get_mountpoint('uploads')[0]
         foo_fp = os.path.join(uploads_dir, '1', 'foo.txt')
@@ -156,13 +157,28 @@ class StudyPrepArtifactCreatorTests(TestHandlerBase):
         with open(bar_fp, 'w') as fp:
             fp.write("@x\nATGC\n+\nHHHH\n")
 
-        uri = '/api/v1/study/1/preparation/1/artifact'
+        prep = StringIO(EXP_PREP_TEMPLATE.format(1))
+        prep_table = load_template_to_dataframe(prep)
+
+        response = self.post('/api/v1/study/1/preparation?data_type=16S',
+                             data=prep_table.T.to_dict(),
+                             headers=self.headers, asjson=True)
+        prepid = json_decode(response.body)['id']
+
+        uri = '/api/v1/study/1/preparation/%d/artifact' % prepid
+        # 1 -> fwd or rev sequences in fastq
+        # 3 -> barcodes
         body = {'artifact_type': 'FASTQ', 'filepaths': [['foo.txt', 1],
                                                         ['bar.txt', 3]],
                 'artifact_name': 'a name is a name'}
 
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
-        self.assertEqual(response.code, 200)
+        self.assertEqual(response.code, 201)
+        obs = json_decode(response.body)['id']
+
+        prep_instance = PrepTemplate(prepid)
+        exp = prep_instance.artifact.id
+        self.assertEqual(obs, exp)
 
 
 EXP_PREP_TEMPLATE = (
