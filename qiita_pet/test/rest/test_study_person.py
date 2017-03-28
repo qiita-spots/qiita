@@ -9,23 +9,12 @@
 from unittest import main
 
 from tornado.escape import json_decode
-from moi import r_client
 
 from qiita_db.study import StudyPerson
-from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_pet.test.rest.test_base import RESTHandlerTestCase
 
 
-class StudyPersonHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
-        r_client.expire(self.client_token, 5)
-
-        self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudyPersonHandlerTests, self).setUp()
-
+class StudyPersonHandlerTests(RESTHandlerTestCase):
     def test_exist(self):
         exp = {'email': 'lab_dude@foo.bar', 'phone': '121-222-3333',
                'address': '123 lab street', 'id': 1}

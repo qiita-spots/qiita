@@ -13,25 +13,14 @@ import os
 import pandas as pd
 
 from tornado.escape import json_decode
-from moi import r_client
 
 from qiita_db.metadata_template.util import load_template_to_dataframe
 from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_pet.test.rest.test_base import RESTHandlerTestCase
 from qiita_db.util import get_mountpoint
 
 
-class StudyPrepCreatorTests(TestHandlerBase):
-    def setUp(self):
-        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
-        r_client.expire(self.client_token, 5)
-
-        self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudyPrepCreatorTests, self).setUp()
-
+class StudyPrepCreatorTests(RESTHandlerTestCase):
     def test_post_non_existant_study(self):
         # study id that does not exist
         prep = StringIO(EXP_PREP_TEMPLATE.format(0))
@@ -77,17 +66,7 @@ class StudyPrepCreatorTests(TestHandlerBase):
         pd.util.testing.assert_frame_equal(prep_table, exp_prep)
 
 
-class StudyPrepArtifactCreatorTests(TestHandlerBase):
-    def setUp(self):
-        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
-        r_client.expire(self.client_token, 5)
-
-        self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudyPrepArtifactCreatorTests, self).setUp()
-
+class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):
     def test_post_non_existant_study(self):
         uri = '/api/v1/study/0/preparation/0/artifact'
         body = {'artifact_type': 'foo', 'filepaths': [['foo.txt', 1],

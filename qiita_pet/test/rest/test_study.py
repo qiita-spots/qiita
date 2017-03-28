@@ -9,23 +9,12 @@
 from unittest import main
 
 from tornado.escape import json_decode
-from moi import r_client
 
 from qiita_db.study import Study
-from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_pet.test.rest.test_base import RESTHandlerTestCase
 
 
-class StudyHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
-        r_client.expire(self.client_token, 5)
-
-        self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudyHandlerTests, self).setUp()
-
+class StudyHandlerTests(RESTHandlerTestCase):
     def test_get_valid(self):
         exp = {u'title': u'Identification of the Microbiomes for Cannabis '
                          u'Soils',
@@ -76,17 +65,7 @@ class StudyHandlerTests(TestHandlerBase):
         # not asserting the body content as this is not a valid URI according
 
 
-class StudyCreatorTests(TestHandlerBase):
-    def setUp(self):
-        self.client_token = 'SOMEAUTHTESTINGTOKENHERE21222'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
-        r_client.expire(self.client_token, 5)
-
-        self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudyCreatorTests, self).setUp()
-
+class StudyCreatorTests(RESTHandlerTestCase):
     def test_post_malformed_study(self):
         response = self.post('/api/v1/study', data={'foo': 'bar'},
                              headers=self.headers, asjson=True)
@@ -163,17 +142,7 @@ class StudyCreatorTests(TestHandlerBase):
         self.assertEqual(obs, {'message': 'Unknown user'})
 
 
-class StudyStatusHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
-        r_client.expire(self.client_token, 5)
-
-        self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudyStatusHandlerTests, self).setUp()
-
+class StudyStatusHandlerTests(RESTHandlerTestCase):
     def test_get_no_study(self):
         response = self.get('/api/v1/study/0/status', headers=self.headers)
         self.assertEqual(response.code, 404)

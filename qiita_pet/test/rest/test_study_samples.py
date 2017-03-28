@@ -10,24 +10,13 @@ from unittest import main
 from datetime import datetime
 
 from tornado.escape import json_decode
-from moi import r_client
 
 from qiita_db.study import Study, StudyPerson
 from qiita_db.user import User
-from qiita_pet.test.tornado_test_base import TestHandlerBase
+from qiita_pet.test.rest.test_base import RESTHandlerTestCase
 
 
-class StudySamplesHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
-        r_client.expire(self.client_token, 5)
-
-        self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudySamplesHandlerTests, self).setUp()
-
+class StudySamplesHandlerTests(RESTHandlerTestCase):
     def test_get_valid(self):
         exp = sorted(['1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195',
                       '1.SKB6.640176', '1.SKD6.640190', '1.SKM6.640187',
@@ -77,17 +66,7 @@ class StudySamplesHandlerTests(TestHandlerBase):
         self.assertEqual(obs, exp)
 
 
-class StudySamplesInfoHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
-        r_client.expire(self.client_token, 5)
-
-        self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudySamplesInfoHandlerTests, self).setUp()
-
+class StudySamplesInfoHandlerTests(RESTHandlerTestCase):
     def test_get_valid(self):
         exp = {'number-of-samples': 27,
                'categories': ['season_environment',
@@ -146,17 +125,7 @@ class StudySamplesInfoHandlerTests(TestHandlerBase):
         self.assertEqual(obs, exp)
 
 
-class StudySamplesCategoriesHandlerTests(TestHandlerBase):
-    def setUp(self):
-        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
-        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
-        r_client.hset(self.client_token, 'client_id', 'test123123123')
-        r_client.hset(self.client_token, 'grant_type', 'client')
-        r_client.expire(self.client_token, 5)
-
-        self.headers = {'Authorization': 'Bearer ' + self.client_token}
-        super(StudySamplesCategoriesHandlerTests, self).setUp()
-
+class StudySamplesCategoriesHandlerTests(RESTHandlerTestCase):
     def test_get_valid_two_arg(self):
         df = Study(1).sample_template.to_dataframe()
         df = df[['ph', 'country']]
