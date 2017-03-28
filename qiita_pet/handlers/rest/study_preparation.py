@@ -41,9 +41,7 @@ class StudyPrepCreatorHandler(RESTHandler):
             p = PrepTemplate.create(data, study_id, data_type,
                                     investigation_type)
         except QiitaError as e:
-            self.write(json_encode({'message': e.message}))
-            self.set_status(406)
-            self.finish()
+            self.fail(e.message, 406)
             return
 
         self.write({'id': p.id})
@@ -63,16 +61,11 @@ class StudyPrepArtifactCreatorHandler(RESTHandler):
         try:
             p = PrepTemplate(prep_id)
         except QiitaDBUnknownIDError:
-            self.set_status(404)
-            self.write({'message': 'Preparation not found'})
-            self.finish()
+            self.fail('Preparation not found', 404)
             return
 
         if p.study_id != study.id:
-            self.set_status(409)
-            self.write({'message': 'Preparation ID not associated with the '
-                                   'study'})
-            self.finish()
+            self.fail('Preparation ID not associated with the study', 409)
             return
 
         artifact_deets = json_decode(self.request.body)
@@ -87,9 +80,7 @@ class StudyPrepArtifactCreatorHandler(RESTHandler):
                                   artifact_deets['artifact_name'],
                                   p)
         except QiitaError as e:
-            self.write(json_encode({'message': e.message}))
-            self.set_status(406)
-            self.finish()
+            self.fail(e.message, 405)
             return
 
         self.write({'id': art.id})

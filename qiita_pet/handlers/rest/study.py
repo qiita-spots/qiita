@@ -50,18 +50,14 @@ class StudyCreatorHandler(RESTHandler):
         try:
             payload = json_decode(self.request.body)
         except ValueError:
-            self.set_status(400)
-            self.write({'message': 'Could not parse body'})
-            self.finish()
+            self.fail('Could not parse body', 400)
             return
 
         required = {'title', 'study_abstract', 'study_description',
                     'study_alias', 'owner', 'efo', 'contacts'}
 
         if not required.issubset(payload):
-            self.set_status(400)
-            self.write({'message': 'Not all required arguments provided'})
-            self.finish()
+            self.fail('Not all required arguments provided', 400)
             return
 
         title = payload['title']
@@ -71,9 +67,7 @@ class StudyCreatorHandler(RESTHandler):
 
         owner = payload['owner']
         if not User.exists(owner):
-            self.set_status(403)
-            self.write({'message': 'Unknown user'})
-            self.finish()
+            self.fail('Unknown user', 403)
             return
         else:
             owner = User(owner)
@@ -82,17 +76,13 @@ class StudyCreatorHandler(RESTHandler):
         contacts = payload['contacts']
 
         if Study.exists(title):
-            self.set_status(409)
-            self.write({'message': 'Study title already exists'})
-            self.finish()
+            self.fail('Study title already exists', 409)
             return
 
         pi_name = contacts['principal_investigator'][0]
         pi_aff = contacts['principal_investigator'][1]
         if not StudyPerson.exists(pi_name, pi_aff):
-            self.set_status(403)
-            self.write({'message': 'Unknown principal investigator'})
-            self.finish()
+            self.fail('Unknown principal investigator', 403)
             return
         else:
             pi = StudyPerson.from_name_and_affiliation(pi_name, pi_aff)
@@ -100,9 +90,7 @@ class StudyCreatorHandler(RESTHandler):
         lp_name = contacts['lab_person'][0]
         lp_aff = contacts['lab_person'][1]
         if not StudyPerson.exists(lp_name, lp_aff):
-            self.set_status(403)
-            self.write({'message': 'Unknown lab person'})
-            self.finish()
+            self.fail('Unknown lab person', 403)
             return
         else:
             lp = StudyPerson.from_name_and_affiliation(lp_name, lp_aff)

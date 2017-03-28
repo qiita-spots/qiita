@@ -23,3 +23,8 @@ class RESTHandler(BaseHandler):
             self.finish()
         finally:
             return s
+
+    def fail(self, msg, status):
+        self.write({'message': msg})
+        self.set_status(status)
+        self.finish()
