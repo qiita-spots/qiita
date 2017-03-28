@@ -36,7 +36,7 @@ class StudyPrepCreatorTests(TestHandlerBase):
         prep_table = load_template_to_dataframe(prep)
 
         response = self.post('/api/v1/study/0/preparation?'
-                             '&investigation_type=WhoCares',
+                             '&data_type=16S',
                              data=prep_table.T.to_dict(),
                              headers=self.headers, asjson=True)
         self.assertEqual(response.code, 404)
@@ -46,13 +46,13 @@ class StudyPrepCreatorTests(TestHandlerBase):
         prep_table = load_template_to_dataframe(prep)
 
         response = self.post('/api/v1/study/1/preparation?'
-                             'data_type=16S'
-                             '&investigation_type=WhoCares',
+                             'data_type=16S',
                              data=prep_table.T.to_dict(),
                              headers=self.headers, asjson=True)
         self.assertEqual(response.code, 406)
-        exp = {'message': 'Samples found in prep template but not in sample '
-                          'template'}
+        exp = {'message': 'Samples found in prep template but not sample '
+                          'template: 1.100.SKB7.640196, 1.100.SKD8.640184, '
+                          '1.100.SKB8.640193'}
         obs = json_decode(response.body)
         self.assertEqual(obs, exp)
 

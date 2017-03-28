@@ -10,7 +10,6 @@ import pandas as pd
 
 from tornado.escape import json_encode, json_decode
 
-from qiita_db.study import Study
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.handlers.oauth2 import authenticate_oauth
 from .rest_handler import RESTHandler
@@ -23,24 +22,22 @@ class StudyPrepCreatorHandler(RESTHandler):
 
     @authenticate_oauth
     def post(self, study_id, *args, **kwargs):
-        study_id = int(study_id)
-
         data_type = self.get_argument('data_type')
         investigation_type = self.get_argument('investigation_type', None)
+
+        study_id = self.study_boilerplate(study_id)
 
         data = pd.DataFrame.from_dict(json_decode(self.request.body),
                                       orient='index')
 
-        p = PrepTemplate.create(data, Study(study_id), data_type,
-                                investigation_type)
-        # try:
-        #     p = PrepTemplate.create(data, Study(study_id), data_type,
-        #                             investigation_type)
-        # except Exception as e:
-        #     self.write(json_encode({'message': e.message}))
-        #     self.set_status(406)
-        #     self.finish()
-        #     return
+        try:
+            p = PrepTemplate.create(data, study_id, data_type,
+                                    investigation_type)
+        except Exception as e:
+            self.write(json_encode({'message': e.message}))
+            self.set_status(406)
+            self.finish()
+            return
 
         self.write({'id': p.id})
         self.set_status(200)
