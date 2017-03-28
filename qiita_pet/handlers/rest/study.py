@@ -122,3 +122,7 @@ class StudyCreatorHandler(RESTHandler):
         self.set_status(201)
         self.write({'id': study.id})
         self.finish()
+
+
+class StudyStatusHandler(RESTHandler):
+    pass

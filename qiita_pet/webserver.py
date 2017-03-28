@@ -70,7 +70,8 @@ from qiita_pet.handlers.rest import (
     StudyPersonHandler as WeDontKnowWhatToCallThisTheFifth,
     StudyCreatorHandler as WeDontKnowWhatToCallThisSr,
     StudyPrepCreatorHandler as MonsiourWeDontKnowWhatToCallThis,
-    StudyPrepArtifactCreatorHandler as FranklyMadamWeDontKnowWhatToCallThis)
+    StudyPrepArtifactCreatorHandler as FranklyMadamWeDontKnowWhatToCallThis,
+    StudyStatusHandler as BondJamesBond)
 
 
 DIRNAME = dirname(__file__)
@@ -187,7 +188,8 @@ class Application(tornado.web.Application):
             (r"/api/v1/study/([0-9]+)/preparation/([0-9]+)/artifact",
                 FranklyMadamWeDontKnowWhatToCallThis),
             (r"/api/v1/study/([0-9]+)/preparation(.*)",
-                MonsiourWeDontKnowWhatToCallThis)
+                MonsiourWeDontKnowWhatToCallThis),
+            (r"/api/v1/study/([0-9]+)/status$", BondJamesBond)
         ]
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal

@@ -161,5 +161,39 @@ class StudyCreatorTests(TestHandlerBase):
         obs = json_decode(response.body)
         self.assertEqual(obs, {'message': 'Unknown user'})
 
+
+class StudyStatusHandlerTests(TestHandlerBase):
+    def setUp(self):
+        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
+        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
+        r_client.hset(self.client_token, 'client_id', 'test123123123')
+        r_client.hset(self.client_token, 'grant_type', 'client')
+        r_client.expire(self.client_token, 5)
+
+        self.headers = {'Authorization': 'Bearer ' + self.client_token}
+        super(StudyStatusHandlerTests, self).setUp()
+
+    def test_get_no_study(self):
+        response = self.get('/api/v1/study/0/status', headers=self.headers)
+        self.assertEqual(response.code, 404)
+        obs = json_decode(response.body)
+        exp = {'message': 'Study not found'}
+        self.assertEqual(obs, exp)
+
+    def test_get_valid(self):
+        response = self.get('/api/v1/study/1/status', headers=self.headers)
+        self.assertEqual(response.code, 200)
+        exp = {'is_public': False,
+               'has_sample_information': True,
+               'sample_information_has_warnings': False,
+               'preparations':
+                   [{'id': 1,
+                     'has_artifact': True,
+                     'information_has_warnings': False}]
+              }
+        obs = json_decode(response.body)
+        self.assertEqual(obs, exp)
+
+
 if __name__ == '__main__':
     main()
