@@ -65,12 +65,18 @@ class StudyPrepCreatorTests(TestHandlerBase):
                              headers=self.headers, asjson=True)
         self.assertEqual(response.code, 200)
         exp = json_decode(response.body)
-        p = PrepTemplate(exp['id']).to_dataframe()
+        exp_prep = PrepTemplate(exp['id']).to_dataframe()
 
         prep_table.index.name = 'sample_id'
-        pd.util.testing.assert_frame_equal(prep_table, p)
 
-    
+        # sort columns to be comparable
+        prep_table = prep_table[sorted(prep_table.columns.tolist())]
+        exp_prep = exp_prep[sorted(exp_prep.columns.tolist())]
+        exp_prep.drop('qiita_prep_id', axis=1, inplace=True)
+
+        pd.util.testing.assert_frame_equal(prep_table, exp_prep)
+
+
 EXP_PREP_TEMPLATE = (
     'sample_name\tbarcode\tcenter_name\tcenter_project_name\t'
     'ebi_submission_accession\temp_status\texperiment_design_description\t'
