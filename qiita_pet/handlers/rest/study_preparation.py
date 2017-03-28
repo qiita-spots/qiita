@@ -42,3 +42,9 @@ class StudyPrepCreatorHandler(RESTHandler):
         self.write({'id': p.id})
         self.set_status(200)
         self.finish()
+
+class StudyPrepArtifactCreatorHandler(RESTHandler):
+    pass
+
+# POST /api/v1/study/<int>/preparation/<int>/artifact
+

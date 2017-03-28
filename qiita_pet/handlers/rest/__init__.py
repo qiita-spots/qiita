@@ -10,9 +10,11 @@ from .study import StudyHandler, StudyCreatorHandler
 from .study_samples import (StudySamplesHandler, StudySamplesInfoHandler,
                             StudySamplesCategoriesHandler)
 from .study_person import StudyPersonHandler
-from .study_preparation import StudyPrepCreatorHandler
+from .study_preparation import (StudyPrepCreatorHandler,
+                                StudyPrepArtifactCreatorHandler)
 
 
 __all__ = ['StudyHandler', 'StudySamplesHandler', 'StudySamplesInfoHandler',
            'StudySamplesCategoriesHandler', 'StudyPersonHandler',
-           'StudyCreatorHandler', 'StudyPrepCreatorHandler']
+           'StudyCreatorHandler', 'StudyPrepCreatorHandler',
+           'StudyPrepArtifactCreatorHandler']
