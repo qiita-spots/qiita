@@ -5,13 +5,16 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
+import warnings
+
 from tornado.escape import json_decode
 
 from qiita_db.handlers.oauth2 import authenticate_oauth
 from qiita_db.study import StudyPerson, Study
 from qiita_db.user import User
 from .rest_handler import RESTHandler
-
+from qiita_db.metadata_template.constants import (SAMPLE_TEMPLATE_COLUMNS,
+                                                  PREP_TEMPLATE_COLUMNS)
 
 class StudyHandler(RESTHandler):
     # /api/v1/study/<int>
@@ -125,4 +128,46 @@ class StudyCreatorHandler(RESTHandler):
 
 
 class StudyStatusHandler(RESTHandler):
-    pass
+    @authenticate_oauth
+    def get(self, study_id):
+        study = self.study_boilerplate(study_id)
+        if study is None:
+            return
+
+        status = {'is_public': study.status == 'public',
+                  'has_sample_information': study.sample_template is not None,
+                  'sample_information_has_warnings': False,
+                  'preparations':[]}
+
+        public = study.status == 'public'
+        st = study.sample_template
+        sample_information = st is not None
+        if sample_information:
+            with warnings.catch_warnings():
+                try:
+                    st.validate(SAMPLE_TEMPLATE_COLUMNS)
+                except Warning:
+                    sample_information_warnings = True
+                else:
+                    sample_information_warnings = False
+        else:
+            sample_information_warnings = False
+
+        preparations = []
+        for prep in study.prep_templates():
+            pid = prep.id
+            art = prep.artifact is not None
+            # TODO: unclear how to test for warnings on the preparations as
+            # it requires knowledge of the preparation type. It is possible
+            # to tease this out, but it replicates code present in
+            # PrepTemplate.create
+            preparations.append({'id': pid, 'has_artifact': art})
+
+        self.write({'is_public': public,
+                    'has_sample_information': sample_information,
+                    'sample_information_has_warnings':
+                        sample_information_warnings,
+                    'preparations': preparations})
+        self.set_status(200)
+        self.finish()
+

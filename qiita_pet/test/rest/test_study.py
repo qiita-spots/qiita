@@ -186,10 +186,8 @@ class StudyStatusHandlerTests(TestHandlerBase):
         exp = {'is_public': False,
                'has_sample_information': True,
                'sample_information_has_warnings': False,
-               'preparations':
-                   [{'id': 1,
-                     'has_artifact': True,
-                     'information_has_warnings': False}]
+               'preparations': [{'id': 1, 'has_artifact': True},
+                                {'id': 2, 'has_artifact': True}]
               }
         obs = json_decode(response.body)
         self.assertEqual(obs, exp)
