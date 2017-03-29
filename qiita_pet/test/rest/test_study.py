@@ -63,6 +63,7 @@ class StudyHandlerTests(RESTHandlerTestCase):
         response = self.get('/api/v1/study/1.11111', headers=self.headers)
         self.assertEqual(response.code, 404)
         # not asserting the body content as this is not a valid URI according
+        # to the regex associating the handler to the webserver
 
 
 class StudyCreatorTests(RESTHandlerTestCase):
