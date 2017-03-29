@@ -353,6 +353,14 @@ function add_metacat(metacat) {
 <!--User Studies-->
 <div class="row">
   <div class="col-sm-12" id="user-studies-div">
+    <h5 class="gray-msg">
+      Filter studies by tags:
+      <small>(
+        <span style="color: #FFA500">Admin</span>,
+        <span style="color: #1E90FF">User</span>
+      )</small>
+    </h5>
+    <ul id="studyTags"></ul>
     <h3 class="gray-msg">Your Studies (includes shared with you)</h3>
     <table id="user-studies-table" class="table table-bordered gray-msg">
       <thead>
@@ -368,20 +376,6 @@ function add_metacat(metacat) {
           <th>Publications</th>
           <th>Status</th>
           <th>EBI</th>
-        </tr>
-      </thead>
-      <thead>
-        <tr>
-          <td colspan="11">
-            <h5 class="gray-msg">
-              Filter studies by tags:
-              <small>(
-                <span style="color: #FFA500">Admin</span>,
-                <span style="color: #1E90FF">User</span>
-              )</small>
-            </h5>
-            <ul id="studyTags"></ul>
-          </td>
         </tr>
       </thead>
     </table>
