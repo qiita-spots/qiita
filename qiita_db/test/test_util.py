@@ -960,7 +960,8 @@ class UtilTests(TestCase):
             'ebi_study_accession': 'EBI123456-BB',
             'study_title': ('Identification of the Microbiomes for Cannabis '
                             'Soils'),
-            'number_samples_collected': 27
+            'number_samples_collected': 27,
+            'study_tags': None
         }]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
