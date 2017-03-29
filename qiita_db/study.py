@@ -1240,7 +1240,6 @@ class StudyPerson(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [name, affiliation])
             return cls(int(qdb.sql_connection.TRN.execute_fetchlast()))
 
-
     @classmethod
     def create(cls, name, email, affiliation, address=None, phone=None):
         """Create a StudyPerson object, checking if person already exists.

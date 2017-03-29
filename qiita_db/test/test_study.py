@@ -46,12 +46,11 @@ class TestStudyPerson(TestCase):
         self.assertFalse(
             qdb.study.StudyPerson.exists('SomeDude', 'affil'))
 
-    def test_retrieve_non_existant_person(self):
+    def test_retrieve_non_existant_people(self):
         with self.assertRaises(qdb.esceptions.QiitaDBLookupError):
             qdb.study.StudyPerson.from_name_and_affiliation('Boaty McBoatFace',
                                                             'UCSD')
 
-    def test_retrieve_non_existant_person(self):
         p = qdb.study.StudyPerson.from_name_and_affiliation('LabDude',
                                                             'knight lab')
         self.assertEqual(p.name, 'LabDude')
