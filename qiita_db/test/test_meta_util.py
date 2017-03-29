@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 
 from unittest import TestCase, main
+import numpy.testing as npt
 
 import pandas as pd
 
@@ -98,7 +99,32 @@ class MetaUtilTests(TestCase):
             self.assertTrue(qdb.meta_util.validate_filepath_access_by_user(
                 admin, i[0]))
 
+        # testing access to a prep info file without artifacts
+        # returning artifacts to private
+        self._set_artifact_private()
+        PT = qdb.metadata_template.prep_template.PrepTemplate
+        md_dict = {
+            'SKB8.640193': {'center_name': 'ANL',
+                            'center_project_name': 'Test Project',
+                            'ebi_submission_accession': None,
+                            'linkerprimersequence': 'GTGCCAGCMGCCGCGGTAA',
+                            'barcodesequence': 'GTCCGCAAGTTA',
+                            'run_prefix': "s_G1_L001_sequences",
+                            'platform': 'ILLUMINA',
+                            'instrument_model': 'Illumina MiSeq',
+                            'library_construction_protocol': 'AAAA',
+                            'experiment_design_description': 'BBBB'}
+            }
+        md = pd.DataFrame.from_dict(md_dict, orient='index', dtype=str)
+        # creating prep info on Study(1), which is our default Study
+        pt = npt.assert_warns(qdb.exceptions.QiitaDBWarning, PT.create, md,
+                              qdb.study.Study(1), "18S")
+        for idx, _ in pt.get_filepaths():
+            self.assertFalse(qdb.meta_util.validate_filepath_access_by_user(
+                user, idx))
+
         # returning to original sharing
+        PT.delete(pt.id)
         qdb.study.Study(1).share(user)
         qdb.analysis.Analysis(1).share(user)
         qdb.study.Study.delete(study.id)
