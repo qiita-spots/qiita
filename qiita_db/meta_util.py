@@ -123,14 +123,21 @@ def validate_filepath_access_by_user(user, filepath_id):
             # the prep access is given by it's artifacts, if the user has
             # access to any artifact, it should have access to the prep
             # [0] cause we should only have 1
-            a = qdb.metadata_template.prep_template.PrepTemplate(
-                pid[0]).artifact
-            if (a.visibility == 'public' or a.study.has_access(user)):
-                return True
+            pt = qdb.metadata_template.prep_template.PrepTemplate(
+                pid[0])
+            a = pt.artifact
+            # however, the prep info file could not have any artifacts attached
+            # , in that case we will use the study access level
+            if a is None:
+                return qdb.study.Study(pt.study_id).has_access(user)
             else:
-                for c in a.descendants.nodes():
-                    if (c.visibility == 'public' or c.study.has_access(user)):
-                        return True
+                if (a.visibility == 'public' or a.study.has_access(user)):
+                    return True
+                else:
+                    for c in a.descendants.nodes():
+                        if ((c.visibility == 'public' or
+                             c.study.has_access(user))):
+                            return True
             return False
         # analyses
         elif anid or jid:
