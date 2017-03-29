@@ -57,13 +57,8 @@ from qiita_db.handlers.plugin import (
     ReloadPluginAPItestHandler)
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
-if qiita_config.portal == "QIITA":
-    from qiita_pet.handlers.portal import (
-        StudyPortalHandler, StudyPortalAJAXHandler)
-
 from qiita_pet.handlers.rest import (
-    StudyHandler as WeDontKnowWhatToCallThis)
-from qiita_pet.handlers.rest import (
+    StudyHandler as WeDontKnowWhatToCallThis,
     StudySamplesHandler as WeDontKnowWhatToCallThisJr,
     StudySamplesInfoHandler as WeDontKnowWhatToCallThisJrJr,
     StudySamplesCategoriesHandler as WeDontKnowWhatToCallThisTheFourth,
@@ -72,6 +67,9 @@ from qiita_pet.handlers.rest import (
     StudyPrepCreatorHandler as MonsiourWeDontKnowWhatToCallThis,
     StudyPrepArtifactCreatorHandler as FranklyMadamWeDontKnowWhatToCallThis,
     StudyStatusHandler as BondJamesBond)
+if qiita_config.portal == "QIITA":
+    from qiita_pet.handlers.portal import (
+        StudyPortalHandler, StudyPortalAJAXHandler)
 
 
 DIRNAME = dirname(__file__)
@@ -181,7 +179,8 @@ class Application(tornado.web.Application):
             # start of REST API URIs
             (r"/api/v1/study$", WeDontKnowWhatToCallThisSr),
             (r"/api/v1/study/([0-9]+)", WeDontKnowWhatToCallThis),
-            (r"/api/v1/study/([0-9]+)/samples/categories=([a-zA-Z\-0-9\.:,_]*)",
+            (r"/api/v1/study/([0-9]+)/samples/"
+             r"categories=([a-zA-Z\-0-9\.:,_]*)",
                 WeDontKnowWhatToCallThisTheFourth),
             (r"/api/v1/study/([0-9]+)/samples", WeDontKnowWhatToCallThisJr),
             (r"/api/v1/study/([0-9]+)/samples/info",

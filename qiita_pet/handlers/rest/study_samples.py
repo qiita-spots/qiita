@@ -12,7 +12,6 @@ from .rest_handler import RESTHandler
 
 
 class StudySamplesHandler(RESTHandler):
-    # /api/v1/study/<int>/samples
 
     @authenticate_oauth
     def get(self, study_id):
@@ -30,17 +29,12 @@ class StudySamplesHandler(RESTHandler):
 
 
 class StudySamplesCategoriesHandler(RESTHandler):
-    # /api/v1/study/<int>/samples?foo
-
-    def _err(self, msg, status):
-        self.write({'message': msg})
-        self.set_status(status)
-        self.finish()
 
     @authenticate_oauth
     def get(self, study_id, categories):
         if not categories:
-            return self._err('No categories specified', 405)
+            self.fail('No categories specified', 405)
+            return
 
         study = self.study_boilerplate(study_id)
         if study is None:
@@ -49,11 +43,13 @@ class StudySamplesCategoriesHandler(RESTHandler):
         categories = categories.split(',')
 
         if study.sample_template is None:
-            return self._err('Category not found', 404)
+            self.fail('Category not found', 404)
+            return
 
         available_categories = set(study.sample_template.categories())
         if not set(categories).issubset(available_categories):
-            return self._err('Category not found', 404)
+            self.fail('Category not found', 404)
+            return
 
         blob = {'header': categories,
                 'samples': {}}
@@ -66,7 +62,6 @@ class StudySamplesCategoriesHandler(RESTHandler):
 
 
 class StudySamplesInfoHandler(RESTHandler):
-    # /api/v1/study/<int>/samples/info
 
     @authenticate_oauth
     def get(self, study_id):

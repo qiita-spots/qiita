@@ -9,7 +9,7 @@
 import os
 
 import pandas as pd
-from tornado.escape import json_encode, json_decode
+from tornado.escape import json_decode
 
 from qiita_db.util import get_mountpoint
 from qiita_db.artifact import Artifact
@@ -21,7 +21,6 @@ from .rest_handler import RESTHandler
 
 
 class StudyPrepCreatorHandler(RESTHandler):
-    # /api/v1/study/<int>/preparation/
     # TODO: do something smart about warnings, perhaps this should go in its
     # own endpoint i.e. /api/v1/study/<int>/preparation/validate
 
@@ -41,9 +40,7 @@ class StudyPrepCreatorHandler(RESTHandler):
             p = PrepTemplate.create(data, study_id, data_type,
                                     investigation_type)
         except QiitaError as e:
-            self.write(json_encode({'message': e.message}))
-            self.set_status(406)
-            self.finish()
+            self.fail(e.message, 406)
             return
 
         self.write({'id': p.id})
@@ -52,7 +49,7 @@ class StudyPrepCreatorHandler(RESTHandler):
 
 
 class StudyPrepArtifactCreatorHandler(RESTHandler):
-    # /api/v1/study/<int>/preparation/<int>/artifact
+
     @authenticate_oauth
     def post(self, study_id, prep_id):
         study = self.study_boilerplate(study_id)
@@ -63,16 +60,11 @@ class StudyPrepArtifactCreatorHandler(RESTHandler):
         try:
             p = PrepTemplate(prep_id)
         except QiitaDBUnknownIDError:
-            self.set_status(404)
-            self.write({'message': 'Preparation not found'})
-            self.finish()
+            self.fail('Preparation not found', 404)
             return
 
         if p.study_id != study.id:
-            self.set_status(409)
-            self.write({'message': 'Preparation ID not associated with the '
-                                   'study'})
-            self.finish()
+            self.fail('Preparation ID not associated with the study', 409)
             return
 
         artifact_deets = json_decode(self.request.body)
@@ -87,9 +79,7 @@ class StudyPrepArtifactCreatorHandler(RESTHandler):
                                   artifact_deets['artifact_name'],
                                   p)
         except QiitaError as e:
-            self.write(json_encode({'message': e.message}))
-            self.set_status(406)
-            self.finish()
+            self.fail(e.message, 406)
             return
 
         self.write({'id': art.id})

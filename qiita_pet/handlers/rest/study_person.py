@@ -21,9 +21,7 @@ class StudyPersonHandler(RESTHandler):
         try:
             p = StudyPerson.from_name_and_affiliation(name, affiliation)
         except QiitaDBLookupError:
-            self.set_status(404)
-            self.write({'message': 'Person not found'})
-            self.finish()
+            self.fail('Person not found', 404)
             return
 
         self.write({'address': p.address, 'phone': p.phone, 'email': p.email,
@@ -40,9 +38,7 @@ class StudyPersonHandler(RESTHandler):
         address = self.get_argument('address', None)
 
         if StudyPerson.exists(name, affiliation):
-            self.set_status(409)
-            self.write({'message': 'Person already exists'})
-            self.finish()
+            self.fail('Person already exists', 409)
             return
 
         p = StudyPerson.create(name=name, affiliation=affiliation, email=email,

@@ -12,14 +12,17 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 
 
 class RESTHandler(BaseHandler):
+    def fail(self, msg, status):
+        self.write({'message': msg})
+        self.set_status(status)
+        self.finish()
+
     def study_boilerplate(self, study_id):
         study_id = to_int(study_id)
         s = None
         try:
             s = Study(study_id)
         except QiitaDBUnknownIDError:
-            self.set_status(404)
-            self.write({'message': 'Study not found'})
-            self.finish()
+            self.fail('Study not found', 404)
         finally:
             return s
