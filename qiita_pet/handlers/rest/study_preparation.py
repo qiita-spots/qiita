@@ -79,7 +79,7 @@ class StudyPrepArtifactCreatorHandler(RESTHandler):
                                   artifact_deets['artifact_name'],
                                   p)
         except QiitaError as e:
-            self.fail(e.message, 405)
+            self.fail(e.message, 406)
             return
 
         self.write({'id': art.id})
