@@ -175,6 +175,8 @@ class Application(tornado.web.Application):
             (r"/qiita_db/plugins/(.*)/(.*)/commands/(.*)/", CommandHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/", CommandListHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
+
+            # start of REST API URIs
             (r"/api/v1/study$", WeDontKnowWhatToCallThisSr),
             (r"/api/v1/study/([0-9]+)", WeDontKnowWhatToCallThis),
             (r"/api/v1/study/([0-9]+)/samples/"
