@@ -57,16 +57,7 @@ from qiita_db.handlers.plugin import (
     ReloadPluginAPItestHandler)
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
-from qiita_pet.handlers.rest import (
-    StudyHandler as WeDontKnowWhatToCallThis,
-    StudySamplesHandler as WeDontKnowWhatToCallThisJr,
-    StudySamplesInfoHandler as WeDontKnowWhatToCallThisJrJr,
-    StudySamplesCategoriesHandler as WeDontKnowWhatToCallThisTheFourth,
-    StudyPersonHandler as WeDontKnowWhatToCallThisTheFifth,
-    StudyCreatorHandler as WeDontKnowWhatToCallThisSr,
-    StudyPrepCreatorHandler as MonsiourWeDontKnowWhatToCallThis,
-    StudyPrepArtifactCreatorHandler as FranklyMadamWeDontKnowWhatToCallThis,
-    StudyStatusHandler as BondJamesBond)
+from qiita_pet.handlers.rest import ENDPOINTS as REST_ENDPOINTS
 if qiita_config.portal == "QIITA":
     from qiita_pet.handlers.portal import (
         StudyPortalHandler, StudyPortalAJAXHandler)
@@ -175,23 +166,11 @@ class Application(tornado.web.Application):
             (r"/qiita_db/plugins/(.*)/(.*)/commands/(.*)/", CommandHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/", CommandListHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
-
-            # start of REST API URIs
-            (r"/api/v1/study$", WeDontKnowWhatToCallThisSr),
-            (r"/api/v1/study/([0-9]+)", WeDontKnowWhatToCallThis),
-            (r"/api/v1/study/([0-9]+)/samples/"
-             r"categories=([a-zA-Z\-0-9\.:,_]*)",
-                WeDontKnowWhatToCallThisTheFourth),
-            (r"/api/v1/study/([0-9]+)/samples", WeDontKnowWhatToCallThisJr),
-            (r"/api/v1/study/([0-9]+)/samples/info",
-                WeDontKnowWhatToCallThisJrJr),
-            (r"/api/v1/person(.*)", WeDontKnowWhatToCallThisTheFifth),
-            (r"/api/v1/study/([0-9]+)/preparation/([0-9]+)/artifact",
-                FranklyMadamWeDontKnowWhatToCallThis),
-            (r"/api/v1/study/([0-9]+)/preparation(.*)",
-                MonsiourWeDontKnowWhatToCallThis),
-            (r"/api/v1/study/([0-9]+)/status$", BondJamesBond)
         ]
+
+        # rest endpoints
+        handlers.extend(REST_ENDPOINTS)
+
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal
             portals = [
