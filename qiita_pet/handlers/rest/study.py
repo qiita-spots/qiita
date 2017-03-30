@@ -45,7 +45,7 @@ class StudyHandler(RESTHandler):
 class StudyCreatorHandler(RESTHandler):
 
     @authenticate_oauth
-    def post(self, *args, **kwargs):
+    def post(self):
         try:
             payload = json_decode(self.request.body)
         except ValueError:

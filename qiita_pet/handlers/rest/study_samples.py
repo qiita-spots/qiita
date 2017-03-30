@@ -43,7 +43,7 @@ class StudySamplesCategoriesHandler(RESTHandler):
         categories = categories.split(',')
 
         if study.sample_template is None:
-            self.fail('Category not found', 404)
+            self.fail('Study does not have sample information', 404)
             return
 
         available_categories = set(study.sample_template.categories())

@@ -204,7 +204,7 @@ class StudySamplesCategoriesHandlerTests(RESTHandlerTestCase):
                                  "Some New Study for test", [1],
                                  info)
 
-        exp = {'message': 'Category not found'}
+        exp = {'message': 'Study does not have sample information'}
         response = self.get('/api/v1/study/%d/samples/categories=foo' %
                             new_study.id, headers=self.headers)
         self.assertEqual(response.code, 404)
