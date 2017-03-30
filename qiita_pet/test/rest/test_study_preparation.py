@@ -148,7 +148,8 @@ class StudyPrepArtifactCreatorTests(RESTHandlerTestCase):
         # 1 -> fwd or rev sequences in fastq
         # 3 -> barcodes
         body = {'artifact_type': 'FASTQ', 'filepaths': [['foo.txt', 1],
-                                                        ['bar.txt', 3]],
+                                                        ['bar.txt',
+                                                         'raw_barcodes']],
                 'artifact_name': 'a name is a name'}
 
         response = self.post(uri, data=body, headers=self.headers, asjson=True)
