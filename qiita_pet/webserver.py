@@ -165,7 +165,7 @@ class Application(tornado.web.Application):
              CommandActivateHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/(.*)/", CommandHandler),
             (r"/qiita_db/plugins/(.*)/(.*)/commands/", CommandListHandler),
-            (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
+            (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler)
         ]
 
         # rest endpoints
