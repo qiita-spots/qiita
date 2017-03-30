@@ -47,8 +47,10 @@ class StudySamplesCategoriesHandler(RESTHandler):
             return
 
         available_categories = set(study.sample_template.categories())
-        if not set(categories).issubset(available_categories):
-            self.fail('Category not found', 404)
+        not_found = set(categories) - available_categories
+        if not_found:
+            self.fail('Category not found', 404,
+                      categories_not_found=sorted(not_found))
             return
 
         blob = {'header': categories,

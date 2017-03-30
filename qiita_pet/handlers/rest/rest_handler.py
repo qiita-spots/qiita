@@ -12,8 +12,11 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 
 
 class RESTHandler(BaseHandler):
-    def fail(self, msg, status):
-        self.write({'message': msg})
+    def fail(self, msg, status, **kwargs):
+        out = {'message': msg}
+        out.update(kwargs)
+
+        self.write(out)
         self.set_status(status)
         self.finish()
 

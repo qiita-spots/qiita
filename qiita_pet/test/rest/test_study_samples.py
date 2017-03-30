@@ -152,7 +152,8 @@ class StudySamplesCategoriesHandlerTests(RESTHandlerTestCase):
         self.assertEqual(obs, exp)
 
     def test_get_valid_two_arg_one_bad(self):
-        exp = {'message': 'Category not found'}
+        exp = {'message': 'Category not found',
+               'categories_not_found': ['foo']}
         response = self.get('/api/v1/study/1/samples/categories=country,foo',
                             headers=self.headers)
         self.assertEqual(response.code, 404)
@@ -168,7 +169,8 @@ class StudySamplesCategoriesHandlerTests(RESTHandlerTestCase):
         self.assertEqual(obs, exp)
 
     def test_get_bad_category(self):
-        exp = {'message': 'Category not found'}
+        exp = {'message': 'Category not found',
+               'categories_not_found': ['foo']}
         response = self.get('/api/v1/study/1/samples/categories=foo',
                             headers=self.headers)
         self.assertEqual(response.code, 404)
