@@ -39,7 +39,6 @@ class StudyHandlerTests(RESTHandlerTestCase):
                     u'different time points in the plant lifecycle.'),
                u'study_description': (u'Analysis of the Cannabis Plant '
                                       u'Microbiome'),
-               u'efo': [1],
                u'study_alias': 'Cannabis Soils'}
 
         response = self.get('/api/v1/study/1', headers=self.headers)
@@ -76,7 +75,6 @@ class StudyCreatorTests(RESTHandlerTestCase):
                             'Soils',
                    'study_abstract': 'stuff',
                    'study_description': 'asdasd',
-                   'efo': [1],
                    'owner': 'admin@foo.bar',
                    'study_alias': 'blah',
                    'contacts': {'principal_investigator': [u'PIDude',
@@ -94,7 +92,6 @@ class StudyCreatorTests(RESTHandlerTestCase):
         payload = {'title': 'foo',
                    'study_abstract': 'stuff',
                    'study_description': 'asdasd',
-                   'efo': [1],
                    'owner': 'admin@foo.bar',
                    'study_alias': 'blah',
                    'contacts': {'principal_investigator': [u'PIDude',
@@ -113,7 +110,6 @@ class StudyCreatorTests(RESTHandlerTestCase):
         self.assertEqual(study.info['study_description'],
                          payload['study_description'])
         self.assertEqual(study.info['study_alias'], payload['study_alias'])
-        self.assertEqual(study.efo, payload['efo'])
         self.assertEqual(study.owner.email, payload['owner'])
         self.assertEqual(study.info['principal_investigator'].name,
                          payload['contacts']['principal_investigator'][0])
@@ -128,7 +124,6 @@ class StudyCreatorTests(RESTHandlerTestCase):
         payload = {'title': 'foo',
                    'study_abstract': 'stuff',
                    'study_description': 'asdasd',
-                   'efo': [1],
                    'owner': 'doesnotexist@foo.bar',
                    'study_alias': 'blah',
                    'contacts': {'principal_investigator': [u'PIDude',

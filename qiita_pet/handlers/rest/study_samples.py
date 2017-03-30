@@ -15,7 +15,7 @@ class StudySamplesHandler(RESTHandler):
 
     @authenticate_oauth
     def get(self, study_id):
-        study = self.study_boilerplate(study_id)
+        study = self.safe_get_study(study_id)
         if study is None:
             return
 
@@ -36,7 +36,7 @@ class StudySamplesCategoriesHandler(RESTHandler):
             self.fail('No categories specified', 405)
             return
 
-        study = self.study_boilerplate(study_id)
+        study = self.safe_get_study(study_id)
         if study is None:
             return
 
@@ -65,7 +65,7 @@ class StudySamplesInfoHandler(RESTHandler):
 
     @authenticate_oauth
     def get(self, study_id):
-        study = self.study_boilerplate(study_id)
+        study = self.safe_get_study(study_id)
         if study is None:
             return
 

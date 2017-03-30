@@ -23,13 +23,14 @@ from .rest_handler import RESTHandler
 class StudyPrepCreatorHandler(RESTHandler):
     # TODO: do something smart about warnings, perhaps this should go in its
     # own endpoint i.e. /api/v1/study/<int>/preparation/validate
+    # See also: https://github.com/biocore/qiita/issues/2096
 
     @authenticate_oauth
     def post(self, study_id, *args, **kwargs):
         data_type = self.get_argument('data_type')
         investigation_type = self.get_argument('investigation_type', None)
 
-        study_id = self.study_boilerplate(study_id)
+        study_id = self.safe_get_study(study_id)
         if study_id is None:
             return
 
@@ -52,7 +53,7 @@ class StudyPrepArtifactCreatorHandler(RESTHandler):
 
     @authenticate_oauth
     def post(self, study_id, prep_id):
-        study = self.study_boilerplate(study_id)
+        study = self.safe_get_study(study_id)
         if study is None:
             return
 

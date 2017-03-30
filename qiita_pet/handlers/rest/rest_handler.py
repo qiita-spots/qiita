@@ -17,7 +17,7 @@ class RESTHandler(BaseHandler):
         self.set_status(status)
         self.finish()
 
-    def study_boilerplate(self, study_id):
+    def safe_get_study(self, study_id):
         study_id = to_int(study_id)
         s = None
         try:

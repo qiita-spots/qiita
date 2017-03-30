@@ -1238,7 +1238,7 @@ class StudyPerson(qdb.base.QiitaObject):
                         WHERE name = %s
                      AND affiliation = %s""".format(cls._table)
             qdb.sql_connection.TRN.add(sql, [name, affiliation])
-            return cls(int(qdb.sql_connection.TRN.execute_fetchlast()))
+            return cls(qdb.sql_connection.TRN.execute_fetchlast())
 
     @classmethod
     def create(cls, name, email, affiliation, address=None, phone=None):

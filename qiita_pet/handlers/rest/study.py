@@ -20,7 +20,7 @@ class StudyHandler(RESTHandler):
 
     @authenticate_oauth
     def get(self, study_id):
-        study = self.study_boilerplate(study_id)
+        study = self.safe_get_study(study_id)
         if study is None:
             return
 
@@ -38,8 +38,7 @@ class StudyHandler(RESTHandler):
                                      lp.email]},
                     'study_abstract': info['study_abstract'],
                     'study_description': info['study_description'],
-                    'study_alias': info['study_alias'],
-                    'efo': study.efo})
+                    'study_alias': info['study_alias']})
         self.finish()
 
 
@@ -54,7 +53,7 @@ class StudyCreatorHandler(RESTHandler):
             return
 
         required = {'title', 'study_abstract', 'study_description',
-                    'study_alias', 'owner', 'efo', 'contacts'}
+                    'study_alias', 'owner', 'contacts'}
 
         if not required.issubset(payload):
             self.fail('Not all required arguments provided', 400)
@@ -72,7 +71,6 @@ class StudyCreatorHandler(RESTHandler):
         else:
             owner = User(owner)
 
-        efo = payload['efo']
         contacts = payload['contacts']
 
         if Study.exists(title):
@@ -108,7 +106,7 @@ class StudyCreatorHandler(RESTHandler):
                 'mixs_compliant': False,
                 'metadata_complete': False,
                 'timeseries_type_id': 1}
-        study = Study.create(owner, title, efo, info)
+        study = Study.create(owner, title, [1], info)
 
         self.set_status(201)
         self.write({'id': study.id})
@@ -118,7 +116,7 @@ class StudyCreatorHandler(RESTHandler):
 class StudyStatusHandler(RESTHandler):
     @authenticate_oauth
     def get(self, study_id):
-        study = self.study_boilerplate(study_id)
+        study = self.safe_get_study(study_id)
         if study is None:
             return
 
@@ -143,7 +141,8 @@ class StudyStatusHandler(RESTHandler):
             # TODO: unclear how to test for warnings on the preparations as
             # it requires knowledge of the preparation type. It is possible
             # to tease this out, but it replicates code present in
-            # PrepTemplate.create
+            # PrepTemplate.create, see:
+            # https://github.com/biocore/qiita/issues/2096
             preparations.append({'id': pid, 'has_artifact': art})
 
         self.write({'is_public': public,
