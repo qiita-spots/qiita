@@ -44,13 +44,16 @@ class TestHandlerBase(AsyncHTTPTestCase):
                 data = urlencode(data, doseq=doseq)
         return self._fetch(url, 'POST', data, headers)
 
-    def patch(self, url, data, headers=None, doseq=True):
-        if isinstance(data, dict):
-            data = urlencode(data, doseq=doseq)
-        if '?' in url:
-            url += '&%s' % data
+    def patch(self, url, data, headers=None, doseq=True, asjson=False):
+        if asjson:
+            data = json_encode(data)
         else:
-            url += '?%s' % data
+            if isinstance(data, dict):
+                data = urlencode(data, doseq=doseq)
+            if '?' in url:
+                url += '&%s' % data
+            else:
+                url += '?%s' % data
         return self._fetch(url, 'PATCH', data=data, headers=headers)
 
     def delete(self, url, data=None, headers=None, doseq=True):
