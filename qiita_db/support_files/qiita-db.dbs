@@ -1396,7 +1396,7 @@
 			<index name="idx_user" unique="NORMAL" >
 				<column name="user_level_id" />
 			</index>
-			<index name="idx_qiita_user" unique="NORMAL" >
+			<index name="uc_qiita_user_client_id" unique="UNIQUE" >
 				<column name="client_id" />
 			</index>
 			<fk name="fk_user_user_level" to_schema="qiita" to_table="user_level" update_action="restrict" >

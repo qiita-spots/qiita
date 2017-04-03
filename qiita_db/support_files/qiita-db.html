@@ -2353,7 +2353,7 @@ Code for initial user email verification</title></a>
 Randomly generated code for password reset</title></a>
   <a xlink:href='#qiita_user.pass_reset_timestamp'><text x='348' y='427'>pass_reset_timestamp</text><title>pass_reset_timestamp timestamp
 Time the reset code was generated</title></a>
-  <a xlink:href='#qiita_user.client_id'><use id='idx' x='332' y='431' xlink:href='#idx'/><title>Index  ( client_id ) </title></a>
+  <a xlink:href='#qiita_user.client_id'><use id='unq' x='332' y='431' xlink:href='#unq'/><title>Unique Index  ( client_id ) </title></a>
 <a xlink:href='#qiita_user.client_id'><text x='348' y='442'>client_id</text><title>client_id varchar</title></a>
 <a xlink:href='#qiita_user.client_id'><use id='fk' x='468' y='431' xlink:href='#fk'/><title>References oauth_identifiers ( client_id ) </title></a>
 
@@ -7085,7 +7085,7 @@ Controlled Vocabulary </td>
 		<td> ON user&#095;level&#095;id</td>
 		<td>  </td>
 	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;qiita&#095;user</td>
+	<tr>		<td>U</td><td>uc&#095;qiita&#095;user&#095;client&#095;id</td>
 		<td> ON client&#095;id</td>
 		<td>  </td>
 	</tr>
