@@ -267,7 +267,7 @@ table {
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='40' y='793' width='580' height='2' />
 
 <!-- ============= Group 'Group_users' ============= -->
-<rect class='grp' style='fill:#ffff99;stroke:#e0e0c5' x='149' y='205' width='347' height='260' />
+<rect class='grp' style='fill:#ffff99;stroke:#e0e0c5' x='149' y='205' width='347' height='275' />
 <text x='160' y='220'>Group_users</text>
 <rect style='fill:url(#groupUnderTitleLine); stroke-width:2;' x='160' y='223' width='325' height='2' />
 
@@ -366,7 +366,7 @@ table {
 	analysis_users references analysis ( analysis_id )</title>
 </path>
 <text x='157' y='925' transform='rotate(0 157,925)' title='Foreign Key fk_analysis_users_analysis
-	analysis_users references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 135 900 L 135,787 Q 135,780 142,780 L 382,780 Q 390,780 390,772 L 390,450' >
+	analysis_users references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 135 900 L 135,787 Q 135,780 142,780 L 382,780 Q 390,780 390,772 L 390,465' >
 	<title>Foreign Key fk_analysis_users_user
 	analysis_users references qiita_user ( email )</title>
 </path>
@@ -411,12 +411,7 @@ table {
 	column_ontology references mixs_field_description ( column_name )</title>
 </path>
 <text x='317' y='1870' transform='rotate(270 317,1870)' title='Foreign Key fk_column_ontology
-	column_ontology references mixs_field_description ( column_name )' style='fill:#a1a0a0;'>column_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 255 L 270,255' >
-	<title>Foreign Key fk_user_user_level
-	qiita_user references user_level ( user_level_id )</title>
-</path>
-<text x='247' y='250' transform='rotate(0 247,250)' title='Foreign Key fk_user_user_level
-	qiita_user references user_level ( user_level_id )' style='fill:#a1a0a0;'>user_level_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 810 885 L 832,885 Q 840,885 840,877 L 840,870' >
+	column_ontology references mixs_field_description ( column_name )' style='fill:#a1a0a0;'>column_name</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 810 885 L 832,885 Q 840,885 840,877 L 840,870' >
 	<title>Foreign Key fk_filepath
 	filepath references filepath_type ( filepath_type_id )</title>
 </path>
@@ -456,7 +451,7 @@ table {
 	collection_analysis references analysis ( analysis_id )</title>
 </path>
 <text x='382' y='655' transform='rotate(0 382,655)' title='Foreign Key fk_collection_analysis_0
-	collection_analysis references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 195 555 L 202,555 Q 210,555 210,547 L 210,427 Q 210,420 217,420 L 315,420' >
+	collection_analysis references analysis ( analysis_id )' style='fill:#a1a0a0;'>analysis_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 195 555 L 202,555 Q 210,555 210,547 L 210,442 Q 210,435 217,435 L 315,435' >
 	<title>Foreign Key fk_collection
 	collection references qiita_user ( email )</title>
 </path>
@@ -471,7 +466,7 @@ table {
 	collection_users references collection ( collection_id )</title>
 </path>
 <text x='174' y='535' transform='rotate(0 174,535)' title='Foreign Key fk_collection_user
-	collection_users references collection ( collection_id )' style='fill:#a1a0a0;'>collection_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 345 495 L 345,450' >
+	collection_users references collection ( collection_id )' style='fill:#a1a0a0;'>collection_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 345 495 L 345,465' >
 	<title>Foreign Key fk_collection_user_email
 	collection_users references qiita_user ( email )</title>
 </path>
@@ -506,7 +501,7 @@ table {
 	message_user references message ( message_id )</title>
 </path>
 <text x='1342' y='1345' transform='rotate(0 1342,1345)' title='Foreign Key fk_message_user
-	message_user references message ( message_id )' style='fill:#a1a0a0;'>message_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 1335 L 967,1335 Q 960,1335 960,1327 L 960,442 Q 960,435 952,435 L 480,435' >
+	message_user references message ( message_id )' style='fill:#a1a0a0;'>message_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1215 1335 L 967,1335 Q 960,1335 960,1327 L 960,457 Q 960,450 952,450 L 480,450' >
 	<title>Foreign Key fk_message_user_0
 	message_user references qiita_user ( email )</title>
 </path>
@@ -586,7 +581,7 @@ table {
 	study_users references qiita_user ( email )</title>
 </path>
 <text x='1879' y='190' transform='rotate(0 1879,190)' title='Foreign Key fk_study_users_user
-	study_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1920 420 L 997,420 Q 990,420 990,412 L 990,367 Q 990,360 982,360 L 480,360' >
+	study_users references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1920 420 L 1237,420 Q 1230,420 1230,412 L 1230,367 Q 1230,360 1222,360 L 480,360' >
 	<title>Foreign Key fk_study_user
 	study references qiita_user ( email )</title>
 </path>
@@ -826,7 +821,7 @@ table {
 	parent_processing_job references processing_job ( child_id -> processing_job_id )</title>
 </path>
 <text x='2117' y='1570' transform='rotate(270 2117,1570)' title='Foreign Key fk_parent_processing_job_0
-	parent_processing_job references processing_job ( child_id -> processing_job_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2250 1725 L 2047,1725 Q 2040,1725 2040,1717 L 2040,1552 Q 2040,1545 2032,1545 L 982,1545 Q 975,1545 975,1537 L 975,427 Q 975,420 967,420 L 480,420' >
+	parent_processing_job references processing_job ( child_id -> processing_job_id )' style='fill:#a1a0a0;'>child_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2250 1725 L 2047,1725 Q 2040,1725 2040,1717 L 2040,1552 Q 2040,1545 2032,1545 L 982,1545 Q 975,1545 975,1537 L 975,442 Q 975,435 967,435 L 480,435' >
 	<title>Foreign Key fk_processing_job_workflow
 	processing_job_workflow references qiita_user ( email )</title>
 </path>
@@ -896,7 +891,7 @@ table {
 	job references reference ( input_file_reference_id -> reference_id )</title>
 </path>
 <text x='622' y='1300' transform='rotate(0 622,1300)' title='Foreign Key fk_job_reference
-	job references reference ( input_file_reference_id -> reference_id )' style='fill:#a1a0a0;'>input_file_reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1965 1485 L 1957,1485 Q 1950,1485 1950,1492 L 1950,1507 Q 1950,1515 1942,1515 L 1702,1515 Q 1695,1515 1695,1507 L 1695,802 Q 1695,795 1702,795 L 1732,795 Q 1740,795 1740,787 L 1740,397 Q 1740,390 1732,390 L 480,390' >
+	job references reference ( input_file_reference_id -> reference_id )' style='fill:#a1a0a0;'>input_file_reference_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 1965 1485 L 1957,1485 Q 1950,1485 1950,1492 L 1950,1507 Q 1950,1515 1942,1515 L 1702,1515 Q 1695,1515 1695,1507 L 1695,802 Q 1695,795 1702,795 L 1732,795 Q 1740,795 1740,787 L 1740,412 Q 1740,405 1732,405 L 480,405' >
 	<title>Foreign Key fk_processing_job_qiita_user
 	processing_job references qiita_user ( email )</title>
 </path>
@@ -976,12 +971,22 @@ table {
 	study_experimental_factor references study ( study_id )</title>
 </path>
 <text x='2161' y='460' transform='rotate(0 2161,460)' title='Foreign Key fk_study_experimental_factor
-	study_experimental_factor references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2445 615 L 2392,615 Q 2385,615 2385,622 L 2385,652 Q 2385,660 2377,660 L 1222,660 Q 1215,660 1215,652 L 1215,412 Q 1215,405 1207,405 L 480,405' >
+	study_experimental_factor references study ( study_id )' style='fill:#a1a0a0;'>study_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 2445 615 L 2392,615 Q 2385,615 2385,622 L 2385,652 Q 2385,660 2377,660 L 1222,660 Q 1215,660 1215,652 L 1215,427 Q 1215,420 1207,420 L 480,420' >
 	<title>Foreign Key fk_study_tags_qiita_user
 	study_tags references qiita_user ( email )</title>
 </path>
 <text x='2419' y='610' transform='rotate(0 2419,610)' title='Foreign Key fk_study_tags_qiita_user
-	study_tags references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><!-- ============= Table 'controlled_vocab_values' ============= -->
+	study_tags references qiita_user ( email )' style='fill:#a1a0a0;'>email</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'    d='M 315 255 L 270,255' >
+	<title>Foreign Key fk_user_user_level
+	qiita_user references user_level ( user_level_id )</title>
+</path>
+<text x='247' y='250' transform='rotate(0 247,250)' title='Foreign Key fk_user_user_level
+	qiita_user references user_level ( user_level_id )' style='fill:#a1a0a0;'>user_level_id</text><path transform='translate(7,0)' marker-start='url(#foot)' marker-end='url(#arrow)'  style='stroke-dasharray:4,2;'  d='M 480 390 L 1897,390 Q 1905,390 1905,397 L 1905,682 Q 1905,690 1912,690 L 2497,690 Q 2505,690 2505,697 L 2505,720' >
+	<title>Foreign Key fk_qiita_user_client_id
+	qiita_user references oauth_identifiers ( client_id )</title>
+</path>
+<text x='487' y='385' transform='rotate(0 487,385)' title='Foreign Key fk_qiita_user_client_id
+	qiita_user references oauth_identifiers ( client_id )' style='fill:#a1a0a0;'>client_id</text><!-- ============= Table 'controlled_vocab_values' ============= -->
 <rect class='table' x='45' y='1703' width='150' height='120' rx='7' ry='7' />
 <path d='M 45.50 1729.50 L 45.50 1710.50 Q 45.50 1703.50 52.50 1703.50 L 187.50 1703.50 Q 194.50 1703.50 194.50 1710.50 L 194.50 1729.50 L45.50 1729.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
 <a xlink:href='#controlled_vocab_values'><text x='53' y='1717' class='tableTitle'>controlled_vocab_values</text><title>Table qiita.controlled_vocab_values</title></a>
@@ -1172,39 +1177,6 @@ Referred by controlled_vocab_values ( controlled_vocab_id ) </title></a>
   <a xlink:href='#ontology.source_url'><text x='528' y='1612'>source_url</text><title>source_url varchar</title></a>
   <a xlink:href='#ontology.definition'><text x='528' y='1627'>definition</text><title>definition text</title></a>
   <use id='nn' x='512' y='1632' xlink:href='#nn'/><a xlink:href='#ontology.load_date'><text x='528' y='1642'>load_date</text><title>load_date date not null</title></a>
-
-<!-- ============= Table 'qiita_user' ============= -->
-<rect class='table' x='330' y='248' width='150' height='195' rx='7' ry='7' />
-<path d='M 330.50 274.50 L 330.50 255.50 Q 330.50 248.50 337.50 248.50 L 472.50 248.50 Q 479.50 248.50 479.50 255.50 L 479.50 274.50 L330.50 274.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
-<a xlink:href='#qiita_user'><text x='378' y='262' class='tableTitle'>qiita_user</text><title>Table qiita.qiita_user
-Holds all user information</title></a>
-  <use id='nn' x='332' y='282' xlink:href='#nn'/><a xlink:href='#qiita_user.email'><use id='pk' x='332' y='281' xlink:href='#pk'/><title>Primary Key  ( email ) </title></a>
-<a xlink:href='#qiita_user.email'><text x='348' y='292'>email</text><title>email varchar not null</title></a>
-<a xlink:href='#qiita_user.email'><use id='ref' x='468' y='281' xlink:href='#ref'/><title>Referred by analysis ( email ) 
-Referred by analysis_users ( email ) 
-Referred by collection ( email ) 
-Referred by collection_users ( email ) 
-Referred by message_user ( email ) 
-Referred by processing_job ( email ) 
-Referred by processing_job_workflow ( email ) 
-Referred by study ( email ) 
-Referred by study_users ( email ) 
-Referred by study_tags ( email ) </title></a>
-  <use id='nn' x='332' y='297' xlink:href='#nn'/><a xlink:href='#qiita_user.user_level_id'><use id='idx' x='332' y='296' xlink:href='#idx'/><title>Index  ( user_level_id ) </title></a>
-<a xlink:href='#qiita_user.user_level_id'><text x='348' y='307'>user_level_id</text><title>user_level_id integer not null default 5
-user level</title></a>
-<a xlink:href='#qiita_user.user_level_id'><use id='fk' x='468' y='296' xlink:href='#fk'/><title>References user_level ( user_level_id ) </title></a>
-  <use id='nn' x='332' y='312' xlink:href='#nn'/><a xlink:href='#qiita_user.password'><text x='348' y='322'>password</text><title>password varchar not null</title></a>
-  <a xlink:href='#qiita_user.name'><text x='348' y='337'>name</text><title>name varchar</title></a>
-  <a xlink:href='#qiita_user.affiliation'><text x='348' y='352'>affiliation</text><title>affiliation varchar</title></a>
-  <a xlink:href='#qiita_user.address'><text x='348' y='367'>address</text><title>address varchar</title></a>
-  <a xlink:href='#qiita_user.phone'><text x='348' y='382'>phone</text><title>phone varchar</title></a>
-  <a xlink:href='#qiita_user.user_verify_code'><text x='348' y='397'>user_verify_code</text><title>user_verify_code varchar
-Code for initial user email verification</title></a>
-  <a xlink:href='#qiita_user.pass_reset_code'><text x='348' y='412'>pass_reset_code</text><title>pass_reset_code varchar
-Randomly generated code for password reset</title></a>
-  <a xlink:href='#qiita_user.pass_reset_timestamp'><text x='348' y='427'>pass_reset_timestamp</text><title>pass_reset_timestamp timestamp
-Time the reset code was generated</title></a>
 
 <!-- ============= Table 'prep_y' ============= -->
 <rect class='table' x='1230' y='263' width='90' height='75' rx='7' ry='7' />
@@ -1561,6 +1533,7 @@ Links shared studies to users they are shared with</title></a>
 <a xlink:href='#study.study_id'><text x='1953' y='307'>study_id</text><title>study_id bigserial not null
 Unique name for study</title></a>
 <a xlink:href='#study.study_id'><use id='ref' x='2103' y='296' xlink:href='#ref'/><title>Referred by investigation_study ( study_id ) 
+Referred by per_study_tags ( study_id ) 
 Referred by sample_template_filepath ( study_id ) 
 Referred by study_artifact ( study_id ) 
 Referred by study_environmental_package ( study_id ) 
@@ -1569,8 +1542,7 @@ Referred by study_portal ( study_id )
 Referred by study_prep_template ( study_id ) 
 Referred by study_publication ( study_id ) 
 Referred by study_sample ( study_id ) 
-Referred by study_users ( study_id ) 
-Referred by per_study_tags ( study_id ) </title></a>
+Referred by study_users ( study_id ) </title></a>
   <use id='nn' x='1937' y='312' xlink:href='#nn'/><a xlink:href='#study.email'><use id='idx' x='1937' y='311' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study.email'><text x='1953' y='322'>email</text><title>email varchar not null
 Email of study owner</title></a>
@@ -1712,7 +1684,8 @@ Referred by ebi_run_accession ( sample_id ) </title></a>
 <a xlink:href='#oauth_identifiers'><text x='2497' y='742' class='tableTitle'>oauth_identifiers</text><title>Table qiita.oauth_identifiers</title></a>
   <use id='nn' x='2492' y='762' xlink:href='#nn'/><a xlink:href='#oauth_identifiers.client_id'><use id='pk' x='2492' y='761' xlink:href='#pk'/><title>Primary Key  ( client_id ) </title></a>
 <a xlink:href='#oauth_identifiers.client_id'><text x='2508' y='772'>client_id</text><title>client_id varchar&#040;50&#041; not null</title></a>
-<a xlink:href='#oauth_identifiers.client_id'><use id='ref' x='2583' y='761' xlink:href='#ref'/><title>Referred by oauth_software ( client_id ) </title></a>
+<a xlink:href='#oauth_identifiers.client_id'><use id='ref' x='2583' y='761' xlink:href='#ref'/><title>Referred by oauth_software ( client_id ) 
+Referred by qiita_user ( client_id ) </title></a>
   <a xlink:href='#oauth_identifiers.client_secret'><text x='2508' y='787'>client_secret</text><title>client_secret varchar&#040;255&#041;</title></a>
 
 <!-- ============= Table 'oauth_software' ============= -->
@@ -2347,6 +2320,42 @@ EFO ontological link of experimental factors to studies</title></a>
   <use id='nn' x='2462' y='612' xlink:href='#nn'/><a xlink:href='#study_tags.email'><use id='idx' x='2462' y='611' xlink:href='#idx'/><title>Index  ( email ) </title></a>
 <a xlink:href='#study_tags.email'><text x='2478' y='622'>email</text><title>email varchar not null</title></a>
 <a xlink:href='#study_tags.email'><use id='fk' x='2553' y='611' xlink:href='#fk'/><title>References qiita_user ( email ) </title></a>
+
+<!-- ============= Table 'qiita_user' ============= -->
+<rect class='table' x='330' y='248' width='150' height='210' rx='7' ry='7' />
+<path d='M 330.50 274.50 L 330.50 255.50 Q 330.50 248.50 337.50 248.50 L 472.50 248.50 Q 479.50 248.50 479.50 255.50 L 479.50 274.50 L330.50 274.50 ' style='fill:url(#tableHeaderGradient0); stroke:none;' />
+<a xlink:href='#qiita_user'><text x='378' y='262' class='tableTitle'>qiita_user</text><title>Table qiita.qiita_user
+Holds all user information</title></a>
+  <use id='nn' x='332' y='282' xlink:href='#nn'/><a xlink:href='#qiita_user.email'><use id='pk' x='332' y='281' xlink:href='#pk'/><title>Primary Key  ( email ) </title></a>
+<a xlink:href='#qiita_user.email'><text x='348' y='292'>email</text><title>email varchar not null</title></a>
+<a xlink:href='#qiita_user.email'><use id='ref' x='468' y='281' xlink:href='#ref'/><title>Referred by analysis ( email ) 
+Referred by analysis_users ( email ) 
+Referred by collection ( email ) 
+Referred by collection_users ( email ) 
+Referred by message_user ( email ) 
+Referred by processing_job ( email ) 
+Referred by processing_job_workflow ( email ) 
+Referred by study ( email ) 
+Referred by study_tags ( email ) 
+Referred by study_users ( email ) </title></a>
+  <use id='nn' x='332' y='297' xlink:href='#nn'/><a xlink:href='#qiita_user.user_level_id'><use id='idx' x='332' y='296' xlink:href='#idx'/><title>Index  ( user_level_id ) </title></a>
+<a xlink:href='#qiita_user.user_level_id'><text x='348' y='307'>user_level_id</text><title>user_level_id integer not null default 5
+user level</title></a>
+<a xlink:href='#qiita_user.user_level_id'><use id='fk' x='468' y='296' xlink:href='#fk'/><title>References user_level ( user_level_id ) </title></a>
+  <use id='nn' x='332' y='312' xlink:href='#nn'/><a xlink:href='#qiita_user.password'><text x='348' y='322'>password</text><title>password varchar not null</title></a>
+  <a xlink:href='#qiita_user.name'><text x='348' y='337'>name</text><title>name varchar</title></a>
+  <a xlink:href='#qiita_user.affiliation'><text x='348' y='352'>affiliation</text><title>affiliation varchar</title></a>
+  <a xlink:href='#qiita_user.address'><text x='348' y='367'>address</text><title>address varchar</title></a>
+  <a xlink:href='#qiita_user.phone'><text x='348' y='382'>phone</text><title>phone varchar</title></a>
+  <a xlink:href='#qiita_user.user_verify_code'><text x='348' y='397'>user_verify_code</text><title>user_verify_code varchar
+Code for initial user email verification</title></a>
+  <a xlink:href='#qiita_user.pass_reset_code'><text x='348' y='412'>pass_reset_code</text><title>pass_reset_code varchar
+Randomly generated code for password reset</title></a>
+  <a xlink:href='#qiita_user.pass_reset_timestamp'><text x='348' y='427'>pass_reset_timestamp</text><title>pass_reset_timestamp timestamp
+Time the reset code was generated</title></a>
+  <a xlink:href='#qiita_user.client_id'><use id='idx' x='332' y='431' xlink:href='#idx'/><title>Index  ( client_id ) </title></a>
+<a xlink:href='#qiita_user.client_id'><text x='348' y='442'>client_id</text><title>client_id varchar</title></a>
+<a xlink:href='#qiita_user.client_id'><use id='fk' x='468' y='431' xlink:href='#fk'/><title>References oauth_identifiers ( client_id ) </title></a>
 
 </g></svg>
 
@@ -3024,91 +3033,6 @@ EFO ontological link of experimental factors to studies</title></a>
 	</tr>
 	<tr>		<td>U</td><td>idx&#095;ontology</td>
 		<td> ON ontology</td>
-		<td>  </td>
-	</tr>
-</tbody>
-</table>
-
-<br/><br/>
-<table class='bordered'>
-<thead>
-<tr><th colspan='4'><a name='qiita_user'>Table qiita_user</a></th></tr>
-<tr><td colspan='3'>Holds all user information </td></tr>
-</thead>
-<tbody>
-	<tr>
-		<td>*</td>
-		<td><a name='qiita_user.email'>email</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='qiita_user.user_level_id'>user&#095;level&#095;id</a></td>
-		<td> integer   DEFO 5 </td>
-		<td> user level </td>
-	</tr>
-	<tr>
-		<td>*</td>
-		<td><a name='qiita_user.password'>password</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='qiita_user.name'>name</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='qiita_user.affiliation'>affiliation</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='qiita_user.address'>address</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='qiita_user.phone'>phone</a></td>
-		<td> varchar   </td>
-		<td>  </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='qiita_user.user_verify_code'>user&#095;verify&#095;code</a></td>
-		<td> varchar   </td>
-		<td> Code for initial user email verification </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='qiita_user.pass_reset_code'>pass&#095;reset&#095;code</a></td>
-		<td> varchar   </td>
-		<td> Randomly generated code for password reset </td>
-	</tr>
-	<tr>
-		<td>&nbsp;</td>
-		<td><a name='qiita_user.pass_reset_timestamp'>pass&#095;reset&#095;timestamp</a></td>
-		<td> timestamp   </td>
-		<td> Time the reset code was generated </td>
-	</tr>
-<tr><th colspan='4'><b>Indexes</b></th></tr>
-	<tr>		<td>Pk</td><td>pk&#095;user</td>
-		<td> ON email</td>
-		<td>  </td>
-	</tr>
-	<tr>		<td>&nbsp;</td><td>idx&#095;user</td>
-		<td> ON user&#095;level&#095;id</td>
-		<td>  </td>
-	</tr>
-<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
-	<tr>
-		<td>&nbsp;</td><td>fk_user_user_level</td>
-		<td > ( user&#095;level&#095;id ) ref <a href='#user&#095;level'>user&#095;level</a> (user&#095;level&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>
@@ -7074,6 +6998,106 @@ Controlled Vocabulary </td>
 	<tr>
 		<td>&nbsp;</td><td>fk_study_tags_qiita_user</td>
 		<td > ( email ) ref <a href='#qiita&#095;user'>qiita&#095;user</a> (email) </td>
+		<td>  </td>
+	</tr>
+</tbody>
+</table>
+
+<br/><br/>
+<table class='bordered'>
+<thead>
+<tr><th colspan='4'><a name='qiita_user'>Table qiita_user</a></th></tr>
+<tr><td colspan='3'>Holds all user information </td></tr>
+</thead>
+<tbody>
+	<tr>
+		<td>*</td>
+		<td><a name='qiita_user.email'>email</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='qiita_user.user_level_id'>user&#095;level&#095;id</a></td>
+		<td> integer   DEFO 5 </td>
+		<td> user level </td>
+	</tr>
+	<tr>
+		<td>*</td>
+		<td><a name='qiita_user.password'>password</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita_user.name'>name</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita_user.affiliation'>affiliation</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita_user.address'>address</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita_user.phone'>phone</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita_user.user_verify_code'>user&#095;verify&#095;code</a></td>
+		<td> varchar   </td>
+		<td> Code for initial user email verification </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita_user.pass_reset_code'>pass&#095;reset&#095;code</a></td>
+		<td> varchar   </td>
+		<td> Randomly generated code for password reset </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita_user.pass_reset_timestamp'>pass&#095;reset&#095;timestamp</a></td>
+		<td> timestamp   </td>
+		<td> Time the reset code was generated </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><a name='qiita_user.client_id'>client&#095;id</a></td>
+		<td> varchar   </td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Indexes</b></th></tr>
+	<tr>		<td>Pk</td><td>pk&#095;user</td>
+		<td> ON email</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;user</td>
+		<td> ON user&#095;level&#095;id</td>
+		<td>  </td>
+	</tr>
+	<tr>		<td>&nbsp;</td><td>idx&#095;qiita&#095;user</td>
+		<td> ON client&#095;id</td>
+		<td>  </td>
+	</tr>
+<tr><th colspan='4'><b>Foreign Keys</b></th></tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_user_user_level</td>
+		<td > ( user&#095;level&#095;id ) ref <a href='#user&#095;level'>user&#095;level</a> (user&#095;level&#095;id) </td>
+		<td>  </td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td><td>fk_qiita_user_client_id</td>
+		<td > ( client&#095;id ) ref <a href='#oauth&#095;identifiers'>oauth&#095;identifiers</a> (client&#095;id) </td>
 		<td>  </td>
 	</tr>
 </tbody>

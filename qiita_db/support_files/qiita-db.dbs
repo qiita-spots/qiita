@@ -1389,14 +1389,21 @@
 			<column name="pass_reset_timestamp" type="timestamp" jt="93" >
 				<comment><![CDATA[Time the reset code was generated]]></comment>
 			</column>
+			<column name="client_id" type="varchar" jt="12" />
 			<index name="pk_user" unique="PRIMARY_KEY" >
 				<column name="email" />
 			</index>
 			<index name="idx_user" unique="NORMAL" >
 				<column name="user_level_id" />
 			</index>
+			<index name="idx_qiita_user" unique="NORMAL" >
+				<column name="client_id" />
+			</index>
 			<fk name="fk_user_user_level" to_schema="qiita" to_table="user_level" update_action="restrict" >
 				<fk_column name="user_level_id" pk="user_level_id" />
+			</fk>
+			<fk name="fk_qiita_user_client_id" to_schema="qiita" to_table="oauth_identifiers" >
+				<fk_column name="client_id" pk="client_id" />
 			</fk>
 		</table>
 		<table name="reference" >
@@ -1892,7 +1899,6 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="column_ontology" color="d0def5" x="285" y="1890" />
 		<entity schema="qiita" name="controlled_vocab" color="d0def5" x="45" y="1500" />
 		<entity schema="qiita" name="ontology" color="d0def5" x="510" y="1500" />
-		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="255" />
 		<entity schema="qiita" name="prep_y" color="d0def5" x="1230" y="270" />
 		<entity schema="qiita" name="checksum_algorithm" color="b2cdf7" x="735" y="1050" />
 		<entity schema="qiita" name="user_level" color="d0def5" x="165" y="240" />
@@ -1971,6 +1977,7 @@ Controlled Vocabulary]]></comment>
 		<entity schema="qiita" name="study_experimental_factor" color="c0d4f3" x="2220" y="465" />
 		<entity schema="qiita" name="timeseries_type" color="c0d4f3" x="2235" y="555" />
 		<entity schema="qiita" name="study_tags" color="b2cdf7" x="2460" y="555" />
+		<entity schema="qiita" name="qiita_user" color="d0def5" x="330" y="255" />
 		<group name="Group_analyses" color="c4e0f9" >
 			<comment>analysis tables</comment>
 			<entity schema="qiita" name="analysis" />
