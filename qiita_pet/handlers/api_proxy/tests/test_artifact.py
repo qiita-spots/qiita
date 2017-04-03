@@ -302,7 +302,7 @@ class TestArtifactAPI(TestCase):
                'files': exp_files,
                'errored_jobs': [],
                'editable': True,
-               'visibility': 'private',
+               'visibility': 'sandbox',
                'job': None,
                'message': '',
                'name': 'Demultiplexed 1',
@@ -316,17 +316,14 @@ class TestArtifactAPI(TestCase):
                    'min_per_read_length_fraction': 0.75,
                    'barcode_type': u'golay_12'},
                'summary': None,
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 2?\')) { '
-                           'set_artifact_visibility(\'public\', 2) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '2?\')) { set_artifact_visibility(\'sandbox\', 2) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button> <a class="btn btn-primary '
-                           'btn-sm" href="/vamps/2"><span class="glyphicon '
-                           'glyphicon-export"></span> Submit to VAMPS</a>'),
+               'buttons': (
+                   '<button onclick="if (confirm(\'Are you sure you want to '
+                   'request approval for artifact id: 2?\')) { '
+                   'set_artifact_visibility(\'awaiting_approval\', 2) }" '
+                   'class="btn btn-primary btn-sm">Request approval</button> '
+                   '<a class="btn btn-primary btn-sm" href="/vamps/2"><span '
+                   'class="glyphicon glyphicon-export"></span> Submit to '
+                   'VAMPS</a>'),
                'study_id': 1,
                'prep_id': 1}
         self.assertEqual(obs, exp)
