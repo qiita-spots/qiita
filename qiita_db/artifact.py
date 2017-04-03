@@ -260,9 +260,11 @@ class Artifact(qdb.base.QiitaObject):
 
         Notes
         -----
-        The visibility of the artifact is set by default to `sandbox`
-        The timestamp of the artifact is set by default to `datetime.now()`
-        The value of `submitted_to_vamps` is set by default to `False`
+        The visibility of the artifact is set by default to `sandbox` if
+        prep_template is passed but if parents is passed we will inherit the
+        most closed visibility.
+        The timestamp of the artifact is set by default to `datetime.now()`.
+        The value of `submitted_to_vamps` is set by default to `False`.
         """
         # We need at least one file
         if not filepaths:
@@ -617,19 +619,20 @@ class Artifact(qdb.base.QiitaObject):
         only applies when the new visibility is more open than before.
         """
         with qdb.sql_connection.TRN:
+            # In order to correctly propagate the visibility we need to find
+            # the root of this artifact and then propagate to all the artifacts
+            root = self.artifact
+            while root.parents:
+                # [0] we only support one parent
+                root = root.parents[0]
+            ids = [a.id for a in root.descendants.nodes()]
+
             sql = """UPDATE qiita.artifact
                      SET visibility_id = %s
-                     WHERE artifact_id = %s"""
-            qdb.sql_connection.TRN.add(
-                sql, [qdb.util.convert_to_id(value, "visibility"), self.id])
+                     WHERE artifact_id IN %s"""
+            vis_id = qdb.util.convert_to_id(value, "visibility")
+            qdb.sql_connection.TRN.add(sql, [vis_id, tuple(ids)], many=True)
             qdb.sql_connection.TRN.execute()
-            # In order to correctly propagate the visibility upstream, we need
-            # to go one step at a time. By setting up the visibility of our
-            # parents first, we accomplish that, since they will propagate
-            # the changes to its parents
-            for p in self.parents:
-                visibilites = [[d.visibility] for d in p.descendants.nodes()]
-                p.visibility = qdb.util.infer_status(visibilites)
 
     @property
     def artifact_type(self):
