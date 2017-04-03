@@ -621,17 +621,18 @@ class Artifact(qdb.base.QiitaObject):
         with qdb.sql_connection.TRN:
             # In order to correctly propagate the visibility we need to find
             # the root of this artifact and then propagate to all the artifacts
-            root = self.artifact
-            while root.parents:
-                # [0] we only support one parent
-                root = root.parents[0]
+            sql = "SELECT * FROM qiita.find_artifact_roots(%s)"
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            root_id = qdb.sql_connection.TRN.execute_fetchlast()
+            root = qdb.artifact.Artifact(root_id)
+            # these are the ids of all the children from the root
             ids = [a.id for a in root.descendants.nodes()]
 
             sql = """UPDATE qiita.artifact
                      SET visibility_id = %s
                      WHERE artifact_id IN %s"""
             vis_id = qdb.util.convert_to_id(value, "visibility")
-            qdb.sql_connection.TRN.add(sql, [vis_id, tuple(ids)], many=True)
+            qdb.sql_connection.TRN.add(sql, [vis_id, tuple(ids)])
             qdb.sql_connection.TRN.execute()
 
     @property
