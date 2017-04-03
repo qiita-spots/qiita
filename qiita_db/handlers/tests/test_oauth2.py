@@ -99,61 +99,45 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
     def test_check_oauth2_header_bad_token(self):
         obj = make_mock_handler()
         obj.request.headers['Authorization'] = 'Bearer BADTOKEN'
-        exp = {'error_description': 'Oauth2 error: token has timed out',
-               'error': 'invalid_grant'}
-        self.assertFalse(_check_oauth2_header(obj))
-        self.assertEqual(obj.status, 400)
-        self.assertEqual(obj.body, exp)
+        exp = ('invalid_grant', 'Oauth2 error: token has timed out', None)
+        self.assertEqual(_check_oauth2_header(obj), exp)
 
     def test_check_oauth2_header_bad_header(self):
         obj = make_mock_handler()
         obj.request.headers['Authorofthestuff'] = 'foo'
-        exp = {'error_description': 'Oauth2 error: invalid access token',
-               'error': 'invalid_request'}
-        self.assertFalse(_check_oauth2_header(obj))
-        self.assertEqual(obj.status, 400)
-        self.assertEqual(obj.body, exp)
+        exp = ('invalid_request', 'Oauth2 error: invalid access token', None)
+        self.assertEqual(_check_oauth2_header(obj), exp)
 
     def test_check_oauth2_header_bad_header_format(self):
         obj = make_mock_handler()
         obj.request.headers['Authorization'] = 'Bear ' + self.user_token
-        exp = {'error_description': 'Oauth2 error: invalid access token',
-               'error': 'invalid_grant'}
-        self.assertFalse(_check_oauth2_header(obj))
-        self.assertEqual(obj.status, 400)
-        self.assertEqual(obj.body, exp)
+        exp = ('invalid_grant', 'Oauth2 error: invalid access token', None)
+        self.assertEqual(_check_oauth2_header(obj), exp)
 
     def test_check_oauth2_header_bad_header_format_toomany_tokens(self):
         obj = make_mock_handler()
         obj.request.headers['Authorization'] = 'Bear er ' + self.user_token
-        exp = {'error_description': 'Oauth2 error: invalid access token',
-               'error': 'invalid_grant'}
-        self.assertFalse(_check_oauth2_header(obj))
-        self.assertEqual(obj.status, 400)
-        self.assertEqual(obj.body, exp)
+        exp = ('invalid_grant', 'Oauth2 error: invalid access token', None)
+        self.assertEqual(_check_oauth2_header(obj), exp)
 
     def test_check_oauth2_header_valid(self):
         obj = make_mock_handler()
         obj.request.headers['Authorization'] = 'Bearer ' + self.client_token
-        self.assertTrue(_check_oauth2_header(obj))
-        self.assertEqual(obj.status, None)
-        self.assertEqual(obj.body, None)
+        self.assertEqual(_check_oauth2_header(obj), (None, None,
+                                                     'test123123123'))
 
     def test_check_oauth2_rate_limiting(self):
         # Check rate limiting works
         obj = make_mock_handler()
         obj.request.headers['Authorization'] = 'Bearer ' + self.user_token
-        self.assertTrue(_check_oauth2_header(obj))
+        self.assertEqual(_check_oauth2_header(obj), (None, None,
+                                                     'testuser'))
 
         self.assertEqual(int(r_client.get(self.user_rate_key)), 1)
         r_client.setex('testuser_test@foo.bar_daily_limit', 0, 2)
-        self.assertFalse(_check_oauth2_header(obj))
-
-        exp = {'error': 'invalid_grant',
-               'error_description': 'Oauth2 error: daily request limit reached'
-               }
-        self.assertEqual(obj.status, 400)
-        self.assertEqual(obj.body, exp)
+        exp = ('invalid_grant', 'Oauth2 error: daily request limit reached',
+               None)
+        self.assertEqual(_check_oauth2_header(obj), exp)
 
 
 class OAuth2HandlerTests(TestHandlerBase):

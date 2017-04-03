@@ -57,32 +57,30 @@ def _check_oauth2_header(handler):
 
     Returns
     -------
-    bool
-        True the request has a valid oauth2 token
-        False otherwise. If False, the HTTP status is set to 400 and the
-        response is finalized.
+    errtype
+        The type of error, None if no error was observed
+    errdesc
+        A description of the error, None if no error was observed.
+    client_id
+        The observed client ID. This field is None if any error was observed.
     """
     header = handler.request.headers.get('Authorization', None)
 
     if header is None:
-        _oauth_error(handler, 'Oauth2 error: invalid access token',
-                     'invalid_request')
-        return False
+        return ('invalid_request', 'Oauth2 error: invalid access token', None)
+
     token_info = header.split()
     # Based on RFC6750 if reply is not 2 elements in the format of:
     # ['Bearer', token] we assume a wrong reply
     if len(token_info) != 2 or token_info[0] != 'Bearer':
-        _oauth_error(handler, 'Oauth2 error: invalid access token',
-                     'invalid_grant')
-        return False
+        return ('invalid_grant', 'Oauth2 error: invalid access token', None)
 
     token = token_info[1]
     db_token = r_client.hgetall(token)
     if not db_token:
         # token has timed out or never existed
-        _oauth_error(handler, 'Oauth2 error: token has timed out',
-                     'invalid_grant')
-        return False
+        return ('invalid_grant', 'Oauth2 error: token has timed out', None)
+
     # Check daily rate limit for key if password style key
     if db_token['grant_type'] == 'password':
         limit_key = '%s_%s_daily_limit' % (db_token['client_id'],
@@ -94,12 +92,10 @@ def _check_oauth2_header(handler):
         else:
             r_client.decr(limit_key)
             if int(r_client.get(limit_key)) <= 0:
-                _oauth_error(
-                    handler, 'Oauth2 error: daily request limit reached',
-                    'invalid_grant')
-                return False
+                return ('invalid_grant',
+                        'Oauth2 error: daily request limit reached', None)
 
-    return True
+    return (None, None, db_token['client_id'])
 
 
 def authenticate_oauth(f):
@@ -124,8 +120,41 @@ def authenticate_oauth(f):
     """
     @functools.wraps(f)
     def wrapper(handler, *args, **kwargs):
-        if _check_oauth2_header(handler):
+        errtype, errdesc, _ = _check_oauth2_header(handler)
+        if errtype is None:
             return f(handler, *args, **kwargs)
+        else:
+            _oauth_error(handler, errdesc, errtype)
+
+    return wrapper
+
+
+def authenticate_oauth_default_to_public_token(f):
+    """Authenticate oauth2 if possible, defaulting to public access
+
+    WARNING: this decorator will *ACCEPT AUTHENTICATION FAILURES* and
+    associate them to a public API access token.
+    """
+    def get_user_maker(cid):
+        def f():
+            return qdb.user.User.from_client_id(cid)
+        return get_user_maker()
+
+    @functools.wraps(f)
+    def wrapper(handler, *args, **kwargs):
+        errtype, _, cid = _check_oauth2_header(handler)
+        if errtype is None:
+            user_f = get_user_maker(cid)
+        else:
+            # TODO: define a public client ID
+            user_f = get_user_maker("I DONT KNOW WHAT THIS SHOULD BE")
+
+        handler.get_current_user = user_f
+        result =  f(handler, *args, **kwargs)
+
+        # TODO: should the monkey patched method be removed?
+        return result
+
     return wrapper
 
 
