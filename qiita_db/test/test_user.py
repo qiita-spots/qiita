@@ -133,6 +133,29 @@ class UserTest(TestCase):
                                                                    [m_id]])
         qdb.util.clear_system_messages()
 
+    def test_oauth_client_id_exists(self):
+        u = qdb.user.User('test@foo.bar')
+        client_id = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
+        u.oauth_client_id = client_id
+        self.assertEqual(u.oauth_client_id, client_id)
+
+    def test_oauth_does_not_exist(self):
+        u = qdb.user.User('test@foo.bar')
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            u.oauth_client_id = 'boaty mcboatface'
+
+    def test_create_from_client_id(self):
+        u = qdb.user.User('test@foo.bar')
+        client_id = '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4'
+        u.oauth_client_id = client_id
+
+        new_u = qdb.user.User.from_client_id(client_id)
+        self.assertEqual(u.id, new_u.id)
+
+    def test_create_from_client_id_does_not_exist(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
+            _ = qdb.user.User.from_client_id('boaty mcboatface')
+
     def test_create_user_info(self):
         user = qdb.user.User.create('testcreateuserinfo@test.bar', 'password',
                                     self.userinfo)

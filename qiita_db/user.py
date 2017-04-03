@@ -92,6 +92,44 @@ class User(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
+    def from_client_id(cls, client_id):
+        """Instantiate a User from a client_id
+
+        Parameters
+        ----------
+        client_id : str
+            The client_id for a qiita user.
+
+        Returns
+        -------
+        qdb.user.User
+            The user for the client_id
+
+        Raises
+        ------
+        qdb.exceptions.QiitaDBUnknownIDError
+            If the client identifier is not associated with any study.
+        """
+        with qdb.sql_connection.TRN:
+
+            sql = """SELECT EXISTS(
+                        SELECT * FROM qiita.{0} WHERE client_id = %s)"""
+            sql = sql.format(cls._table)
+            qdb.sql_connection.TRN.add(sql, [client_id])
+
+            if not qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBUnknownIDError(client_id,
+                                                           cls._table)
+
+            sql = """SELECT email
+                     FROM qiita.{0}
+                     WHERE client_id = %s"""
+            sql = sql.format(cls._table)
+            qdb.sql_connection.TRN.add(sql, [client_id])
+
+            return cls(qdb.sql_connection.TRN.execute_fetchlast())
+
+    @classmethod
     def iter(cls):
         """Iterates over all users, sorted by their email addresses
 
@@ -479,6 +517,34 @@ class User(qdb.base.QiitaObject):
                      ORDER BY message_time DESC"""
             qdb.sql_connection.TRN.add(sql, [self._id])
             return qdb.sql_connection.TRN.execute_fetchindex()
+
+    @property
+    def oauth_client_id(self):
+        """Get an OAUTH2 client identifier for a user"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT client_id
+                     FROM qiita.{0}
+                     WHERE email = %s""".format(self._table)
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
+
+    @oauth_client_id.setter
+    def oauth_client_id(self, client_id):
+        """Set an OAUTH2 client identifier for a user"""
+        with qdb.sql_connection.TRN:
+            sql = """SELECT  EXISTS(
+                     SELECT *
+                     FROM qiita.oauth_identifiers
+                     WHERE client_id = %s)"""
+            qdb.sql_connection.TRN.add(sql, [client_id])
+            if not qdb.sql_connection.TRN.execute_fetchlast():
+                raise qdb.exceptions.QiitaDBUnknownIDError(client_id,
+                                                           'oauth_identifiers')
+
+            sql = """UPDATE qiita.{0}
+                     SET client_id = %s
+                     WHERE email = %s""".format(self._table)
+            qdb.sql_connection.TRN.add(sql, [client_id, self.id])
 
     # ------- methods ---------
     def user_artifacts(self, artifact_type=None):
