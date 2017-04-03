@@ -10,7 +10,27 @@ from json import loads
 
 from moi import r_client
 
+from qiita_db.handlers.oauth2 import _check_oauth2_header
 from qiita_pet.test.tornado_test_base import TestHandlerBase
+
+
+def make_mock_handler():
+    class mock_object:
+        def __init__(self):
+            self.status = None
+            self.body = None
+        def set_status(self, thing):
+            self.status = thing
+        def write(self, thing):
+            self.body = thing
+        def finish(self):
+            pass
+
+    handler = mock_object()
+    handler.request = mock_object()
+    handler.request.headers = {}
+
+    return handler
 
 
 class OAuth2BaseHandlerTests(TestHandlerBase):
@@ -75,6 +95,65 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         exp = {'error': 'invalid_grant',
                'error_description': 'Oauth2 error: invalid access token'}
         self.assertEqual(loads(obs.body), exp)
+
+    def test_check_oauth2_header_bad_token(self):
+        obj = make_mock_handler()
+        obj.request.headers['Authorization'] = 'Bearer BADTOKEN'
+        exp = {'error_description': 'Oauth2 error: token has timed out',
+               'error': 'invalid_grant'}
+        self.assertFalse(_check_oauth2_header(obj))
+        self.assertEqual(obj.status, 400)
+        self.assertEqual(obj.body, exp)
+
+    def test_check_oauth2_header_bad_header(self):
+        obj = make_mock_handler()
+        obj.request.headers['Authorofthestuff'] = 'foo'
+        exp = {'error_description': 'Oauth2 error: invalid access token',
+               'error': 'invalid_request'}
+        self.assertFalse(_check_oauth2_header(obj))
+        self.assertEqual(obj.status, 400)
+        self.assertEqual(obj.body, exp)
+
+    def test_check_oauth2_header_bad_header_format(self):
+        obj = make_mock_handler()
+        obj.request.headers['Authorization'] = 'Bear ' + self.user_token
+        exp = {'error_description': 'Oauth2 error: invalid access token',
+               'error': 'invalid_grant'}
+        self.assertFalse(_check_oauth2_header(obj))
+        self.assertEqual(obj.status, 400)
+        self.assertEqual(obj.body, exp)
+
+    def test_check_oauth2_header_bad_header_format_toomany_tokens(self):
+        obj = make_mock_handler()
+        obj.request.headers['Authorization'] = 'Bear er ' + self.user_token
+        exp = {'error_description': 'Oauth2 error: invalid access token',
+               'error': 'invalid_grant'}
+        self.assertFalse(_check_oauth2_header(obj))
+        self.assertEqual(obj.status, 400)
+        self.assertEqual(obj.body, exp)
+
+    def test_check_oauth2_header_valid(self):
+        obj = make_mock_handler()
+        obj.request.headers['Authorization'] = 'Bearer ' + self.client_token
+        self.assertTrue(_check_oauth2_header(obj))
+        self.assertEqual(obj.status, None)
+        self.assertEqual(obj.body, None)
+
+    def test_check_oauth2_rate_limiting(self):
+        # Check rate limiting works
+        obj = make_mock_handler()
+        obj.request.headers['Authorization'] = 'Bearer ' + self.user_token
+        self.assertTrue(_check_oauth2_header(obj))
+
+        self.assertEqual(int(r_client.get(self.user_rate_key)), 1)
+        r_client.setex('testuser_test@foo.bar_daily_limit', 0, 2)
+        self.assertFalse(_check_oauth2_header(obj))
+
+        exp = {'error': 'invalid_grant',
+               'error_description': 'Oauth2 error: daily request limit reached'
+               }
+        self.assertEqual(obj.status, 400)
+        self.assertEqual(obj.body, exp)
 
 
 class OAuth2HandlerTests(TestHandlerBase):

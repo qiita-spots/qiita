@@ -47,6 +47,61 @@ def _oauth_error(handler, error_msg, error):
     handler.finish()
 
 
+def _check_oauth2_header(handler):
+    """Check if the oauth2 header is valid
+
+    Parameters
+    ----------
+    handler : tornado.web.RequestHandler instance
+        The handler instance being requested
+
+    Returns
+    -------
+    bool
+        True the request has a valid oauth2 token
+        False otherwise. If False, the HTTP status is set to 400 and the
+        response is finalized.
+    """
+    header = handler.request.headers.get('Authorization', None)
+
+    if header is None:
+        _oauth_error(handler, 'Oauth2 error: invalid access token',
+                     'invalid_request')
+        return False
+    token_info = header.split()
+    # Based on RFC6750 if reply is not 2 elements in the format of:
+    # ['Bearer', token] we assume a wrong reply
+    if len(token_info) != 2 or token_info[0] != 'Bearer':
+        _oauth_error(handler, 'Oauth2 error: invalid access token',
+                     'invalid_grant')
+        return False
+
+    token = token_info[1]
+    db_token = r_client.hgetall(token)
+    if not db_token:
+        # token has timed out or never existed
+        _oauth_error(handler, 'Oauth2 error: token has timed out',
+                     'invalid_grant')
+        return False
+    # Check daily rate limit for key if password style key
+    if db_token['grant_type'] == 'password':
+        limit_key = '%s_%s_daily_limit' % (db_token['client_id'],
+                                           db_token['user'])
+        limiter = r_client.get(limit_key)
+        if limiter is None:
+            # Set limit to 5,000 requests per day
+            r_client.setex(limit_key, 5000, 86400)
+        else:
+            r_client.decr(limit_key)
+            if int(r_client.get(limit_key)) <= 0:
+                _oauth_error(
+                    handler, 'Oauth2 error: daily request limit reached',
+                    'invalid_grant')
+                return False
+
+    return True
+
+
 def authenticate_oauth(f):
     """Decorate methods to require valid Oauth2 Authorization header[1]
 
@@ -69,43 +124,8 @@ def authenticate_oauth(f):
     """
     @functools.wraps(f)
     def wrapper(handler, *args, **kwargs):
-        header = handler.request.headers.get('Authorization', None)
-        if header is None:
-            _oauth_error(handler, 'Oauth2 error: invalid access token',
-                         'invalid_request')
-            return
-        token_info = header.split()
-        # Based on RFC6750 if reply is not 2 elements in the format of:
-        # ['Bearer', token] we assume a wrong reply
-        if len(token_info) != 2 or token_info[0] != 'Bearer':
-            _oauth_error(handler, 'Oauth2 error: invalid access token',
-                         'invalid_grant')
-            return
-
-        token = token_info[1]
-        db_token = r_client.hgetall(token)
-        if not db_token:
-            # token has timed out or never existed
-            _oauth_error(handler, 'Oauth2 error: token has timed out',
-                         'invalid_grant')
-            return
-        # Check daily rate limit for key if password style key
-        if db_token['grant_type'] == 'password':
-            limit_key = '%s_%s_daily_limit' % (db_token['client_id'],
-                                               db_token['user'])
-            limiter = r_client.get(limit_key)
-            if limiter is None:
-                # Set limit to 5,000 requests per day
-                r_client.setex(limit_key, 5000, 86400)
-            else:
-                r_client.decr(limit_key)
-                if int(r_client.get(limit_key)) <= 0:
-                    _oauth_error(
-                        handler, 'Oauth2 error: daily request limit reached',
-                        'invalid_grant')
-                    return
-
-        return f(handler, *args, **kwargs)
+        if _check_oauth2_header(handler):
+            return f(handler, *args, **kwargs)
     return wrapper
 
 
