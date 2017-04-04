@@ -8,7 +8,7 @@
 
 from tornado.web import HTTPError
 
-from .oauth2 import OauthBaseHandler, authenticate_oauth
+from .oauth2 import OauthBaseHandler, authenticate_oauth2
 import qiita_db as qdb
 
 
@@ -42,7 +42,7 @@ def _get_reference(r_id):
 
 
 class ReferenceHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, reference_id):
         """Retrieves the filepath information of the given reference
 

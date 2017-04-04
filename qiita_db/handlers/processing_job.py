@@ -13,7 +13,7 @@ from tornado.web import HTTPError
 
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
-from .oauth2 import OauthBaseHandler, authenticate_oauth
+from .oauth2 import OauthBaseHandler, authenticate_oauth2
 
 
 def _get_job(job_id):
@@ -71,7 +71,7 @@ def _job_completer(job_id, payload):
 
 
 class JobHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, job_id):
         """Get the job information
 
@@ -103,7 +103,7 @@ class JobHandler(OauthBaseHandler):
 
 
 class HeartbeatHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, job_id):
         """Update the heartbeat timestamp of the job
 
@@ -124,7 +124,7 @@ class HeartbeatHandler(OauthBaseHandler):
 
 
 class ActiveStepHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, job_id):
         """Changes the current exectuion step of the given job
 
@@ -146,7 +146,7 @@ class ActiveStepHandler(OauthBaseHandler):
 
 
 class CompleteHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, job_id):
         """Updates the job to one of the completed statuses: 'success', 'error'
 
@@ -171,7 +171,7 @@ class CompleteHandler(OauthBaseHandler):
 
 
 class ProcessingJobAPItestHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self):
         user = self.get_argument('user', 'test@foo.bar')
         s_name, s_version, cmd_name = loads(self.get_argument('command'))

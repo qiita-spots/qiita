@@ -12,7 +12,7 @@ from os.path import join
 
 from tornado.web import HTTPError
 
-from .oauth2 import OauthBaseHandler, authenticate_oauth
+from .oauth2 import OauthBaseHandler, authenticate_oauth2
 from qiita_core.qiita_settings import qiita_config
 import qiita_db as qdb
 
@@ -50,7 +50,7 @@ def _get_plugin(name, version):
 
 
 class PluginHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, name, version):
         """Retrieve the plugin information
 
@@ -91,7 +91,7 @@ class PluginHandler(OauthBaseHandler):
 
 
 class CommandListHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, name, version):
         with qdb.sql_connection.TRN:
             plugin = _get_plugin(name, version)
@@ -154,7 +154,7 @@ def _get_command(plugin_name, plugin_version, cmd_name):
 
 
 class CommandHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, plugin_name, plugin_version, cmd_name):
         """Retrieve the command information
 
@@ -193,7 +193,7 @@ class CommandHandler(OauthBaseHandler):
 
 
 class CommandActivateHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, plugin_name, plugin_version, cmd_name):
         """Activates the command
 
@@ -214,7 +214,7 @@ class CommandActivateHandler(OauthBaseHandler):
 
 
 class ReloadPluginAPItestHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self):
         """Reloads the plugins"""
         conf_files = glob(join(qiita_config.plugin_dir, "*.conf"))

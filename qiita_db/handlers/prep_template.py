@@ -13,7 +13,7 @@ from tornado.web import HTTPError
 import pandas as pd
 
 import qiita_db as qdb
-from .oauth2 import OauthBaseHandler, authenticate_oauth
+from .oauth2 import OauthBaseHandler, authenticate_oauth2
 
 
 def _get_prep_template(pid):
@@ -48,7 +48,7 @@ def _get_prep_template(pid):
 
 
 class PrepTemplateDBHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, prep_id):
         """Retrieves the prep template information
 
@@ -89,7 +89,7 @@ class PrepTemplateDBHandler(OauthBaseHandler):
 
 
 class PrepTemplateDataHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, prep_id):
         """Retrieves the prep contents
 
@@ -111,7 +111,7 @@ class PrepTemplateDataHandler(OauthBaseHandler):
 
 
 class PrepTemplateAPItestHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self):
         prep_info_dict = loads(self.get_argument('prep_info'))
         study = self.get_argument('study')

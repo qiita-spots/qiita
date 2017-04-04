@@ -11,7 +11,7 @@ from collections import defaultdict
 from json import loads
 
 import qiita_db as qdb
-from .oauth2 import OauthBaseHandler, authenticate_oauth
+from .oauth2 import OauthBaseHandler, authenticate_oauth2
 
 
 def _get_artifact(a_id):
@@ -46,7 +46,7 @@ def _get_artifact(a_id):
 
 
 class ArtifactHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, artifact_id):
         """Retrieves the artifact information
 
@@ -109,7 +109,7 @@ class ArtifactHandler(OauthBaseHandler):
 
         self.write(response)
 
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def patch(self, artifact_id):
         """Patches the artifact information
 
@@ -140,7 +140,7 @@ class ArtifactHandler(OauthBaseHandler):
 
 
 class ArtifactAPItestHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self):
         """Creates a new artifact
 
@@ -180,7 +180,7 @@ class ArtifactAPItestHandler(OauthBaseHandler):
 
 
 class ArtifactTypeHandler(OauthBaseHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self):
         """Creates a new artifact type
 
