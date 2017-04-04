@@ -105,13 +105,17 @@ class authenticate_oauth2:
     If an invalid header is given, a 400 error code is returned and the json
     error message is automatically sent.
 
-    Returns
-    -------
-    Sends oauth2 formatted error JSON if authorizaton fails
-
-    Notes
-    -----
-    Expects handler to be a tornado RequestHandler or subclass
+    Attributes
+    ----------
+    default_public : bool
+        If True, execute the handler if a) the oauth2 token is acceptable or
+        b) if the Authorization header is not present. If False, the handler
+        will only be executed if the oauth2 token is acceptable.
+    inject_user : bool
+        If True, monkey patch the handler's get_current_user method to return
+        the instance of the User associated with the token's client ID. If
+        False, get_current_user is not monkey patched. If default_public is
+        also True, the default User returned is "demo@microbio.me"
 
     References
     ----------
@@ -123,6 +127,7 @@ class authenticate_oauth2:
         self.inject_user = inject_user
 
     def get_user_maker(self, cid):
+        """Produce a function which acts like get_current_user"""
         def f():
             if cid is None:
                 return qdb.user.User("demo@microbio.me")
@@ -131,6 +136,21 @@ class authenticate_oauth2:
         return f
 
     def __call__(self, f):
+        """Handle oauth, and execute the handler's method if appropriate
+
+        Parameters
+        ----------
+        f : function
+            The function decorated is expected to be a member method of a
+            subclass of `Tornado.web.RequestHandler`
+
+        Notes
+        -----
+        If an error with oauth2 occurs, a status code of 400 is set, a message
+        about the error is sent out over `write` and the response is ended
+        with `finish`. This happens without control being passed to the
+        handler, and in this situation, the handler is not executed.
+        """
         @functools.wraps(f)
         def wrapper(handler, *args, **kwargs):
             errtype, errdesc, cid = _check_oauth2_header(handler)
