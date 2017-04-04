@@ -20,10 +20,13 @@ def make_mock_handler():
         def __init__(self):
             self.status = None
             self.body = None
+
         def set_status(self, thing):
             self.status = thing
+
         def write(self, thing):
             self.body = thing
+
         def finish(self):
             pass
 
@@ -39,10 +42,13 @@ def make_mock_decorated_handler(default_public, inject_user):
         def __init__(self):
             self.status = None
             self.body = None
+
         def set_status(self, thing):
             self.status = thing
+
         def write(self, thing):
             self.body = thing
+
         def finish(self):
             pass
 

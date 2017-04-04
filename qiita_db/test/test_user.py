@@ -154,7 +154,7 @@ class UserTest(TestCase):
 
     def test_create_from_client_id_does_not_exist(self):
         with self.assertRaises(qdb.exceptions.QiitaDBUnknownIDError):
-            _ = qdb.user.User.from_client_id('boaty mcboatface')
+            qdb.user.User.from_client_id('boaty mcboatface')
 
     def test_create_user_info(self):
         user = qdb.user.User.create('testcreateuserinfo@test.bar', 'password',
