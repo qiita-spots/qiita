@@ -10,7 +10,8 @@ from json import loads
 
 from moi import r_client
 
-from qiita_db.handlers.oauth2 import _check_oauth2_header
+from qiita_db.user import User
+from qiita_db.handlers.oauth2 import _check_oauth2_header, authenticate_oauth2
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 
 
@@ -25,6 +26,33 @@ def make_mock_handler():
             self.body = thing
         def finish(self):
             pass
+
+    handler = mock_object()
+    handler.request = mock_object()
+    handler.request.headers = {}
+
+    return handler
+
+
+def make_mock_decorated_handler(default_public, inject_user):
+    class mock_object:
+        def __init__(self):
+            self.status = None
+            self.body = None
+        def set_status(self, thing):
+            self.status = thing
+        def write(self, thing):
+            self.body = thing
+        def finish(self):
+            pass
+
+        @authenticate_oauth2(default_public=default_public,
+                             inject_user=inject_user)
+        def get(self, item, item2=None):
+            self.body = {'x': item, 'y': item2}
+
+        def get_current_user(self):
+            return "Default get_current_user method"
 
     handler = mock_object()
     handler.request = mock_object()
@@ -138,6 +166,108 @@ class OAuth2BaseHandlerTests(TestHandlerBase):
         exp = ('invalid_grant', 'Oauth2 error: daily request limit reached',
                None)
         self.assertEqual(_check_oauth2_header(obj), exp)
+
+
+class AuthorizeOauth2DecoratorTests(TestHandlerBase):
+    def setUp(self):
+        # Create client test authentication token
+        self.client_token = 'SOMEAUTHTESTINGTOKENHERE2122'
+        r_client.hset(self.client_token, 'timestamp', '12/12/12 12:12:00')
+        r_client.hset(self.client_token, 'client_id',
+                      '19ndkO3oMKsoChjVVWluF7QkxHRfYhTKSFbAVt8IhK7gZgDaO4')
+        r_client.hset(self.client_token, 'grant_type', 'client')
+        r_client.expire(self.client_token, 5)
+        # Create username test authentication token
+        self.user_token = 'SOMEAUTHTESTINGTOKENHEREUSERNAME'
+        r_client.hset(self.user_token, 'timestamp', '12/12/12 12:12:00')
+        r_client.hset(self.user_token, 'client_id',
+                      'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u')
+        r_client.hset(self.user_token, 'grant_type', 'password')
+        r_client.hset(self.user_token, 'user', 'test@foo.bar')
+        r_client.expire(self.user_token, 5)
+        # Create test access limit token
+        self.user_rate_key = 'testuser_test@foo.bar_daily_limit'
+        r_client.setex(self.user_rate_key, 2, 5)
+        super(AuthorizeOauth2DecoratorTests, self).setUp()
+
+    def test_not_public_no_inject_user(self):
+        obj = make_mock_decorated_handler(False, False)
+        obj.request.headers['Authorization'] = 'Bearer ' + self.user_token
+        obj.get('item1', 'item2')
+        self.assertEqual(obj.body, {'x': 'item1', 'y': 'item2'})
+        self.assertEqual(obj.get_current_user(),
+                         "Default get_current_user method")
+
+    def test_not_public_no_inject_user_bad_token(self):
+        obj = make_mock_decorated_handler(False, False)
+        token = 'Bearer ' + self.user_token + 'asdasd'
+        obj.request.headers['Authorization'] = token
+        obj.get('item1', 'item2')
+        exp = {'error': 'invalid_grant',
+               'error_description': 'Oauth2 error: token has timed out'}
+        self.assertEqual(obj.status, 400)
+        self.assertEqual(obj.body, exp)
+        self.assertEqual(obj.get_current_user(),
+                         "Default get_current_user method")
+
+    def test_not_public_inject_user(self):
+        cid = 'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u'
+        u = User('admin@foo.bar')
+        u.oauth_client_id = cid
+
+        obj = make_mock_decorated_handler(False, True)
+        obj.request.headers['Authorization'] = 'Bearer ' + self.user_token
+        obj.get('item1', 'item2')
+        self.assertEqual(obj.body, {'x': 'item1', 'y': 'item2'})
+        self.assertEqual(obj.get_current_user(), u)
+
+    def test_not_public_inject_user_bad_auth(self):
+        obj = make_mock_decorated_handler(False, True)
+        token = 'Bearer ' + self.user_token + 'asdasd'
+        obj.request.headers['Authorization'] = token
+        obj.get('item1', 'item2')
+        exp = {'error': 'invalid_grant',
+               'error_description': 'Oauth2 error: token has timed out'}
+        self.assertEqual(obj.status, 400)
+        self.assertEqual(obj.body, exp)
+
+        # if we request a user injection, but we have a authentication error
+        # then we should _not_ actually inject the user
+        self.assertEqual(obj.get_current_user(),
+                         "Default get_current_user method")
+
+    def test_public_no_inject_user_notoken(self):
+        obj = make_mock_decorated_handler(True, False)
+        # no header info
+        obj.get('item1', 'item2')
+        self.assertEqual(obj.body, {'x': 'item1', 'y': 'item2'})
+        self.assertEqual(obj.get_current_user(),
+                         "Default get_current_user method")
+
+    def test_public_no_inject_user_token(self):
+        obj = make_mock_decorated_handler(True, False)
+        obj.request.headers['Authorization'] = 'Bearer ' + self.user_token
+        obj.get('item1', 'item2')
+        self.assertEqual(obj.body, {'x': 'item1', 'y': 'item2'})
+        self.assertEqual(obj.get_current_user(),
+                         "Default get_current_user method")
+
+    def test_public_inject_user_token(self):
+        cid = 'yKDgajoKn5xlOA8tpo48Rq8mWJkH9z4LBCx2SvqWYLIryaan2u'
+        u = User('admin@foo.bar')
+        u.oauth_client_id = cid
+
+        obj = make_mock_decorated_handler(True, True)
+        obj.request.headers['Authorization'] = 'Bearer ' + self.user_token
+        obj.get('item1', 'item2')
+        self.assertEqual(obj.body, {'x': 'item1', 'y': 'item2'})
+        self.assertEqual(obj.get_current_user(), u)
+
+    def test_public_inject_user_notoken(self):
+        obj = make_mock_decorated_handler(True, True)
+        obj.get('item1', 'item2')
+        self.assertEqual(obj.body, {'x': 'item1', 'y': 'item2'})
+        self.assertEqual(obj.get_current_user(), User('demo@microbio.me'))
 
 
 class OAuth2HandlerTests(TestHandlerBase):

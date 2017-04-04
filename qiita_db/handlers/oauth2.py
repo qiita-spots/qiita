@@ -98,7 +98,7 @@ def _check_oauth2_header(handler):
     return (None, None, db_token['client_id'])
 
 
-def authenticate_oauth(f):
+class authenticate_oauth2:
     """Decorate methods to require valid Oauth2 Authorization header[1]
 
     If a valid header is given, the handoff is done and the page is rendered.
@@ -118,44 +118,50 @@ def authenticate_oauth(f):
     [1] The OAuth 2.0 Authorization Framework.
     http://tools.ietf.org/html/rfc6749
     """
-    @functools.wraps(f)
-    def wrapper(handler, *args, **kwargs):
-        errtype, errdesc, _ = _check_oauth2_header(handler)
-        if errtype is None:
-            return f(handler, *args, **kwargs)
-        else:
-            _oauth_error(handler, errdesc, errtype)
+    def __init__(self, default_public=False, inject_user=False):
+        self.default_public = default_public
+        self.inject_user = inject_user
 
-    return wrapper
-
-
-def authenticate_oauth_default_to_public_token(f):
-    """Authenticate oauth2 if possible, defaulting to public access
-
-    WARNING: this decorator will *ACCEPT AUTHENTICATION FAILURES* and
-    associate them to a public API access token.
-    """
-    def get_user_maker(cid):
+    def get_user_maker(self, cid):
         def f():
-            return qdb.user.User.from_client_id(cid)
-        return get_user_maker()
+            if cid is None:
+                return qdb.user.User("demo@microbio.me")
+            else:
+                return qdb.user.User.from_client_id(cid)
+        return f
 
-    @functools.wraps(f)
-    def wrapper(handler, *args, **kwargs):
-        errtype, _, cid = _check_oauth2_header(handler)
-        if errtype is None:
-            user_f = get_user_maker(cid)
-        else:
-            # TODO: define a public client ID
-            user_f = get_user_maker("I DONT KNOW WHAT THIS SHOULD BE")
+    def __call__(self, f):
+        @functools.wraps(f)
+        def wrapper(handler, *args, **kwargs):
+            errtype, errdesc, cid = _check_oauth2_header(handler)
 
-        handler.get_current_user = user_f
-        result =  f(handler, *args, **kwargs)
+            if self.default_public:
+                # no error, or no authorization header. We should error if
+                # oauth is actually attempted but there was an auth issue
+                # (e.g., rate limit hit)
+                if errtype not in (None, 'invalid_request'):
+                    _oauth_error(handler, errdesc, errtype)
+                    return
 
-        # TODO: should the monkey patched method be removed?
-        return result
+                if self.inject_user:
+                    handler.get_current_user = self.get_user_maker(cid)
+            else:
+                if errtype is not None:
+                    _oauth_error(handler, errdesc, errtype)
+                    return
+                if self.inject_user:
+                    if cid is None:
+                        raise ValueError("cid is None, without an oauth "
+                                         "error. This should never happen.")
+                    else:
+                        handler.get_current_user = self.get_user_maker(cid)
 
-    return wrapper
+            return f(handler, *args, **kwargs)
+
+        return wrapper
+
+
+authenticate_oauth = authenticate_oauth2(False, False)
 
 
 class OauthBaseHandler(RequestHandler):
