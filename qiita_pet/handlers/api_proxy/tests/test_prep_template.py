@@ -332,7 +332,7 @@ class TestPrepAPI(TestCase):
         obs = prep_template_graph_get_req(1, 'demo@microbio.me')
         self.assertEqual(obs['message'], '')
         self.assertEqual(obs['status'], 'success')
-        self.assertEqual(8, len(obs['node_labels']))
+        self.assertEqual(11, len(obs['node_labels']))
         self.assertIn(('artifact', 1, 'Raw data 1 - FASTQ'),
                       obs['node_labels'])
         self.assertIn(('artifact', 2, 'Demultiplexed 1 - Demultiplexed'),
