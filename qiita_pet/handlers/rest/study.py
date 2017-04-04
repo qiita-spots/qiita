@@ -9,7 +9,7 @@ import warnings
 
 from tornado.escape import json_decode
 
-from qiita_db.handlers.oauth2 import authenticate_oauth
+from qiita_db.handlers.oauth2 import authenticate_oauth2
 from qiita_db.study import StudyPerson, Study
 from qiita_db.user import User
 from .rest_handler import RESTHandler
@@ -18,7 +18,7 @@ from qiita_db.metadata_template.constants import SAMPLE_TEMPLATE_COLUMNS
 
 class StudyHandler(RESTHandler):
 
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, study_id):
         study = self.safe_get_study(study_id)
         if study is None:
@@ -44,7 +44,7 @@ class StudyHandler(RESTHandler):
 
 class StudyCreatorHandler(RESTHandler):
 
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self):
         try:
             payload = json_decode(self.request.body)
@@ -114,7 +114,7 @@ class StudyCreatorHandler(RESTHandler):
 
 
 class StudyStatusHandler(RESTHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, study_id):
         study = self.safe_get_study(study_id)
         if study is None:

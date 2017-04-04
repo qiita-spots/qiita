@@ -16,7 +16,7 @@ from qiita_db.artifact import Artifact
 from qiita_pet.handlers.util import to_int
 from qiita_db.exceptions import QiitaDBUnknownIDError, QiitaError
 from qiita_db.metadata_template.prep_template import PrepTemplate
-from qiita_db.handlers.oauth2 import authenticate_oauth
+from qiita_db.handlers.oauth2 import authenticate_oauth2
 from .rest_handler import RESTHandler
 
 
@@ -24,8 +24,7 @@ class StudyPrepCreatorHandler(RESTHandler):
     # TODO: do something smart about warnings, perhaps this should go in its
     # own endpoint i.e. /api/v1/study/<int>/preparation/validate
     # See also: https://github.com/biocore/qiita/issues/2096
-
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, study_id, *args, **kwargs):
         data_type = self.get_argument('data_type')
         investigation_type = self.get_argument('investigation_type', None)
@@ -51,7 +50,7 @@ class StudyPrepCreatorHandler(RESTHandler):
 
 class StudyPrepArtifactCreatorHandler(RESTHandler):
 
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, study_id, prep_id):
         study = self.safe_get_study(study_id)
         if study is None:

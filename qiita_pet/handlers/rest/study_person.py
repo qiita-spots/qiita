@@ -6,14 +6,14 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from qiita_db.handlers.oauth2 import authenticate_oauth
+from qiita_db.handlers.oauth2 import authenticate_oauth2
 from qiita_db.study import StudyPerson
 from qiita_db.exceptions import QiitaDBLookupError
 from .rest_handler import RESTHandler
 
 
 class StudyPersonHandler(RESTHandler):
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def get(self, *args, **kwargs):
         name = self.get_argument('name')
         affiliation = self.get_argument('affiliation')
@@ -28,7 +28,7 @@ class StudyPersonHandler(RESTHandler):
                     'id': p.id})
         self.finish()
 
-    @authenticate_oauth
+    @authenticate_oauth2(default_public=False, inject_user=False)
     def post(self, *args, **kwargs):
         name = self.get_argument('name')
         affiliation = self.get_argument('affiliation')
