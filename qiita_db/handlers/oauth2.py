@@ -161,9 +161,6 @@ class authenticate_oauth2:
         return wrapper
 
 
-authenticate_oauth = authenticate_oauth2(False, False)
-
-
 class OauthBaseHandler(RequestHandler):
     def write_error(self, status_code, **kwargs):
         """Overriding the default write error in tornado RequestHandler
