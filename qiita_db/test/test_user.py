@@ -71,7 +71,8 @@ class UserTest(TestCase):
             'phone': '111-222-3344',
             'pass_reset_code': None,
             'pass_reset_timestamp': None,
-            'user_verify_code': None
+            'user_verify_code': None,
+            'client_id': None
         }
 
     def tearDown(self):
@@ -121,6 +122,7 @@ class UserTest(TestCase):
             'user_verify_code': '',
             'address': None,
             'user_level_id': 5,
+            'client_id': None,
             'email': 'testcreateuser@test.bar'}
         self._check_correct_info(obs, exp)
 
@@ -176,6 +178,7 @@ class UserTest(TestCase):
             'pass_reset_code': None,
             'user_verify_code': '',
             'user_level_id': 5,
+            'client_id': None,
             'email': 'testcreateuserinfo@test.bar'}
         self._check_correct_info(obs, exp)
 
@@ -242,7 +245,8 @@ class UserTest(TestCase):
             'pass_reset_code': None,
             'pass_reset_timestamp': None,
             'user_verify_code': None,
-            'phone': '222-444-6789'
+            'phone': '222-444-6789',
+            'client_id': None
         }
         self.assertEqual(self.user.info, expinfo)
 
