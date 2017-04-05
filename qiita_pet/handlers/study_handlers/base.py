@@ -62,6 +62,7 @@ class StudyBaseInfoAJAX(BaseHandler):
 
 
 class StudyDeleteAjax(BaseHandler):
+    @authenticated
     def post(self):
         study_id = self.get_argument('study_id')
         self.write(study_delete_req(int(study_id), self.current_user.id))
