@@ -250,6 +250,18 @@ class AuthorizeOauth2DecoratorTests(TestHandlerBase):
         self.assertEqual(obj.get_current_user(),
                          "Default get_current_user method")
 
+    def test_public_no_inject_user_badtoken(self):
+        obj = make_mock_decorated_handler(True, False)
+        token = 'Bearer ' + self.user_token + 'asdasd'
+        obj.request.headers['Authorization'] = token
+        obj.get('item1', 'item2')
+        exp = {'error': 'invalid_grant',
+               'error_description': 'Oauth2 error: token has timed out'}
+        self.assertEqual(obj.status, 400)
+        self.assertEqual(obj.body, exp)
+        self.assertEqual(obj.get_current_user(),
+                         "Default get_current_user method")
+
     def test_public_no_inject_user_token(self):
         obj = make_mock_decorated_handler(True, False)
         obj.request.headers['Authorization'] = 'Bearer ' + self.user_token
