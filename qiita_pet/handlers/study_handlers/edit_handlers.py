@@ -166,7 +166,7 @@ class StudyEditHandler(BaseHandler):
             raise HTTPError(404, "Study %s does not exist" % study_id)
 
         # We need to check if the user has access to the study
-        check_access(self.current_user, study)
+        check_access(self.current_user, study, raise_error=True)
         return study
 
     def _get_study_person_id(self, index, new_people_info):
