@@ -12,6 +12,7 @@ from qiita_db.meta_util import validate_filepath_access_by_user
 from qiita_core.util import execute_as_transaction, get_release_info
 from qiita_core.configuration_manager import ConfigurationManager
 
+
 class DownloadHandler(BaseHandler):
     @authenticated
     @execute_as_transaction
