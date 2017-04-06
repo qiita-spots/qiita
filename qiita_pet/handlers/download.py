@@ -130,7 +130,7 @@ class DownloadRelease(BaseHandler):
     def get(self, extras):
         qiita_config = ConfigurationManager()
         working_dir = qiita_config.working_dir
-        _, relpath, _ = get_release_info('private')
+        _, relpath, _ = get_release_info()
         fullpath = join(working_dir, relpath)
 
         # If we don't have nginx, write a file that indicates this

@@ -9,9 +9,9 @@
 # -----------------------------------------------------------------------------
 
 from qiita_db.util import (
-    purge_filepaths, empty_trash_upload_folder,
-    generate_biom_and_metadata_release)
-from qiita_db.meta_util import update_redis_stats
+    purge_filepaths, empty_trash_upload_folder)
+from qiita_db.meta_util import (
+    update_redis_stats, generate_biom_and_metadata_release)
 
 
 # This script will perform these jobs:

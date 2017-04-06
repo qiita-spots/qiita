@@ -345,7 +345,7 @@ def generate_biom_and_metadata_release(study_status='public'):
     ----------
     study_status : str, optional
         The study status to search for. Note that this should always be set
-        to 'public' but having this exposed as helps with testing. The other
+        to 'public' but having this exposed helps with testing. The other
         options are 'private' and 'sandbox'
     """
     studies = qdb.study.Study.get_by_status(study_status)
@@ -424,7 +424,7 @@ def generate_biom_and_metadata_release(study_status='public'):
     rename(tgz_name, tgz_name_final)
 
     vals = [
-        ('filepath', tgz_name_final[len(working_dir) + 1:], r_client.set),
+        ('filepath', tgz_name_final[len(working_dir):], r_client.set),
         ('md5sum', md5sum.hexdigest(), r_client.set),
         ('time', time, r_client.set)]
     for k, v, f in vals:

@@ -147,11 +147,11 @@ def get_qiita_version():
 def get_release_info(study_status='public'):
     """Returns the study status release MD5
 
-    level
+    Parameters
     ----------
     study_status : str, optional
         The study status to search for. Note that this should always be set
-        to 'public' but having this exposed as helps with testing. The other
+        to 'public' but having this exposed helps with testing. The other
         options are 'private' and 'sandbox'
 
     Returns
