@@ -1,12 +1,13 @@
 {% from moi import r_client %}
 {% from qiita_core.qiita_settings import qiita_config %}
-{% from qiita_core.util import get_qiita_version %}
+{% from qiita_core.util import get_qiita_version, get_release_info %}
 {% from qiita_pet import allowed_min_browser_versions %}
 {% from qiita_pet.portal import portal_styling %}
 {% set maintenance = r_client.get('maintenance') %}
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
 {% set qiita_version, qiita_sha = get_qiita_version() %}
+{% set public_md5, _, public_timestamp = get_release_info() %}
 
 {% set level = globals().get('level', '') %}
 {% if level not in {'danger', 'success', 'info', 'warning'} %}
@@ -508,6 +509,23 @@
             <ul class="nav navbar-nav">
               <li>
                 <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <!-- downloads -->
+              <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Downloads<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="{% raw qiita_config.portal_dir %}/release/download/public">
+                      Public processed data
+                      <small>
+                        <br/><b>MD5:</b> {{public_md5}}
+                        <br/><b>Last update:</b>{{public_timestamp}}
+                      </small>
+                    </a>
+                  </li>
+                </ul>
               </li>
             </ul>
           </div> <!--/.navbar-collapse -->

@@ -9,8 +9,8 @@ from qiita_pet.handlers.api_proxy import study_get_req
 from qiita_db.study import Study
 from qiita_db.util import filepath_id_to_rel_path, get_db_files_base_dir
 from qiita_db.meta_util import validate_filepath_access_by_user
-from qiita_core.util import execute_as_transaction
-
+from qiita_core.util import execute_as_transaction, get_release_info
+from qiita_core.configuration_manager import ConfigurationManager
 
 class DownloadHandler(BaseHandler):
     @authenticated
@@ -122,4 +122,28 @@ class DownloadStudyBIOMSHandler(BaseHandler):
         self.set_header('X-Archive-Files', 'zip')
         self.set_header('Content-Disposition',
                         'attachment; filename=%s' % zip_fn)
+        self.finish()
+
+
+class DownloadRelease(BaseHandler):
+    def get(self, extras):
+        qiita_config = ConfigurationManager()
+        working_dir = qiita_config.working_dir
+        _, relpath, _ = get_release_info('private')
+        fullpath = join(working_dir, relpath)
+
+        # If we don't have nginx, write a file that indicates this
+        self.write("This installation of Qiita was not equipped with nginx, "
+                   "so it is incapable of serving files. The file you "
+                   "attempted to download is located at %s" % fullpath)
+
+        self.set_header('Content-Description', 'File Transfer')
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Transfer-Encoding', 'binary')
+        self.set_header('Expires',  '0')
+        self.set_header('Cache-Control',  'no-cache')
+        self.set_header('X-Accel-Redirect', '/protected/' + fullpath)
+        self.set_header('Content-Disposition',
+                        'attachment; filename=%s' % basename(fullpath))
+
         self.finish()

@@ -11,6 +11,7 @@ from functools import wraps
 from os.path import dirname
 from git import Repo
 from git.exc import InvalidGitRepositoryError
+from moi import r_client
 
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet import __version__ as qiita_pet_lib_version
@@ -141,3 +142,32 @@ def get_qiita_version():
         sha = ''
 
     return (qiita_pet_lib_version, sha)
+
+
+def get_release_info(study_status='public'):
+    """Returns the study status release MD5
+
+    level
+    ----------
+    study_status : str, optional
+        The study status to search for. Note that this should always be set
+        to 'public' but having this exposed as helps with testing. The other
+        options are 'private' and 'sandbox'
+
+    Returns
+    ------
+    str, str, str
+        The release MD5, filepath and timestamp
+    """
+    portal = qiita_config.portal
+    md5sum = r_client.get('%s:release:%s:md5sum' % (portal, study_status))
+    filepath = r_client.get('%s:release:%s:filepath' % (portal, study_status))
+    timestamp = r_client.get('%s:release:%s:time' % (portal, study_status))
+    if md5sum is None:
+        md5sum = ''
+    if filepath is None:
+        filepath = ''
+    if timestamp is None:
+        timestamp = ''
+
+    return md5sum, filepath, timestamp

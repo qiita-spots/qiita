@@ -39,7 +39,7 @@ from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.stats import StatsHandler
 from qiita_pet.handlers.download import (
-    DownloadHandler, DownloadStudyBIOMSHandler)
+    DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease)
 from qiita_pet.handlers.prep_template import PrepTemplateHandler
 from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (
@@ -149,6 +149,7 @@ class Application(tornado.web.Application):
             (r"/stats/", StatsHandler),
             (r"/download/(.*)", DownloadHandler),
             (r"/download_study_bioms/(.*)", DownloadStudyBIOMSHandler),
+            (r"/release/download/(.*)", DownloadRelease),
             (r"/vamps/(.*)", VAMPSHandler),
             # Plugin handlers - the order matters here so do not change
             # qiita_db/jobs/(.*) should go after any of the

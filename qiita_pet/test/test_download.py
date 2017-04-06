@@ -138,5 +138,23 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         self.assertRegexpMatches(response.body, exp)
 
 
+class TestDownloadRelease(TestHandlerBase):
+
+    def setUp(self):
+        super(TestDownloadRelease, self).setUp()
+
+    def tearDown(self):
+        super(TestDownloadRelease, self).tearDown()
+
+    def test_download(self):
+        # check success
+        response = self.get('/release/download/1')
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.body, (
+            "This installation of Qiita was not equipped with nginx, so it "
+            "is incapable of serving files. The file you attempted to "
+            "download is located at raw_data/1_s_G1_L001_sequences.fastq.gz"))
+
+
 if __name__ == '__main__':
     main()

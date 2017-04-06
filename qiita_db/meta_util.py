@@ -25,7 +25,8 @@ Methods
 from __future__ import division
 
 from moi import r_client
-from os import stat
+from os import stat, makedirs, rename
+from os.path import join, relpath, exists
 from time import strftime, localtime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -34,8 +35,11 @@ from urllib import quote
 from StringIO import StringIO
 from future.utils import viewitems
 from datetime import datetime
+from tarfile import open as topen, TarInfo
+from hashlib import md5
 
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
 
 
@@ -332,3 +336,99 @@ def get_lat_longs():
         qdb.sql_connection.TRN.add(sql)
 
         return qdb.sql_connection.TRN.execute_fetchindex()
+
+
+def generate_biom_and_metadata_release(study_status='public'):
+    """Generate a list of biom/meatadata filepaths and a tgz of those files
+
+    Parameters
+    ----------
+    study_status : str, optional
+        The study status to search for. Note that this should always be set
+        to 'public' but having this exposed as helps with testing. The other
+        options are 'private' and 'sandbox'
+    """
+    studies = qdb.study.Study.get_by_status(study_status)
+    qiita_config = ConfigurationManager()
+    working_dir = qiita_config.working_dir
+    portal = qiita_config.portal
+    bdir = qdb.util.get_db_files_base_dir()
+    time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
+
+    data = []
+    for s in studies:
+        # [0] latest is first, [1] only getting the filepath
+        sample_fp = relpath(s.sample_template.get_filepaths()[0][1], bdir)
+
+        for a in s.artifacts(artifact_type='BIOM'):
+            if a.processing_parameters is None:
+                continue
+
+            cmd_name = a.processing_parameters.command.name
+
+            # this loop is necessary as in theory an artifact can be
+            # generated from multiple prep info files
+            human_cmd = []
+            for p in a.parents:
+                pp = p.processing_parameters
+                pp_cmd_name = pp.command.name
+                if pp_cmd_name == 'Trimming':
+                    human_cmd.append('%s @ %s' % (
+                        cmd_name, str(pp.values['length'])))
+                else:
+                    human_cmd.append('%s, %s' % (cmd_name, pp_cmd_name))
+            human_cmd = ', '.join(human_cmd)
+
+            for _, fp, fp_type in a.filepaths:
+                if fp_type != 'biom' or 'only-16s' in fp:
+                    continue
+                fp = relpath(fp, bdir)
+                # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
+                #          human readable name)
+                for pt in a.prep_templates:
+                    for _, prep_fp in pt.get_filepaths():
+                        if 'qiime' not in prep_fp:
+                            break
+                    prep_fp = relpath(prep_fp, bdir)
+                    data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
+
+    # writing text and tgz file
+    ts = datetime.now().strftime('%m%d%y-%H%M%S')
+    tgz_dir = join(working_dir, 'releases')
+    if not exists(tgz_dir):
+        makedirs(tgz_dir)
+    tgz_name = join(tgz_dir, '%s-%s-building.tgz' % (portal, study_status))
+    tgz_name_final = join(tgz_dir, '%s-%s.tgz' % (portal, study_status))
+    txt_hd = StringIO()
+    with topen(tgz_name, "w|gz") as tgz:
+        # writing header for txt
+        txt_hd.write(
+            "biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n")
+        for biom_fp, sample_fp, prep_fp, artifact_id, human_cmd in data:
+            txt_hd.write("%s\t%s\t%s\t%s\t%s\n" % (
+                biom_fp, sample_fp, prep_fp, artifact_id, human_cmd))
+            tgz.add(join(bdir, biom_fp), arcname=biom_fp, recursive=False)
+            tgz.add(join(bdir, sample_fp), arcname=sample_fp, recursive=False)
+            tgz.add(join(bdir, prep_fp), arcname=prep_fp, recursive=False)
+
+        txt_hd.seek(0)
+        info = TarInfo(name='%s-%s-%s.txt' % (portal, study_status, ts))
+        info.size = len(txt_hd.buf)
+        tgz.addfile(tarinfo=info, fileobj=txt_hd)
+
+    with open(tgz_name, "rb") as f:
+        md5sum = md5()
+        for c in iter(lambda: f.read(4096), b""):
+            md5sum.update(c)
+
+    rename(tgz_name, tgz_name_final)
+
+    vals = [
+        ('filepath', tgz_name_final[len(working_dir) + 1:], r_client.set),
+        ('md5sum', md5sum.hexdigest(), r_client.set),
+        ('time', time, r_client.set)]
+    for k, v, f in vals:
+        redis_key = '%s:release:%s:%s' % (portal, study_status, k)
+        # important to "flush" variables to avoid errors
+        r_client.delete(redis_key)
+        f(redis_key, v)
