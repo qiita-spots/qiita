@@ -77,8 +77,6 @@ class TestDownloadStudyBIOMSHandler(TestHandlerBase):
         with open(tgz, 'w') as f:
             f.write('\n')
 
-        self._clean_up_files.append(tmp_dir)
-
         files_biom = [(biom_fp, 'biom'), (smr_dir, 'directory'), (tgz, 'tgz')]
 
         params = Parameters.from_default_params(
@@ -154,6 +152,46 @@ class TestDownloadRelease(TestHandlerBase):
             "This installation of Qiita was not equipped with nginx, so it is "
             "incapable of serving files. The file you attempted to download "
             "is located at", response.body)
+
+
+class TestDownloadRawData(TestHandlerBase):
+
+    def setUp(self):
+        super(TestDownloadRawData, self).setUp()
+        self._clean_up_files = []
+
+    def tearDown(self):
+        super(TestDownloadRawData, self).tearDown()
+        for fp in self._clean_up_files:
+            if exists(fp):
+                if isdir(fp):
+                    rmtree(fp)
+                else:
+                    remove(fp)
+
+    def test_download_raw_data(self):
+        response = self.get('/download_raw_data/1')
+        self.assertEqual(response.code, 200)
+
+        exp = (
+            '- 0 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
+            'raw_data/1_s_G1_L001_sequences.fastq.gz\n'
+            '- 0 /protected/raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz '
+            'raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
+            '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/1_mapping_file.txt\n'
+            '- 36615 /protected/templates/1_prep_2_qiime_[0-9]*-[0-9]*.txt '
+            'mapping_files/7_mapping_file.txt\n')
+        self.assertRegexpMatches(response.body, exp)
+
+        response = self.get('/download_study_bioms/200')
+        self.assertEqual(response.code, 405)
+
+        # changing user so we can test the failures
+        BaseHandler.get_current_user = Mock(
+            return_value=User("demo@microbio.me"))
+        response = self.get('/download_study_bioms/1')
+        self.assertEqual(response.code, 405)
 
 
 if __name__ == '__main__':
