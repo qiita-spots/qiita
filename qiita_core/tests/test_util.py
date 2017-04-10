@@ -65,6 +65,8 @@ class UtilTests(TestCase):
         self.assertEqual(exp_version, qdb.__version__)
 
     def test_get_release_info(self):
+        # making sure there is a release
+        get_qiita_version()
         # just checking that is not empty cause the MD5 will change on every
         # run
         md5sum, filepath, timestamp = get_release_info('private')
