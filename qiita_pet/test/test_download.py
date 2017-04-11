@@ -178,7 +178,7 @@ class TestDownloadRawData(TestHandlerBase):
         for fp in all_files:
             if not exists(fp):
                 with open(fp, 'w') as f:
-                    f.write('test`')
+                    f.write('')
         response = self.get('/download_raw_data/1')
         self.assertEqual(response.code, 200)
 
