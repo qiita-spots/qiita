@@ -57,21 +57,13 @@ class DownloadStudyBIOMSHandler(BaseHandler):
                                                  str(study_id)))
 
         study = Study(study_id)
-        user = self.current_user
         basedir = get_db_files_base_dir()
         basedir_len = len(basedir) + 1
         # loop over artifacts and retrieve those that we have access to
         to_download = []
-        vfabu = validate_filepath_access_by_user
         for a in study.artifacts():
             if a.artifact_type == 'BIOM':
-                to_add = True
                 for i, (fid, path, data_type) in enumerate(a.filepaths):
-                    # validate access only of the first artifact filepath,
-                    # the rest have the same permissions
-                    if (i == 0 and not vfabu(user, fid)):
-                        to_add = False
-                        break
                     # ignore if tgz as they could create problems and the
                     # raw data is in the folder
                     if data_type == 'tgz':
@@ -97,16 +89,15 @@ class DownloadStudyBIOMSHandler(BaseHandler):
                         # how to trigger it
                         to_download.append((path, path, path))
 
-                if to_add:
-                    for pt in a.prep_templates:
-                        qmf = pt.qiime_map_fp
-                        if qmf is not None:
-                            sqmf = qmf
-                            if qmf.startswith(basedir):
-                                sqmf = qmf[basedir_len:]
-                            to_download.append(
-                                (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
-                                            % a.id))
+                for pt in a.prep_templates:
+                    qmf = pt.qiime_map_fp
+                    if qmf is not None:
+                        sqmf = qmf
+                        if qmf.startswith(basedir):
+                            sqmf = qmf[basedir_len:]
+                        to_download.append(
+                            (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
+                                        % a.id))
 
         # If we don't have nginx, write a file that indicates this
         all_files = '\n'.join(["- %s /protected/%s %s" % (getsize(fp), sfp, n)
@@ -172,16 +163,9 @@ class DownloadRawData(BaseHandler):
         basedir_len = len(basedir) + 1
         # loop over artifacts and retrieve raw data (no parents)
         to_download = []
-        vfabu = validate_filepath_access_by_user
         for a in study.artifacts():
             if not a.parents:
-                to_add = True
                 for i, (fid, path, data_type) in enumerate(a.filepaths):
-                    # validate access only of the first artifact filepath,
-                    # the rest have the same permissions
-                    if (i == 0 and not vfabu(user, fid)):
-                        to_add = False
-                        break
                     if data_type == 'directory':
                         # If we have a directory, we actually need to list
                         # all the files from the directory so NGINX can
@@ -203,16 +187,15 @@ class DownloadRawData(BaseHandler):
                         # how to trigger it
                         to_download.append((path, path, path))
 
-                if to_add:
-                    for pt in a.prep_templates:
-                        qmf = pt.qiime_map_fp
-                        if qmf is not None:
-                            sqmf = qmf
-                            if qmf.startswith(basedir):
-                                sqmf = qmf[basedir_len:]
-                            to_download.append(
-                                (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
-                                            % a.id))
+                for pt in a.prep_templates:
+                    qmf = pt.qiime_map_fp
+                    if qmf is not None:
+                        sqmf = qmf
+                        if qmf.startswith(basedir):
+                            sqmf = qmf[basedir_len:]
+                        to_download.append(
+                            (qmf, sqmf, 'mapping_files/%s_mapping_file.txt'
+                                        % a.id))
 
         # If we don't have nginx, write a file that indicates this
         # Note that this configuration will automatically create and download

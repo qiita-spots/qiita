@@ -19,6 +19,7 @@ from biom import example_table as et
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.user import User
+from qiita_db.study import Study
 from qiita_db.artifact import Artifact
 from qiita_db.software import Parameters, Command
 
@@ -170,6 +171,14 @@ class TestDownloadRawData(TestHandlerBase):
                     remove(fp)
 
     def test_download_raw_data(self):
+        # it's possible that one of the tests is deleting the raw data
+        # so we will make sure that the files exists so this test passes
+        all_files = [fp for a in Study(1).artifacts()
+                     for _, fp, _ in a.filepaths]
+        for fp in all_files:
+            if not exists(fp):
+                with open(fp, 'w') as f:
+                    f.write('test`')
         response = self.get('/download_raw_data/1')
         self.assertEqual(response.code, 200)
 
