@@ -130,6 +130,8 @@ class DownloadRelease(BaseHandler):
         _, relpath, _ = get_release_info()
 
         # If we don't have nginx, write a file that indicates this
+        # Note that this configuration will automatically create and download
+        # ("on the fly") the zip file via the contents in all_files
         self.write("This installation of Qiita was not equipped with nginx, "
                    "so it is incapable of serving files. The file you "
                    "attempted to download is located at %s" % relpath)
@@ -213,6 +215,8 @@ class DownloadRawData(BaseHandler):
                                             % a.id))
 
         # If we don't have nginx, write a file that indicates this
+        # Note that this configuration will automatically create and download
+        # ("on the fly") the zip file via the contents in all_files
         all_files = '\n'.join(["- %s /protected/%s %s" % (getsize(fp), sfp, n)
                                for fp, sfp, n in to_download])
         self.write("%s\n" % all_files)

@@ -94,9 +94,9 @@ class TestStudyAPI(TestCase):
                 'number_samples_collected': 27,
                 'owner': 'test@foo.bar',
                 'ebi_submission_status': 'submitted',
+                'has_access_to_raw_data': True,
                 'ebi_study_accession': 'EBI123456-BB'},
             'editable': True}
-
         self.assertEqual(obs, exp)
 
         # Test with no lab person
