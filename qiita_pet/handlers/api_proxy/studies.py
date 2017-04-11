@@ -100,6 +100,10 @@ def study_get_req(study_id, user_id):
     samples = study.sample_template
     study_info['num_samples'] = 0 if samples is None else len(list(samples))
     study_info['owner'] = study.owner.id
+    # Study.has_access no_public=True, will return True only if the user_id is
+    # the owner of the study or if the study is shared with the user_id
+    study_info['has_access_to_raw_data'] = study.has_access(
+        User(user_id), True)
 
     return {'status': 'success',
             'message': '',
