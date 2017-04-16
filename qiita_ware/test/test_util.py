@@ -46,7 +46,10 @@ class UtilTests(TestCase):
                       ('c_2', 'AATTGGCC-c2'),
                       ('c_1', 'AATTGGCC-c1')])
         obs = per_sample_sequences(mock_sequence_iter(sequences), max_seqs)
-        self.assertEqual(sorted(obs), exp)
+        print 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+        print 'THIS TEST WAS RUN'
+        print 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+        self.assertEqual(sorted(obs), None)
 
     def test_per_sample_sequences_min_seqs(self):
         max_seqs = 10
