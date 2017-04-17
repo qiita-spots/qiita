@@ -30,3 +30,4 @@ following documents:
    faq.rst
    resources.rst
    processing-recommendations.rst
+   deblur_quality.rst
