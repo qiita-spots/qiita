@@ -2,13 +2,15 @@
 
 .. index:: deblur-quality
 
+========================
 Deblur quality filtering
 ========================
 
 In the `Deblur Manuscript <http://msystems.asm.org/content/2/2/e00191-16>`__, many of the analyses performed quality filtered the sequence data based on the PHRED scores prior to the application of Deblur. The decision at the time was a motivation to reduce potential noise in the Deblur process, however an evaluation of whether the quality filtering actually mattered had not been performed. Herein, we explore the effect of quality filtering on Deblur as well as closed and open reference OTU picking using Mantel tests assessing the correlation between quality filtering levels. Based on our results, we do not see a practical reason to quality filter beyond the minimal recommendations made in `Bokulich et al. 2013 <https://www.ncbi.nlm.nih.gov/pubmed/23202435>`__.
 
+-------
 Methods
-=======
+-------
 
 Preprocessed Illumina (MiSeq and HiSeq) artifacts targeting the 16S rRNA V4 region were selected from the public data in Qiita. The artifacts were choosen to span environments and with a bias toward longer read length to allow for the exploration of read trim lengths. The specific artifacts, studies and brief summaries of their environments used are summarized below:
 
@@ -68,8 +70,9 @@ A high level characterization was performed by rarefying the tables to 1000 sequ
 
 For the rarefaction assessment, the picked data were rarefied to 1000 sequences per sample 10 times. Unweighted and weighted UniFrac were computed for each replicate using q2-state-unifrac. For a given artifact, OTU type, trim length and quality threshold, pairwise Mantel tests were performed between replicates. In addition, for a given artifact OTU type, and trim length, pairwise Mantel tests were performed between the quality replicates (e.g., all q4 vs all q20). 
 
+-------
 Results
-=======
+-------
 
 We first set out to test whether higher quality filtering led to improved correlation between quality filtering levels. Our hypothesis being that a filtering level of N would have a higher correlation to a filtering level of N-1 then to the N-16 level. In order to assess this, we plotted the resulting Pearson r^2 values from Mantel tests between q4 vs. q20, against the Pearson r^2 values from Mantel tests between q19 vs. q20. As can be see with the unweighted UniFrac results in figure 1, the impact of quality filtering does not appear to improve correlation with more stringent filtering irrespective of the OTU methods tested. Paradoxically, there are a few examples where it appears that q4 has a higher correlation to q20 than q19. The effect is similar with weighted UniFrac (figure 2) in that studies which correlate poorly between q4 and q20 tend to correlate poorly between q19 and q20, however q2-Deblur tends to surprisingly have higher correlation between q4 and q20 in contrast to open reference. Closed reference OTU picking appears robust with weighted UniFrac. 
 
@@ -97,8 +100,8 @@ Finally, we examined the stability of the results by computing multiple rarefact
 
 **Figure 4.** Within and between rarefaction assessment of Mantel correlations at a trim of 99nt. For a given artifact, at a given quality filtering level, 10 rarefactions were computed. Within a quality filtering level, all pairwise Mantel tests were performed. Between quality levels, all pairwise Mantel tests of the rarefactions between levels were computed. The results suggest that more aggressive quality filtering does not have an appreciable impact on the overall relationships between samples.
 
-
+----------
 Discussion
-==========
+----------
 
 The application of quality filtering on a sequencing run does not appear to share a monotonic relationship with Mantel test correlations. This result is surprising. Run quality should improve as more low quality sequences are removed. Instead, these data suggest that more aggressive quality filtering (in the case of 16S V4 data) only results in throwing away sequence data. This observation appears to hold across environments, sequencing instruments and OTU assessment methods. 
