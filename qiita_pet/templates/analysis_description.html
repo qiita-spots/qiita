@@ -34,11 +34,12 @@
   function populateContentArtifact(artifactId) {
     // Put the loading gif in the div
     show_loading('{% raw qiita_config.portal_dir %}', 'analysis-results');
-    $.get('{% raw qiita_config.portal_dir %}/study/description/artifact_summary/', {'artifact_id': artifactId}, function(data){
+    $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifactId + '/summary/', function(data){
       $("#analysis-results").html(data);
     })
       .fail(function(object, status, error_msg) {
-        $("#analysis-results").html("Error loading artifact information: " + status + " " + error_msg);
+        // $("#analysis-results").html(object.responseText);
+        $("#analysis-results").html("Error loading artifact information: " + status + " " + object.statusText);
       }
     );
   };
@@ -84,7 +85,7 @@
       props: ['nodes', 'edges']
     });
 
-    new Vue({
+    var vueGraph = new Vue({
       el: "#analysis-graph-vue",
       data: {
         nodes: [],
@@ -101,6 +102,8 @@
               vm.update_jobs();
             }
             else {
+              vm.nodes = [];
+              vm.edges = [];
               // The initial set of artifacts has been created! Format the graph
               // data in a way that Vis.Network likes it
               // Format edge list data
@@ -163,7 +166,10 @@
           }
         }, 5000);
       }
-    })
+    });
+
+    // Add the vue object to the div, so we avoid to have global variables
+    $("#analysis-network-div").data('data-graph-vue', vueGraph);
   });
 </script>
 <style>

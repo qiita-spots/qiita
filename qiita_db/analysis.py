@@ -514,6 +514,26 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [pmid, self._id])
             qdb.sql_connection.TRN.execute()
 
+    @property
+    def can_be_publicized(self):
+        """Returns whether the analysis can be made public
+
+        Returns
+        -------
+        bool
+            Whether the analysis can be publicized or not
+        """
+        # The analysis can be made public if all the artifacts used
+        # to get the samples from are public
+        with qdb.sql_connection.TRN:
+            sql = """SELECT DISTINCT artifact_id
+                     FROM qiita.analysis_sample
+                     WHERE analysis_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return all(
+                [qdb.artifact.Artifact(aid).visibility == 'public'
+                 for aid in qdb.sql_connection.TRN.execute_fetchflatten()])
+
     def add_artifact(self, artifact):
         """Adds an artifact to the analysis
 
@@ -569,6 +589,24 @@ class Analysis(qdb.base.QiitaObject):
 
             return self in Analysis.get_by_status('public') | \
                 user.private_analyses | user.shared_analyses
+
+    def can_edit(self, user):
+        """Returns whether the given user can edit the analysis
+
+        Parameters
+        ----------
+        user : User object
+            User we are checking edit permissions for
+
+        Returns
+        -------
+        bool
+            Whether user can edit the study or not
+        """
+        # The analysis is editable only if the user is the owner, is in the
+        # shared list or the user is an admin
+        return (user.level in {'superuser', 'admin'} or self.owner == user or
+                user in self.shared_with)
 
     def summary_data(self):
         """Return number of studies, artifacts, and samples selected

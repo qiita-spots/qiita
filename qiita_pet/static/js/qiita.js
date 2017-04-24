@@ -209,3 +209,27 @@ function draw_processing_graph(nodes, edges, target, artifactFunc, jobFunc) {
 function show_loading(portal_dir, target) {
   $("#" + target).html("<img src='" + portal_dir + "/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
 }
+
+/**
+ *
+ * Function to update the name of an artifact
+ *
+ * @param portal_dir: string. The portal that qiita is running under
+ * @param artifact_id: int. The artifact to be changed
+ * @param new_name: string. The new artifact name
+ * @param on_success_func: function. Function to execute when the name has been
+ *        successfully updated
+ *
+ */
+function change_artifact_name(portal_dir, artifact_id, new_name, on_success_func) {
+  $.ajax({
+    url: portal_dir + '/artifact/' + artifact_id + '/',
+    type: 'PATCH',
+    data: {'op': 'replace', 'path': '/name/', 'value': new_name},
+    success: on_success_func,
+    error: function(object, status, error_msg) {
+      // Something went wrong, show the message
+      bootstrapAlert("Error changing artifact name: " + error_msg, "danger");
+    }
+  });
+}
