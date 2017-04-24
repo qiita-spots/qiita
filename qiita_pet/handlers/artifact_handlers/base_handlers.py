@@ -35,7 +35,7 @@ def check_artifact_access(user, artifact):
     user : qiita_db.user.User object
         User to check
     artifact : qiita_db.artifact.Artifact
-        Artifact ti check access for
+        Artifact to check access for
 
     Raises
     ------
@@ -49,7 +49,7 @@ def check_artifact_access(user, artifact):
         analysis = artifact.analysis
         if study:
             if not study.has_access(user):
-                raise QiitaHTTPError(403, "Access denied to artifact %s"
+                raise QiitaHTTPError(403, "Access denied to study %s"
                                           % artifact.id)
         elif analysis:
             if not analysis.has_access(user):
@@ -153,7 +153,6 @@ def artifact_summary_get_request(user, artifact_id):
                 buttons.append(
                     btn_base % ('request approval for', 'awaiting_approval',
                                 'Request approval'))
-
             elif user.level == 'admin' and visibility == 'awaiting_approval':
                 # The approve artifact button only appears if the user is an
                 # admin the artifact is waiting to be approvaed and the qiita
