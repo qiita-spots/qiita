@@ -27,7 +27,7 @@ def check_artifact_access(user, artifact):
     user : qiita_db.user.User object
         User to check
     artifact : qiita_db.artifact.Artifact
-        Artifact ti check access for
+        Artifact to check access for
 
     Raises
     ------
@@ -41,7 +41,7 @@ def check_artifact_access(user, artifact):
         analysis = artifact.analysis
         if study:
             if not study.has_access(user):
-                raise QiitaHTTPError(403, "Access denied to artifact %s"
+                raise QiitaHTTPError(403, "Access denied to study %s"
                                           % artifact.id)
         elif analysis:
             if not analysis.has_access(user):
@@ -207,8 +207,6 @@ def artifact_summary_get_request(user, artifact_id):
             'summary': summary,
             'job': job_info,
             'errored_jobs': errored_jobs
-            # 'prep_id': artifact.prep_templates[0].id,
-            # 'study_id': artifact.analysis.id
             }
 
 
