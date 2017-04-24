@@ -215,9 +215,7 @@
 
     // Add the vue object to the div, so we avoid to have global variables
     $("#analysis-network-div").data('data-graph-vue', vueGraph);
-
     $("processing-content-div").hide();
-
     {% if alert_msg %}
       bootstrapAlert("{{alert_msg}}", "{{alert_type}}");
     {% end %}
