@@ -26,6 +26,24 @@ from qiita_db.artifact import Artifact
 # trasnfer the data from the old structure to the new one
 
 
+def get_random_string(length):
+    """Creates a random string of the given length with alphanumeric chars
+
+    Parameters
+    ----------
+    length : int
+        The desired length of the string
+
+    Returns
+    -------
+    str
+        The new random string
+    """
+    sr = SystemRandom()
+    chars = ascii_letters + digits
+    return ''.join(sr.choice(chars) for i in range(length))
+
+
 def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
     """Creates the initial non-rarefied BIOM artifact of the analysis
 
@@ -454,10 +472,10 @@ with TRN:
     # Step 8: Give a new client id/client secret pair to the plugins
     sql = """INSERT INTO qiita.oauth_identifiers (client_id, client_secret)
                 VALUES (%s, %s)"""
-    sr = SystemRandom()
-    chars = ascii_letters + digits
-    client_id = ''.join(sr.choice(chars) for i in range(50))
-    client_secret = ''.join(sr.choice(chars) for i in range(255))
+    # Each plugin needs a client id/secret pair, so we are generating it here
+    # at random
+    client_id = get_random_string(50)
+    client_secret = get_random_string(255)
     TRN.add(sql, [client_id, client_secret])
     sql = """INSERT INTO qiita.oauth_software (client_id, software_id)
                 VALUES (%s, %s)"""
