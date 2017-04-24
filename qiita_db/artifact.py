@@ -571,6 +571,10 @@ class Artifact(qdb.base.QiitaObject):
             sql = "DELETE FROM qiita.study_artifact WHERE artifact_id = %s"
             qdb.sql_connection.TRN.add(sql, [artifact_id])
 
+            # Detach the artifact from the analysis_artifact table
+            sql = "DELETE FROM qiita.analysis_artifact WHERE artifact_id = %s"
+            qdb.sql_connection.TRN.add(sql, [artifact_id])
+
             # Delete the row in the artifact table
             sql = "DELETE FROM qiita.artifact WHERE artifact_id = %s"
             qdb.sql_connection.TRN.add(sql, [artifact_id])

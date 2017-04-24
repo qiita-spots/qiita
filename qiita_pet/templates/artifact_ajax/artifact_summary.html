@@ -8,13 +8,11 @@
    * This function executes an AJAX query to delete an artifact from the system
    */
   function delete_artifact(aid) {
-    $.post("{% raw qiita_config.portal_dir %}/artifact/", {artifact_id: +aid })
-      .done(function ( data ) {
-        if( data.status == "success") {
-        }
-        if( data.status == "error") {
-          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
-        }
+    $.post('{% raw qiita_config.portal_dir %}/artifact/' + aid + '/', function(data){
+      reload_UI_post_artifact_delete();
+    })
+      .fail(function(object, status, error_msg) {
+        bootstrapAlert("Error deleting artifact: " + object.statusText.replace("\n", "<br/>"), "danger");
       });
   }
 
@@ -51,28 +49,36 @@
    *
    */
   function set_artifact_visibility(visibility, aid) {
-    $.post('{% raw qiita_config.portal_dir %}/admin/artifact/', {artifact_id: +aid, visibility: visibility})
-      .done(function ( data ) {
-        var status = "info";
-        if(data["status"] == "error") { status = "danger"; }
-        bootstrapAlert(data.message.replace("\n", "<br/>"), status);
-        //update buttons to match new status
-        load_artifact_summary(aid);
-      });
+    $.ajax({
+      url: '{% raw qiita_config.portal_dir %}/artifact/' + aid + '/',
+      type: 'PATCH',
+      data: {'op': 'replace', 'path': '/visibility/', 'value': visibility},
+      success: function(data) {
+        // Reload the artifact summary page so we can update the buttons
+        populateContentArtifact(aid);
+      },
+      error: function(object, status, error_msg) {
+        // Something went wrong, show the message
+        bootstrapAlert("Error changing artifact visiblity: " + error_msg, "danger");
+      }
+    });
   }
 
   /**
    *
+   * This function is called when the artifact name is successfully changed.
    *
+   * @param: data. Ignored
    */
   function name_changed(data) {
+    // Hide the modal to change the artifact name
     $("#update-artifact-name").modal('hide');
+    // Update the name of the artifact in the GUI
     $("#summary-title").text($('#new-artifact-name').val());
+    // Reset the value in the modal to an empty string
     $('#new-artifact-name').val("");
-    // TODO: update the given graph
-    // In the study side -> load_template_graph();
-    // In the analysis side ->
-    $("#analysis-network-div").data('data-graph-vue').update_graph();
+    // Reload the artifact/jobs graph so the new name is shown in it
+    reload_graph();
   }
 
   /**
