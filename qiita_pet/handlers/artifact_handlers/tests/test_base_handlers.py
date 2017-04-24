@@ -274,8 +274,7 @@ class TestBaseHandlersUtils(TestCase):
 
         # Missing value
         with self.assertRaises(QiitaHTTPError):
-            artifact_patch_request(test_user, 1, 'replace',
-                                   '/name/')
+            artifact_patch_request(test_user, 1, 'replace', '/name/')
 
         # Wrong attribute
         with self.assertRaises(QiitaHTTPError):
