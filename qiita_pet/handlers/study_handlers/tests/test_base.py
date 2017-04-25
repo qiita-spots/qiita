@@ -58,5 +58,6 @@ class StudyFilesAJAXTests(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertNotEqual(response.body, "")
 
+
 if __name__ == "__main__":
     main()

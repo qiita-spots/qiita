@@ -36,7 +36,7 @@ class SetupTest(TestCase):
         self.assertEqual(get_count("qiita.study_experimental_factor"), 1)
 
     def test_filepath(self):
-        self.assertEqual(get_count("qiita.filepath"), 21)
+        self.assertEqual(get_count("qiita.filepath"), 26)
 
     def test_filepath_type(self):
         self.assertEqual(get_count("qiita.filepath_type"), 21)

@@ -19,5 +19,6 @@ class TestOntologyHandler(TestHandlerBase):
         exp = {'status': 'success', 'message': ''}
         self.assertEqual(loads(response.body), exp)
 
+
 if __name__ == '__main__':
     main()

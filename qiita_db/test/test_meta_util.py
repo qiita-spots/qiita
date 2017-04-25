@@ -156,7 +156,7 @@ class MetaUtilTests(TestCase):
                 'physical_specimen_remaining': True,
                 'dna_extracted': True,
                 'sample_type': 'type1',
-                'collection_timestamp': '05/29/14 12:24:51',
+                'collection_timestamp': '2014-05-29 12:24:51',
                 'host_subject_id': 'NotIdentified',
                 'Description': 'Test Sample 4',
                 'str_column': 'Value for sample 4',
@@ -185,10 +185,10 @@ class MetaUtilTests(TestCase):
 
         portal = qiita_config.portal
         vals = [
-            ('number_studies', {'sanbox': '0', 'public': '1',
-                                'private': '0'}, r_client.hgetall),
-            ('number_of_samples', {'sanbox': '0', 'public': '27',
-                                   'private': '0'}, r_client.hgetall),
+            ('number_studies', {'sandbox': '0', 'public': '0',
+                                'private': '1'}, r_client.hgetall),
+            ('number_of_samples', {'sandbox': '0', 'public': '0',
+                                   'private': '27'}, r_client.hgetall),
             ('num_users', '4', r_client.get),
             ('lat_longs', EXP_LAT_LONG, r_client.get),
             ('num_studies_ebi', '1', r_client.get),
@@ -217,6 +217,7 @@ EXP_LAT_LONG = (
     ' [35.2374368957, 68.5041623253], [12.7065957714, 84.9722975792],'
     ' [0.291867635913, 68.5945325743], [85.4121476399, 15.6526750776],'
     ' [68.0991287718, 34.8360987059]]')
+
 
 if __name__ == '__main__':
     main()

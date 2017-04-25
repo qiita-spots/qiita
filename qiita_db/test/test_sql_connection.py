@@ -660,5 +660,6 @@ class TestTransaction(TestBase):
 
         self.assertEqual(qdb.sql_connection.TRN.index, 0)
 
+
 if __name__ == "__main__":
     main()

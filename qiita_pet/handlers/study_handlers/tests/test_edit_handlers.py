@@ -154,5 +154,6 @@ class TestCreateStudyAJAX(TestHandlerBase):
         # make sure responds properly
         self.assertEqual(response.body, 'False')
 
+
 if __name__ == "__main__":
     main()

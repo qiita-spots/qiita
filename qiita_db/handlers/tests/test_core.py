@@ -20,5 +20,6 @@ class ResetAPItestHandler(OauthTestingBase):
         self.assertEqual(obs.code, 200)
         self.assertFalse(qdb.user.User.exists('new_user@test.foo'))
 
+
 if __name__ == '__main__':
     main()

@@ -748,33 +748,55 @@ class DBUtilTests(TestCase):
         tmp = topen(tgz, "r:gz")
         tgz_obs = [ti.name for ti in tmp]
         tmp.close()
-        tgz_exp = [
-            'processed_data/1_study_1001_closed_reference_otu_table.biom',
-            'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom',
-            'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt',
-            'processed_data/1_study_1001_closed_reference_otu_table_'
-            'Silva.biom', 'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt']
-        self.assertEqual(tgz_obs, tgz_exp)
+        # files names might change due to updates and patches so just check
+        # that the prefix exists.
+        fn = 'processed_data/1_study_1001_closed_reference_otu_table.biom'
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # yes, this file is there twice
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # let's check the next biom
+        fn = ('processed_data/1_study_1001_closed_reference_otu_table_Silva.'
+              'biom')
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # now let's check prep info files based on their suffix, just take
+        # the first one and check/rm the occurances of that file
+        fn_prep = [f for f in tgz_obs
+                   if f.startswith('templates/1_prep_1_')][0]
+        # 3 times
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        fn_sample = [f for f in tgz_obs if f.startswith('templates/1_')][0]
+        # 3 times
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        # now it should be empty
+        self.assertEqual(tgz_obs, [])
 
         tmp = open(txt)
         txt_obs = tmp.readlines()
         tmp.close()
         txt_exp = [
             'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
-            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
-            '.txt\t4\tPick closed-reference OTUs, Split libraries FASTQ\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
-            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
-            '.txt\t5\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            '%s\t%s\t4\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep),
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            '%s\t%s\t5\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep),
             'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
-            'm\ttemplates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-'
-            '000000.txt\t6\tPick closed-reference OTUs, Split libraries '
-            'FASTQ\n']
+            'm\t%s\t%s\t6\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep)]
         self.assertEqual(txt_obs, txt_exp)
 
         # whatever the configuration was, we will change to settings so we can
@@ -798,33 +820,55 @@ class DBUtilTests(TestCase):
         tmp = topen(tgz, "r:gz")
         tgz_obs = [ti.name for ti in tmp]
         tmp.close()
-        tgz_exp = [
-            'processed_data/1_study_1001_closed_reference_otu_table.biom',
-            'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom',
-            'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt',
-            'processed_data/1_study_1001_closed_reference_otu_table_'
-            'Silva.biom', 'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt']
-        self.assertEqual(tgz_obs, tgz_exp)
+        # files names might change due to updates and patches so just check
+        # that the prefix exists.
+        fn = 'processed_data/1_study_1001_closed_reference_otu_table.biom'
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # yes, this file is there twice
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # let's check the next biom
+        fn = ('processed_data/1_study_1001_closed_reference_otu_table_Silva.'
+              'biom')
+        self.assertTrue(fn in tgz_obs)
+        tgz_obs.remove(fn)
+        # now let's check prep info files based on their suffix, just take
+        # the first one and check/rm the occurances of that file
+        fn_prep = [f for f in tgz_obs
+                   if f.startswith('templates/1_prep_1_')][0]
+        # 3 times
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        self.assertTrue(fn_prep in tgz_obs)
+        tgz_obs.remove(fn_prep)
+        fn_sample = [f for f in tgz_obs if f.startswith('templates/1_')][0]
+        # 3 times
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        self.assertTrue(fn_sample in tgz_obs)
+        tgz_obs.remove(fn_sample)
+        # now it should be empty
+        self.assertEqual(tgz_obs, [])
 
         tmp = open(txt)
         txt_obs = tmp.readlines()
         tmp.close()
         txt_exp = [
             'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
-            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
-            '.txt\t4\tPick closed-reference OTUs, Split libraries FASTQ\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
-            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
-            '.txt\t5\tPick closed-reference OTUs, Split libraries FASTQ\n',
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            '%s\t%s\t4\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep),
+            'processed_data/1_study_1001_closed_reference_otu_table.biom\t'
+            '%s\t%s\t5\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep),
             'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
-            'm\ttemplates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-'
-            '000000.txt\t6\tPick closed-reference OTUs, Split libraries '
-            'FASTQ\n']
+            'm\t%s\t%s\t6\tPick closed-reference OTUs, Split libraries FASTQ\n'
+            % (fn_sample, fn_prep)]
         self.assertEqual(txt_obs, txt_exp)
 
         # returning configuration

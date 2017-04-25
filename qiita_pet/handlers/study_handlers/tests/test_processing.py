@@ -24,5 +24,6 @@ class ListOptionsHandler(TestHandlerBase):
     # TODO: Missing tests
     pass
 
+
 if __name__ == "__main__":
     main()

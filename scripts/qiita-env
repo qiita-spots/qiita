@@ -175,5 +175,6 @@ def rem_portal(portal):
     except qdb.exceptions.QiitaDBLookupError:
         raise click.BadParameter("Portal name does not exist!")
 
+
 if __name__ == '__main__':
     env()
