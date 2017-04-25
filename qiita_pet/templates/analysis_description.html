@@ -25,6 +25,28 @@
       location.reload();
   }
 
+  function reload_UI_post_workflow_submission(artifact_id) {
+      $("#processing-content-div").hide();
+      $("#processing-content-div").html("");
+      $("#analysis-content-div").show();
+      populateContentArtifact(artifact_id);
+  }
+
+  function load_process_artifact_ui(artifact_id) {
+    $("#analysis-content-div").hide()
+    $("#processing-content-div").show()
+    show_loading('{% raw qiita_config.portal_dir %}', 'processing-content-div');
+    $.get('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/process/', function(data){
+      $("#processing-content-div").html(data);
+    })
+      .fail(function(object, status, error_msg) {
+        bootstrapAlert("Error loading processing page: " + status + " " + object.statusText, "danger");
+        $("#analysis-content-div").show()
+        $("#processing-content-div").hide()
+      }
+    )
+  };
+
   /**
    * Creates the HTML with the job information and adds it to `target`
    *
@@ -193,6 +215,7 @@
 
     // Add the vue object to the div, so we avoid to have global variables
     $("#analysis-network-div").data('data-graph-vue', vueGraph);
+    $("processing-content-div").hide();
     {% if alert_msg %}
       bootstrapAlert("{{alert_msg}}", "{{alert_type}}");
     {% end %}
@@ -214,22 +237,25 @@
     <h3>{{analysis_description}}</h3>
   </div>
 </div>
-<div class="row">
-  <div class="col">
-    <h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network</i></h4>
-    <b>(Click nodes for more information, blue are jobs)</b>
+<div class="row" id='analysis-content-div'>
+  <div class="row">
+    <div class="col">
+      <h4><a class="btn btn-info" id="show-hide-network-btn" onclick="toggle_network_graph();">-</a><i> Processing network</i></h4>
+      <b>(Click nodes for more information, blue are jobs)</b>
+    </div>
+  </div>
+  <div class='row' id="analysis-graph-vue">
+    <analysis-graph></analysis-graph>
+  </div>
+  <div class='row'>
+    <div class='col-md-12' style='width:90%' id='analysis-job-div'>
+    </div>
+  </div>
+  <div class='row'>
+    <div class='col-md-12' style='width:90%' id='analysis-results'>
+    </div>
   </div>
 </div>
-<div class='row' id="analysis-graph-vue">
-  <analysis-graph></analysis-graph>
-</div>
-<div class='row'>
-  <div class='col-md-12' style='width:90%' id='analysis-job-div'>
-  </div>
-</div>
-<div class='row'>
-  <div class='col-md-12' style='width:90%' id='analysis-results'>
-  </div>
-</div>
+<div class="row" id='processing-content-div'></div>
 
 {% end %}

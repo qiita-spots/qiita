@@ -7,6 +7,8 @@
 # 3) Transfer all the data in the old structures to the plugin structures
 # 4) Delete old structures
 
+from string import ascii_letters, digits
+from random import SystemRandom
 from os.path import join, exists, basename
 from os import makedirs
 from json import loads
@@ -22,6 +24,24 @@ from qiita_db.artifact import Artifact
 # Create some aux functions that are going to make the code more modular
 # and easier to understand, since there is a fair amount of work to do to
 # trasnfer the data from the old structure to the new one
+
+
+def get_random_string(length):
+    """Creates a random string of the given length with alphanumeric chars
+
+    Parameters
+    ----------
+    length : int
+        The desired length of the string
+
+    Returns
+    -------
+    str
+        The new random string
+    """
+    sr = SystemRandom()
+    chars = ascii_letters + digits
+    return ''.join(sr.choice(chars) for i in range(length))
 
 
 def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
@@ -95,6 +115,7 @@ def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
         TRN.add(sql, [analysis['timestamp'], biom_data['data_type_id'],
                       4, 7, False])
         artifact_id = TRN.execute_fetchlast()
+
         # Associate the artifact with the analysis
         sql = """INSERT INTO qiita.analysis_artifact
                     (analysis_id, artifact_id)
@@ -398,6 +419,9 @@ with TRN:
              VALUES (%s, %s, %s, %s)"""
     sql_args = [(validate_cmd_id, 'files', 'string', True),
                 (validate_cmd_id, 'artifact_type', 'string', True),
+                (validate_cmd_id, 'template', 'prep_template', False),
+                (validate_cmd_id, 'analysis', 'analysis', False),
+                (validate_cmd_id, 'provenance', 'string', False),
                 (html_summary_cmd_id, 'input_data', 'artifact', True)]
     TRN.add(sql, sql_args, many=True)
 
@@ -445,6 +469,18 @@ with TRN:
                 ['taxa_summary', 'taxa_summary', True, True]]
     TRN.add(sql, sql_args, many=True)
 
+    # Step 8: Give a new client id/client secret pair to the plugins
+    sql = """INSERT INTO qiita.oauth_identifiers (client_id, client_secret)
+                VALUES (%s, %s)"""
+    # Each plugin needs a client id/secret pair, so we are generating it here
+    # at random
+    client_id = get_random_string(50)
+    client_secret = get_random_string(255)
+    TRN.add(sql, [client_id, client_secret])
+    sql = """INSERT INTO qiita.oauth_software (client_id, software_id)
+                VALUES (%s, %s)"""
+    TRN.add(sql, [client_id, divtype_id])
+
     # Create the new commands that execute the current analyses. In qiita,
     # the only commands that where available are Summarize Taxa, Beta
     # Diversity and Alpha Rarefaction. The system was executing rarefaction
@@ -491,8 +527,8 @@ with TRN:
         (sum_taxa_cmd_id, 'sort', 'bool', False, 'False'),
         # Beta Diversity
         (bdiv_cmd_id, 'tree', 'string', False, ''),
-        (bdiv_cmd_id, 'metrics',
-         'mchoice:["abund_jaccard","binary_chisq","binary_chord",'
+        (bdiv_cmd_id, 'metric',
+         'choice:["abund_jaccard","binary_chisq","binary_chord",'
          '"binary_euclidean","binary_hamming","binary_jaccard",'
          '"binary_lennon","binary_ochiai","binary_otu_gain","binary_pearson",'
          '"binary_sorensen_dice","bray_curtis","bray_curtis_faith",'
@@ -501,12 +537,21 @@ with TRN:
          '"pearson","soergel","spearman_approx","specprof","unifrac",'
          '"unifrac_g","unifrac_g_full_tree","unweighted_unifrac",'
          '"unweighted_unifrac_full_tree","weighted_normalized_unifrac",'
-         '"weighted_unifrac"]', False, '["binary_jaccard","bray_curtis"]'),
+         '"weighted_unifrac"]', False, '"binary_jaccard"'),
         # Alpha rarefaction
         (arare_cmd_id, 'tree', 'string', False, ''),
         (arare_cmd_id, 'num_steps', 'integer', False, 10),
         (arare_cmd_id, 'min_rare_depth', 'integer', False, 10),
         (arare_cmd_id, 'max_rare_depth', 'integer', False, 'Default'),
+        (arare_cmd_id, 'metrics',
+         'mchoice:["ace","berger_parker_d","brillouin_d","chao1","chao1_ci",'
+         '"dominance","doubles","enspie","equitability","esty_ci",'
+         '"fisher_alpha","gini_index","goods_coverage","heip_e",'
+         '"kempton_taylor_q","margalef","mcintosh_d","mcintosh_e",'
+         '"menhinick","michaelis_menten_fit","observed_otus",'
+         '"observed_species","osd","simpson_reciprocal","robbins",'
+         '"shannon","simpson","simpson_e","singles","strong","PD_whole_tree"]',
+         False, '["chao1","observed_otus"]'),
         # Single rarefaction
         (srare_cmd_id, 'depth', 'integer', True, None),
         (srare_cmd_id, 'subsample_multinomial', 'bool', False, 'False')
@@ -552,6 +597,22 @@ with TRN:
     arare_cmd_out_id = TRN.execute_fetchlast()
     TRN.add(sql, ['rarefied_table', srare_cmd_id, biom_atype_id])
     srare_cmd_out_id = TRN.execute_fetchlast()
+
+    # Step 6: Add default parameter sets
+    sql = """INSERT INTO qiita.default_parameter_set
+                (command_id, parameter_set_name, parameter_set)
+             VALUES (%s, %s, %s)"""
+    sql_args = [
+        [sum_taxa_cmd_id, 'Defaults',
+         '{"sort": false, "metadata_category": ""}'],
+        [bdiv_cmd_id, 'Unweighted UniFrac',
+         '{"metrics": "unweighted_unifrac", "tree": ""}'],
+        [arare_cmd_id, 'Defaults',
+         '{"max_rare_depth": "Default", "tree": "", "num_steps": 10, '
+         '"min_rare_depth": 10, "metrics": ["chao1", "observed_otus"]}'],
+        [srare_cmd_id, 'Defaults',
+         '{"subsample_multinomial": "False"}']]
+    TRN.add(sql, sql_args, many=True)
 
 # At this point we are ready to start transferring the data from the old
 # structures to the new structures. Overview of the procedure:
