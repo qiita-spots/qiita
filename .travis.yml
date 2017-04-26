@@ -28,8 +28,13 @@ install:
   - source activate qiita
   - pip install -U pip
   - pip install sphinx sphinx-bootstrap-theme coveralls 'ipython[all]==2.4.1'
-  - travis_retry pip install . --process-dependency-links
   - 'echo "backend: Agg" > matplotlibrc'
+  - git clone https://github.com/nicolasff/webdis
+  - pushd webdis
+  - make
+  - ./webdis &
+  - popd
+  - travis_retry pip install . --process-dependency-links
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
