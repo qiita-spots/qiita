@@ -71,15 +71,16 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
         build_samples = True
 
     # get list of studies for table
+    user_study_set = user.user_studies.union(user.shared_studies)
     if search_type == 'user':
-        user_study_set = user.user_studies.union(user.shared_studies)
         if user.level == 'admin':
             user_study_set = (user_study_set |
                               Study.get_by_status('sandbox') |
-                              Study.get_by_status('private'))
-        study_set = user_study_set - Study.get_by_status('public')
+                              Study.get_by_status('private') -
+                              Study.get_by_status('public'))
+        study_set = user_study_set
     elif search_type == 'public':
-        study_set = Study.get_by_status('public')
+        study_set = Study.get_by_status('public') - user_study_set
     else:
         raise ValueError('Not a valid search type')
     if study_proc is not None:
