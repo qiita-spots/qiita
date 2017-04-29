@@ -85,7 +85,7 @@ class TestHelpers(TestHandlerBase):
 
     def test_build_study_info(self):
         for a in Study(1).artifacts():
-            a.visibility='private'
+            a.visibility = 'private'
 
         obs = _build_study_info(User('test@foo.bar'), 'user')
         self.assertEqual(obs, self.exp)
@@ -98,7 +98,7 @@ class TestHelpers(TestHandlerBase):
 
         # make all the artifacts public - (1) the only study in the tests,
         for a in Study(1).artifacts():
-            a.visibility='public'
+            a.visibility = 'public'
         self.exp[0]['status'] = 'public'
 
         obs = _build_study_info(User('test@foo.bar'), 'user')
@@ -112,8 +112,7 @@ class TestHelpers(TestHandlerBase):
 
         # return to it's private status
         for a in Study(1).artifacts():
-            a.visibility='private'
-
+            a.visibility = 'private'
 
     def test_build_study_info_erros(self):
         with self.assertRaises(IncompetentQiitaDeveloperError):
