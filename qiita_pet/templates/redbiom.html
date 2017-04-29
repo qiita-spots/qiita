@@ -1,0 +1,79 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+{% from future.utils import viewitems %}
+{% extends sitebase.html %}
+
+{%block head%}
+<link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
+<script type="text/javascript">
+
+  function show_wait(){
+
+  }
+
+  $(document).ready(function() {
+    $("#submitForm").submit(function(event){
+      event.preventDefault();
+
+      show_loading("redbiom-data")
+
+      var search = $("#search").val();
+      var search_on = $("#search_on").val();
+
+      $.post("{% raw qiita_config.portal_dir %}/redbiom/", { 'search': search, 'search_on': search_on})
+        .done(function ( data ){
+          if(data.status == "error") {
+            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
+          } else {
+            info = ""
+            if(data.message != ''){
+              info += `<div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <strong>Warning!</strong> ` + data.message + `</div><br/>`;
+            }
+            if(data.data){
+              info += data.data;
+            }
+            $("#redbiom-data").html(info);
+          }
+        });
+    });
+  });
+</script>
+
+<style>
+  .my-group .form-control{
+    width:50%;
+  }
+</style>
+{%end%}
+
+{%block content%}
+  <small>Some general instructions!</small>
+  <br/><br/>
+  <form data-toggle="validator" role="form" id="submitForm">
+    <div class="container">
+      <div class="col-lg-8">
+        <div class="input-group my-group">
+          <input type="text" class="form-control" name="search" id="search" placeholder="Search" required>
+          <select class="selectpicker form-control" name="search_on" id="search_on">
+            <option checked value="sequences">Sequences (preselected)</option>
+            <option value="metadata">Metadata</option>
+          </select>
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="submit">GO!</button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <hr>
+
+  <div class="row">
+    <div class="col-md-12" id="redbiom-data">
+    </div>
+  </div>
+
+{% end %}
