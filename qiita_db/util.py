@@ -1266,16 +1266,13 @@ def supported_filepath_types(artifact_type):
         return qdb.sql_connection.TRN.execute_fetchindex()
 
 
-def generate_study_list(study_ids, build_samples, public_only=False):
+def generate_study_list(study_ids, public_only=False):
     """Get general study information
 
     Parameters
     ----------
     study_ids : list of ints
         The study ids to look for. Non-existing ids will be ignored
-    build_samples : bool
-        If true the sample information for each process artifact within each
-        study will be included
     public_only : bool, optional
         If true, return only public BIOM artifacts. Default: false.
 
@@ -1481,68 +1478,55 @@ def generate_study_list(study_ids, build_samples, public_only=False):
             del info["shared_with_email"]
 
             info['proc_data_info'] = []
-            if build_samples and info['artifact_biom_ids']:
-                to_loop = zip(
-                    info['artifact_biom_ids'], info['artifact_biom_dts'],
-                    info['artifact_biom_ts'], info['artifact_biom_params'],
-                    info['artifact_biom_cmd'], info['artifact_biom_vis'])
-                for artifact_id, dt, ts, params, cmd, vis in to_loop:
-                    if public_only and vis != 'public':
-                        continue
-                    proc_info = {'processed_date': str(ts)}
-                    proc_info['pid'] = artifact_id
-                    proc_info['data_type'] = dt
+            to_loop = zip(
+                info['artifact_biom_ids'], info['artifact_biom_dts'],
+                info['artifact_biom_ts'], info['artifact_biom_params'],
+                info['artifact_biom_cmd'], info['artifact_biom_vis'])
+            for artifact_id, dt, ts, params, cmd, vis in to_loop:
+                if public_only and vis != 'public':
+                    continue
+                proc_info = {'processed_date': str(ts)}
+                proc_info['pid'] = artifact_id
+                proc_info['data_type'] = dt
 
-                    # if cmd exists then we can get its parameters
-                    if cmd is not None:
-                        # making sure that the command is only queried once
-                        if cmd not in commands:
-                            c = qdb.software.Command(cmd)
-                            commands[cmd] = {
-                                # remove artifacts from parameters
-                                'del_keys': [k for k, v in viewitems(
-                                    c.parameters) if v[0] == 'artifact'],
-                                'sfwn': c.software.name,
-                                'cmdn': c.name
+                # if cmd exists then we can get its parameters
+                if cmd is not None:
+                    # making sure that the command is only queried once
+                    if cmd not in commands:
+                        c = qdb.software.Command(cmd)
+                        commands[cmd] = {
+                            # remove artifacts from parameters
+                            'del_keys': [k for k, v in viewitems(
+                                c.parameters) if v[0] == 'artifact'],
+                            'sfwn': c.software.name,
+                            'cmdn': c.name
+                        }
+                    for k in commands[cmd]['del_keys']:
+                        del params[k]
+
+                    # making sure that the reference is only created once
+                    if 'reference' in params:
+                        rid = params.pop('reference')
+                        if rid not in refs:
+                            reference = qdb.reference.Reference(rid)
+                            tfp = basename(reference.taxonomy_fp)
+                            sfp = basename(reference.sequence_fp)
+                            refs[rid] = {
+                                'name': reference.name,
+                                'taxonomy_fp': tfp,
+                                'sequence_fp': sfp,
+                                'tree_fp': basename(reference.tree_fp),
+                                'version': reference.version
                             }
-                        for k in commands[cmd]['del_keys']:
-                            del params[k]
+                        params['reference_name'] = refs[rid]['name']
+                        params['reference_version'] = refs[rid][
+                            'version']
 
-                        # making sure that the reference is only created once
-                        if 'reference' in params:
-                            rid = params.pop('reference')
-                            if rid not in refs:
-                                reference = qdb.reference.Reference(rid)
-                                tfp = basename(reference.taxonomy_fp)
-                                sfp = basename(reference.sequence_fp)
-                                refs[rid] = {
-                                    'name': reference.name,
-                                    'taxonomy_fp': tfp,
-                                    'sequence_fp': sfp,
-                                    'tree_fp': basename(reference.tree_fp),
-                                    'version': reference.version
-                                }
-                            params['reference_name'] = refs[rid]['name']
-                            params['reference_version'] = refs[rid][
-                                'version']
+                    proc_info['algorithm'] = '%s (%s)' % (
+                        commands[cmd]['sfwn'], commands[cmd]['cmdn'])
+                    proc_info['params'] = params
 
-                        proc_info['algorithm'] = '%s (%s)' % (
-                            commands[cmd]['sfwn'], commands[cmd]['cmdn'])
-                        proc_info['params'] = params
-
-                    # getting all samples
-                    sql = """SELECT sample_id from qiita.prep_template_sample
-                             WHERE prep_template_id = (
-                                 SELECT prep_template_id
-                                 FROM qiita.prep_template
-                                 WHERE artifact_id IN (
-                                     SELECT *
-                                     FROM qiita.find_artifact_roots(%s)))"""
-                    qdb.sql_connection.TRN.add(sql, [proc_info['pid']])
-                    proc_info['samples'] = sorted(
-                        qdb.sql_connection.TRN.execute_fetchflatten())
-
-                    info["proc_data_info"].append(proc_info)
+                info["proc_data_info"].append(proc_info)
 
             del info["artifact_biom_ids"]
             del info["artifact_biom_dts"]
