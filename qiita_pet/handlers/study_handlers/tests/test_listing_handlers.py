@@ -84,8 +84,36 @@ class TestHelpers(TestHandlerBase):
         self.exp = [self.single_exp]
 
     def test_build_study_info(self):
+        for a in Study(1).artifacts():
+            a.visibility='private'
+
         obs = _build_study_info(User('test@foo.bar'), 'user')
         self.assertEqual(obs, self.exp)
+
+        obs = _build_study_info(User('test@foo.bar'), 'public')
+        self.assertEqual(obs, [])
+
+        obs = _build_study_info(User('demo@microbio.me'), 'public')
+        self.assertEqual(obs, [])
+
+        # make all the artifacts public - (1) the only study in the tests,
+        for a in Study(1).artifacts():
+            a.visibility='public'
+        self.exp[0]['status'] = 'public'
+
+        obs = _build_study_info(User('test@foo.bar'), 'user')
+        self.assertEqual(obs, self.exp)
+
+        obs = _build_study_info(User('test@foo.bar'), 'public')
+        self.assertEqual(obs, [])
+
+        obs = _build_study_info(User('demo@microbio.me'), 'public')
+        self.assertEqual(obs, self.exp)
+
+        # return to it's private status
+        for a in Study(1).artifacts():
+            a.visibility='private'
+
 
     def test_build_study_info_erros(self):
         with self.assertRaises(IncompetentQiitaDeveloperError):
