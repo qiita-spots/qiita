@@ -1478,55 +1478,56 @@ def generate_study_list(study_ids, public_only=False):
             del info["shared_with_email"]
 
             info['proc_data_info'] = []
-            to_loop = zip(
-                info['artifact_biom_ids'], info['artifact_biom_dts'],
-                info['artifact_biom_ts'], info['artifact_biom_params'],
-                info['artifact_biom_cmd'], info['artifact_biom_vis'])
-            for artifact_id, dt, ts, params, cmd, vis in to_loop:
-                if public_only and vis != 'public':
-                    continue
-                proc_info = {'processed_date': str(ts)}
-                proc_info['pid'] = artifact_id
-                proc_info['data_type'] = dt
+            if info['artifact_biom_ids']:
+                to_loop = zip(
+                    info['artifact_biom_ids'], info['artifact_biom_dts'],
+                    info['artifact_biom_ts'], info['artifact_biom_params'],
+                    info['artifact_biom_cmd'], info['artifact_biom_vis'])
+                for artifact_id, dt, ts, params, cmd, vis in to_loop:
+                    if public_only and vis != 'public':
+                        continue
+                    proc_info = {'processed_date': str(ts)}
+                    proc_info['pid'] = artifact_id
+                    proc_info['data_type'] = dt
 
-                # if cmd exists then we can get its parameters
-                if cmd is not None:
-                    # making sure that the command is only queried once
-                    if cmd not in commands:
-                        c = qdb.software.Command(cmd)
-                        commands[cmd] = {
-                            # remove artifacts from parameters
-                            'del_keys': [k for k, v in viewitems(
-                                c.parameters) if v[0] == 'artifact'],
-                            'sfwn': c.software.name,
-                            'cmdn': c.name
-                        }
-                    for k in commands[cmd]['del_keys']:
-                        del params[k]
-
-                    # making sure that the reference is only created once
-                    if 'reference' in params:
-                        rid = params.pop('reference')
-                        if rid not in refs:
-                            reference = qdb.reference.Reference(rid)
-                            tfp = basename(reference.taxonomy_fp)
-                            sfp = basename(reference.sequence_fp)
-                            refs[rid] = {
-                                'name': reference.name,
-                                'taxonomy_fp': tfp,
-                                'sequence_fp': sfp,
-                                'tree_fp': basename(reference.tree_fp),
-                                'version': reference.version
+                    # if cmd exists then we can get its parameters
+                    if cmd is not None:
+                        # making sure that the command is only queried once
+                        if cmd not in commands:
+                            c = qdb.software.Command(cmd)
+                            commands[cmd] = {
+                                # remove artifacts from parameters
+                                'del_keys': [k for k, v in viewitems(
+                                    c.parameters) if v[0] == 'artifact'],
+                                'sfwn': c.software.name,
+                                'cmdn': c.name
                             }
-                        params['reference_name'] = refs[rid]['name']
-                        params['reference_version'] = refs[rid][
-                            'version']
+                        for k in commands[cmd]['del_keys']:
+                            del params[k]
 
-                    proc_info['algorithm'] = '%s (%s)' % (
-                        commands[cmd]['sfwn'], commands[cmd]['cmdn'])
-                    proc_info['params'] = params
+                        # making sure that the reference is only created once
+                        if 'reference' in params:
+                            rid = params.pop('reference')
+                            if rid not in refs:
+                                reference = qdb.reference.Reference(rid)
+                                tfp = basename(reference.taxonomy_fp)
+                                sfp = basename(reference.sequence_fp)
+                                refs[rid] = {
+                                    'name': reference.name,
+                                    'taxonomy_fp': tfp,
+                                    'sequence_fp': sfp,
+                                    'tree_fp': basename(reference.tree_fp),
+                                    'version': reference.version
+                                }
+                            params['reference_name'] = refs[rid]['name']
+                            params['reference_version'] = refs[rid][
+                                'version']
 
-                info["proc_data_info"].append(proc_info)
+                        proc_info['algorithm'] = '%s (%s)' % (
+                            commands[cmd]['sfwn'], commands[cmd]['cmdn'])
+                        proc_info['params'] = params
+
+                    info["proc_data_info"].append(proc_info)
 
             del info["artifact_biom_ids"]
             del info["artifact_biom_dts"]
