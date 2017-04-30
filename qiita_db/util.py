@@ -1361,7 +1361,31 @@ def generate_study_list(study_ids, public_only=False):
                 WHERE study_id=qiita.study.study_id) AS shared_with_email
     - all study tags
             (SELECT array_agg(study_tag) FROM qiita.per_study_tags
-                WHERE study_id=qiita.study.study_id) AS study_tags
+                WHERE study_id=qiita.study.study_id) AS study_tags,
+    - count of all samples
+            (SELECT array_agg(prep_total_samples ORDER BY artifact_id)
+            FROM (
+                SELECT study_id, artifact_id,
+                    qiita.find_artifact_roots(artifact_id) as root
+                FROM qiita.study_artifact
+                WHERE study_id = qiita.study.study_id) q1
+                LEFT JOIN LATERAL (
+                    SELECT prep_template_id, COUNT(pts.sample_id)
+                        AS prep_total_samples
+                    FROM qiita.prep_template pt
+                    LEFT JOIN qiita.prep_template_sample pts
+                        USING (prep_template_id)
+                    WHERE pt.artifact_id = root
+                    GROUP by prep_template_id) q2 ON true)
+            AS artifact_biom_prep_total,
+    - getting all the names of the bioms
+            (SELECT array_agg(name ORDER BY artifact_id)
+             FROM qiita.study_artifact
+             LEFT JOIN qiita.artifact USING (artifact_id)
+             LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+             WHERE artifact_type='BIOM' AND
+                study_id = qiita.study.study_id)
+            AS artifact_biom_name
     """
     with qdb.sql_connection.TRN:
         sql = """
@@ -1429,7 +1453,29 @@ def generate_study_list(study_ids, public_only=False):
                     LEFT JOIN qiita.qiita_user USING (email)
                     WHERE study_id=qiita.study.study_id) AS shared_with_email,
                 (SELECT array_agg(study_tag) FROM qiita.per_study_tags
-                    WHERE study_id=qiita.study.study_id) AS study_tags
+                    WHERE study_id=qiita.study.study_id) AS study_tags,
+                (SELECT array_agg(prep_total_samples ORDER BY artifact_id)
+                    FROM (
+                        SELECT study_id, artifact_id,
+                            qiita.find_artifact_roots(artifact_id) as root
+                        FROM qiita.study_artifact
+                        WHERE study_id = qiita.study.study_id) q1
+                        LEFT JOIN LATERAL (
+                            SELECT prep_template_id, COUNT(pts.sample_id)
+                                AS prep_total_samples
+                            FROM qiita.prep_template pt
+                            LEFT JOIN qiita.prep_template_sample pts
+                                USING (prep_template_id)
+                            WHERE pt.artifact_id = root
+                            GROUP by prep_template_id) q2 ON true)
+                AS artifact_biom_prep_total,
+                (SELECT array_agg(name ORDER BY artifact_id)
+                 FROM qiita.study_artifact
+                 LEFT JOIN qiita.artifact USING (artifact_id)
+                 LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                 WHERE artifact_type='BIOM' AND
+                    study_id = qiita.study.study_id)
+                AS artifact_biom_name
                 FROM qiita.study
                 LEFT JOIN qiita.study_person ON (
                     study_person_id=principal_investigator_id)
@@ -1482,13 +1528,17 @@ def generate_study_list(study_ids, public_only=False):
                 to_loop = zip(
                     info['artifact_biom_ids'], info['artifact_biom_dts'],
                     info['artifact_biom_ts'], info['artifact_biom_params'],
-                    info['artifact_biom_cmd'], info['artifact_biom_vis'])
-                for artifact_id, dt, ts, params, cmd, vis in to_loop:
+                    info['artifact_biom_cmd'], info['artifact_biom_vis'],
+                    info['artifact_biom_prep_total'],
+                    info['artifact_biom_name'])
+                for artifact_id, dt, ts, params, cmd, vis, ptots, n in to_loop:
                     if public_only and vis != 'public':
                         continue
                     proc_info = {'processed_date': str(ts)}
                     proc_info['pid'] = artifact_id
                     proc_info['data_type'] = dt
+                    proc_info['prep_total_samples'] = ptots
+                    proc_info['name'] = n
 
                     # if cmd exists then we can get its parameters
                     if cmd is not None:
@@ -1500,6 +1550,7 @@ def generate_study_list(study_ids, public_only=False):
                                 'del_keys': [k for k, v in viewitems(
                                     c.parameters) if v[0] == 'artifact'],
                                 'sfwn': c.software.name,
+                                'sfv': c.software.version,
                                 'cmdn': c.name
                             }
                         for k in commands[cmd]['del_keys']:
@@ -1523,8 +1574,9 @@ def generate_study_list(study_ids, public_only=False):
                             params['reference_version'] = refs[rid][
                                 'version']
 
-                        proc_info['algorithm'] = '%s (%s)' % (
-                            commands[cmd]['sfwn'], commands[cmd]['cmdn'])
+                        proc_info['algorithm'] = '%s v%s (%s)' % (
+                            commands[cmd]['sfwn'], commands[cmd]['sfv'],
+                            commands[cmd]['cmdn'])
                         proc_info['params'] = params
 
                     info["proc_data_info"].append(proc_info)
@@ -1535,6 +1587,8 @@ def generate_study_list(study_ids, public_only=False):
             del info["artifact_biom_params"]
             del info['artifact_biom_cmd']
             del info['artifact_biom_vis']
+            del info['artifact_biom_prep_total']
+            del info['artifact_biom_name']
 
             infolist.append(info)
 

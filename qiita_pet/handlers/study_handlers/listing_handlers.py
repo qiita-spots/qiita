@@ -59,7 +59,6 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
     -----
     Both study_proc and proc_samples must be passed, or neither passed.
     """
-    build_samples = False
     # Logic check to make sure both needed parts passed
     if study_proc is not None and proc_samples is None:
         raise IncompetentQiitaDeveloperError(
@@ -67,8 +66,6 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
     elif proc_samples is not None and study_proc is None:
         raise IncompetentQiitaDeveloperError(
             'Must pass study_proc when proc_samples given')
-    elif study_proc is None:
-        build_samples = True
 
     # get list of studies for table
     user_study_set = user.user_studies.union(user.shared_studies)
