@@ -1208,7 +1208,7 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                      WHERE processing_job_workflow_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchflatten()
-            if len(res) != 1 or res[0] != 'in_construction':
+            if (len(res) == 1 and res[0] != 'in_construction') or len(res) > 1:
                 # The workflow is no longer in construction, raise an error
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                     "Workflow not in construction")
