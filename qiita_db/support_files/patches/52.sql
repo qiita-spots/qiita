@@ -49,6 +49,11 @@ ALTER TABLE qiita.analysis ADD logging_id bigint  ;
 CREATE INDEX idx_analysis_0 ON qiita.analysis ( logging_id ) ;
 ALTER TABLE qiita.analysis ADD CONSTRAINT fk_analysis_logging FOREIGN KEY ( logging_id ) REFERENCES qiita.logging( logging_id )    ;
 
+-- Alter the software command table to differentiate between commands that
+-- apply to the analysis pipeline or commands that apply on the study
+-- processing pipeline
+ALTER TABLE qiita.software_command ADD is_analysis bool DEFAULT 'False' NOT NULL;
+
 -- We can handle some of the special cases here, so we simplify the work in the
 -- python patch
 
