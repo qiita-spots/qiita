@@ -499,8 +499,9 @@ with TRN:
     qiime_id = TRN.execute_fetchlast()
 
     # Step 2: Insert the new commands in the software_command table
-    sql = """INSERT INTO qiita.software_command (software_id, name, description)
-             VALUES (%s, %s, %s)
+    sql = """INSERT INTO qiita.software_command
+                (software_id, name, description, is_analysis)
+             VALUES (%s, %s, %s, TRUE)
              RETURNING command_id"""
     TRN.add(sql, [qiime_id, 'Summarize Taxa', 'Plots taxonomy summaries at '
                             'different taxonomy levels'])
