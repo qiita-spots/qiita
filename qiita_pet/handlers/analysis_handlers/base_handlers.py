@@ -52,13 +52,16 @@ def analysis_description_handler_get_request(analysis_id, user):
         job_info = loads(job_info)
         job_id = job_info['job_id']
         if job_id:
-            redis_info = loads(r_client.get(job_id))
-            if redis_info['status_msg'] == 'running':
-                alert_msg = 'An artifact is being deleted from this analysis'
-            elif redis_info['return'] is not None:
-                alert_type = redis_info['return']['status']
-                alert_msg = redis_info['return']['message'].replace(
-                    '\n', '</br>')
+            r_payload = r_client.get(job_id)
+            if r_payload:
+                redis_info = loads(r_client.get(job_id))
+                if redis_info['status_msg'] == 'running':
+                    alert_msg = ('An artifact is being deleted from this '
+                                 'analysis')
+                elif redis_info['return'] is not None:
+                    alert_type = redis_info['return']['status']
+                    alert_msg = redis_info['return']['message'].replace(
+                        '\n', '</br>')
 
     return {'analysis_name': analysis.name,
             'analysis_id': analysis.id,
