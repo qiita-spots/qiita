@@ -799,6 +799,20 @@ class UtilTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_generate_study_list(self):
+        # creating a new study to make sure that empty studies are also
+        # returned
+        info = {"timeseries_type_id": 1, "metadata_complete": True,
+                "mixs_compliant": True, "number_samples_collected": 25,
+                "number_samples_promised": 28, "study_alias": "TST",
+                "study_description": "Some description of the study goes here",
+                "study_abstract": "Some abstract goes here",
+                "emp_person_id": qdb.study.StudyPerson(1),
+                "principal_investigator_id": qdb.study.StudyPerson(1),
+                "lab_person_id": qdb.study.StudyPerson(1)}
+        new_study = qdb.study.Study.create(
+            qdb.user.User('shared@foo.bar'), 'test_study_1', efo=[1],
+            info=info)
+
         exp_info = [{
             'metadata_complete': True,
             'ebi_submission_status': 'submitted',
@@ -825,7 +839,15 @@ class UtilTests(TestCase):
                             'Soils'),
             'number_samples_collected': 27,
             'study_tags': None
-        }]
+        }, {
+            'metadata_complete': True,
+            'ebi_submission_status': 'not submitted', 'publication_pid': [],
+            'study_abstract': 'Some abstract goes here',
+            'pi': ('lab_dude@foo.bar', 'LabDude'), 'status': 'sandbox',
+            'proc_data_info': [], 'study_tags': None, 'shared': [],
+            'publication_doi': [], 'study_id': new_study.id,
+            'ebi_study_accession': None, 'study_title': 'test_study_1',
+            'number_samples_collected': 0}]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
         self.assertEqual(obs_info, exp_info)
 
