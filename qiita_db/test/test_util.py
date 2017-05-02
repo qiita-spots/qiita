@@ -860,24 +860,21 @@ class UtilTests(TestCase):
              'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
                         'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
                         'threads': 1, u'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'},
-             'prep_total_samples': 27},
+                        'reference_version': '13_8'}},
             {'data_type': '18S', 'name': 'BIOM',
              'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
              'pid': 5, 'processed_date': '2012-10-02 17:30:00',
              'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
                         'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
                         'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'},
-             'prep_total_samples': 27},
+                        'reference_version': '13_8'}},
             {'data_type': '16S', 'name': 'BIOM',
              'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
              'pid': 6, 'processed_date': '2012-10-02 17:30:00',
              'params': {'similarity': 0.97, 'reference_name': 'Silva',
                         'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
                         'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': 'test'},
-             'prep_total_samples': 27}]
+                        'reference_version': 'test'}}]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
         self.assertEqual(obs_info, exp_info)
 
@@ -888,26 +885,23 @@ class UtilTests(TestCase):
              'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
                         'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
                         'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'},
-             'prep_total_samples': 27},
+                        'reference_version': '13_8'}},
             {'data_type': '18S', 'name': 'BIOM',
              'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
              'pid': 5, 'processed_date': '2012-10-02 17:30:00',
              'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
                         'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
                         'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'},
-             'prep_total_samples': 27},
+                        'reference_version': '13_8'}},
             {'data_type': '16S', 'name': 'BIOM',
              'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
              'pid': 6, 'processed_date': '2012-10-02 17:30:00',
              'params': {'similarity': 0.97, 'reference_name': 'Silva',
                         'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
                         'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': 'test'},
-             'prep_total_samples': 27},
+                        'reference_version': 'test'}},
             {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'name': 'BIOM',
-             'data_type': '16S', 'prep_total_samples': 27}]
+             'data_type': '16S'}]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 

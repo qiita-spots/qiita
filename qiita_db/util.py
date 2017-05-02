@@ -1537,19 +1537,6 @@ def generate_study_list(study_ids, public_only=False):
                             commands[cmd]['cmdn'])
                         proc_info['params'] = params
 
-                    # getting all samples
-                    sql = """SELECT COUNT(sample_id)
-                             FROM qiita.prep_template_sample
-                             WHERE prep_template_id = (
-                                 SELECT prep_template_id
-                                 FROM qiita.prep_template
-                                 WHERE artifact_id IN (
-                                     SELECT *
-                                     FROM qiita.find_artifact_roots(%s)))"""
-                    qdb.sql_connection.TRN.add(sql, [proc_info['pid']])
-                    proc_info['prep_total_samples'] = \
-                        qdb.sql_connection.TRN.execute_fetchlast()
-
                     info["proc_data_info"].append(proc_info)
 
             infolist.append({

@@ -28,11 +28,11 @@ PROC_DATA_INFO = [
     {'data_type': u'18S',
      'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
      'pid': 4, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
-     'name': 'BIOM', 'prep_total_samples': 27},
+     'name': 'BIOM'},
     {'data_type': '18S',
      'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
      'pid': 5, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
-     'name': 'BIOM', 'prep_total_samples': 27},
+     'name': 'BIOM'},
     {'data_type': '16S',
      'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
      'pid': 6, 'processed_date': '2012-10-02 17:30:00',
@@ -40,9 +40,9 @@ PROC_DATA_INFO = [
                 'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000,
                 'threads': 1, 'sortmerna_coverage': 0.97,
                 'reference_version': 'test'},
-     'name': 'BIOM', 'prep_total_samples': 27},
+     'name': 'BIOM'},
     {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'data_type': '16S',
-     'name': 'BIOM', 'prep_total_samples': 27}]
+     'name': 'BIOM'}]
 
 
 class TestHelpers(TestHandlerBase):

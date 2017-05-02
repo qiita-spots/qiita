@@ -88,7 +88,7 @@ $(document).ready(function() {
       // create formatted cell with proc data table
       var proc_data_table = '<h4>Processed Data</h4>' +
         '<table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%">' +
-        '<tr><th></th><th>ID</th><th>Name</th><th>Data type</th><th>Processed Date</th><th>Samples in preparation</th>' +
+        '<tr><th></th><th>ID</th><th>Name</th><th>Data type</th><th>Processed Date</th>' +
         '<th>Algorithm</th><th>Parameters</th></tr>';
       for(i=0;i<d.proc_data_info.length;i++) {
         var proc_data = d.proc_data_info[i];
@@ -100,7 +100,7 @@ $(document).ready(function() {
         proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" ' +
           'onclick="sel_proc_data(\''+ name +'\' ,'+ row +',' + proc_data.pid +')"></td><td>' +
           proc_data.pid + '</td><td>' + proc_data.name + '</td><td>' + proc_data.data_type + '</td><td>' +
-          proc_data.processed_date + '</td><td>' + proc_data.prep_total_samples + '</td><td>' + '</td><td>' +
+          proc_data.processed_date + '</td><td>' +
           proc_data.algorithm + '</td><td><small>' + params + '</small></td></tr>';
       }
       proc_data_table += '</table>';
