@@ -1283,124 +1283,40 @@ def generate_study_list(study_ids, public_only=False):
 
     Notes
     -----
-    The main select might look scary but it's pretty simple:
-    - We select the requiered fields from qiita.study and qiita.study_person
-        SELECT metadata_complete, study_abstract, study_id,
-            study_title, ebi_study_accession, ebi_submission_status,
-            qiita.study_person.name AS pi_name,
-            qiita.study_person.email AS pi_email,
-    - the total number of samples collected by counting sample_ids
-            (SELECT COUNT(sample_id) FROM qiita.study_sample
-                WHERE study_id=qiita.study.study_id)
-                AS number_samples_collected,
-    - all the BIOM artifact_ids sorted by artifact_id that belong to the study
-            (SELECT array_agg(artifact_id ORDER BY artifact_id)
-                FROM qiita.study_artifact
-                LEFT JOIN qiita.artifact USING (artifact_id)
-                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                WHERE artifact_type='BIOM' AND
-                study_id = qiita.study.study_id) AS artifact_biom_ids,
-    - all the BIOM data_types sorted by artifact_id that belong to the study
-            (SELECT array_agg(data_type ORDER BY artifact_id)
-                FROM qiita.study_artifact
-                LEFT JOIN qiita.artifact USING (artifact_id)
-                LEFT JOIN qiita.data_type USING (data_type_id)
-                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                WHERE artifact_type='BIOM' AND
-                study_id = qiita.study.study_id) AS artifact_biom_dts,
-    - all the BIOM parameters sorted by artifact_id that belong to the study
-            (SELECT array_agg(command_parameters ORDER BY artifact_id)
-                FROM qiita.study_artifact
-                LEFT JOIN qiita.artifact USING (artifact_id)
-                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                WHERE artifact_type='BIOM' AND
-                    study_id = qiita.study.study_id)
-                AS artifact_biom_params,
-    - all the BIOM command_ids sorted by artifact_id that belong to the study,
-            (SELECT array_agg(command_id ORDER BY artifact_id)
-                FROM qiita.study_artifact
-                LEFT JOIN qiita.artifact USING (artifact_id)
-                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                WHERE artifact_type='BIOM' AND
-                    study_id = qiita.study.study_id)
-                AS artifact_biom_cmd,
-    - all the BIOM timestamps sorted by artifact_id that belong to the study
-            (SELECT array_agg(generated_timestamp ORDER BY artifact_id)
-                FROM qiita.study_artifact
-                LEFT JOIN qiita.artifact USING (artifact_id)
-                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                WHERE artifact_type='BIOM' AND
-                    study_id = qiita.study.study_id) AS artifact_biom_ts,
-    - all the BIOM visibility sorted by artifact_id that belong to the study
-            (SELECT array_agg(visibility ORDER BY artifact_id)
-                FROM qiita.study_artifact
-                LEFT JOIN qiita.artifact USING (artifact_id)
-                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                LEFT JOIN qiita.visibility USING (visibility_id)
-                WHERE artifact_type='BIOM' AND
-                    study_id = qiita.study.study_id) AS artifact_biom_vis,
-    - all the visibilities of all artifacts that belong to the study
-            (SELECT array_agg(DISTINCT visibility)
-                FROM qiita.study_artifact
-                LEFT JOIN qiita.artifact USING (artifact_id)
-                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                LEFT JOIN qiita.visibility USING (visibility_id)
-                WHERE study_id = qiita.study.study_id)
-                AS artifacts_visibility,
-    - all the publications that belong to the study
-            (SELECT array_agg((publication, is_doi)))
-                FROM qiita.study_publication
-                WHERE study_id=qiita.study.study_id) AS publications,
-    - all names sorted by email of users that have access to the study
-            (SELECT array_agg(name ORDER BY email) FROM qiita.study_users
-                LEFT JOIN qiita.qiita_user USING (email)
-                WHERE study_id=qiita.study.study_id) AS shared_with_name,
-    - all emails sorted by email of users that have access to the study
-            (SELECT array_agg(email ORDER BY email) FROM qiita.study_users
-                LEFT JOIN qiita.qiita_user USING (email)
-                WHERE study_id=qiita.study.study_id) AS shared_with_email
-    - all study tags
-            (SELECT array_agg(study_tag) FROM qiita.per_study_tags
-                WHERE study_id=qiita.study.study_id) AS study_tags,
-    - count of all samples
-            (SELECT array_agg(prep_total_samples ORDER BY artifact_id)
-            FROM (
-                SELECT study_id, artifact_id,
-                    qiita.find_artifact_roots(artifact_id) as root
-                FROM qiita.study_artifact
-                WHERE study_id = qiita.study.study_id) q1
-                LEFT JOIN LATERAL (
-                    SELECT prep_template_id, COUNT(pts.sample_id)
-                        AS prep_total_samples
-                    FROM qiita.prep_template pt
-                    LEFT JOIN qiita.prep_template_sample pts
-                        USING (prep_template_id)
-                    WHERE pt.artifact_id = root
-                    GROUP by prep_template_id) q2 ON true)
-            AS artifact_biom_prep_total,
-    - getting all the names of the bioms
-            (SELECT array_agg(name ORDER BY artifact_id)
-             FROM qiita.study_artifact
-             LEFT JOIN qiita.artifact USING (artifact_id)
-             LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-             WHERE artifact_type='BIOM' AND
-                study_id = qiita.study.study_id)
-            AS artifact_biom_name
+    - The SQL code is divided in 3 main queries: sql, which gest all the
+      studies and BIOM artifacts ids; artifact_sql, which retrieves the info
+      about the artifacts in the previous command; and prep_info_sql, which
+      returns the count of the prep for a given prep.
+    - The code caches the prep_info_counts and the commands/software info.
     """
     with qdb.sql_connection.TRN:
+
+        artifact_sql = """
+            SELECT artifact_id, name, data_type, command_id,
+                   generated_timestamp, visibility, command_parameters,
+                   qiita.find_artifact_roots(artifact_id) as root
+            FROM qiita.artifact
+            LEFT JOIN qiita.data_type USING (data_type_id)
+            LEFT JOIN qiita.visibility USING (visibility_id)
+            WHERE artifact_id IN %s
+            ORDER BY artifact_id
+        """
+
+        prep_info_sql = """
+            SELECT COUNT(prep_template_id)
+            FROM qiita.prep_template_sample
+            RIGHT JOIN qiita.prep_template USING (prep_template_id)
+            WHERE artifact_id = %s
+        """
+
         sql = """
             SELECT metadata_complete, study_abstract, study_id,
                 study_title, ebi_study_accession, ebi_submission_status,
                 qiita.study_person.name AS pi_name,
                 qiita.study_person.email AS pi_email,
-                array_agg(CASE WHEN artifact_type = 'BIOM' THEN artifact_id
-                          ELSE NULL END ORDER BY artifact_id) AS aids,
-                array_agg(qiita.artifact.name ORDER BY artifact_id) AS anames,
-                array_agg(data_type ORDER BY artifact_id) AS adts,
-                array_agg(command_id ORDER BY artifact_id) AS acids,
-                array_agg(generated_timestamp ORDER BY artifact_id) AS agts,
-                array_agg(visibility ORDER BY artifact_id) AS avis,
-                array_agg(command_parameters ORDER BY artifact_id) AS acps,
+                array_remove(
+                    array_agg(CASE WHEN artifact_type = 'BIOM'
+                              THEN artifact_id ELSE NULL END), NULL) AS aids,
                 (SELECT COUNT(sample_id) FROM qiita.study_sample
                     WHERE study_id=qiita.study.study_id)
                     AS number_samples_collected,
@@ -1421,30 +1337,13 @@ def generate_study_list(study_ids, public_only=False):
                     LEFT JOIN qiita.qiita_user USING (email)
                     WHERE study_id=qiita.study.study_id) AS shared_with_email,
                 (SELECT array_agg(study_tag) FROM qiita.per_study_tags
-                    WHERE study_id=qiita.study.study_id) AS study_tags,
-                (SELECT array_agg(prep_total_samples ORDER BY artifact_id)
-                    FROM (
-                        SELECT study_id, artifact_id,
-                            qiita.find_artifact_roots(artifact_id) as root
-                        FROM qiita.study_artifact
-                        WHERE study_id = qiita.study.study_id) q1
-                        LEFT JOIN LATERAL (
-                            SELECT prep_template_id, COUNT(pts.sample_id)
-                                AS prep_total_samples
-                            FROM qiita.prep_template pt
-                            LEFT JOIN qiita.prep_template_sample pts
-                                USING (prep_template_id)
-                            WHERE pt.artifact_id = root
-                            GROUP by prep_template_id) q2 ON true)
-                AS artifact_biom_prep_total
+                    WHERE study_id=qiita.study.study_id) AS study_tags
                 FROM qiita.study
                 LEFT JOIN qiita.study_person ON (
                     study_person_id=principal_investigator_id)
                 LEFT JOIN qiita.study_artifact USING (study_id)
                 LEFT JOIN qiita.artifact USING (artifact_id)
                 LEFT JOIN qiita.artifact_type USING (artifact_type_id)
-                LEFT JOIN qiita.data_type USING (data_type_id)
-                LEFT JOIN qiita.visibility USING (visibility_id)
                 WHERE study_id IN %s
                 GROUP BY metadata_complete, study_abstract, study_id,
                          study_title, ebi_study_accession,
@@ -1454,6 +1353,7 @@ def generate_study_list(study_ids, public_only=False):
         infolist = []
         refs = {}
         commands = {}
+        prep_info_counts = {}
         for info in qdb.sql_connection.TRN.execute_fetchindex():
             info = dict(info)
 
@@ -1494,22 +1394,24 @@ def generate_study_list(study_ids, public_only=False):
             del info["shared_with_email"]
 
             info['proc_data_info'] = []
-            if info['aids'] is not None and info['aids'] != [None]:
-                to_loop = zip(
-                    info['aids'], info['anames'], info['adts'], info['acids'],
-                    info['agts'], info['avis'], info['acps'],
-                    info['artifact_biom_prep_total'])
-                for aid, name, dt, cid, ts, vis, params, ptots in to_loop:
-                    if (public_only and vis != 'public') or aid is None:
+            if info['aids']:
+                qdb.sql_connection.TRN.add(artifact_sql, [tuple(info['aids'])])
+                for aid, name, dt, cid, ts, vis, params, root in \
+                        qdb.sql_connection.TRN.execute_fetchindex():
+                    if public_only and vis != 'public':
                         continue
+
+                    if root not in prep_info_counts:
+                        qdb.sql_connection.TRN.add(prep_info_sql, [root])
+                        prep_info_counts[root] = \
+                            qdb.sql_connection.TRN.execute_fetchlast()
 
                     proc_info = {'processed_date': str(ts)}
                     proc_info['pid'] = aid
                     proc_info['data_type'] = dt
-                    proc_info['prep_total_samples'] = ptots
+                    proc_info['prep_total_samples'] = prep_info_counts[root]
                     proc_info['name'] = name
 
-                    # if cmd exists then we can get its parameters
                     if cid is not None:
                         # making sure that the command is only queried once
                         if cid not in commands:
