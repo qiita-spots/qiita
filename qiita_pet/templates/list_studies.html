@@ -19,6 +19,8 @@ td.details-control {
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
 function send_samples_to_moi(aids) {
+  bootstrapAlert('We are adding ' + aids.length + ' artifact(s) to the analysis. This ' +
+                 'might take some time based on the number of samples on each artifact.', "warning", 10000);
   $.get('/artifact/samples/', {ids:aids})
     .done(function ( data ) {
       if (data['status']=='success') {
@@ -44,7 +46,7 @@ function sel_proc_data(aid) {
 }
 
 function show_alert(data) {
-  bootstrapAlert(data + ' samples selected.', "success", 1000);
+  bootstrapAlert(data + ' samples selected.', "success", 2000);
    $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
 }
 
