@@ -1331,6 +1331,13 @@ def generate_study_list(study_ids, public_only=False):
                 LEFT JOIN qiita.artifact_type USING (artifact_type_id)
                 WHERE artifact_type='BIOM' AND
                     study_id = qiita.study.study_id) AS artifact_biom_ts,
+    - all the BIOM names sorted by artifact_id that belong to the study
+            (SELECT array_agg(name ORDER BY artifact_id)
+                FROM qiita.study_artifact
+                LEFT JOIN qiita.artifact USING (artifact_id)
+                LEFT JOIN qiita.artifact_type USING (artifact_type_id)
+                WHERE artifact_type='BIOM' AND
+                    study_id = qiita.study.study_id) AS artifact_biom_name,
     - all the BIOM visibility sorted by artifact_id that belong to the study
             (SELECT array_agg(visibility ORDER BY artifact_id)
                 FROM qiita.study_artifact
