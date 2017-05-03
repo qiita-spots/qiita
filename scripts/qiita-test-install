@@ -178,6 +178,15 @@ class QiitaConfig(TestCase):
             self.redis_version = r.info()['redis_version']
         except:
             self.redis_version = None
+        try:
+            r = StrictRedis(
+                host=self.config.redbiom_redis_host,
+                password=self.config.redbiom_redis_password,
+                port=self.config.redbiom_redis_port,
+                db=self.config.redbiom_redis_db)
+            self.redbiom_redis_version = r.info()['redis_version']
+        except:
+            self.redbiom_redis_version = None
 
     def test_future_library_version(self):
         acceptable_version = (0, 14, 0)
@@ -270,6 +279,20 @@ class QiitaConfig(TestCase):
             'version between %s and %s (not including)' %
             ('.'.join(map(str, version)), str_acceptable_min_version,
              str_acceptable_max_version))
+
+    def test_redbiom_version(self):
+        if not self.redbiom_redis_version:
+            self.assertTrue(False, 'redbiom redis not running or configured')
+
+        acceptable_version = (2, 8, 17)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, self.redbiom_redis_version.split('.')))
+
+        self.assertTrue(acceptable_version <= version,
+                        'Unsupported redis version. You have %s but the '
+                        'minimum required version is %s'
+                        % ('.'.join(map(str, version)),
+                           string_acceptable_version))
 
 
 system_info_header = """
@@ -380,6 +403,17 @@ def main():
         redis_running = True
     except:
         redis_running = False
+
+    try:
+        StrictRedis(
+            host=qiita_config.redbiom_redis_host,
+            password=qiita_config.redbiom_redis_password,
+            port=qiita_config.redbiom_redis_port,
+            db=qiita_config.redbiom_redis_db)
+        redbiom_redis_running = True
+    except:
+        redbiom_redis_running = False
+
     try:
         def sum(a, b):
             return a, b
@@ -408,6 +442,8 @@ def main():
          qiita_config.valid_upload_extension)),
         ('PostgreSQL is up and configuration can connect?', psql_running),
         ('Redis is up and configuracion can connect?', redis_running),
+        ('Redbiom redis is up and configuracion can connect?',
+         redbiom_redis_running),
         ('IPython is running', ipython_running),
         ('Extra info', extra_info)
     ]

@@ -59,7 +59,7 @@ Install the non-python dependencies
 -----------------------------------
 
 * [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.5, we have tested most extensively with 9.3.6)
-* [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
+* [redis-server](http://redis.io) (we have tested most extensively with 3.2.8)
 
 There are several options to install these dependencies depending on your needs:
 
@@ -80,11 +80,11 @@ source ~/.bash_profile
 
 ### Redis-server installation on Mac OS X
 
-Assuming you have [homebrew](http://www.brew.sh) installed, you can install redis-server v2.8.x as follows:
+Assuming you have [homebrew](http://www.brew.sh) installed, you can install redis-server as follows:
 
 ```bash
 brew update
-brew install homebrew/versions/redis28
+brew install redis
 ```
 
 

@@ -53,8 +53,11 @@ script:
   - qiita pet webserver
 addons:
   postgresql: "9.3"
+  # https://github.com/travis-ci/travis-ci/issues/4811
+  apt:
+    packages:
+      - redis-server
 services:
-  - redis-server
   - postgresql
 after_success:
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then coveralls ; fi
