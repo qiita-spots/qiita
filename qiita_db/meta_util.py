@@ -322,7 +322,8 @@ def get_lat_longs():
                  WHERE table_name SIMILAR TO 'sample_[0-9]+'
                     AND table_schema = 'qiita'
                     AND column_name IN ('latitude', 'longitude')
-                    AND SPLIT_PART(table_name, '_', 2)::int IN %s;"""
+                    AND SPLIT_PART(table_name, '_', 2)::int IN %s
+                    GROUP BY table_name HAVING COUNT(column_name) = 2;"""
         qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
 
         sql = [('SELECT CAST(latitude AS FLOAT), '
