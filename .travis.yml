@@ -41,6 +41,7 @@ script:
     export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
     export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
     fi
+  - redis-server &
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
