@@ -31,7 +31,7 @@ from .studies import (
 from .artifact import (artifact_graph_get_req, artifact_types_get_req,
                        artifact_post_req, artifact_get_req,
                        artifact_status_put_req, artifact_delete_req,
-                       artifact_summary_get_request,
+                       artifact_summary_get_request, artifact_get_prep_req,
                        artifact_summary_post_request, artifact_patch_request)
 from .ontology import ontology_patch_handler
 from .processing import (
@@ -48,7 +48,7 @@ __all__ = ['prep_template_summary_get_req', 'sample_template_post_req',
            'study_get_req', 'sample_template_summary_get_req',
            'sample_template_delete_req', 'sample_template_filepaths_get_req',
            'prep_template_summary_get_req', 'prep_template_post_req',
-           'prep_template_delete_req',
+           'prep_template_delete_req', 'artifact_get_prep_req',
            'prep_template_graph_get_req', 'prep_template_filepaths_get_req',
            'artifact_get_req', 'artifact_status_put_req',
            'artifact_delete_req', 'prep_template_get_req', 'study_delete_req',

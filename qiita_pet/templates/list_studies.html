@@ -18,27 +18,29 @@ td.details-control {
 <script type="text/javascript">
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
-function sel_study(name, row) {
-  data = $('#'+name).dataTable().fnGetData(row);
-  var proc_data = {};
-  // Build list of processed data and associated samples for entire study
-  for(var i=0;i<data.proc_data_info.length;i++) {
-    proc_data[data.proc_data_info[i].pid] = 'all';
-  }
-  moi.send('sel', proc_data);
+function send_samples_to_moi(aids) {
+  $.get('/artifact/samples/', {ids:aids})
+    .done(function ( data ) {
+      if (data['status']=='success') {
+        moi.send('sel', data['data']);
+      } else {
+        bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+      }
+    });
 }
 
-function sel_proc_data(name, row, pid) {
-  proc_data_info = $('#'+name).dataTable().fnGetData(row).proc_data_info;
-  var proc_data = {};
-  for(var i=0;i<proc_data_info.length;i++) {
-    // Find the processed data and send associated samples
-    if(proc_data_info[i].pid == pid) {
-      proc_data[pid] = 'all';
-      break;
-    }
+function sel_study(name, row) {
+  var row_data = $('#'+name).dataTable().fnGetData(row);
+  var aids = []
+
+  for(var i=0;i<row_data.proc_data_info.length;i++){
+    aids.push(row_data['proc_data_info'][i]['pid']);
   }
-  moi.send('sel', proc_data);
+  send_samples_to_moi(aids);
+}
+
+function sel_proc_data(aid) {
+  send_samples_to_moi([aid]);
 }
 
 function show_alert(data) {
@@ -98,7 +100,7 @@ $(document).ready(function() {
           params += '<i>' + key + '</i>: ' + p[key] + '<br/>';
         }
         proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" ' +
-          'onclick="sel_proc_data(\''+ name +'\' ,'+ row +',' + proc_data.pid +')"></td><td>' +
+          'onclick="sel_proc_data('+ proc_data.pid +')"></td><td>' +
           proc_data.pid + '</td><td>' + proc_data.name + '</td><td>' + proc_data.data_type + '</td><td>' +
           proc_data.processed_date + '</td><td>' +
           proc_data.algorithm + '</td><td><small>' + params + '</small></td></tr>';
