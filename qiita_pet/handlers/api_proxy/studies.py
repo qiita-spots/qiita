@@ -107,7 +107,7 @@ def study_get_req(study_id, user_id):
 
     study_info['show_biom_download_button'] = 'BIOM' in [
         a.artifact_type for a in study.artifacts()]
-    study_info['show_raw_download_button'] = bool([
+    study_info['show_raw_download_button'] = any([
         True for pt in study.prep_templates() if pt.artifact is not None])
 
     return {'status': 'success',
