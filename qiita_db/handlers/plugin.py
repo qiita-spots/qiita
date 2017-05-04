@@ -104,12 +104,14 @@ class CommandListHandler(OauthBaseHandler):
             if outputs:
                 outputs = loads(outputs)
             dflt_param_set = loads(self.get_argument('default_parameter_sets'))
+            analysis_only = self.get_argument('analysis_only', False)
 
             parameters = req_params
             parameters.update(opt_params)
 
             cmd = qdb.software.Command.create(
-                plugin, cmd_name, cmd_desc, parameters, outputs)
+                plugin, cmd_name, cmd_desc, parameters, outputs,
+                analysis_only=analysis_only)
 
             if dflt_param_set is not None:
                 for name, vals in dflt_param_set.items():
