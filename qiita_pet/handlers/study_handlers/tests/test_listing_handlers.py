@@ -21,32 +21,28 @@ from qiita_pet.handlers.study_handlers.listing_handlers import (
     _build_study_info)
 from qiita_pet.handlers.base_handlers import BaseHandler
 
-
-SAMPLES = ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195', '1.SKB4.640189',
-           '1.SKB5.640181', '1.SKB6.640176', '1.SKB7.640196', '1.SKB8.640193',
-           '1.SKB9.640200', '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-           '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191',
-           '1.SKD8.640184', '1.SKD9.640182', '1.SKM1.640183', '1.SKM2.640199',
-           '1.SKM3.640197', '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-           '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']
 GPARAMS = {'similarity': 0.97, 'reference_name': 'Greengenes',
            'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000, 'threads': 1,
            'sortmerna_coverage': 0.97, 'reference_version': u'13_8'}
 PROC_DATA_INFO = [
-    {'data_type': u'18S', 'algorithm': 'QIIME (Pick closed-reference OTUs)',
+    {'data_type': u'18S',
+     'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
      'pid': 4, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
-     'samples': SAMPLES},
-    {'data_type': '18S', 'algorithm': 'QIIME (Pick closed-reference OTUs)',
+     'name': 'BIOM'},
+    {'data_type': '18S',
+     'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
      'pid': 5, 'processed_date': '2012-10-02 17:30:00', 'params': GPARAMS,
-     'samples': SAMPLES},
-    {'data_type': '16S', 'algorithm': 'QIIME (Pick closed-reference OTUs)',
+     'name': 'BIOM'},
+    {'data_type': '16S',
+     'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
      'pid': 6, 'processed_date': '2012-10-02 17:30:00',
      'params': {'similarity': 0.97, 'reference_name': u'Silva',
                 'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000,
                 'threads': 1, 'sortmerna_coverage': 0.97,
-                'reference_version': 'test'}, 'samples': SAMPLES},
+                'reference_version': 'test'},
+     'name': 'BIOM'},
     {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'data_type': '16S',
-     'samples': SAMPLES}]
+     'name': 'BIOM'}]
 
 
 class TestHelpers(TestHandlerBase):
