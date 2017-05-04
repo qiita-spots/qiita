@@ -95,6 +95,8 @@ class TestStudyAPI(TestCase):
                 'owner': 'test@foo.bar',
                 'ebi_submission_status': 'submitted',
                 'has_access_to_raw_data': True,
+                'show_biom_download_button': True,
+                'show_raw_download_button': True,
                 'ebi_study_accession': 'EBI123456-BB'},
             'editable': True}
         self.assertEqual(obs, exp)
