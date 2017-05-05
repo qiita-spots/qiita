@@ -67,6 +67,11 @@ except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'toredis'))
 
 try:
+    from redbiom import __version__ as redbiom_lib_version
+except ImportError as e:
+    missing_deps_errors.append((e, core_dependency_missing_msg % 'redbiom'))
+
+try:
     from bcrypt import __version__ as bcrypt_lib_version
 except ImportError as e:
     missing_deps_errors.append((e, core_dependency_missing_msg % 'bcrypt'))
@@ -266,6 +271,20 @@ class QiitaConfig(TestCase):
                         % ('.'.join(map(str, version)),
                            string_acceptable_version))
 
+    def test_redbiom_version(self):
+        if not self.redbiom_lib_version:
+            self.assertTrue(False, 'redis not running or configured')
+
+        acceptable_version = (9, 3, 0)
+        string_acceptable_version = '.'.join(map(str, acceptable_version))
+        version = tuple(map(int, self.psql_version.split(' ')[1].split('.')))
+
+        self.assertTrue(acceptable_version <= version,
+                        'Unsupported redbiom version. You have %s but the '
+                        'minimum required version is %s'
+                        % ('.'.join(map(str, version)),
+                           string_acceptable_version))
+
     def test_ipython_version(self):
         acceptable_min_version = (2, 4, 1)
         acceptable_max_version = (2, 5, 0)
@@ -429,6 +448,8 @@ def main():
         ipython_running = False
         extra_info = ('IPython test failed, perhaps due to an old MOI '
                       'version, please review')
+
+    print qiita_config_header
     qiita_config_info = [
         ('QIITA_CONFIG_FP filepath', qiita_conf_fp),
         ('Test environment', str(qiita_config.test_environment)),
@@ -441,9 +462,13 @@ def main():
         ('Valid file extensions for upload', ', '.join(
          qiita_config.valid_upload_extension)),
         ('PostgreSQL is up and configuration can connect?', psql_running),
-        ('Redis is up and configuracion can connect?', redis_running),
+        ('Redis is up and configuracion can connect?',
+         redis_running if not redis_running else '%s --port %d' % (
+            redis_running, qiita_config.redis_port)),
         ('Redbiom redis is up and configuracion can connect?',
-         redbiom_redis_running),
+         redbiom_redis_running if not redbiom_redis_running else
+            '%s --port %d' % (redbiom_redis_running,
+                              qiita_config.redbiom_redis_port)),
         ('IPython is running', ipython_running),
         ('Extra info', extra_info)
     ]

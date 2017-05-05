@@ -18,10 +18,11 @@
 
       show_loading("redbiom-data")
 
+      var context = $("#context").val();
       var search = $("#search").val();
       var search_on = $("#search_on").val();
 
-      $.post("{% raw qiita_config.portal_dir %}/redbiom/", { 'search': search, 'search_on': search_on})
+      $.post("{% raw qiita_config.portal_dir %}/redbiom/", {'context': context, 'search': search, 'search_on': search_on})
         .done(function ( data ){
           if(data.status == "error") {
             bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
@@ -42,29 +43,32 @@
   });
 </script>
 
-<style>
-  .my-group .form-control{
-    width:50%;
-  }
-</style>
 {%end%}
 
 {%block content%}
   <small>Some general instructions!</small>
   <br/><br/>
   <form data-toggle="validator" role="form" id="submitForm">
-    <div class="container">
-      <div class="col-lg-8">
-        <div class="input-group my-group">
-          <input type="text" class="form-control" name="search" id="search" placeholder="Search" required>
-          <select class="selectpicker form-control" name="search_on" id="search_on">
-            <option checked value="sequences">Sequences (preselected)</option>
-            <option value="metadata">Metadata</option>
-          </select>
-          <span class="input-group-btn">
-            <button class="btn btn-default" type="submit">GO!</button>
-          </span>
-        </div>
+    <div class="form-group row">
+      <div class="col-xs-3">
+        <select class="selectpicker form-control" name="context" id="context">
+          {% for v in contexts %}
+            <option checked value="{{v}}">{{v}}</option>
+          {% end %}
+        </select>
+      </div>
+      <div class="col-xs-6">
+        <input type="text" class="form-control" name="search" id="search" placeholder="Search" required>
+      </div>
+
+      <div class="col-xs-2">
+        <select class="selectpicker form-control col-xs-2" name="search_on" id="search_on">
+          <option value="metadata">Metadata</option>
+          <option checked value="observations">Observation</option>
+        </select>
+      </div>
+      <div class="col-xs-1">
+          <button class="btn btn-default" type="submit">GO!</button>
       </div>
     </div>
   </form>

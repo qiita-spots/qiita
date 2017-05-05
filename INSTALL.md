@@ -59,7 +59,8 @@ Install the non-python dependencies
 -----------------------------------
 
 * [PostgreSQL](http://www.postgresql.org/download/) (minimum required version 9.3.5, we have tested most extensively with 9.3.6)
-* [redis-server](http://redis.io) (we have tested most extensively with 3.2.8)
+* [redis-server](http://redis.io) (we have tested most extensively with 2.8.17)
+* [webdis] (https://github.com/nicolasff/webdis) (latest version should be fine)
 
 There are several options to install these dependencies depending on your needs:
 
@@ -80,11 +81,31 @@ source ~/.bash_profile
 
 ### Redis-server installation on Mac OS X
 
-Assuming you have [homebrew](http://www.brew.sh) installed, you can install redis-server as follows:
+Assuming you have [homebrew](http://www.brew.sh) installed, you can install redis-server v2.8.x as follows:
 
 ```bash
 brew update
-brew install redis
+brew install homebrew/versions/redis28
+```
+
+### webdis
+
+Note that this is the only package that assumes that Qiita is already installed (due to library dependencies). Also, that the general suggestion is to have 2 redis servers running, one for webdis/redbiom and the other for Qiita. The default configuration has webdis/redbiom running on the default redis port and Qiita's on 7777.
+
+The following instructions install, compile and pre-populates the redbiom redis DB so we assume that redis is running on the default port and that Qiita is fully installed as the redbiom package is installed with Qiita.
+
+```
+git clone https://github.com/nicolasff/webdis
+pushd webdis
+make
+./webdis &
+popd
+wget https://raw.githubusercontent.com/wasade/redbiom/master/Makefile
+wget https://raw.githubusercontent.com/wasade/redbiom/master/test.txt
+wget https://raw.githubusercontent.com/wasade/redbiom/master/test.biom
+wget https://raw.githubusercontent.com/wasade/redbiom/master/test_with_alts.txt
+wget https://raw.githubusercontent.com/wasade/redbiom/master/test_with_alts.biom
+make test_db
 ```
 
 
