@@ -10,7 +10,7 @@ env:
 before_install:
   - redis-server --version
   # let's start a second redis instance for Qiita as we want redbiom to use the default one
-  - redis-server --port 7777
+  - redis-server --port 7777 &
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
