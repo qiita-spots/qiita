@@ -1,6 +1,5 @@
-
 language: python
-sudo: false
+sudo: required
 env:
   global:
     - PYTHON_VERSION=2.7
