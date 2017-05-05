@@ -11,6 +11,7 @@ from json import dumps
 
 from future.utils import viewitems
 from moi import r_client
+from skbio.util import flatten
 
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
@@ -23,7 +24,6 @@ from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.util import get_mountpoint, get_visibilities
 from qiita_db.software import Command, Parameters
 from qiita_db.processing_job import ProcessingJob
-
 
 PREP_TEMPLATE_KEY_FORMAT = 'prep_template_%s'
 
@@ -261,6 +261,39 @@ def artifact_get_req(user_id, artifact_id):
             'ebi_run_accessions': ebi_run_accessions,
             'can_submit_vamps': can_submit_vamps,
             'is_submitted_vamps': is_submitted_vamps}
+
+
+@execute_as_transaction
+def artifact_get_prep_req(user_id, artifact_ids):
+    """Returns all prep info sample ids for the given artifact_ids
+
+    Parameters
+    ----------
+    user_id : str
+        user making the request
+    artifact_ids : list of int
+        list of artifact ids
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the artifact information
+        {'status': status,
+         'message': message,
+         'data': {artifact_id: [prep info sample ids]}
+    """
+    samples = {}
+
+    for aid in artifact_ids:
+        artifact = Artifact(aid)
+        access_error = check_access(artifact.study.id, user_id)
+        if access_error:
+            return access_error
+
+        samples[aid] = flatten(
+            [pt.keys() for pt in Artifact(aid).prep_templates])
+
+    return {'status': 'success', 'msg': '', 'data': samples}
 
 
 @execute_as_transaction

@@ -16,7 +16,7 @@ from qiita_pet.handlers.api_proxy import (
     artifact_graph_get_req, artifact_types_get_req, artifact_post_req,
     artifact_status_put_req, artifact_get_req, artifact_delete_req,
     artifact_summary_get_request, artifact_summary_post_request,
-    artifact_patch_request)
+    artifact_patch_request, artifact_get_prep_req)
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 
@@ -103,6 +103,16 @@ class ArtifactAJAX(BaseHandler):
 
         response = artifact_patch_request(
             self.current_user.id, req_op, req_path, req_value, req_from)
+
+        self.write(response)
+
+
+class ArtifactGetSamples(BaseHandler):
+    @authenticated
+    def get(self):
+        aids = map(int, self.request.arguments.get('ids[]', []))
+
+        response = artifact_get_prep_req(self.current_user.id, aids)
 
         self.write(response)
 
