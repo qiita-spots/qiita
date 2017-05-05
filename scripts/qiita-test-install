@@ -271,20 +271,6 @@ class QiitaConfig(TestCase):
                         % ('.'.join(map(str, version)),
                            string_acceptable_version))
 
-    def test_redbiom_version(self):
-        if not self.redbiom_lib_version:
-            self.assertTrue(False, 'redis not running or configured')
-
-        acceptable_version = (9, 3, 0)
-        string_acceptable_version = '.'.join(map(str, acceptable_version))
-        version = tuple(map(int, self.psql_version.split(' ')[1].split('.')))
-
-        self.assertTrue(acceptable_version <= version,
-                        'Unsupported redbiom version. You have %s but the '
-                        'minimum required version is %s'
-                        % ('.'.join(map(str, version)),
-                           string_acceptable_version))
-
     def test_ipython_version(self):
         acceptable_min_version = (2, 4, 1)
         acceptable_max_version = (2, 5, 0)
@@ -303,11 +289,11 @@ class QiitaConfig(TestCase):
         if not self.redbiom_redis_version:
             self.assertTrue(False, 'redbiom redis not running or configured')
 
-        acceptable_version = (2, 8, 17)
+        acceptable_version = ('2017', '0', '1', 'dev0')
         string_acceptable_version = '.'.join(map(str, acceptable_version))
-        version = tuple(map(int, self.redbiom_redis_version.split('.')))
+        version = tuple(redbiom_lib_version.split('.'))
 
-        self.assertTrue(acceptable_version <= version,
+        self.assertTrue(acceptable_version == version,
                         'Unsupported redis version. You have %s but the '
                         'minimum required version is %s'
                         % ('.'.join(map(str, version)),
@@ -364,6 +350,7 @@ def main():
         ('pandas library version', pandas_lib_version),
         ('tornado library version', tornado_lib_version),
         ('redis library version', redis_lib_version),
+        ('redbiom library version', redbiom_lib_version),
         ('bcrypt library version', bcrypt_lib_version),
         ('pyparsing library version', pyparsing_lib_version),
         ('networkX library version', networkx_lib_version),

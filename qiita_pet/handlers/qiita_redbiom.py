@@ -1,8 +1,5 @@
 from tornado.gen import coroutine, Task
 
-import pandas as pd
-import numpy as np
-
 from qiita_core.util import execute_as_transaction
 
 from .base_handlers import BaseHandler
@@ -24,7 +21,7 @@ class RedbiomPublicSearch(BaseHandler):
     @execute_as_transaction
     def get(self, search):
         contexts = yield Task(self._get_context)
-        self.render('redbiom.html', contexts = contexts)
+        self.render('redbiom.html', contexts=contexts)
 
     @execute_as_transaction
     def _redbiom_search(self, context, query, search_on, callback):
