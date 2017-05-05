@@ -18,31 +18,35 @@ td.details-control {
 <script type="text/javascript">
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
-function sel_study(name, row) {
-  data = $('#'+name).dataTable().fnGetData(row);
-  var proc_data = {};
-  // Build list of processed data and associated samples for entire study
-  for(var i=0;i<data.proc_data_info.length;i++) {
-    proc_data[data.proc_data_info[i].pid] = data.proc_data_info[i].samples;
-  }
-  moi.send('sel', proc_data);
+function send_samples_to_moi(aids) {
+  bootstrapAlert('We are adding ' + aids.length + ' artifact(s) to the analysis. This ' +
+                 'might take some time based on the number of samples on each artifact.', "warning", 10000);
+  $.get('/artifact/samples/', {ids:aids})
+    .done(function ( data ) {
+      if (data['status']=='success') {
+        moi.send('sel', data['data']);
+      } else {
+        bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+      }
+    });
 }
 
-function sel_proc_data(name, row, pid) {
-  proc_data_info = $('#'+name).dataTable().fnGetData(row).proc_data_info;
-  var proc_data = {};
-  for(var i=0;i<proc_data_info.length;i++) {
-    // Find the processed data and send associated samples
-    if(proc_data_info[i].pid == pid) {
-      proc_data[pid] = proc_data_info[i].samples;
-      break;
-    }
+function sel_study(name, row) {
+  var row_data = $('#'+name).dataTable().fnGetData(row);
+  var aids = []
+
+  for(var i=0;i<row_data.proc_data_info.length;i++){
+    aids.push(row_data['proc_data_info'][i]['pid']);
   }
-  moi.send('sel', proc_data);
+  send_samples_to_moi(aids);
+}
+
+function sel_proc_data(aid) {
+  send_samples_to_moi([aid]);
 }
 
 function show_alert(data) {
-  bootstrapAlert(data + ' samples selected.', "success", 1000);
+  bootstrapAlert(data + ' samples selected.', "success", 10000);
    $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
 }
 
@@ -86,7 +90,10 @@ $(document).ready(function() {
   function format (name, d, row) {
       // `d` is the original data object for the row
       // create formatted cell with proc data table
-      var proc_data_table = '<h4>Processed Data</h4><table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%"><tr><th></th><th>ID</th><th>Data type</th><th>Processed Date</th><th>Samples</th><th>Algorithm</th><th>Parameters</th></tr>';
+      var proc_data_table = '<h4>Processed Data</h4>' +
+        '<table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%">' +
+        '<tr><th></th><th>ID</th><th>Name</th><th>Data type</th><th>Processed Date</th>' +
+        '<th>Algorithm</th><th>Parameters</th></tr>';
       for(i=0;i<d.proc_data_info.length;i++) {
         var proc_data = d.proc_data_info[i];
         var params = '';
@@ -94,7 +101,11 @@ $(document).ready(function() {
         for (var key in p) {
           params += '<i>' + key + '</i>: ' + p[key] + '<br/>';
         }
-        proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(\''+ name +'\' ,'+ row +','+ proc_data.pid +')"></td><td>' + proc_data.pid + '</td><td>' + proc_data.data_type + '</td><td>' + proc_data.processed_date + '</td><td>' + proc_data.samples.length + '</td><td>' + proc_data.algorithm + '</td><td><small>' + params + '</small></td></tr>';
+        proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" ' +
+          'onclick="sel_proc_data('+ proc_data.pid +')"></td><td>' +
+          proc_data.pid + '</td><td>' + proc_data.name + '</td><td>' + proc_data.data_type + '</td><td>' +
+          proc_data.processed_date + '</td><td>' +
+          proc_data.algorithm + '</td><td><small>' + params + '</small></td></tr>';
       }
       proc_data_table += '</table>';
       return proc_data_table;

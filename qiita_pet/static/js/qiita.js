@@ -7,6 +7,9 @@
  * @param timeout: OPTIONAL. When given, time (in ms) before alert fades out
  *
  */
+
+var timeoutHandleForBoostrapAlert = null;
+
 function bootstrapAlert(message, severity, timeout){
   // Clear the previous alert - so they don't keep stacking on top of each other
   $('#bootstrap-alert').alert('close');
@@ -32,7 +35,13 @@ function bootstrapAlert(message, severity, timeout){
   $('#qiita-main').prepend(alertDiv);
 
   if(timeout > 0) {
-   window.setTimeout(function() { $('#alert-message').alert('close'); }, timeout);
+   if (timeoutHandleForBoostrapAlert != null) {
+     window.clearTimeout(timeoutHandleForBoostrapAlert);
+   }
+   timeoutHandleForBoostrapAlert = window.setTimeout(function() {
+     $('#alert-message').alert('close');
+     timeoutHandleForBoostrapAlert = null;
+   }, timeout);
   }
 }
 
