@@ -124,14 +124,6 @@ class ConfigurationManager(object):
         The script used to start the plugins
     plugin_dir : str
         The path to the directory containing the plugin configuration files
-    redbiom_redis_host : str
-        The host/ip for redbiom in redis
-    redbiom_redis_port : int
-        The port for redbiom in redis
-    redbiom_redis_password : str
-        The password for redbiom in redis
-    redbiom_redis_db : int
-        The db for redbiom in redis
 
     Raises
     ------
@@ -166,7 +158,6 @@ class ConfigurationManager(object):
         self._get_ipython(config)
         self._get_vamps(config)
         self._get_portal(config)
-        self._get_redbiom(config)
 
     def _get_main(self, config):
         """Get the configuration of the main section"""
@@ -312,13 +303,3 @@ class ConfigurationManager(object):
                 self.portal_dir = self.portal_dir[:-1]
         else:
             self.portal_dir = ""
-
-    def _get_redbiom(self, config):
-        """Get the configuration of the rebdbiom redis section"""
-        sec_get = partial(config.get, 'redbiom')
-        sec_getint = partial(config.getint, 'redbiom')
-
-        self.redbiom_redis_host = sec_get('HOST')
-        self.redbiom_redis_password = sec_get('PASSWORD')
-        self.redbiom_redis_db = sec_getint('DB')
-        self.redbiom_redis_port = sec_getint('PORT')

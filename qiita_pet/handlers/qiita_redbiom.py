@@ -25,24 +25,30 @@ class RedbiomPublicSearch(BaseHandler):
 
     @execute_as_transaction
     def _redbiom_search(self, context, query, search_on, callback):
-        if search_on == 'metadata':
-            samples = redbiom.search.metadata_full(query, categories=None)
+        df = redbiom.summarize.contexts()
+        contexts = df.ContextName.values
+        if context not in contexts:
+            callback(('', 'The given context is not valid: %s - %s' % (
+                context, contexts)))
         else:
-            redbiom._requests.valid(context)
-            # from_or_nargs first parameter is the file handler so it uses that
-            # as the query input. None basically will force to take the values
-            # from query
-            it = redbiom.util.from_or_nargs(None, query)
-            samples = redbiom.util.samples_from_observations(
-                it, False, context)
+            if search_on == 'metadata':
+                samples = redbiom.search.metadata_full(query, categories=None)
+            elif search_on == 'observations':
+                # from_or_nargs first parameter is the file handler so it uses
+                # that as the query input. None basically will force to take
+                # the values from query
+                samples = redbiom.util.samples_from_observations(
+                    query.split(' '), True, context)
+            else:
+                callback(('', 'Incorrect search by: you can use observations '
+                          'or metadata and you passed: %s' % search_on))
 
-        if not samples:
-            callback(('', 'No samples where found! Try again ...'))
-
-        df, _ = redbiom.fetch.sample_metadata(
-            samples, common=True, context=context, restrict_to=None)
-
-        callback((df.to_html(), ''))
+            if bool(samples):
+                df, _ = redbiom.fetch.sample_metadata(
+                    samples, common=True, context=context, restrict_to=None)
+                callback((df.to_html(), ''))
+            else:
+                callback(('', 'No samples where found! Try again ...'))
 
     @coroutine
     @execute_as_transaction
@@ -51,7 +57,7 @@ class RedbiomPublicSearch(BaseHandler):
         search = self.get_argument('search', None)
         search_on = self.get_argument('search_on', None)
 
-        data = None
+        data = ''
         if search is not None and search and search != ' ':
             if search_on in ('observations', 'metadata'):
                 data, msg = yield Task(
@@ -60,7 +66,5 @@ class RedbiomPublicSearch(BaseHandler):
                 msg = 'Not a valid option for search_on'
         else:
             msg = 'Nothing to search for ...'
-
-        print '-->', msg, type(data)
 
         self.write({'status': 'success', 'message': msg, 'data': data})

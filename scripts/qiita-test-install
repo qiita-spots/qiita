@@ -183,15 +183,6 @@ class QiitaConfig(TestCase):
             self.redis_version = r.info()['redis_version']
         except:
             self.redis_version = None
-        try:
-            r = StrictRedis(
-                host=self.config.redbiom_redis_host,
-                password=self.config.redbiom_redis_password,
-                port=self.config.redbiom_redis_port,
-                db=self.config.redbiom_redis_db)
-            self.redbiom_redis_version = r.info()['redis_version']
-        except:
-            self.redbiom_redis_version = None
 
     def test_future_library_version(self):
         acceptable_version = (0, 14, 0)
@@ -286,9 +277,6 @@ class QiitaConfig(TestCase):
              str_acceptable_max_version))
 
     def test_redbiom_version(self):
-        if not self.redbiom_redis_version:
-            self.assertTrue(False, 'redbiom redis not running or configured')
-
         acceptable_version = ('2017', '0', '1', 'dev0')
         string_acceptable_version = '.'.join(map(str, acceptable_version))
         version = tuple(redbiom_lib_version.split('.'))
@@ -343,6 +331,12 @@ def main():
         "SELECT current_patch FROM settings")[0]
     qiita_db_patch_number = splitext(current_patch)[0]
 
+    # Getting required environment variables
+    if 'REDBIOM_HOST' in environ:
+        redbiom_host = environ['REDBIOM_HOST']
+    else:
+        redbiom_host = None
+
     version_info = [
         ('click library version', click_lib_version),
         ('future library version', future_lib_version),
@@ -350,7 +344,8 @@ def main():
         ('pandas library version', pandas_lib_version),
         ('tornado library version', tornado_lib_version),
         ('redis library version', redis_lib_version),
-        ('redbiom library version', redbiom_lib_version),
+        ('redbiom library version', '%s - host: %s' % (
+            redbiom_lib_version, redbiom_host)),
         ('bcrypt library version', bcrypt_lib_version),
         ('pyparsing library version', pyparsing_lib_version),
         ('networkX library version', networkx_lib_version),

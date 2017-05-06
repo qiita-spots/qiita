@@ -184,6 +184,12 @@ Next, make a test environment:
 qiita-env make --no-load-ontologies
 ```
 
+Finally, redbiom rely on the REDBIOM_HOST environment variable to set the URL to query. By default is set to http://127.0.0.1:7379, which is the webdis default. For example you could:
+
+```bash
+export REDBIOM_HOST=http://my_host.com:7329
+```
+
 ## Start Qiita
 
 Start postgres (instructions vary depending on operating system and install method).
