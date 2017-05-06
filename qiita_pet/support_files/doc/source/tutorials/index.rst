@@ -1,17 +1,17 @@
-Tutorials
-=========
+Qiita Guides
+============
 
-The following is a full list of the available tutorials:
+This is not a tutorial section, for tutorials please visit the
+`CMI Qiita/GNPS workshop pages <http://cmi-workshop.readthedocs.io/en/latest/>`__.
+
+The following is a full list of the available guides:
 
 .. toctree::
    :maxdepth: 2
 
-   account-creation
    prepare-information-files
    ebi-submission
-   getting-started
    sharing
-   analyze-data
    no-raw-sequences
    join-paired-end-reads
 
