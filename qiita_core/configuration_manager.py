@@ -145,7 +145,7 @@ class ConfigurationManager(object):
             config.readfp(conf_file)
 
         _required_sections = {'main', 'redis', 'postgres', 'smtp', 'ebi',
-                              'ipython', 'portal', 'redbiom'}
+                              'ipython', 'portal'}
         if not _required_sections.issubset(set(config.sections())):
             missing = _required_sections - set(config.sections())
             raise MissingConfigSection(', '.join(missing))
