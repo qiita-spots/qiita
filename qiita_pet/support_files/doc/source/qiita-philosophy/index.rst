@@ -69,6 +69,73 @@ public, both in Qiita and the permanent repository, Figure 2.
    study listing page.
 
 
+Qiita allows for complex study designs
+--------------------------------------
+
+As seen in Figure 1 studies are the  main source of data for Qiita, and studies
+can contain only one set of samples but can also contain multiple sets, each of
+which can have a different preparations.
+
+The traditional study design includes a single sample and a single preparation
+information file. However as technology improves, study designs become more
+complex where a study with a defined set of collected samples can have subsets
+prepared in different ways so we can answer different questions. For example,
+let's imagine a study looking at how different `microbial communities changes
+during mammalian corpse decomposition
+<https://www.ncbi.nlm.nih.gov/pubmed/26657285>`__.; thus, your full study design
+is to collect a set of samples, which you will then process with 16S, 18S and
+ITS primers. This will result in 1 sample and 3 preparation information files,
+`see it in Qiita <https://qiita.ucsd.edu/study/description/10141>`__.
+
+Now, let's imagine other more complex examples:
+1. All of the samples were prepped for 16S and sequenced in two separate
+  MiSeq runs
+2. 50 of the samples were prepped for 18S and ITS, and sequenced ina single
+  MiSeq run
+3. 50 of the samples were prepped for WGS and sequenced on a single
+  HiSeq run
+4. 30 of the samples have metabolomic profiles
+
+To represent this project in Qiita, you will need to create a single
+study with a single sample information file that contains all 100 of the
+samples. Separately, you will need to create four prep information files that
+describe the preparations for the corresponding samples. All raw data
+uploaded will need to correspond to a specific preparation (prep) information
+file. For instance, the data sets described above would require the following
+data and prep information:
+
+1. All of the samples prepped for 16S and sequenced in two separate
+  MiSeq runs
+
+  a) 1 prep information file describing the two MiSeq runs (use a
+     run\_prefix column to differentiate between the two MiSeq runs, more
+     on metadata below) where the 100 samples are represented
+  b) the 4-6 fastq raw data files without demultiplexing (i.e., the
+     forward, reverse (optional), and barcodes for each run)
+
+2. 50 of the samples prepped for 18S and ITS, and sequenced in a single
+  MiSeq run
+
+  a) prep information files, one describing the 18S and the other describing the
+     ITS preparations
+  b) the 2-3 fastq raw data files (forward, reverse (optional), and
+     barcodes)
+
+3. 50 of the samples prepped for WGS and sequenced on a single HiSeq run
+
+  a) 1 prep information files describing how the samples were multiplexed
+  b) the 2-3 fastq raw data files (forward, reverse (optional), and
+     barcodes).
+  c) NOTE: We currently do not have a processing pipeline for WGS but
+     should soon.
+
+4. 30 of the samples with metabolomic profiles
+
+  a) 1 prep information file. the raw data file(s) from the metabolomic
+     characterization.
+  b) NOTE: We currently do not have a processing pipeline for metabolomics but
+     should soon.
+
 Portals
 -------
 
