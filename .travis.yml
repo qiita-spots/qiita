@@ -1,5 +1,5 @@
 language: python
-sudo: required
+sudo: false
 env:
   global:
     - PYTHON_VERSION=2.7
@@ -36,7 +36,7 @@ install:
   - popd
   - travis_retry pip install . --process-dependency-links
 before_script:
-  - sudo redis-server /etc/redis/redis.conf --port 7777
+  - redis-server /etc/redis/redis.conf --port 7777 &
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
     export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
@@ -46,6 +46,9 @@ before_script:
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
   # loading redbiom with Qiita's test set
+  # first let's make sure redis is empty
+  - curl -s http://127.0.0.1:7379/FLUSHALL > /dev/null
+  - redbiom admin create-context --name "qiita-test" --description "qiita-test context"
   - fp=`python -c 'import qiita_db; print qiita_db.__file__'`
   - qdbd=`dirname $fp`;
   - redbiom admin load-sample-metadata --metadata ${qdbd}/support_files/test_data/templates/1_19700101-000000.txt
