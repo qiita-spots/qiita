@@ -117,3 +117,90 @@ function show_hide_process_list() {
     $("#qiita-processing").hide();
   }
 }
+
+function send_samples_to_moi(aids, samples) {
+  bootstrapAlert('We are adding ' + aids.length + ' artifact(s) to the analysis. This ' +
+                 'might take some time based on the number of samples on each artifact.', "warning", 10000);
+
+  if (typeof samples === 'undefined') {
+    $.get('/artifact/samples/', {ids:aids})
+      .done(function ( data ) {
+        if (data['status']=='success') {
+          moi.send('sel', data['data']);
+        } else {
+          bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+        }
+    });
+  } else {
+    var data = {}
+    data[aids[0]] = samples
+    console.log(data)
+    moi.send('sel', data);
+  }
+}
+
+function redbiom_send_to_moi(aid, row) {
+  var row_data = $('#redbiom-table').dataTable().fnGetData(row);
+  send_samples_to_moi([aid], row_data.samples);
+}
+
+function sel_study(name, row) {
+  var row_data = $('#'+name).dataTable().fnGetData(row);
+  var aids = []
+
+  for(var i=0;i<row_data.proc_data_info.length;i++){
+    aids.push(row_data['proc_data_info'][i]['pid']);
+  }
+  send_samples_to_moi(aids);
+}
+
+function sel_proc_data(aid) {
+  send_samples_to_moi([aid]);
+}
+
+function remove_pd_from_html(data) {
+    pid = data.proc_data;
+    sid = data.sid;
+    $('#proc' + pid).remove();
+    $('#proc' + pid + '-samples').remove();
+    // remove study if all proc data removed
+    if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+    check_empty();
+}
+
+function check_empty() {
+  if($('.row').length <= 1) {
+    $('#dflt-sel-info').removeAttr('style');
+    $('.topfloat').hide();
+    $('#no-selected').show();
+  }
+}
+
+function remove_sample_from_html(data) {
+    pid = data.proc_data;
+    sample = data.samples[0];
+    sid = data.sid;
+    document.getElementById(pid + '@' + sample).remove();
+    //decriment sample count for pid
+    var count = $('#proc' + pid + '-sample-count');
+    count.text(parseInt(count.text(), 10) - 1);
+    // remove proc data if all samples removed
+    if($('#proc' + pid + '-samples-table tbody').children().length === 0) { $('#proc'+pid).remove(); $('#proc' + pid + '-samples').remove(); }
+    // remove study if all proc data removed
+    if($('#study'+ sid + '-table tbody').children().length === 1) { $('#study'+sid).remove(); }
+    check_empty();
+}
+
+function clear_from_html(data) {
+  $.each($('.row'), function(index, value) { value.remove(); });
+  check_empty();
+}
+
+function error(evt) {
+  $('#ws-error').html("<b>Server communication error. Sample removal will not be recorded. Please try again later.</b>");
+};
+
+function show_alert(data) {
+  bootstrapAlert(data + ' samples selected.', "success", 10000);
+   $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
+}

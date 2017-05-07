@@ -10,45 +10,11 @@ td.details-control {
   cursor: pointer;
 }
 </style>
-<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
-<script src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
 
 <script type="text/javascript">
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
-
-function send_samples_to_moi(aids) {
-  bootstrapAlert('We are adding ' + aids.length + ' artifact(s) to the analysis. This ' +
-                 'might take some time based on the number of samples on each artifact.', "warning", 10000);
-  $.get('/artifact/samples/', {ids:aids})
-    .done(function ( data ) {
-      if (data['status']=='success') {
-        moi.send('sel', data['data']);
-      } else {
-        bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
-      }
-    });
-}
-
-function sel_study(name, row) {
-  var row_data = $('#'+name).dataTable().fnGetData(row);
-  var aids = []
-
-  for(var i=0;i<row_data.proc_data_info.length;i++){
-    aids.push(row_data['proc_data_info'][i]['pid']);
-  }
-  send_samples_to_moi(aids);
-}
-
-function sel_proc_data(aid) {
-  send_samples_to_moi([aid]);
-}
-
-function show_alert(data) {
-  bootstrapAlert(data + ' samples selected.', "success", 10000);
-   $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
-}
 
 function fillAbstract(table, row) {
   $('#title-text-area').text($('#' + table).find('#study' + row + "-title").text());
