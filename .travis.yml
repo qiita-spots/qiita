@@ -35,15 +35,8 @@ install:
   - ./webdis &
   - popd
   - travis_retry pip install . --process-dependency-links
-  - wget https://raw.githubusercontent.com/wasade/redbiom/master/Makefile
-  - wget https://raw.githubusercontent.com/wasade/redbiom/master/test.txt
-  - wget https://raw.githubusercontent.com/wasade/redbiom/master/test.biom
-  - wget https://raw.githubusercontent.com/wasade/redbiom/master/test_with_alts.txt
-  - wget https://raw.githubusercontent.com/wasade/redbiom/master/test_with_alts.biom
-  - make test_db
 before_script:
-  sudo redis-server /etc/redis/redis.conf --port 7777
-script:
+  - sudo redis-server /etc/redis/redis.conf --port 7777
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
     export QIITA_CONFIG_FP=`pwd`/qiita_core/support_files/config_test_travis.cfg;
@@ -52,6 +45,14 @@ script:
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
+  # loading redbiom with Qiita's test set
+  - fp=`python -c 'import qiita_db; print qiita_db.__file__'`
+  - qdbd=`dirname $fp`;
+  - redbiom admin load-sample-metadata --metadata ${qdbd}/support_files/test_data/templates/1_19700101-000000.txt
+  - redbiom admin load-sample-metadata-search --metadata ${qdbd}/support_files/test_data/templates/1_19700101-000000.txt
+  - redbiom admin load-observations --table ${qdbd}/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test
+  - redbiom admin load-sample-data --table ${qdbd}/support_files/test_data/processed_data/1_study_1001_closed_reference_otu_table.biom --context qiita-test
+script:
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-cron-job ; fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then qiita-test-install ; fi

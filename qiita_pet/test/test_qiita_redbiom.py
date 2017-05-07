@@ -92,20 +92,14 @@ class TestRedbiom(TestHandlerBase):
 
 
 OBSERVATION = [
-    {'artifact_id': 5, 'study_id': 1, 'version': '1.9.1',
+    {'artifact_id': 4, 'study_id': 1, 'version': '1.9.1',
      'command': 'Pick closed-reference OTUs', 'samples': [
         '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198', '1.SKD4.640185',
         '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191', '1.SKD8.640184',
         '1.SKD9.640182'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM', 'software': 'QIIME'},
-    {'artifact_id': 7, 'study_id': 1, 'version': None, 'command': None,
-     'samples': ['1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                 '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                 '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182'],
-     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
-     'aname': 'BIOM', 'software': None},
-    {'artifact_id': 4, 'study_id': 1, 'version': '1.9.1',
+    {'artifact_id': 5, 'study_id': 1, 'version': '1.9.1',
      'command': 'Pick closed-reference OTUs', 'samples': [
         '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198', '1.SKD4.640185',
         '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191', '1.SKD8.640184',
@@ -120,21 +114,16 @@ OBSERVATION = [
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM', 'software': 'QIIME'}]
 
-
 SEQUENCE = [
     {'artifact_id': 4, 'study_id': 1, 'version': '1.9.1',
      'command': 'Pick closed-reference OTUs', 'samples': ['1.SKM3.640197'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM', 'software': 'QIIME'},
-    {'artifact_id': 6, 'study_id': 1, 'version': u'1.9.1',
+    {'artifact_id': 5, 'study_id': 1, 'version': '1.9.1',
      'command': 'Pick closed-reference OTUs', 'samples': ['1.SKM3.640197'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM', 'software': 'QIIME'},
-    {'artifact_id': 7, 'study_id': 1, 'version': None, 'command': None,
-     'samples': ['1.SKM3.640197'],
-     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
-     'aname': 'BIOM', 'software': None},
-    {'artifact_id': 5, 'study_id': 1, 'version': '1.9.1',
+    {'artifact_id': 6, 'study_id': 1, 'version': u'1.9.1',
      'command': 'Pick closed-reference OTUs', 'samples': ['1.SKM3.640197'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM', 'software': 'QIIME'}]

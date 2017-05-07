@@ -45,28 +45,56 @@ class RedbiomPublicSearch(BaseHandler):
                           'or metadata and you passed: %s' % search_on))
 
             if bool(samples):
+                import qiita_db as qdb
                 import qiita_db.sql_connection as qdbsc
-                with qdbsc.TRN:
-                    sql = """
-                    SELECT DISTINCT study_title, study_id,
-                        artifact_id, a.name AS aname, sc.name as command,
-                        s.name as software, version,
-                        array_agg(DISTINCT sample_id) AS samples
-                    FROM qiita.study_sample
-                    LEFT JOIN qiita.study USING (study_id)
-                    LEFT JOIN qiita.study_artifact USING (study_id)
-                    LEFT JOIN qiita.artifact a USING (artifact_id)
-                    RIGHT JOIN qiita.artifact_type ON
-                        a.artifact_type_id=qiita.artifact_type.artifact_type_id
-                        AND artifact_type = 'BIOM'
-                    LEFT JOIN qiita.software_command sc USING (command_id)
-                    LEFT JOIN qiita.software s USING (software_id)
+
+                sql = """
+                WITH main_query AS (
+                    SELECT study_title, study_id, artifact_id,
+                        array_agg(DISTINCT sample_id) AS samples,
+                        qiita.artifact_descendants(artifact_id) AS children
+                    FROM qiita.study_prep_template
+                    JOIN qiita.prep_template USING (prep_template_id)
+                    JOIN qiita.prep_template_sample USING (prep_template_id)
+                    JOIN qiita.study USING (study_id)
                     WHERE sample_id IN %s
-                    GROUP BY study_title, study_id, artifact_id, aname,
-                    command, software, version"""
+                    GROUP BY study_title, study_id, artifact_id)
+                SELECT study_title, study_id, samples, name, command_id,
+                    (main_query.children).artifact_id AS artifact_id
+                FROM main_query
+                JOIN qiita.artifact a ON (main_query.children).artifact_id =
+                    a.artifact_id
+                JOIN qiita.artifact_type at ON (
+                    at.artifact_type_id = a.artifact_type_id
+                    AND artifact_type = 'BIOM')
+                ORDER BY artifact_id
+                """
+                with qdbsc.TRN:
                     qdbsc.TRN.add(sql, [tuple(samples)])
-                    callback(([dict(row)
-                               for row in qdbsc.TRN.execute_fetchindex()], ''))
+                    results = []
+                    commands = {}
+                    for row in qdbsc.TRN.execute_fetchindex():
+                        title, sid, samples, name, cid, aid = row
+                        nr = {'study_title': title, 'study_id': sid,
+                              'artifact_id': aid, 'aname': name,
+                              'samples': samples}
+                        if cid is not None:
+                            if cid not in commands:
+                                c = qdb.software.Command(cid)
+                                commands[cid] = {
+                                    'sfwn': c.software.name,
+                                    'sfv': c.software.version,
+                                    'cmdn': c.name
+                                }
+                            nr['command'] = commands[cid]['cmdn']
+                            nr['software'] = commands[cid]['sfwn']
+                            nr['version'] = commands[cid]['sfv']
+                        else:
+                            nr['command'] = None
+                            nr['software'] = None
+                            nr['version'] = None
+                        results.append(nr)
+                    callback((results, ''))
             else:
                 callback(([], 'No samples where found! Try again ...'))
 
