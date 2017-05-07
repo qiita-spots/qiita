@@ -38,8 +38,12 @@
         {type:'natural', targets:[1,2,3,4]},
         // render Add to Analysis button
         {"render": function ( data, type, row, meta ) {
-          var text = '<input type="button" class="btn btn-sm" value="Add to analysis" onclick="redbiom_send_to_moi(' +
-                     row.artifact_id + ', ' + meta.row + ')">';
+          {% if current_user is not None %}
+            var text = '<input type="button" class="btn btn-sm" value="Add to analysis" onclick="redbiom_send_to_moi(' +
+                       row.artifact_id + ', ' + meta.row + ')">';
+          {% else %}
+            var text = ''
+          {% end %}
           return text;
         }, targets: [0]},
         // render Study title
