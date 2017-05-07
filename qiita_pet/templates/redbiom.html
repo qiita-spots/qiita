@@ -11,6 +11,22 @@
     moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
     moi.add_callback('sel', show_alert);
     $("#redbiom-table").dataTable({
+      "dom": 'lfrt<"footer">ip',
+      'footerCallback': function ( row, data, start, end, display ) {
+        var api = this.api(), data;
+        var total_samples = api
+          .column(4)
+          .data()
+          .reduce( function (a, b) { return a + b.samples.length; }, 0);
+
+        $('.footer').addClass("col-md-12 text-right");
+        if (total_samples == 0) {
+          text = ''
+        } else {
+          text = 'Found ' + total_samples + ' samples.';
+        }
+        $('.footer').html(text)
+      },
       "columns": [
         { "data": null, "orderable": false, "width": "10%" },
         { "data": null, "width": "40%"  },
@@ -110,7 +126,7 @@
         </select>
       </div>
       <div class="col-xs-6">
-        <input type="text" class="form-control" name="search" id="search" placeholder="Search" required value="Diesel">
+        <input type="text" class="form-control" name="search" id="search" placeholder="Search" required>
       </div>
 
       <div class="col-xs-2">
