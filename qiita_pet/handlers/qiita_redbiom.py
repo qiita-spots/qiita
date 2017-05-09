@@ -32,11 +32,8 @@ class RedbiomPublicSearch(BaseHandler):
                 context, contexts)))
         else:
             if search_on == 'metadata':
-                samples = redbiom.search.metadata_full(query, categories=None)
+                samples = redbiom.search.metadata_full(query, categories=False)
             elif search_on == 'observations':
-                # from_or_nargs first parameter is the file handler so it uses
-                # that as the query input. None basically will force to take
-                # the values from query
                 samples = [s.split('_', 1)[1]
                            for s in redbiom.util.samples_from_observations(
                                query.split(' '), True, context)]

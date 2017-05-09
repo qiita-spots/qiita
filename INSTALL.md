@@ -90,7 +90,7 @@ brew install homebrew/versions/redis28
 
 ### webdis
 
-Note that this is the only package that assumes that Qiita is already installed (due to library dependencies). Also, that the general suggestion is to have 2 redis servers running, one for webdis/redbiom and the other for Qiita. The default configuration has webdis/redbiom running on the default redis port and Qiita's on 7777.
+Note that this is the only package that assumes that Qiita is already installed (due to library dependencies). Also, that the general suggestion is to have 2 redis servers running, one for webdis/redbiom and the other for Qiita. The default configuration. The reason for multiple redis servers is so that the redbiom cache can be flushed without impacting the operation of the qiita server itself.
 
 The following instructions install, compile and pre-populates the redbiom redis DB so we assume that redis is running on the default port and that Qiita is fully installed as the redbiom package is installed with Qiita.
 
@@ -184,7 +184,7 @@ Next, make a test environment:
 qiita-env make --no-load-ontologies
 ```
 
-Finally, redbiom rely on the REDBIOM_HOST environment variable to set the URL to query. By default is set to http://127.0.0.1:7379, which is the webdis default. For example you could:
+Finally, redbiom relies on the REDBIOM_HOST environment variable to set the URL to query. By default is set to http://127.0.0.1:7379, which is the webdis default. For example you could:
 
 ```bash
 export REDBIOM_HOST=http://my_host.com:7329

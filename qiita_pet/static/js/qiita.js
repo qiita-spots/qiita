@@ -134,7 +134,6 @@ function send_samples_to_moi(aids, samples) {
   } else {
     var data = {}
     data[aids[0]] = samples
-    console.log(data)
     moi.send('sel', data);
   }
 }
