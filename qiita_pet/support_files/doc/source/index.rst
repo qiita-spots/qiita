@@ -16,6 +16,9 @@ standards as described by this documentation.  Easily interface with the EBI
 repository for automated deposition. Query and interact with Qiita data
 programmatically.
 
+The latests tutorials can be found in:
+`CMI Qiita/GNPS workshop pages <http://cmi-workshop.readthedocs.io/en/latest/>`__.
+
 If you intend to use Qiita at the `central deployment
 <http://qiita.microbio.me>`__ we recommend that you have a look at the
 following documents:
