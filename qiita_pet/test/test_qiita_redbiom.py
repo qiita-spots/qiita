@@ -13,7 +13,6 @@ class TestRedbiom(TestHandlerBase):
 
     def test_post_metadata(self):
         post_args = {
-            'context': 'qiita-test',
             'search': 'Diesel',
             'search_on': 'metadata'
         }
@@ -23,7 +22,6 @@ class TestRedbiom(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
-            'context': 'qiita-test',
             'search': 'inf',
             'search_on': 'metadata'
         }
@@ -33,9 +31,19 @@ class TestRedbiom(TestHandlerBase):
                'message': 'No samples where found! Try again ...', 'data': []}
         self.assertEqual(loads(response.body), exp)
 
-    def test_post_sequence(self):
         post_args = {
-            'context': 'qiita-test',
+            'search': '4353076',
+            'search_on': 'metadata'
+        }
+        response = self.post('/redbiom/', post_args)
+        self.assertEqual(response.code, 200)
+        exp = {'status': 'success',
+               'message': ('Not a valid search: "4353076", are you sure this '
+                           'is a valid metadata value?'), 'data': []}
+        self.assertEqual(loads(response.body), exp)
+
+    def test_post_observations(self):
+        post_args = {
             'search': ('4479944'),
             'search_on': 'observations'
         }
@@ -45,7 +53,6 @@ class TestRedbiom(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
-            'context': 'qiita-test',
             'search': ('TT'),
             'search_on': 'observations'
         }
@@ -55,22 +62,39 @@ class TestRedbiom(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertEqual(loads(response.body), exp)
 
-    def test_post_errors(self):
+    def test_post_categories(self):
         post_args = {
-            'context': 'should error',
-            'search': 'infant',
-            'search_on': 'metadata'
+            'search': ('texture'),
+            'search_on': 'categories'
+        }
+        response = self.post('/redbiom/', post_args)
+        exp = {'status': 'success', 'message': '', 'data': CATEGORIES}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+        post_args = {
+            'search': ('longtext'),
+            'search_on': 'categories'
+        }
+        response = self.post('/redbiom/', post_args)
+        exp = {'status': 'success',
+               'message': 'No samples where found! Try again ...', 'data': []}
+        self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body), exp)
+
+        post_args = {
+            'search': '4353076',
+            'search_on': 'categories'
         }
         response = self.post('/redbiom/', post_args)
         self.assertEqual(response.code, 200)
         exp = {'status': 'success',
-               'message': ("The given context is not valid: should error - "
-                           "[u'qiita-test']"),
-               'data': []}
+               'message': ('Not a valid search: "4353076", are you sure this '
+                           'is a valid metadata category?'), 'data': []}
         self.assertEqual(loads(response.body), exp)
 
+    def test_post_errors(self):
         post_args = {
-            'context': 'qiita-test',
             'search_on': 'metadata'
         }
         response = self.post('/redbiom/', post_args)
@@ -80,7 +104,6 @@ class TestRedbiom(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
-            'context': 'qiita-test',
             'search': 'infant',
             'search_on': 'error'
         }
@@ -127,6 +150,12 @@ SEQUENCE = [
      'command': 'Pick closed-reference OTUs', 'samples': ['1.SKM3.640197'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM', 'software': 'QIIME'}]
+
+CATEGORIES = [
+    {'artifact_id': None, 'study_id': 1, 'version': None,
+     'command': 'texture', 'samples': ['texture'],
+     'study_title': 'Identification of the Microbiomes for Cannabis Soils',
+     'aname': None, u'software': None}]
 
 if __name__ == "__main__":
     main()

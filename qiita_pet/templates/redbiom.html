@@ -23,7 +23,11 @@
         if (total_samples == 0) {
           text = ''
         } else {
-          text = 'Found ' + total_samples + ' samples.';
+          if ($("#search_on").val() == 'categories'){
+            text = 'Found ' + total_samples + ' categories.';
+          } else {
+            text = 'Found ' + total_samples + ' samples.';
+          }
         }
         $('.footer').html(text)
       },
@@ -87,11 +91,10 @@
 
       show_loading("redbiom-info")
 
-      var context = $("#context").val();
       var search = $("#search").val();
       var search_on = $("#search_on").val();
 
-      $.post("{% raw qiita_config.portal_dir %}/redbiom/", {'context': context, 'search': search, 'search_on': search_on})
+      $.post("{% raw qiita_config.portal_dir %}/redbiom/", {'search': search, 'search_on': search_on})
         .done(function ( data ){
           var redbiom_table = $('#redbiom-table').DataTable();
           var redbiom_info = $('#redbiom-info');
@@ -104,12 +107,23 @@
                 `<div class="alert alert-warning alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <strong>Warning!</strong> ` + data.message + `</div><br/>`)
-            }
-            if(data.data){
+            } else if(data.data){
+              $('#redbiom-table tr:eq(0) th:eq(1)').text("Study Title");
+              if (search_on != 'categories') {
+                {% if current_user is not None %}
+                  $('#redbiom-table tr:eq(0) th:eq(0)').text("Add to Analysis");
+                {% end %}
+                $('#redbiom-table tr:eq(0) th:eq(2)').text("Artifact Name");
+                $('#redbiom-table tr:eq(0) th:eq(3)').text("Artifact Processing");
+                $('#redbiom-table tr:eq(0) th:eq(4)').text("# of Samples Found");
+              } else {
+                $('#redbiom-table tr:eq(0) th:eq(3)').text("Metadata Categories");
+                $('#redbiom-table tr:eq(0) th:eq(4)').text("# of Categories Found");
+              }
               redbiom_table.rows.add(data.data).draw();
+              redbiom_info.html('');
             }
           }
-          redbiom_info.html('');
         });
     });
   });
@@ -122,14 +136,7 @@
   <br/><br/>
   <form data-toggle="validator" role="form" id="submitForm">
     <div class="form-group row">
-      <div class="col-xs-3">
-        <select class="selectpicker form-control" name="context" id="context">
-          {% for v in contexts %}
-            <option checked value="{{v}}">{{v}}</option>
-          {% end %}
-        </select>
-      </div>
-      <div class="col-xs-6">
+      <div class="col-xs-9">
         <input type="text" class="form-control" name="search" id="search" placeholder="Search" required>
       </div>
 
@@ -137,6 +144,7 @@
         <select class="selectpicker form-control col-xs-2" name="search_on" id="search_on">
           <option value="metadata">Metadata</option>
           <option checked value="observations">Observation</option>
+          <option checked value="categories">Metadata Categories</option>
         </select>
       </div>
       <div class="col-xs-1">
@@ -154,11 +162,11 @@
     <table id="redbiom-table" class="table table-bordered gray-msg">
       <thead>
         <tr>
-          <th>Add to Analysis</th>
-          <th>Study Title</th>
-          <th>Artifact Name</th>
-          <th>Artifact Processing</th>
-          <th># of samples found</th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
         </tr>
       </thead>
     </table>
