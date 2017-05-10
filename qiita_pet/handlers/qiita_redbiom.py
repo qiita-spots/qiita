@@ -3,6 +3,7 @@ from tornado.gen import coroutine, Task
 from qiita_core.util import execute_as_transaction
 
 from .base_handlers import BaseHandler
+from request import ConnectionError
 import redbiom.summarize
 import redbiom.search
 import redbiom._requests
@@ -17,8 +18,12 @@ class RedbiomPublicSearch(BaseHandler):
 
     @execute_as_transaction
     def _redbiom_search(self, query, search_on, callback):
-        df = redbiom.summarize.contexts()
-        contexts = df.ContextName.values
+        try:
+            df = redbiom.summarize.contexts()
+            contexts = df.ContextName.values
+        except ConnectionError:
+            callback(([], 'Redbiom is down - contact admin, thanks!' % query))
+
         query = query.lower()
         samples, categories = [], []
 
