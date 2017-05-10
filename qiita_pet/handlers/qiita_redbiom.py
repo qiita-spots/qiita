@@ -22,7 +22,7 @@ class RedbiomPublicSearch(BaseHandler):
             df = redbiom.summarize.contexts()
             contexts = df.ContextName.values
         except ConnectionError:
-            callback(([], 'Redbiom is down - contact admin, thanks!' % query))
+            callback(([], 'Redbiom is down - contact admin, thanks!'))
 
         query = query.lower()
         samples, categories = [], []
