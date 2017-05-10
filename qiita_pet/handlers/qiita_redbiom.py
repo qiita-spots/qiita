@@ -3,7 +3,7 @@ from tornado.gen import coroutine, Task
 from qiita_core.util import execute_as_transaction
 
 from .base_handlers import BaseHandler
-from request import ConnectionError
+from requests import ConnectionError
 import redbiom.summarize
 import redbiom.search
 import redbiom._requests
