@@ -59,8 +59,8 @@ class RedbiomPublicSearch(BaseHandler):
                         '(too few letters), try a longer query' % query)
             elif search_on == 'observations':
                 features = [s.split('_', 1)[1] for context in contexts
-                           for s in redbiom.util.samples_from_observations(
-                               query.split(' '), True, context)]
+                            for s in redbiom.util.samples_from_observations(
+                                query.split(' '), True, context)]
             else:
                 error = True
                 message = ('Incorrect search by: you can use observations '
