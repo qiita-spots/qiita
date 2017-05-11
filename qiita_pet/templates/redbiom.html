@@ -9,24 +9,24 @@
 <script type="text/javascript">
   $(document).ready(function() {
     moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
-    moi.add_callback('sel', show_alert);
+    moi.add_callback('sel', display_number_of_samples_added);
     $("#redbiom-table").dataTable({
       "dom": 'lfrt<"footer">ip',
       'footerCallback': function ( row, data, start, end, display ) {
         var api = this.api(), data;
-        var total_samples = api
+        var total_features = api
           .column(4)
           .data()
           .reduce( function (a, b) { return a + b.samples.length; }, 0);
 
         $('.footer').addClass("col-md-12 text-right");
-        if (total_samples == 0) {
-          text = ''
+        if (total_features == 0) {
+          text = '';
         } else {
           if ($("#search_on").val() == 'categories'){
-            text = 'Found ' + total_samples + ' categories.';
+            text = 'Found ' + total_features + ' categories.';
           } else {
-            text = 'Found ' + total_samples + ' samples.';
+            text = 'Found ' + total_features + ' samples.';
           }
         }
         $('.footer').html(text)
@@ -46,7 +46,7 @@
             var text = '<input type="button" class="btn btn-sm" value="Add to analysis" onclick="redbiom_send_to_moi(' +
                        row.artifact_id + ', ' + meta.row + ')">';
           {% else %}
-            var text = ''
+            var text = '';
           {% end %}
           return text;
         }, targets: [0]},
@@ -89,7 +89,7 @@
     $("#submitForm").submit(function(event){
       event.preventDefault();
 
-      show_loading("redbiom-info")
+      show_loading("redbiom-info");
 
       var search = $("#search").val();
       var search_on = $("#search_on").val();
@@ -148,7 +148,7 @@
         </select>
       </div>
       <div class="col-xs-1">
-          <button class="btn btn-default" type="submit">GO!</button>
+          <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search"></span></button>
       </div>
     </div>
   </form>

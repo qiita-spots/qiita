@@ -1,3 +1,11 @@
+# -----------------------------------------------------------------------------
+# Copyright (c) 2014--, The Qiita Development Team.
+#
+# Distributed under the terms of the BSD 3-clause License.
+#
+# The full license is in the file LICENSE, distributed with this software.
+# -----------------------------------------------------------------------------
+
 from unittest import main
 
 from json import loads
@@ -44,7 +52,7 @@ class TestRedbiom(TestHandlerBase):
 
     def test_post_observations(self):
         post_args = {
-            'search': ('4479944'),
+            'search': '4479944',
             'search_on': 'observations'
         }
         response = self.post('/redbiom/', post_args)
@@ -53,7 +61,7 @@ class TestRedbiom(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
-            'search': ('TT'),
+            'search': 'TT',
             'search_on': 'observations'
         }
         response = self.post('/redbiom/', post_args)
@@ -64,7 +72,7 @@ class TestRedbiom(TestHandlerBase):
 
     def test_post_categories(self):
         post_args = {
-            'search': ('texture'),
+            'search': 'texture',
             'search_on': 'categories'
         }
         response = self.post('/redbiom/', post_args)
@@ -73,7 +81,7 @@ class TestRedbiom(TestHandlerBase):
         self.assertEqual(loads(response.body), exp)
 
         post_args = {
-            'search': ('longtext'),
+            'search': 'longtext',
             'search_on': 'categories'
         }
         response = self.post('/redbiom/', post_args)

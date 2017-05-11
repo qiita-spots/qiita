@@ -52,7 +52,7 @@ $(document).ready(function() {
 
   $("#search-waiting").hide();
   moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
-  moi.add_callback('sel', show_alert);
+  moi.add_callback('sel', display_number_of_samples_added);
   function format (name, d, row) {
       // `d` is the original data object for the row
       // create formatted cell with proc data table
