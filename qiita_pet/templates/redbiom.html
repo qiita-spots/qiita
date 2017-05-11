@@ -1,0 +1,173 @@
+{% from qiita_core.qiita_settings import qiita_config %}
+{% from future.utils import viewitems %}
+{% extends sitebase.html %}
+
+{%block head%}
+<script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
+<script type="text/javascript">
+  $(document).ready(function() {
+    moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
+    moi.add_callback('sel', display_number_of_samples_added);
+    $("#redbiom-table").dataTable({
+      "dom": 'lfrt<"footer">ip',
+      'footerCallback': function ( row, data, start, end, display ) {
+        var api = this.api(), data;
+        var total_features = api
+          .column(4)
+          .data()
+          .reduce( function (a, b) { return a + b.samples.length; }, 0);
+
+        $('.footer').addClass("col-md-12 text-right");
+        if (total_features == 0) {
+          text = '';
+        } else {
+          if ($("#search_on").val() == 'categories'){
+            text = 'Found ' + total_features + ' categories.';
+          } else {
+            text = 'Found ' + total_features + ' samples.';
+          }
+        }
+        $('.footer').html(text)
+      },
+      "columns": [
+        { "data": null, "orderable": false, "width": "10%" },
+        { "data": null, "width": "40%"  },
+        { "data": "aname", "width": "20%"  },
+        { "data": null, "width": "20%"  },
+        { "data": null, "width": "10%" }
+      ],
+      columnDefs: [
+        {type:'natural', targets:[1,2,3,4]},
+        // render Add to Analysis button
+        {"render": function ( data, type, row, meta ) {
+          {% if current_user is not None %}
+            var text = '<input type="button" class="btn btn-sm" value="Add to analysis" onclick="redbiom_send_to_moi(' +
+                       row.artifact_id + ', ' + meta.row + ')">';
+          {% else %}
+            var text = '';
+          {% end %}
+          return text;
+        }, targets: [0]},
+        // render Study title
+        {"render": function ( data, type, row, meta ) {
+          {% if current_user is not None %}
+            var text = '<a target="_blank" href="{% raw qiita_config.portal_dir %}/study/description/' +
+                       row.study_id + '" role="button">' + row.study_title + ' (ID: ' + row.study_id + ')</a>';
+          {% else %}
+            var text = row.study_title + ' (ID: ' + row.study_id + ')';
+          {% end %}
+          return text;
+        }, targets: [1]},
+        // render Artifact Processing
+        {"render": function ( data, type, row, meta ) {
+            var text = '';
+            if (!(!row.command)) {
+              text += row.command;
+            }
+            if (!(!row.software)) {
+              text += ' ' + row.software;
+            }
+            if (!(!row.version)) {
+              text += ' v' + row.version;
+            }
+          return text;
+        }, targets: [3]},
+        // render Artifact Processing
+        {"render": function ( data, type, row, meta ) {
+          return row.samples.length;
+        }, targets: [4]}
+      ],
+      "language": {
+          "search": "Filter results by column data (Study Name, Artifact Name, Software, etc):",
+          "loadingRecords": "Please wait - loading information ...",
+          "zeroRecords": "  "
+      },
+  });
+
+    $("#submitForm").submit(function(event){
+      event.preventDefault();
+
+      show_loading("redbiom-info");
+
+      var search = $("#search").val();
+      var search_on = $("#search_on").val();
+
+      $.post("{% raw qiita_config.portal_dir %}/redbiom/", {'search': search, 'search_on': search_on})
+        .done(function ( data ){
+          var redbiom_table = $('#redbiom-table').DataTable();
+          var redbiom_info = $('#redbiom-info');
+          redbiom_table.clear().draw();
+          if(data.status == "error") {
+            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
+          } else {
+            if(data.message != ''){
+              redbiom_info.html(
+                `<div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <strong>Warning!</strong> ` + data.message + `</div><br/>`)
+            } else if(data.data){
+              $('#redbiom-table tr:eq(0) th:eq(1)').text("Study Title");
+              if (search_on != 'categories') {
+                {% if current_user is not None %}
+                  $('#redbiom-table tr:eq(0) th:eq(0)').text("Add to Analysis");
+                {% end %}
+                $('#redbiom-table tr:eq(0) th:eq(2)').text("Artifact Name");
+                $('#redbiom-table tr:eq(0) th:eq(3)').text("Artifact Processing");
+                $('#redbiom-table tr:eq(0) th:eq(4)').text("# of Samples Found");
+              } else {
+                $('#redbiom-table tr:eq(0) th:eq(3)').text("Metadata Categories");
+                $('#redbiom-table tr:eq(0) th:eq(4)').text("# of Categories Found");
+              }
+              redbiom_table.rows.add(data.data).draw();
+              redbiom_info.html('');
+            }
+          }
+        });
+    });
+  });
+</script>
+
+{%end%}
+
+{%block content%}
+  <small>Some general instructions!</small>
+  <br/><br/>
+  <form data-toggle="validator" role="form" id="submitForm">
+    <div class="form-group row">
+      <div class="col-xs-9">
+        <input type="text" class="form-control" name="search" id="search" placeholder="Search" required>
+      </div>
+
+      <div class="col-xs-2">
+        <select class="selectpicker form-control col-xs-2" name="search_on" id="search_on">
+          <option value="metadata">Metadata</option>
+          <option checked value="observations">Observation</option>
+          <option checked value="categories">Metadata Categories</option>
+        </select>
+      </div>
+      <div class="col-xs-1">
+          <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search"></span></button>
+      </div>
+    </div>
+  </form>
+
+  <hr>
+
+  <div class="row">
+    <div class="col-md-12" id="redbiom-info"></div>
+  </div>
+  <div class="row">
+    <table id="redbiom-table" class="table table-bordered gray-msg">
+      <thead>
+        <tr>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+
+{% end %}
