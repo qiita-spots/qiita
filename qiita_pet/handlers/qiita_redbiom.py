@@ -83,42 +83,54 @@ class RedbiomPublicSearch(BaseHandler):
                                 (prep_template_id)
                             JOIN qiita.study USING (study_id)
                             WHERE sample_id IN %s
-                            GROUP BY study_title, study_id, artifact_id)
-                        SELECT study_title, study_id, samples,
-                            name, command_id,
-                            (main_query.children).artifact_id AS artifact_id
-                        FROM main_query
-                        JOIN qiita.artifact a ON
-                            (main_query.children).artifact_id = a.artifact_id
-                        JOIN qiita.artifact_type at ON (
-                            at.artifact_type_id = a.artifact_type_id
-                            AND artifact_type = 'BIOM')
-                        ORDER BY artifact_id
+                            GROUP BY study_title, study_id, artifact_id),
+                         artifact_query AS (
+                            SELECT study_title, study_id, samples,
+                                name, command_id,
+                                (main_query.children).artifact_id AS
+                                    artifact_id
+                            FROM main_query
+                            JOIN qiita.artifact a ON
+                                (main_query.children).artifact_id =
+                                    a.artifact_id
+                            JOIN qiita.artifact_type at ON (
+                                at.artifact_type_id = a.artifact_type_id
+                                AND artifact_type = 'BIOM')
+                            ORDER BY artifact_id)
+                        SELECT artifact_query.*, a.command_id AS parent_cid
+                        FROM artifact_query
+                        LEFT JOIN qiita.parent_artifact pa ON (
+                            artifact_query.artifact_id = pa.artifact_id)
+                        LEFT JOIN qiita.artifact a ON (
+                            pa.parent_id = a.artifact_id)
                         """
                         with qdbsc.TRN:
                             qdbsc.TRN.add(sql, [tuple(features)])
                             results = []
                             commands = {}
+                            commands_parent = {}
                             for row in qdbsc.TRN.execute_fetchindex():
-                                title, sid, samples, name, cid, aid = row
+                                title, sid, samples, name, cid, aid, pid = row
                                 nr = {'study_title': title, 'study_id': sid,
                                       'artifact_id': aid, 'aname': name,
                                       'samples': samples}
                                 if cid is not None:
                                     if cid not in commands:
                                         c = qdb.software.Command(cid)
-                                        commands[cid] = {
-                                            'sfwn': c.software.name,
-                                            'sfv': c.software.version,
-                                            'cmdn': c.name
-                                        }
-                                    nr['command'] = commands[cid]['cmdn']
-                                    nr['software'] = commands[cid]['sfwn']
-                                    nr['version'] = commands[cid]['sfv']
+                                        commands[cid] = '%s - %s v%s' % (
+                                            c.name, c.software.name,
+                                            c.software.version)
+                                    if pid is not None:
+                                        if pid not in commands_parent:
+                                            c = qdb.software.Command(pid)
+                                            commands_parent[pid] = c.name
+                                        nr['command'] = '%s @ %s' % (
+                                            commands[cid],
+                                            commands_parent[pid])
+                                    else:
+                                        nr['command'] = commands[cid]
                                 else:
-                                    nr['command'] = None
-                                    nr['software'] = None
-                                    nr['version'] = None
+                                    nr['command'] = ''
                                 results.append(nr)
                     else:
                         sql = """
