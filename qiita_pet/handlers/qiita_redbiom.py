@@ -96,8 +96,7 @@ class RedbiomPublicSearch(BaseHandler):
                                     a.artifact_id
                             JOIN qiita.artifact_type at ON (
                                 at.artifact_type_id = a.artifact_type_id
-                                AND artifact_type = 'BIOM')
-                            ORDER BY artifact_id),
+                                AND artifact_type = 'BIOM')),
                          parent_query AS (
                             SELECT artifact_query.*,
                                 array_agg(parent_params) as parent_parameters
@@ -114,6 +113,7 @@ class RedbiomPublicSearch(BaseHandler):
                                 artifact_query.command_id,
                                 artifact_query.artifact_id)
                         SELECT * FROM parent_query
+                        ORDER BY parent_parameters, artifact_id
                         """
 
                         sql_params = """
