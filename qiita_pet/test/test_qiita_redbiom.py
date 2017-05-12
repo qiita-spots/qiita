@@ -124,21 +124,24 @@ class TestRedbiom(TestHandlerBase):
 
 OBSERVATION = [
     {'artifact_id': 4, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Split libraries FASTQ', 'samples': [
+     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
+     'samples': [
         '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198', '1.SKD4.640185',
         '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191', '1.SKD8.640184',
         '1.SKD9.640182'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM'},
     {'artifact_id': 5, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Split libraries FASTQ', 'samples': [
+     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
+     'samples': [
         '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198', '1.SKD4.640185',
         '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191', '1.SKD8.640184',
         '1.SKD9.640182'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM'},
     {'artifact_id': 6, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Split libraries FASTQ', 'samples': [
+     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
+     'samples': [
         '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198', '1.SKD4.640185',
         '1.SKD5.640186', '1.SKD6.640190', '1.SKD7.640191', '1.SKD8.640184',
         '1.SKD9.640182'],
@@ -147,17 +150,17 @@ OBSERVATION = [
 
 SEQUENCE = [
     {'artifact_id': 4, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Split libraries FASTQ',
+     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
      'samples': ['1.SKM3.640197'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM'},
     {'artifact_id': 5, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Split libraries FASTQ',
+     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
      'samples': ['1.SKM3.640197'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM'},
     {'artifact_id': 6, 'study_id': 1,
-     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Split libraries FASTQ',
+     'command': 'Pick closed-reference OTUs - QIIME v1.9.1 @ Defaults',
      'samples': ['1.SKM3.640197'],
      'study_title': 'Identification of the Microbiomes for Cannabis Soils',
      'aname': 'BIOM'}]

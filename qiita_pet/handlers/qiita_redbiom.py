@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from future.utils import viewitems
 from requests import ConnectionError
 import redbiom.summarize
 import redbiom.search
@@ -96,21 +97,45 @@ class RedbiomPublicSearch(BaseHandler):
                             JOIN qiita.artifact_type at ON (
                                 at.artifact_type_id = a.artifact_type_id
                                 AND artifact_type = 'BIOM')
-                            ORDER BY artifact_id)
-                        SELECT artifact_query.*, a.command_id AS parent_cid
-                        FROM artifact_query
-                        LEFT JOIN qiita.parent_artifact pa ON (
-                            artifact_query.artifact_id = pa.artifact_id)
-                        LEFT JOIN qiita.artifact a ON (
-                            pa.parent_id = a.artifact_id)
+                            ORDER BY artifact_id),
+                         parent_query AS (
+                            SELECT artifact_query.*,
+                                array_agg(parent_params) as parent_parameters
+                            FROM artifact_query
+                            LEFT JOIN qiita.parent_artifact pa ON (
+                                artifact_query.artifact_id = pa.artifact_id)
+                            LEFT JOIN qiita.artifact a ON (
+                                pa.parent_id = a.artifact_id),
+                                json_each_text(command_parameters)
+                                    parent_params
+                            GROUP BY artifact_query.study_title,
+                                artifact_query.study_id,
+                                artifact_query.samples, artifact_query.name,
+                                artifact_query.command_id,
+                                artifact_query.artifact_id)
+                        SELECT * FROM parent_query
                         """
+
+                        sql_params = """
+                        SELECT parameter_set_name, array_agg(ps) AS param_set
+                        FROM qiita.default_parameter_set,
+                            json_each_text(parameter_set) ps
+                        GROUP BY parameter_set_name"""
+
                         with qdbsc.TRN:
-                            qdbsc.TRN.add(sql, [tuple(features)])
                             results = []
                             commands = {}
-                            commands_parent = {}
+                            # obtaining all existing parameters, note that
+                            # they are not that many (~40) and we don't expect
+                            # to have a huge growth in the near future
+                            qdbsc.TRN.add(sql_params)
+                            params = {pname: eval(params) for pname, params
+                                      in qdbsc.TRN.execute_fetchindex()}
+
+                            # now let's get the actual artifacts
+                            qdbsc.TRN.add(sql, [tuple(features)])
                             for row in qdbsc.TRN.execute_fetchindex():
-                                title, sid, samples, name, cid, aid, pid = row
+                                title, sid, samples, name, cid, aid, pp = row
                                 nr = {'study_title': title, 'study_id': sid,
                                       'artifact_id': aid, 'aname': name,
                                       'samples': samples}
@@ -120,15 +145,18 @@ class RedbiomPublicSearch(BaseHandler):
                                         commands[cid] = '%s - %s v%s' % (
                                             c.name, c.software.name,
                                             c.software.version)
-                                    if pid is not None:
-                                        if pid not in commands_parent:
-                                            c = qdb.software.Command(pid)
-                                            commands_parent[pid] = c.name
-                                        nr['command'] = '%s @ %s' % (
-                                            commands[cid],
-                                            commands_parent[pid])
-                                    else:
-                                        nr['command'] = commands[cid]
+
+                                    # [-1] taking the last cause it's sorted by
+                                    #      the number of overlapping parameters
+                                    # [0] then taking the first element that is
+                                    # the name of the parameter set
+                                    ppc = sorted(
+                                        [[k, len(eval(pp) & v)]
+                                         for k, v in viewitems(params)],
+                                        key=lambda x: x[1])[-1][0]
+
+                                    nr['command'] = '%s @ %s' % (
+                                        commands[cid], ppc)
                                 else:
                                     nr['command'] = ''
                                 results.append(nr)
