@@ -301,17 +301,3 @@ function display_number_of_samples_added(num_samples) {
   bootstrapAlert(num_samples + ' samples selected.', "success", 10000);
   $('#dflt-sel-info').css('color', 'rgb(0, 160, 0)');
 }
-
-/**
- *
- * Function to show the loading gif in a given div
- *
- * @param div_name string with the name of the div to populate with the loading gif
- *
- * This function replaces the content of the given div with the
- * gif to show that the section of page is loading
- *
- */
-function show_loading(div_name) {
-    $("#" + div_name).html("<img src='{% raw qiita_config.portal_dir %}/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
-}
