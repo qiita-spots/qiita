@@ -1208,6 +1208,15 @@ class ProcessingWorkflow(qdb.base.QiitaObject):
                      WHERE processing_job_workflow_id = %s"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchflatten()
+            # If the above SQL query returns a single element and the value
+            # is different from in construction, it means that all the jobs
+            # in the workflow are in the same status and it is not
+            # 'in_construction', hence raise the error. If the above SQL query
+            # returns more than value (len(res) > 1) it means that the workflow
+            # is no longer in construction cause some jobs have been submited
+            # for processing. Note that if the above query doesn't retrun any
+            # value, it means that no jobs are in the workflow and that means
+            # that the workflow is in construction.
             if (len(res) == 1 and res[0] != 'in_construction') or len(res) > 1:
                 # The workflow is no longer in construction, raise an error
                 raise qdb.exceptions.QiitaDBOperationNotPermittedError(

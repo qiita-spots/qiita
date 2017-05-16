@@ -107,7 +107,7 @@ DECLARE
     baf_cmd_id      bigint;
 BEGIN
     INSERT INTO qiita.software (name, version, description, environment_script, start_script, software_type_id, active)
-        VALUES ('Qiita', 'alpha', 'Internal Qiita jobs', 'source activate qiita', 'qiita-private-2', 3, True)
+        VALUES ('Qiita', 'alpha', 'Internal Qiita jobs', 'source activate qiita', 'qiita-private-plugin', 3, True)
         RETURNING software_id INTO qiita_sw_id;
 
     INSERT INTO qiita.software_command (software_id, name, description)

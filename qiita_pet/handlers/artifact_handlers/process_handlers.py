@@ -42,6 +42,7 @@ def process_artifact_handler_get_req(artifact_id):
 class ProcessArtifactHandler(BaseHandler):
     @authenticated
     def get(self, artifact_id):
+        # Check if the user has access to the artifact
         artifact_id = to_int(artifact_id)
         res = process_artifact_handler_get_req(artifact_id)
         self.render('artifact_ajax/processing_artifact.html', **res)
