@@ -65,9 +65,9 @@ def private_task(job_id):
 
     job = qdb.processing_job.ProcessingJob(job_id)
     job.update_heartbeat_state()
+    task_name = job.command.name
 
     try:
-        task_name = job.command.name
         TASK_DICT[task_name](job)
     except Exception:
         job.complete(False, error="Error executing private task: %s"

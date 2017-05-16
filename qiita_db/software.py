@@ -522,7 +522,7 @@ class Command(qdb.base.QiitaObject):
         Returns
         -------
         bool
-            Whether the commad is analysis only or not
+            Whether the command is analysis only or not
         """
         with qdb.sql_connection.TRN:
             sql = """SELECT is_analysis
