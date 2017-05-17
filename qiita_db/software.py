@@ -44,7 +44,8 @@ class Command(qdb.base.QiitaObject):
     _table = "software_command"
 
     @classmethod
-    def get_commands_by_input_type(cls, artifact_types, active_only=True):
+    def get_commands_by_input_type(cls, artifact_types, active_only=True,
+                                   exclude_analysis=True):
         """Returns the commands that can process the given artifact types
 
         Parameters
@@ -70,6 +71,8 @@ class Command(qdb.base.QiitaObject):
                      WHERE artifact_type IN %s"""
             if active_only:
                 sql += " AND active = True"
+            if exclude_analysis:
+                sql += " AND is_analysis = False"
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_types)])
             for c_id in qdb.sql_connection.TRN.execute_fetchflatten():
                 yield cls(c_id)
@@ -191,7 +194,8 @@ class Command(qdb.base.QiitaObject):
             return qdb.sql_connection.TRN.execute_fetchlast()
 
     @classmethod
-    def create(cls, software, name, description, parameters, outputs=None):
+    def create(cls, software, name, description, parameters, outputs=None,
+               analysis_only=False):
         r"""Creates a new command in the system
 
         The supported types for the parameters are:
@@ -222,6 +226,9 @@ class Command(qdb.base.QiitaObject):
         outputs : dict, optional
             The description of the outputs that this command generated. The
             format is: {output_name: artifact_type}
+        analysis_only : bool, optional
+            If true, then the command will only be available on the analysis
+            pipeline. Default: False.
 
         Returns
         -------
@@ -297,10 +304,10 @@ class Command(qdb.base.QiitaObject):
                                % (software.id, name))
             # Add the command to the DB
             sql = """INSERT INTO qiita.software_command
-                            (name, software_id, description)
-                     VALUES (%s, %s, %s)
+                            (name, software_id, description, is_analysis)
+                     VALUES (%s, %s, %s, %s)
                      RETURNING command_id"""
-            sql_params = [name, software.id, description]
+            sql_params = [name, software.id, description, analysis_only]
             qdb.sql_connection.TRN.add(sql, sql_params)
             c_id = qdb.sql_connection.TRN.execute_fetchlast()
 
@@ -507,6 +514,22 @@ class Command(qdb.base.QiitaObject):
                      WHERE command_id = %s"""
             qdb.sql_connection.TRN.add(sql, [True, self.id])
             return qdb.sql_connection.TRN.execute()
+
+    @property
+    def analysis_only(self):
+        """Returns if the command is an analysis-only command
+
+        Returns
+        -------
+        bool
+            Whether the command is analysis only or not
+        """
+        with qdb.sql_connection.TRN:
+            sql = """SELECT is_analysis
+                     FROM qiita.software_command
+                     WHERE command_id = %s"""
+            qdb.sql_connection.TRN.add(sql, [self.id])
+            return qdb.sql_connection.TRN.execute_fetchlast()
 
 
 class Software(qdb.base.QiitaObject):

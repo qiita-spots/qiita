@@ -55,6 +55,21 @@ class CommandTests(TestCase):
         exp = [qdb.software.Command(1), qdb.software.Command(2)]
         self.assertItemsEqual(obs, exp)
 
+        new_cmd = qdb.software.Command.create(
+            self.software, "Analysis Only Command",
+            "This is a command for testing",
+            {'req_art': ['artifact:["FASTQ"]', None]},
+            analysis_only=True)
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'SFF'], active_only=False))
+        exp = [qdb.software.Command(1), qdb.software.Command(2)]
+        self.assertItemsEqual(obs, exp)
+
+        obs = list(qdb.software.Command.get_commands_by_input_type(
+            ['FASTQ', 'SFF'], active_only=False, exclude_analysis=False))
+        exp = [qdb.software.Command(1), qdb.software.Command(2), new_cmd]
+        self.assertItemsEqual(obs, exp)
+
     def test_get_html_artifact(self):
         obs = qdb.software.Command.get_html_generator('BIOM')
         exp = qdb.software.Command(5)
@@ -278,10 +293,11 @@ class CommandTests(TestCase):
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
             'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
+        self.assertFalse(obs.analysis_only)
 
         obs = qdb.software.Command.create(
             self.software, "Test Command 2", "This is a command for testing",
-            self.parameters)
+            self.parameters, analysis_only=True)
         self.assertEqual(obs.name, "Test Command 2")
         self.assertEqual(obs.description, "This is a command for testing")
         exp_required = {'req_param': ('string', [None]),
@@ -292,6 +308,7 @@ class CommandTests(TestCase):
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
             'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
+        self.assertTrue(obs.analysis_only)
 
     def test_activate(self):
         qdb.software.Software.deactivate_all()

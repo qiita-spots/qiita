@@ -88,6 +88,25 @@ class CommandListHandlerTests(OauthTestingBase):
         self.assertEqual(obs.code, 200)
         obs = _get_command('QIIME', '1.9.1', 'New Command')
         self.assertEqual(obs.name, 'New Command')
+        self.assertFalse(obs.analysis_only)
+
+        # Create a new command that is analysis only
+        data = {
+            'name': 'New analysis command',
+            'description': 'Analysis command added for testing',
+            'required_parameters': dumps(
+                {'in_data': ['artifact:["BIOM"]', None]}),
+            'optional_parameters': dumps({'param1': ['string', 'default']}),
+            'outputs': dumps({'outtable': 'BIOM'}),
+            'default_parameter_sets': dumps({'dflt1': {'param1': 'test'}}),
+            'analysis_only': True
+        }
+        obs = self.post('/qiita_db/plugins/QIIME/1.9.1/commands/', data=data,
+                        headers=self.header)
+        self.assertEqual(obs.code, 200)
+        obs = _get_command('QIIME', '1.9.1', 'New analysis command')
+        self.assertEqual(obs.name, 'New analysis command')
+        self.assertTrue(obs.analysis_only)
 
 
 class CommandHandlerTests(OauthTestingBase):

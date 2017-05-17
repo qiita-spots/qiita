@@ -94,6 +94,7 @@ def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
             # Note that we are sure that the biom table exists for sure, so
             # no need to check if biom_fp is undefined
             biom_table = load_table(biom_fp)
+            samples = set(samples).intersection(biom_table.ids())
             biom_table.filter(samples, axis='sample', inplace=True)
             new_table = new_table.merge(biom_table)
             ids_map.update({sid: "%d.%s" % (a_id, sid)
@@ -498,8 +499,9 @@ with TRN:
     qiime_id = TRN.execute_fetchlast()
 
     # Step 2: Insert the new commands in the software_command table
-    sql = """INSERT INTO qiita.software_command (software_id, name, description)
-             VALUES (%s, %s, %s)
+    sql = """INSERT INTO qiita.software_command
+                (software_id, name, description, is_analysis)
+             VALUES (%s, %s, %s, TRUE)
              RETURNING command_id"""
     TRN.add(sql, [qiime_id, 'Summarize Taxa', 'Plots taxonomy summaries at '
                             'different taxonomy levels'])
@@ -606,7 +608,7 @@ with TRN:
         [sum_taxa_cmd_id, 'Defaults',
          '{"sort": false, "metadata_category": ""}'],
         [bdiv_cmd_id, 'Unweighted UniFrac',
-         '{"metrics": "unweighted_unifrac", "tree": ""}'],
+         '{"metric": "unweighted_unifrac", "tree": ""}'],
         [arare_cmd_id, 'Defaults',
          '{"max_rare_depth": "Default", "tree": "", "num_steps": 10, '
          '"min_rare_depth": 10, "metrics": ["chao1", "observed_otus"]}'],
@@ -669,7 +671,10 @@ with TRN:
                     srare_cmd_out_id)
             else:
                 # The BIOM table was not rarefied, use current table as initial
-                initial_biom_id = transfer_file_to_artifact()
+                initial_biom_id = transfer_file_to_artifact(
+                    analysis['analysis_id'], analysis['timestamp'], None,
+                    biom_data['data_type_id'], None, 7,
+                    biom_data['filepath_id'])
 
             # Loop through all the jobs that used this biom table as input
             sql = """SELECT *

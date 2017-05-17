@@ -27,7 +27,7 @@
   };
 
   function load_process_artifact_ui(artifact_id) {
-      populate_main_div('{% raw qiita_config.portal_dir %}/study/process/', {artifact_id: artifact_id });
+      populate_main_div('{% raw qiita_config.portal_dir %}/artifact/' + artifact_id + '/process/');
   };
 
   /*
