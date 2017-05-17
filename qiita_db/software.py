@@ -55,6 +55,8 @@ class Command(qdb.base.QiitaObject):
         active_only : bool, optional
             If True, return only active commands, otherwise return all commands
             Default: True
+        exclude_analysis : bool, optional
+            If True, return commands that are not part of the analysis pipeline
 
         Returns
         -------
