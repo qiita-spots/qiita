@@ -28,6 +28,8 @@ class CommandTests(TestCase):
             'req_param': ['string', None],
             'opt_int_param': ['integer', '4'],
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
+            'opt_mchoice_param': ['mchoice:["opt1", "opt2", "opt3"]',
+                                  ['opt1', 'opt2']],
             'opt_bool': ['boolean', 'False']}
         self.outputs = {'out1': 'BIOM'}
 
@@ -291,6 +293,8 @@ class CommandTests(TestCase):
         exp_optional = {
             'opt_int_param': ['integer', '4'],
             'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
+            'opt_mchoice_param': ['mchoice:["opt1", "opt2", "opt3"]',
+                                  ['opt1', 'opt2']],
             'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertFalse(obs.analysis_only)
@@ -300,13 +304,7 @@ class CommandTests(TestCase):
             self.parameters, analysis_only=True)
         self.assertEqual(obs.name, "Test Command 2")
         self.assertEqual(obs.description, "This is a command for testing")
-        exp_required = {'req_param': ('string', [None]),
-                        'req_art': ('artifact', ['BIOM'])}
         self.assertEqual(obs.required_parameters, exp_required)
-        exp_optional = {
-            'opt_int_param': ['integer', '4'],
-            'opt_choice_param': ['choice:["opt1", "opt2"]', 'opt1'],
-            'opt_bool': ['boolean', 'False']}
         self.assertEqual(obs.optional_parameters, exp_optional)
         self.assertTrue(obs.analysis_only)
 

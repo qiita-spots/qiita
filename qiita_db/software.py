@@ -272,16 +272,25 @@ class Command(qdb.base.QiitaObject):
             supported_types = ['string', 'integer', 'float', 'reference',
                                'boolean', 'prep_template']
             if ptype not in supported_types and not ptype.startswith(
-                    ('choice', 'artifact')):
-                supported_types.extend(['choice', 'artifact'])
+                    ('choice', 'mchoice', 'artifact')):
+                supported_types.extend(['choice', 'mchoice', 'artifact'])
                 raise qdb.exceptions.QiitaDBError(
                     "Unsupported parameters type '%s' for parameter %s. "
                     "Supported types are: %s"
                     % (ptype, pname, ', '.join(supported_types)))
 
-            if ptype.startswith('choice') and dflt is not None:
-                choices = loads(ptype.split(':')[1])
-                if dflt not in choices:
+            if ptype.startswith(('choice', 'mchoice')) and dflt is not None:
+                choices = set(loads(ptype.split(':')[1]))
+                dflt_val = dflt
+                if ptype.startswith('choice'):
+                    # In the choice case, the dflt value is a single string,
+                    # create a list with it the string on it to use the
+                    # issuperset call below
+                    dflt_val = [dflt_val]
+                else:
+                    # jsonize the list to store it in the DB
+                    dflt = dumps(dflt)
+                if not choices.issuperset(dflt_val):
                     raise qdb.exceptions.QiitaDBError(
                         "The default value '%s' for the parameter %s is not "
                         "listed in the available choices: %s"
@@ -452,7 +461,17 @@ class Command(qdb.base.QiitaObject):
                      WHERE command_id = %s AND required = false"""
             qdb.sql_connection.TRN.add(sql, [self.id])
             res = qdb.sql_connection.TRN.execute_fetchindex()
-            return {pname: [ptype, dflt] for pname, ptype, dflt in res}
+
+            # Define a function to load the json storing the default parameters
+            # if ptype is multiple choice. When I added it to the for loop as
+            # a one liner if, made the code a bit hard to read
+            def dflt_fmt(dflt, ptype):
+                if ptype.startswith('mchoice'):
+                    return loads(dflt)
+                return dflt
+
+            return {pname: [ptype, dflt_fmt(dflt, ptype)]
+                    for pname, ptype, dflt in res}
 
     @property
     def default_parameter_sets(self):
