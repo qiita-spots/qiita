@@ -13,6 +13,9 @@
     $("#redbiom-table").dataTable({
       "dom": 'lfrt<"footer">ip',
       'footerCallback': function ( row, data, start, end, display ) {
+
+        // adding total features found
+
         var api = this.api(), data;
         var total_features = api
           .column(4)
@@ -30,34 +33,40 @@
           }
         }
         $('.footer').html(text)
+
+        // adding selectors for filtering
+
+        this.api().columns().every( function (iterator) {
+          var column = this;
+          if (iterator == 3 && column.data().length != 0) {
+            var select = $('<select><option value=""></option></select>')
+              .appendTo( $(column.footer()).empty() )
+              .on('change', function () {
+                var val = $.fn.dataTable.util.escapeRegex( $(this).val() );
+                column
+                  .search( val ? '^'+val+'$' : '', true, false )
+                  .draw();
+              });
+            var added = [];
+            column.data().each(function (d){
+              var cmd = d.command;
+              if (added.indexOf(cmd) == -1){
+                added.push(cmd);
+                select.append('<option value="' + cmd + '">' + cmd + '</option>');
+              }
+            });
+          }
+        });
       },
       "columns": [
         { "data": null, "orderable": false, "width": "10%" },
         { "data": null, "width": "40%"  },
-        { "data": "aname", "width": "20%"  },
-        { "data": null, "width": "20%"  },
+        { "data": null, "width": "10%"  },
+        { "data": null, "width": "30%"  },
         { "data": null, "width": "10%" }
       ],
-      "order": [[ 3, 'asc' ]],
-      // "displayLength": 25,
-      "drawCallback": function ( settings ) {
-          var api = this.api();
-          var rows = api.rows( {page:'current'} ).nodes();
-          var last=null;
-
-          api.column(3, {page:'current'} ).data().each( function ( data, i ) {
-            group = data.command;
-            if ( last !== group ) {
-              $(rows).eq( i ).before(
-                '<tr class="group"><td colspan="5">'+group+'</td></tr>'
-              );
-              last = group;
-            }
-          });
-      },
       columnDefs: [
-        { "visible": false, "targets": 3 },
-        { type:'natural', targets: [1,2,4] },
+        { type:'natural', targets: [1,2,3,4] },
         // render Add to Analysis button
         {"render": function ( data, type, row, meta ) {
           var text = '';
@@ -87,6 +96,10 @@
           }
           return text;
         }, targets: [2]},
+        // render # of samples/categories
+        {"render": function ( data, type, row, meta ) {
+          return row.command;
+        }, targets: [3]},
         // render # of samples/categories
         {"render": function ( data, type, row, meta ) {
           return row.samples.length;
@@ -127,15 +140,16 @@
               var header_0 =  "";
             {% end %}
             var header_2 =  "Artifact Name";
-            var header_3 =  "# of Samples Found";
+            var header_4 =  "# of Samples";
             if (search_on == 'categories') {
               header_2 =  "Metadata Categories";
-              header_3 =  "# of Categories Found";
+              header_4 =  "# of Categories";
             }
             $('#redbiom-table tr:eq(0) th:eq(0)').text(header_0);
             $('#redbiom-table tr:eq(0) th:eq(1)').text("Study Title");
             $('#redbiom-table tr:eq(0) th:eq(2)').text(header_2);
-            $('#redbiom-table tr:eq(0) th:eq(3)').text(header_3);
+            $('#redbiom-table tr:eq(0) th:eq(3)').text("Processing Parameters");
+            $('#redbiom-table tr:eq(0) th:eq(4)').text(header_4);
 
             redbiom_table.rows.add(data.data).draw();
             redbiom_info.html('');
@@ -143,19 +157,6 @@
         }
       });
     });
-
-    // Order by the grouping
-    $('#redbiom-table tbody').on( 'click', 'tr.group', function () {
-      var table = $('#redbiom-table').DataTable();
-      var currentOrder = table.order()[0];
-      if (currentOrder[0] === 3 && currentOrder[1] === 'asc') {
-        table.order([ 3, 'desc' ]).draw();
-      }
-      else {
-        table.order([ 3, 'asc' ]).draw();
-      }
-    });
-
   });
 </script>
 
@@ -199,6 +200,15 @@
           <th></th>
         </tr>
       </thead>
+      <tfoot>
+        <tr>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+        </tr>
+      </tfoot>
     </table>
   </div>
 
