@@ -276,6 +276,10 @@
       else {
         $inp.val(dflt_val);
       }
+      $inp.addClass('optional-parameter');
+    }
+    else {
+      $inp.addClass('required-parameter');
     }
 
     $inp.appendTo($colDiv).attr('id', p_name).attr('name', p_name).addClass('form-control');
