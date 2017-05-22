@@ -64,11 +64,20 @@ class TestProcessingAPIReadOnly(TestCase):
                                        'sortmerna_e_value': 1,
                                        'sortmerna_max_pos': 10000,
                                        'threads': 1}}],
-               'req_options': {'input_data': ('artifact', ['Demultiplexed'])}}
+               'req_options': {'input_data': ('artifact', ['Demultiplexed'])},
+               'opt_options': {'reference': ['reference', '1'],
+                               'similarity': ['float', '0.97'],
+                               'sortmerna_coverage': ['float', '0.97'],
+                               'sortmerna_e_value': ['float', '1'],
+                               'sortmerna_max_pos': ['integer', '10000'],
+                               'threads': ['integer', '1']}}
+        # First check that the keys are the same
+        self.assertItemsEqual(obs, exp)
         self.assertEqual(obs['status'], exp['status'])
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['options'], exp['options'])
         self.assertEqual(obs['req_options'], exp['req_options'])
+        self.assertEqual(obs['opt_options'], exp['opt_options'])
 
     def test_job_ajax_get_req(self):
         obs = job_ajax_get_req("063e553b-327c-4818-ab4a-adfe58e49860")
