@@ -72,7 +72,22 @@ class RedbiomPublicSearch(BaseHandler):
                 import qiita_db.sql_connection as qdbsc
                 if features:
                     if search_on in ('metadata', 'observations'):
+                        # This query basically selects all studies/prep-infos
+                        # that contain the given sample ids (main_query); with
+                        # those we select the artifacts that are only BIOM and
+                        # their parent (artifact_query); then we can select
+                        # the processing parameters of the parents. The
+                        # structure might seem excessive but it's the only way
+                        # to work with the json elements of the database and
+                        # make it run in an OK manner (see initial comments)
+                        # in https://github.com/biocore/qiita/pull/2132. Also
+                        # this query could be simplified if we used a newer
+                        # version of postgres, which doesn't mean faster
+                        # performance
                         sql = """
+                        -- main_query will retrieve all basic information
+                        -- about the study based on which samples that exist
+                        -- in the prep info file, and their artifact_ids
                         WITH main_query AS (
                             SELECT study_title, study_id, artifact_id,
                                 array_agg(DISTINCT sample_id) AS samples,
@@ -85,6 +100,11 @@ class RedbiomPublicSearch(BaseHandler):
                             JOIN qiita.study USING (study_id)
                             WHERE sample_id IN %s
                             GROUP BY study_title, study_id, artifact_id),
+                        -- now, we can take all the artifacts and just select
+                        -- the BIOMs, while selecting the parent of the
+                        -- artifacts, note that we are selecting the main
+                        -- columns (discardig children) from the main_query +
+                        -- the children artifact_id
                          artifact_query AS (
                             SELECT study_title, study_id, samples,
                                 name, command_id,
@@ -97,6 +117,10 @@ class RedbiomPublicSearch(BaseHandler):
                             JOIN qiita.artifact_type at ON (
                                 at.artifact_type_id = a.artifact_type_id
                                 AND artifact_type = 'BIOM')),
+                        -- now, we can select the parent processing parameters
+                        -- of the children, note that we are selecting all
+                        -- columns returned from artifact_query and the
+                        -- parent processing parameters
                          parent_query AS (
                             SELECT artifact_query.*,
                                 array_agg(parent_params) as parent_parameters
@@ -112,6 +136,7 @@ class RedbiomPublicSearch(BaseHandler):
                                 artifact_query.samples, artifact_query.name,
                                 artifact_query.command_id,
                                 artifact_query.artifact_id)
+                        -- just select everything that is the parent_query
                         SELECT * FROM parent_query
                         ORDER BY parent_parameters, artifact_id
                         """
