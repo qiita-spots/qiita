@@ -88,17 +88,21 @@
           {% end %}
           return text;
         }, targets: [1]},
-        // render Artifact Name or Metadata Categories
+        // render Artifact Name
         {"render": function ( data, type, row, meta ) {
           var text = row.aname;
+          if ($("#search_on").val() == 'categories'){
+            text = '';
+          }
+          return text;
+        }, targets: [2]},
+        // render Processing Parameters or Metadata Categories
+        {"render": function ( data, type, row, meta ) {
+          var text = row.command;
           if ($("#search_on").val() == 'categories'){
             text = row.samples.join(', ');
           }
           return text;
-        }, targets: [2]},
-        // render # of samples/categories
-        {"render": function ( data, type, row, meta ) {
-          return row.command;
         }, targets: [3]},
         // render # of samples/categories
         {"render": function ( data, type, row, meta ) {
@@ -139,16 +143,18 @@
             {% else %}
               var header_0 =  "";
             {% end %}
-            var header_2 =  "Artifact Name";
-            var header_4 =  "# of Samples";
+            var header_2 = "Artifact Name";
+            var header_3 = "Processing Parameters";
+            var header_4 = "# of Samples";
             if (search_on == 'categories') {
-              header_2 =  "Metadata Categories";
-              header_4 =  "# of Categories";
+              header_2 = "";
+              header_3 = "Metadata Categories";
+              header_4 = "# of Categories";
             }
             $('#redbiom-table tr:eq(0) th:eq(0)').text(header_0);
             $('#redbiom-table tr:eq(0) th:eq(1)').text("Study Title");
             $('#redbiom-table tr:eq(0) th:eq(2)').text(header_2);
-            $('#redbiom-table tr:eq(0) th:eq(3)').text("Processing Parameters");
+            $('#redbiom-table tr:eq(0) th:eq(3)').text(header_3);
             $('#redbiom-table tr:eq(0) th:eq(4)').text(header_4);
 
             redbiom_table.rows.add(data.data).draw();
