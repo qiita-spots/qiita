@@ -203,26 +203,82 @@
    * @param p_name str the name of the parameter
    * @param param_info object the information of the parameter
    * @param sel_artifacts_info object with the information of the currently selected artifacts
+   * @param target DOM div to add the parameter gui
+   * @param dflt_val object with the default value to use for the given parameter
    *
    * This function generates the needed GUI specific to the given parameter type
    *
    */
-  function load_parameter_gui(p_name, param_info, sel_artifacts_info) {
-    $('<i>').appendTo("#cmd-opts-div").text(p_name.replace('_', ' ') + ': ');
+  function load_parameter_gui(p_name, param_info, sel_artifacts_info, target, dflt_val) {
+    // Create the parameter interface
+    var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo(target);
+    // Replace the '_' by ' ' in the parameter name for readability
+    $('<label>').addClass('col-sm-1').addClass('col-form-label').text(p_name.replace('_', ' ') + ': ').appendTo($rowDiv).attr('for', p_name);
+    var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
+
     var p_type = param_info[0];
     var allowed_types = param_info[1];
-    if (p_type == 'artifact') {
-      var sel = $('<select>').appendTo("#cmd-opts-div").attr('id', p_name).attr('name', p_name).addClass('required-parameter');
-      for(var key in sel_artifacts_info) {
-         if(allowed_types.indexOf(sel_artifacts_info[key].type) !== -1) {
-           sel.append($('<option>').attr('value', key).text(sel_artifacts_info[key].name));
-         }
+    var $inp;
+
+    if (p_type == 'artifact' || p_type.startsWith('choice') || p_type.startsWith('mchoice')) {
+      // The parameter type is an artifact or choice, the input type is a dropdown
+      $inp = $('<select>');
+      // show a dropdown menu with the
+      var options = [];
+      if (p_type.startsWith('choice') || p_type.startsWith('mchoice')) {
+        $.each(JSON.parse(p_type.split(':')[1]), function (idx, val) { options.push([val, val]); });
+
+        if (p_type.startsWith('mchoice')) {
+          $inp.attr('multiple', true);
+        }
+      }
+      else {
+        // available artifacts of the given type
+        for(var key in sel_artifacts_info) {
+           if(allowed_types.indexOf(sel_artifacts_info[key].type) !== -1) {
+             options.push([key, sel_artifacts_info[key].name]);
+           }
+        }
+      }
+
+      $.each(options, function(idx, val) {
+        $inp.append($("<option>").attr('value', val[0]).text(val[1]));
+      });
+    }
+    else {
+      // The rest of parameter types are represented with an input
+      $inp = $('<input>');
+      // It just changes the type of input
+      if (p_type == 'integer') {
+        // For the integer type, show an input of type number
+        $inp.attr('type', 'number');
+      }
+      else if (p_type == 'float') {
+        // For the float type, show an input of type number, with a step of 0.001
+        $inp.attr('type', 'number').attr('step', 0.001);
+      }
+      else if (p_type == 'string') {
+        // For the float type, show an input of type text
+        $inp.attr('type', 'text');
+      }
+      else if (p_type == 'boolean') {
+        // For the boolean type, show an input of type checkbox
+        $inp.attr('type', 'checkbox');
       }
     }
-    else if (p_type == 'integer') {
-      var inp = $('<input>').appendTo("#cmd-opts-div").attr('id', p_name).attr('name', p_name).attr('type', 'number').addClass('required-parameter');
+
+    if (dflt_val !== undefined) {
+      if (p_type == 'boolean') {
+        // The boolean type works differently than the others, so we needed
+        // to special case it here.
+        $inp.prop('checked', dflt_val);
+      }
+      else {
+        $inp.val(dflt_val);
+      }
     }
-    $('<br>').appendTo("#cmd-opts-div")
+
+    $inp.appendTo($colDiv).attr('id', p_name).attr('name', p_name).addClass('form-control');
   }
 
   /*
@@ -230,40 +286,55 @@
    *
    * @param cmd_id int the command to load the options from
    * @param sel_artifacts_info object with the information of the currently selected artifacts
+   * @param allow_change_optionals bool whether to allow changing the default optional parameters or not
    *
    * This function executes an AJAX call to retrieve the information about the
    * options of the given command and generates the GUI to present those options
    * to the user
    *
    */
-  function load_command_options(cmd_id, sel_artifacts_info) {
+  function load_command_options(cmd_id, sel_artifacts_info, allow_change_optionals) {
     $.get('{% raw qiita_config.portal_dir %}/study/process/commands/options/', {command_id: cmd_id})
       .done(function(data){
           // Put first the required parameters
+          $("#cmd-opts-div").append($('<h4>').text('Required parameters:'));
           for(var key in data.req_options) {
-            load_parameter_gui(key, data.req_options[key], sel_artifacts_info);
+            load_parameter_gui(key, data.req_options[key], sel_artifacts_info, $("#cmd-opts-div"));
           }
-          $('<i>').appendTo("#cmd-opts-div").text("Choose parameter set:");
-          // Create a select dropdown for the default parameter sets
-          var sel = $('<select>').appendTo("#cmd-opts-div").attr('id', 'params-sel').attr('name', 'params-sel');
-          sel.append($("<option>").attr('value', "").text("Choose parameter set..."));
+
+          // Put a dropdown menu to choose the default parameter set
+          $("#cmd-opts-div").append($('<h4>').text('Optional parameters:'));
+          var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#cmd-opts-div");
+          $('<label>').addClass('col-sm-1').addClass('col-form-label').text('Parameter set:').appendTo($rowDiv).attr('for', 'params-sel');
+          var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
+          var sel = $('<select>').appendTo($colDiv).attr('id', 'params-sel').attr('name', 'params-sel').addClass('form-control').attr('placeholder', 'Choose parameter set...');
+          sel.append($("<option>").attr('value', "").text("Choose parameter set...").prop('disabled', true).prop('selected', true));
           for(var i=0; i<data.options.length; i++) {
             sel.append($("<option>").attr('value', data.options[i].id).attr('data-vals', JSON.stringify(data.options[i].values)).text(data.options[i].name));
           }
           $("<div>").appendTo("#cmd-opts-div").attr('id', 'opt-vals-div').attr('name', 'opt-vals-div');
+
           sel.change(function(event){
             var v = $("#params-sel").val();
+            $("#opt-vals-div").empty();
             if (v !== "") {
-              // Show the specific parameter values
+              // Get the parameter set values that the user selected
               var opt_vals = JSON.parse($("#params-sel option[value='" + v + "']").attr("data-vals"));
-              $("#opt-vals-div").empty();
-              for(var key in opt_vals) {
-                $("#opt-vals-div").append("<b>" + key + "</b> " + opt_vals[key] + "</br>");
+              if (allow_change_optionals) {
+                // Create the interface so the user can change the default parameter set
+                for(var key in data.opt_options) {
+                  load_parameter_gui(key, data.opt_options[key], sel_artifacts_info, $("#opt-vals-div"), opt_vals[key]);
+                }
+              }
+              else {
+                // The user is not allowed to change the default parameter set, simply list them
+                for(var key in opt_vals) {
+                  $("#opt-vals-div").append("<b>" + key + "</b> " + opt_vals[key] + "</br>");
+                }
               }
               $("#add-cmd-btn-div").show();
             }
             else {
-              $("#opt-vals-div").empty();
               $("#add-cmd-btn-div").hide();
             }
           });
@@ -274,13 +345,14 @@
    * Generates the GUI for selecting the commands to apply to the given artifacts
    *
    * @param p_nodes list The ids of the selected artifacts
+   * @param allow_change_optionals bool whether to allow changing the default optional parameters or not
    *
    * This function executes an AJAX call to retrieve all the commands that can
    * process the selected artifacts. It generates the interface so the user
    * can select which command should be added to the workflow
    *
    */
-  function load_artifact_type(p_nodes) {
+  function load_artifact_type(p_nodes, allow_change_optionals) {
     var types = [];
     var sel_artifacts_info = {};
     var t;
@@ -295,21 +367,22 @@
     $.get('{% raw qiita_config.portal_dir %}/study/process/commands/', {artifact_types: types})
       .done(function (data) {
         $("#processing-info-div").empty();
-        $("#processing-info-div").html("<i>Choose command: </i>");
+
         // Create the command select dropdown
-        var sel = $('<select>').appendTo('#processing-info-div').attr('id', 'command-sel').attr('name', 'command');
-        sel.append($("<option>").attr('value', "").text("Choose command..."));
+        var $rowDiv = $('<div>').addClass('row').addClass('form-group').appendTo("#processing-info-div");
+        $('<label>').addClass('col-sm-1').addClass('col-form-label').text('Choose command:').appendTo($rowDiv).attr('for', 'command-sel');
+        var $colDiv = $('<div>').addClass('col-sm-3').appendTo($rowDiv);
+        var sel = $('<select>').appendTo($colDiv).attr('id', 'command-sel').attr('name', 'command').addClass('form-control').attr('placeholder', 'Choose command...');
+        sel.append($("<option>").attr('value', "").text("Choose command...").prop('disabled', true).prop('selected', true));
         for(var i=0; i<data.commands.length; i++) {
           sel.append($("<option>").attr('value', data.commands[i].id).text(data.commands[i].command));
         }
         sel.change(function(event) {
+          $("#cmd-opts-div").empty();
+          $("#add-cmd-btn-div").hide();
           var v = $("#command-sel").val();
           if (v !== "") {
-            load_command_options(v, sel_artifacts_info);
-          }
-          else {
-            $("#cmd-opts-div").empty();
-            $("#add-cmd-btn-div").hide();
+            load_command_options(v, sel_artifacts_info, allow_change_optionals);
           }
         });
 
@@ -317,8 +390,9 @@
         $('<div>').appendTo('#processing-info-div').attr('id', 'cmd-opts-div').attr('name', 'cmd-opts-div');
 
         // Create the add command button - but not show it yet
-        $('<div hidden>').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
-        $('<button>').appendTo('#add-cmd-btn-div').addClass('btn btn-xs').text('Add Command').click(add_job);
+        var $rowDiv = $('<div hidden>').addClass('row').addClass('form-group').appendTo('#processing-info-div').attr('id', 'add-cmd-btn-div').attr('name', 'add-cmd-btn-div');
+        var $colDiv = $('<div>').addClass('col-sm-1').appendTo($rowDiv);
+        $('<button>').appendTo($colDiv).addClass('btn btn-info').text('Add Command').click(add_job);
       });
   }
 
@@ -382,7 +456,7 @@
           load_job(params.nodes);
         }
         else if(group == 'type') {
-          load_artifact_type(params.nodes);
+          load_artifact_type(params.nodes, {% raw str(allow_change_optionals).lower() %});
         }
         else {
           $("#processing-info-div").empty();
