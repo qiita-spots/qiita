@@ -30,7 +30,7 @@ def user_jobs_get_req(user, limit=30):
     """
 
     response = []
-    for i, j in enumerate(user.jobs()):
+    for i, j in enumerate(user.jobs(limit=limit)):
         name = j.command.name
         hb = j.heartbeat
         hb = "" if hb is None else hb.strftime("%Y-%m-%d %H:%M:%S")
