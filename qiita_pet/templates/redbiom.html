@@ -11,7 +11,7 @@
     moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
     moi.add_callback('sel', display_number_of_samples_added);
     $("#redbiom-table").dataTable({
-      "dom": 'lfrt<"footer">ip',
+      "dom": '<"ps">lfr<t><"footer">ip',
       'footerCallback': function ( row, data, start, end, display ) {
 
         // adding total features found
@@ -39,20 +39,24 @@
         this.api().columns().every( function (iterator) {
           var column = this;
           if (iterator == 3 && column.data().length != 0) {
-            var select = $('<select><option value=""></option></select>')
-              .appendTo( $(column.footer()).empty() )
+            var placer = $(".ps");
+            placer.empty();
+            placer.append("<b>Filter by Processing paramters</b>: ")
+            var selector = $('<select><option value=""></option></select>')
+              .appendTo( placer )
               .on('change', function () {
                 var val = $.fn.dataTable.util.escapeRegex( $(this).val() );
                 column
                   .search( val ? '^'+val+'$' : '', true, false )
                   .draw();
               });
+
             var added = [];
             column.data().each(function (d){
               var cmd = d.command;
               if (added.indexOf(cmd) == -1){
                 added.push(cmd);
-                select.append('<option value="' + cmd + '">' + cmd + '</option>');
+                selector.append('<option value="' + cmd + '">' + cmd + '</option>');
               }
             });
           }
@@ -110,7 +114,7 @@
         }, targets: [4]}
       ],
       "language": {
-          "search": "Filter results by column data (Study Name, Artifact Name, Software, etc):",
+          "search": "Filter results by column data:",
           "loadingRecords": "Please wait - loading information ...",
           "zeroRecords": "  "
       },
@@ -128,7 +132,11 @@
       .done(function ( data ){
         var redbiom_table = $('#redbiom-table').DataTable();
         var redbiom_info = $('#redbiom-info');
+        // the next 4 lines reset the column filtering
+        var placer = $(".ps");
+        redbiom_table.column(3).search("").draw();
         redbiom_table.clear().draw();
+        placer.empty();
         if(data.status == "error") {
           bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
         } else {
@@ -156,7 +164,6 @@
             $('#redbiom-table tr:eq(0) th:eq(2)').text(header_2);
             $('#redbiom-table tr:eq(0) th:eq(3)').text(header_3);
             $('#redbiom-table tr:eq(0) th:eq(4)').text(header_4);
-
             redbiom_table.rows.add(data.data).draw();
             redbiom_info.html('');
           }
@@ -206,15 +213,6 @@
           <th></th>
         </tr>
       </thead>
-      <tfoot>
-        <tr>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-        </tr>
-      </tfoot>
     </table>
   </div>
 
