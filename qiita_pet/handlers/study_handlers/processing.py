@@ -46,10 +46,10 @@ class WorkflowRunHandler(BaseHandler):
 class WorkflowHandler(BaseHandler):
     @authenticated
     def post(self):
-        dflt_params_id = self.get_argument('dflt_params_id')
-        req_params = self.get_argument('req_params')
+        command_id = self.get_argument('command_id')
+        params = self.get_argument('params')
         self.write(workflow_handler_post_req(
-            self.current_user.id, dflt_params_id, req_params))
+            self.current_user.id, command_id, params))
 
     @authenticated
     def patch(self):

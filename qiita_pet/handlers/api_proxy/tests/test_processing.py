@@ -103,15 +103,21 @@ class TestProcessingAPIReadOnly(TestCase):
 @qiita_test_checker()
 class TestProcessingAPI(TestCase):
     def test_workflow_handler_post_req(self):
-        next_id = get_count('qiita.processing_job_workflow_root') + 1
-        obs = workflow_handler_post_req("test@foo.bar", 1, '{"input_data": 1}')
-        wf = ProcessingWorkflow(next_id)
+        params = ('{"max_barcode_errors": 1.5, "barcode_type": "golay_12", '
+                  '"max_bad_run_length": 3, "phred_offset": "auto", '
+                  '"rev_comp": false, "phred_quality_threshold": 3, '
+                  '"input_data": 1, "rev_comp_barcode": false, '
+                  '"rev_comp_mapping_barcodes": false, '
+                  '"min_per_read_length_fraction": 0.75, "sequence_max_n": 0}')
+        obs = workflow_handler_post_req("test@foo.bar", 1, params)
+        wf_id = obs['workflow_id']
+        wf = ProcessingWorkflow(wf_id)
         nodes = wf.graph.nodes()
         self.assertEqual(len(nodes), 1)
         job = nodes[0]
         exp = {'status': 'success',
                'message': '',
-               'workflow_id': next_id,
+               'workflow_id': wf_id,
                'job': {'id': job.id,
                        'inputs': [1],
                        'label': "Split libraries FASTQ",
