@@ -9,7 +9,6 @@ from unittest import TestCase, main
 from json import dumps
 
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import get_count
 from qiita_db.processing_job import ProcessingWorkflow
 from qiita_db.software import Command, Parameters
 from qiita_db.user import User
@@ -38,18 +37,34 @@ class TestProcessingAPIReadOnly(TestCase):
         self.assertEqual(obs, exp)
 
     def test_list_commands_handler_get_req(self):
-        obs = list_commands_handler_get_req('FASTQ')
+        obs = list_commands_handler_get_req('FASTQ', True)
         exp = {'status': 'success',
                'message': '',
                'commands': [{'id': 1, 'command': 'Split libraries FASTQ',
                              'output': [['demultiplexed', 'Demultiplexed']]}]}
         self.assertEqual(obs, exp)
 
-        obs = list_commands_handler_get_req('Demultiplexed')
+        obs = list_commands_handler_get_req('Demultiplexed', True)
         exp = {'status': 'success',
                'message': '',
                'commands': [{'id': 3, 'command': 'Pick closed-reference OTUs',
                              'output': [['OTU table', 'BIOM']]}]}
+        self.assertEqual(obs, exp)
+
+        obs = list_commands_handler_get_req('BIOM', False)
+        exp = {'status': 'success',
+               'message': '',
+               'commands': [
+                    {'command': 'Summarize Taxa', 'id': 11,
+                     'output': [['taxa_summary', 'taxa_summary']]},
+                    {'command': 'Beta Diversity', 'id': 12,
+                     'output': [['distance_matrix', 'distance_matrix']]},
+                    {'command': 'Alpha Rarefaction', 'id': 13,
+                     'output': [['rarefaction_curves', 'rarefaction_curves']]},
+                    {'command': 'Single Rarefaction', 'id': 14,
+                     'output': [['rarefied_table', 'BIOM']]}]}
+        # since the order of the commands can change, test them separately
+        self.assertItemsEqual(obs.pop('commands'), exp.pop('commands'))
         self.assertEqual(obs, exp)
 
     def test_list_options_handler_get_req(self):

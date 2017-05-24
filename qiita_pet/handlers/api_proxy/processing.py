@@ -41,13 +41,15 @@ def process_artifact_handler_get_req(artifact_id):
             'study_id': artifact.study.id}
 
 
-def list_commands_handler_get_req(artifact_types):
+def list_commands_handler_get_req(artifact_types, exclude_analysis):
     """Retrieves the commands that can process the given artifact types
 
     Parameters
     ----------
     artifact_types : str
         Comma-separated list of artifact types
+    exclude_analysis : bool
+        If True, return commands that are not part of the analysis pipeline
 
     Returns
     -------
@@ -62,7 +64,8 @@ def list_commands_handler_get_req(artifact_types):
     artifact_types = artifact_types.split(',')
     cmd_info = [
         {'id': cmd.id, 'command': cmd.name, 'output': cmd.outputs}
-        for cmd in Command.get_commands_by_input_type(artifact_types)]
+        for cmd in Command.get_commands_by_input_type(
+            artifact_types, exclude_analysis=exclude_analysis)]
 
     return {'status': 'success',
             'message': '',

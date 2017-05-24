@@ -304,14 +304,14 @@
    *
    * @param cmd_id int the command to load the options from
    * @param sel_artifacts_info object with the information of the currently selected artifacts
-   * @param allow_change_optionals bool whether to allow changing the default optional parameters or not
+   * @param is_analysis_pipeline bool whether we are in the analysis pipeline or not
    *
    * This function executes an AJAX call to retrieve the information about the
    * options of the given command and generates the GUI to present those options
    * to the user
    *
    */
-  function load_command_options(cmd_id, sel_artifacts_info, allow_change_optionals) {
+  function load_command_options(cmd_id, sel_artifacts_info, is_analysis_pipeline) {
     $.get('{% raw qiita_config.portal_dir %}/study/process/commands/options/', {command_id: cmd_id})
       .done(function(data){
           // Put first the required parameters
@@ -336,13 +336,13 @@
             var v = $("#params-sel").val();
             $("#opt-vals-div").empty();
             if (v !== "") {
-              if (!allow_change_optionals) {
+              if (!is_analysis_pipeline) {
                 $("#opt-vals-div").append($('<label>').text('Note: changing default parameter values not allowed'));
               }
               // Get the parameter set values that the user selected
               var opt_vals = JSON.parse($("#params-sel option[value='" + v + "']").attr("data-vals"));
               for(var key in data.opt_options) {
-                load_parameter_gui(key, data.opt_options[key], sel_artifacts_info, $("#opt-vals-div"), opt_vals[key], allow_change_optionals);
+                load_parameter_gui(key, data.opt_options[key], sel_artifacts_info, $("#opt-vals-div"), opt_vals[key], is_analysis_pipeline);
               }
               $("#add-cmd-btn-div").show();
             }
@@ -357,14 +357,14 @@
    * Generates the GUI for selecting the commands to apply to the given artifacts
    *
    * @param p_nodes list The ids of the selected artifacts
-   * @param allow_change_optionals bool whether to allow changing the default optional parameters or not
+   * @param is_analysis_pipeline bool whether we are in the analysis pipeline or not
    *
    * This function executes an AJAX call to retrieve all the commands that can
    * process the selected artifacts. It generates the interface so the user
    * can select which command should be added to the workflow
    *
    */
-  function load_artifact_type(p_nodes, allow_change_optionals) {
+  function load_artifact_type(p_nodes, is_analysis_pipeline) {
     var types = [];
     var sel_artifacts_info = {};
     var t;
@@ -376,7 +376,7 @@
       }
       sel_artifacts_info[node.id] = {'type': node.type, 'name': node.name}
     }
-    $.get('{% raw qiita_config.portal_dir %}/study/process/commands/', {artifact_types: types})
+    $.get('{% raw qiita_config.portal_dir %}/study/process/commands/', {artifact_types: types, exclude_analysis: !is_analysis_pipeline})
       .done(function (data) {
         $("#processing-info-div").empty();
 
@@ -394,7 +394,7 @@
           $("#add-cmd-btn-div").hide();
           var v = $("#command-sel").val();
           if (v !== "") {
-            load_command_options(v, sel_artifacts_info, allow_change_optionals);
+            load_command_options(v, sel_artifacts_info, is_analysis_pipeline);
           }
         });
 

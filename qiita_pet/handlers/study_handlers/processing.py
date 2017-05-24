@@ -26,7 +26,9 @@ class ListCommandsHandler(BaseHandler):
         # Fun fact - if the argument is a list, JS adds '[]' to the
         # argument name
         artifact_types = self.get_argument("artifact_types[]")
-        self.write(list_commands_handler_get_req(artifact_types))
+        exclude_analysis = self.get_argument('exclude_analysis') == 'true'
+        self.write(
+            list_commands_handler_get_req(artifact_types, exclude_analysis))
 
 
 class ListOptionsHandler(BaseHandler):
