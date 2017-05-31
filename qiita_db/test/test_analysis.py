@@ -129,21 +129,11 @@ class TestAnalysis(TestCase):
         analysis = qdb.analysis.Analysis(1)
         self.assertFalse(analysis.can_be_publicized)
         a4 = qdb.artifact.Artifact(4)
-        a5 = qdb.artifact.Artifact(5)
-        a6 = qdb.artifact.Artifact(6)
 
         a4.visibility = 'public'
-        self.assertFalse(analysis.can_be_publicized)
-
-        a5.visibility = 'public'
-        self.assertFalse(analysis.can_be_publicized)
-
-        a6.visibility = 'public'
         self.assertTrue(analysis.can_be_publicized)
 
         a4.visibility = 'private'
-        a5.visibility = 'private'
-        a6.visibility = 'private'
         self.assertFalse(analysis.can_be_publicized)
 
     def test_add_artifact(self):

@@ -56,7 +56,9 @@ class PluginHandlerTests(OauthTestingBase):
                            'for performing microbiome analysis from raw DNA '
                            'sequencing data',
             'commands': ['Split libraries FASTQ', 'Split libraries',
-                         'Pick closed-reference OTUs'],
+                         'Pick closed-reference OTUs', 'Summarize Taxa',
+                         'Beta Diversity', 'Alpha Rarefaction',
+                         'Single Rarefaction'],
             'publications': [{'DOI': '10.1038/nmeth.f.303',
                               'PubMed': '20383131'}],
             'default_workflows': ['FASTQ upstream workflow',
