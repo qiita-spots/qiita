@@ -144,7 +144,7 @@
 <div class='row'>
   <div class='col-md-12' id='artifact-summary-content'>
     {% if summary is not None %}
-      {% raw summary %}
+      <iframe width="100%" height="900" src="/artifact/html_summary/{{summary}}" frameBorder=0></iframe>
     {% elif job is not None %}
       Job <b>{{ job[0] }}</b>: <i>{{ job[1] }}</i> {{ job[2] }}
     {% else %}

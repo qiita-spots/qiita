@@ -9,11 +9,12 @@
 from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
-from os.path import basename, exists
+from os.path import basename, exists, relpath
 
 from tornado.web import HTTPError
 
 from qiita_core.util import qiita_test_checker
+from qiita_db.util import get_db_files_base_dir
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
 from qiita_db.processing_job import ProcessingJob
@@ -134,6 +135,8 @@ class TestBaseHandlersUtils(TestCase):
         exp_files.append(
             (a.html_summary_fp[0],
              '%s (html summary)' % basename(a.html_summary_fp[1])))
+        exp_summary_path = relpath(
+            a.html_summary_fp[1], get_db_files_base_dir())
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
@@ -150,7 +153,7 @@ class TestBaseHandlersUtils(TestCase):
                            'sandbox</button>'),
                'processing_parameters': {},
                'files': exp_files,
-               'summary': '<b>HTML TEST - not important</b>\n',
+               'summary': exp_summary_path,
                'job': None,
                'processing_jobs': exp_p_jobs,
                'errored_jobs': []}
@@ -171,7 +174,7 @@ class TestBaseHandlersUtils(TestCase):
                'buttons': '',
                'processing_parameters': {},
                'files': [],
-               'summary': '<b>HTML TEST - not important</b>\n',
+               'summary': exp_summary_path,
                'job': None,
                'processing_jobs': exp_p_jobs,
                'errored_jobs': []}
@@ -228,7 +231,7 @@ class TestBaseHandlersUtils(TestCase):
                'editable': True,
                'buttons': '',
                'processing_parameters': {},
-               'files': [(22, 'biom_table.biom (biom)')],
+               'files': [(27, 'biom_table.biom (biom)')],
                'summary': None,
                'job': None,
                'processing_jobs': [],
@@ -309,6 +312,16 @@ class TestBaseHandlersUtils(TestCase):
 
 
 class TestBaseHandlers(TestHandlerBase):
+    def setUp(self):
+        super(TestBaseHandlers, self).setUp()
+        self._files_to_remove = []
+
+    def tearDown(self):
+        super(TestBaseHandlers, self).tearDown()
+        for fp in self._files_to_remove:
+            if exists(fp):
+                remove(fp)
+
     def test_get_artifact_summary_ajax_handler(self):
         response = self.get('/artifact/1/summary/')
         self.assertEqual(response.code, 200)
@@ -321,6 +334,22 @@ class TestBaseHandlers(TestHandlerBase):
         self.assertEqual(response.code, 200)
         self.assertEqual(a.name, 'NEW_NAME')
         a.name = 'Raw data 1'
+
+    def test_get_artifact_summary_handler(self):
+        a = Artifact(1)
+        # Add a summary to the artifact
+        fd, fp = mkstemp(suffix=".html")
+        close(fd)
+        with open(fp, 'w') as f:
+            f.write('<b>HTML TEST - not important</b>\n')
+        a = Artifact(1)
+        a.html_summary_fp = fp
+        self._files_to_remove.extend([fp, a.html_summary_fp[1]])
+
+        summary = relpath(a.html_summary_fp[1], get_db_files_base_dir())
+        response = self.get('/artifact/html_summary/%s' % summary)
+        self.assertEqual(response.code, 200)
+        self.assertEqual(response.body, '<b>HTML TEST - not important</b>\n')
 
 
 if __name__ == '__main__':
