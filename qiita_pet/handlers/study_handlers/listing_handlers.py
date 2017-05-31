@@ -59,7 +59,6 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
     -----
     Both study_proc and proc_samples must be passed, or neither passed.
     """
-    build_samples = False
     # Logic check to make sure both needed parts passed
     if study_proc is not None and proc_samples is None:
         raise IncompetentQiitaDeveloperError(
@@ -67,19 +66,18 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
     elif proc_samples is not None and study_proc is None:
         raise IncompetentQiitaDeveloperError(
             'Must pass study_proc when proc_samples given')
-    elif study_proc is None:
-        build_samples = True
 
     # get list of studies for table
+    user_study_set = user.user_studies.union(user.shared_studies)
     if search_type == 'user':
-        user_study_set = user.user_studies.union(user.shared_studies)
         if user.level == 'admin':
             user_study_set = (user_study_set |
                               Study.get_by_status('sandbox') |
-                              Study.get_by_status('private'))
-        study_set = user_study_set - Study.get_by_status('public')
+                              Study.get_by_status('private') -
+                              Study.get_by_status('public'))
+        study_set = user_study_set
     elif search_type == 'public':
-        study_set = Study.get_by_status('public')
+        study_set = Study.get_by_status('public') - user_study_set
     else:
         raise ValueError('Not a valid search type')
     if study_proc is not None:
@@ -88,7 +86,7 @@ def _build_study_info(user, search_type, study_proc=None, proc_samples=None):
         # No studies left so no need to continue
         return []
 
-    return generate_study_list([s.id for s in study_set], build_samples,
+    return generate_study_list([s.id for s in study_set],
                                public_only=(search_type == 'public'))
 
 

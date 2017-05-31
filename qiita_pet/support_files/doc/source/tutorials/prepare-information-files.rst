@@ -11,11 +11,11 @@ use from the system.
 
 As described in :doc:`../qiita-philosophy/index`, a Qiita study can have
 many biological samples, each with many preparations for different kinds of
-multi-omic analysis. As described in :doc:`getting-started`, the study will
-have a single *sample information file* that will define the biological context
-of each sample. Each multi-omic data type prepared will have a separate
-*preparation information file* that will describe the sequencing technology
-or analytical chemistry used to generate that data set.
+multi-omic analysis. Thus, the study will have a single *sample information
+file* that will define the biological context of each sample. Each multi-omic
+data type prepared will have a separate *preparation information file* that
+will describe the sequencing technology or analytical chemistry used to
+generate that data set.
 
 Please note that while *sample information* and *preparation information files*
 are similar to a `QIIME metadata file

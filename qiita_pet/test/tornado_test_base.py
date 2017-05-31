@@ -5,6 +5,7 @@ except ImportError:  # py3
     from urllib.parse import urlencode
 
 from tornado.testing import AsyncHTTPTestCase
+from tornado.escape import json_encode
 from qiita_pet.webserver import Application
 from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_db.environment_manager import clean_test_environment
@@ -35,19 +36,24 @@ class TestHandlerBase(AsyncHTTPTestCase):
                 url += '?%s' % data
         return self._fetch(url, 'GET', headers=headers)
 
-    def post(self, url, data, headers=None, doseq=True):
+    def post(self, url, data, headers=None, doseq=True, asjson=False):
         if data is not None:
-            if isinstance(data, dict):
+            if asjson:
+                data = json_encode(data)
+            elif isinstance(data, dict):
                 data = urlencode(data, doseq=doseq)
         return self._fetch(url, 'POST', data, headers)
 
-    def patch(self, url, data, headers=None, doseq=True):
-        if isinstance(data, dict):
-            data = urlencode(data, doseq=doseq)
-        if '?' in url:
-            url += '&%s' % data
+    def patch(self, url, data, headers=None, doseq=True, asjson=False):
+        if asjson:
+            data = json_encode(data)
         else:
-            url += '?%s' % data
+            if isinstance(data, dict):
+                data = urlencode(data, doseq=doseq)
+            if '?' in url:
+                url += '&%s' % data
+            else:
+                url += '?%s' % data
         return self._fetch(url, 'PATCH', data=data, headers=headers)
 
     def delete(self, url, data=None, headers=None, doseq=True):

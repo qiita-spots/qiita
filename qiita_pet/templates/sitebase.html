@@ -1,12 +1,13 @@
 {% from moi import r_client %}
 {% from qiita_core.qiita_settings import qiita_config %}
-{% from qiita_core.util import get_qiita_version %}
+{% from qiita_core.util import get_qiita_version, get_release_info %}
 {% from qiita_pet import allowed_min_browser_versions %}
 {% from qiita_pet.portal import portal_styling %}
 {% set maintenance = r_client.get('maintenance') %}
 {% set sysmessage = r_client.get('sysmessage') %}
 {% set user = current_user %}
 {% set qiita_version, qiita_sha = get_qiita_version() %}
+{% set public_md5, _, public_timestamp = get_release_info() %}
 
 {% set level = globals().get('level', '') %}
 {% if level not in {'danger', 'success', 'info', 'warning'} %}
@@ -22,8 +23,6 @@
   {% set message = sysmessage + "<br />" + str(message) %}
 {% end %}
 
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
   <head>
@@ -34,7 +33,7 @@
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap-theme.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/chosen.css" type="text/css">
-    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/css/style.css" type="text/css">
     <link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis.min.css" type="text/css">
     <link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
@@ -485,6 +484,9 @@
                 <a href="#" data-toggle="dropdown" class="dropdown-toggle">More Info<b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   <li>
+                    <a href="http://cmi-workshop.readthedocs.io/en/latest/">Tutorials</a>
+                  </li>
+                  <li>
                     <a href="{% raw qiita_config.portal_dir %}/static/doc/html/index.html">Help</a>
                   </li>
                   <li>
@@ -513,6 +515,23 @@
             <ul class="nav navbar-nav">
               <li>
                 <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <!-- downloads -->
+              <li class="dropdown">
+                <a href="#" data-toggle="dropdown" class="dropdown-toggle">Downloads<b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="{% raw qiita_config.portal_dir %}/release/download/public">
+                      Public BIOM and metadata files
+                      <small>
+                        <br/><b>MD5:</b> {{public_md5}}
+                        <br/><b>Last update:</b>{{public_timestamp}}
+                      </small>
+                    </a>
+                  </li>
+                </ul>
               </li>
             </ul>
           </div> <!--/.navbar-collapse -->
