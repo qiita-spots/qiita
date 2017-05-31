@@ -276,6 +276,9 @@
         // For the boolean type, show an input of type checkbox
         $inp.attr('type', 'checkbox');
       }
+      else {
+        bootstrapAlert("Error: Parameter type (" + p_type + ") not recognized. Please, take a screenshot and <a href='mailto:qiita.help@gmail.com'>contact us</a>", "danger");
+      }
     }
 
     if (dflt_val !== undefined) {
@@ -376,7 +379,7 @@
       }
       sel_artifacts_info[node.id] = {'type': node.type, 'name': node.name}
     }
-    $.get('{% raw qiita_config.portal_dir %}/study/process/commands/', {artifact_types: types, exclude_analysis: !is_analysis_pipeline})
+    $.get('{% raw qiita_config.portal_dir %}/study/process/commands/', {artifact_types: types, include_analysis: is_analysis_pipeline})
       .done(function (data) {
         $("#processing-info-div").empty();
 
