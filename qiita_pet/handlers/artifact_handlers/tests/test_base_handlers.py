@@ -181,7 +181,7 @@ class TestBaseHandlersUtils(TestCase):
         self.assertEqual(obs, exp)
 
         # returnig to private
-        a.visibility = 'sandbox'
+        a.visibility = 'private'
 
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
