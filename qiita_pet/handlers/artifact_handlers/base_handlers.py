@@ -6,10 +6,10 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
-from os.path import basename
+from os.path import basename, relpath
 from json import dumps
 
-from tornado.web import authenticated
+from tornado.web import authenticated, StaticFileHandler
 from moi import r_client
 
 from qiita_core.qiita_settings import qiita_config
@@ -108,8 +108,12 @@ def artifact_summary_get_request(user, artifact_id):
 
     # Check if the HTML summary exists
     if summary:
-        with open(summary[1]) as f:
-            summary = f.read()
+        # Magic number 1: If the artifact has a summary, the call
+        # artifact.html_summary_fp returns a tuple with 2 elements. The first
+        # element is the filepath id, while the second one is the actual
+        # actual filepath. We are only interested on the actual filepath,
+        # hence the 1 value.
+        summary = relpath(summary[1], qiita_config.base_data_dir)
     else:
         # Check if the summary is being generated
         command = Command.get_html_generator(artifact.artifact_type)
@@ -394,3 +398,24 @@ class ArtifactAJAX(BaseHandler):
                                    req_path, req_value, req_from)
 
         self.finish()
+
+
+class ArtifactSummaryHandler(StaticFileHandler, BaseHandler):
+    def validate_absolute_path(self, root, absolute_path):
+        """Overrides StaticFileHandler's method to include authentication"""
+        user = self.current_user
+
+        # Magic number 1, the path structure for the summaries is
+        # root/ARTIFACTDIR/artifact_id/FILE. We are interested in the
+        # artifact_id. root is removed by relpath, so the second element of the
+        # list is the artifact id
+        artifact_id = relpath(absolute_path, root).split('/')[1]
+
+        # This call will check if the user has access to the artifact or not,
+        # taking into account admin privileges. If not it will raise a 403
+        # which will be handled correctly by tornado
+        check_artifact_access(user, Artifact(artifact_id))
+
+        # If we reach this point the user has access to the file - return it
+        return super(ArtifactSummaryHandler, self).validate_absolute_path(
+            root, absolute_path)

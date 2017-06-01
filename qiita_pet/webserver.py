@@ -34,7 +34,8 @@ from qiita_pet.handlers.study_handlers import (
     PrepTemplateSummaryAJAX,
     WorkflowHandler, WorkflowRunHandler, JobAJAX, AutocompleteHandler)
 from qiita_pet.handlers.artifact_handlers import (
-    ArtifactSummaryAJAX, ArtifactAJAX, ProcessArtifactHandler)
+    ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler,
+    ProcessArtifactHandler)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
@@ -129,6 +130,8 @@ class Application(tornado.web.Application):
             # Artifact handlers
             (r"/artifact/graph/", ArtifactGraphAJAX),
             (r"/artifact/(.*)/summary/", ArtifactSummaryAJAX),
+            (r"/artifact/html_summary/(.*)", ArtifactSummaryHandler,
+             {"path": qiita_config.base_data_dir}),
             (r"/artifact/(.*)/process/", ProcessArtifactHandler),
             (r"/artifact/(.*)/", ArtifactAJAX),
             (r"/prep_template/", PrepTemplateHandler),
