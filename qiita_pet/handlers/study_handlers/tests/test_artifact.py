@@ -128,18 +128,6 @@ class NewArtifactHandlerTests(TestHandlerBase):
         wait_for_prep_information_job(self.prep.id)
 
 
-class ArtifactAJAXTests(TestHandlerBase):
-
-    def test_delete_artifact(self):
-        response = self.post('/artifact/',
-                             {'artifact_id': 2})
-        self.assertEqual(response.code, 200)
-        # This is needed so the clean up works - this is a distributed system
-        # so we need to make sure that all processes are done before we reset
-        # the test database
-        wait_for_prep_information_job(1)
-
-
 class ArtifactGetSamplesTest(TestHandlerBase):
     def test_get(self):
         response = self.get('/artifact/samples/', {'ids[]': [4, 5]})

@@ -10,20 +10,25 @@ from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
 from os.path import basename, exists, relpath
+from json import loads
 
 from tornado.web import HTTPError
+from moi import r_client
 
+from qiita_core.testing import wait_for_prep_information_job
 from qiita_core.util import qiita_test_checker
 from qiita_db.util import get_db_files_base_dir
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Parameters, Command
+from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.exceptions import QiitaHTTPError
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.artifact_handlers.base_handlers import (
     check_artifact_access, artifact_summary_get_request,
-    artifact_summary_post_request, artifact_patch_request)
+    artifact_summary_post_request, artifact_patch_request,
+    artifact_post_req)
 
 
 @qiita_test_checker()
@@ -253,6 +258,18 @@ class TestBaseHandlersUtils(TestCase):
         exp = {'job': [job.id, 'queued', None]}
         self.assertEqual(obs, exp)
 
+    def test_artifact_post_request(self):
+        # No access
+        with self.assertRaises(QiitaHTTPError):
+            artifact_post_req(User('demo@microbio.me'), 1)
+
+        artifact_post_req(User('test@foo.bar'), 2)
+        # Wait until the job is completed
+        wait_for_prep_information_job(1)
+        # Check that the delete function has been actually called
+        obs = r_client.get(loads(r_client.get('prep_template_1'))['job_id'])
+        self.assertIn('Cannot delete artifact 2', obs)
+
     def test_artifact_patch_request(self):
         a = Artifact(1)
         test_user = User('test@foo.bar')
@@ -325,6 +342,11 @@ class TestBaseHandlers(TestHandlerBase):
     def test_get_artifact_summary_ajax_handler(self):
         response = self.get('/artifact/1/summary/')
         self.assertEqual(response.code, 200)
+
+    def test_post_artifact_ajax_handler(self):
+        response = self.post('/artifact/2/', {})
+        self.assertEqual(response.code, 200)
+        wait_for_prep_information_job(1)
 
     def test_patch_artifact_ajax_handler(self):
         a = Artifact(1)
