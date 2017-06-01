@@ -108,6 +108,11 @@ def artifact_summary_get_request(user, artifact_id):
 
     # Check if the HTML summary exists
     if summary:
+        # Magic number 1: If the artifact has a summary, the call
+        # artifact.html_summary_fp returns a tuple with 2 elements. The first
+        # element is the filepath id, while the second one is the actual
+        # actual filepath. We are only interested on the actual filepath,
+        # hence the 1 value.
         summary = relpath(summary[1], qiita_config.base_data_dir)
     else:
         # Check if the summary is being generated
