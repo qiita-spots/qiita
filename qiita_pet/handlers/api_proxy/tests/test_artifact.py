@@ -20,7 +20,7 @@ from qiita_core.testing import wait_for_prep_information_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
-from qiita_db.util import get_count, get_mountpoint
+from qiita_db.util import get_mountpoint
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
 from qiita_db.software import Command, Parameters, DefaultParameters

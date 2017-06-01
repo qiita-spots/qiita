@@ -28,5 +28,6 @@ class TestListingHandlers(TestHandlerBase):
         # Make sure page response loaded sucessfully
         self.assertEqual(response.code, 200)
 
+
 if __name__ == '__main__':
     main()

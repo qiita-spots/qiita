@@ -49,5 +49,6 @@ class TestProcessHandlers(TestHandlerBase):
         self.assertNotEqual(response.body, "")
         self.assertIn('load_artifact_type(params.nodes, true);', response.body)
 
+
 if __name__ == '__main__':
     main()

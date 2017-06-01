@@ -22,7 +22,6 @@ from qiita_db.user import User
 from qiita_db.artifact import Artifact
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.software import Parameters, Command
-from qiita_db.exceptions import QiitaDBUnknownIDError
 from qiita_pet.exceptions import QiitaHTTPError
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.artifact_handlers.base_handlers import (
