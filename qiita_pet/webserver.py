@@ -28,10 +28,10 @@ from qiita_pet.handlers.study_handlers import (
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
     VAMPSHandler, PrepTemplateGraphAJAX, StudyTags, StudyGetTags,
     ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
-    PrepTemplateAJAX, NewArtifactHandler, SampleAJAX,
-    StudyDeleteAjax, ArtifactAdminAJAX,
-    NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX, ArtifactGetSamples,
-    WorkflowHandler, WorkflowRunHandler, JobAJAX, AutocompleteHandler)
+    PrepTemplateAJAX, NewArtifactHandler, SampleAJAX, StudyDeleteAjax,
+    ArtifactAdminAJAX, NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
+    ArtifactGetSamples, WorkflowHandler, WorkflowRunHandler, JobAJAX,
+    AutocompleteHandler)
 from qiita_pet.handlers.artifact_handlers import (
     ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler,
     ProcessArtifactHandler)
