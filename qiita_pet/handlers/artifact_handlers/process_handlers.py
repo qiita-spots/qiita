@@ -36,7 +36,8 @@ def process_artifact_handler_get_req(artifact_id):
             'message': '',
             'name': artifact.name,
             'type': artifact.artifact_type,
-            'artifact_id': artifact.id}
+            'artifact_id': artifact.id,
+            'allow_change_optionals': artifact.analysis is not None}
 
 
 class ProcessArtifactHandler(BaseHandler):

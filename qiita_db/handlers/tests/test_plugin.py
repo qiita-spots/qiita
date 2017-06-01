@@ -74,9 +74,12 @@ class CommandListHandlerTests(OauthTestingBase):
             'description': 'Command added for testing',
             'required_parameters': dumps(
                 {'in_data': ['artifact:["FASTA"]', None]}),
-            'optional_parameters': dumps({'param1': ['string', ''],
-                                          'param2': ['float', '1.5'],
-                                          'param3': ['boolean', 'True']}),
+            'optional_parameters': dumps(
+                {'param1': ['string', ''],
+                 'param2': ['float', '1.5'],
+                 'param3': ['boolean', 'True'],
+                 'param4': ['mchoice:["opt1", "opt2", "opt3"]',
+                            dumps(['opt1', 'opt2'])]}),
             'outputs': dumps({'out1': 'BIOM'}),
             'default_parameter_sets': dumps(
                 {'dflt1': {'param1': 'test',
