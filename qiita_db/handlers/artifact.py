@@ -79,6 +79,8 @@ class ArtifactHandler(OauthBaseHandler):
         """
         with qdb.sql_connection.TRN:
             artifact = _get_artifact(artifact_id)
+            study = artifact.study
+            analysis = artifact.analysis
             response = {
                 'name': artifact.name,
                 'timestamp': str(artifact.timestamp),
@@ -89,7 +91,8 @@ class ArtifactHandler(OauthBaseHandler):
                 'can_be_submitted_to_vamps':
                     artifact.can_be_submitted_to_vamps,
                 'prep_information': [p.id for p in artifact.prep_templates],
-                'study': artifact.study.id}
+                'study': study.id if study else None,
+                'analysis': analysis.id if analysis else None}
             params = artifact.processing_parameters
             response['processing_parameters'] = (
                 params.values if params is not None else None)

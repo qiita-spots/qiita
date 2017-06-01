@@ -294,5 +294,6 @@ class OAuth2HandlerTests(TestHandlerBase):
                'error_description': 'Oauth2 error: missing user information'}
         self.assertEqual(obs_body, exp)
 
+
 if __name__ == "__main__":
     main()

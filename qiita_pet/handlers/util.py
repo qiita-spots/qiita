@@ -7,11 +7,27 @@
 # -----------------------------------------------------------------------------
 from __future__ import division
 from functools import partial
+from contextlib import contextmanager
 
 from tornado.web import HTTPError
 
 from qiita_pet.util import linkify
+from qiita_pet.exceptions import QiitaHTTPError
 from qiita_core.util import execute_as_transaction
+
+
+@contextmanager
+def safe_execution():
+    try:
+        yield
+    except HTTPError:
+        # The HTTPError is already handled nicely by tornado, just re-raise
+        raise
+    except Exception as e:
+        # Any other error we need to catch and re-raise as a QiitaHTTPError
+        # so we can make sure that tornado will handle it gracefully and send
+        # a useful error message to the user
+        raise QiitaHTTPError(500, str(e))
 
 
 @execute_as_transaction

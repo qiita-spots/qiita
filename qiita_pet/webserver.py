@@ -19,26 +19,30 @@ from qiita_pet.handlers.user_handlers import (
     ChangeForgotPasswordHandler, ForgotPasswordHandler, UserProfileHandler,
     UserMessagesHander, UserJobs)
 from qiita_pet.handlers.analysis_handlers import (
-    SelectCommandsHandler, AnalysisWaitHandler, AnalysisResultsHandler,
-    ShowAnalysesHandler, ResultsHandler, SelectedSamplesHandler,
-    AnalysisSummaryAJAX, ShareAnalysisAJAX)
+    ListAnalysesHandler, AnalysisSummaryAJAX, SelectedSamplesHandler,
+    AnalysisDescriptionHandler, AnalysisGraphHandler, CreateAnalysisHandler,
+    AnalysisJobsHandler)
 from qiita_pet.handlers.study_handlers import (
     StudyIndexHandler, StudyBaseInfoAJAX, SampleTemplateAJAX,
     StudyEditHandler, ListStudiesHandler, SearchStudiesAJAX, EBISubmitHandler,
     CreateStudyAJAX, ShareStudyAJAX, StudyApprovalList, ArtifactGraphAJAX,
-    VAMPSHandler, PrepTemplateGraphAJAX,
-    ProcessArtifactHandler, ListCommandsHandler, ListOptionsHandler,
+    VAMPSHandler, PrepTemplateGraphAJAX, StudyTags, StudyGetTags,
+    ListCommandsHandler, ListOptionsHandler, PrepTemplateSummaryAJAX,
     PrepTemplateAJAX, NewArtifactHandler, SampleAJAX,
-    StudyDeleteAjax, ArtifactAdminAJAX, ArtifactAJAX,
-    NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX,
-    PrepTemplateSummaryAJAX, ArtifactSummaryAJAX,
+    StudyDeleteAjax, ArtifactAdminAJAX,
+    NewPrepTemplateAjax, DataTypesMenuAJAX, StudyFilesAJAX, ArtifactGetSamples,
     WorkflowHandler, WorkflowRunHandler, JobAJAX, AutocompleteHandler)
+from qiita_pet.handlers.artifact_handlers import (
+    ArtifactSummaryAJAX, ArtifactAJAX, ArtifactSummaryHandler,
+    ProcessArtifactHandler)
 from qiita_pet.handlers.websocket_handlers import (
     MessageHandler, SelectedSocketHandler, SelectSamplesHandler)
 from qiita_pet.handlers.logger_handlers import LogEntryViewerHandler
 from qiita_pet.handlers.upload import UploadFileHandler, StudyUploadFileHandler
 from qiita_pet.handlers.stats import StatsHandler
-from qiita_pet.handlers.download import DownloadHandler
+from qiita_pet.handlers.download import (
+    DownloadHandler, DownloadStudyBIOMSHandler, DownloadRelease,
+    DownloadRawData)
 from qiita_pet.handlers.prep_template import PrepTemplateHandler
 from qiita_pet.handlers.ontology import OntologyHandler
 from qiita_db.handlers.processing_job import (
@@ -58,6 +62,7 @@ from qiita_db.handlers.plugin import (
 from qiita_db.handlers.analysis import APIAnalysisMetadataHandler
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
+from qiita_pet.handlers.rest import ENDPOINTS as REST_ENDPOINTS
 if qiita_config.portal == "QIITA":
     from qiita_pet.handlers.portal import (
         StudyPortalHandler, StudyPortalAJAXHandler)
@@ -90,24 +95,25 @@ class Application(tornado.web.Application):
             (r"/profile/", UserProfileHandler),
             (r"/user/messages/", UserMessagesHander),
             (r"/user/jobs/", UserJobs),
-            (r"/results/(.*)", ResultsHandler,
-             {"path": RES_PATH}),
             (r"/static/(.*)", tornado.web.StaticFileHandler,
              {"path": STATIC_PATH}),
-            (r"/analysis/3", SelectCommandsHandler),
-            (r"/analysis/wait/(.*)", AnalysisWaitHandler),
-            (r"/analysis/results/(.*)", AnalysisResultsHandler),
-            (r"/analysis/show/", ShowAnalysesHandler),
+            # Analysis handlers
+            (r"/analysis/list/", ListAnalysesHandler),
             (r"/analysis/dflt/sumary/", AnalysisSummaryAJAX),
+            (r"/analysis/create/", CreateAnalysisHandler),
             (r"/analysis/selected/", SelectedSamplesHandler),
             (r"/analysis/selected/socket/", SelectedSocketHandler),
-            (r"/analysis/sharing/", ShareAnalysisAJAX),
+            (r"/analysis/description/(.*)/graph/", AnalysisGraphHandler),
+            (r"/analysis/description/(.*)/jobs/", AnalysisJobsHandler),
+            (r"/analysis/description/(.*)/", AnalysisDescriptionHandler),
             (r"/moi-ws/", MOIMessageHandler),
             (r"/consumer/", MessageHandler),
             (r"/admin/error/", LogEntryViewerHandler),
             (r"/admin/approval/", StudyApprovalList),
             (r"/admin/artifact/", ArtifactAdminAJAX),
+            (r"/artifact/samples/", ArtifactGetSamples),
             (r"/ebi_submission/(.*)", EBISubmitHandler),
+            # Study handlers
             (r"/study/create/", StudyEditHandler),
             (r"/study/edit/(.*)", StudyEditHandler),
             (r"/study/list/", ListStudiesHandler),
@@ -116,7 +122,6 @@ class Application(tornado.web.Application):
             (r"/study/process/workflow/run/", WorkflowRunHandler),
             (r"/study/process/workflow/", WorkflowHandler),
             (r"/study/process/job/", JobAJAX),
-            (r"/study/process/", ProcessArtifactHandler),
             (r"/study/list/socket/", SelectSamplesHandler),
             (r"/study/search/(.*)", SearchStudiesAJAX),
             (r"/study/new_artifact/", NewArtifactHandler),
@@ -124,9 +129,16 @@ class Application(tornado.web.Application):
             (r"/study/sharing/", ShareStudyAJAX),
             (r"/study/sharing/autocomplete/", AutocompleteHandler),
             (r"/study/new_prep_template/", NewPrepTemplateAjax),
+            (r"/study/tags/(.*)", StudyTags),
+            (r"/study/get_tags/", StudyGetTags),
             (r"/prep/graph/", PrepTemplateGraphAJAX),
-            (r"/artifact/", ArtifactAJAX),
+            # Artifact handlers
             (r"/artifact/graph/", ArtifactGraphAJAX),
+            (r"/artifact/(.*)/summary/", ArtifactSummaryAJAX),
+            (r"/artifact/html_summary/(.*)", ArtifactSummaryHandler,
+             {"path": qiita_config.base_data_dir}),
+            (r"/artifact/(.*)/process/", ProcessArtifactHandler),
+            (r"/artifact/(.*)/", ArtifactAJAX),
             (r"/prep_template/", PrepTemplateHandler),
             (r"/ontology/", OntologyHandler),
             # ORDER FOR /study/description/ SUBPAGES HERE MATTERS.
@@ -135,7 +147,6 @@ class Application(tornado.web.Application):
             (r"/study/description/sample_summary/", SampleAJAX),
             (r"/study/description/prep_summary/", PrepTemplateSummaryAJAX),
             (r"/study/description/prep_template/", PrepTemplateAJAX),
-            (r"/study/description/artifact_summary/", ArtifactSummaryAJAX),
             (r"/study/description/baseinfo/", StudyBaseInfoAJAX),
             (r"/study/description/data_type_menu/", DataTypesMenuAJAX),
             (r"/study/description/(.*)", StudyIndexHandler),
@@ -145,6 +156,9 @@ class Application(tornado.web.Application):
             (r"/check_study/", CreateStudyAJAX),
             (r"/stats/", StatsHandler),
             (r"/download/(.*)", DownloadHandler),
+            (r"/download_study_bioms/(.*)", DownloadStudyBIOMSHandler),
+            (r"/release/download/(.*)", DownloadRelease),
+            (r"/download_raw_data/(.*)", DownloadRawData),
             (r"/vamps/(.*)", VAMPSHandler),
             # Plugin handlers - the order matters here so do not change
             # qiita_db/jobs/(.*) should go after any of the
@@ -168,6 +182,10 @@ class Application(tornado.web.Application):
             (r"/qiita_db/plugins/(.*)/(.*)/", PluginHandler),
             (r"/qiita_db/analysis/(.*)/metadata/", APIAnalysisMetadataHandler)
         ]
+
+        # rest endpoints
+        handlers.extend(REST_ENDPOINTS)
+
         if qiita_config.portal == "QIITA":
             # Add portals editing pages only on main portal
             portals = [

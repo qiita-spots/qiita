@@ -11,11 +11,11 @@ use from the system.
 
 As described in :doc:`../qiita-philosophy/index`, a Qiita study can have
 many biological samples, each with many preparations for different kinds of
-multi-omic analysis. As described in :doc:`getting-started`, the study will
-have a single *sample information file* that will define the biological context
-of each sample. Each multi-omic data type prepared will have a separate
-*preparation information file* that will describe the sequencing technology
-or analytical chemistry used to generate that data set.
+multi-omic analysis. Thus, the study will have a single *sample information
+file* that will define the biological context of each sample. Each multi-omic
+data type prepared will have a separate *preparation information file* that
+will describe the sequencing technology or analytical chemistry used to
+generate that data set.
 
 Please note that while *sample information* and *preparation information files*
 are similar to a `QIIME metadata file
@@ -72,14 +72,14 @@ These are the columns required for successfully submit your data to EBI:
 +----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
 | Field name                       | Format                  | Description                                                                                                                                         |
 +==================================+=========================+=====================================================================================================================================================+
-| ``collection_timestamp``         | ``mm/dd/yyyy hh:mm:ss`` | The time stamp (preferred) of when the sample was collected. Several format are accepted.                                                           |
-|                                  | or ``mm/dd/yyyy hh:mm`` |                                                                                                                                                     |
-|                                  | or ``mm/dd/yyyy hh``    |                                                                                                                                                     |
-|                                  | or ``mm/dd/yyyy``       |                                                                                                                                                     |
-|                                  | or ``mm/yyyy``          |                                                                                                                                                     |
+| ``collection_timestamp``         | ``yyyy-mm-dd hh:mm:ss`` | The time stamp (preferred) of when the sample was collected. Several format are accepted, all ISO 8601.                                             |
+|                                  | or ``yyyy-mm-dd hh:mm`` |                                                                                                                                                     |
+|                                  | or ``yyyy-mm-dd hh``    |                                                                                                                                                     |
+|                                  | or ``yyyy-mm-dd ``      |                                                                                                                                                     |
+|                                  | or ``yyyy-mm``          |                                                                                                                                                     |
 |                                  | or ``yyyy``.            |                                                                                                                                                     |
-|                                  | Years are supported as  |                                                                                                                                                     |
-|                                  | 4 ``yyyy`` or 2 ``yy``  |                                                                                                                                                     |
+|                                  | Years are only          |                                                                                                                                                     |
+|                                  | supported as 4 ``yyyy`` |                                                                                                                                                     |
 |                                  | digits                  |                                                                                                                                                     |
 +----------------------------------+-------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
 | ``physical_specimen_location``   | free text               | Where you would go to find physical sample or DNA, regardless of whether it is still available or not.                                              |

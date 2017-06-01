@@ -7,9 +7,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 from unittest import main
+from mock import Mock
 
+from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_db.study import StudyPerson, Study
+from qiita_db.user import User
 from qiita_db.util import get_count, check_count
 
 
@@ -126,12 +129,26 @@ class TestStudyEditHandler(TestHandlerBase):
             'principal_investigator': study_info['principal_investigator'].id,
             'lab_person': study_info['lab_person'].id}
 
-        self.post('/study/edit/1', post_data)
-
+        response = self.post('/study/edit/1', post_data)
+        self.assertEqual(response.code, 200)
         # Check that the study was updated
         self.assertTrue(check_count('qiita.study', study_count_before))
         self.assertEqual(study.title, 'New title - test post edit')
         self.assertEqual(study.publications, [])
+
+        # check for failure
+        old_title = post_data['study_title']
+        post_data['study_title'] = 'My new title!'
+        shared = User('shared@foo.bar')
+        study.unshare(shared)
+        BaseHandler.get_current_user = Mock(return_value=shared)
+        response = self.post('/study/edit/1', post_data)
+        self.assertEqual(response.code, 403)
+        # Check that the study wasn't updated
+        self.assertEqual(study.title, old_title)
+
+        # returning sharing
+        study.share(shared)
 
 
 class TestCreateStudyAJAX(TestHandlerBase):
@@ -153,6 +170,7 @@ class TestCreateStudyAJAX(TestHandlerBase):
         self.assertEqual(response.code, 200)
         # make sure responds properly
         self.assertEqual(response.body, 'False')
+
 
 if __name__ == "__main__":
     main()

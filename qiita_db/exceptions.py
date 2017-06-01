@@ -111,4 +111,5 @@ class QiitaDBWarning(UserWarning):
     """Warning specific for the QiitaDB domain"""
     pass
 
+
 warnings.simplefilter('always', QiitaDBWarning)

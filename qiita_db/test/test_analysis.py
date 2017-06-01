@@ -125,6 +125,27 @@ class TestAnalysis(TestCase):
         self.assertEqual(
             qdb.analysis.Analysis.get_by_status('public'), set([]))
 
+    def test_can_be_publicized(self):
+        analysis = qdb.analysis.Analysis(1)
+        self.assertFalse(analysis.can_be_publicized)
+        a4 = qdb.artifact.Artifact(4)
+        a5 = qdb.artifact.Artifact(5)
+        a6 = qdb.artifact.Artifact(6)
+
+        a4.visibility = 'public'
+        self.assertFalse(analysis.can_be_publicized)
+
+        a5.visibility = 'public'
+        self.assertFalse(analysis.can_be_publicized)
+
+        a6.visibility = 'public'
+        self.assertTrue(analysis.can_be_publicized)
+
+        a4.visibility = 'private'
+        a5.visibility = 'private'
+        a6.visibility = 'private'
+        self.assertFalse(analysis.can_be_publicized)
+
     def test_add_artifact(self):
         obs = self._create_analyses_with_samples()
         exp = qdb.artifact.Artifact(4)
@@ -161,6 +182,13 @@ class TestAnalysis(TestCase):
     def test_has_access_no_access(self):
         self.assertFalse(
             self.analysis.has_access(qdb.user.User("demo@microbio.me")))
+
+    def test_can_edit(self):
+        a = qdb.analysis.Analysis(1)
+        self.assertTrue(a.can_edit(qdb.user.User('test@foo.bar')))
+        self.assertTrue(a.can_edit(qdb.user.User('shared@foo.bar')))
+        self.assertTrue(a.can_edit(qdb.user.User('admin@foo.bar')))
+        self.assertFalse(a.can_edit(qdb.user.User('demo@microbio.me')))
 
     def test_create_nonqiita_portal(self):
         qiita_config.portal = "EMP"
@@ -351,14 +379,13 @@ class TestAnalysis(TestCase):
         npt.assert_warns(qdb.exceptions.QiitaDBWarning,
                          analysis._build_mapping_file, samples)
         obs = analysis.mapping_file
+
         exp = self.get_fp("%s_analysis_mapping.txt" % analysis.id)
         self.assertEqual(obs, exp)
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             obs, index='#SampleID')
-        exp = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.util.load_template_to_dataframe,
+        exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.map_exp_fp, index='#SampleID')
         assert_frame_equal(obs, exp)
 
@@ -371,9 +398,7 @@ class TestAnalysis(TestCase):
 
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             analysis.mapping_file, index='#SampleID')
-        exp = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.util.load_template_to_dataframe,
+        exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.duplicated_samples_not_merged, index='#SampleID')
 
         # assert_frame_equal assumes same order on the rows, thus sorting
@@ -390,9 +415,7 @@ class TestAnalysis(TestCase):
                          analysis._build_mapping_file, samples)
         obs = qdb.metadata_template.util.load_template_to_dataframe(
             analysis.mapping_file, index='#SampleID')
-        exp = npt.assert_warns(
-            qdb.exceptions.QiitaDBWarning,
-            qdb.metadata_template.util.load_template_to_dataframe,
+        exp = qdb.metadata_template.util.load_template_to_dataframe(
             self.map_exp_fp, index='#SampleID')
         assert_frame_equal(obs, exp)
 

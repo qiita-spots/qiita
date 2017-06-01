@@ -14,7 +14,6 @@ from shutil import rmtree
 from datetime import datetime
 from functools import partial
 from string import punctuation
-from tarfile import open as topen
 
 import pandas as pd
 
@@ -741,98 +740,6 @@ class DBUtilTests(TestCase):
         exp = [["biom", True], ["directory", False], ["log", False]]
         self.assertItemsEqual(obs, exp)
 
-    def test_generate_biom_and_metadata_release(self):
-        tgz, txt = qdb.util.generate_biom_and_metadata_release('private')
-        self.files_to_remove.extend([tgz, txt])
-
-        tmp = topen(tgz, "r:gz")
-        tgz_obs = [ti.name for ti in tmp]
-        tmp.close()
-        tgz_exp = [
-            'processed_data/1_study_1001_closed_reference_otu_table.biom',
-            'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom',
-            'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt',
-            'processed_data/1_study_1001_closed_reference_otu_table_'
-            'Silva.biom', 'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt']
-        self.assertEqual(tgz_obs, tgz_exp)
-
-        tmp = open(txt)
-        txt_obs = tmp.readlines()
-        tmp.close()
-        txt_exp = [
-            'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
-            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
-            '.txt\t4\tPick closed-reference OTUs, Split libraries FASTQ\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
-            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
-            '.txt\t5\tPick closed-reference OTUs, Split libraries FASTQ\n',
-            'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
-            'm\ttemplates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-'
-            '000000.txt\t6\tPick closed-reference OTUs, Split libraries '
-            'FASTQ\n']
-        self.assertEqual(txt_obs, txt_exp)
-
-        # whatever the configuration was, we will change to settings so we can
-        # test the other option when dealing with the end '/'
-        with qdb.sql_connection.TRN:
-            qdb.sql_connection.TRN.add(
-                "SELECT base_data_dir FROM settings")
-            obdr = qdb.sql_connection.TRN.execute_fetchlast()
-            if obdr[-1] == '/':
-                bdr = obdr[:-1]
-            else:
-                bdr = obdr + '/'
-
-            qdb.sql_connection.TRN.add(
-                "UPDATE settings SET base_data_dir = '%s'" % bdr)
-            bdr = qdb.sql_connection.TRN.execute()
-
-        tgz, txt = qdb.util.generate_biom_and_metadata_release('private')
-        self.files_to_remove.extend([tgz, txt])
-
-        tmp = topen(tgz, "r:gz")
-        tgz_obs = [ti.name for ti in tmp]
-        tmp.close()
-        tgz_exp = [
-            'processed_data/1_study_1001_closed_reference_otu_table.biom',
-            'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom',
-            'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt',
-            'processed_data/1_study_1001_closed_reference_otu_table_'
-            'Silva.biom', 'templates/1_19700101-000000.txt',
-            'templates/1_prep_1_19700101-000000.txt']
-        self.assertEqual(tgz_obs, tgz_exp)
-
-        tmp = open(txt)
-        txt_obs = tmp.readlines()
-        tmp.close()
-        txt_exp = [
-            'biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
-            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
-            '.txt\t4\tPick closed-reference OTUs, Split libraries FASTQ\n',
-            'processed_data/1_study_1001_closed_reference_otu_table.biom\ttem'
-            'plates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-000000'
-            '.txt\t5\tPick closed-reference OTUs, Split libraries FASTQ\n',
-            'processed_data/1_study_1001_closed_reference_otu_table_Silva.bio'
-            'm\ttemplates/1_19700101-000000.txt\ttemplates/1_prep_1_19700101-'
-            '000000.txt\t6\tPick closed-reference OTUs, Split libraries '
-            'FASTQ\n']
-        self.assertEqual(txt_obs, txt_exp)
-
-        # returning configuration
-        with qdb.sql_connection.TRN:
-                    qdb.sql_connection.TRN.add(
-                        "UPDATE settings SET base_data_dir = '%s'" % obdr)
-                    bdr = qdb.sql_connection.TRN.execute()
-
 
 @qiita_test_checker()
 class UtilTests(TestCase):
@@ -890,6 +797,20 @@ class UtilTests(TestCase):
         self.assertEqual(obs, exp)
 
     def test_generate_study_list(self):
+        # creating a new study to make sure that empty studies are also
+        # returned
+        info = {"timeseries_type_id": 1, "metadata_complete": True,
+                "mixs_compliant": True, "number_samples_collected": 25,
+                "number_samples_promised": 28, "study_alias": "TST",
+                "study_description": "Some description of the study goes here",
+                "study_abstract": "Some abstract goes here",
+                "emp_person_id": qdb.study.StudyPerson(1),
+                "principal_investigator_id": qdb.study.StudyPerson(1),
+                "lab_person_id": qdb.study.StudyPerson(1)}
+        new_study = qdb.study.Study.create(
+            qdb.user.User('shared@foo.bar'), 'test_study_1', efo=[1],
+            info=info)
+
         exp_info = [{
             'metadata_complete': True,
             'ebi_submission_status': 'submitted',
@@ -914,97 +835,72 @@ class UtilTests(TestCase):
             'ebi_study_accession': 'EBI123456-BB',
             'study_title': ('Identification of the Microbiomes for Cannabis '
                             'Soils'),
-            'number_samples_collected': 27
-        }]
-        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
+            'number_samples_collected': 27,
+            'study_tags': None
+        }, {
+            'metadata_complete': True,
+            'ebi_submission_status': 'not submitted', 'publication_pid': [],
+            'study_abstract': 'Some abstract goes here',
+            'pi': ('lab_dude@foo.bar', 'LabDude'), 'status': 'sandbox',
+            'proc_data_info': [], 'study_tags': None, 'shared': [],
+            'publication_doi': [], 'study_id': new_study.id,
+            'ebi_study_accession': None, 'study_title': 'test_study_1',
+            'number_samples_collected': 0}]
+        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
         self.assertEqual(obs_info, exp_info)
 
         qdb.artifact.Artifact(4).visibility = 'public'
         exp_info[0]['status'] = 'public'
-        exp_info[0]['proc_data_info'] = [{
-            'data_type': '18S',
-            'algorithm': 'QIIME (Pick closed-reference OTUs)',
-            'pid': 4,
-            'processed_date': '2012-10-02 17:30:00',
-            'params': {
-                'similarity': 0.97,
-                'reference_name': 'Greengenes',
-                'sortmerna_e_value': 1,
-                'sortmerna_max_pos': 10000,
-                'threads': 1,
-                'sortmerna_coverage': 0.97,
-                'reference_version': '13_8'},
-            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}]
-        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True,
-                                                public_only=True)
+        exp_info[0]['proc_data_info'] = [
+            {'data_type': '18S', 'name': 'BIOM',
+             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
+             'pid': 4, 'processed_date': '2012-10-02 17:30:00',
+             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
+                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
+                        'threads': 1, u'sortmerna_coverage': 0.97,
+                        'reference_version': '13_8'}},
+            {'data_type': '18S', 'name': 'BIOM',
+             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
+             'pid': 5, 'processed_date': '2012-10-02 17:30:00',
+             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
+                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
+                        'threads': 1, 'sortmerna_coverage': 0.97,
+                        'reference_version': '13_8'}},
+            {'data_type': '16S', 'name': 'BIOM',
+             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
+             'pid': 6, 'processed_date': '2012-10-02 17:30:00',
+             'params': {'similarity': 0.97, 'reference_name': 'Silva',
+                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
+                        'threads': 1, 'sortmerna_coverage': 0.97,
+                        'reference_version': 'test'}}]
+        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
         self.assertEqual(obs_info, exp_info)
 
-        exp_info[0]['proc_data_info'].extend(
-           [{
-            'data_type': '18S',
-            'algorithm': 'QIIME (Pick closed-reference OTUs)',
-            'pid': 5,
-            'processed_date': '2012-10-02 17:30:00',
-            'params': {
-                'similarity': 0.97,
-                'reference_name': 'Greengenes',
-                'sortmerna_e_value': 1,
-                'sortmerna_max_pos': 10000,
-                'threads': 1,
-                'sortmerna_coverage': 0.97,
-                'reference_version': '13_8'},
-            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}, {
-            'data_type': '16S',
-            'algorithm': 'QIIME (Pick closed-reference OTUs)',
-            'pid': 6,
-            'processed_date': '2012-10-02 17:30:00',
-            'params': {
-                'similarity': 0.97,
-                'reference_name': 'Silva',
-                'sortmerna_e_value': 1,
-                'sortmerna_max_pos': 10000,
-                'threads': 1,
-                'sortmerna_coverage': 0.97,
-                'reference_version': 'test'},
-            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192']}, {
-            'processed_date': '2012-10-02 17:30:00',
-            'pid': 7,
-            'samples': ['1.SKB1.640202', '1.SKB2.640194', '1.SKB3.640195',
-                        '1.SKB4.640189', '1.SKB5.640181', '1.SKB6.640176',
-                        '1.SKB7.640196', '1.SKB8.640193', '1.SKB9.640200',
-                        '1.SKD1.640179', '1.SKD2.640178', '1.SKD3.640198',
-                        '1.SKD4.640185', '1.SKD5.640186', '1.SKD6.640190',
-                        '1.SKD7.640191', '1.SKD8.640184', '1.SKD9.640182',
-                        '1.SKM1.640183', '1.SKM2.640199', '1.SKM3.640197',
-                        '1.SKM4.640180', '1.SKM5.640177', '1.SKM6.640187',
-                        '1.SKM7.640188', '1.SKM8.640201', '1.SKM9.640192'],
-            'data_type': '16S'}])
-
-        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
+        exp_info[0]['proc_data_info'] = [
+            {'data_type': '18S', 'name': 'BIOM',
+             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
+             'pid': 4, 'processed_date': '2012-10-02 17:30:00',
+             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
+                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
+                        'threads': 1, 'sortmerna_coverage': 0.97,
+                        'reference_version': '13_8'}},
+            {'data_type': '18S', 'name': 'BIOM',
+             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
+             'pid': 5, 'processed_date': '2012-10-02 17:30:00',
+             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
+                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
+                        'threads': 1, 'sortmerna_coverage': 0.97,
+                        'reference_version': '13_8'}},
+            {'data_type': '16S', 'name': 'BIOM',
+             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
+             'pid': 6, 'processed_date': '2012-10-02 17:30:00',
+             'params': {'similarity': 0.97, 'reference_name': 'Silva',
+                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
+                        'threads': 1, 'sortmerna_coverage': 0.97,
+                        'reference_version': 'test'}},
+            {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'name': 'BIOM',
+             'data_type': '16S'}]
+        obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 
 

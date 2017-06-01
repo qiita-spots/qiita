@@ -46,14 +46,18 @@ class PrepTemplateHandlerTests(OauthTestingBase):
         path_builder = partial(join, db_test_template_dir)
 
         obs = loads(obs.body)
-        exp = {'data_type': '18S',
-               'artifact': 1,
-               'investigation_type': 'Metagenomics',
-               'study': 1,
-               'status': 'private',
-               'qiime-map': path_builder('1_prep_1_qiime_19700101-000000.txt'),
-               'prep-file': path_builder('1_prep_1_19700101-000000.txt')}
-        self.assertEqual(obs, exp)
+
+        # have to check per key because since patch 51 we are updating the
+        # test info files
+        self.assertEqual(obs['data_type'], '18S')
+        self.assertEqual(obs['artifact'], 1)
+        self.assertEqual(obs['investigation_type'], 'Metagenomics')
+        self.assertEqual(obs['study'], 1)
+        self.assertEqual(obs['status'], 'private')
+        self.assertTrue(obs['qiime-map'].startswith(
+            path_builder('1_prep_1_qiime_')))
+        self.assertTrue(obs['prep-file'].startswith(
+            path_builder('1_prep_1_')))
 
 
 class PrepTemplateDataHandlerTests(OauthTestingBase):

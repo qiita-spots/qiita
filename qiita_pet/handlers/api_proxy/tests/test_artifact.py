@@ -29,7 +29,7 @@ from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
     artifact_delete_req, artifact_types_get_req, artifact_post_req,
     artifact_summary_get_request, artifact_summary_post_request,
-    artifact_patch_request)
+    artifact_patch_request, artifact_get_prep_req)
 
 
 class TestArtifactAPIReadOnly(TestCase):
@@ -302,7 +302,7 @@ class TestArtifactAPI(TestCase):
                'files': exp_files,
                'errored_jobs': [],
                'editable': True,
-               'visibility': 'private',
+               'visibility': 'sandbox',
                'job': None,
                'message': '',
                'name': 'Demultiplexed 1',
@@ -316,17 +316,14 @@ class TestArtifactAPI(TestCase):
                    'min_per_read_length_fraction': 0.75,
                    'barcode_type': u'golay_12'},
                'summary': None,
-               'buttons': ('<button onclick="if (confirm(\'Are you sure you '
-                           'want to make public artifact id: 2?\')) { '
-                           'set_artifact_visibility(\'public\', 2) }" '
-                           'class="btn btn-primary btn-sm">Make public'
-                           '</button> <button onclick="if (confirm(\'Are you '
-                           'sure you want to revert to sandbox artifact id: '
-                           '2?\')) { set_artifact_visibility(\'sandbox\', 2) '
-                           '}" class="btn btn-primary btn-sm">Revert to '
-                           'sandbox</button> <a class="btn btn-primary '
-                           'btn-sm" href="/vamps/2"><span class="glyphicon '
-                           'glyphicon-export"></span> Submit to VAMPS</a>'),
+               'buttons': (
+                   '<button onclick="if (confirm(\'Are you sure you want to '
+                   'request approval for artifact id: 2?\')) { '
+                   'set_artifact_visibility(\'awaiting_approval\', 2) }" '
+                   'class="btn btn-primary btn-sm">Request approval</button> '
+                   '<a class="btn btn-primary btn-sm" href="/vamps/2"><span '
+                   'class="glyphicon glyphicon-export"></span> Submit to '
+                   'VAMPS</a>'),
                'study_id': 1,
                'prep_id': 1}
         self.assertEqual(obs, exp)
@@ -404,6 +401,25 @@ class TestArtifactAPI(TestCase):
 
     def test_artifact_delete_req_no_access(self):
         obs = artifact_delete_req(self.artifact.id, 'demo@microbio.me')
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_get_prep_req(self):
+        obs = artifact_get_prep_req('test@foo.bar', [4])
+        exp = {'status': 'success', 'msg': '', 'data': {
+            4: ['1.SKB2.640194', '1.SKM4.640180', '1.SKB3.640195',
+                '1.SKB6.640176', '1.SKD6.640190', '1.SKM6.640187',
+                '1.SKD9.640182', '1.SKM8.640201', '1.SKM2.640199',
+                '1.SKD2.640178', '1.SKB7.640196', '1.SKD4.640185',
+                '1.SKB8.640193', '1.SKM3.640197', '1.SKD5.640186',
+                '1.SKB1.640202', '1.SKM1.640183', '1.SKD1.640179',
+                '1.SKD3.640198', '1.SKB5.640181', '1.SKB4.640189',
+                '1.SKB9.640200', '1.SKM9.640192', '1.SKD8.640184',
+                '1.SKM5.640177', '1.SKM7.640188', '1.SKD7.640191']}}
+        self.assertEqual(obs, exp)
+
+        obs = artifact_get_prep_req('demo@microbio.me', [4])
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
         self.assertEqual(obs, exp)
@@ -509,6 +525,7 @@ class TestArtifactAPI(TestCase):
         exp = {'status': 'error',
                'message': 'Unknown visiblity value: BADSTAT'}
         self.assertEqual(obs, exp)
+
 
 if __name__ == "__main__":
     main()

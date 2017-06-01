@@ -77,9 +77,35 @@ class ArtifactHandlerTests(OauthTestingBase):
             'is_submitted_to_vamps': None,
             'prep_information': [1],
             'study': 1,
+            'analysis': None,
             'processing_parameters': None,
             'files': exp_fps}
         self.assertEqual(loads(obs.body), exp)
+
+        obs = self.get('/qiita_db/artifacts/9/', headers=self.header)
+        self.assertEqual(obs.code, 200)
+        db_test_raw_dir = qdb.util.get_mountpoint('analysis')[0][1]
+        path_builder = partial(join, db_test_raw_dir)
+        exp_fps = {"biom": [path_builder('1_analysis_18S.biom')]}
+        exp = {
+            'name': 'noname',
+            'visibility': 'sandbox',
+            'type': 'BIOM',
+            'data_type': '18S',
+            'can_be_submitted_to_ebi': False,
+            'ebi_run_accessions': None,
+            'can_be_submitted_to_vamps': False,
+            'is_submitted_to_vamps': None,
+            'prep_information': [],
+            'study': None,
+            'analysis': 1,
+            'processing_parameters': {'biom_table': 8, 'depth': 9000,
+                                      'subsample_multinomial': False},
+            'files': exp_fps}
+        obs = loads(obs.body)
+        # The timestamp is genreated at patch time, so we can't check for it
+        del obs['timestamp']
+        self.assertEqual(obs, exp)
 
     def test_patch(self):
         arguments = {'op': 'add', 'path': '/html_summary/',
@@ -212,6 +238,7 @@ class ArtifactTypeHandlerTests(OauthTestingBase):
         obs = self.post('/qiita_db/artifacts/types/', headers=self.header,
                         data=data)
         self.assertEqual(obs.code, 200)
+
 
 if __name__ == '__main__':
     main()

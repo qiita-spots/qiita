@@ -269,6 +269,7 @@ def _submit(ctx, channel, f, *args, **kwargs):
     ctx.submit_async(_redis_wrap, f, redis_deets, *args, **kwargs)
     return uuid
 
+
 # likely want this in qiita_ware.__init__
 context = Dispatch()
 submit = partial(_submit, context)

@@ -121,5 +121,6 @@ class TestSampleAJAX(TestHandlerBase):
                "message": "Category NOEXIST does not exist in sample template"}
         self.assertEqual(loads(res.body), exp)
 
+
 if __name__ == "__main__":
     main()

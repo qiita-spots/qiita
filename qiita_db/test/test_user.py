@@ -454,14 +454,20 @@ class UserTest(TestCase):
         PJ = qdb.processing_job.ProcessingJob
         ignore_status = []
         # generates expected jobs
-        jobs = qdb.user.User('shared@foo.bar').jobs(ignore_status)
+        jobs = qdb.user.User('shared@foo.bar').jobs(
+            ignore_status=ignore_status)
         self.assertEqual(jobs, [
             PJ('d19f76ee-274e-4c1b-b3a2-a12d73507c55'),
             PJ('b72369f9-a886-4193-8d3d-f7b504168e75')])
 
+        # just one job
+        self.assertEqual(qdb.user.User('shared@foo.bar').jobs(
+            limit=1, ignore_status=ignore_status), [
+                PJ('d19f76ee-274e-4c1b-b3a2-a12d73507c55')])
+
         # no jobs
         self.assertEqual(qdb.user.User('admin@foo.bar').jobs(
-            ignore_status), [])
+            ignore_status=ignore_status), [])
 
     def test_jobs_defaults(self):
         PJ = qdb.processing_job.ProcessingJob
@@ -472,6 +478,7 @@ class UserTest(TestCase):
 
         # no jobs
         self.assertEqual(qdb.user.User('admin@foo.bar').jobs(), [])
+
 
 if __name__ == "__main__":
     main()

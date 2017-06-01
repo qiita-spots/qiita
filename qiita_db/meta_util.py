@@ -25,7 +25,8 @@ Methods
 from __future__ import division
 
 from moi import r_client
-from os import stat
+from os import stat, makedirs, rename
+from os.path import join, relpath, exists
 from time import strftime, localtime
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -34,8 +35,11 @@ from urllib import quote
 from StringIO import StringIO
 from future.utils import viewitems
 from datetime import datetime
+from tarfile import open as topen, TarInfo
+from hashlib import md5
 
 from qiita_core.qiita_settings import qiita_config
+from qiita_core.configuration_manager import ConfigurationManager
 import qiita_db as qdb
 
 
@@ -126,14 +130,21 @@ def validate_filepath_access_by_user(user, filepath_id):
             # the prep access is given by it's artifacts, if the user has
             # access to any artifact, it should have access to the prep
             # [0] cause we should only have 1
-            a = qdb.metadata_template.prep_template.PrepTemplate(
-                pid[0]).artifact
-            if (a.visibility == 'public' or a.study.has_access(user)):
-                return True
+            pt = qdb.metadata_template.prep_template.PrepTemplate(
+                pid[0])
+            a = pt.artifact
+            # however, the prep info file could not have any artifacts attached
+            # , in that case we will use the study access level
+            if a is None:
+                return qdb.study.Study(pt.study_id).has_access(user)
             else:
-                for c in a.descendants.nodes():
-                    if (c.visibility == 'public' or c.study.has_access(user)):
-                        return True
+                if (a.visibility == 'public' or a.study.has_access(user)):
+                    return True
+                else:
+                    for c in a.descendants.nodes():
+                        if ((c.visibility == 'public' or
+                             c.study.has_access(user))):
+                            return True
             return False
         # analyses
         elif anid:
@@ -154,9 +165,9 @@ def update_redis_stats():
         artifact filepaths that are not present in the file system
     """
     STUDY = qdb.study.Study
-    studies = {'public': STUDY.get_by_status('private'),
-               'private': STUDY.get_by_status('public'),
-               'sanbox': STUDY.get_by_status('sandbox')}
+    studies = {'public': STUDY.get_by_status('public'),
+               'private': STUDY.get_by_status('private'),
+               'sandbox': STUDY.get_by_status('sandbox')}
     number_studies = {k: len(v) for k, v in viewitems(studies)}
 
     number_of_samples = {}
@@ -186,7 +197,8 @@ def update_redis_stats():
 
     lat_longs = get_lat_longs()
 
-    num_studies_ebi = len(ebi_samples_prep)
+    num_studies_ebi = len([k for k, v in viewitems(ebi_samples_prep)
+                           if v >= 1])
     number_samples_ebi_prep = sum([v for _, v in viewitems(ebi_samples_prep)])
 
     # generating file size stats
@@ -304,7 +316,8 @@ def get_lat_longs():
                  WHERE table_name SIMILAR TO 'sample_[0-9]+'
                     AND table_schema = 'qiita'
                     AND column_name IN ('latitude', 'longitude')
-                    AND SPLIT_PART(table_name, '_', 2)::int IN %s;"""
+                    AND SPLIT_PART(table_name, '_', 2)::int IN %s
+                    GROUP BY table_name HAVING COUNT(column_name) = 2;"""
         qdb.sql_connection.TRN.add(sql, [tuple(portal_table_ids)])
 
         sql = [('SELECT CAST(latitude AS FLOAT), '
@@ -318,3 +331,99 @@ def get_lat_longs():
         qdb.sql_connection.TRN.add(sql)
 
         return qdb.sql_connection.TRN.execute_fetchindex()
+
+
+def generate_biom_and_metadata_release(study_status='public'):
+    """Generate a list of biom/meatadata filepaths and a tgz of those files
+
+    Parameters
+    ----------
+    study_status : str, optional
+        The study status to search for. Note that this should always be set
+        to 'public' but having this exposed helps with testing. The other
+        options are 'private' and 'sandbox'
+    """
+    studies = qdb.study.Study.get_by_status(study_status)
+    qiita_config = ConfigurationManager()
+    working_dir = qiita_config.working_dir
+    portal = qiita_config.portal
+    bdir = qdb.util.get_db_files_base_dir()
+    time = datetime.now().strftime('%m-%d-%y %H:%M:%S')
+
+    data = []
+    for s in studies:
+        # [0] latest is first, [1] only getting the filepath
+        sample_fp = relpath(s.sample_template.get_filepaths()[0][1], bdir)
+
+        for a in s.artifacts(artifact_type='BIOM'):
+            if a.processing_parameters is None:
+                continue
+
+            cmd_name = a.processing_parameters.command.name
+
+            # this loop is necessary as in theory an artifact can be
+            # generated from multiple prep info files
+            human_cmd = []
+            for p in a.parents:
+                pp = p.processing_parameters
+                pp_cmd_name = pp.command.name
+                if pp_cmd_name == 'Trimming':
+                    human_cmd.append('%s @ %s' % (
+                        cmd_name, str(pp.values['length'])))
+                else:
+                    human_cmd.append('%s, %s' % (cmd_name, pp_cmd_name))
+            human_cmd = ', '.join(human_cmd)
+
+            for _, fp, fp_type in a.filepaths:
+                if fp_type != 'biom' or 'only-16s' in fp:
+                    continue
+                fp = relpath(fp, bdir)
+                # format: (biom_fp, sample_fp, prep_fp, qiita_artifact_id,
+                #          human readable name)
+                for pt in a.prep_templates:
+                    for _, prep_fp in pt.get_filepaths():
+                        if 'qiime' not in prep_fp:
+                            break
+                    prep_fp = relpath(prep_fp, bdir)
+                    data.append((fp, sample_fp, prep_fp, a.id, human_cmd))
+
+    # writing text and tgz file
+    ts = datetime.now().strftime('%m%d%y-%H%M%S')
+    tgz_dir = join(working_dir, 'releases')
+    if not exists(tgz_dir):
+        makedirs(tgz_dir)
+    tgz_name = join(tgz_dir, '%s-%s-building.tgz' % (portal, study_status))
+    tgz_name_final = join(tgz_dir, '%s-%s.tgz' % (portal, study_status))
+    txt_hd = StringIO()
+    with topen(tgz_name, "w|gz") as tgz:
+        # writing header for txt
+        txt_hd.write(
+            "biom_fp\tsample_fp\tprep_fp\tqiita_artifact_id\tcommand\n")
+        for biom_fp, sample_fp, prep_fp, artifact_id, human_cmd in data:
+            txt_hd.write("%s\t%s\t%s\t%s\t%s\n" % (
+                biom_fp, sample_fp, prep_fp, artifact_id, human_cmd))
+            tgz.add(join(bdir, biom_fp), arcname=biom_fp, recursive=False)
+            tgz.add(join(bdir, sample_fp), arcname=sample_fp, recursive=False)
+            tgz.add(join(bdir, prep_fp), arcname=prep_fp, recursive=False)
+
+        txt_hd.seek(0)
+        info = TarInfo(name='%s-%s-%s.txt' % (portal, study_status, ts))
+        info.size = len(txt_hd.buf)
+        tgz.addfile(tarinfo=info, fileobj=txt_hd)
+
+    with open(tgz_name, "rb") as f:
+        md5sum = md5()
+        for c in iter(lambda: f.read(4096), b""):
+            md5sum.update(c)
+
+    rename(tgz_name, tgz_name_final)
+
+    vals = [
+        ('filepath', tgz_name_final[len(working_dir):], r_client.set),
+        ('md5sum', md5sum.hexdigest(), r_client.set),
+        ('time', time, r_client.set)]
+    for k, v, f in vals:
+        redis_key = '%s:release:%s:%s' % (portal, study_status, k)
+        # important to "flush" variables to avoid errors
+        r_client.delete(redis_key)
+        f(redis_key, v)

@@ -46,6 +46,19 @@ class TestStudyPerson(TestCase):
         self.assertFalse(
             qdb.study.StudyPerson.exists('SomeDude', 'affil'))
 
+    def test_retrieve_non_existant_people(self):
+        with self.assertRaises(qdb.exceptions.QiitaDBLookupError):
+            qdb.study.StudyPerson.from_name_and_affiliation('Boaty McBoatFace',
+                                                            'UCSD')
+
+        p = qdb.study.StudyPerson.from_name_and_affiliation('LabDude',
+                                                            'knight lab')
+        self.assertEqual(p.name, 'LabDude')
+        self.assertEqual(p.affiliation, 'knight lab')
+        self.assertEqual(p.address, '123 lab street')
+        self.assertEqual(p.phone, '121-222-3333')
+        self.assertEqual(p.email, 'lab_dude@foo.bar')
+
     def test_iter(self):
         """Make sure that each and every StudyPerson is retrieved"""
         expected = [
@@ -833,31 +846,43 @@ class TestStudy(TestCase):
             self.study.environmental_packages = ['air']
 
     def test_study_tags(self):
+        # testing empty tags
+        obs = qdb.study.Study.get_tags()
+        self.assertEqual(obs, {'admin': [], 'user': []})
+
         # inserting new tags
         user = qdb.user.User('test@foo.bar')
-        tags = ['this is my tag', 'I want GOLD!!']
+        tags = ['this is my tag', 'I want GOLD!!', 'this is my tag']
         qdb.study.Study.insert_tags(user, tags)
+        # now as admin
+        admin = qdb.user.User('admin@foo.bar')
+        admin_tags = ['actual GOLD!', 'this is my tag']
+        qdb.study.Study.insert_tags(admin, admin_tags)
 
         # testing that insertion went fine
         obs = qdb.study.Study.get_tags()
-        exp = [[i + 1, tag] for i, tag in enumerate(tags)]
+        exp = {'user': ['this is my tag', 'I want GOLD!!'],
+               'admin': ['actual GOLD!']}
         self.assertEqual(obs, exp)
 
-        # assigning the tags to study
+        # assigning the tags to study as user
         study = qdb.study.Study(1)
-        self.assertEqual(study.tags, [])
-        study.tags = [tig for tig, tag in obs]
-        # and checking that everything went fine
-        self.assertEqual(obs, study.tags)
-
-        # making sure that everything is overwritten
-        obs.pop()
-        study.tags = [tig for tig, tag in obs]
-        self.assertEqual(obs, study.tags)
+        tags = ['this is my tag', 'actual GOLD!']
+        message = study.update_tags(user, tags)
+        self.assertItemsEqual(study.tags, tags[:1])
+        self.assertEqual(message, 'Only admins can assign: actual GOLD!')
+        # now like admin
+        message = study.update_tags(admin, tags)
+        self.assertItemsEqual(study.tags, tags)
+        self.assertEqual(message, '')
 
         # cleaning tags
-        study.tags = []
+        message = study.update_tags(user, [])
+        self.assertEqual(study.tags, ['actual GOLD!'])
+        self.assertEqual(message, 'You cannot remove: actual GOLD!')
+        message = study.update_tags(admin, [])
         self.assertEqual(study.tags, [])
+        self.assertEqual(message, '')
 
 
 if __name__ == "__main__":
