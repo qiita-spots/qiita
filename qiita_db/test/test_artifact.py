@@ -1047,8 +1047,8 @@ class ArtifactTests(TestCase):
         #              /- 2 (private) -|- 5 (private)
         # 1 (private) -|               \- 6 (private)
         #              \- 3 (private)
-        # By changing the visibility of 4 to public, the visibility of 1 and
-        # 2 also changes to public
+        # By changing the visibility of 4 to public, the visibility of all
+        # should change
         a1 = qdb.artifact.Artifact(1)
         a2 = qdb.artifact.Artifact(2)
         a3 = qdb.artifact.Artifact(3)
@@ -1060,17 +1060,16 @@ class ArtifactTests(TestCase):
 
         self.assertEqual(a1.visibility, "public")
         self.assertEqual(a2.visibility, "public")
-        self.assertEqual(a3.visibility, "private")
+        self.assertEqual(a3.visibility, "public")
         self.assertEqual(a4.visibility, "public")
-        self.assertEqual(a5.visibility, "private")
-        self.assertEqual(a6.visibility, "private")
+        self.assertEqual(a5.visibility, "public")
+        self.assertEqual(a6.visibility, "public")
 
-        # However, if we change it back to private,
-        # it should remain public
+        # Same if we go back
         a4.visibility = 'private'
 
-        self.assertEqual(a1.visibility, "public")
-        self.assertEqual(a2.visibility, "public")
+        self.assertEqual(a1.visibility, "private")
+        self.assertEqual(a2.visibility, "private")
         self.assertEqual(a3.visibility, "private")
         self.assertEqual(a4.visibility, "private")
         self.assertEqual(a5.visibility, "private")
