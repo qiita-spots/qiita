@@ -2,6 +2,7 @@ language: python
 sudo: false
 env:
   global:
+    - PATH=/home/travis/miniconda3/bin:$PATH
     - PYTHON_VERSION=2.7
   matrix:
     - TEST_ADD_STUDIES=False
@@ -12,8 +13,8 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   # - export PATH=/home/travis/miniconda3/bin:$PATH
-  - echo "export PATH=/home/travis/miniconda3/bin:$PATH" >> .bashrc
-  - source .bashrc
+  # - echo "export PATH=/home/travis/miniconda3/bin:$PATH" >> .bashrc
+  # - source .bashrc
   # Update conda itself
   - conda update --yes conda
   # Downloading and setting up ascp for EBI testing
