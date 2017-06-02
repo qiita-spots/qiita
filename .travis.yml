@@ -49,7 +49,7 @@ script:
   # Thus, we need a qiita webserver running to be able to execute the tests.
   - |
     if [ ${TEST_ADD_STUDIES} == "False" ]; then
-        qiita pet webserver start &
+        qiita pet webserver --no-build-docs start &
     fi
   - python qiita_db/test/test_analysis.py
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then sleep 5; fi
