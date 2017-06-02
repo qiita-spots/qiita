@@ -30,6 +30,8 @@ install:
   - pip install sphinx sphinx-bootstrap-theme coveralls 'ipython[all]==2.4.1'
   - travis_retry pip install . --process-dependency-links
   - 'echo "backend: Agg" > matplotlibrc'
+  # Install the biom plugin so we can run the analysis tests
+  - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
@@ -44,8 +46,8 @@ script:
   - |
     if [ ${TEST_ADD_STUDIES} == "False" ]; then
         qiita pet webserver start &
-        python qiita_db/test/test_analysis.py
     fi
+  - python qiita_db/test/test_analysis.py
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then sleep 5; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then qiita-cron-job ; fi
