@@ -66,6 +66,8 @@ class TestAnalysis(TestCase):
     def _wait_for_jobs(self, analysis):
         for j in analysis.jobs:
             wait_for_processing_job(j.id)
+            if j.status == 'error':
+                print j.log.msg
 
     def _create_analyses_with_samples(self, user='demo@microbio.me',
                                       merge=False):

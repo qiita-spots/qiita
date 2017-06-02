@@ -2,7 +2,6 @@ language: python
 sudo: false
 env:
   global:
-    - PATH=/home/travis/miniconda3/bin:$PATH
     - PYTHON_VERSION=2.7
   matrix:
     - TEST_ADD_STUDIES=False
@@ -12,9 +11,7 @@ before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
-  # - export PATH=/home/travis/miniconda3/bin:$PATH
-  # - echo "export PATH=/home/travis/miniconda3/bin:$PATH" >> .bashrc
-  # - source .bashrc
+  - export PATH=/home/travis/miniconda3/bin:$PATH
   # Update conda itself
   - conda update --yes conda
   # Downloading and setting up ascp for EBI testing
@@ -47,6 +44,7 @@ script:
   - |
     if [ ${TEST_ADD_STUDIES} == "False" ]; then
         qiita pet webserver start &
+        python qiita_db/test/test_analysis.py
     fi
   - if [ ${TEST_ADD_STUDIES} == "False" ]; then sleep 5; fi
   - if [ ${TEST_ADD_STUDIES} == "True" ]; then test_data_studies/commands.sh ; fi
