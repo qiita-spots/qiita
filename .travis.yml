@@ -33,6 +33,8 @@ install:
   # Install the biom plugin so we can run the analysis tests
   - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
+  - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
+  - configure_biom --env-script "source activate qiita" --server-cert $QIITA_SERVER_CERT
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
   - if [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
