@@ -31,6 +31,7 @@ install:
   - travis_retry pip install . --process-dependency-links
   - 'echo "backend: Agg" > matplotlibrc'
   # Install the biom plugin so we can run the analysis tests
+  - pip install https://github.com/qiita-spots/qiita_client/archive/master.zip
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
 script:
   - export MOI_CONFIG_FP=`pwd`/qiita_core/support_files/config_test.cfg
