@@ -655,6 +655,7 @@ class ProcessingJob(qdb.base.QiitaObject):
         qiita_db.exceptions.QiitaDBOperationNotPermittedError
             If the job is not in running state
         """
+        print "COMPLETE: %s" % error
         with qdb.sql_connection.TRN:
             if success:
                 if self.status != 'running':
