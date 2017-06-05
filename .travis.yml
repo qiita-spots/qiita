@@ -47,7 +47,10 @@ before_script:
   - ipython profile create qiita-general --parallel
   - qiita-env start_cluster qiita-general
   - qiita-env make --no-load-ontologies
-  - qiita pet webserver --no-build-docs start &
+  - |
+    if [ ${TEST_ADD_STUDIES} == "False" ]; then
+        qiita pet webserver --no-build-docs start &
+    fi
 script:
   - sleep 5
   - python qiita_db/test/test_analysis.py
