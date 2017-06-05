@@ -35,7 +35,8 @@ install:
   - pip install https://github.com/qiita-spots/qtp-biom/archive/master.zip --process-dependency-links
   - export QIITA_SERVER_CERT=`pwd`/qiita_core/support_files/server.crt
   - mkdir ~/.qiita_plugins
-  - configure_biom --env-script "source activate qiita" --server-cert $QIITA_SERVER_CERT
+  - cp $PWD/qiita_core/support_files/BIOM\ type_2.1.4.conf ~/.qiita_plugins
+  # - configure_biom --env-script "source activate qiita" --server-cert $QIITA_SERVER_CERT
 before_script:
     # Some of the tests rely on the plugin system to complete successfuly.
     # Thus, we need a qiita webserver running to be able to execute the tests.
