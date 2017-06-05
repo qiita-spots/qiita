@@ -59,6 +59,8 @@ def _job_completer(job_id, payload):
     """
     import qiita_db as qdb
 
+    print "JOB COMPLETER: %s" % payload
+
     success, error = qdb.processing_job.private_job_submitter(
         "Complete job %s" % job_id, 'complete_job', [job_id, payload])
     if not success:
