@@ -34,6 +34,9 @@ from qiita_pet.handlers.artifact_handlers.base_handlers import (
 class TestBaseHandlersUtils(TestCase):
     def setUp(self):
         self._files_to_remove = []
+        # Remove the max diff limitation so we can actually see the
+        # entire error
+        self.maxDiff = None
 
     def tearDown(self):
         for fp in self._files_to_remove:
@@ -66,6 +69,16 @@ class TestBaseHandlersUtils(TestCase):
         check_artifact_access(User('shared@foo.bar'), a)
         a.visibility = 'public'
         check_artifact_access(demo_u, a)
+
+    def _assert_summary_equal(self, obs, exp):
+        "Utility function for testing the artifact summary get request"
+        obs_files = obs.pop('files')
+        exp_files = exp.pop('files')
+        self.assertItemsEqual(obs_files, exp_files)
+        obs_jobs = obs.pop('processing_jobs')
+        exp_jobs = obs.pop('processing_jobs')
+        self.assertItemsEqual(obs_jobs, exp_jobs)
+        self.assertEqual(obs, exp)
 
     def test_artifact_summary_get_request(self):
         user = User('test@foo.bar')
