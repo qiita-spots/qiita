@@ -34,9 +34,6 @@ from qiita_pet.handlers.artifact_handlers.base_handlers import (
 class TestBaseHandlersUtils(TestCase):
     def setUp(self):
         self._files_to_remove = []
-        # Remove the max diff limitation so we can actually see the
-        # entire error
-        self.maxDiff = None
 
     def tearDown(self):
         for fp in self._files_to_remove:
