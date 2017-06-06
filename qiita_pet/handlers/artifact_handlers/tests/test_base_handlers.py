@@ -15,9 +15,9 @@ from json import loads
 from tornado.web import HTTPError
 from moi import r_client
 
+from qiita_core.qiita_settings import qiita_config
 from qiita_core.testing import wait_for_prep_information_job
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import get_db_files_base_dir
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
 from qiita_db.processing_job import ProcessingJob
@@ -34,6 +34,7 @@ from qiita_pet.handlers.artifact_handlers.base_handlers import (
 class TestBaseHandlersUtils(TestCase):
     def setUp(self):
         self._files_to_remove = []
+        self.maxDiff = None
 
     def tearDown(self):
         for fp in self._files_to_remove:
@@ -150,7 +151,7 @@ class TestBaseHandlersUtils(TestCase):
             (a.html_summary_fp[0],
              '%s (html summary)' % basename(a.html_summary_fp[1])))
         exp_summary_path = relpath(
-            a.html_summary_fp[1], get_db_files_base_dir())
+            a.html_summary_fp[1], qiita_config.base_data_dir)
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
@@ -377,7 +378,7 @@ class TestBaseHandlers(TestHandlerBase):
         a.html_summary_fp = fp
         self._files_to_remove.extend([fp, a.html_summary_fp[1]])
 
-        summary = relpath(a.html_summary_fp[1], get_db_files_base_dir())
+        summary = relpath(a.html_summary_fp[1], qiita_config.base_data_dir)
         response = self.get('/artifact/html_summary/%s' % summary)
         self.assertEqual(response.code, 200)
         self.assertEqual(response.body, '<b>HTML TEST - not important</b>\n')
