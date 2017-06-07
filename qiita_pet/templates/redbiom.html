@@ -9,8 +9,11 @@
     moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
     moi.add_callback('sel', display_number_of_samples_added);
     $("#redbiom-table").dataTable({
-      "dom": 'lfrt<"footer">ip',
+      "dom": '<"ps">lfr<t><"footer">ip',
       'footerCallback': function ( row, data, start, end, display ) {
+
+        // adding total features found
+
         var api = this.api(), data;
         var total_features = api
           .column(4)
@@ -28,23 +31,52 @@
           }
         }
         $('.footer').html(text)
+
+        // adding selectors for filtering
+
+        this.api().columns().every( function (iterator) {
+          var column = this;
+          if (iterator == 3 && column.data().length != 0) {
+            var placer = $(".ps");
+            placer.empty();
+            placer.append("<b>Filter by Processing paramters</b>: ")
+            var selector = $('<select><option value=""></option></select>')
+              .appendTo( placer )
+              .on('change', function () {
+                var val = $.fn.dataTable.util.escapeRegex( $(this).val() );
+                column
+                  .search( val ? '^'+val+'$' : '', true, false )
+                  .draw();
+              });
+
+            var added = [];
+            column.data().each(function (d){
+              var cmd = d.command;
+              if (added.indexOf(cmd) == -1){
+                added.push(cmd);
+                selector.append('<option value="' + cmd + '">' + cmd + '</option>');
+              }
+            });
+          }
+        });
       },
       "columns": [
         { "data": null, "orderable": false, "width": "10%" },
         { "data": null, "width": "40%"  },
-        { "data": "aname", "width": "20%"  },
-        { "data": null, "width": "20%"  },
+        { "data": null, "width": "10%"  },
+        { "data": null, "width": "30%"  },
         { "data": null, "width": "10%" }
       ],
       columnDefs: [
-        {type:'natural', targets:[1,2,3,4]},
+        { type:'natural', targets: [1,2,3,4] },
         // render Add to Analysis button
         {"render": function ( data, type, row, meta ) {
+          var text = '';
           {% if current_user is not None %}
-            var text = '<input type="button" class="btn btn-sm" value="Add to analysis" onclick="redbiom_send_to_moi(' +
-                       row.artifact_id + ', ' + meta.row + ')">';
-          {% else %}
-            var text = '';
+            if ($("#search_on").val() != 'categories'){
+              var text = '<input type="button" class="btn btn-sm" value="Add to analysis" onclick="redbiom_send_to_moi(' +
+                         row.artifact_id + ', ' + meta.row + ')">';
+            }
           {% end %}
           return text;
         }, targets: [0]},
@@ -58,71 +90,83 @@
           {% end %}
           return text;
         }, targets: [1]},
-        // render Artifact Processing
+        // render Artifact Name
         {"render": function ( data, type, row, meta ) {
-            var text = '';
-            if (!(!row.command)) {
-              text += row.command;
-            }
-            if (!(!row.software)) {
-              text += ' ' + row.software;
-            }
-            if (!(!row.version)) {
-              text += ' v' + row.version;
-            }
+          var text = row.aname;
+          if ($("#search_on").val() == 'categories'){
+            text = '';
+          }
+          return text;
+        }, targets: [2]},
+        // render Processing Parameters or Metadata Categories
+        {"render": function ( data, type, row, meta ) {
+          var text = row.command;
+          if ($("#search_on").val() == 'categories'){
+            text = row.samples.join(', ');
+          }
           return text;
         }, targets: [3]},
-        // render Artifact Processing
+        // render # of samples/categories
         {"render": function ( data, type, row, meta ) {
           return row.samples.length;
         }, targets: [4]}
       ],
       "language": {
-          "search": "Filter results by column data (Study Name, Artifact Name, Software, etc):",
+          "search": "Filter results by column data:",
           "loadingRecords": "Please wait - loading information ...",
           "zeroRecords": "  "
       },
   });
 
-    $("#submitForm").submit(function(event){
-      event.preventDefault();
+  $("#submitForm").submit(function(event){
+    event.preventDefault();
 
-      show_loading("redbiom-info");
+    show_loading("redbiom-info");
 
-      var search = $("#search").val();
-      var search_on = $("#search_on").val();
+    var search = $("#search").val();
+    var search_on = $("#search_on").val();
 
-      $.post("{% raw qiita_config.portal_dir %}/redbiom/", {'search': search, 'search_on': search_on})
-        .done(function ( data ){
-          var redbiom_table = $('#redbiom-table').DataTable();
-          var redbiom_info = $('#redbiom-info');
-          redbiom_table.clear().draw();
-          if(data.status == "error") {
-            bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
-          } else {
-            if(data.message != ''){
-              redbiom_info.html(
-                `<div class="alert alert-warning alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <strong>Warning!</strong> ` + data.message + `</div><br/>`)
-            } else if(data.data){
-              $('#redbiom-table tr:eq(0) th:eq(1)').text("Study Title");
-              if (search_on != 'categories') {
-                {% if current_user is not None %}
-                  $('#redbiom-table tr:eq(0) th:eq(0)').text("Add to Analysis");
-                {% end %}
-                $('#redbiom-table tr:eq(0) th:eq(2)').text("Artifact Name");
-                $('#redbiom-table tr:eq(0) th:eq(3)').text("Artifact Processing");
-                $('#redbiom-table tr:eq(0) th:eq(4)').text("# of Samples Found");
-              } else {
-                $('#redbiom-table tr:eq(0) th:eq(3)').text("Metadata Categories");
-                $('#redbiom-table tr:eq(0) th:eq(4)').text("# of Categories Found");
-              }
-              redbiom_table.rows.add(data.data).draw();
-              redbiom_info.html('');
+    $.post("{% raw qiita_config.portal_dir %}/redbiom/", {'search': search, 'search_on': search_on})
+      .done(function ( data ){
+        var redbiom_table = $('#redbiom-table').DataTable();
+        var redbiom_info = $('#redbiom-info');
+        // the next 4 lines reset the column filtering
+        var placer = $(".ps");
+        redbiom_table.column(3).search("").draw();
+        redbiom_table.clear().draw();
+        placer.empty();
+        if(data.status == "error") {
+          bootstrapAlert(data.message.replace("\n", "<br/>"), "danger");
+        } else {
+          if(data.message != ''){
+            redbiom_info.html(
+              `<div class="alert alert-warning alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <strong>Warning!</strong> ` + data.message + `</div><br/>`)
+          } else if(data.data){
+            {% if current_user is not None %}
+              var header_0 =  "Add to Analysis";
+            {% else %}
+              var header_0 =  "";
+            {% end %}
+            var header_2 = "Artifact Name";
+            var header_3 = "Processing Parameters";
+            var header_4 = "# of Samples";
+            if (search_on == 'categories') {
+              header_2 = "";
+              header_3 = "Metadata Categories";
+              header_4 = "# of Categories";
             }
+            $('#redbiom-table tr:eq(0) th:eq(0)').text(header_0);
+            $('#redbiom-table tr:eq(0) th:eq(1)').text("Study Title");
+            $('#redbiom-table tr:eq(0) th:eq(2)').text(header_2);
+            $('#redbiom-table tr:eq(0) th:eq(3)').text(header_3);
+            $('#redbiom-table tr:eq(0) th:eq(4)').text(header_4);
+            redbiom_table.rows.add(data.data).draw();
+            redbiom_info.html('');
           }
-        });
+        }
+      });
     });
   });
 </script>

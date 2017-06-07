@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # -----------------------------------------------------------------------------
 
+from future.utils import viewitems
 from requests import ConnectionError
 import redbiom.summarize
 import redbiom.search
@@ -71,7 +72,22 @@ class RedbiomPublicSearch(BaseHandler):
                 import qiita_db.sql_connection as qdbsc
                 if features:
                     if search_on in ('metadata', 'observations'):
+                        # This query basically selects all studies/prep-infos
+                        # that contain the given sample ids (main_query); with
+                        # those we select the artifacts that are only BIOM and
+                        # their parent (artifact_query); then we can select
+                        # the processing parameters of the parents. The
+                        # structure might seem excessive but it's the only way
+                        # to work with the json elements of the database and
+                        # make it run in an OK manner (see initial comments)
+                        # in https://github.com/biocore/qiita/pull/2132. Also
+                        # this query could be simplified if we used a newer
+                        # version of postgres, which doesn't mean faster
+                        # performance
                         sql = """
+                        -- main_query will retrieve all basic information
+                        -- about the study based on which samples that exist
+                        -- in the prep info file, and their artifact_ids
                         WITH main_query AS (
                             SELECT study_title, study_id, artifact_id,
                                 array_agg(DISTINCT sample_id) AS samples,
@@ -83,42 +99,91 @@ class RedbiomPublicSearch(BaseHandler):
                                 (prep_template_id)
                             JOIN qiita.study USING (study_id)
                             WHERE sample_id IN %s
-                            GROUP BY study_title, study_id, artifact_id)
-                        SELECT study_title, study_id, samples,
-                            name, command_id,
-                            (main_query.children).artifact_id AS artifact_id
-                        FROM main_query
-                        JOIN qiita.artifact a ON
-                            (main_query.children).artifact_id = a.artifact_id
-                        JOIN qiita.artifact_type at ON (
-                            at.artifact_type_id = a.artifact_type_id
-                            AND artifact_type = 'BIOM')
-                        ORDER BY artifact_id
+                            GROUP BY study_title, study_id, artifact_id),
+                        -- now, we can take all the artifacts and just select
+                        -- the BIOMs, while selecting the parent of the
+                        -- artifacts, note that we are selecting the main
+                        -- columns (discardig children) from the main_query +
+                        -- the children artifact_id
+                         artifact_query AS (
+                            SELECT study_title, study_id, samples,
+                                name, command_id,
+                                (main_query.children).artifact_id AS
+                                    artifact_id
+                            FROM main_query
+                            JOIN qiita.artifact a ON
+                                (main_query.children).artifact_id =
+                                    a.artifact_id
+                            JOIN qiita.artifact_type at ON (
+                                at.artifact_type_id = a.artifact_type_id
+                                AND artifact_type = 'BIOM')),
+                        -- now, we can select the parent processing parameters
+                        -- of the children, note that we are selecting all
+                        -- columns returned from artifact_query and the
+                        -- parent processing parameters
+                         parent_query AS (
+                            SELECT artifact_query.*,
+                                array_agg(parent_params) as parent_parameters
+                            FROM artifact_query
+                            LEFT JOIN qiita.parent_artifact pa ON (
+                                artifact_query.artifact_id = pa.artifact_id)
+                            LEFT JOIN qiita.artifact a ON (
+                                pa.parent_id = a.artifact_id),
+                                json_each_text(command_parameters)
+                                    parent_params
+                            GROUP BY artifact_query.study_title,
+                                artifact_query.study_id,
+                                artifact_query.samples, artifact_query.name,
+                                artifact_query.command_id,
+                                artifact_query.artifact_id)
+                        -- just select everything that is the parent_query
+                        SELECT * FROM parent_query
+                        ORDER BY parent_parameters, artifact_id
                         """
+
+                        sql_params = """
+                        SELECT parameter_set_name, array_agg(ps) AS param_set
+                        FROM qiita.default_parameter_set,
+                            json_each_text(parameter_set) ps
+                        GROUP BY parameter_set_name"""
+
                         with qdbsc.TRN:
-                            qdbsc.TRN.add(sql, [tuple(features)])
                             results = []
                             commands = {}
+                            # obtaining all existing parameters, note that
+                            # they are not that many (~40) and we don't expect
+                            # to have a huge growth in the near future
+                            qdbsc.TRN.add(sql_params)
+                            params = {pname: eval(params) for pname, params
+                                      in qdbsc.TRN.execute_fetchindex()}
+
+                            # now let's get the actual artifacts
+                            qdbsc.TRN.add(sql, [tuple(features)])
                             for row in qdbsc.TRN.execute_fetchindex():
-                                title, sid, samples, name, cid, aid = row
+                                title, sid, samples, name, cid, aid, pp = row
                                 nr = {'study_title': title, 'study_id': sid,
                                       'artifact_id': aid, 'aname': name,
                                       'samples': samples}
                                 if cid is not None:
                                     if cid not in commands:
                                         c = qdb.software.Command(cid)
-                                        commands[cid] = {
-                                            'sfwn': c.software.name,
-                                            'sfv': c.software.version,
-                                            'cmdn': c.name
-                                        }
-                                    nr['command'] = commands[cid]['cmdn']
-                                    nr['software'] = commands[cid]['sfwn']
-                                    nr['version'] = commands[cid]['sfv']
+                                        commands[cid] = '%s - %s v%s' % (
+                                            c.name, c.software.name,
+                                            c.software.version)
+
+                                    # [-1] taking the last cause it's sorted by
+                                    #      the number of overlapping parameters
+                                    # [0] then taking the first element that is
+                                    # the name of the parameter set
+                                    ppc = sorted(
+                                        [[k, len(eval(pp) & v)]
+                                         for k, v in viewitems(params)],
+                                        key=lambda x: x[1])[-1][0]
+
+                                    nr['command'] = '%s @ %s' % (
+                                        commands[cid], ppc)
                                 else:
-                                    nr['command'] = None
-                                    nr['software'] = None
-                                    nr['version'] = None
+                                    nr['command'] = ''
                                 results.append(nr)
                     else:
                         sql = """
