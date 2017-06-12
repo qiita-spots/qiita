@@ -13,6 +13,7 @@ from tornado.web import HTTPError
 from moi import r_client
 
 from qiita_core.util import qiita_test_checker
+from qiita_core.testing import wait_for_processing_job
 from qiita_db.user import User
 from qiita_db.analysis import Analysis
 from qiita_pet.test.tornado_test_base import TestHandlerBase
@@ -101,6 +102,13 @@ class TestBaseHandlers(TestHandlerBase):
             response.effective_url,
             r"http://localhost:\d+/analysis/description/\d+/")
         self.assertEqual(response.code, 200)
+
+        # The new analysis id is located at the -2 position (see regex above)
+        new_id = response.effective_url.split('/')[-2]
+        a = Analysis(new_id)
+        # Make sure that all jobs have completed before we exit this tests
+        for j in a.jobs:
+            wait_for_processing_job(j.id)
 
     def test_get_analysis_description_handler(self):
         response = self.get('/analysis/description/1/')
