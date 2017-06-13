@@ -16,6 +16,8 @@ from json import dumps
 
 from tornado.web import HTTPError
 import pandas as pd
+from biom import example_table as et
+from biom.util import biom_open
 
 from qiita_db.handlers.tests.oauthbase import OauthTestingBase
 import qiita_db as qdb
@@ -205,6 +207,27 @@ class ArtifactAPItestHandlerTests(OauthTestingBase):
         a = qdb.artifact.Artifact(obs['artifact'])
         self._clean_up_files.extend([fp for _, fp, _ in a.filepaths])
         self.assertEqual(a.name, "New test artifact")
+
+    def test_post_analysis(self):
+        fd, fp = mkstemp(suffix='_table.biom')
+        close(fd)
+        with biom_open(fp, 'w') as f:
+            et.to_hdf5(f, "test")
+        self._clean_up_files.append(fp)
+
+        data = {'filepaths': dumps([(fp, 'biom')]),
+                'type': "BIOM",
+                'name': "New biom artifact",
+                'analysis': 1,
+                'data_type': '16S'}
+        obs = self.post('/apitest/artifact/', headers=self.header, data=data)
+        self.assertEqual(obs.code, 200)
+        obs = loads(obs.body)
+        self.assertEqual(obs.keys(), ['artifact'])
+
+        a = qdb.artifact.Artifact(obs['artifact'])
+        self._clean_up_files.extend([afp for _, afp, _ in a.filepaths])
+        self.assertEqual(a.name, "New biom artifact")
 
     def test_post_error(self):
         data = {'filepaths': dumps([('Do not exist', 'raw_forward_seqs')]),

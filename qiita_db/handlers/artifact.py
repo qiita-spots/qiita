@@ -169,15 +169,21 @@ class ArtifactAPItestHandler(OauthBaseHandler):
         """
         filepaths = loads(self.get_argument('filepaths'))
         artifact_type = self.get_argument('type')
-        prep_template = self.get_argument('prep')
+        prep_template = self.get_argument('prep', None)
+        analysis = self.get_argument('analysis', None)
         name = self.get_argument('name', None)
+        dtype = self.get_argument('data_type', None)
 
-        if prep_template:
+        if prep_template is not None:
             prep_template = qdb.metadata_template.prep_template.PrepTemplate(
                 prep_template)
+            dtype = None
+        if analysis is not None:
+            analysis = qdb.analysis.Analysis(analysis)
 
         a = qdb.artifact.Artifact.create(
-            filepaths, artifact_type, name=name, prep_template=prep_template)
+            filepaths, artifact_type, name=name, prep_template=prep_template,
+            analysis=analysis, data_type=dtype)
 
         self.write({'artifact': a.id})
 
