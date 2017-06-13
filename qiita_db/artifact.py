@@ -311,8 +311,7 @@ class Artifact(qdb.base.QiitaObject):
         # them execute a set of common operations. Declare functions to avoid
         # code duplication. These functions should not be used outside of the
         # create function, hence declaring them here
-        def _common_creation_steps(atype, cmd_id, data_type, cmd_parameters,
-                                   fps, mv_files):
+        def _common_creation_steps(atype, cmd_id, data_type, cmd_parameters):
             gen_timestamp = datetime.now()
             visibility_id = qdb.util.convert_to_id("sandbox", "visibility")
             atype_id = qdb.util.convert_to_id(atype, "artifact_type")
@@ -328,15 +327,6 @@ class Artifact(qdb.base.QiitaObject):
                         cmd_parameters, visibility_id, atype_id, False]
             qdb.sql_connection.TRN.add(sql, sql_args)
             a_id = qdb.sql_connection.TRN.execute_fetchlast()
-            # Associate the artifact with its filepaths
-            fp_ids = qdb.util.insert_filepaths(
-                fps, a_id, atype, "filepath",
-                move_files=mv_files, copy=(not mv_files))
-            sql = """INSERT INTO qiita.artifact_filepath
-                        (artifact_id, filepath_id)
-                     VALUES (%s, %s)"""
-            sql_args = [[a_id, fp_id] for fp_id in fp_ids]
-            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
             qdb.sql_connection.TRN.execute()
 
             return cls(a_id)
@@ -398,8 +388,7 @@ class Artifact(qdb.base.QiitaObject):
 
                     instance = _common_creation_steps(
                         artifact_type, processing_parameters.command.id,
-                        dtypes.pop(), processing_parameters.dump(), filepaths,
-                        move_files)
+                        dtypes.pop(), processing_parameters.dump())
 
                     _associate_with_study(instance, study_id)
                 else:
@@ -411,8 +400,7 @@ class Artifact(qdb.base.QiitaObject):
                                  if len(dtypes) > 1 else dtypes.pop())
                     instance = _common_creation_steps(
                         artifact_type, processing_parameters.command.id,
-                        data_type, processing_parameters.dump(), filepaths,
-                        move_files)
+                        data_type, processing_parameters.dump())
                     _associate_with_analysis(instance, analysis_id)
 
                 # Associate the artifact with its parents
@@ -436,8 +424,7 @@ class Artifact(qdb.base.QiitaObject):
                 # This artifact is uploaded by the user in the
                 # processing pipeline
                 instance = _common_creation_steps(
-                    artifact_type, None, prep_template.data_type(), None,
-                    filepaths, move_files)
+                    artifact_type, None, prep_template.data_type(), None)
                 # Associate the artifact with the prep template
                 prep_template.artifact = instance
                 # Associate the artifact with the study
@@ -445,10 +432,19 @@ class Artifact(qdb.base.QiitaObject):
             else:
                 # This artifact is an initial artifact of an analysis
                 instance = _common_creation_steps(
-                    artifact_type, None, data_type, None, filepaths,
-                    move_files)
+                    artifact_type, None, data_type, None)
                 # Associate the artifact with the analysis
                 analysis.add_artifact(instance)
+
+            # Associate the artifact with its filepaths
+            fp_ids = qdb.util.insert_filepaths(
+                filepaths, instance.id, artifact_type, "filepath",
+                move_files=move_files, copy=(not move_files))
+            sql = """INSERT INTO qiita.artifact_filepath
+                        (artifact_id, filepath_id)
+                     VALUES (%s, %s)"""
+            sql_args = [[instance.id, fp_id] for fp_id in fp_ids]
+            qdb.sql_connection.TRN.add(sql, sql_args, many=True)
 
             if name:
                 instance.name = name

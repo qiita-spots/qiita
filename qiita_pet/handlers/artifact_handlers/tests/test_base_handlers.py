@@ -10,11 +10,14 @@ from unittest import TestCase, main
 from tempfile import mkstemp
 from os import close, remove
 from os.path import basename, exists, relpath
+from json import loads
 
 from tornado.web import HTTPError
+from moi import r_client
 
+from qiita_core.qiita_settings import qiita_config
+from qiita_core.testing import wait_for_prep_information_job
 from qiita_core.util import qiita_test_checker
-from qiita_db.util import get_db_files_base_dir
 from qiita_db.user import User
 from qiita_db.artifact import Artifact
 from qiita_db.processing_job import ProcessingJob
@@ -23,13 +26,15 @@ from qiita_pet.exceptions import QiitaHTTPError
 from qiita_pet.test.tornado_test_base import TestHandlerBase
 from qiita_pet.handlers.artifact_handlers.base_handlers import (
     check_artifact_access, artifact_summary_get_request,
-    artifact_summary_post_request, artifact_patch_request)
+    artifact_summary_post_request, artifact_patch_request,
+    artifact_post_req)
 
 
 @qiita_test_checker()
 class TestBaseHandlersUtils(TestCase):
     def setUp(self):
         self._files_to_remove = []
+        self.maxDiff = None
 
     def tearDown(self):
         for fp in self._files_to_remove:
@@ -62,6 +67,16 @@ class TestBaseHandlersUtils(TestCase):
         check_artifact_access(User('shared@foo.bar'), a)
         a.visibility = 'public'
         check_artifact_access(demo_u, a)
+
+    def _assert_summary_equal(self, obs, exp):
+        "Utility function for testing the artifact summary get request"
+        obs_files = obs.pop('files')
+        exp_files = exp.pop('files')
+        self.assertItemsEqual(obs_files, exp_files)
+        obs_jobs = obs.pop('processing_jobs')
+        exp_jobs = obs.pop('processing_jobs')
+        self.assertItemsEqual(obs_jobs, exp_jobs)
+        self.assertEqual(obs, exp)
 
     def test_artifact_summary_get_request(self):
         user = User('test@foo.bar')
@@ -136,7 +151,7 @@ class TestBaseHandlersUtils(TestCase):
             (a.html_summary_fp[0],
              '%s (html summary)' % basename(a.html_summary_fp[1])))
         exp_summary_path = relpath(
-            a.html_summary_fp[1], get_db_files_base_dir())
+            a.html_summary_fp[1], qiita_config.base_data_dir)
         obs = artifact_summary_get_request(user, 1)
         exp = {'name': 'Raw data 1',
                'artifact_id': 1,
@@ -181,7 +196,7 @@ class TestBaseHandlersUtils(TestCase):
         self.assertEqual(obs, exp)
 
         # returnig to private
-        a.visibility = 'sandbox'
+        a.visibility = 'private'
 
         # admin gets buttons
         obs = artifact_summary_get_request(User('admin@foo.bar'), 2)
@@ -252,6 +267,18 @@ class TestBaseHandlersUtils(TestCase):
         obs = artifact_summary_post_request(User('test@foo.bar'), 2)
         exp = {'job': [job.id, 'queued', None]}
         self.assertEqual(obs, exp)
+
+    def test_artifact_post_request(self):
+        # No access
+        with self.assertRaises(QiitaHTTPError):
+            artifact_post_req(User('demo@microbio.me'), 1)
+
+        artifact_post_req(User('test@foo.bar'), 2)
+        # Wait until the job is completed
+        wait_for_prep_information_job(1)
+        # Check that the delete function has been actually called
+        obs = r_client.get(loads(r_client.get('prep_template_1'))['job_id'])
+        self.assertIn('Cannot delete artifact 2', obs)
 
     def test_artifact_patch_request(self):
         a = Artifact(1)
@@ -326,6 +353,11 @@ class TestBaseHandlers(TestHandlerBase):
         response = self.get('/artifact/1/summary/')
         self.assertEqual(response.code, 200)
 
+    def test_post_artifact_ajax_handler(self):
+        response = self.post('/artifact/2/', {})
+        self.assertEqual(response.code, 200)
+        wait_for_prep_information_job(1)
+
     def test_patch_artifact_ajax_handler(self):
         a = Artifact(1)
         self.assertEqual(a.name, 'Raw data 1')
@@ -346,7 +378,7 @@ class TestBaseHandlers(TestHandlerBase):
         a.html_summary_fp = fp
         self._files_to_remove.extend([fp, a.html_summary_fp[1]])
 
-        summary = relpath(a.html_summary_fp[1], get_db_files_base_dir())
+        summary = relpath(a.html_summary_fp[1], qiita_config.base_data_dir)
         response = self.get('/artifact/html_summary/%s' % summary)
         self.assertEqual(response.code, 200)
         self.assertEqual(response.body, '<b>HTML TEST - not important</b>\n')

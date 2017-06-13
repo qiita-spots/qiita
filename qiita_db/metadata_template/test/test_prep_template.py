@@ -930,7 +930,6 @@ class TestPrepTemplate(TestCase):
     def test_create_warning(self):
         """Warns if a required columns is missing for a given functionality
         """
-        fp_count = qdb.util.get_count("qiita.filepath")
         del self.metadata['barcode']
         pt = npt.assert_warns(
             qdb.exceptions.QiitaDBWarning,

@@ -20,7 +20,7 @@ from qiita_core.testing import wait_for_prep_information_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
-from qiita_db.util import get_count, get_mountpoint
+from qiita_db.util import get_mountpoint
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
 from qiita_db.software import Command, Parameters, DefaultParameters
@@ -107,7 +107,11 @@ class TestArtifactAPIReadOnly(TestCase):
                          ['FASTA_Sanger', None],
                          ['FASTQ', None],
                          ['SFF', None],
-                         ['per_sample_FASTQ', None]]}
+                         ['per_sample_FASTQ', None],
+                         ['distance_matrix', 'Distance matrix holding pairwise'
+                                             ' distance between samples'],
+                         ['rarefaction_curves', 'Rarefaction curves'],
+                         ['taxa_summary', 'Taxa summary plots']]}
 
         self.assertEqual(obs['message'], exp['message'])
         self.assertEqual(obs['status'], exp['status'])
@@ -447,7 +451,6 @@ class TestArtifactAPI(TestCase):
             pd.DataFrame({'new_col': {'1.SKD6.640190': 1}}), Study(1), '16S')
         self._files_to_remove.extend([fp for _, fp in pt.get_filepaths()])
 
-        new_artifact_id = get_count('qiita.artifact') + 1
         obs = artifact_post_req(
             'test@foo.bar', {}, 'Demultiplexed', 'New Test Artifact 2',
             pt.id, 3)
@@ -458,7 +461,7 @@ class TestArtifactAPI(TestCase):
         wait_for_prep_information_job(pt.id)
         # Instantiate the artifact to make sure it was made and
         # to clean the environment
-        a = Artifact(new_artifact_id)
+        a = Artifact(pt.artifact.id)
         self._files_to_remove.extend([fp for _, fp, _ in a.filepaths])
 
     def test_artifact_post_req_error(self):
