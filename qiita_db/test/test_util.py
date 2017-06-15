@@ -446,16 +446,6 @@ class DBUtilTests(TestCase):
 
             self.files_to_remove.append(new_fp)
 
-    def test_get_filepath_id(self):
-        _, base = qdb.util.get_mountpoint("raw_data")[0]
-        fp = join(base, '1_s_G1_L001_sequences.fastq.gz')
-        obs = qdb.util.get_filepath_id("raw_data", fp)
-        self.assertEqual(obs, 1)
-
-    def test_get_filepath_id_error(self):
-        with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.util.get_filepath_id("raw_data", "Not_a_path")
-
     def test_get_mountpoint(self):
         exp = [(5, join(qdb.util.get_db_files_base_dir(), 'raw_data'))]
         obs = qdb.util.get_mountpoint("raw_data")

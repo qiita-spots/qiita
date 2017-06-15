@@ -96,9 +96,11 @@ def create_non_rarefied_biom_artifact(analysis, biom_data, rarefied_table):
             biom_table = load_table(biom_fp)
             samples = set(samples).intersection(biom_table.ids())
             biom_table.filter(samples, axis='sample', inplace=True)
-            new_table = new_table.merge(biom_table)
-            ids_map.update({sid: "%d.%s" % (a_id, sid)
-                            for sid in biom_table.ids()})
+            # we need to check if the table has samples left before merging
+            if biom_table.shape[0] != 0 and biom_table.shape[1] != 0:
+                new_table = new_table.merge(biom_table)
+                ids_map.update({sid: "%d.%s" % (a_id, sid)
+                                for sid in biom_table.ids()})
 
         # Check if we need to rename the sample ids in the biom table
         new_table_ids = set(new_table.ids())

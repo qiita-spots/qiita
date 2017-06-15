@@ -48,7 +48,7 @@ from string import ascii_letters, digits, punctuation
 from binascii import crc32
 from bcrypt import hashpw, gensalt
 from functools import partial
-from os.path import join, basename, isdir, relpath, exists
+from os.path import join, basename, isdir, exists
 from os import walk, remove, listdir, makedirs, rename
 from shutil import move, rmtree, copy as shutil_copy
 from json import dumps
@@ -839,44 +839,6 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
                 move(fp, destination)
 
         qdb.sql_connection.TRN.execute()
-
-
-def get_filepath_id(table, fp):
-    """Return the filepath_id of fp
-
-    Parameters
-    ----------
-    table : str
-        The table type so we can search on this one
-    fp : str
-        The full filepath
-
-    Returns
-    -------
-    int
-        The filepath id forthe given filepath
-
-    Raises
-    ------
-    QiitaDBError
-        If fp is not stored in the DB.
-    """
-    with qdb.sql_connection.TRN:
-        _, mp = get_mountpoint(table)[0]
-        base_fp = join(get_db_files_base_dir(), mp)
-
-        sql = "SELECT filepath_id FROM qiita.filepath WHERE filepath=%s"
-        qdb.sql_connection.TRN.add(sql, [relpath(fp, base_fp)])
-        fp_id = qdb.sql_connection.TRN.execute_fetchindex()
-
-        # check if the query has actually returned something
-        if not fp_id:
-            raise qdb.exceptions.QiitaDBError(
-                "Filepath not stored in the database")
-
-        # If there was a result it was a single row and and single value,
-        # hence access to [0][0]
-        return fp_id[0][0]
 
 
 def filepath_id_to_rel_path(filepath_id):
