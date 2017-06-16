@@ -19,7 +19,7 @@ from qiita_pet.handlers.base_handlers import BaseHandler
 from qiita_pet.handlers.util import download_link_or_path
 from qiita_pet.handlers.analysis_handlers import check_analysis_access
 from qiita_pet.util import is_localhost
-from qiita_db.util import get_filepath_id
+from qiita_db.util import retrieve_filepaths
 from qiita_db.analysis import Analysis
 from qiita_db.logger import LogEntry
 from qiita_db.reference import Reference
@@ -37,27 +37,21 @@ class ListAnalysesHandler(BaseHandler):
         analyses = user.shared_analyses | user.private_analyses
 
         is_local_request = is_localhost(self.request.headers['host'])
-        gfi = partial(get_filepath_id, 'analysis')
         dlop = partial(download_link_or_path, is_local_request)
         mappings = {}
         bioms = {}
         tgzs = {}
         for analysis in analyses:
             _id = analysis.id
-            # getting mapping file
-            mapping = analysis.mapping_file
-            if mapping is not None:
-                mappings[_id] = dlop(mapping, gfi(mapping), 'mapping file')
-            else:
-                mappings[_id] = ''
-
-            bioms[_id] = ''
-            # getting tgz file
-            tgz = analysis.tgz
-            if tgz is not None:
-                tgzs[_id] = dlop(tgz, gfi(tgz), 'tgz file')
-            else:
-                tgzs[_id] = ''
+            mappings[_id], bioms[_id], tgzs[_id] = '', '', ''
+            for fid, fp, fpt in retrieve_filepaths('analysis_filepath',
+                                                   'analysis_id', _id):
+                if fpt == 'plain_text':
+                    mappings[_id] = dlop(fp, fid, 'mapping file')
+                if fpt == 'biom':
+                    bioms[_id] = dlop(fp, fid, 'biom file')
+                if fpt == 'tgz':
+                    tgzs[_id] = dlop(fp, fid, 'tgz file')
 
         self.render("list_analyses.html", analyses=analyses, message=message,
                     level=level, is_local_request=is_local_request,
