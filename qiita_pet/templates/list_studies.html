@@ -87,7 +87,7 @@ $(document).ready(function() {
   $("#search-waiting").hide();
   moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
   moi.add_callback('sel', show_alert);
-  function format_biom_rows(name, data, row) {
+  function format_biom_rows(data, row) {
     var proc_data_table = '<table class="table" cellpadding="0" cellspacing="0" border="0" style="padding-left:0px;width:95%">';
     proc_data_table += '<tr>';
     proc_data_table += '<th></th>';
@@ -265,14 +265,24 @@ $(document).ready(function() {
       var table = $('#studies-table').DataTable();
       var tr = $(this).closest('tr');
       var row = table.row( tr );
+
       if ( row.child.isShown() ) {
         // This row is already open - close it
         row.child.hide();
         tr.removeClass('shown');
       } else {
         // Open this row
-        row.child( format_biom_rows('studies-table', row.data(), row.index()) ).show();
+        // modified from: https://jsfiddle.net/8rejaL88/2/
         tr.addClass('shown');
+        row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
+        $.get('/artifact/info/', {ids: row.data().artifact_biom_ids})
+          .done(function ( data ) {
+            if (data['status']=='success') {
+              $('td', row.child()).html(format_biom_rows(data.data, row.index())).show();
+            } else {
+              bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+            }
+          });
       }
   });
   $('#user-studies-table tbody').on('click', 'td.details-control', function () {
@@ -291,7 +301,7 @@ $(document).ready(function() {
         $.get('/artifact/info/', {ids: row.data().artifact_biom_ids})
           .done(function ( data ) {
             if (data['status']=='success') {
-              $('td', row.child()).html(format_biom_rows('studies-table', data.data, row.index())).show();
+              $('td', row.child()).html(format_biom_rows(data.data, row.index())).show();
             } else {
               bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
             }
