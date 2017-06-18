@@ -157,7 +157,11 @@ $(document).ready(function() {
         {"targets": [ 3 ], "visible": false},
         // render the study checkbox cell
         {"render": function ( data, type, row, meta ) {
-          return row.artifact_biom_ids.length
+          var len = 0;
+          if (row.artifact_biom_ids != undefined) {
+            len = row.artifact_biom_ids.length;
+          }
+          return len
             // if(row.proc_data_info.length > 0) {
             //     return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
             // }
@@ -207,7 +211,7 @@ $(document).ready(function() {
       "sDom": '<"top">rti<"bottom"p><"clear">',
       "bLengthChange": false,
       "columns": [
-        {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'},
+        {"className": 'details-control', "orderable": false, "data": null, "defaultContent": ''},
         { "orderable": false},
         { "data": "study_title" },
         { "data": "study_abstract" },
@@ -222,8 +226,13 @@ $(document).ready(function() {
         {"targets": [ 3 ], "visible": false},
         // render the study checkbox cell
         {"render": function ( data, type, row, meta ) {
+          var len = 0;
+          if (row.artifact_biom_ids != undefined) {
+            len = row.artifact_biom_ids.length;
+          }
+          return len
             // if(row.proc_data_info.length > 0) {
-            //     return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"studies-table\", "+ meta.row +")'>";
+            //     return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
             // }
             // else { return '<p style="font-size:12px">No Processed Data</p>'; }
         }, targets: [1]},
