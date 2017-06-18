@@ -20,7 +20,7 @@ from qiita_core.testing import wait_for_prep_information_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
-from qiita_db.util import get_mountpoint
+from qiita_db.util import get_mountpoint, get_db_files_base_dir
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
 from qiita_db.software import Command, Parameters, DefaultParameters
@@ -29,7 +29,7 @@ from qiita_pet.handlers.api_proxy.artifact import (
     artifact_get_req, artifact_status_put_req, artifact_graph_get_req,
     artifact_delete_req, artifact_types_get_req, artifact_post_req,
     artifact_summary_get_request, artifact_summary_post_request,
-    artifact_patch_request, artifact_get_prep_req)
+    artifact_patch_request, artifact_get_prep_req, artifact_get_biom_info)
 
 
 class TestArtifactAPIReadOnly(TestCase):
@@ -426,6 +426,45 @@ class TestArtifactAPI(TestCase):
         obs = artifact_get_prep_req('demo@microbio.me', [4])
         exp = {'status': 'error',
                'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+    def test_artifact_get_biom_info(self):
+        bdir = get_db_files_base_dir()
+
+        obs = artifact_get_biom_info('test@foo.bar', [5, 6])
+        exp = {'status': 'success', 'msg': '', 'data': {
+            5: {'files': [(9, join(bdir, ('processed_data/1_study_1001_closed'
+                                          '_reference_otu_table.biom')))],
+                'target_subfragment': ['V4'], 'parameters': {
+                    'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
+                    'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
+                    'sortmerna_coverage': 0.97},
+                'algorithm': ('Pick closed-reference OTUs | Split libraries '
+                              'FASTQ (Defaults with reverse complement '
+                              'mapping file barcodes)'),
+                'timestamp': '2012-10-02 17:30:00',
+                'data_type': '18S', 'name': 'BIOM'},
+            6: {'files': [(12, join(bdir, (
+                    'processed_data/1_study_1001_closed_reference_otu_'
+                    'table_Silva.biom')))],
+                'target_subfragment': ['V4'], 'parameters': {
+                    'reference': 2, 'similarity': 0.97, 'sortmerna_e_value': 1,
+                    'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
+                    'sortmerna_coverage': 0.97}, 'algorithm': (
+                        'Pick closed-reference OTUs | Split libraries FASTQ '
+                        '(Defaults with reverse complement mapping file '
+                        'barcodes)'),
+                'timestamp': '2012-10-02 17:30:00',
+                'data_type': '16S', 'name': 'BIOM'}}}
+        self.assertEqual(obs, exp)
+
+        obs = artifact_get_biom_info('demo@microbio.me', [4])
+        exp = {'status': 'error',
+               'message': 'User does not have access to study'}
+        self.assertEqual(obs, exp)
+
+        obs = artifact_get_biom_info('test@foo.bar', [7])
+        exp = {'status': 'success', 'msg': '', 'data': {7: ''}}
         self.assertEqual(obs, exp)
 
     def test_artifact_post_req(self):

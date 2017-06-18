@@ -35,9 +35,9 @@ function sel_study(name, row) {
   var row_data = $('#'+name).dataTable().fnGetData(row);
   var aids = []
 
-  for(var i=0;i<row_data.proc_data_info.length;i++){
-    aids.push(row_data['proc_data_info'][i]['pid']);
-  }
+  // for(var i=0;i<row_data.proc_data_info.length;i++){
+  //   aids.push(row_data['proc_data_info'][i]['pid']);
+  // }
   send_samples_to_moi(aids);
 }
 
@@ -87,35 +87,60 @@ $(document).ready(function() {
   $("#search-waiting").hide();
   moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/study/list/socket/', function(){}, error, error);
   moi.add_callback('sel', show_alert);
-  function format (name, d, row) {
-      // `d` is the original data object for the row
-      // create formatted cell with proc data table
-      var proc_data_table = '<h4>Processed Data</h4>' +
-        '<table class="table" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;width:80%">' +
-        '<tr><th></th><th>ID</th><th>Name</th><th>Data type</th><th>Processed Date</th>' +
-        '<th>Algorithm</th><th>Parameters</th></tr>';
-      for(i=0;i<d.proc_data_info.length;i++) {
-        var proc_data = d.proc_data_info[i];
+  function format_biom_rows(name, data, row) {
+    var proc_data_table = '<table class="table" cellpadding="0" cellspacing="0" border="0" style="padding-left:0px;width:95%">';
+    proc_data_table += '<tr>';
+    proc_data_table += '<th></th>';
+    proc_data_table += '<th>ID</th>';
+    proc_data_table += '<th>Name</th>';
+    proc_data_table += '<th>Data type</th>';
+    proc_data_table += '<th>Target Subfragment</th>';
+    proc_data_table += '<th>Processed Date</th>';
+    proc_data_table += '<th>Algorithm</th>';
+    proc_data_table += '<th>Parameters</th>';
+    proc_data_table += '<th>Files</th>';
+    proc_data_table += '</tr>';
+
+    $.each(data, function (pid, info) {
+      if (typeof info !== 'string' && !(info instanceof String)) {
+        proc_data_table += '<tr>';
+        proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(' + pid + ')"></td>';
+        proc_data_table += '<td>' + pid + '</td>';
+        proc_data_table += '<td>' + info.name + '</td>';
+        proc_data_table += '<td>' + info.data_type + '</td>';
+        proc_data_table += '<td>' + info.target_subfragment.join(', ') + '</td>';
+        proc_data_table += '<td>' + info.timestamp + '</td>';
+        proc_data_table += '<td>' + info.algorithm + '</td>';
+
         var params = '';
-        var p = proc_data.params;
-        for (var key in p) {
-          params += '<i>' + key + '</i>: ' + p[key] + '<br/>';
+        for (var key in info.parameters) {
+          params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
         }
-        proc_data_table += '<tr><td><input type="button" class="btn btn-sm" value="Add" ' +
-          'onclick="sel_proc_data('+ proc_data.pid +')"></td><td>' +
-          proc_data.pid + '</td><td>' + proc_data.name + '</td><td>' + proc_data.data_type + '</td><td>' +
-          proc_data.processed_date + '</td><td>' +
-          proc_data.algorithm + '</td><td><small>' + params + '</small></td></tr>';
+        proc_data_table += '<td><small>' + params + '</small></td>';
+
+        var files = '';
+        for (var key in info.files) {
+          var vals = info.files[key]
+          var name = vals[1].split('/');
+          files += 'FID: ' + vals[0];
+          files += '<br/>';
+          files += 'Name: ' + name[name.length-1];
+        }
+        proc_data_table += '<td><small>' + files + '</small></td>';
+
+        proc_data_table += '</tr>';
       }
-      proc_data_table += '</table>';
-      return proc_data_table;
+    });
+
+    proc_data_table += '</table>';
+    return proc_data_table;
   }
 
   $('#user-studies-table').dataTable({
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
       "columns": [
-        {"className": 'details-control', "orderable": false, "data": null, "defaultContent": '<span class="glyphicon glyphicon-chevron-down"></span>'},
+        {"className": 'details-control', "orderable": false, "data": null, "defaultContent": ''},
         { "orderable": false},
         { "data": "study_title" },
         { "data": "study_abstract" },
@@ -132,10 +157,11 @@ $(document).ready(function() {
         {"targets": [ 3 ], "visible": false},
         // render the study checkbox cell
         {"render": function ( data, type, row, meta ) {
-            if(row.proc_data_info.length > 0) {
-                return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
-            }
-            else { return '<p style="font-size:12px">No Processed Data</p>'; }
+          return row.artifact_biom_ids.length
+            // if(row.proc_data_info.length > 0) {
+            //     return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
+            // }
+            // else { return '<p style="font-size:12px">No Processed Data</p>'; }
         }, targets: [1]},
         // render the title cell
         {"render": function ( data, type, row, meta ) {
@@ -196,10 +222,10 @@ $(document).ready(function() {
         {"targets": [ 3 ], "visible": false},
         // render the study checkbox cell
         {"render": function ( data, type, row, meta ) {
-            if(row.proc_data_info.length > 0) {
-                return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"studies-table\", "+ meta.row +")'>";
-            }
-            else { return '<p style="font-size:12px">No Processed Data</p>'; }
+            // if(row.proc_data_info.length > 0) {
+            //     return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"studies-table\", "+ meta.row +")'>";
+            // }
+            // else { return '<p style="font-size:12px">No Processed Data</p>'; }
         }, targets: [1]},
         // render the title cell
         {"render": function ( data, type, row, meta ) {
@@ -239,15 +265,13 @@ $(document).ready(function() {
       var table = $('#studies-table').DataTable();
       var tr = $(this).closest('tr');
       var row = table.row( tr );
-
       if ( row.child.isShown() ) {
         // This row is already open - close it
         row.child.hide();
         tr.removeClass('shown');
-      }
-      else {
+      } else {
         // Open this row
-        row.child( format('studies-table', row.data(), row.index()) ).show();
+        row.child( format_biom_rows('studies-table', row.data(), row.index()) ).show();
         tr.addClass('shown');
       }
   });
@@ -255,16 +279,23 @@ $(document).ready(function() {
       var table = $('#user-studies-table').DataTable();
       var tr = $(this).closest('tr');
       var row = table.row( tr );
-
       if ( row.child.isShown() ) {
         // This row is already open - close it
         row.child.hide();
         tr.removeClass('shown');
-      }
-      else {
+      } else {
         // Open this row
-        row.child( format('user-studies-table', row.data(), row.index()) ).show();
+        // modified from: https://jsfiddle.net/8rejaL88/2/
         tr.addClass('shown');
+        row.child('<p><center><img src="{% raw qiita_config.portal_dir %}/static/img/waiting.gif" style="display:block;margin-left: auto;margin-right: auto"/></center></p>', 'no-padding' ).show();
+        $.get('/artifact/info/', {ids: row.data().artifact_biom_ids})
+          .done(function ( data ) {
+            if (data['status']=='success') {
+              $('td', row.child()).html(format_biom_rows('studies-table', data.data, row.index())).show();
+            } else {
+              bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+            }
+          });
       }
   });
 
@@ -376,7 +407,7 @@ function add_metacat(metacat) {
     <table id="user-studies-table" class="table table-bordered gray-msg">
       <thead>
         <tr>
-          <th>Expand</th>
+          <th>For analysis</th>
           <th>Add to analysis</th>
           <th>Title</th>
           <th>Abstract</th>
@@ -392,19 +423,19 @@ function add_metacat(metacat) {
     </table>
     <h3 class="gray-msg">Other Studies</h3>
     <table id="studies-table" class="table table-bordered gray-msg">
-        <thead>
-            <tr>
-                <th>Expand</th>
-                <th>Add to analysis</th>
-                <th>Title</th>
-                <th>Abstract</th>
-                <th>Study ID</th>
-                <th>Samples</th>
-                <th>Principal Investigator</th>
-                <th>Publications</th>
-                <th>EBI</th>
-            </tr>
-        </thead>
+      <thead>
+        <tr>
+          <th>For analysis</th>
+          <th>Add to analysis</th>
+          <th>Title</th>
+          <th>Abstract</th>
+          <th>Study ID</th>
+          <th>Samples</th>
+          <th>Principal Investigator</th>
+          <th>Publications</th>
+          <th>EBI</th>
+        </tr>
+      </thead>
     </table>
   </div>
 </div>

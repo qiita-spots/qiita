@@ -18,10 +18,18 @@
 
 td.more-info-processing-jobs{
   cursor: pointer;
-  background: url('../img//details_open.png') no-repeat center center;
+  background: url('../img/details_open.png') no-repeat center center;
 }
-tr.shown td.more-info-processing-jobs {
-    background: url('../img//details_close.png') no-repeat center center;
+tr.shown td.more-info-processing-jobs{
+  background: url('../img/details_close.png') no-repeat center center;
+}
+
+td.details-control{
+  cursor: pointer;
+  background: url('../img/details_open.png') no-repeat center center;
+}
+tr.shown td.details-control{
+  background: url('../img/details_close.png') no-repeat center center;
 }
 
 .blinking-message {

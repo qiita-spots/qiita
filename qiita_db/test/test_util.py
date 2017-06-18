@@ -807,7 +807,6 @@ class UtilTests(TestCase):
             'shared': [('shared@foo.bar', 'Shared')],
             'pi': ('PI_dude@foo.bar', 'PIDude'),
             'status': 'private',
-            'proc_data_info': [],
             'publication_doi': ['10.100/123456', '10.100/7891011'],
             'publication_pid': ['123456', '7891011'],
             'study_abstract': (
@@ -832,7 +831,7 @@ class UtilTests(TestCase):
             'ebi_submission_status': 'not submitted', 'publication_pid': [],
             'study_abstract': 'Some abstract goes here',
             'pi': ('lab_dude@foo.bar', 'LabDude'), 'status': 'sandbox',
-            'proc_data_info': [], 'study_tags': None, 'shared': [],
+            'study_tags': None, 'shared': [],
             'publication_doi': [], 'study_id': new_study.id,
             'ebi_study_accession': None, 'study_title': 'test_study_1',
             'number_samples_collected': 0}]
@@ -841,55 +840,9 @@ class UtilTests(TestCase):
 
         qdb.artifact.Artifact(4).visibility = 'public'
         exp_info[0]['status'] = 'public'
-        exp_info[0]['proc_data_info'] = [
-            {'data_type': '18S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 4, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, u'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'}},
-            {'data_type': '18S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 5, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'}},
-            {'data_type': '16S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 6, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Silva',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': 'test'}}]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
         self.assertEqual(obs_info, exp_info)
 
-        exp_info[0]['proc_data_info'] = [
-            {'data_type': '18S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 4, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'}},
-            {'data_type': '18S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 5, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Greengenes',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': '13_8'}},
-            {'data_type': '16S', 'name': 'BIOM',
-             'algorithm': 'QIIME v1.9.1 (Pick closed-reference OTUs)',
-             'pid': 6, 'processed_date': '2012-10-02 17:30:00',
-             'params': {'similarity': 0.97, 'reference_name': 'Silva',
-                        'sortmerna_e_value': 1, u'sortmerna_max_pos': 10000,
-                        'threads': 1, 'sortmerna_coverage': 0.97,
-                        'reference_version': 'test'}},
-            {'processed_date': '2012-10-02 17:30:00', 'pid': 7, 'name': 'BIOM',
-             'data_type': '16S'}]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 

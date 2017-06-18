@@ -16,7 +16,7 @@ from qiita_pet.handlers.api_proxy import (
     artifact_graph_get_req, artifact_types_get_req, artifact_post_req,
     artifact_status_put_req, artifact_get_req,
     artifact_summary_get_request, artifact_summary_post_request,
-    artifact_get_prep_req)
+    artifact_get_prep_req, artifact_get_biom_info)
 from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 
@@ -83,6 +83,16 @@ class ArtifactGetSamples(BaseHandler):
         aids = map(int, self.request.arguments.get('ids[]', []))
 
         response = artifact_get_prep_req(self.current_user.id, aids)
+
+        self.write(response)
+
+
+class ArtifactGetBIOMInfo(BaseHandler):
+    @authenticated
+    def get(self):
+        aids = map(int, self.request.arguments.get('ids[]', []))
+
+        response = artifact_get_biom_info(self.current_user.id, aids)
 
         self.write(response)
 

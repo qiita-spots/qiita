@@ -1181,6 +1181,74 @@ class Artifact(qdb.base.QiitaObject):
             res = qdb.sql_connection.TRN.execute_fetchindex()
             return qdb.analysis.Analysis(res[0][0]) if res else None
 
+    @property
+    def biom_info(self):
+        """Returns processing information about the bioms in the artifact
+
+        Returns
+        -------
+        dict or None
+            The info of the bioms if artifact_type is BIOM or None if not.
+        """
+        if self.artifact_type != 'BIOM':
+            return None
+        files = [(fid, fp)for fid, fp, fpt in self.filepaths if fpt == 'biom']
+        if not files:
+            return None
+
+        parameters = {}
+        with qdb.sql_connection.TRN:
+            # getting target_subfragment
+            sql = """
+                SELECT DISTINCT target_subfragment
+                FROM qiita.prep_%s
+                WHERE EXISTS (SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name='prep_%s'
+                        AND column_name='target_subfragment')"""
+            pt_ids = [[pt.id, pt.id] for pt in self.prep_templates]
+            qdb.sql_connection.TRN.add(sql, pt_ids, many=True)
+            target_subfragment = qdb.sql_connection.TRN.execute_fetchflatten()
+
+            # getting processing_parameters
+            pp = self.processing_parameters
+            if pp is not None:
+                parameters = pp.values
+                parents = self.parents
+                if bool(parents):
+                    # [0] an artifact can only have one processing parent
+                    parent = parents[0]
+                    ppp = parent.processing_parameters.command.name
+                    # obtaining all processing parameters so we can then
+                    # match, the parents processing params
+                    sql_params = """
+                        SELECT parameter_set_name, array_agg(ps) AS param_set
+                        FROM qiita.default_parameter_set,
+                            json_each_text(parameter_set) ps
+                        GROUP BY parameter_set_name"""
+                    qdb.sql_connection.TRN.add(sql_params)
+                    params = {pname: eval(params) for pname, params
+                              in qdb.sql_connection.TRN.execute_fetchindex()}
+                    tpppv = {'(%s,%s)' % (k, v)
+                             for k, v in viewitems(
+                                parent.processing_parameters.values)}
+                    pppv = sorted([
+                        [k, len(tpppv & v)] for k, v in viewitems(params)],
+                        key=lambda x: x[1])[-1][0]
+                else:
+                    ppp = ''
+                    pppv = ''
+
+                algorithm = '%s | %s (%s)' % (
+                    pp.command.name, ppp, pppv)
+            else:
+                algorithm = 'N/A'
+
+        return {'target_subfragment': target_subfragment, 'name': self.name,
+                'data_type': self.data_type, 'timestamp': self.timestamp,
+                'parameters': parameters, 'algorithm': algorithm,
+                'files': files}
+
     def jobs(self, cmd=None, status=None):
         """Jobs that used this artifact as input
 

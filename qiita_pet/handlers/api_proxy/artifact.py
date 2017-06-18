@@ -297,6 +297,45 @@ def artifact_get_prep_req(user_id, artifact_ids):
 
 
 @execute_as_transaction
+def artifact_get_biom_info(user_id, artifact_ids):
+    """Returns all artifact info for the given artifact_ids
+
+    Parameters
+    ----------
+    user_id : str
+        user making the request
+    artifact_ids : list of int
+        list of artifact ids
+
+    Returns
+    -------
+    dict of objects
+        A dictionary containing the artifact information
+        {'status': status,
+         'message': message,
+         'data': {artifact_id: {biom_info}}
+    """
+    artifact_info = {}
+
+    for aid in artifact_ids:
+        artifact = Artifact(aid)
+        access_error = check_access(artifact.study.id, user_id)
+        if access_error:
+            return access_error
+
+        info = artifact.biom_info
+        if info is not None:
+            info['timestamp'] = str(info['timestamp'])
+        else:
+            # sending an empty string is better than sending None for web
+            # and testing
+            info = ''
+        artifact_info[aid] = info
+
+    return {'status': 'success', 'msg': '', 'data': artifact_info}
+
+
+@execute_as_transaction
 def artifact_post_req(user_id, filepaths, artifact_type, name,
                       prep_template_id, artifact_id=None):
     """Creates the initial artifact for the prep template

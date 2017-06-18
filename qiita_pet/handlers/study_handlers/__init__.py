@@ -22,7 +22,7 @@ from .processing import (ProcessArtifactHandler, ListCommandsHandler,
                          WorkflowRunHandler, JobAJAX)
 from .artifact import (ArtifactGraphAJAX, NewArtifactHandler,
                        ArtifactAdminAJAX, ArtifactSummaryAJAX,
-                       ArtifactGetSamples)
+                       ArtifactGetSamples, ArtifactGetBIOMInfo)
 from .sample_template import SampleTemplateAJAX, SampleAJAX
 
 __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
@@ -36,4 +36,4 @@ __all__ = ['ListStudiesHandler', 'StudyApprovalList', 'ShareStudyAJAX',
            'DataTypesMenuAJAX', 'StudyFilesAJAX', 'PrepTemplateSummaryAJAX',
            'ArtifactSummaryAJAX', 'WorkflowHandler', 'WorkflowRunHandler',
            'JobAJAX', 'AutocompleteHandler', 'StudyGetTags', 'StudyTags',
-           'ArtifactGetSamples']
+           'ArtifactGetSamples', 'ArtifactGetBIOMInfo']
