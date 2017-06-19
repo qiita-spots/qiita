@@ -9,9 +9,10 @@
 from unittest import main, TestCase
 from json import loads
 from functools import partial
-from os.path import join, exists
+from os.path import join, exists, isfile
 from os import close, remove
-from tempfile import mkstemp
+from shutil import rmtree
+from tempfile import mkstemp, mkdtemp
 from json import dumps
 
 from tornado.web import HTTPError
@@ -39,15 +40,16 @@ class ArtifactHandlerTests(OauthTestingBase):
     def setUp(self):
         super(ArtifactHandlerTests, self).setUp()
 
-        fd, self.html_fp = mkstemp(suffix=".html")
-        close(fd)
-        self._clean_up_files = [self.html_fp]
+        self._clean_up_files = []
 
     def tearDown(self):
         super(ArtifactHandlerTests, self).tearDown()
         for fp in self._clean_up_files:
             if exists(fp):
-                remove(fp)
+                if isfile(fp):
+                    remove(fp)
+                else:
+                    rmtree(fp)
 
     def test_get_artifact_does_not_exist(self):
         obs = self.get('/qiita_db/artifacts/100/', headers=self.header)
@@ -110,18 +112,40 @@ class ArtifactHandlerTests(OauthTestingBase):
         self.assertEqual(obs, exp)
 
     def test_patch(self):
+        fd, html_fp = mkstemp(suffix=".html")
+        close(fd)
+        self._clean_up_files.append(html_fp)
+        # correct argument with a single HTML
         arguments = {'op': 'add', 'path': '/html_summary/',
-                     'value': self.html_fp}
-        self.assertIsNone(qdb.artifact.Artifact(1).html_summary_fp)
+                     'value': html_fp}
+        artifact = qdb.artifact.Artifact(1)
+        self.assertIsNone(artifact.html_summary_fp)
         obs = self.patch('/qiita_db/artifacts/1/',
                          headers=self.header,
                          data=arguments)
         self.assertEqual(obs.code, 200)
-        self.assertIsNotNone(qdb.artifact.Artifact(1).html_summary_fp)
+        self.assertIsNotNone(artifact.html_summary_fp)
+
+        # Correct argument with an HMTL and a directory
+        fd, html_fp = mkstemp(suffix=".html")
+        close(fd)
+        self._clean_up_files.append(html_fp)
+        html_dir = mkdtemp()
+        self._clean_up_files.append(html_dir)
+        arguments = {'op': 'add', 'path': '/html_summary/',
+                     'value': dumps({'html': html_fp, 'dir': html_dir})}
+        obs = self.patch('/qiita_db/artifacts/1/',
+                         headers=self.header,
+                         data=arguments)
+        self.assertEqual(obs.code, 200)
+        self.assertIsNotNone(artifact.html_summary_fp)
+        html_dir = [fp for _, fp, fp_type in artifact.filepaths
+                    if fp_type == 'html_summary_dir']
+        self.assertEqual(len(html_dir), 1)
 
         # Wrong operation
         arguments = {'op': 'wrong', 'path': '/html_summary/',
-                     'value': self.html_fp}
+                     'value': html_fp}
         obs = self.patch('/qiita_db/artifacts/1/',
                          headers=self.header,
                          data=arguments)
@@ -131,7 +155,7 @@ class ArtifactHandlerTests(OauthTestingBase):
 
         # Wrong path parameter
         arguments = {'op': 'add', 'path': '/wrong/',
-                     'value': self.html_fp}
+                     'value': html_fp}
         obs = self.patch('/qiita_db/artifacts/1/',
                          headers=self.header,
                          data=arguments)
@@ -140,7 +164,7 @@ class ArtifactHandlerTests(OauthTestingBase):
 
         # Wrong value parameter
         arguments = {'op': 'add', 'path': '/html_summary/',
-                     'value': self.html_fp}
+                     'value': html_fp}
         obs = self.patch('/qiita_db/artifacts/1/',
                          headers=self.header,
                          data=arguments)
