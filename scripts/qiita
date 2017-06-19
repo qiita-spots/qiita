@@ -16,7 +16,7 @@ from os.path import join, abspath, dirname, basename
 from future.utils import viewitems
 from glob import glob
 from time import sleep
-# from multiprocessing import active_children
+from multiprocessing import active_children
 
 import click
 import tornado.httpserver
