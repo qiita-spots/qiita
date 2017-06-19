@@ -184,8 +184,9 @@ class Analysis(qdb.base.QiitaObject):
             qdb.sql_connection.TRN.add(sql, [a_id, job.id])
             qdb.sql_connection.TRN.execute()
 
-        # Doing the submission outside of the transaction
-        job.submit()
+            # Don't submit the job until the transaction commits
+            qdb.sql_connection.TRN.add_post_commit_func(job.submit)
+
         return instance
 
     @classmethod
