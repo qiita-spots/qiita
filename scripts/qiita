@@ -464,7 +464,8 @@ def start(port, master):
     # Set a PeriodicCallback for cleaning up the threads every 10 seconds
     # To understand why this is working as expected, check the multiprocessing
     # documentation https://docs.python.org/2/library/multiprocessing.html
-    PeriodicCallback(lambda: active_children(), 10000).start()
+    # 600000 == 10 min
+    PeriodicCallback(lambda: active_children(), 600000).start()
 
     ioloop.start()
 
