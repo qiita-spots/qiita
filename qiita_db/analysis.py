@@ -183,8 +183,10 @@ class Analysis(qdb.base.QiitaObject):
                      VALUES (%s, %s)"""
             qdb.sql_connection.TRN.add(sql, [a_id, job.id])
             qdb.sql_connection.TRN.execute()
-            job.submit()
-            return instance
+
+        # Doing the submission outside of the transaction
+        job.submit()
+        return instance
 
     @classmethod
     def delete(cls, _id):
