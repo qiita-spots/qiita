@@ -101,11 +101,11 @@ $(document).ready(function() {
     proc_data_table += '<th>Files</th>';
     proc_data_table += '</tr>';
 
-    $.each(data, function (pid, info) {
+    $.each(data, function (idx, info) {
       if (typeof info !== 'string' && !(info instanceof String)) {
         proc_data_table += '<tr>';
-        proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(' + pid + ')"></td>';
-        proc_data_table += '<td>' + pid + '</td>';
+        proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(' + info.artifact_id + ')"></td>';
+        proc_data_table += '<td>' + info.artifact_id + '</td>';
         proc_data_table += '<td>' + info.name + '</td>';
         proc_data_table += '<td>' + info.data_type + '</td>';
         proc_data_table += '<td>' + info.target_subfragment.join(', ') + '</td>';
@@ -117,16 +117,7 @@ $(document).ready(function() {
           params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
         }
         proc_data_table += '<td><small>' + params + '</small></td>';
-
-        var files = '';
-        for (var key in info.files) {
-          var vals = info.files[key]
-          var name = vals[1].split('/');
-          files += 'FID: ' + vals[0];
-          files += '<br/>';
-          files += 'Name: ' + name[name.length-1];
-        }
-        proc_data_table += '<td><small>' + files + '</small></td>';
+        proc_data_table += '<td><small>' + info.files.join(', ')  + '</small></td>';
 
         proc_data_table += '</tr>';
       }

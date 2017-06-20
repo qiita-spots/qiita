@@ -1317,3 +1317,141 @@ def generate_study_list(study_ids, public_only=False):
             })
 
     return infolist
+
+
+def get_artifacts_bioms_information(artifact_ids):
+        """Returns processing information about the bioms in the artifact
+
+        Returns
+        -------
+        dict or None
+            The info of the bioms if artifact_type is BIOM or None if not.
+        """
+        sql = """
+            SELECT a.artifact_id, a.name, a.command_id, a.generated_timestamp,
+                   array_agg(a.command_parameters), dt.data_type, parent_id,
+                   array_agg(parent_info.command_parameters),
+                   array_agg(filepaths.filepath), array_agg(pt.prep_id)
+            FROM qiita.artifact a
+            JOIN qiita.artifact_type at ON (
+                a.artifact_type_id = at .artifact_type_id
+                    AND artifact_type = 'BIOM')
+            LEFT JOIN qiita.parent_artifact pa ON (
+                a.artifact_id = pa.artifact_id)
+            LEFT OUTER JOIN LATERAL (
+                SELECT command_parameters FROM qiita.artifact ap
+                WHERE ap.artifact_id = pa.parent_id) parent_info ON true
+            LEFT OUTER JOIN LATERAL (
+                SELECT filepath
+                FROM qiita.artifact_filepath af
+                JOIN qiita.filepath USING (filepath_id)
+                WHERE af.artifact_id = a.artifact_id) filepaths ON true
+            LEFT OUTER JOIN LATERAL (
+                SELECT data_type
+                FROM qiita.data_type
+                WHERE data_type_id = a.data_type_id) dt ON true
+            LEFT OUTER JOIN LATERAL (
+                SELECT CASE WHEN (
+                    SELECT true
+                    FROM information_schema.columns
+                    WHERE table_name = 'prep_' || CAST(
+                        prep_template_id AS TEXT)
+                        AND column_name='target_subfragment')
+                    THEN prep_template_id
+                    ELSE null END AS prep_id
+                FROM qiita.prep_template pt
+                WHERE pt.artifact_id IN (
+                    SELECT * FROM qiita.find_artifact_roots(a.artifact_id)))
+                pt ON true
+            WHERE a.artifact_id IN %s
+            GROUP BY a.artifact_id, a.name, a.command_id,
+                     a.generated_timestamp, dt.data_type, parent_id
+            ORDER BY command_id, artifact_id
+            """
+
+        sql_params = """
+            SELECT parameter_set_name, array_agg(parameter_set) AS param_set
+            FROM qiita.default_parameter_set
+            GROUP BY parameter_set_name"""
+
+        sql_ts = """SELECT DISTINCT target_subfragment FROM qiita.prep_%s"""
+
+        with qdb.sql_connection.TRN:
+            results = []
+            commands = {}
+            # obtaining all existing parameters, note that
+            # they are not that many (~40) and we don't expect
+            # to have a huge growth in the near future
+            qdb.sql_connection.TRN.add(sql_params)
+            params = {name: set(params[0].iteritems()) for name, params in
+                      qdb.sql_connection.TRN.execute_fetchindex()}
+
+            # now let's get the actual artifacts
+            qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
+            for row in qdb.sql_connection.TRN.execute_fetchindex():
+                aid, name, cid, gt, aparams, dt, pid, pparams, filepaths, \
+                    target = row
+                # cleaning fields:
+                # - [0] due to the array_agg
+                pparams = pparams[0]
+                if pparams is not None:
+                    # [-1] taking the last cause it's sorted by
+                    #      the number of overlapping parameters
+                    # [0] then taking the first element that is
+                    # the name of the parameter set
+                    pparams = sorted([
+                        [k, len(v & set(pparams.iteritems()))]
+                        for k, v in viewitems(params)],
+                        key=lambda x: x[1])[-1][0]
+                else:
+                    pparams = 'N/A'
+                # - [0] due to the array_agg
+                aparams = aparams[0]
+                if aparams is None:
+                    aparams = {}
+                # - ignoring empty filepaths
+                if filepaths == [None]:
+                    filepaths = []
+                # - ignoring empty target
+                if target == [None]:
+                    target = []
+
+                algorithm = ''
+                if cid is not None:
+                    if cid not in commands:
+                        c = qdb.software.Command(cid)
+                        s = c.software
+                        commands[cid] = '%s, %sv%s' % (
+                            c.name, s.name, s.version)
+
+                    algorithm = '%s | %s' % (commands[cid], pparams)
+
+                results.append({
+                    'artifact_id': aid,
+                    'target_subfragment': target,
+                    'name': name,
+                    'data_type': dt,
+                    'timestamp': str(gt),
+                    'parameters': aparams,
+                    'algorithm': algorithm,
+                    'files': filepaths})
+
+            # let's get the values for target_subfragment from the
+            # prep_template, note that we have to do it in a separate sql
+            # doing crosstab is really difficult and in another loop cause we
+            # need to loop over all execute_fetchindex before doing another
+            # query
+            ts = {}
+            for i, r in enumerate(results):
+                ats = []
+                for pid in r['target_subfragment']:
+                    if pid not in ts:
+                        qdb.sql_connection.TRN.add(sql_ts, [pid])
+                        ts[pid] = qdb.sql_connection.TRN.execute_fetchflatten()
+                    ats.extend(ts[pid])
+
+                # set to remove any duplicates, then list so JSON can serialize
+                # and play nice with web
+                results[i]['target_subfragment'] = list(set(ats))
+
+            return results

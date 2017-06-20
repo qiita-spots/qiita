@@ -429,42 +429,33 @@ class TestArtifactAPI(TestCase):
         self.assertEqual(obs, exp)
 
     def test_artifact_get_biom_info(self):
-        bdir = get_db_files_base_dir()
-
-        obs = artifact_get_biom_info('test@foo.bar', [5, 6])
-        exp = {'status': 'success', 'msg': '', 'data': {
-            5: {'files': [(9, join(bdir, ('processed_data/1_study_1001_closed'
-                                          '_reference_otu_table.biom')))],
-                'target_subfragment': ['V4'], 'parameters': {
+        obs = artifact_get_biom_info('test@foo.bar', [5, 6, 7])
+        exp = {
+            'status': 'success', 'msg': '', 'data': [
+                {'files': ['1_study_1001_closed_reference_otu_table.biom'],
+                 'target_subfragment': ['V4'],
+                 'algorithm': ('Pick closed-reference OTUs, QIIMEv1.9.1'
+                               ' | Defaults'), 'artifact_id': 5,
+                 'data_type': '18S', 'timestamp': '2012-10-02 17:30:00',
+                 'parameters': {
                     'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
                     'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
                     'sortmerna_coverage': 0.97},
-                'algorithm': ('Pick closed-reference OTUs | Split libraries '
-                              'FASTQ (Defaults with reverse complement '
-                              'mapping file barcodes)'),
-                'timestamp': '2012-10-02 17:30:00',
-                'data_type': '18S', 'name': 'BIOM'},
-            6: {'files': [(12, join(bdir, (
-                    'processed_data/1_study_1001_closed_reference_otu_'
-                    'table_Silva.biom')))],
-                'target_subfragment': ['V4'], 'parameters': {
-                    'reference': 2, 'similarity': 0.97, 'sortmerna_e_value': 1,
-                    'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
-                    'sortmerna_coverage': 0.97}, 'algorithm': (
-                        'Pick closed-reference OTUs | Split libraries FASTQ '
-                        '(Defaults with reverse complement mapping file '
-                        'barcodes)'),
-                'timestamp': '2012-10-02 17:30:00',
-                'data_type': '16S', 'name': 'BIOM'}}}
-        self.assertEqual(obs, exp)
-
-        obs = artifact_get_biom_info('demo@microbio.me', [4])
-        exp = {'status': 'error',
-               'message': 'User does not have access to study'}
-        self.assertEqual(obs, exp)
-
-        obs = artifact_get_biom_info('test@foo.bar', [7])
-        exp = {'status': 'success', 'msg': '', 'data': {7: ''}}
+                 'name': 'BIOM'},
+                {'files': ['1_study_1001_closed_reference_otu_table_'
+                           'Silva.biom'], 'target_subfragment': ['V4'],
+                 'algorithm': ('Pick closed-reference OTUs, QIIMEv1.9.1'
+                               ' | Defaults'), 'artifact_id': 6,
+                 'data_type': '16S', 'timestamp': '2012-10-02 17:30:00',
+                 'parameters': {'reference': 2, 'similarity': 0.97,
+                                'sortmerna_e_value': 1,
+                                'sortmerna_max_pos': 10000, 'input_data': 2,
+                                'threads': 1, 'sortmerna_coverage': 0.97},
+                                'name': 'BIOM'}, {
+                 'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
+                 'artifact_id': 7, 'data_type': '16S',
+                 'timestamp': '2012-10-02 17:30:00', 'parameters': {},
+                 'name': 'BIOM'}]}
         self.assertEqual(obs, exp)
 
     def test_artifact_post_req(self):

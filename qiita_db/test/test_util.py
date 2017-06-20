@@ -846,6 +846,32 @@ class UtilTests(TestCase):
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], False)
         self.assertEqual(obs_info, exp_info)
 
+    def test_get_artifacts_bioms_information(self):
+        # we are gonna test that it ignores 1 and 2 cause they are not biom,
+        # 4 has all information and 7 and 8 don't
+        obs = qdb.util.get_artifacts_bioms_information([1, 2, 4, 7, 8])
+        # not testing timestamp
+        for i in range(len(obs)):
+            del obs[i]['timestamp']
+        exp = [
+            {'files': ['1_study_1001_closed_reference_otu_table.biom'],
+             'target_subfragment': ['V4'],
+             'algorithm': 'Pick closed-reference OTUs, QIIMEv1.9.1 | Defaults',
+             'artifact_id': 4, 'data_type': '18S',
+             'parameters': {'reference': 1, 'similarity': 0.97,
+                            'sortmerna_e_value': 1, 'sortmerna_max_pos': 10000,
+                            'input_data': 2, 'threads': 1,
+                            'sortmerna_coverage': 0.97},
+             'name': 'BIOM'}, {
+             'files': [],
+             'target_subfragment': ['V4'],
+             'algorithm': '', 'artifact_id': 7, 'data_type': '16S',
+             'parameters': {}, 'name': 'BIOM'},
+            {'files': ['1_analysis_18S.biom'], 'target_subfragment': [],
+             'algorithm': '', 'artifact_id': 8, 'data_type': '18S',
+             'parameters': {}, 'name': 'noname'}]
+        self.assertEqual(obs, exp)
+
 
 if __name__ == '__main__':
     main()

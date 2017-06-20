@@ -407,37 +407,6 @@ class ArtifactTestsReadOnly(TestCase):
                          qdb.analysis.Analysis(1))
         self.assertIsNone(qdb.artifact.Artifact(1).analysis)
 
-    def test_biom_info(self):
-        # testing not biom
-        self.assertIsNone(qdb.artifact.Artifact(1).biom_info)
-        self.assertIsNone(qdb.artifact.Artifact(2).biom_info)
-        # test no biom // empty analysis
-        self.assertIsNone(qdb.artifact.Artifact(7).biom_info)
-        # regular processed file
-        bdir = qdb.util.get_db_files_base_dir()
-        obs = qdb.artifact.Artifact(4).biom_info
-        exp = {
-            'files': [(9, join(bdir, 'processed_data/1_study_1001_closed'
-                               '_reference_otu_table.biom'))],
-            'target_subfragment': ['V4'], 'parameters': {
-                'reference': 1, 'similarity': 0.97, 'sortmerna_e_value': 1,
-                'sortmerna_max_pos': 10000, 'input_data': 2, 'threads': 1,
-                'sortmerna_coverage': 0.97},
-            'algorithm': (
-                'Pick closed-reference OTUs | Split libraries FASTQ '
-                '(Defaults with reverse complement mapping file barcodes)'),
-            'timestamp': datetime(2012, 10, 2, 17, 30),
-            'data_type': '18S', 'name': 'BIOM'}
-        self.assertEqual(obs, exp)
-        # analysis
-        obs = qdb.artifact.Artifact(8).biom_info
-        exp = {
-            'files': [(15, join(bdir, 'analysis/1_analysis_18S.biom'))],
-            'target_subfragment': [], 'parameters': {}, 'algorithm': 'N/A',
-            'timestamp': datetime(2017, 6, 16, 15, 28, 28, 943120),
-            'data_type': '18S', 'name': 'noname'}
-        self.assertEqual(obs, exp)
-
     def test_jobs(self):
         obs = qdb.artifact.Artifact(1).jobs()
         exp = [
