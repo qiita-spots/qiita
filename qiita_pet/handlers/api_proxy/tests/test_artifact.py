@@ -20,7 +20,7 @@ from qiita_core.testing import wait_for_prep_information_job
 from qiita_db.artifact import Artifact
 from qiita_db.metadata_template.prep_template import PrepTemplate
 from qiita_db.study import Study
-from qiita_db.util import get_mountpoint, get_db_files_base_dir
+from qiita_db.util import get_mountpoint
 from qiita_db.processing_job import ProcessingJob
 from qiita_db.user import User
 from qiita_db.software import Command, Parameters, DefaultParameters
@@ -451,8 +451,8 @@ class TestArtifactAPI(TestCase):
                                 'sortmerna_e_value': 1,
                                 'sortmerna_max_pos': 10000, 'input_data': 2,
                                 'threads': 1, 'sortmerna_coverage': 0.97},
-                                'name': 'BIOM'}, {
-                 'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
+                 'name': 'BIOM'},
+                {'files': [], 'target_subfragment': ['V4'], 'algorithm': '',
                  'artifact_id': 7, 'data_type': '16S',
                  'timestamp': '2012-10-02 17:30:00', 'parameters': {},
                  'name': 'BIOM'}]}

@@ -801,40 +801,37 @@ class UtilTests(TestCase):
             qdb.user.User('shared@foo.bar'), 'test_study_1', efo=[1],
             info=info)
 
-        exp_info = [{
-            'metadata_complete': True,
-            'ebi_submission_status': 'submitted',
-            'shared': [('shared@foo.bar', 'Shared')],
-            'pi': ('PI_dude@foo.bar', 'PIDude'),
-            'status': 'private',
-            'publication_doi': ['10.100/123456', '10.100/7891011'],
-            'publication_pid': ['123456', '7891011'],
-            'study_abstract': (
+        exp_info = [
+            {'status': 'private', 'metadata_complete': True,
+             'study_tags': None, 'publication_doi': [
+                '10.100/123456', '10.100/7891011'],
+             'study_title': ('Identification of the Microbiomes for '
+                             'Cannabis Soils'),
+             'publication_pid': ['123456', '7891011'],
+             'ebi_submission_status': 'submitted', 'study_id': 1,
+             'ebi_study_accession': 'EBI123456-BB',
+             'shared': [('shared@foo.bar', 'Shared')],
+             'study_abstract': (
                 'This is a preliminary study to examine the microbiota '
-                'associated with the Cannabis plant. Soils samples from '
-                'the bulk soil, soil associated with the roots, and the '
-                'rhizosphere were extracted and the DNA sequenced. Roots '
-                'from three independent plants of different strains were '
-                'examined. These roots were obtained November 11, 2011 from '
-                'plants that had been harvested in the summer. Future studies '
-                'will attempt to analyze the soils and rhizospheres from the '
-                'same location at different time points in the plant '
-                'lifecycle.'),
-            'study_id': 1,
-            'ebi_study_accession': 'EBI123456-BB',
-            'study_title': ('Identification of the Microbiomes for Cannabis '
-                            'Soils'),
-            'number_samples_collected': 27,
-            'study_tags': None
-        }, {
-            'metadata_complete': True,
-            'ebi_submission_status': 'not submitted', 'publication_pid': [],
-            'study_abstract': 'Some abstract goes here',
-            'pi': ('lab_dude@foo.bar', 'LabDude'), 'status': 'sandbox',
-            'study_tags': None, 'shared': [],
-            'publication_doi': [], 'study_id': new_study.id,
-            'ebi_study_accession': None, 'study_title': 'test_study_1',
-            'number_samples_collected': 0}]
+                'associated with the Cannabis plant. Soils samples from the '
+                'bulk soil, soil associated with the roots, and the '
+                'rhizosphere were extracted and the DNA sequenced. Roots from '
+                'three independent plants of different strains were examined. '
+                'These roots were obtained November 11, 2011 from plants that '
+                'had been harvested in the summer. Future studies will '
+                'attempt to analyze the soils and rhizospheres from the same '
+                'location at different time points in the plant lifecycle.'),
+             'pi': ('PI_dude@foo.bar', 'PIDude'),
+             'artifact_biom_ids': [4, 5, 6, 7],
+             'number_samples_collected': 27},
+            {'status': 'sandbox', 'metadata_complete': True,
+             'study_tags': None, 'publication_doi': [],
+             'study_title': 'test_study_1', 'publication_pid': [],
+             'ebi_submission_status': 'not submitted',
+             'study_id': new_study.id, 'ebi_study_accession': None,
+             'shared': [], 'study_abstract': 'Some abstract goes here',
+             'pi': ('lab_dude@foo.bar', 'LabDude'),
+             'artifact_biom_ids': None, 'number_samples_collected': 0}]
         obs_info = qdb.util.generate_study_list([1, 2, 3, 4], True)
         self.assertEqual(obs_info, exp_info)
 

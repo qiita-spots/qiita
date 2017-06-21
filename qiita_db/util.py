@@ -1322,51 +1322,58 @@ def generate_study_list(study_ids, public_only=False):
 def get_artifacts_bioms_information(artifact_ids):
         """Returns processing information about the bioms in the artifact
 
+        Parameters
+        ----------
+        artifact_ids : list of ints
+            The artifact ids to look for. Non-existing ids will be ignored
+
         Returns
         -------
-        dict or None
+        dict
             The info of the bioms if artifact_type is BIOM or None if not.
         """
+        if not artifact_ids:
+            return {}
+
         sql = """
-            SELECT a.artifact_id, a.name, a.command_id, a.generated_timestamp,
-                   array_agg(a.command_parameters), dt.data_type, parent_id,
-                   array_agg(parent_info.command_parameters),
-                   array_agg(filepaths.filepath), array_agg(pt.prep_id)
-            FROM qiita.artifact a
-            JOIN qiita.artifact_type at ON (
-                a.artifact_type_id = at .artifact_type_id
-                    AND artifact_type = 'BIOM')
-            LEFT JOIN qiita.parent_artifact pa ON (
-                a.artifact_id = pa.artifact_id)
-            LEFT OUTER JOIN LATERAL (
-                SELECT command_parameters FROM qiita.artifact ap
-                WHERE ap.artifact_id = pa.parent_id) parent_info ON true
-            LEFT OUTER JOIN LATERAL (
-                SELECT filepath
-                FROM qiita.artifact_filepath af
-                JOIN qiita.filepath USING (filepath_id)
-                WHERE af.artifact_id = a.artifact_id) filepaths ON true
-            LEFT OUTER JOIN LATERAL (
-                SELECT data_type
-                FROM qiita.data_type
-                WHERE data_type_id = a.data_type_id) dt ON true
-            LEFT OUTER JOIN LATERAL (
-                SELECT CASE WHEN (
-                    SELECT true
-                    FROM information_schema.columns
-                    WHERE table_name = 'prep_' || CAST(
-                        prep_template_id AS TEXT)
+            WITH main_query AS (
+                SELECT a.artifact_id, a.name, a.command_id,
+                       a.generated_timestamp, array_agg(a.command_parameters),
+                       dt.data_type, parent_id,
+                       array_agg(parent_info.command_parameters),
+                       array_agg(filepaths.filepath),
+                       qiita.find_artifact_roots(a.artifact_id) AS root_id
+                FROM qiita.artifact a
+                JOIN qiita.artifact_type at ON (
+                    a.artifact_type_id = at .artifact_type_id
+                        AND artifact_type = 'BIOM')
+                LEFT JOIN qiita.parent_artifact pa ON (
+                    a.artifact_id = pa.artifact_id)
+                LEFT JOIN qiita.data_type dt USING (data_type_id)
+                LEFT OUTER JOIN LATERAL (
+                    SELECT command_parameters FROM qiita.artifact ap
+                    WHERE ap.artifact_id = pa.parent_id) parent_info ON true
+                LEFT OUTER JOIN LATERAL (
+                    SELECT filepath
+                    FROM qiita.artifact_filepath af
+                    JOIN qiita.filepath USING (filepath_id)
+                    WHERE af.artifact_id = a.artifact_id) filepaths ON true
+                WHERE a.artifact_id IN %s
+                GROUP BY a.artifact_id, a.name, a.command_id,
+                         a.generated_timestamp, dt.data_type, parent_id
+                ORDER BY command_id, artifact_id),
+              has_target_subfragment AS (
+                SELECT main_query.*, CASE WHEN (
+                        SELECT true FROM information_schema.columns
+                        WHERE table_name = 'prep_' || CAST(
+                            prep_template_id AS TEXT)
                         AND column_name='target_subfragment')
-                    THEN prep_template_id
-                    ELSE null END AS prep_id
-                FROM qiita.prep_template pt
-                WHERE pt.artifact_id IN (
-                    SELECT * FROM qiita.find_artifact_roots(a.artifact_id)))
-                pt ON true
-            WHERE a.artifact_id IN %s
-            GROUP BY a.artifact_id, a.name, a.command_id,
-                     a.generated_timestamp, dt.data_type, parent_id
-            ORDER BY command_id, artifact_id
+                    THEN prep_template_id ELSE NULL END
+                FROM main_query
+                LEFT JOIN qiita.prep_template pt ON (
+                    main_query.root_id = pt.artifact_id)
+            )
+            SELECT * FROM has_target_subfragment
             """
 
         sql_params = """
@@ -1389,8 +1396,9 @@ def get_artifacts_bioms_information(artifact_ids):
             # now let's get the actual artifacts
             qdb.sql_connection.TRN.add(sql, [tuple(artifact_ids)])
             for row in qdb.sql_connection.TRN.execute_fetchindex():
-                aid, name, cid, gt, aparams, dt, pid, pparams, filepaths, \
+                aid, name, cid, gt, aparams, dt, pid, pparams, filepaths, _, \
                     target = row
+
                 # cleaning fields:
                 # - [0] due to the array_agg
                 pparams = pparams[0]
@@ -1443,15 +1451,13 @@ def get_artifacts_bioms_information(artifact_ids):
             # query
             ts = {}
             for i, r in enumerate(results):
-                ats = []
-                for pid in r['target_subfragment']:
+                pid = r['target_subfragment']
+                if pid is None:
+                    results[i]['target_subfragment'] = []
+                else:
                     if pid not in ts:
                         qdb.sql_connection.TRN.add(sql_ts, [pid])
                         ts[pid] = qdb.sql_connection.TRN.execute_fetchflatten()
-                    ats.extend(ts[pid])
-
-                # set to remove any duplicates, then list so JSON can serialize
-                # and play nice with web
-                results[i]['target_subfragment'] = list(set(ats))
+                    results[i]['target_subfragment'] = ts[pid]
 
             return results
