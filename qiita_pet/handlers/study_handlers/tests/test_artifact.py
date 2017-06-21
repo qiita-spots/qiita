@@ -123,6 +123,8 @@ class NewArtifactHandlerTests(TestHandlerBase):
             'import-artifact': ''}
         response = self.post('/study/new_artifact/', args)
         self.assertEqual(response.code, 200)
+        self.assertEqual(loads(response.body),
+                         {'status': 'success', 'message': ''})
 
         # make sure new artifact created
         wait_for_prep_information_job(self.prep.id)
