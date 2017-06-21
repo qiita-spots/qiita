@@ -506,37 +506,6 @@ def artifact_graph_get_req(artifact_id, direction, user_id):
             'message': ''}
 
 
-def artifact_delete_req(artifact_id, user_id):
-    """Deletes the artifact
-
-    Parameters
-    ----------
-    artifact_id : int
-        Artifact being acted on
-    user_id : str
-        The user requesting the action
-
-    Returns
-    -------
-    dict
-        Status of action, in the form {'status': status, 'message': msg}
-        status: status of the action, either success or error
-        message: Human readable message for status
-    """
-    pd = Artifact(int(artifact_id))
-    pt_id = pd.prep_templates[0].id
-    access_error = check_access(pd.study.id, user_id)
-    if access_error:
-        return access_error
-
-    job_id = safe_submit(user_id, delete_artifact, artifact_id)
-    r_client.set(PREP_TEMPLATE_KEY_FORMAT % pt_id,
-                 dumps({'job_id': job_id, 'is_qiita_job': False}))
-
-    return {'status': 'success',
-            'message': ''}
-
-
 def artifact_status_put_req(artifact_id, user_id, visibility):
     """Set the status of the artifact given
 
