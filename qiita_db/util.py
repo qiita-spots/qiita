@@ -1374,6 +1374,7 @@ def get_artifacts_bioms_information(artifact_ids):
                     main_query.root_id = pt.artifact_id)
             )
             SELECT * FROM has_target_subfragment
+            ORDER BY command_id, data_type
             """
 
         sql_params = """

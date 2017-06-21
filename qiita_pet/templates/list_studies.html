@@ -91,12 +91,9 @@ $(document).ready(function() {
     var proc_data_table = '<table class="table" cellpadding="0" cellspacing="0" border="0" style="padding-left:0px;width:95%">';
     proc_data_table += '<tr>';
     proc_data_table += '<th></th>';
-    proc_data_table += '<th>ID</th>';
     proc_data_table += '<th>Name</th>';
     proc_data_table += '<th>Data type</th>';
-    proc_data_table += '<th>Target Subfragment</th>';
-    proc_data_table += '<th>Processed Date</th>';
-    proc_data_table += '<th>Algorithm</th>';
+    proc_data_table += '<th>Processing method</th>';
     proc_data_table += '<th>Parameters</th>';
     proc_data_table += '<th>Files</th>';
     proc_data_table += '</tr>';
@@ -105,11 +102,8 @@ $(document).ready(function() {
       if (typeof info !== 'string' && !(info instanceof String)) {
         proc_data_table += '<tr>';
         proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(' + info.artifact_id + ')"></td>';
-        proc_data_table += '<td>' + info.artifact_id + '</td>';
-        proc_data_table += '<td>' + info.name + '</td>';
-        proc_data_table += '<td>' + info.data_type + '</td>';
-        proc_data_table += '<td>' + info.target_subfragment.join(', ') + '</td>';
-        proc_data_table += '<td>' + info.timestamp + '</td>';
+        proc_data_table += '<td>' + info.name + ' (' + info.artifact_id + ' - ' + info.timestamp.split('.')[0] + ')</td>';
+        proc_data_table += '<td>' + info.data_type + ' (' + info.target_subfragment.join(', ') + ')</td>';
         proc_data_table += '<td>' + info.algorithm + '</td>';
 
         var params = '';
@@ -117,7 +111,7 @@ $(document).ready(function() {
           params += '<i>' + key + '</i>: ' + info.parameters[key] + '<br/>';
         }
         proc_data_table += '<td><small>' + params + '</small></td>';
-        proc_data_table += '<td><small>' + info.files.join(', ')  + '</small></td>';
+        proc_data_table += '<td><small>' + info.files.join('<br/>')  + '</small></td>';
 
         proc_data_table += '</tr>';
       }
