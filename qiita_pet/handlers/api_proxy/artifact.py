@@ -17,7 +17,7 @@ from qiita_core.util import execute_as_transaction
 from qiita_core.qiita_settings import qiita_config
 from qiita_pet.handlers.api_proxy.util import check_access, check_fp
 from qiita_ware.context import safe_submit
-from qiita_ware.dispatchable import (copy_raw_data, delete_artifact)
+from qiita_ware.dispatchable import copy_raw_data
 from qiita_db.artifact import Artifact
 from qiita_db.user import User
 from qiita_db.metadata_template.prep_template import PrepTemplate
