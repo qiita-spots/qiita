@@ -65,7 +65,7 @@
       $.ajax({
         url: '{% raw qiita_config.portal_dir %}/study/description/sample_template/',
         type: 'PATCH',
-        data: {'op': 'remove', 'path': '/{{study_id}}/samples/' + sample_name},
+        data: {'op': 'remove', 'path': '/{{study_id}}/' + row_id + '/samples/' + column_name},
         success: function(data) {
           if(data.status == 'error') {
             bootstrapAlert(data.message, "danger");
