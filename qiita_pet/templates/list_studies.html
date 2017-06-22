@@ -5,11 +5,6 @@
 <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
 <link href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.tagit.css" rel="stylesheet" type="text/css">
 
-<style>
-td.details-control {
-  cursor: pointer;
-}
-</style>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
 <script src="{% raw qiita_config.portal_dir %}/static/js/sharing.js"></script>
@@ -18,31 +13,25 @@ td.details-control {
 <script type="text/javascript">
 function error(evt) { $('#search-error').html("<b>Server communication error. Sample selection will not be recorded. Please try again later.</b>"); }
 
-function send_samples_to_moi(aids) {
+function send_samples_to_moi(button, aids) {
+  button.value = 'Adding';
+  button.disabled = true;
+  $(button).addClass("btn-info");
   bootstrapAlert('We are adding ' + aids.length + ' artifact(s) to the analysis. This ' +
                  'might take some time based on the number of samples on each artifact.', "warning", 10000);
   $.get('/artifact/samples/', {ids:aids})
     .done(function ( data ) {
       if (data['status']=='success') {
         moi.send('sel', data['data']);
+        button.value = 'Added';
+        $(button).removeClass("btn-info");
       } else {
-        bootstrapAlert('ERROR: ' + data['msg'], "danger", 10000);
+        bootstrapAlert('ERROR: ' + data['msg'], "danger");
+        button.value = 'There was an error, scroll up to see it';
+        button.disabled = false;
+        $(button).addClass("btn-danger");
       }
     });
-}
-
-function sel_study(name, row) {
-  var row_data = $('#'+name).dataTable().fnGetData(row);
-  var aids = []
-
-  // for(var i=0;i<row_data.proc_data_info.length;i++){
-  //   aids.push(row_data['proc_data_info'][i]['pid']);
-  // }
-  send_samples_to_moi(aids);
-}
-
-function sel_proc_data(aid) {
-  send_samples_to_moi([aid]);
 }
 
 function show_alert(data) {
@@ -101,7 +90,7 @@ $(document).ready(function() {
     $.each(data, function (idx, info) {
       if (typeof info !== 'string' && !(info instanceof String)) {
         proc_data_table += '<tr>';
-        proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="sel_proc_data(' + info.artifact_id + ')"></td>';
+        proc_data_table += '<td><input type="button" class="btn btn-sm" value="Add" onclick="send_samples_to_moi(this, [' + info.artifact_id + '])"></td>';
         proc_data_table += '<td>' + info.name + ' (' + info.artifact_id + ' - ' + info.timestamp.split('.')[0] + ')</td>';
         proc_data_table += '<td>' + info.data_type + ' (' + info.target_subfragment.join(', ') + ')</td>';
         proc_data_table += '<td>' + info.algorithm + '</td>';
@@ -125,8 +114,7 @@ $(document).ready(function() {
       "lengthMenu": [[5, 10, 50, -1], [5, 10, 50, "All"]],
       "deferRender": true,
       "columns": [
-        {"className": 'details-control', "orderable": false, "data": null, "defaultContent": ''},
-        { "orderable": false},
+        { "orderable": false, "data": "artifact_biom_ids" },
         { "data": "study_title" },
         { "data": "study_abstract" },
         { "data": "study_id" },
@@ -138,20 +126,25 @@ $(document).ready(function() {
         { "data": "ebi_info" }
       ],
       columnDefs: [
-        {type:'natural', targets:[3,7,8]},
-        {"targets": [ 3 ], "visible": false},
-        // render the study checkbox cell
+        {type:'natural', targets:[2,6,7]},
+        {"targets": [ 2 ], "visible": false},
+        // render zero
         {"render": function ( data, type, row, meta ) {
           var len = 0;
-          if (row.artifact_biom_ids != undefined) {
-            len = row.artifact_biom_ids.length;
+          if (data !== null && data !== undefined){
+            len = data.length;
           }
-          return len
-            // if(row.proc_data_info.length > 0) {
-            //     return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
-            // }
-            // else { return '<p style="font-size:12px">No Processed Data</p>'; }
-        }, targets: [1]},
+          if (len != 0){
+            return '<div class="container" style="max-width: 5em;">'+
+                     '<div class="row justify-content-md-center">' +
+                       '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
+                       '<div class="col-md-1 text-center">' + len + '</div>' +
+                     '</div>' +
+                   '</div>';
+          } else {
+            return '';
+          }
+        }, targets: [0]},
         // render the title cell
         {"render": function ( data, type, row, meta ) {
             result = "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\">" +
@@ -167,12 +160,12 @@ $(document).ready(function() {
               result += ' <span class="label label-' + level + '">' + tag + '</span>';
             }
             return result
-        }, targets: [2]},
+        }, targets: [1]},
         {"render": function ( data, type, row, meta ) {
             var glyph = 'remove';
             if(data === true) { glyph = 'ok' }
             return "<span id='shared_html_"+ row.study_id +"'>"+ data +"</span><br/><a class='btn btn-primary btn-xs' data-toggle='modal' data-target='#share-study-modal-view' onclick='modify_sharing("+ row.study_id +");'>Modify</a>";
-        }, targets: [6]},
+        }, targets: [5]},
         ],
       "language": {
           "search": "Filter results by column data (Title, abstract, PI, etc):",
@@ -196,8 +189,7 @@ $(document).ready(function() {
       "sDom": '<"top">rti<"bottom"p><"clear">',
       "bLengthChange": false,
       "columns": [
-        {"className": 'details-control', "orderable": false, "data": null, "defaultContent": ''},
-        { "orderable": false},
+        { "orderable": false, "data": "artifact_biom_ids" },
         { "data": "study_title" },
         { "data": "study_abstract" },
         { "data": "study_id" },
@@ -207,20 +199,25 @@ $(document).ready(function() {
         { "data": "ebi_info" }
       ],
       columnDefs: [
-        {type:'natural', targets:[3,7,8]},
-        {"targets": [ 3 ], "visible": false},
-        // render the study checkbox cell
+        {type:'natural', targets:[2,6,7]},
+        {"targets": [ 2 ], "visible": false},
+        // render zero
         {"render": function ( data, type, row, meta ) {
           var len = 0;
-          if (row.artifact_biom_ids != undefined) {
-            len = row.artifact_biom_ids.length;
+          if (data !== null && data !== undefined){
+            len = data.length;
+           }
+          if (len != 0){
+            return '<div class="container" style="max-width: 5em;">'+
+                     '<div class="row justify-content-md-center">' +
+                       '<div class="col-md-1 text-center details-control">&nbsp;</div>' +
+                       '<div class="col-md-1 text-center">' + len + '</div>' +
+                     '</div>' +
+                   '</div>';
+          } else {
+            return '';
           }
-          return len
-            // if(row.proc_data_info.length > 0) {
-            //     return "<input type='button' id='study"+row.study_id+"-checkbox' class='btn btn-sm' value='Add to Analysis' onclick='sel_study(\"user-studies-table\", "+ meta.row +")'>";
-            // }
-            // else { return '<p style="font-size:12px">No Processed Data</p>'; }
-        }, targets: [1]},
+        }, targets: [0]},
         // render the title cell
         {"render": function ( data, type, row, meta ) {
               result = "<a href='#' data-toggle='modal' data-target='#study-abstract-modal' onclick=\"fillAbstract('studies-table', "+ meta.row +")\">" +
@@ -236,7 +233,7 @@ $(document).ready(function() {
                 result += ' <span class="label label-' + level + '">' + tag + '</span>';
               }
               return result
-        }, targets: [2]},
+        }, targets: [1]},
         ],
       "language": {
           "search": "Filter results by column data (Title, abstract, PI, etc):",
@@ -255,7 +252,7 @@ $(document).ready(function() {
   });
 
   // Add event listener for opening and closing details
-  $('#studies-table tbody').on('click', 'td.details-control', function () {
+  $('#studies-table tbody').on('click', 'div.details-control', function () {
       var table = $('#studies-table').DataTable();
       var tr = $(this).closest('tr');
       var row = table.row( tr );
@@ -279,7 +276,7 @@ $(document).ready(function() {
           });
       }
   });
-  $('#user-studies-table tbody').on('click', 'td.details-control', function () {
+  $('#user-studies-table tbody').on('click', 'div.details-control', function () {
       var table = $('#user-studies-table').DataTable();
       var tr = $(this).closest('tr');
       var row = table.row( tr );
@@ -411,8 +408,7 @@ function add_metacat(metacat) {
     <table id="user-studies-table" class="table table-bordered gray-msg">
       <thead>
         <tr>
-          <th>For analysis</th>
-          <th>Add to analysis</th>
+          <th>Expand for analysis</th>
           <th>Title</th>
           <th>Abstract</th>
           <th>Study ID</th>
@@ -429,8 +425,7 @@ function add_metacat(metacat) {
     <table id="studies-table" class="table table-bordered gray-msg">
       <thead>
         <tr>
-          <th>For analysis</th>
-          <th>Add to analysis</th>
+          <th>Expand for analysis</th>
           <th>Title</th>
           <th>Abstract</th>
           <th>Study ID</th>
