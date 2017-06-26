@@ -655,14 +655,14 @@ class MetadataTemplate(qdb.base.QiitaObject):
             raise qdb.exceptions.QiitaDBOperationNotPermittedError(
                 '%s cannot be deleted' % column_name)
         with qdb.sql_connection.TRN:
-            sql = 'ALTER TABLE qiita.%s%d DISABLE TRIGGER ALL'.format(
-                self._table_prefix, self._id)
+            sql = ('ALTER TABLE qiita.%s%d DISABLE TRIGGER ALL' % (
+                   self._table_prefix, self._id))
             qdb.sql_connection.TRN.add(sql)
             sql = 'ALTER TABLE qiita.%s%d DROP COLUMN %s' % (
                 self._table_prefix, self._id, column_name)
             qdb.sql_connection.TRN.add(sql)
-            sql = 'ALTER TABLE qiita.%s%d ENABLE TRIGGER ALL'.format(
-                self._table_prefix, self._id)
+            sql = ('ALTER TABLE qiita.%s%d ENABLE TRIGGER ALL' % (
+                   self._table_prefix, self._id))
             qdb.sql_connection.TRN.add(sql)
             qdb.sql_connection.TRN.execute()
 
