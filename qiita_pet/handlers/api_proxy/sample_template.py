@@ -521,7 +521,9 @@ def sample_template_patch_request(user_id, req_op, req_path, req_value=None,
     if req_op == 'remove':
         req_path = [v for v in req_path.split('/') if v]
 
-        # format: study_id/row_id/column|sample/attribute_id
+        # format
+        # column: study_id/row_id/columns/column_name
+        # sample: study_id/row_id/samples/sample_id
         if len(req_path) != 4:
             return {'status': 'error',
                     'message': 'Incorrect path parameter'}
