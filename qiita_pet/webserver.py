@@ -60,6 +60,7 @@ from qiita_db.handlers.plugin import (
 from qiita_pet import uimodules
 from qiita_db.util import get_mountpoint
 from qiita_pet.handlers.rest import ENDPOINTS as REST_ENDPOINTS
+from qiita_pet.handlers.qiita_redbiom import RedbiomPublicSearch
 if qiita_config.portal == "QIITA":
     from qiita_pet.handlers.portal import (
         StudyPortalHandler, StudyPortalAJAXHandler)
@@ -154,6 +155,7 @@ class Application(tornado.web.Application):
             (r"/release/download/(.*)", DownloadRelease),
             (r"/download_raw_data/(.*)", DownloadRawData),
             (r"/vamps/(.*)", VAMPSHandler),
+            (r"/redbiom/(.*)", RedbiomPublicSearch),
             # Plugin handlers - the order matters here so do not change
             # qiita_db/jobs/(.*) should go after any of the
             # qiita_db/jobs/(.*)/XXXX because otherwise it will match the

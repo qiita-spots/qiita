@@ -34,6 +34,7 @@
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/bootstrap-theme.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/chosen.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/jquery.dataTables.min.css" type="text/css">
+    <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/vendor/css/select2.min.css" type="text/css">
     <link rel="stylesheet" href="{% raw qiita_config.portal_dir %}/static/css/style.css" type="text/css">
     {% if portal_styling.custom_css %}
     <style type="text/css">
@@ -46,11 +47,27 @@
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/chosen.jquery.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/jquery.dataTables.min.js" type="text/javascript"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/vue.min.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/moi_list.js"></script>
+    <script src="{% raw qiita_config.portal_dir %}/static/vendor/js/select2.min.js"></script>
     <script src="{% raw qiita_config.portal_dir %}/static/js/qiita.js"></script>
-
     <link rel="shortcut icon" href="{% raw qiita_config.portal_dir %}/static/img/favicon.ico">
 
     <script>
+      /**
+       *
+       * Function to show the loading gif in a given div
+       *
+       * @param div_name string with the name of the div to populate with the loading gif
+       *
+       * This function replaces the content of the given div with the
+       * gif to show that the section of page is loading
+       *
+       */
+      function show_loading(div_name) {
+          $("#" + div_name).html("<img src='{% raw qiita_config.portal_dir %}/static/img/waiting.gif' style='display:block;margin-left: auto;margin-right: auto'/>");
+      }
+
       function overlay_check() {
         // from http://stackoverflow.com/q/5916900/379593
         var ua=navigator.userAgent,tem,M=ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
@@ -350,6 +367,11 @@
           }, 30000);
         }
       });
+
+      moi.init(null, window.location.host + '{% raw qiita_config.portal_dir %}/analysis/selected/socket/', function(){}, error, error);
+      moi.add_callback('remove_pd', remove_pd_from_html);
+      moi.add_callback('remove_sample', remove_sample_from_html);
+      moi.add_callback('clear', clear_from_html);
     });
 
     </script>
@@ -512,6 +534,11 @@
             <ul class="nav navbar-nav">
               <li>
                 <a href="https://github.com/biocore/qiita/blob/master/README.rst#current-features">Current and Future Features</a>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav">
+              <li>
+                <a href="{% raw qiita_config.portal_dir %}/redbiom/">Redbiom</a>
               </li>
             </ul>
             <ul class="nav navbar-nav">
