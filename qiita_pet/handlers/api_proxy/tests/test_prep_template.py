@@ -52,7 +52,7 @@ class TestPrepAPIReadOnly(TestCase):
             'status': 'success',
             'prep_files': ['uploaded_file.txt'],
             'data_types': ['16S', '18S', 'ITS', 'Metabolomic', 'Metagenomic',
-                           'Proteomic'],
+                           'Multiomic', 'Proteomic'],
             'ontology': {
                 'ENA': ['Cancer Genomics', 'Epigenetics', 'Exome Sequencing',
                         'Forensic or Paleo-genomics', 'Gene Regulation Study',

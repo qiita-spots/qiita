@@ -8,7 +8,7 @@
 
 from unittest import TestCase, main
 from tempfile import mkstemp
-from os import close, remove, mkdir
+from os import close, remove, makedirs, mkdir
 from os.path import join, exists, basename
 from shutil import rmtree
 from datetime import datetime
@@ -87,7 +87,7 @@ class DBUtilTests(TestCase):
         self.assertEqual(
             qdb.util.convert_to_id("directory", "filepath_type"), 8)
         self.assertEqual(
-            qdb.util.convert_to_id("running", "analysis_status", "status"), 3)
+            qdb.util.convert_to_id("private", "visibility", "visibility"), 3)
         self.assertEqual(
             qdb.util.convert_to_id("EMP", "portal_type", "portal"), 2)
 
@@ -98,8 +98,10 @@ class DBUtilTests(TestCase):
 
     def test_get_artifact_types(self):
         obs = qdb.util.get_artifact_types()
-        exp = {'Demultiplexed': 6, 'FASTA_Sanger': 2, 'FASTQ': 3, 'BIOM': 7,
-               'per_sample_FASTQ': 5, 'SFF': 1, 'FASTA': 4}
+        exp = {'SFF': 1, 'FASTA_Sanger': 2, 'FASTQ': 3, 'FASTA': 4,
+               'per_sample_FASTQ': 5, 'Demultiplexed': 6, 'BIOM': 7,
+               'distance_matrix': 8L, 'rarefaction_curves': 9L,
+               'taxa_summary': 10L}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_artifact_types(key_by_id=True)
@@ -133,7 +135,7 @@ class DBUtilTests(TestCase):
         """Tests that get_data_types works with valid arguments"""
         obs = qdb.util.get_data_types()
         exp = {'16S': 1, '18S': 2, 'ITS': 3, 'Proteomic': 4, 'Metabolomic': 5,
-               'Metagenomic': 6}
+               'Metagenomic': 6, 'Multiomic': 7}
         self.assertEqual(obs, exp)
 
         obs = qdb.util.get_data_types(key='data_type_id')
@@ -315,17 +317,20 @@ class DBUtilTests(TestCase):
 
         removed_fps = [
             join(raw_data_mp, '2_sequences_barcodes.fastq.gz'),
-            join(raw_data_mp, '2_sequences.fastq.gz')]
+            join(raw_data_mp, '2_sequences.fastq.gz'),
+            join(raw_data_mp, 'directory_test')]
 
-        for fp in removed_fps:
+        for fp in removed_fps[:-1]:
             with open(fp, 'w') as f:
                 f.write('\n')
+        makedirs(removed_fps[-1])
 
         sql = """INSERT INTO qiita.filepath
                     (filepath, filepath_type_id, checksum,
                      checksum_algorithm_id, data_directory_id)
                 VALUES ('2_sequences_barcodes.fastq.gz', 3, '852952723', 1, 5),
-                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5)
+                       ('2_sequences.fastq.gz', 1, '852952723', 1, 5),
+                       ('directory_test', 8, '852952723', 1, 5)
                 RETURNING filepath_id"""
         fp_ids = self.conn_handler.execute_fetchall(sql)
 
@@ -337,7 +342,7 @@ class DBUtilTests(TestCase):
         for fp in removed_fps:
             self.assertTrue(exists(fp))
 
-        exp_count = qdb.util.get_count("qiita.filepath") - 2
+        exp_count = qdb.util.get_count("qiita.filepath") - 3
 
         qdb.util.purge_filepaths()
 
@@ -440,16 +445,6 @@ class DBUtilTests(TestCase):
                 self.assertTrue(exists(new_fp))
 
             self.files_to_remove.append(new_fp)
-
-    def test_get_filepath_id(self):
-        _, base = qdb.util.get_mountpoint("raw_data")[0]
-        fp = join(base, '1_s_G1_L001_sequences.fastq.gz')
-        obs = qdb.util.get_filepath_id("raw_data", fp)
-        self.assertEqual(obs, 1)
-
-    def test_get_filepath_id_error(self):
-        with self.assertRaises(qdb.exceptions.QiitaDBError):
-            qdb.util.get_filepath_id("raw_data", "Not_a_path")
 
     def test_get_mountpoint(self):
         exp = [(5, join(qdb.util.get_db_files_base_dir(), 'raw_data'))]
@@ -673,13 +668,6 @@ class DBUtilTests(TestCase):
         exp = {1: 'raw_data/1_s_G1_L001_sequences.fastq.gz',
                3: 'preprocessed_data/1_seqs.fna',
                test: 'FASTQ/2/%s' % basename(fp)}
-
-        self.assertEqual(obs, exp)
-
-    def test_check_access_to_analysis_result(self):
-        obs = qdb.util.check_access_to_analysis_result('test@foo.bar',
-                                                       '1_job_result.txt')
-        exp = [13]
 
         self.assertEqual(obs, exp)
 

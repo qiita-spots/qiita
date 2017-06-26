@@ -6,6 +6,11 @@
 <link rel="stylesheet" src="{% raw qiita_config.portal_dir %}/static/vendor/css/vis-network.min.css" type="text/css">
 <script type="text/javascript" src="{% raw qiita_config.portal_dir %}/static/vendor/js/vis.min.js"></script>
 <script type="text/javascript">
+
+  function reload_UI_post_workflow_submission(artifact_id) {
+    populate_main_div('{% raw qiita_config.portal_dir %}/study/description/baseinfo/', { study_id: {{study_info['study_id']}} });
+  }
+
   var network = null;
   // Track what prep template is currently being shown.
   var curr_prep = -1;
