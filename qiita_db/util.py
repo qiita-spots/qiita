@@ -821,6 +821,10 @@ def move_filepaths_to_upload_folder(study_id, filepaths):
     """
     with qdb.sql_connection.TRN:
         uploads_fp = join(get_mountpoint("uploads")[0][1], str(study_id))
+
+        if not exists(uploads_fp):
+            makedirs(uploads_fp)
+
         path_builder = partial(join, uploads_fp)
 
         # We can now go over and remove all the filepaths
