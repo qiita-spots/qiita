@@ -228,4 +228,6 @@ class ReloadPluginAPItestHandler(OauthBaseHandler):
         for fp in conf_files:
             s = qdb.software.Software.from_file(fp, update=True)
             s.activate()
+            s.register_commands()
+
         self.finish()
