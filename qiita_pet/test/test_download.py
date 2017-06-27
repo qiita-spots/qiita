@@ -183,9 +183,9 @@ class TestDownloadRawData(TestHandlerBase):
         self.assertEqual(response.code, 200)
 
         exp = (
-            '- 0 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
+            '- 58 /protected/raw_data/1_s_G1_L001_sequences.fastq.gz '
             'raw_data/1_s_G1_L001_sequences.fastq.gz\n'
-            '- 0 /protected/raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz '
+            '- 58 /protected/raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz '
             'raw_data/1_s_G1_L001_sequences_barcodes.fastq.gz\n'
             '- 36615 /protected/templates/1_prep_1_qiime_[0-9]*-[0-9]*.txt '
             'mapping_files/1_mapping_file.txt\n'
