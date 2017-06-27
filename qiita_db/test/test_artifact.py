@@ -70,6 +70,7 @@ class ArtifactTestsReadOnly(TestCase):
                ['taxa_summary', 'Taxa summary plots'],
                ['NewType', 'NewTypeDesc']]
         self.assertItemsEqual(obs, exp)
+        self.assertTrue(exists(qdb.util.get_mountpoint('NewType')[0][1]))
 
         with self.assertRaises(qdb.exceptions.QiitaDBDuplicateError):
             qdb.artifact.Artifact.create_type(
