@@ -337,6 +337,7 @@ class Command(qdb.base.QiitaObject):
             sql_type = """INSERT INTO qiita.parameter_artifact_type
                             (command_parameter_id, artifact_type_id)
                           VALUES (%s, %s)"""
+            supported_types = []
             for pname, p_type, atypes in sql_artifact_params:
                 sql_params = [c_id, pname, p_type, True, None]
                 qdb.sql_connection.TRN.add(sql, sql_params)
@@ -345,6 +346,14 @@ class Command(qdb.base.QiitaObject):
                     [pid, qdb.util.convert_to_id(at, 'artifact_type')]
                     for at in atypes]
                 qdb.sql_connection.TRN.add(sql_type, sql_params, many=True)
+                supported_types.extend([atid for _, atid in sql_params])
+
+            if software.type == 'artifact definition':
+                sql = """INSERT INTO qiita.software_artifact_type
+                                (software_id, artifact_type_id)
+                            VALUES (%s, %s)"""
+                sql_params = [[software.id, atid] for atid in supported_types]
+                qdb.sql_connection.TRN.add(sql, sql_params, many=True)
 
             # Add the outputs to the command
             if outputs:

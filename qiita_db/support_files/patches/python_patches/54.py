@@ -392,57 +392,22 @@ def transfer_job(analysis, command_id, params, input_artifact_id, job_data,
 # and (3) taxonomy summary, which will include all the files generated
 # by summarize_taxa_through_plots.py
 
-# Step 1: Create the new type
 with TRN:
-    # Magic number 2 -> The "artifact definition" software type
-    sql = """INSERT INTO qiita.software
-                (name, version, description, environment_script, start_script,
-                software_type_id)
-             VALUES ('Diversity types', '0.1.0',
-                     'Diversity artifacts type plugin',
-                     'source activate qiita', 'start_diversity_types', 2)
-             RETURNING software_id"""
-    TRN.add(sql)
-    divtype_id = TRN.execute_fetchlast()
-
-    # Step 2: Create the validate and HTML generator commands
-    sql = """INSERT INTO qiita.software_command (software_id, name, description)
-             VALUES (%s, %s, %s)
-             RETURNING command_id"""
-    TRN.add(sql, [divtype_id, 'Validate',
-                  'Validates a new artifact of the given diversity type'])
-    validate_cmd_id = TRN.execute_fetchlast()
-    TRN.add(sql, [divtype_id, 'Generate HTML summary',
-                  'Generates the HTML summary of a given diversity type'])
-    html_summary_cmd_id = TRN.execute_fetchlast()
-
-    # Step 3: Add the parameters for the previous commands
-    sql = """INSERT INTO qiita.command_parameter
-                (command_id, parameter_name, parameter_type, required)
-             VALUES (%s, %s, %s, %s)"""
-    sql_args = [(validate_cmd_id, 'files', 'string', True),
-                (validate_cmd_id, 'artifact_type', 'string', True),
-                (validate_cmd_id, 'template', 'prep_template', False),
-                (validate_cmd_id, 'analysis', 'analysis', False),
-                (validate_cmd_id, 'provenance', 'string', False),
-                (html_summary_cmd_id, 'input_data', 'artifact', True)]
-    TRN.add(sql, sql_args, many=True)
-
-    # Step 4: Add the new artifact types
+    # Add the new artifact types
     sql = """INSERT INTO qiita.artifact_type (
                 artifact_type, description, can_be_submitted_to_ebi,
                 can_be_submitted_to_vamps)
              VALUES (%s, %s, %s, %s)
              RETURNING artifact_type_id"""
-    TRN.add(sql, ['distance_matrix', 'Distance matrix holding pairwise '
-                                     'distance between samples', False, False])
+    TRN.add(sql, ['beta_div_plots', 'Qiime 1 beta diversity results',
+                  False, False])
     dm_atype_id = TRN.execute_fetchlast()
     TRN.add(sql, ['rarefaction_curves', 'Rarefaction curves', False, False])
     rc_atype_id = TRN.execute_fetchlast()
     TRN.add(sql, ['taxa_summary', 'Taxa summary plots', False, False])
     ts_atype_id = TRN.execute_fetchlast()
 
-    # Step 5: Associate each artifact with the filetypes that it accepts
+    # Associate each artifact with the filetypes that it accepts
     # At this time we are going to add them as directories, just as it is done
     # right now. We can make it fancier with the new type system.
     # Magic number 8: the filepath_type_id for the directory
@@ -453,36 +418,6 @@ with TRN:
                 [rc_atype_id, 8, True],
                 [ts_atype_id, 8, True]]
     TRN.add(sql, sql_args, many=True)
-
-    # Step 6: Associate the plugin with the types that it defines
-    sql = """INSERT INTO qiita.software_artifact_type
-                (software_id, artifact_type_id)
-             VALUES (%s, %s)"""
-    sql_args = [[divtype_id, dm_atype_id],
-                [divtype_id, rc_atype_id],
-                [divtype_id, ts_atype_id]]
-    TRN.add(sql, sql_args, many=True)
-
-    # Step 7: Create the new entries for the data directory
-    sql = """INSERT INTO qiita.data_directory
-                (data_type, mountpoint, subdirectory, active)
-             VALUES (%s, %s, %s, %s)"""
-    sql_args = [['distance_matrix', 'distance_matrix', True, True],
-                ['rarefaction_curves', 'rarefaction_curves', True, True],
-                ['taxa_summary', 'taxa_summary', True, True]]
-    TRN.add(sql, sql_args, many=True)
-
-    # Step 8: Give a new client id/client secret pair to the plugins
-    sql = """INSERT INTO qiita.oauth_identifiers (client_id, client_secret)
-                VALUES (%s, %s)"""
-    # Each plugin needs a client id/secret pair, so we are generating it here
-    # at random
-    client_id = get_random_string(50)
-    client_secret = get_random_string(255)
-    TRN.add(sql, [client_id, client_secret])
-    sql = """INSERT INTO qiita.oauth_software (client_id, software_id)
-                VALUES (%s, %s)"""
-    TRN.add(sql, [client_id, divtype_id])
 
     # Create the new commands that execute the current analyses. In qiita,
     # the only commands that where available are Summarize Taxa, Beta
