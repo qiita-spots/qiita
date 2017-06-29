@@ -100,7 +100,7 @@ class DBUtilTests(TestCase):
         obs = qdb.util.get_artifact_types()
         exp = {'SFF': 1, 'FASTA_Sanger': 2, 'FASTQ': 3, 'FASTA': 4,
                'per_sample_FASTQ': 5, 'Demultiplexed': 6, 'BIOM': 7,
-               'distance_matrix': 8L, 'rarefaction_curves': 9L,
+               'beta_div_plots': 8L, 'rarefaction_curves': 9L,
                'taxa_summary': 10L}
         self.assertEqual(obs, exp)
 

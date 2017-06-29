@@ -10,8 +10,8 @@ from __future__ import division
 from future.utils import viewitems
 from itertools import chain
 from datetime import datetime
-from os import remove
-from os.path import isfile
+from os import remove, makedirs
+from os.path import isfile, exists
 from shutil import rmtree
 from functools import partial
 
@@ -152,6 +152,19 @@ class Artifact(qdb.base.QiitaObject):
                 [at_id, qdb.util.convert_to_id(fpt, 'filepath_type'), req]
                 for fpt, req in filepath_types]
             qdb.sql_connection.TRN.add(sql, sql_args, many=True)
+
+            # When creating a type is expected that a new mountpoint is created
+            # for that type
+            sql = """INSERT INTO qiita.data_directory
+                        (data_type, mountpoint, subdirectory, active)
+                        VALUES (%s, %s, %s, %s)"""
+            qdb.sql_connection.TRN.add(sql, [name, name, True, True])
+
+            # We are intersted in the dirpath
+            dp = qdb.util.get_mountpoint(name)[0][1]
+            if not exists(dp):
+                makedirs(dp)
+
             qdb.sql_connection.TRN.execute()
 
     @classmethod
